@@ -27,14 +27,14 @@ int MPIDI_SHM_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_SHM_init_world(void)
+int MPIDI_SHM_comm_bootstrap(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_POSIX_init_world();
+    mpi_errno = MPIDI_POSIX_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_IPC_init_world();
+    mpi_errno = MPIDI_IPC_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

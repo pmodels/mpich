@@ -39,23 +39,23 @@ int MPIDI_IPC_init_local(void)
     goto fn_exit;
 }
 
-int MPIDI_IPC_init_world(void)
+int MPIDI_IPC_comm_bootstrap(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    mpi_errno = MPIDI_XPMEM_init_world();
+    mpi_errno = MPIDI_XPMEM_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
 #ifdef MPIDI_CH4_SHM_ENABLE_CMA
-    mpi_errno = MPIDI_CMA_init_world();
+    mpi_errno = MPIDI_CMA_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_ENABLE_GPU) {
-        mpi_errno = MPIDI_GPU_init_world();
+        mpi_errno = MPIDI_GPU_comm_bootstrap(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 #endif

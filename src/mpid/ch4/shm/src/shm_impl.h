@@ -29,4 +29,6 @@
 /* Not-inlined shm functions */
 #include "shm_noinline.h"
 
+int MPIDI_SHM_comm_bootstrap(MPIR_Comm * comm);
+
 #endif /* SHM_IMPL_H_INCLUDED */
