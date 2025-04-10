@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
-#include "mpidu_bc.h"
 #include "ofi_noinline.h"
 
 #define HAS_PREF_NIC(comm) comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1

@@ -315,6 +315,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
+    comm_p->csel_comm = NULL;
 
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
@@ -802,6 +803,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     mpi_errno = check_hierarchy(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if ((comm->attr & MPIR_COMM_ATTR__HIERARCHY) && (comm->num_external != comm->local_size)) {
+        mpi_errno = MPIR_Comm_create_subcomms(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -809,11 +815,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     /* Create collectives-specific infrastructure */
     mpi_errno = MPIR_Coll_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if ((comm->attr & MPIR_COMM_ATTR__HIERARCHY) && (comm->num_external != comm->local_size)) {
-        mpi_errno = MPIR_Comm_create_subcomms(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
     /* call post commit hooks */
     mpi_errno = MPID_Comm_commit_post_hook(comm);

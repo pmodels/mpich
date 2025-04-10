@@ -777,6 +777,18 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
+    char *addrname[FI_NAME_MAX];
+    size_t addrnamelen = FI_NAME_MAX;
+    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen), getname);
+
+    MPIR_Lpid lpid = MPIR_Process.rank;
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
+    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname, 1,
+                                &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
+    MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+    MPIDI_OFI_global.lpid0 = lpid;
+    MPIDI_OFI_global.addrnamelen = addrnamelen;
+
     /* index datatypes for RMA atomics. */
     MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
 
@@ -799,11 +811,11 @@ int MPIDI_OFI_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_OFI_global.got_named_av) {
-        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx();
+    if (!MPIDI_OFI_global.got_named_av && MPIR_Process.size > 1) {
+        MPIR_Assert(MPIR_Process.comm_world);
+        mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
     ofi_initialized = true;
 
   fn_exit:

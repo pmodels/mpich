@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
-#include "mpidu_bc.h"
 
 static int all_vcis_address_exchange(MPIR_Comm * comm);
 static void flush_all(void);

@@ -24,7 +24,6 @@ PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read], [-lucs -lucm
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
-build_mpid_common_bc=yes
 build_mpid_common_genq=yes
 build_mpid_common_stream_workq=yes
 
@@ -275,6 +274,7 @@ if test "${with_ch4_shmmods}" = "auto" -a "${ch4_netmods}" = "ucx" ; then
 fi
 
 if test "${with_ch4_shmmods}" = "none" -o "${with_ch4_shmmods}" = "no" ; then
+    enable_nolocal=yes
     AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
 fi
 
