@@ -56,9 +56,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 
 /* define MPIDI_PROGRESS to make the code more readable (to avoid nested '#ifdef's) */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-#define MPIDI_PROGRESS(vci) \
+#define MPIDI_PROGRESS(vci, is_global) \
     do {                                              \
-        if (state->flag & MPIDI_PROGRESS_NM && !made_progress) {	      \
+        if (state->flag & MPIDI_PROGRESS_NM && (is_global || !made_progress)) {	      \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);  \
             mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);   \
@@ -67,15 +67,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
     } while (0)
 
 #else
-#define MPIDI_PROGRESS(vci)			\
+#define MPIDI_PROGRESS(vci, is_global) \
     do {                                                \
-        if (state->flag & MPIDI_PROGRESS_SHM && !made_progress) { \
+        if (state->flag & MPIDI_PROGRESS_SHM && (is_global || !made_progress)) { \
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));             \
             mpi_errno = MPIDI_SHM_progress(vci, &made_progress); \
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));              \
             MPIR_ERR_CHECK(mpi_errno); \
         }                                                               \
-        if (state->flag & MPIDI_PROGRESS_NM && !made_progress) { \
+        if (state->flag & MPIDI_PROGRESS_NM && (is_global || !made_progress)) { \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);            \
             mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);                     \
@@ -125,13 +125,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
 
 #if MPIDI_CH4_MAX_VCIS == 1
     /* fast path for single vci */
-    MPIDI_PROGRESS(0);
+    MPIDI_PROGRESS(0, false);
 #else
     /* multiple vci */
     bool is_explicit_vci = (state->vci_count == 1 && MPIDI_VCI_IS_EXPLICIT(state->vci[0]));
     if (!is_explicit_vci && MPIDI_do_global_progress()) {
         for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
-            MPIDI_PROGRESS(vci);
+            MPIDI_PROGRESS(vci, true);
         }
     } else {
         for (int i = 0; i < state->vci_count; i++) {
@@ -139,7 +139,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
             if (vci >= MPIDI_global.n_total_vcis) {
                 continue;
             }
-            MPIDI_PROGRESS(vci);
+            MPIDI_PROGRESS(vci, false);
         }
     }
 #endif
