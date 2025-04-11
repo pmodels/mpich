@@ -1245,6 +1245,13 @@ AC_CHECK_FUNCS(getpid)
 dnl Check for shm
 PAC_ARG_SHARED_MEMORY
 
+dnl always check POSIX shared memory
+AC_CHECK_FUNC(shm_open)
+if test "$ac_cv_func_shm_open" = yes ; then
+    AC_DEFINE(HAS_POSIX_SHM, 1, [Define if we have POSIX shared memory])
+    AC_DEFINE(HAS_INITSHM, 1, [Define if we have mpl_initshm_ facility])
+fi
+
 #######################################################################
 ## END OF SHM CODE
 #######################################################################

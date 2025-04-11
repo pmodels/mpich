@@ -26,6 +26,7 @@
 #include "mpl_yield.h"
 #include "mpl_dbg.h"
 #include "mpl_shm.h"
+#include "mpl_initshm.h"
 #include "mpl_math.h"
 #include "mpl_proc_mutex.h"
 #include "mpl_gpu.h"
