@@ -12,8 +12,7 @@ noinst_HEADERS += src/mpid/ch4/shm/ipc/src/shm_inline.h    \
                   src/mpid/ch4/shm/ipc/src/ipc_types.h     \
                   src/mpid/ch4/shm/ipc/src/ipc_pre.h
 
-mpi_core_sources += src/mpid/ch4/shm/ipc/src/globals.c     \
-                    src/mpid/ch4/shm/ipc/src/ipc_init.c    \
+mpi_core_sources += src/mpid/ch4/shm/ipc/src/ipc_init.c    \
                     src/mpid/ch4/shm/ipc/src/ipc_control.c \
                     src/mpid/ch4/shm/ipc/src/ipc_win.c     \
                     src/mpid/ch4/shm/ipc/src/ipc_fd.c
