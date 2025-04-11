@@ -23,6 +23,30 @@ cvars:
       description : >-
         If on, poll global progress every once a while. With per-vci configuration, turning global progress off may improve the threading performance.
 
+    - name        : MPIR_CVAR_CH4_PROGRESS_THROTTLE
+      category    : CH4
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        When running high PPN (high number of processes on a single node), keep polling progress may monopolize
+        the underlying atomic queue and preventing packets being enqueued. A work around is to hold back progress
+        polling. Setting MPIR_CVAR_CH4_PROGRESS_THROTTLE=true will throttle the progress polling by injecting
+        usleep(1) every once a while.
+    
+    - name        : MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT
+      category    : CH4
+      type        : int
+      default     : 4096
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        When MPIR_CVAR_CH4_PROGRESS_THROTTLE=true, MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT is the number
+        of consecutive polls that must fail to make progress before calling usleep(1) in the progress. A higher value 
+        makes the usleep less frequent, and a lower value makes the usleep more frequent.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -32,6 +56,11 @@ cvars:
 #define MPIDI_CH4_PROG_POLL_MASK 0xff
 
 extern MPL_TLS int global_vci_poll_count;
+
+/* Counter to track how many consecutive calls to MPIDI_progress_test fail to make progress.
+ * Used when MPIR_CVAR_CH4_PROGRESS_THROTTLE=true.
+ */
+extern MPL_TLS int no_progress_counter;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
@@ -146,6 +175,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    if(made_progress) {
+        no_progress_counter = 0;
+    }
+    else {
+        if (!made_progress && MPIR_CVAR_CH4_PROGRESS_THROTTLE && 
+            no_progress_counter > MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT) {
+            usleep(1);
+        }
+
+        no_progress_counter++;
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
