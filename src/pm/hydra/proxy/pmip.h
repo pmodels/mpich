@@ -107,7 +107,8 @@ struct pmip_pg {
      * server at barrier_in. */
     UT_array *kvs_batch;
 
-    /* for barrier_in */
+    /* for barrier_in. Use uthash to support group barriers */
+    struct HYD_barrier *barriers;
     int barrier_count;
 
     /* environment */
@@ -138,6 +139,9 @@ struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream);
 HYD_status PMIP_foreach_pg_do(HYD_status(*callback) (struct pmip_pg * pg));
 HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg *pg, int num_procs);
 struct pmip_pg *PMIP_find_pg(int pgid, int proxy_id);
+
+int PMIP_pg_local_to_global_id(struct pmip_pg *pg, int local_id);
+int PMIP_pg_global_to_local_id(struct pmip_pg *pg, int global_id);
 
 bool PMIP_pg_has_open_stdoe(struct pmip_pg *pg);
 

@@ -195,6 +195,12 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         mapping = NULL;
     }
 
+    /* FIXME: The following code is still assigning ranks according to round-robin PPN.
+     *        For now it works because we don't provide explicit rankmap option. The
+     *        rankmap is always generated from round-robin PPN. The code need be changed
+     *        if we ever offer user custom rankmap.
+     */
+
     total_core_count = 0;
     for (int i = 0; i < pg->proxy_count; i++) {
         total_core_count += pg->proxy_list[i].node->core_count;
