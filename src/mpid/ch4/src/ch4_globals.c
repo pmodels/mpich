@@ -22,6 +22,8 @@ MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[MPIR_REQUEST_NUM_POOLS];
  * progress happen, so some race condition or even corruption can be tolerated.  */
 MPL_TLS int global_vci_poll_count = 0;
 
+MPL_TLS int no_progress_counter = 0;
+
 /* ** HACK **
  * Hack to workaround an Intel compiler bug on macOS. Touching
  * global_vci_poll_count in this file forces the compiler to allocate
