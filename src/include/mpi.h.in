@@ -762,12 +762,14 @@ enum MPIR_Combiner_enum {
 
 #define MPI_ERR_ERRHANDLER         80  /* Invalid errhandler handle */
 
+#define MPI_ERR_ABI                81  /* Fortran ABI already set */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a
 					   predefined error class */
 #endif /* BUILD_MPI_ABI */
 
 
-#define MPICH_ERR_LAST_CLASS 80     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 81     /* It is also helpful to know the
 				       last valid class */
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
                                   * already using some of the values in this
