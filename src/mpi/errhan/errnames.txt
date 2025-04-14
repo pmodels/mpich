@@ -908,6 +908,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **notsuppmultithread:this functionality is not supported when the thread level is greater than MPI_THREAD_SINGLE
 **valuetoolarge:Value is too large to store
 
+**abi:Fortran ABI already set
+
 #
 # mpi functions
 #

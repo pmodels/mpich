@@ -244,6 +244,7 @@ enum {
     MPI_ERR_VALUE_TOO_LARGE            = 59, /* added: MPI-4.0 */
     MPI_ERR_SESSION                    = 60, /* added: MPI-4.0 */
     MPI_ERR_ERRHANDLER                 = 61, /* added: MPI-4.1 */
+    MPI_ERR_ABI                        = 62, /* added: MPI-5.0 */
 
     MPI_T_ERR_CANNOT_INIT              = 1001,
     MPI_T_ERR_NOT_ACCESSIBLE           = 1002,
