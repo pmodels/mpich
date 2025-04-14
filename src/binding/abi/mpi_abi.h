@@ -568,8 +568,12 @@ typedef void (MPI_T_event_free_cb_function)(MPI_T_event_registration event_regis
 typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_registration event_registration, int source_index, MPI_T_cb_safety cb_safety, void *user_data);
 
 /* MPI functions */
+int MPI_Abi_get_fortran_booleans(int logical_size, void *logical_true, void *logical_false);
+int MPI_Abi_get_fortran_info(MPI_Info *info);
 int MPI_Abi_get_info(MPI_Info *info);
 int MPI_Abi_get_version(int *abi_major, int *abi_minor);
+int MPI_Abi_set_fortran_booleans(int logical_size, void *logical_true, void *logical_false);
+int MPI_Abi_set_fortran_info(MPI_Info info);
 int MPI_Abort(MPI_Comm comm, int errorcode);
 int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
 int MPI_Accumulate_c(const void *origin_addr, MPI_Count origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
@@ -1237,8 +1241,12 @@ int MPI_T_source_get_num(int *num_sources);
 int MPI_T_source_get_timestamp(int source_index, MPI_Count *timestamp);
 
 /* PMPI functions */
+int PMPI_Abi_get_fortran_booleans(int logical_size, void *logical_true, void *logical_false);
+int PMPI_Abi_get_fortran_info(MPI_Info *info);
 int PMPI_Abi_get_info(MPI_Info *info);
 int PMPI_Abi_get_version(int *abi_major, int *abi_minor);
+int PMPI_Abi_set_fortran_booleans(int logical_size, void *logical_true, void *logical_false);
+int PMPI_Abi_set_fortran_info(MPI_Info info);
 int PMPI_Abort(MPI_Comm comm, int errorcode);
 int PMPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
 int PMPI_Accumulate_c(const void *origin_addr, MPI_Count origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
