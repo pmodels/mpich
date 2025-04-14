@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
+#include "ofi_init.h"
 
 #define HAS_PREF_NIC(comm) comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1
 
@@ -134,6 +135,12 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+
+    if (comm == MPIR_Process.comm_world && !MPIDI_OFI_global.got_named_av) {
+        MPIR_Assert(MPIR_Process.comm_world);
+        mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
