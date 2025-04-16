@@ -73,9 +73,6 @@ int MPIDI_GPU_init_world(void)
     }
     MPIDU_Init_shm_barrier();
 
-    /* Initialize the local and global device mappings */
-    MPL_gpu_init_device_mappings(node_max_dev_id, node_max_subdev_id);
-
     MPIDI_GPUI_global.local_procs = MPIR_Process.node_local_map;
     MPIDI_GPUI_global.local_ranks =
         (int *) MPL_malloc(MPIR_Process.size * sizeof(int), MPL_MEM_SHM);
