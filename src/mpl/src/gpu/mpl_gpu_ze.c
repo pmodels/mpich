@@ -3437,6 +3437,9 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
+void MPL_gpu_fast_memcpy_avx512f(void *src, void *dest, size_t size);
+void MPL_gpu_fast_memcpy_avx(void *src, void *dest, size_t size);
+
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size)
 {
@@ -3459,72 +3462,20 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
     }
-#if defined(MPL_HAVE_AVX512F) || defined(MPL_HAVE_AVX)
+
     /* fallback to MPL_Memcpy_stream if not 64-byte aligned */
+    /* TODO: unify non-temporal copy */
     if (((uintptr_t) s) & 63 || ((uintptr_t) d) & 63) {
         MPL_Memcpy_stream(d, s, size);
-        goto fn_exit;
+    } else {
+        if (MPL_ARCH_HAS_AVX512F) {
+            MPL_gpu_fast_memcpy_avx512f(s, d, n);
+        } else if (MPL_ARCH_HAS_AVX2) {
+            MPL_gpu_fast_memcpy_avx(s, d, n);
+        } else {
+            memcpy(s, d, n);
+        }
     }
-#if defined(MPL_HAVE_AVX512F)
-    while (n >= 64) {
-        _mm512_stream_si512((__m512i *) d, _mm512_stream_load_si512((__m512i const *) s));
-        d += 64;
-        s += 64;
-        n -= 64;
-    }
-    if (n & 32) {
-        _mm256_stream_si256((__m256i *) d, _mm256_stream_load_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
-#elif defined(MPL_HAVE_AVX)
-    while (n >= 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_stream_load_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
-#endif /* MPL_HAVE_AVX512F || MPL_HAVE_AVX */
-#else
-    goto fallback;
-#endif
-    if (n & 16) {
-#if defined(MPL_HAVE_AVX) || defined(MPL_HAVE_AVX512F)
-        _mm_stream_si128((__m128i *) d, _mm_stream_load_si128((__m128i const *) s));
-#endif
-        d += 16;
-        s += 16;
-        n -= 16;
-    }
-    if (n & 8) {
-        *(int64_t *) d = *(int64_t *) s;
-        d += 8;
-        s += 8;
-        n -= 8;
-    }
-    if (n & 4) {
-        *(int *) d = *(int *) s;
-        d += 4;
-        s += 4;
-        n -= 4;
-    }
-    if (n & 2) {
-        *(int16_t *) d = *(int16_t *) s;
-        d += 2;
-        s += 2;
-        n -= 2;
-    }
-    if (n == 1) {
-        *(char *) d = *(char *) s;
-    }
-#if defined(MPL_HAVE_AVX512F) || defined(MPL_HAVE_AVX)
-    _mm_sfence();
-#endif
-    goto fn_exit;
-
-  fallback:
-    memcpy(d, s, n);
 
   fn_exit:
     return mpl_err;

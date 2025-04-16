@@ -160,14 +160,8 @@ enable_fast_alwaysinline=no
 
 # Instruction specific options (avx, avx512f) are for users to explicitly request for
 # corresponding instruction sets.
-# If these options are not set. We do fallback to compile-time and runtime-check, and enable
-# the instructions that is supported by the compiler and the building machine.
-enable_fast_instr_auto=yes
-# If set, we only check if the compiler supports them and skip the runtime check.
-# In this case, the build may not be usable if the instructions are not supported on the
-# target machine. For example, on AMD Zen3 with avx512f option set, MPICH will be built with
-# AVX512F support. But the library will be broken for Zen3 because the CPU does not support
-# AVX512F.
+# If set, we will add the corresponding flags if supported by the compiler. This will enable
+# AVX and AVX512F for the entire MPICH code base.
 force_enable_avx=no
 force_enable_avx512f=no
 
@@ -178,23 +172,14 @@ for option in $enable_fast ; do
         alwaysinline)
         enable_fast_alwaysinline=yes
         ;;
-        sse2)
-        enable_fast_instr_auto=no
-        force_enable_sse2=yes
-        ;;
         avx)
-        enable_fast_instr_auto=no
         force_enable_avx=yes
         ;;
         avx512f)
-        enable_fast_instr_auto=no
         force_enable_avx512f=yes
         ;;
         all|yes)
         enable_fast_alwaysinline=yes
-        ;;
-        none)
-        enable_fast_instr_auto=no
         ;;
         *) # do not change default value (no) for other fast options
         ;;
@@ -206,62 +191,57 @@ if test "$enable_fast_alwaysinline" = "yes"; then
     AC_DEFINE(ENABLE_ALWAYS_INLINE,1,[Define if force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX])
 fi
 
+AC_CANONICAL_HOST
+
+case "$host_cpu" in
+  i*86 | x86_64)
+    build_for_x86="yes"
+    ;;
+esac
+AM_CONDITIONAL([MPL_BUILD_FOR_X86], [test "x$build_for_x86" = "xyes"])
+
 # check if compiler supports avx, avx512f
 # also check if the building machine can run them if not force enabled
-AC_CACHE_CHECK([whether -mavx is supported], pac_cv_found_avx,
-              [PAC_C_CHECK_COMPILER_OPTION([-mavx],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
+AC_CACHE_CHECK([whether -mavx2 is supported], pac_cv_found_avx,
+              [PAC_C_CHECK_COMPILER_OPTION([-mavx2],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
               pac_cv_found_avx=no,pac_cv_found_avx=yes)
 AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f,
                [PAC_C_CHECK_COMPILER_OPTION([-mavx512f],pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)],
                pac_cv_found_avx512f=no,pac_cv_found_avx512f=yes)
 
-if test "$enable_fast_instr_auto" = "yes"; then
-    PAC_PUSH_FLAG([CFLAGS])
-    PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
-    AC_CACHE_CHECK([whether AVX512F is supported by the CPU], pac_cv_found_avx512f_runnable,[
-                    AC_RUN_IFELSE([AC_LANG_SOURCE([[
-                                   #include <immintrin.h>
+AM_CONDITIONAL([MPL_BUILD_AVX], [test "x$pac_cv_found_avx" = "xyes"])
+if test "x$pac_cv_found_avx" = "xyes"; then
+    AC_DEFINE([HAVE_AVX], [1], [Have AVX support])
 
-                                   int main() {
-                                       __m512i a = _mm512_set1_epi32(1);
-                                       __asm__ volatile("" : : "x" (a) : "memory");
-                                       return 0;
-                                   }
-                                   ]])], pac_cv_found_avx512f_runnable="yes",
-                                   pac_cv_found_avx512f_runnable="no",
-                                   pac_cv_found_avx512f_runnable="unknown")
-                    ])
-    PAC_POP_FLAG([CFLAGS])
-    if test "$pac_cv_found_avx512f_runnable" = "no"; then
-        # if avx512f, try avx
-        PAC_PUSH_FLAG([CFLAGS])
-        PAC_APPEND_FLAG([-mavx],[CFLAGS])
-        AC_CACHE_CHECK([whether AVX is supported by the CPU], pac_cv_found_avx_runnable,[
-                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-                                       #include <immintrin.h>
-
-                                       int main() {
-                                           __m256i a = _mm256_set1_epi32(1);
-                                           __asm__ volatile("" : : "x" (a) : "memory");
-                                           return 0;
-                                       }
-                                       ]])], pac_cv_found_avx_runnable="yes",
-                                       pac_cv_found_avx_runnable="no",
-                                       pac_cv_found_avx_runnable="unknown")
-                        ])
-        PAC_POP_FLAG([CFLAGS])
+    if test "$force_enable_avx" = "yes"; then
+        PAC_APPEND_FLAG([-mavx2],[CFLAGS])
+        AC_DEFINE([FORCE_AVX], [1], [Force enable AVX support])
     fi
 fi
 
-if test "$force_enable_avx512f" = "yes" || test "$pac_cv_found_avx512f_runnable" = "yes"; then
-    PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
-    AC_DEFINE(HAVE_AVX512F,1,[Define if avx512f is available])
+AM_CONDITIONAL([MPL_BUILD_AVX512F], [test "x$pac_cv_found_avx512f" = "xyes"])
+if test "x$pac_cv_found_avx512f" = "xyes"; then
+    AC_DEFINE([HAVE_AVX512F], [1], [Have AVX512F support])
+
+    if test "$force_enable_avx512f" = "yes"; then
+        PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
+        AC_DEFINE([FORCE_AVX512F], [1], [Force enable AVX512F support])
+    fi
 fi
 
-if test "$force_enable_avx" = "yes" || test "$pac_cv_found_avx_runnable" = "yes"; then
-    PAC_APPEND_FLAG([-mavx],[CFLAGS])
-    AC_DEFINE(HAVE_AVX,1,[Define if avx is available])
-fi
+# Check for __builtin_cpu_init and __builtin_cpu_supports
+AC_MSG_CHECKING([whether __builtin_cpu_init and __builtin_cpu_supports are available])
+AC_LINK_IFELSE(
+  [AC_LANG_SOURCE([[
+    int main() {
+      __builtin_cpu_init();
+      return __builtin_cpu_supports("avx");
+    }
+  ]])],
+  [AC_MSG_RESULT([yes])
+   AC_DEFINE([HAVE_BUILTIN_CPU_SUPPORTS], [1], [Define if __builtin_cpu_init and __builtin_cpu_supports are available])],
+  [AC_MSG_RESULT([no])]
+)
 
 #######################################################################
 # valgrind support
@@ -1310,6 +1290,19 @@ PAC_POP_ALL_FLAGS
 
 MPL_CFLAGS="${CFLAGS#${PARENT_CFLAGS}}"
 AC_SUBST(MPL_CFLAGS)
+
+NO_OPT_CFLAGS=""
+for word in $CFLAGS; do
+    case $word in
+        -O0|-O1|-O2|-O3|-Og)
+        ;;
+        *)
+        NO_OPT_CFLAGS="$NO_OPT_CFLAGS $word"
+        ;;
+    esac
+done
+NO_OPT_CFLAGS="$NO_OPT_CFLAGS -O0"
+AC_SUBST([NO_OPT_CFLAGS])
 
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
