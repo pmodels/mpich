@@ -38,6 +38,7 @@ int MPII_init_gpu(void)
                 MPL_gpu_info.max_cache_entries = -1;
                 break;
             case MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE_limited:
+                MPIR_Assert(MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES > 0);
                 MPL_gpu_info.max_cache_entries = MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES;
                 break;
             case MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE_disabled:
