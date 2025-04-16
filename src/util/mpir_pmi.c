@@ -638,11 +638,10 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
         mpi_errno = put_ex(key, sendbuf, sendsize, 0);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    if (MPIR_CVAR_PMI_VERSION != MPIR_CVAR_PMI_VERSION_x) {
-        /* PMIx will wait, so barrier unnecessary */
-        mpi_errno = MPIR_pmi_barrier();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (in_domain) {
         int domain_size = MPIR_Process.size;
         if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
