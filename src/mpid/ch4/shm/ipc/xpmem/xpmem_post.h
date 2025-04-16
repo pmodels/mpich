@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
     int dt_contig;
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM ||
+    if (!MPIR_CVAR_CH4_XPMEM_ENABLE ||
         data_sz < MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD ||
         (MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD > 0 &&
          data_sz > MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD) ||
