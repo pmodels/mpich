@@ -875,7 +875,7 @@ sub ExpandDir {
 	elsif (-d "$dir/$filename") {
 	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
 	}
-	elsif ($filename =~ /(.*\.[chi])(pp){0,1}$/) {
+	elsif ($filename =~ /(.*\.([chi])(pp){0,1}|inc)$/) {
 	    # Test for both Unix- and Windows-style directory separators
 	    if (!defined($skipFiles{"$dir/$filename"}) &&
 		!defined($skipFiles{"$dir\\$filename"})) {
