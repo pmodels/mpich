@@ -22,7 +22,7 @@ class RE:
 
 def main():
     # run from pmi top_srcdir
-    load_pmi_txt("maint/pmi-1.1.txt", "1.1")
+    load_pmi_txt("maint/pmi-1.2.txt", "1.2")
     load_pmi_txt("maint/pmi-2.0.txt", "2.0")
 
     dump_all()
@@ -179,6 +179,22 @@ def dump_all():
                 print(t_if + " (pmi->version == %s) {" % ver, file=Out)
 
         def dump_attrs(spaces, is_set, is_query, attrs, attrs0):
+            def check_not_dflt(var, kind, dflt):
+                if kind == "int":
+                    return "%s != %s" % (var, dflt)
+                elif kind == "bool":
+                    if dflt == "true":
+                        return "!" + var
+                    else:
+                        return var
+                elif kind == "str":
+                    if dflt == "NULL":
+                        return var
+                    else:
+                        return "strcmp(%s, %s) == 0" % (var, dflt)
+                else:
+                    raise Exception("unexpected")
+
             non_optional = 0
             for i in range(len(attrs)):
                 a = attrs[i]
@@ -197,11 +213,21 @@ def dump_all():
                 else:
                     raise Exception("Unhandled kind: " + a[1])
 
+                dflt = None
+                if RE.match(r'.*optional=(\S+)', a[2]):
+                    dflt = RE.m.group(1)
+
                 if is_set:
+                    indent=spaces
+                    if dflt is not None:
+                        print(spaces + "if (%s) {" % check_not_dflt(var, kind, dflt), file=Out)
+                        indent += "    "
                     pmiu = "PMIU_cmd_add_" + kind
-                    print(spaces + "%s(%s, \"%s\", %s);" % (pmiu, pmi, a[0], var), file=Out)
+                    print(indent + "%s(%s, \"%s\", %s);" % (pmiu, pmi, a[0], var), file=Out)
+                    if dflt is not None:
+                        print(spaces + "}", file=Out)
                 else:
-                    if RE.match(r'.*optional=(\S+)', a[2]):
+                    if dflt is not None:
                         dflt = RE.m.group(1)
                         pmiu = "PMIU_CMD_GET_%sVAL_WITH_DEFAULT" % kind.upper()
                         print(spaces + "%s(pmi, \"%s\", *%s, %s);" % (pmiu, a[0], var, dflt), file=Out)

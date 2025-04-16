@@ -26,10 +26,11 @@ struct HYD_pg {
     int proxy_count;
     int *rankmap;
     int pg_process_count;
-    int barrier_count;
     bool is_active;
-
     int spawner_pgid;
+    int min_node_id;
+
+    struct HYD_barrier *barriers;
 
     /* user-specified node-list */
     struct HYD_node *user_node_list;
