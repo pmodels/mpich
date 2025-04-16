@@ -537,9 +537,7 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
 
     MPIR_FUNC_ENTER;
 
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled ||
-        (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized &&
-         MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES == 0)) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gpu_ipc_handle_unmap((void *) ((uintptr_t) vaddr - handle.offset));
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -718,9 +716,7 @@ int MPIDI_GPU_send_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled ||
-        (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized &&
-         MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES == 0)) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
         void *pbase = MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.bounds_base);
         MPL_pointer_attr_t *gpu_attr = &MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.gpu_attr);
         int mpl_err = MPL_gpu_ipc_handle_destroy(pbase, gpu_attr);
