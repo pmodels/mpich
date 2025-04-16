@@ -278,6 +278,7 @@ static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
 static int search_physical_devices(ze_pci_address_ext_t pci);
 #endif
+static int init_device_mappings(void);
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -413,7 +414,7 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     return ret;
 }
 
-int MPL_gpu_init_device_mappings(int dummy1, int dummy2)
+static int init_device_mappings(void)
 {
     int mpl_err = MPL_SUCCESS;
 
@@ -567,6 +568,10 @@ int MPL_gpu_init(int debug_summary)
         goto fn_fail;
 
     get_max_dev_id(&max_dev_id, &max_subdev_id);
+
+    mpl_err = init_device_mappings();
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
 
     ipc_max_entries = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
     if (ipc_max_entries == NULL) {
