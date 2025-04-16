@@ -53,6 +53,7 @@ MPI_Abi_get_fortran_info:
     *info = info_ptr->handle;
 #else
     *info = MPI_INFO_NULL;
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 }
 
