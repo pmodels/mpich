@@ -74,11 +74,6 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     return ret;
 }
 
-int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
-{
-    return MPL_SUCCESS;
-}
-
 #ifdef MPL_HIP_USE_MEMORYTYPE
 /* pre-ROCm 6.0 */
 #define DEVICE_ATTR_TYPE attr->device_attr.memoryType
