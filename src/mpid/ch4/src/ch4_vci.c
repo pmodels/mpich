@@ -121,7 +121,6 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     /* update global vci settings */
     MPIDI_global.n_total_vcis = all_num_vcis[comm->rank];
     MPIDI_global.n_vcis = MPL_MIN(MPIR_CVAR_CH4_NUM_VCIS, MPIDI_global.n_total_vcis);
-    MPIDI_global.n_reserved_vcis = MPIDI_global.n_total_vcis - MPIDI_global.n_vcis;
     for (int i = 0; i < nprocs; i++) {
         MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
     }
