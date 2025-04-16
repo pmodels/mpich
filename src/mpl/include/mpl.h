@@ -7,6 +7,7 @@
 #define MPL_H_INCLUDED
 
 #include "mpl_base.h"
+#include "mpl_arch.h"
 #include "mpl_err.h"
 /* must come before mpltrmem.h */
 #include "mpl_valgrind.h"
