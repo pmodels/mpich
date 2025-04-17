@@ -154,6 +154,21 @@ int MPIR_Datatype_init_predefined(void)
     return mpi_errno;
 }
 
+#ifndef MPIR_INT128_ALIGN
+#define MPIR_INT128_ALIGN 16
+#endif
+#ifndef MPIR_FLOAT16_ALIGN
+#define MPIR_FLOAT16_ALIGN 2
+#endif
+#ifndef MPIR_FLOAT128_ALIGN
+#define MPIR_FLOAT128_ALIGN 16
+#endif
+#ifndef MPIR_ALT_FLOAT96_ALIGN
+#define MPIR_ALT_FLOAT96_ALIGN 4
+#endif
+#ifndef MPIR_ALT_FLOAT128_ALIGN
+#define MPIR_ALT_FLOAT128_ALIGN 16
+#endif
 int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
 {
     if (type == MPI_DATATYPE_NULL)
@@ -182,40 +197,30 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPIR_UINT64:
         case MPIR_FORTRAN_LOGICAL64:
             return MPIR_INT64_ALIGN;
-#ifdef MPIR_INT128_ALIGN
         case MPIR_FIXED128:
         case MPIR_INT128:
         case MPIR_UINT128:
         case MPIR_FORTRAN_LOGICAL128:
             return MPIR_INT128_ALIGN;
-#endif
-#ifdef MPIR_FLOAT16_ALIGN
         case MPIR_FLOAT16:
         case MPIR_COMPLEX16:
         case MPIR_BFLOAT16:
             return MPIR_FLOAT16_ALIGN;
-#endif
         case MPIR_FLOAT32:
         case MPIR_COMPLEX32:
             return MPIR_FLOAT32_ALIGN;
         case MPIR_FLOAT64:
         case MPIR_COMPLEX64:
             return MPIR_FLOAT64_ALIGN;
-#ifdef MPIR_FLOAT128_ALIGN
         case MPIR_FLOAT128:
         case MPIR_COMPLEX128:
             return MPIR_FLOAT128_ALIGN;
-#endif
-#ifdef MPIR_ALT_FLOAT96_ALIGN
         case MPIR_ALT_FLOAT96:
         case MPIR_ALT_COMPLEX96:
             return MPIR_ALT_FLOAT96_ALIGN;
-#endif
-#ifdef MPIR_ALT_FLOAT128_ALIGN
         case MPIR_ALT_COMPLEX128:
         case MPIR_ALT_FLOAT128:
             return MPIR_ALT_FLOAT128_ALIGN;
-#endif
         default:
             /* FIXME: throw error */
             MPIR_Assert(0);
