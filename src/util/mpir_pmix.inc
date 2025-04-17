@@ -52,7 +52,14 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     if (pmix_init_count == 1) {
         pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
         if (pmi_errno == PMIX_ERR_UNREACH) {
-            /* no pmi server, assume we are a singleton */
+            /* Failed to connect to server. Throw an error if an
+             * incompatible server is detected (e.g. hydra), otherwise
+             * proceed as a singleton. */
+            if (getenv("PMI_FD") || getenv("PMI_PORT") || getenv("PMI_HOSTNAME")) {
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_init",
+                                     "**pmix_init %s",
+                                     "(launcher not compatible with PMIx client)");
+            }
             goto singleton_out;
         }
         MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
