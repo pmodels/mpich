@@ -14,6 +14,7 @@
 cvars:
     - name        : MPIR_CVAR_PROGRESS_TIMEOUT
       category    : CH4
+      alt-env     : MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT
       type        : int
       default     : 0
       class       : none
