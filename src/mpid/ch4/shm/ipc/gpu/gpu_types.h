@@ -24,8 +24,6 @@ struct MPIDI_GPUI_handle_cache_entry {
 };
 
 typedef struct {
-    int *local_ranks;
-    int *local_procs;
     int local_device_count;
     int initialized;
     struct MPIDI_GPUI_map_cache_entry *ipc_map_cache;

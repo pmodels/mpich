@@ -190,25 +190,10 @@ static void init_topo_info(void)
 int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, local_rank_0 = -1;
+    int i;
 
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
                             < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
-
-    /* Populate these values with transformation information about each rank and its original
-     * information in MPI_COMM_WORLD. */
-
-    MPIDI_POSIX_global.local_ranks = (int *) MPL_malloc(MPIR_Process.size * sizeof(int),
-                                                        MPL_MEM_SHM);
-    for (i = 0; i < MPIR_Process.size; ++i) {
-        MPIDI_POSIX_global.local_ranks[i] = -1;
-    }
-    for (i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDI_POSIX_global.local_ranks[MPIR_Process.node_local_map[i]] = i;
-    }
-    local_rank_0 = MPIR_Process.node_local_map[0];
-
-    MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
     /* hwloc getting topo info */
     MPIDI_POSIX_global.topo.core_id = -1;
@@ -381,7 +366,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     mpi_errno = posix_coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_free(MPIDI_POSIX_global.local_ranks);
     MPL_free(MPIDI_POSIX_global.local_rank_dist);
 
     posix_world_initialized = 0;

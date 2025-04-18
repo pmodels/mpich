@@ -57,16 +57,6 @@ int MPIDI_GPU_comm_bootstrap(comm)
     }
 
 
-    MPIDI_GPUI_global.local_procs = MPIR_Process.node_local_map;
-    MPIDI_GPUI_global.local_ranks =
-        (int *) MPL_malloc(MPIR_Process.size * sizeof(int), MPL_MEM_SHM);
-    for (int i = 0; i < MPIR_Process.size; ++i) {
-        MPIDI_GPUI_global.local_ranks[i] = -1;
-    }
-    for (int i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDI_GPUI_global.local_ranks[MPIDI_GPUI_global.local_procs[i]] = i;
-    }
-
     MPIDI_GPUI_global.local_device_count = device_count;
     MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
@@ -91,8 +81,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     if (MPIDI_GPUI_global.initialized) {
         mpi_errno = MPIDI_FD_mpi_finalize_hook();
         MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
-
-        MPL_free(MPIDI_GPUI_global.local_ranks);
     }
 
     {

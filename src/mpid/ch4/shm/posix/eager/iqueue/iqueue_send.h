@@ -55,7 +55,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     /* Try to get a new cell to hold the message */
     /* Select the appropriate free queue depending on whether we are using intra-NUMA or inter-NUMAfree
      * free queue. */
-    int dst_local_rank = MPIDI_POSIX_global.local_ranks[grank];
+    int dst_local_rank = MPIDI_SHM_global.local_ranks[grank];
     bool is_topo_local =
         (MPIDI_POSIX_global.local_rank_dist[dst_local_rank] == MPIDI_POSIX_DIST__LOCAL);
     if (is_topo_local) {
@@ -74,7 +74,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     }
 
     /* Find the correct queue for this rank pair. */
-    terminal = &transport->terminals[MPIDI_POSIX_global.local_ranks[grank]];
+    terminal = &transport->terminals[MPIDI_SHM_global.local_ranks[grank]];
 
     /* Get the memory allocated to be used for the message transportation. */
     payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
