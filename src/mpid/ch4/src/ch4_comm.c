@@ -181,12 +181,11 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
      * TODO: expose MPIX_Comm_set_vcis to allow vcis for arbitrary comm
      */
     if (comm == MPIR_Process.comm_world) {
-        int n_total_vcis = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
         /* we always need call set_vcis even when n_total_vcis is 1 because -
          * 1. in case netmod need support multi-nics.
          * 2. remote processes may have multiple vcis.
          */
-        mpi_errno = MPIDI_Comm_set_vcis(comm, n_total_vcis);
+        mpi_errno = MPIDI_Comm_set_vcis(comm, MPIR_CVAR_CH4_NUM_VCIS, MPIR_CVAR_CH4_RESERVE_VCIS);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

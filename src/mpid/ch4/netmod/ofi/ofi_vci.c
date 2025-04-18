@@ -34,20 +34,25 @@ int MPIDI_OFI_vci_init(void)
 
 /* Address exchange within comm and setup multiple vcis */
 static int init_vcis(int num_vcis, int *num_vcis_actual);
-static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis);
+static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vcis);
 
-int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
+int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved,
+                            MPIDI_num_vci_t * all_num_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* set up local vcis */
+    int num_vcis = num_implicit + num_reserved;
     int num_vcis_actual;
     mpi_errno = init_vcis(num_vcis, &num_vcis_actual);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* gather the number of remote vcis */
-    mpi_errno = MPIR_Allgather_impl(&num_vcis_actual, 1, MPIR_INT_INTERNAL,
-                                    all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
+    all_num_vcis[comm->rank].n_vcis = MPL_MIN(num_implicit, num_vcis_actual);
+    all_num_vcis[comm->rank].n_total_vcis = num_vcis_actual;
+    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                    all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
+                                    comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
@@ -188,7 +193,7 @@ static int setup_additional_vcis(void)
 /* NOTE: with scalable endpoint as context, all vcis share the same address. */
 #define NUM_VCIS_FOR_RANK(r) 1
 #else
-#define NUM_VCIS_FOR_RANK(r) all_num_vcis[r]
+#define NUM_VCIS_FOR_RANK(r) all_num_vcis[r].n_total_vcis
 #endif
 
 #define GET_AV_AND_ADDRNAMES(rank) \
@@ -235,7 +240,7 @@ static int get_root_av_table_index(int rank)
 }
 
 ATTRIBUTE((unused))
-static int get_av_table_index(int rank, int nic, int vci, int *all_num_vcis)
+static int get_av_table_index(int rank, int nic, int vci, MPIDI_num_vci_t * all_num_vcis)
 {
     if (nic == 0 && vci == 0) {
         return get_root_av_table_index(rank);
@@ -251,7 +256,7 @@ static int get_av_table_index(int rank, int nic, int vci, int *all_num_vcis)
     }
 }
 
-static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
+static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -267,7 +272,8 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
         }
     }
 
-    int num_vcis = NUM_VCIS_FOR_RANK(rank);
+    MPIR_Assert(NUM_VCIS_FOR_RANK(rank) == MPIDI_OFI_global.num_vcis);
+    int num_vcis = MPIDI_OFI_global.num_vcis;
     int num_nics = MPIDI_OFI_global.num_nics;
 
     /* Assume num_nics are all equal */

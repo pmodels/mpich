@@ -291,7 +291,7 @@ typedef struct MPIDI_CH4_Global_t {
     int n_reserved_vcis;        /* num of reserved vcis */
     int n_total_vcis;           /* total num of vcis, must > n_vcis + n_reserved_vcis */
     bool share_reserved_vcis;   /* default false, skip locking for explicit vcis */
-    int *all_num_vcis;          /* allgathered n_vcis, needed for implicit hashing */
+    MPIDI_num_vci_t *all_num_vcis;      /* allgathered num vcis, MPIDI_num_vci_t is {n_vcis, n_total_vcis} */
     MPIDI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
 
     MPIDI_CH4_configurations_t settings;

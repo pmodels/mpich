@@ -636,6 +636,11 @@ typedef struct MPIDI_av_entry {
 #endif
 } MPIDI_av_entry_t;
 
+typedef struct MPIDI_num_vci {
+    int n_vcis;
+    int n_total_vcis;
+} MPIDI_num_vci_t;
+
 #define HAVE_DEV_COMM_HOOK
 
 int MPIDI_check_for_failed_procs(void);
