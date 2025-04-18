@@ -49,23 +49,20 @@ ze_device_handle_t *ze_devices_handle = NULL;
 static int gpu_initialized = 0;
 static uint32_t device_count;   /* Counts all local devices, does not include subdevices */
 static uint32_t local_ze_device_count;  /* Counts all local devices and subdevices */
-static uint32_t global_ze_device_count; /* Counts all global devices and subdevices */
-static int max_dev_id;          /* Does not include subdevices */
-static int max_subdev_id;
-static int global_dev_count;
-static int global_subdev_count;
+static uint32_t known_ze_device_count;  /* Counts all known devices and subdevices -
+                                         * including referenced from ZE_AFFINITY_MASK */
+static int known_dev_count;
+static int known_subdev_count;
 /* global_to_local_map[] are ordered (dev_id, sub_id), where sub_id is 0 for root device and
  * (subdev_id + 1) for tiles */
 #define SET_GLOBAL_ZE_DEVICE_COUNT \
     do { \
-        global_dev_count = max_dev_id + 1; \
-        global_subdev_count = max_subdev_id + 1; \
-        global_ze_device_count = global_dev_count * (global_subdev_count); \
+        known_ze_device_count = known_dev_count * (known_subdev_count + 1); \
     } while (0)
 
 /* GLOBAL_DEV_INDEX is the index to global_to_local_map[]. NOTE: each process may differ due visibility */
 #define GET_GLOBAL_DEV_INDEX(dev_id, sub_id) \
-    ((sub_id) * global_dev_count + (dev_id))
+    ((sub_id) * known_dev_count + (dev_id))
 
 /* GLOBAL_DEV_ID is to be communicated between processes. It is an int but only uses two bytes:
  *   low-byte - sub_id (subdev_id + 1 or 0 for root device)
@@ -143,7 +140,7 @@ static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 /* Mappings for translating between local and global device ids */
 static int *local_to_global_map;        /* [local_ze_device_count] */
-static int *global_to_local_map;        /* [global_ze_device_count] */
+static int *global_to_local_map;        /* [known_ze_device_count] */
 
 /* Maps a subdevice id to the upper device id, specifically for indexing into shared_device_fds */
 static int *subdevice_map = NULL;
@@ -290,7 +287,7 @@ static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, voi
             goto fn_fail; \
     } while (0)
 
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdev_id)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *max_dev_id, int *max_subdev_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
@@ -298,8 +295,8 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdev_id)
     }
 
     *dev_cnt = local_ze_device_count;
-    *dev_id = max_dev_id;
-    *subdev_id = max_subdev_id;
+    *max_dev_id = known_dev_count - 1;
+    *max_subdev_id = known_subdev_count - 1;
     return ret;
 }
 
@@ -432,13 +429,13 @@ static int init_device_mappings(affinity_mask_t * mask)
     }
 
     /* Initialize global_to_local_map */
-    global_to_local_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    global_to_local_map = MPL_malloc(known_ze_device_count * sizeof(int), MPL_MEM_OTHER);
     if (global_to_local_map == NULL) {
         mpl_err = MPL_ERR_GPU_NOMEM;
         goto fn_fail;
     }
 
-    for (int i = 0; i < global_ze_device_count; ++i) {
+    for (int i = 0; i < known_ze_device_count; ++i) {
         global_to_local_map[i] = -1;
     }
 
@@ -454,12 +451,12 @@ static int init_device_mappings(affinity_mask_t * mask)
             /* Mark the subdevice(s) as visible. */
             if (subdevice != -1) {
                 /* Handle special case where there are no subdevices among any device. */
-                if (global_subdev_count > 0) {
+                if (known_subdev_count > 0) {
                     int idx = GET_GLOBAL_DEV_INDEX(device, subdevice + 1);
                     global_to_local_map[idx] = 1;
                 }
             } else {
-                for (int j = 0; j < global_subdev_count; ++j) {
+                for (int j = 0; j < known_subdev_count; ++j) {
                     int idx = GET_GLOBAL_DEV_INDEX(device, j + 1);
                     global_to_local_map[idx + j] = 1;
                 }
@@ -467,7 +464,7 @@ static int init_device_mappings(affinity_mask_t * mask)
         }
     } else {
         /* every device visible */
-        for (int i = 0; i < global_ze_device_count; ++i) {
+        for (int i = 0; i < known_ze_device_count; ++i) {
             global_to_local_map[i] = 1;
         }
     }
@@ -476,18 +473,17 @@ static int init_device_mappings(affinity_mask_t * mask)
     int local_dev_id = 0;
 
     /* The root devices first */
-    for (int i = 0; i < global_dev_count; ++i) {
+    for (int i = 0; i < known_dev_count; ++i) {
         if (global_to_local_map[i] == 1) {
             /* Check if the device has subdevices before setting its index. If it does not, then
              * only the subdevice is visible. However, need to check for the special case that
              * there are no subdevices among any device. */
-            if (subdevice_count[local_dev_id] || global_subdev_count == 0) {
+            if (subdevice_count[local_dev_id] || known_subdev_count == 0) {
                 global_to_local_map[i] = local_dev_id;
             } else {
                 /* Find which subdevice is visible and give it the local device id since it is the
                  * root device. */
-                int idx = global_dev_count + i * global_subdev_count;
-                for (int j = 0; j < global_subdev_count; ++j) {
+                for (int j = 0; j < known_subdev_count; ++j) {
                     int idx = GET_GLOBAL_DEV_INDEX(i, j + 1);
                     if (global_to_local_map[idx] == 1) {
                         global_to_local_map[idx] = local_dev_id;
@@ -501,9 +497,9 @@ static int init_device_mappings(affinity_mask_t * mask)
     }
 
     /* The subdevices next */
-    for (int i = 0; i < global_dev_count; ++i) {
+    for (int i = 0; i < known_dev_count; ++i) {
         if (global_to_local_map[i] != -1) {
-            for (int j = 0; j < global_subdev_count; ++j) {
+            for (int j = 0; j < known_subdev_count; ++j) {
                 int idx = GET_GLOBAL_DEV_INDEX(i, j + 1);
                 if (global_to_local_map[idx] == 1) {
                     global_to_local_map[idx] = local_dev_id;
@@ -517,11 +513,11 @@ static int init_device_mappings(affinity_mask_t * mask)
 
     /* Setup local_to_global_map */
     local_dev_id = 0;
-    for (int i = 0; i < global_ze_device_count; ++i) {
+    for (int i = 0; i < known_ze_device_count; ++i) {
         int local_id = global_to_local_map[i];
         if (local_id != -1) {
-            int dev_id = i % global_dev_count;
-            int sub_id = i / global_dev_count;
+            int dev_id = i % known_dev_count;
+            int sub_id = i / known_dev_count;
             local_to_global_map[local_id] = MAKE_GLOBAL_DEV_ID(dev_id, sub_id);
         }
     }
@@ -555,9 +551,6 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
 
-    max_dev_id = 0;
-    max_subdev_id = 0;
-
     if (local_ze_device_count <= 0) {
         gpu_initialized = 1;
         goto fn_exit;
@@ -568,7 +561,11 @@ int MPL_gpu_init(int debug_summary)
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
+    int max_dev_id = 0;
+    int max_subdev_id = 0;
     get_max_dev_id(&mask_contents, &max_dev_id, &max_subdev_id);
+    known_dev_count = max_dev_id + 1;
+    known_subdev_count = max_subdev_id + 1;
 
     mpl_err = init_device_mappings(&mask_contents);
     if (mpl_err != MPL_SUCCESS)
@@ -1477,7 +1474,7 @@ int MPL_gpu_global_to_local_dev_id(int global_dev_id)
     int dev_id, sub_id;
     SPLIT_GLOBAL_DEV_ID(global_dev_id, dev_id, sub_id);
 
-    if (dev_id >= global_dev_count || sub_id >= global_subdev_count) {
+    if (dev_id >= known_dev_count || sub_id >= known_subdev_count) {
         return -1;
     } else {
         int idx = GET_GLOBAL_DEV_INDEX(dev_id, sub_id);
@@ -2174,8 +2171,8 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
     MPL_ze_device_entry_t *device_state1, *device_state2;
     int local_dev1, local_dev2;
 
-    assert(global_dev1 >= 0 && global_dev1 < global_ze_device_count);
-    assert(global_dev2 >= 0 && global_dev2 < global_ze_device_count);
+    assert(global_dev1 >= 0 && global_dev1 < known_ze_device_count);
+    assert(global_dev2 >= 0 && global_dev2 < known_ze_device_count);
 
     if (IS_SAME_DEV(global_dev1, global_dev2))
         return 1;
