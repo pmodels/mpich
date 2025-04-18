@@ -20,6 +20,7 @@ strsep_LDADD = lib@MPLLIBNAME@.la
 
 mpl_headers =               \
     include/mpl.h           \
+    include/mpl_arch.h      \
     include/mpl_atomic.h    \
     include/mpl_base.h      \
     include/mpl_math.h      \
@@ -29,6 +30,7 @@ mpl_headers =               \
     include/mpl_env.h       \
     include/mpl_str.h       \
     include/mpl_trmem.h     \
+    include/mpl_trmem_arch.h\
     include/mpl_msg.h       \
     include/mpl_sock.h      \
     include/mpl_sockaddr.h  \

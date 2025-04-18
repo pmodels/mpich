@@ -3437,9 +3437,6 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
-void MPL_gpu_fast_memcpy_avx512f(void *src, void *dest, size_t size);
-void MPL_gpu_fast_memcpy_avx(void *src, void *dest, size_t size);
-
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size)
 {
@@ -3463,21 +3460,14 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
             goto fn_fail;
     }
 
-    /* fallback to MPL_Memcpy_stream if not 64-byte aligned */
-    /* TODO: unify non-temporal copy */
-    if (((uintptr_t) s) & 63 || ((uintptr_t) d) & 63) {
-        MPL_Memcpy_stream(d, s, size);
+    if (MPL_ARCH_HAS_AVX512F) {
+        MPL_Memcpy_stream_dev_avx512f(d, s, n);
+    } else if (MPL_ARCH_HAS_AVX2) {
+        MPL_Memcpy_stream_dev_avx(d, s, n);
     } else {
-        if (MPL_ARCH_HAS_AVX512F) {
-            MPL_gpu_fast_memcpy_avx512f(s, d, n);
-        } else if (MPL_ARCH_HAS_AVX2) {
-            MPL_gpu_fast_memcpy_avx(s, d, n);
-        } else {
-            memcpy(s, d, n);
-        }
+        memcpy(d, s, n);
     }
 
-  fn_exit:
     return mpl_err;
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
