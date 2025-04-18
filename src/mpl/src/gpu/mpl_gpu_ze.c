@@ -133,7 +133,10 @@ typedef struct {
     int *subdev_id;
 } affinity_mask_t;
 
-static affinity_mask_t mask_contents;
+static int parse_affinity_mask(affinity_mask_t * mask);
+static void get_max_dev_id(affinity_mask_t * mask, int *max_dev_id, int *max_subdev_id);
+static int init_device_mappings(affinity_mask_t * mask);
+static void free_affinity_mask(affinity_mask_t * mask);
 
 #define MAX_GPU_STR_LEN 256
 static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
@@ -268,8 +271,6 @@ static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
-static int parse_affinity_mask(void);
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int update_lru_mapped_order(void *ipc_buf, int dev_id);
@@ -278,7 +279,6 @@ static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
 static int search_physical_devices(ze_pci_address_ext_t pci);
 #endif
-static int init_device_mappings(void);
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -414,7 +414,7 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     return ret;
 }
 
-static int init_device_mappings(void)
+static int init_device_mappings(affinity_mask_t * mask)
 {
     int mpl_err = MPL_SUCCESS;
 
@@ -442,11 +442,11 @@ static int init_device_mappings(void)
         global_to_local_map[i] = -1;
     }
 
-    if (mask_contents.num_dev > 0) {
+    if (mask->num_dev > 0) {
         int device, subdevice;
-        for (int i = 0; i < mask_contents.num_dev; ++i) {
-            device = mask_contents.dev_id[i];
-            subdevice = mask_contents.subdev_id[i];
+        for (int i = 0; i < mask->num_dev; ++i) {
+            device = mask->dev_id[i];
+            subdevice = mask->subdev_id[i];
             /* Temporarily mark the device as visible. It might only be a subdevice that is
              * visible. */
             global_to_local_map[device] = 1;
@@ -563,15 +563,18 @@ int MPL_gpu_init(int debug_summary)
         goto fn_exit;
     }
 
-    mpl_err = parse_affinity_mask();
+    affinity_mask_t mask_contents = { 0 };
+    mpl_err = parse_affinity_mask(&mask_contents);
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
-    get_max_dev_id(&max_dev_id, &max_subdev_id);
+    get_max_dev_id(&mask_contents, &max_dev_id, &max_subdev_id);
 
-    mpl_err = init_device_mappings();
+    mpl_err = init_device_mappings(&mask_contents);
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
+
+    free_affinity_mask(&mask_contents);
 
     ipc_max_entries = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
     if (ipc_max_entries == NULL) {
@@ -1240,8 +1243,8 @@ static int gpu_ze_init_driver(void)
     goto fn_exit;
 }
 
-/* Parses ZE_AFFINITY_MASK to populate mask_contents with corresponding data */
-static int parse_affinity_mask(void)
+/* -- ZE_AFFINITY_MASK routines -- */
+static int parse_affinity_mask(affinity_mask_t * mask)
 {
     int i, curr_dev, num_dev = 0, mpl_err = MPL_SUCCESS;
 
@@ -1259,14 +1262,14 @@ static int parse_affinity_mask(void)
         if (tmp[i - 1] != ',')
             ++num_dev;
 
-        mask_contents.num_dev = num_dev;
-        mask_contents.dev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
-        if (mask_contents.dev_id == NULL) {
+        mask->num_dev = num_dev;
+        mask->dev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
+        if (mask->dev_id == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
         }
-        mask_contents.subdev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
-        if (mask_contents.subdev_id == NULL) {
+        mask->subdev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
+        if (mask->subdev_id == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
         }
@@ -1280,15 +1283,15 @@ static int parse_affinity_mask(void)
             int device = atoi(subdevices);
             tmp = NULL;
 
-            mask_contents.dev_id[curr_dev] = device;
+            mask->dev_id[curr_dev] = device;
 
             subdevices = strtok_r(tmp, ".", &subdev);
             tmp = NULL;
 
             if (subdevices != NULL) {
-                mask_contents.subdev_id[curr_dev] = atoi(subdevices);
+                mask->subdev_id[curr_dev] = atoi(subdevices);
             } else {
-                mask_contents.subdev_id[curr_dev] = -1;
+                mask->subdev_id[curr_dev] = -1;
             }
 
             devices = NULL;
@@ -1299,9 +1302,9 @@ static int parse_affinity_mask(void)
 
         MPL_free(free_ptr);
     } else {
-        mask_contents.num_dev = 0;
-        mask_contents.dev_id = NULL;
-        mask_contents.subdev_id = NULL;
+        mask->num_dev = 0;
+        mask->dev_id = NULL;
+        mask->subdev_id = NULL;
     }
 
   fn_exit:
@@ -1311,21 +1314,21 @@ static int parse_affinity_mask(void)
 }
 
 /* Get the max dev_id and subdev_id based on the environment */
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
+static void get_max_dev_id(affinity_mask_t * mask, int *max_dev_id, int *max_subdev_id)
 {
     /* This function assumes that parse_affinity_mask was previously called */
     *max_dev_id = *max_subdev_id = 0;
 
     /* Values based on ZE_AFFINITY_MASK */
-    for (int i = 0; i < mask_contents.num_dev; ++i) {
-        if (mask_contents.dev_id[i] > *max_dev_id)
-            *max_dev_id = mask_contents.dev_id[i];
-        if (mask_contents.subdev_id[i] > *max_subdev_id)
-            *max_subdev_id = mask_contents.subdev_id[i];
+    for (int i = 0; i < mask->num_dev; ++i) {
+        if (mask->dev_id[i] > *max_dev_id)
+            *max_dev_id = mask->dev_id[i];
+        if (mask->subdev_id[i] > *max_subdev_id)
+            *max_subdev_id = mask->subdev_id[i];
     }
 
     /* If ZE_AFFINITY_MASK wasn't set */
-    if (mask_contents.num_dev == 0) {
+    if (mask->num_dev == 0) {
         *max_dev_id = device_count - 1;
     }
 
@@ -1334,6 +1337,14 @@ static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
         if (subdevice_count[i] > 0 && (subdevice_count[i] - 1) > *max_subdev_id) {
             *max_subdev_id = subdevice_count[i] - 1;
         }
+    }
+}
+
+static void free_affinity_mask(affinity_mask_t * mask)
+{
+    if (mask->num_dev > 0) {
+        MPL_free(mask->dev_id);
+        MPL_free(mask->subdev_id);
     }
 }
 
@@ -1454,9 +1465,6 @@ int MPL_gpu_finalize(void)
     MPL_free(engine_conversion);
 
     MPL_event_pool_destroy();
-
-    MPL_free(mask_contents.dev_id);
-    MPL_free(mask_contents.subdev_id);
 
     /* Reset initialization state */
     gpu_initialized = 0;
