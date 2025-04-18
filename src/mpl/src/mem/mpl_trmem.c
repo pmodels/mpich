@@ -1023,9 +1023,6 @@ void MPL_direct_free(void *ptr)
 }
 #endif
 
-void MPL_Memcpy_stream_avx(void *dest, const void *src, size_t n);
-void MPL_Memcpy_stream_avx512f(void *dest, const void *src, size_t n);
-
 void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
 {
     if (MPL_ARCH_HAS_AVX512F) {

@@ -98,9 +98,69 @@ void MPL_Memcpy_stream_avx512f(void *dest, const void *src, size_t n)
     _mm_sfence();
 }
 
+void MPL_Memcpy_stream_dev_avx512f(void *dest, const void *src, size_t n)
+{
+    char *d = (char *) dest;
+    const char *s = (const char *) src;
+    size_t n = size;
+
+    /* fallback to MPL_Memcpy_stream if not 64-byte aligned */
+    if (((uintptr_t) s) & 63 || ((uintptr_t) d) & 63) {
+        MPL_Memcpy_stream_avx512f(d, s, n);
+        return;
+    }
+
+    while (n >= 64) {
+        _mm512_stream_si512((__m512i *) d, _mm512_stream_load_si512((__m512i const *) s));
+        d += 64;
+        s += 64;
+        n -= 64;
+    }
+    if (n & 32) {
+        _mm256_stream_si256((__m256i *) d, _mm256_stream_load_si256((__m256i const *) s));
+        d += 32;
+        s += 32;
+        n -= 32;
+    }
+    if (n & 16) {
+        _mm_stream_si128((__m128i *) d, _mm_stream_load_si128((__m128i const *) s));
+        d += 16;
+        s += 16;
+        n -= 16;
+    }
+    if (n & 8) {
+        *(int64_t *) d = *(int64_t *) s;
+        d += 8;
+        s += 8;
+        n -= 8;
+    }
+    if (n & 4) {
+        *(int *) d = *(int *) s;
+        d += 4;
+        s += 4;
+        n -= 4;
+    }
+    if (n & 2) {
+        *(int16_t *) d = *(int16_t *) s;
+        d += 2;
+        s += 2;
+        n -= 2;
+    }
+    if (n == 1) {
+        *(char *) d = *(char *) s;
+    }
+    _mm_sfence();
+}
+
 #else
 
 void MPL_Memcpy_stream_avx512f(void *dest, const void *src, size_t n)
+{
+    /* stub function, should not reach here */
+    assert(0);
+}
+
+void MPL_Memcpy_stream_dev_avx512f(void *dest, const void *src, size_t n)
 {
     /* stub function, should not reach here */
     assert(0);
