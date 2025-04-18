@@ -44,7 +44,8 @@ int MPIDI_vci_init(void)
     MPIDI_global.n_reserved_vcis = 0;
     MPIDI_global.share_reserved_vcis = false;
 
-    MPIDI_global.all_num_vcis = MPL_calloc(MPIR_Process.size, sizeof(int), MPL_MEM_OTHER);
+    MPIDI_global.all_num_vcis = MPL_calloc(MPIR_Process.size, sizeof(MPIDI_num_vci_t),
+                                           MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_global.all_num_vcis);
 
     return MPI_SUCCESS;
@@ -71,7 +72,7 @@ int MPIDI_vci_finalize(void)
  * The number of vcis above MPIR_CVAR_CH4_NUM_VCIS will be used as explicit (reserved) vcis.
  * The netmod may create less than the requested number of vcis.
  */
-int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
+int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -97,17 +98,17 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
 
     /* for now, we only allow setup setup vcis for each remote once */
     for (int i = 0; i < nprocs; i++) {
-        MPIR_Assert(MPIDI_global.all_num_vcis[granks[i]] == 0);
+        MPIR_Assert(MPIDI_global.all_num_vcis[granks[i]].n_total_vcis == 0);
     }
 
     /* setup vcis in netmod and shm */
     /* Netmod will decide that actual number of vcis (and nics) and gather from all ranks in all_num_vcis */
-    int *all_num_vcis;
-    MPIR_CHKLMEM_MALLOC(all_num_vcis, nprocs * sizeof(int));
-    mpi_errno = MPIDI_NM_comm_set_vcis(comm, num_vcis, all_num_vcis);
+    MPIDI_num_vci_t *all_num_vcis;
+    MPIR_CHKLMEM_MALLOC(all_num_vcis, nprocs * sizeof(MPIDI_num_vci_t));
+    mpi_errno = MPIDI_NM_comm_set_vcis(comm, num_implicit, num_reserved, all_num_vcis);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int n_total_vcis = all_num_vcis[comm->rank];
+    int n_total_vcis = all_num_vcis[comm->rank].n_total_vcis;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_comm_set_vcis(comm, n_total_vcis);
     MPIR_ERR_CHECK(mpi_errno);
@@ -119,8 +120,8 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     }
 
     /* update global vci settings */
-    MPIDI_global.n_total_vcis = all_num_vcis[comm->rank];
-    MPIDI_global.n_vcis = MPL_MIN(MPIR_CVAR_CH4_NUM_VCIS, MPIDI_global.n_total_vcis);
+    MPIDI_global.n_total_vcis = all_num_vcis[comm->rank].n_total_vcis;
+    MPIDI_global.n_vcis = all_num_vcis[comm->rank].n_vcis;
     for (int i = 0; i < nprocs; i++) {
         MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
     }
