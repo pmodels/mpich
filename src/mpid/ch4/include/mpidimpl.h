@@ -20,6 +20,6 @@
 
 int MPIDI_world_pre_init(void);
 int MPIDI_world_post_init(void);
-int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis);
+int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved);
 
 #endif /* MPIDIMPL_H_INCLUDED */
