@@ -99,7 +99,7 @@ int MPIDI_XPMEM_comm_bootstrap(MPIR_Comm * comm)
         int num_disabled = 0;
         for (int i = 0; i < local_size; i++) {
             int grank = MPIDIU_get_grank(rank, comm);
-            int local_id = MPIDI_POSIX_global.local_ranks[grank];;
+            int local_id = MPIDI_SHM_global.local_ranks[grank];;
             MPIDI_XPMEMI_global.segmaps[local_id].remote_segid = all_segids[i];
             if (all_segids[i] == -1) {
                 num_disabled++;
