@@ -9,15 +9,25 @@
 static int all_vcis_address_exchange(MPIR_Comm * comm);
 static void flush_all(void);
 
-int MPIDI_UCX_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
+/* Compared to MPIDI_OFI_comm_set_vcis, this is simpler because -
+ *   * assume the requested num_vcis will always be created.
+ *   * assume every rank will have the same number of vcis.
+ *
+ * TODO: remove those assumptions
+ */
+int MPIDI_UCX_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved,
+                            MPIDI_num_vci_t * all_num_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Assert(MPIDI_UCX_global.num_vcis == 1);
-    MPIDI_UCX_global.num_vcis = num_vcis;
+    MPIDI_UCX_global.num_vcis = num_implicit + num_reserved;
 
-    mpi_errno = MPIR_Allgather_impl(&MPIDI_UCX_global.num_vcis, 1, MPIR_INT_INTERNAL,
-                                    all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
+    all_num_vcis[comm->rank].n_vcis = num_implicit;
+    all_num_vcis[comm->rank].n_total_vcis = num_implicit + num_reserved;;
+    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                    all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
+                                    comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 1; i < MPIDI_UCX_global.num_vcis; i++) {
