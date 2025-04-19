@@ -19,8 +19,11 @@ static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payloa
 
 static int ipc_fd_initialized = 0;
 static int *MPIDI_IPCI_global_fd_socks;
-static pid_t *MPIDI_IPCI_global_fd_pids;
-static int ipc_fd_initialized;
+
+#define SET_SOCK_NAME(sock_name, pid, local_rank, remote_rank) \
+    do { \
+        snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid, local_rank, remote_rank); \
+    } while (0)
 
 int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
 {
@@ -62,18 +65,13 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank)
+static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank, pid_t * all_pids)
 {
     int mpi_errno = MPI_SUCCESS;
     int sock_err;
     char sock_name[SOCK_MAX_STR_LEN];
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     int i;
-
-    if (!MPIDI_IPCI_global_fd_pids || !MPIDI_IPCI_global_fd_socks) {
-        /* skip if not initialized */
-        goto fn_exit;
-    }
 
     /* Close sockets */
     for (i = 0; i < local_size; ++i) {
@@ -84,9 +82,8 @@ static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank)
                                  MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
         }
 
-        if (MPIDI_IPCI_global_fd_pids[local_rank] != 0 && local_rank != i) {
-            snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                     MPIDI_IPCI_global_fd_pids[local_rank], local_rank, i);
+        if (local_rank != i) {
+            SET_SOCK_NAME(sock_name, all_pids[local_rank], local_rank, i);
             sock_err = unlink(sock_name);
             MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_unlink",
                                  "**sock_unlink %s %d",
@@ -94,7 +91,6 @@ static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank)
         }
     }
 
-    MPL_free(MPIDI_IPCI_global_fd_pids);
     MPL_free(MPIDI_IPCI_global_fd_socks);
 
   fn_exit:
@@ -155,7 +151,7 @@ static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank)
 #endif
 }
 
-static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm)
+static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids)
 {
     int mpi_errno = MPI_SUCCESS;
     pid_t pid;
@@ -172,20 +168,9 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm)
     MPIDI_IPCI_global_fd_socks = (int *) MPL_calloc(fd_count, sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_socks, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    MPIDI_IPCI_global_fd_pids = (pid_t *) MPL_calloc(fd_count, sizeof(pid_t), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_pids, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
     for (int i = 0; i < fd_count; i++) {
         MPIDI_IPCI_global_fd_socks[i] = -1;
     }
-
-    /* Send PID in order to locally generate named-socket locations */
-    pid = getpid();
-
-    mpi_errno = MPIR_Allgather_impl(&pid, sizeof(pid_t), MPIR_BYTE_INTERNAL,
-                                    MPIDI_IPCI_global_fd_pids, sizeof(pid_t), MPIR_BYTE_INTERNAL,
-                                    node_comm, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* Create servers for lower ranks */
     for (int j = 0; j < local_rank; j++) {
@@ -235,12 +220,10 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm)
         char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
         /* Create the remote socket name */
-        snprintf(remote_sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                 MPIDI_IPCI_global_fd_pids[i], i, local_rank);
+        SET_SOCK_NAME(remote_sock_name, all_pids[i], i, local_rank);
 
         /* Create the local socket name */
-        snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
-                 local_rank, i);
+        SET_SOCK_NAME(sock_name, all_pids[local_rank], local_rank, i);
 
         /* Create a socket for local rank j */
         MPIDI_IPCI_global_fd_socks[i] = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -298,11 +281,23 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm)
 static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
 
     int local_size = node_comm->local_size;
     int local_rank = node_comm->rank;
 
-    mpi_errno = MPIDI_IPC_mpi_socks_init(node_comm);
+    /* Allgather pids -- used to locally generate named-socket locations */
+    static pid_t *all_pids;
+    MPIR_CHKLMEM_MALLOC(all_pids, local_size * sizeof(pid_t));
+
+    all_pids[local_rank] = getpid();
+    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, sizeof(pid_t), MPIR_BYTE_INTERNAL,
+                                    all_pids, sizeof(pid_t), MPIR_BYTE_INTERNAL,
+                                    node_comm, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* ---- */
+    mpi_errno = MPIDI_IPC_mpi_socks_init(node_comm, all_pids);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_IPC_mpi_ze_fd_setup(local_size, local_rank);
@@ -311,18 +306,19 @@ static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
     /* Cleanup the sockets upon completion of init - they are no longer needed */
     /* close client first, and then server to avoid the TIME_WAIT */
     if (node_comm->rank == 0) {
-        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank);
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank, all_pids);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank);
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank, all_pids);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
