@@ -224,7 +224,7 @@ static int ipc_mapped_cache_insert(const void *remote_addr, int remote_rank, int
         entry->mapped_addrs[device_id] = mapped_base_addr;
     } else {
         /* create and add new entry */
-        size_t entry_size = sizeof(struct MPIDI_GPUI_map_cache_entry) +
+        int entry_size = sizeof(struct MPIDI_GPUI_map_cache_entry) +
             (MPIDI_GPUI_global.local_device_count * sizeof(void *));
         entry = MPL_malloc(entry_size, MPL_MEM_OTHER);
         memset(entry, 0, entry_size);
