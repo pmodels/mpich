@@ -443,12 +443,11 @@ AC_ARG_ENABLE(fast,
         ndebug   - Appends -DNDEBUG to MPICHLIB_CFLAGS.
         no-strict-alignment - relax strict alignment requirement
         alwaysinline - Force compiler to always inline performance critical routines
-        sse2     - Enable compiler optimizations with SSE2 instruction set
-        avx      - Enable compiler optimizations with AVX instruction set
-        avx512f  - Enable compiler optimizations with AVX512F instruction set
+        avx      - Force enable compiler optimizations with AVX instruction set
+        avx512f  - Force enable compiler optimizations with AVX512F instruction set
         all|yes  - "O2", "ndebug", and "alwaysinline" are enabled
         none     - None of above options, i.e. --disable-fast
-],,enable_fast=[O2,sse2])
+],,enable_fast=[O2])
 
 AC_ARG_ENABLE(interlib-deps,
 	[AS_HELP_STRING([--enable-interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)

@@ -4,7 +4,8 @@
 ##
 
 lib@MPLLIBNAME@_la_SOURCES += \
-    src/mpl_rankmap.c
+    src/mpl_rankmap.c \
+    src/mpl_arch.c
 
 include src/atomic/Makefile.mk
 include src/bt/Makefile.mk
