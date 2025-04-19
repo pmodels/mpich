@@ -14,9 +14,11 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int
 static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm);
 static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank, pid_t * all_pids,
                                     int *fd_socks);
+#ifdef MPL_HAVE_ZE
 static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank, int *fd_socks);
-static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
-static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
+static int MPIDI_IPC_mpi_fd_send(int sock, int fd, void *payload, size_t payload_len);
+static int MPIDI_IPC_mpi_fd_recv(int sock, int *fd, void *payload, size_t payload_len, int flags);
+#endif
 
 static int ipc_fd_initialized = 0;
 
@@ -97,58 +99,6 @@ static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank, pid_t * all_
     goto fn_exit;
 }
 
-static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank, int *fd_socks)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-#if defined(MPL_HAVE_ZE)
-    int num_fds, i, r, mpl_err = MPL_SUCCESS;
-    int *fds, *bdfs;
-
-    /* Get the number of ze devices */
-    mpl_err = MPL_ze_init_device_fds(&num_fds, NULL, NULL);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**mpl_ze_init_device_fds");
-
-    fds = (int *) MPL_malloc(num_fds * sizeof(int), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!fds, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    bdfs = (int *) MPL_malloc(num_fds * 4 * sizeof(int), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!bdfs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    if (local_rank == 0) {
-        /* Setup the device fds */
-        mpl_err = MPL_ze_init_device_fds(&num_fds, fds, bdfs);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**mpl_ze_init_device_fds");
-
-        /* Send the fds to all other local processes */
-        for (r = 1; r < local_size; r++) {
-            MPIDI_IPC_mpi_fd_send(fd_socks[r], fds[0], bdfs, 4 * num_fds * sizeof(int));
-            for (i = 1; i < num_fds; i++) {
-                MPIDI_IPC_mpi_fd_send(fd_socks[r], fds[i], NULL, 0);
-            }
-        }
-    } else {
-        /* Receive the fds from local process 0 */
-        MPIDI_IPC_mpi_fd_recv(fd_socks[0], fds, bdfs, 4 * num_fds * sizeof(int), 0);
-        for (i = 1; i < num_fds; i++) {
-            MPIDI_IPC_mpi_fd_recv(fd_socks[0], fds + i, NULL, 0, 0);
-        }
-    }
-
-    /* Save the fds in MPL */
-    MPL_ze_set_fds(num_fds, fds, bdfs);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-#else
-    return mpi_errno;
-#endif
-}
-
 static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int *fd_socks)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -199,7 +149,7 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int
         int sock_err;
         char sock_name[SOCK_MAX_STR_LEN];
         char remote_sock_name[SOCK_MAX_STR_LEN];
-        struct sockaddr_un remote_sockaddr;
+        struct sockaddr_un sockaddr, remote_sockaddr;
         char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
         /* Create the remote socket name */
@@ -240,14 +190,16 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int
     for (int j = 0; j < local_rank; j++) {
         int sock;
         struct sockaddr_un sockaddr;
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
         sock = fd_socks[j];
         memset(&sockaddr, 0, sizeof(sockaddr));
-        int len = sizeof(sockaddr);
+        socklen_t len = sizeof(sockaddr);
         fd_socks[j] = accept(sock, (struct sockaddr *) &sockaddr, &len);
         MPIR_ERR_CHKANDJUMP2(fd_socks[j] == -1, mpi_errno, MPI_ERR_OTHER,
                              "**sock_accept", "**sock_accept %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        int enable = 1;
         setsockopt(fd_socks[j], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
         close(sock);
     }
@@ -255,6 +207,7 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int
   fn_exit:
     return mpi_errno;
   fn_fail:
+    /* TODO: cleanup */
     goto fn_exit;
 }
 
@@ -280,14 +233,19 @@ static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
     int *fd_socks;
     MPIR_CHKLMEM_MALLOC(fd_socks, local_size * sizeof(pid_t));
     for (int i = 0; i < local_size; i++) {
-        fd_socks = -1;
+        fd_socks[i] = -1;
     }
 
     mpi_errno = MPIDI_IPC_mpi_socks_init(node_comm, all_pids, fd_socks);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Only ZE will set MPL_GPU_IPC_HANDLE_SHAREABLE_FD and reach here. */
+#ifdef MPL_HAVE_ZE
     mpi_errno = MPIDI_IPC_mpi_ze_fd_setup(local_size, local_rank, fd_socks);
     MPIR_ERR_CHECK(mpi_errno);
+#else
+    MPIR_Assert(0);
+#endif
 
     /* Cleanup the sockets upon completion of init - they are no longer needed */
     /* close client first, and then server to avoid the TIME_WAIT */
@@ -305,6 +263,56 @@ static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPL_HAVE_ZE
+
+static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank, int *fd_socks)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int num_fds, i, r, mpl_err = MPL_SUCCESS;
+    int *fds, *bdfs;
+
+    /* Get the number of ze devices */
+    mpl_err = MPL_ze_init_device_fds(&num_fds, NULL, NULL);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**mpl_ze_init_device_fds");
+
+    fds = (int *) MPL_malloc(num_fds * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!fds, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    bdfs = (int *) MPL_malloc(num_fds * 4 * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!bdfs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    if (local_rank == 0) {
+        /* Setup the device fds */
+        mpl_err = MPL_ze_init_device_fds(&num_fds, fds, bdfs);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**mpl_ze_init_device_fds");
+
+        /* Send the fds to all other local processes */
+        for (r = 1; r < local_size; r++) {
+            MPIDI_IPC_mpi_fd_send(fd_socks[r], fds[0], bdfs, 4 * num_fds * sizeof(int));
+            for (i = 1; i < num_fds; i++) {
+                MPIDI_IPC_mpi_fd_send(fd_socks[r], fds[i], NULL, 0);
+            }
+        }
+    } else {
+        /* Receive the fds from local process 0 */
+        MPIDI_IPC_mpi_fd_recv(fd_socks[0], fds, bdfs, 4 * num_fds * sizeof(int), 0);
+        for (i = 1; i < num_fds; i++) {
+            MPIDI_IPC_mpi_fd_recv(fd_socks[0], fds + i, NULL, 0, 0);
+        }
+    }
+
+    /* Save the fds in MPL */
+    MPL_ze_set_fds(num_fds, fds, bdfs);
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -417,3 +425,5 @@ static int MPIDI_IPC_mpi_fd_recv(int sock, int *fd, void *payload, size_t payloa
   fn_fail:
     goto fn_exit;
 }
+
+#endif /* MPL_HAVE_ZE */
