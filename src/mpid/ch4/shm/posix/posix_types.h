@@ -52,6 +52,8 @@ typedef struct {
     int num_vcis;               /* num_vcis in POSIX need >= MPIDI_global.n_total_vcis */
     int *local_rank_dist;
     MPIDI_POSIX_topo_info_t topo;
+    void *shm_slab;             /* the main shared memory slab */
+    void *shm_vci_slab;         /* extra shared memory slab for multiple vcis */
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;

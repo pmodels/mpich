@@ -253,7 +253,13 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
     mpi_errno = MPIDI_POSIX_init_vci(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_POSIX_eager_init(rank, size);
+    void *slab;
+    int slab_size = MPIDI_POSIX_eager_shm_size(size);
+    mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_POSIX_global.shm_slab = slab;
+
+    mpi_errno = MPIDI_POSIX_eager_init(slab, rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
@@ -355,12 +361,21 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
         /* Destroy the shared counter which was used to track the amount of shared memory created
          * per node for intra-node collectives */
         mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
 
+        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_slab);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     for (int vci = 0; vci < MPIDI_POSIX_global.num_vcis; vci++) {
         MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vci[vci].am_hdr_buf_pool);
         MPL_free(MPIDI_POSIX_global.per_vci[vci].active_rreq);
+    }
+
+    if (MPIDI_POSIX_global.shm_vci_slab) {
+        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_vci_slab);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_POSIX_global.shm_vci_slab = NULL;
     }
 
     mpi_errno = posix_coll_finalize();

@@ -27,7 +27,13 @@ int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno = MPIDI_POSIX_eager_set_vcis(comm, max_vcis);
+        int slab_size = MPIDI_POSIX_eager_shm_vci_size(MPIR_Process.local_size, max_vcis);
+        void *slab;
+        mpi_errno = MPIDU_Init_shm_comm_alloc(comm, slab_size, (void *) &slab);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_POSIX_global.shm_vci_slab = slab;
+
+        mpi_errno = MPIDI_POSIX_eager_set_vcis(slab, comm, max_vcis);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

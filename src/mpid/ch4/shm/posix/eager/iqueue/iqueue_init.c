@@ -108,7 +108,7 @@ int MPIDI_POSIX_iqueue_shm_vci_size(int local_size, int max_vci)
     return slab_size * max_vci * max_vci;
 }
 
-int MPIDI_POSIX_iqueue_init(int rank, int size)
+int MPIDI_POSIX_iqueue_init(void *slab, int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -121,22 +121,12 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     /* Init vci 0. Communication on vci 0 is enabled afterwards. */
     MPIDI_POSIX_eager_iqueue_global.max_vcis = 1;
 
-    /* calculate needed shmem size per (vci_src, vci_dst) */
+    /* ensure MPIDI_POSIX_eager_iqueue_global.slab_size is set */
+    (void) MPIDI_POSIX_iqueue_shm_size(size);
 
-    /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
-    void *slab;
-    int slab_size = MPIDI_POSIX_iqueue_shm_size(size);
-    mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_POSIX_eager_iqueue_global.slab_size = slab_size;
-    MPIDI_POSIX_eager_iqueue_global.terminal_offset = pool_size;
     MPIDI_POSIX_eager_iqueue_global.root_slab = slab;
 
     mpi_errno = init_transport(slab, 0, 0);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -152,21 +142,12 @@ int MPIDI_POSIX_iqueue_post_init(void)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm, int max_vcis)
+int MPIDI_POSIX_iqueue_set_vcis(void *slab, MPIR_Comm * comm, int max_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(MPIDI_POSIX_eager_iqueue_global.all_vci_slab == NULL);
-
-    MPIDU_Init_shm_barrier();
-
-    int slab_size = MPIDI_POSIX_eager_iqueue_global.slab_size * max_vcis * max_vcis;
-    /* Create the shared memory regions for all vcis */
-    void *slab;
-    mpi_errno = MPIDU_Init_shm_comm_alloc(comm, slab_size, (void *) &slab);
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPIDI_POSIX_eager_iqueue_global.all_vci_slab = slab;
 
     for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
@@ -208,8 +189,6 @@ int MPIDI_POSIX_iqueue_finalize(void)
         mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.root_slab);
-        MPIR_ERR_CHECK(mpi_errno);
         MPIDI_POSIX_eager_iqueue_global.root_slab = NULL;
     }
 
@@ -227,8 +206,7 @@ int MPIDI_POSIX_iqueue_finalize(void)
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
-        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.all_vci_slab);
-        MPIR_ERR_CHECK(mpi_errno);
+
         MPIDI_POSIX_eager_iqueue_global.all_vci_slab = NULL;
     }
 
