@@ -2831,7 +2831,7 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
   AC_CHECK_TYPES([long double _Complex])
 ])
 
-dnl define shell functions e.g. to_hex, to_dec, get_c_int_type, get_c_float_type
+dnl define shell functions e.g. get_c_int_type, get_c_float_type, get_c_bool_type
 PAC_DATATYPE_UTILS()
 
 # Generate a hex version of the size of each type
