@@ -8,5 +8,6 @@
 
 #include <mpidimpl.h>
 #include "mpidu_init_shm.h"
+#include "iqueue_types.h"
 
 #endif /* POSIX_EAGER_IQUEUE_IMPL_H_INCLUDED */

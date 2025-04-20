@@ -20,7 +20,6 @@ class RE:
         return RE.m
 
 def main():
-
     load_ch4_api("./src/mpid/ch4/ch4_api.txt")
 
     os.system("mkdir -p src/mpid/ch4/shm/include")
@@ -40,6 +39,16 @@ def main():
 
     dump_stub("src/mpid/ch4/netmod/stubnm", 'stubnm', is_nm=True)
     dump_stub("src/mpid/ch4/shm/stubshm", 'stubshm', is_nm=False)
+
+    # posix eager api
+    load_eager_api("src/mpid/ch4/shm/posix/eager/eager_api.txt")
+    dump_posix_eager_h("src/mpid/ch4/shm/posix/eager/include/posix_eager.h")
+    dump_posix_eager_impl_c("src/mpid/ch4/shm/posix/eager/src/posix_eager_impl.c")
+    for name in ["stub", "iqueue"]:
+        dump_eager_func_table_c("src/mpid/ch4/shm/posix/eager/%s/func_table.c" % name)
+        dump_eager_noinline_h("src/mpid/ch4/shm/posix/eager/%s/%s_noinline.h" % (name, name))
+    dump_eager_stub_noinline_c("src/mpid/ch4/shm/posix/eager/stub/stub_noinline.c")
+    dump_eager_stub_inline_h("src/mpid/ch4/shm/posix/eager/stub/stub_inline.h")
 
 # ---- subroutines --------------------------------------------
 def load_ch4_api(ch4_api_txt):
@@ -274,7 +283,7 @@ def dump_netmod_impl_c(c_file):
 
 def dump_func_table_c(c_file, mod):
     """Dumps func_table.c. When NETMOD_INLINE is not defined, this file defines function table
-    by filling entries. NETMOD_DISABLE_INLINES is a hack to prevent wrapers in netmod_impl.h
+    by filling entries. NETMOD_DISABLE_INLINES is a hack to prevent wrappers in netmod_impl.h
     gets included"""
     MOD = mod.upper()
     print("  --> [%s]" % c_file)
@@ -423,6 +432,157 @@ def dump_stub(stub_dir, mod, is_nm):
     else:
         dump_stub_file("%s/shm_inline.h" % stub_dir, mod, True, is_nm)
     dump_stub_file("%s/%s_noinline.c" % (stub_dir, mod), mod, False, is_nm)
+
+# ---- ch4 POSIX eager module API  --------------------------------------
+def load_eager_api(eager_api_txt):
+    with open(eager_api_txt, "r") as In:
+        G.eager_inlines = []
+        G.eager_noinlines = []
+        is_noinline = True
+        for line in In:
+            if re.match(r'# noinline', line):
+                is_noinline = True
+            elif re.match(r'# inline', line):
+                is_noinline = False
+            elif RE.match(r'(\w.*?)\s+(\w+)\((.*)\);', line):
+                if is_noinline:
+                    G.eager_noinlines.append(RE.m.group(1,2,3))
+                else:
+                    G.eager_inlines.append(RE.m.group(1,2,3))
+
+def dump_posix_eager_h(h_file):
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include <posix_eager_transaction.h>", file=Out)
+        print("#define MPIDI_MAX_POSIX_EAGER_STRING_LEN 64", file=Out)
+        print("", file=Out)
+        for api in G.eager_noinlines + G.eager_inlines:
+            print("typedef %s (*MPIDI_POSIX_eager_%s_t) (%s);" % api, file=Out)
+        print("", file=Out)
+        print("typedef struct {", file=Out)
+        for api in G.eager_noinlines + G.eager_inlines:
+            print("    MPIDI_POSIX_eager_%s_t %s;" % (api[1], api[1]), file=Out)
+        print("} MPIDI_POSIX_eager_funcs_t;", file=Out)
+        print("", file=Out)
+        print("extern MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_funcs[];", file=Out)
+        print("extern MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func;", file=Out)
+        print("extern int MPIDI_num_posix_eager_fabrics;", file=Out)
+        print("extern char MPIDI_POSIX_eager_strings[][MPIDI_MAX_POSIX_EAGER_STRING_LEN];", file=Out)
+        print("", file=Out)
+        for api in G.eager_noinlines:
+            print("%s MPIDI_POSIX_eager_%s(%s);" % api, file=Out)
+        for api in G.eager_inlines:
+            print("MPL_STATIC_INLINE_PREFIX %s MPIDI_POSIX_eager_%s(%s) MPL_STATIC_INLINE_SUFFIX;" % api, file=Out)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_posix_eager_impl_c(c_file):
+    print("  --> [%s]" % c_file)
+    with open(c_file, "w") as Out:
+        dump_copyright(Out)
+        print("", file=Out)
+        print("#ifndef POSIX_EAGER_INLINE", file=Out)
+        print("#ifndef POSIX_EAGER_DISABLE_INLINES", file=Out)
+        print("", file=Out)
+        print("#include \"mpidimpl.h\"", file=Out)
+        print("#include \"posix_eager.h\"", file=Out)
+        print("", file=Out)
+        for api in G.eager_noinlines:
+            print("%s MPIDI_POSIX_eager_%s(%s)" % api, file=Out)
+            print("{", file=Out)
+            args = ""
+            if api[2] != "void":
+                args = re.sub(r'.+? \**(\w+(, *|$))', r'\1', api[2])
+            print("    return MPIDI_POSIX_eager_func->%s(%s);" % (api[1], args), file=Out)
+            print("}", file=Out)
+        print("#endif", file=Out)
+        print("#endif", file=Out)
+
+def dump_eager_func_table_c(c_file):
+    eager_name=""
+    if RE.match(r'.*\/(\w+)\/func_table.c', c_file):
+        eager_name = RE.m.group(1)
+    print("  --> [%s]" % c_file)
+    with open(c_file, "w") as Out:
+        dump_copyright(Out)
+        print("", file=Out)
+        print("#ifdef POSIX_EAGER_INLINE", file=Out)
+        print("/* this file is empty */", file=Out)
+        print("#else", file=Out)
+        print("#define POSIX_EAGER_DISABLE_INLINES", file=Out)
+        print("#include <mpidimpl.h>", file=Out)
+        print("#include \"posix_eager_inline.h\"", file=Out)
+        print("", file=Out)
+        print("MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_%s_funcs = {" % eager_name, file=Out)
+        for api in G.eager_noinlines:
+            print("    MPIDI_POSIX_%s_%s," % (eager_name, api[1]), file=Out)
+        for api in G.eager_inlines:
+            print("    MPIDI_POSIX_eager_%s," % (api[1]), file=Out)
+        print("};", file=Out)
+        print("", file=Out)
+        print("#endif /* POSIX_EAGER_INLINE */", file=Out)
+
+def dump_eager_noinline_h(h_file):
+    eager_name=""
+    if RE.match(r'.*\/(\w+)\/\w+_noinline.h', h_file):
+        eager_name = RE.m.group(1)
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include \"%s_impl.h\"" % eager_name, file=Out)
+        print("", file=Out)
+        for api in G.eager_noinlines:
+            print("%s MPIDI_POSIX_%s_%s(%s);" % (api[0], eager_name, api[1], api[2]), file=Out)
+        print("#ifdef POSIX_EAGER_INLINE", file=Out)
+        for api in G.eager_noinlines:
+            print("#define MPIDI_POSIX_eager_%s MPIDI_POSIX_%s_%s" % (api[1], eager_name, api[1]), file=Out)
+        print("#endif", file=Out)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_eager_stub_noinline_c(c_file):
+    eager_name="stub"
+    print("  --> [%s]" % c_file)
+    with open(c_file, "w") as Out:
+        dump_copyright(Out)
+        print("", file=Out)
+        print("#include \"stub_noinline.h\"", file=Out)
+        for api in G.eager_noinlines:
+            print("", file=Out)
+            print("%s MPIDI_POSIX_%s_%s(%s)" % (api[0], eager_name, api[1], api[2]), file=Out)
+            print("{", file=Out)
+            print("    MPIR_Assert(0);", file=Out)
+            print("    return 0;", file=Out)
+            print("}", file=Out)
+
+def dump_eager_stub_inline_h(h_file):
+    eager_name="stub"
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include \"stub_impl.h\"", file=Out)
+        print("", file=Out)
+        for api in G.eager_noinlines:
+            print("MPL_STATIC_INLINE_SUFFIX %s MPIDI_POSIX_eager_%s(%s)" % (api[0], api[1], api[2]), file=Out)
+            print("{", file=Out)
+            print("    MPIR_Assert(0);", file=Out)
+            print("    return 0;", file=Out)
+            print("}", file=Out)
+            print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
 
 # ---- utils ------------------------------------------------------------
 def dump_copyright(out):
