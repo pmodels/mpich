@@ -10,12 +10,8 @@
 /* This is defined as the max socket name length sun_path in sockaddr_un */
 #define SOCK_MAX_STR_LEN 108
 
-static int MPIDI_FD_mpi_init_hook(void);
-static int MPIDI_FD_mpi_finalize_hook(void);
-
 static int MPIDI_IPC_mpi_socks_init(void);
 static int MPIDI_IPC_mpi_fd_init(bool use_drmfd);
-static int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd);
 static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
 static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
 
@@ -53,47 +49,10 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
     }
 
     MPIR_Assert(comm == MPIR_Process.comm_world);
-    mpi_errno = MPIDI_FD_mpi_init_hook();
+    mpi_errno = MPIDI_IPC_mpi_fd_init(use_drmfd);
     MPIR_ERR_CHECK(mpi_errno);
 
     ipc_fd_initialized = 1;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int MPIDI_FD_mpi_init_hook(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPL_gpu_info.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
-        bool use_drmfd = (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE ==
-                          MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd);
-
-        mpi_errno = MPIDI_IPC_mpi_fd_init(use_drmfd);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    MPIDI_FD_mpi_finalize_hook();
-    goto fn_exit;
-}
-
-static int MPIDI_FD_mpi_finalize_hook(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPL_gpu_info.ipc_handle_type == MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
-        bool use_drmfd = (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE ==
-                          MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd);
-
-        mpi_errno = MPIDI_IPC_mpi_fd_finalize(use_drmfd);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     return mpi_errno;
@@ -330,7 +289,6 @@ static int MPIDI_IPC_mpi_socks_init(void)
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIDI_IPC_mpi_fd_finalize(true);
     goto fn_exit;
 }
 
@@ -365,11 +323,6 @@ static int MPIDI_IPC_mpi_fd_init(bool use_drmfd)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd)
-{
-    return MPI_SUCCESS;
 }
 
 static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
