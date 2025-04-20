@@ -32,7 +32,7 @@ to_dec() {
 get_c_int_type() {
     len=$[]1
     pac_retval=
-    for c_type in char short int long "long_long" ; do
+    for c_type in char short int long "long_long" __int128 ; do
         eval ctypelen=\$"ac_cv_sizeof_$c_type"
         if test "$len" = "$ctypelen" -a "$ctypelen" -gt 0 ; then
             if test "$c_type" = "long_long" ; then
