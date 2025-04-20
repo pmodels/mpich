@@ -10,14 +10,17 @@
 /* This is defined as the max socket name length sun_path in sockaddr_un */
 #define SOCK_MAX_STR_LEN 108
 
-static int MPIDI_IPC_mpi_socks_init(void);
-static int MPIDI_IPC_mpi_fd_init(bool use_drmfd);
+static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm);
+static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm);
+static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank);
+static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank);
 static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
 static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
 
 static int ipc_fd_initialized = 0;
 static int *MPIDI_IPCI_global_fd_socks;
 static pid_t *MPIDI_IPCI_global_fd_pids;
+static int ipc_fd_initialized;
 
 int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
 {
@@ -48,8 +51,7 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_Assert(comm == MPIR_Process.comm_world);
-    mpi_errno = MPIDI_IPC_mpi_fd_init(use_drmfd);
+    mpi_errno = MPIDI_IPC_mpi_fd_init(node_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     ipc_fd_initialized = 1;
@@ -60,7 +62,7 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-static int MPIDI_IPC_mpi_fd_cleanup(void)
+static int MPIDI_IPC_mpi_fd_cleanup(int local_size, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int sock_err;
@@ -74,7 +76,7 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
     }
 
     /* Close sockets */
-    for (i = 0; i < MPIR_Process.local_size; ++i) {
+    for (i = 0; i < local_size; ++i) {
         if (MPIDI_IPCI_global_fd_socks[i] != -1) {
             sock_err = close(MPIDI_IPCI_global_fd_socks[i]);
             MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_close",
@@ -82,10 +84,9 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
                                  MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
         }
 
-        if (MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank] != 0 && MPIR_Process.local_rank != i) {
+        if (MPIDI_IPCI_global_fd_pids[local_rank] != 0 && local_rank != i) {
             snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                     MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank],
-                     MPIR_Process.local_rank, i);
+                     MPIDI_IPCI_global_fd_pids[local_rank], local_rank, i);
             sock_err = unlink(sock_name);
             MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_unlink",
                                  "**sock_unlink %s %d",
@@ -102,7 +103,7 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
     goto fn_exit;
 }
 
-static int MPIDI_IPC_mpi_ze_fd_setup(void)
+static int MPIDI_IPC_mpi_ze_fd_setup(int local_size, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -121,14 +122,14 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
     bdfs = (int *) MPL_malloc(num_fds * 4 * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!bdfs, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    if (MPIR_Process.local_rank == 0) {
+    if (local_rank == 0) {
         /* Setup the device fds */
         mpl_err = MPL_ze_init_device_fds(&num_fds, fds, bdfs);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**mpl_ze_init_device_fds");
 
         /* Send the fds to all other local processes */
-        for (r = 1; r < MPIR_Process.local_size; r++) {
+        for (r = 1; r < local_size; r++) {
             MPIDI_IPC_mpi_fd_send(r, fds[0], bdfs, 4 * num_fds * sizeof(int));
             for (i = 1; i < num_fds; i++) {
                 MPIDI_IPC_mpi_fd_send(r, fds[i], NULL, 0);
@@ -154,58 +155,49 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
 #endif
 }
 
-static int MPIDI_IPC_mpi_socks_init(void)
+static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    int sock_err;
-    int i, fd_count;
-    unsigned int len;
-    struct sockaddr_un sockaddr;
-    char sock_name[SOCK_MAX_STR_LEN];
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     pid_t pid;
-    int enable = 1;
 
-    if (MPIR_Process.local_size == 1) {
+    int local_size = node_comm->local_size;
+    int local_rank = node_comm->rank;
+
+    if (local_size == 1) {
         /* skip if not needed */
         goto fn_exit;
     }
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    fd_count = MPIR_Process.local_size;
+    int fd_count = node_comm->local_size;
     MPIDI_IPCI_global_fd_socks = (int *) MPL_calloc(fd_count, sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_socks, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     MPIDI_IPCI_global_fd_pids = (pid_t *) MPL_calloc(fd_count, sizeof(pid_t), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!MPIDI_IPCI_global_fd_pids, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    for (i = 0; i < fd_count; i++) {
+    for (int i = 0; i < fd_count; i++) {
         MPIDI_IPCI_global_fd_socks[i] = -1;
     }
 
-    pid = getpid();
-    len = sizeof(sockaddr);
-
     /* Send PID in order to locally generate named-socket locations */
-    mpi_errno = MPIDU_Init_shm_put(&pid, sizeof(pid_t));
-    MPIR_ERR_CHECK(mpi_errno);
+    pid = getpid();
 
-    mpi_errno = MPIDU_Init_shm_barrier();
+    mpi_errno = MPIR_Allgather_impl(&pid, sizeof(pid_t), MPIR_BYTE_INTERNAL,
+                                    MPIDI_IPCI_global_fd_pids, sizeof(pid_t), MPIR_BYTE_INTERNAL,
+                                    node_comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-
-    for (i = 0; i < MPIR_Process.local_size; ++i) {
-        mpi_errno = MPIDU_Init_shm_get(i, sizeof(pid_t), &MPIDI_IPCI_global_fd_pids[i]);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
     /* Create servers for lower ranks */
-    for (int j = 0; j < MPIR_Process.local_rank; j++) {
+    for (int j = 0; j < local_rank; j++) {
+        int sock_err;
         int sock;
+        struct sockaddr_un sockaddr;
+        char sock_name[SOCK_MAX_STR_LEN];
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
         /* Create the local socket name */
         snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
-                 MPIR_Process.local_rank, j);
+                 local_rank, j);
 
         /* Create a socket for local rank i */
         sock = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -213,12 +205,13 @@ static int MPIDI_IPC_mpi_socks_init(void)
                              "**sock_create %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+        int enable = 1;
         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
         memset(&sockaddr, 0, sizeof(sockaddr));
         sockaddr.sun_family = AF_UNIX;
         strcpy(sockaddr.sun_path, sock_name);
 
-        sock_err = bind(sock, (struct sockaddr *) &sockaddr, len);
+        sock_err = bind(sock, (struct sockaddr *) &sockaddr, sizeof(sockaddr));
         MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**bind", "**bind %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
         MPIDI_IPCI_global_fd_socks[j] = sock;
@@ -230,20 +223,24 @@ static int MPIDI_IPC_mpi_socks_init(void)
                                                              MPIR_STRERROR_BUF_SIZE), errno);
     }
 
-    mpi_errno = MPIDU_Init_shm_barrier();
+    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create clients for higher ranks */
-    for (i = MPIR_Process.local_rank + 1; i < MPIR_Process.local_size; ++i) {
+    for (int i = local_rank + 1; i < local_size; ++i) {
+        int sock_err;
+        char sock_name[SOCK_MAX_STR_LEN];
         char remote_sock_name[SOCK_MAX_STR_LEN];
         struct sockaddr_un remote_sockaddr;
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
         /* Create the remote socket name */
         snprintf(remote_sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                 MPIDI_IPCI_global_fd_pids[i], i, MPIR_Process.local_rank);
+                 MPIDI_IPCI_global_fd_pids[i], i, local_rank);
 
         /* Create the local socket name */
         snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
-                 MPIR_Process.local_rank, i);
+                 local_rank, i);
 
         /* Create a socket for local rank j */
         MPIDI_IPCI_global_fd_socks[i] = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -251,12 +248,14 @@ static int MPIDI_IPC_mpi_socks_init(void)
                              "**sock_create", "**sock_create %s %d",
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+        int enable = 1;
         setsockopt(MPIDI_IPCI_global_fd_socks[i], SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
         memset(&sockaddr, 0, sizeof(sockaddr));
         sockaddr.sun_family = AF_UNIX;
         strcpy(sockaddr.sun_path, sock_name);
 
-        sock_err = bind(MPIDI_IPCI_global_fd_socks[i], (struct sockaddr *) &sockaddr, len);
+        sock_err = bind(MPIDI_IPCI_global_fd_socks[i],
+                        (struct sockaddr *) &sockaddr, sizeof(sockaddr));
         MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**bind",
                              "**bind %s %d", MPIR_Strerror(errno, strerrbuf,
                                                            MPIR_STRERROR_BUF_SIZE), errno);
@@ -267,17 +266,21 @@ static int MPIDI_IPC_mpi_socks_init(void)
         strcpy(remote_sockaddr.sun_path, remote_sock_name);
 
         sock_err =
-            connect(MPIDI_IPCI_global_fd_socks[i], (struct sockaddr *) &remote_sockaddr, len);
+            connect(MPIDI_IPCI_global_fd_socks[i], (struct sockaddr *) &remote_sockaddr,
+                    sizeof(sockaddr));
         MPIR_ERR_CHKANDJUMP2(sock_err < 0, mpi_errno, MPI_ERR_OTHER, "**sock_connect",
                              "sock_connect %d %s", errno, MPIR_Strerror(errno, strerrbuf,
                                                                         MPIR_STRERROR_BUF_SIZE));
     }
 
     /* Servers accept connections */
-    for (int j = 0; j < MPIR_Process.local_rank; j++) {
+    for (int j = 0; j < local_rank; j++) {
         int sock;
+        struct sockaddr_un sockaddr;
+
         sock = MPIDI_IPCI_global_fd_socks[j];
         memset(&sockaddr, 0, sizeof(sockaddr));
+        int len = sizeof(sockaddr);
         MPIDI_IPCI_global_fd_socks[j] = accept(sock, (struct sockaddr *) &sockaddr, &len);
         MPIR_ERR_CHKANDJUMP2(MPIDI_IPCI_global_fd_socks[j] == -1, mpi_errno, MPI_ERR_OTHER,
                              "**sock_accept", "**sock_accept %s %d",
@@ -292,30 +295,30 @@ static int MPIDI_IPC_mpi_socks_init(void)
     goto fn_exit;
 }
 
-static int MPIDI_IPC_mpi_fd_init(bool use_drmfd)
+static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!use_drmfd)
-        goto fn_exit;
+    int local_size = node_comm->local_size;
+    int local_rank = node_comm->rank;
 
-    mpi_errno = MPIDI_IPC_mpi_socks_init();
+    mpi_errno = MPIDI_IPC_mpi_socks_init(node_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_IPC_mpi_ze_fd_setup();
+    mpi_errno = MPIDI_IPC_mpi_ze_fd_setup(local_size, local_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Cleanup the sockets upon completion of init - they are no longer needed */
     /* close client first, and then server to avoid the TIME_WAIT */
-    if (MPIR_Process.local_rank == 0) {
-        mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
+    if (node_comm->rank == 0) {
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIDU_Init_shm_barrier();
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIDU_Init_shm_barrier();
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIDI_IPC_mpi_fd_cleanup();
+        mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -335,8 +338,6 @@ static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload
     char ctrl_buf[CMSG_SPACE(sizeof(fd))];
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     char empty_buf;
-
-    MPIR_Assert(rank != MPIR_Process.local_rank);
 
     /* Setup a payload if provided */
     if (payload == NULL) {
@@ -384,8 +385,6 @@ static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payloa
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     char empty_buf;
     bool trunc_check;
-
-    MPIR_Assert(rank != MPIR_Process.local_rank);
 
     /* Setup a payload if provided */
     if (payload == NULL) {
