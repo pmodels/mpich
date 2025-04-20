@@ -10,10 +10,61 @@
 /* This is defined as the max socket name length sun_path in sockaddr_un */
 #define SOCK_MAX_STR_LEN 108
 
+static int MPIDI_FD_mpi_init_hook(void);
+static int MPIDI_FD_mpi_finalize_hook(void);
+
+static int MPIDI_IPC_mpi_socks_init(void);
+static int MPIDI_IPC_mpi_fd_init(bool use_drmfd);
+static int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd);
+static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len);
+static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags);
+
+static int ipc_fd_initialized = 0;
 static int *MPIDI_IPCI_global_fd_socks;
 static pid_t *MPIDI_IPCI_global_fd_pids;
 
-int MPIDI_FD_mpi_init_hook(void)
+int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPL_gpu_info.ipc_handle_type != MPL_GPU_IPC_HANDLE_SHAREABLE_FD) {
+        goto fn_exit;
+    }
+
+    if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE != MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+        goto fn_exit;
+    }
+
+    MPIR_Comm *node_comm = MPIR_Comm_get_node_comm(comm);
+
+    if (node_comm->local_size == 1) {
+        goto fn_exit;
+    }
+
+    int already_initialized;
+    mpi_errno = MPIR_Allreduce(&ipc_fd_initialized, &already_initialized, 1, MPIR_INT_INTERNAL,
+                               MPI_MAX, node_comm, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (already_initialized) {
+        /* we can't do repeated fd sharing */
+        mpi_errno = MPI_ERR_OTHER;
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPIR_Assert(comm == MPIR_Process.comm_world);
+    mpi_errno = MPIDI_FD_mpi_init_hook();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    ipc_fd_initialized = 1;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int MPIDI_FD_mpi_init_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -32,7 +83,7 @@ int MPIDI_FD_mpi_init_hook(void)
     goto fn_exit;
 }
 
-int MPIDI_FD_mpi_finalize_hook(void)
+static int MPIDI_FD_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -144,7 +195,7 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
 #endif
 }
 
-int MPIDI_IPC_mpi_socks_init(void)
+static int MPIDI_IPC_mpi_socks_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int sock_err;
@@ -283,7 +334,7 @@ int MPIDI_IPC_mpi_socks_init(void)
     goto fn_exit;
 }
 
-int MPIDI_IPC_mpi_fd_init(bool use_drmfd)
+static int MPIDI_IPC_mpi_fd_init(bool use_drmfd)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -316,12 +367,12 @@ int MPIDI_IPC_mpi_fd_init(bool use_drmfd)
     goto fn_exit;
 }
 
-int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd)
+static int MPIDI_IPC_mpi_fd_finalize(bool use_drmfd)
 {
     return MPI_SUCCESS;
 }
 
-int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
+static int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
 {
     int mpi_errno = MPI_SUCCESS;
     int sock_err;
@@ -369,7 +420,7 @@ int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
     goto fn_exit;
 }
 
-int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags)
+static int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, int flags)
 {
     int mpi_errno = MPI_SUCCESS;
     int sock_err;

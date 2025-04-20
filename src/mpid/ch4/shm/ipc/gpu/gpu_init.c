@@ -61,7 +61,7 @@ int MPIDI_GPU_comm_bootstrap(comm)
     MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
     /* This hook is needed when using the drmfd shareable ipc handle implementation in ze backend */
-    mpi_errno = MPIDI_FD_mpi_init_hook();
+    mpi_errno = MPIDI_FD_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_GPUI_global.initialized = 1;
@@ -77,11 +77,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
-
-    if (MPIDI_GPUI_global.initialized) {
-        mpi_errno = MPIDI_FD_mpi_finalize_hook();
-        MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
-    }
 
     {
         struct MPIDI_GPUI_map_cache_entry *entry, *tmp;
