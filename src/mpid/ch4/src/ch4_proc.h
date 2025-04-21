@@ -25,6 +25,8 @@ int MPIDIU_free_avt(int avtid);
 int MPIDIU_avt_init(void);
 int MPIDIU_avt_finalize(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
+int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int addrlen,
+                                  void *roots_names);
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
 void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid);
