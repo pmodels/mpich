@@ -136,12 +136,6 @@ int MPIDI_POSIX_iqueue_init(void *slab, int rank, int size)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_iqueue_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    return mpi_errno;
-}
-
 int MPIDI_POSIX_iqueue_set_vcis(void *slab, MPIR_Comm * comm, int max_vcis)
 {
     int mpi_errno = MPI_SUCCESS;

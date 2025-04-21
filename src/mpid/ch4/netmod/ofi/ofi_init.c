@@ -805,13 +805,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_OFI_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    return mpi_errno;
-}
-
 /* static functions needed by finalize */
 
 #define MPIDI_OFI_FLUSH_CONTEXT_ID 0xF000
