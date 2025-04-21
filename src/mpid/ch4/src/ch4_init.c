@@ -636,13 +636,7 @@ int MPIDI_world_pre_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDU_Init_shm_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_post_hook() */
@@ -726,9 +720,6 @@ int MPID_Finalize(void)
     MPIDU_genq_private_pool_destroy(MPIDI_global.gpu_coll_pool);
 
     MPIDIU_avt_finalize();
-
-    mpi_errno = MPIDU_Init_shm_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_stream_workq_finalize();
     MPIR_ERR_CHECK(mpi_errno);
