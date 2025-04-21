@@ -340,54 +340,8 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
 int MPIDI_POSIX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_POSIX_topo_info_t *local_rank_topo = NULL;
 
-    /* gather topo info from local procs and calculate distance */
-    if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE && MPIR_Process.local_size > 1) {
-        int topo_info_size = sizeof(MPIDI_POSIX_topo_info_t);
-        local_rank_topo = MPL_calloc(MPIR_Process.local_size, topo_info_size, MPL_MEM_SHM);
-        mpi_errno =
-            MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size, MPIR_BYTE_INTERNAL,
-                                    local_rank_topo, topo_info_size, MPIR_BYTE_INTERNAL,
-                                    MPIR_Process.comm_world->node_comm, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < MPIR_Process.local_size; i++) {
-            if (local_rank_topo[i].l3_cache_id == -1 || local_rank_topo[i].numa_id == -1) {
-                /* if topo info is incomplete, treat the node as local as fallback */
-                MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__LOCAL;
-                continue;
-            }
-            if (local_rank_topo[i].l3_cache_id != MPIDI_POSIX_global.topo.l3_cache_id) {
-                MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__NO_SHARED_CACHE;
-                continue;
-            }
-            if (local_rank_topo[i].numa_id != MPIDI_POSIX_global.topo.numa_id) {
-                MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__INTER_NUMA;
-                continue;
-            }
-        }
-
-        if (MPIR_CVAR_DEBUG_SUMMARY >= 2) {
-            if (MPIR_Process.rank == 0) {
-                fprintf(stdout, "====== POSIX Topo Dist ======\n");
-            }
-            fprintf(stdout, "Rank: %d, Local_rank: %d [ %d", MPIR_Process.rank,
-                    MPIR_Process.local_rank, MPIDI_POSIX_global.local_rank_dist[0]);
-            for (int i = 1; i < MPIR_Process.local_size; i++) {
-                fprintf(stdout, ", %d", MPIDI_POSIX_global.local_rank_dist[i]);
-            }
-            fprintf(stdout, " ]\n");
-            if (MPIR_Process.rank == 0) {
-                fprintf(stdout, "=============================\n");
-            }
-        }
-    }
-
-  fn_exit:
-    MPL_free(local_rank_topo);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_POSIX_mpi_finalize_hook(void)
