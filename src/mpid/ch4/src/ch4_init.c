@@ -442,8 +442,6 @@ int MPID_Init(int requested, int *provided)
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_global.is_initialized = 0;
-
     switch (requested) {
         case MPI_THREAD_SINGLE:
         case MPI_THREAD_SERIALIZED:
@@ -650,8 +648,6 @@ int MPIDI_world_post_init(void)
 #endif
     mpi_errno = MPIDI_NM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_global.is_initialized = 1;
 
   fn_exit:
     return mpi_errno;
