@@ -774,7 +774,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                      vci_src, vci_dst, request, syncflag, errflag);
         MPIR_ERR_CHECK(mpi_errno);
-    } else if (!MPIDI_global.is_initialized) {
+    } else if (0 /* TODO */) {
+        /* TODO: It is more robust to use MPIDI_OFI_send_fallback during init and comm bootstrapping.
+         *       We need a way to pass the flag to here -- maybe via attr? */
         MPIR_Assert(!MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr));
         mpi_errno = MPIDI_OFI_send_fallback(buf, count, datatype, rank, tag, comm,
                                             context_offset, addr, vci_src, vci_dst, request);
