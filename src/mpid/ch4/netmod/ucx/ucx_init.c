@@ -241,13 +241,6 @@ int MPIDI_UCX_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_UCX_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    return mpi_errno;
-}
-
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
