@@ -1,4 +1,6 @@
 # noinline
+int shm_size(int local_size);
+int shm_vci_size(int local_size, int max_vci);
 int init(int rank, int size);
 int post_init(void);
 int set_vcis(MPIR_Comm * comm, int num_vcis);

@@ -81,6 +81,33 @@ static int init_transport(void *slab, int vci_src, int vci_dst)
     goto fn_exit;
 }
 
+int MPIDI_POSIX_iqueue_shm_size(int local_size)
+{
+    /* only calculate it once to ensure consistency */
+    if (MPIDI_POSIX_eager_iqueue_global.slab_size == 0) {
+        int num_free_queue = MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE ? 2 : 1;
+        int cell_size = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
+        int num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
+
+        int pool_size =
+            MPIDU_genq_shmem_pool_size(cell_size, num_cells, local_size, num_free_queue);
+        int terminal_size = local_size * sizeof(MPIDU_genq_shmem_queue_u);
+
+        int slab_size = pool_size + terminal_size;
+
+        MPIDI_POSIX_eager_iqueue_global.terminal_offset = pool_size;
+        MPIDI_POSIX_eager_iqueue_global.slab_size = slab_size;
+    }
+
+    return MPIDI_POSIX_eager_iqueue_global.slab_size;
+}
+
+int MPIDI_POSIX_iqueue_shm_vci_size(int local_size, int max_vci)
+{
+    int slab_size = MPIDI_POSIX_iqueue_shm_size(local_size);
+    return slab_size * max_vci * max_vci;
+}
+
 int MPIDI_POSIX_iqueue_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -95,18 +122,10 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     MPIDI_POSIX_eager_iqueue_global.max_vcis = 1;
 
     /* calculate needed shmem size per (vci_src, vci_dst) */
-    int num_free_queue = MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE ? 2 : 1;
-    int cell_size = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
-    int num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
-    int nprocs = MPIR_Process.local_size;
-
-    int pool_size = MPIDU_genq_shmem_pool_size(cell_size, num_cells, nprocs, num_free_queue);
-    int terminal_size = nprocs * sizeof(MPIDU_genq_shmem_queue_u);
-
-    int slab_size = pool_size + terminal_size;
 
     /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
     void *slab;
+    int slab_size = MPIDI_POSIX_iqueue_shm_size(size);
     mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
     MPIR_ERR_CHECK(mpi_errno);
 
