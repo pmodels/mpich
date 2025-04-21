@@ -126,11 +126,6 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_Assert(comm->local_group);
     MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM || comm->remote_group);
 
-    if (comm == MPIR_Process.comm_world) {
-        mpi_errno = MPIDI_world_pre_init();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
     MPIDI_COMM(comm, multi_leads_comm) = NULL;
     MPIDI_COMM(comm, inter_node_leads_comm) = NULL;
     MPIDI_COMM(comm, sub_node_comm) = NULL;
@@ -164,11 +159,6 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    if (comm == MPIR_Process.comm_world) {
-        mpi_errno = MPIDI_world_post_init();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
     mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);

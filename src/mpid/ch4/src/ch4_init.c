@@ -629,32 +629,6 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
-/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_pre_hook() */
-int MPIDI_world_pre_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    return mpi_errno;
-}
-
-/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_post_hook() */
-int MPIDI_world_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-    mpi_errno = MPIDI_NM_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPID_Stream_create_hook(MPIR_Stream * stream)
 {
     int mpi_errno = MPI_SUCCESS;

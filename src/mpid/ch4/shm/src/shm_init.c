@@ -55,19 +55,6 @@ int MPIDI_SHM_comm_bootstrap(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-int MPIDI_SHM_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_POSIX_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_SHM_mpi_finalize_hook(void)
 {
     int ret;

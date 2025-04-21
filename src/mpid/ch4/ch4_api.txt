@@ -37,9 +37,6 @@ Non Native API:
   mpi_finalize_hook : int
       NM : void
      SHM : void
-  post_init : int
-      NM : void
-     SHM : void
   progress : int
       NM*: vci, made_progress
      SHM*: vci, made_progress

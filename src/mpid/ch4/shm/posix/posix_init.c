@@ -337,13 +337,6 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    return mpi_errno;
-}
-
 int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
