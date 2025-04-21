@@ -129,6 +129,24 @@ static int pmi1_barrier_local(void)
     return pmi1_barrier();
 }
 
+static int pmi1_barrier_group(int *group, int count)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+    MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_WORLD == PMI_GROUP_WORLD);
+    MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_SELF == PMI_GROUP_SELF);
+
+    pmi_errno = PMI_Barrier_group(group, count);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_barrier_group", "**pmi_barrier_group %d", pmi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int pmi1_optimized_put(const char *key, const char *val, int is_local)
 {
     return pmi1_put(key, val);
@@ -305,6 +323,11 @@ static int pmi1_barrier(void)
 }
 
 static int pmi1_barrier_local(void)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmi1_barrier_group(int *group, int count)
 {
     return MPI_ERR_INTERN;
 }

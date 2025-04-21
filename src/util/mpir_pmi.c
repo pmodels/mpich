@@ -389,6 +389,15 @@ int MPIR_pmi_barrier_local(void)
     return mpi_errno;
 }
 
+int MPIR_pmi_barrier_group(int *group, int count)
+{
+    int mpi_errno = MPI_SUCCESS;
+    SWITCH_PMI(mpi_errno = pmi1_barrier_group(group, count),
+               mpi_errno = pmi2_barrier_group(group, count),
+               mpi_errno = pmix_barrier_group(group, count));
+    return mpi_errno;
+}
+
 /* is_local is a hint that we optimize for node local access when we can */
 static int optimized_put(const char *key, const char *val, int is_local)
 {
@@ -724,6 +733,66 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
         mpi_errno = get_ex(src, key, (unsigned char *) shm_buf + i * recvsize, &got_size, 0);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(got_size <= recvsize);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* NOTE: since groups may overlap, we need two barriers to control the access epoch.
+ *       However, our usage is to exchange business cards, which are constants between
+ *       epochs. Thus, we provide a shortcut: one name is given and it is not NULL, we
+ *       omit the last barrier.
+ */
+int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize, void *recvbuf,
+                             int recvsize, int *group, int count)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (group == MPIR_PMI_GROUP_WORLD) {
+        mpi_errno = MPIR_pmi_allgather(sendbuf, sendsize, recvbuf, recvsize, MPIR_PMI_DOMAIN_ALL);
+        goto fn_exit;
+    }
+
+    MPIR_Assert(count > 0);
+
+    /* check the support of MPIR_pmi_barrier_group */
+    mpi_errno = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0);
+    MPIR_ERR_CHECK(mpi_errno);
+
+
+    int is_local = 0;
+    char key[50];
+    if (name) {
+        MPIR_Assert(strlen(name) < 40); /* ensure we won't over flow the key buffer */
+        sprintf(key, "-%s-%d", name, MPIR_Process.rank);
+    } else {
+        sprintf(key, "-allgather-group-%d", MPIR_Process.rank);
+    }
+
+    mpi_errno = put_ex(key, sendbuf, sendsize, is_local);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_pmi_barrier_group(group, count);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int i = 0; i < count; i++) {
+        if (name) {
+            sprintf(key, "-%s-%d", name, group[i]);
+        } else {
+            sprintf(key, "-allgather-group-%d", group[i]);
+        }
+        int got_size = recvsize;
+        mpi_errno = get_ex(group[i], key, (unsigned char *) recvbuf + i * recvsize, &got_size,
+                           is_local);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (!name) {
+        mpi_errno = put_ex(key, sendbuf, sendsize, is_local);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
