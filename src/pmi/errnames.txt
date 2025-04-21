@@ -17,6 +17,8 @@
 **pmi_get_id %d:PMI_Get_id returned %d
 **pmi_barrier:PMI_Barrier failed
 **pmi_barrier %d:PMI_Barrier returned %d
+**pmi_barrier_group:PMI_Barrier_group failed
+**pmi_barrier_group %d:PMI_Barrier_group returned %d
 **pmi_kvs_get_my_name:PMI_KVS_Get_my_name failed
 **pmi_kvs_get_my_name %d:PMI_KVS_Get_my_name returned %d
 **pmi_kvs_get_name_length_max:PMI_KVS_Get_name_length_max failed
@@ -90,6 +92,8 @@
 **pmi_port %s: Unable to decide hostport from \"%s\"
 **pmi2_info_getjobattr: PMI2_Info_GetJobAttr failed
 **pmi2_info_getjobattr %d: PMI2_Info_GetJobAttr returned %d
+**pmi2_unsupport: PMI2 does not support this method
+**pmi2_unsupport %s: PMI2 does not support %s
 #
 # PMIx
 #
