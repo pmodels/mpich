@@ -512,74 +512,61 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
-static bool is_world_group(MPIR_Group * group_ptr)
-{
-    return (group_ptr->size == MPIR_Process.size && group_ptr->size > 1);
-}
-
-static bool is_self_group(MPIR_Group * group_ptr)
-{
-    return (group_ptr->size == 1);
-}
-
 int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
                                      MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
                                      MPIR_Comm ** p_newcom_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int use_comm_world = 0;
+    MPIR_FUNC_ENTER;
 
-    /* NOTE: only world or self is supported without first establishing comm_world.  */
+    int tag = get_tag_from_stringtag(stringtag);
 
-    MPL_initlock_lock(&MPIR_init_lock);
-    if (MPIR_Process.comm_world) {
-        use_comm_world = 1;
-    } else if (is_world_group(group_ptr)) {
-        mpi_errno = MPIR_init_comm_world();
-        use_comm_world = 1;
-    } else if (!MPIR_Process.comm_self && is_self_group(group_ptr)) {
-        mpi_errno = MPIR_init_comm_self();
-    }
-    MPL_initlock_unlock(&MPIR_init_lock);
+    MPIR_Comm *new_comm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
+    MPIR_ERR_CHKANDJUMP(!new_comm, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    mpi_errno = MPII_Comm_init(new_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (use_comm_world) {
-        /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
-        int tag = get_tag_from_stringtag(stringtag);
+    new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
+    new_comm->context_id = MPIR_CTXID_BOOTSTRAP;
+    new_comm->recvcontext_id = new_comm->context_id;
+    new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+    new_comm->rank = group_ptr->rank;
+    new_comm->local_size = group_ptr->size;
+    new_comm->remote_size = new_comm->local_size;
+    new_comm->local_group = group_ptr;
+    MPIR_Group_add_ref(group_ptr);
 
-        /* Because the group_ptr may not be derived from a communicator, local_group in
-         * comm_world may not have been created */
-        static MPL_initlock_t lock = MPL_INITLOCK_INITIALIZER;
-        MPL_initlock_lock(&lock);
-        if (!MPIR_Process.comm_world->local_group) {
-            mpi_errno = comm_create_local_group(MPIR_Process.comm_world);
-        }
-        MPL_initlock_unlock(&lock);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno =
-            MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        /* Currently only self comm is allowed here */
-        MPIR_Assert(is_self_group(group_ptr));
+    mpi_errno = MPIR_Comm_commit(new_comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Comm_dup_impl(MPIR_Process.comm_self, p_newcom_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
+    /* allocate a new context id */
+    int new_context_id;
+    mpi_errno = MPIR_Get_contextid_sparse_group(new_comm, NULL, tag, &new_context_id, 0);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        MPIR_Comm_set_session_ptr(*p_newcom_ptr, group_ptr->session_ptr);
+    new_comm->context_id = new_context_id;
+    new_comm->recvcontext_id = new_comm->context_id;
+    if (new_comm->node_comm) {
+        new_comm->node_comm->context_id = new_context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+        new_comm->node_comm->recvcontext_id = new_comm->node_comm->context_id;
+    }
+    if (new_comm->node_roots_comm) {
+        new_comm->node_roots_comm->context_id = new_context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+        new_comm->node_roots_comm->recvcontext_id = new_comm->node_roots_comm->context_id;
     }
 
-    if (*p_newcom_ptr) {
-        if (info_ptr) {
-            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr, true);
-        }
+    if (info_ptr) {
+        MPII_Comm_set_hints(new_comm, info_ptr, true);
+    }
 
-        if (errhan_ptr) {
-            MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
-        }
+    if (errhan_ptr) {
+        MPIR_Comm_set_errhandler_impl(new_comm, errhan_ptr);
     }
 
   fn_exit:
+    *p_newcom_ptr = new_comm;
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
