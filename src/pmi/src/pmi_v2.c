@@ -84,6 +84,12 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     PMIU_ERR_POP(pmi_errno);
 
     if (PMI_fd == -1) {
+        /* Check if we are in a PMIx environment to throw an error */
+        if (PMIU_detect_pmix_launcher()) {
+            PMIU_printf(1, "launcher not compatible with PMI2 client\n");
+            return PMI2_FAIL;
+        }
+
         /* Singleton init: Process not started with mpiexec,
          * so set size to 1, rank to 0 */
         *size = 1;
