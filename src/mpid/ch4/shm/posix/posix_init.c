@@ -261,10 +261,6 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
     int local_size = node_comm->local_size;
     int local_rank = node_comm->rank;
 
-    if (local_size == 1) {
-        goto fn_exit;
-    }
-
     MPIDI_POSIX_shm_t *slab = MPIDI_POSIX_global.shm_slab;
     if (MPIDI_POSIX_global.shm_slab == NULL) {
         mpi_errno = MPIDI_POSIX_init_vci(0);
