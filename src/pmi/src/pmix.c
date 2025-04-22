@@ -207,10 +207,27 @@ pmix_status_t PMIx_Fence(const pmix_proc_t procs[], size_t nprocs,
     PMIU_cmd_init_zero(&pmicmd);
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        PMIU_msg_set_query(&pmicmd, USE_WIRE_VER, PMIU_CMD_BARRIER, no_static);
+        char *group_str = NULL;
+        if (nprocs == 1 && procs[0].rank == PMIX_RANK_WILDCARD) {
+            PMIU_msg_set_query(&pmicmd, USE_WIRE_VER, PMIU_CMD_BARRIER, no_static);
+        } else {
+            /* convert the int array into a comma-separated int list */
+            group_str = MPL_malloc(nprocs * 8, MPL_MEM_OTHER);  /* assume each integer fits in 8 chars */
+            char *s = group_str;
+            for (int i = 0; i < nprocs; i++) {
+                int n = sprintf(s, "%d,", procs[i].rank);
+                s += n;
+            }
+            /* overwrite the last comma */
+            s[-1] = '\0';
+
+            PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
+        }
 
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
         PMIU_ERR_POP(pmi_errno);
+
+        MPL_free(group_str);
     }
 
   fn_exit:
