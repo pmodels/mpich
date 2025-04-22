@@ -136,9 +136,8 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (comm == MPIR_Process.comm_world && !MPIDI_OFI_global.got_named_av) {
-        MPIR_Assert(MPIR_Process.comm_world);
-        mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
+    if ((comm->attr & MPIR_COMM_ATTR__BOOTSTRAP) && !MPIDI_OFI_global.got_named_av) {
+        mpi_errno = MPIDI_OFI_comm_addr_exchange(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -178,13 +177,8 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     MPIR_FUNC_ENTER;
 
-    /* When setting up built in communicators, there won't be any way to do collectives yet. We also
-     * won't have any info hints to propagate so there won't be any preferences that need to be
-     * communicated. */
-    if (comm != MPIR_Process.comm_world) {
-        mpi_errno = update_nic_preferences(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    mpi_errno = update_nic_preferences(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
