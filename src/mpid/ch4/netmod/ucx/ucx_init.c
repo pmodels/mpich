@@ -81,9 +81,6 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
-    /* only comm_world for now */
-    MPIR_Assert(comm == MPIR_Process.comm_world);
-
     MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 
     char *addrname = (void *) MPIDI_UCX_global.ctx[0].if_address;
