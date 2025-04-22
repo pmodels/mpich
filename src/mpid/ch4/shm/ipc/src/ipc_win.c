@@ -9,44 +9,6 @@
 #include "../xpmem/xpmem_post.h"
 #include "../gpu/gpu_post.h"
 
-/* Return global node rank of each process in the shared communicator.
- * I.e., rank in MPIR_Process.comm_world->node_comm. The caller routine
- * must allocate/free each buffer. */
-static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ranks)
-{
-    int i;
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Group *node_group_ptr;
-    MPIR_Group *shm_group_ptr;
-
-    MPIR_FUNC_ENTER;
-
-    for (i = 0; i < shm_comm_ptr->local_size; i++)
-        shm_ranks[i] = i;
-
-    mpi_errno = MPIR_Comm_group_impl(shm_comm_ptr, &shm_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world->node_comm, &node_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Group_translate_ranks_impl(shm_group_ptr, shm_comm_ptr->local_size,
-                                                shm_ranks, node_group_ptr, node_ranks);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Group_free_impl(shm_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Group_free_impl(node_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 typedef struct win_shared_info {
     uint32_t disp_unit;
     size_t size;
@@ -62,7 +24,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     size_t total_shm_size = 0;
     MPIDIG_win_shared_info_t *shared_table = NULL;
     win_shared_info_t *ipc_shared_table = NULL; /* temporary exchange buffer */
-    int *ranks_in_shm_grp = NULL;
     MPIDI_IPCI_ipc_attr_t ipc_attr;
 
     MPIR_FUNC_ENTER;
@@ -172,11 +133,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     }
 
     /* Attach remote memory regions based on its IPC type */
-    MPIR_CHKLMEM_MALLOC(ranks_in_shm_grp, shm_comm_ptr->local_size * sizeof(int) * 2);
-    mpi_errno = get_node_ranks(shm_comm_ptr, ranks_in_shm_grp,
-                               &ranks_in_shm_grp[shm_comm_ptr->local_size]);
-    MPIR_ERR_CHECK(mpi_errno);
-
     for (i = 0; i < shm_comm_ptr->local_size; i++) {
         shared_table[i].size = ipc_shared_table[i].size;
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
