@@ -13,7 +13,7 @@ int MPIDI_SHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (comm == MPIR_Process.comm_world) {
+    if (comm->attr & MPIR_COMM_ATTR__BOOTSTRAP) {
         mpi_errno = MPIDI_SHM_comm_bootstrap(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
