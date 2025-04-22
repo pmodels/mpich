@@ -91,6 +91,18 @@
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
+/* Reserved context_id:
+ *   0 - for bootstrapping communicators
+ *   1 - for comm_world
+ *   2 - for comm_self
+ *   3 - for the internal-only copy of comm_world (if needed by mpid)
+ */
+#define MPIR_CTXID_BOOTSTRAP   (0 << MPIR_CONTEXT_PREFIX_SHIFT)
+#define MPIR_CTXID_COMM_WORLD  (1 << MPIR_CONTEXT_PREFIX_SHIFT)
+#define MPIR_CTXID_COMM_SELF   (2 << MPIR_CONTEXT_PREFIX_SHIFT)
+
+#define MPIR_CONTEXT_MASK_0 0xFFFFFFF8;
+
 void MPIR_context_id_init(void);
 
 /* Utility routines.  Where possible, these are kept in the source directory
