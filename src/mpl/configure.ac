@@ -147,6 +147,16 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 AC_HEADER_STDBOOL
 
+AC_CANONICAL_HOST
+
+case "$host_cpu" in
+  i*86 | x86_64)
+    build_for_x86="yes"
+    SUMMARY_MESSAGE="Runtime checking of AVX2/AVX512F is enabled for selected functions in libmpi.so"
+    ;;
+esac
+AM_CONDITIONAL([MPL_BUILD_FOR_X86], [test "x$build_for_x86" = "xyes"])
+
 AC_ARG_ENABLE(fast,
 [  --enable-fast=option - Control the level of fast execution supported by MPL.
         alwaysinline   - Force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX
@@ -174,9 +184,11 @@ for option in $enable_fast ; do
         ;;
         avx)
         force_enable_avx=yes
+        SUMMARY_MESSAGE="--enable-fast=avx enables AVX2 for the entire libmpi.so"
         ;;
         avx512f)
         force_enable_avx512f=yes
+        SUMMARY_MESSAGE="--enable-fast=avx512f enables AVX512F for the entire libmpi.so"
         ;;
         all|yes)
         enable_fast_alwaysinline=yes
@@ -190,15 +202,6 @@ IFS="$save_IFS"
 if test "$enable_fast_alwaysinline" = "yes"; then
     AC_DEFINE(ENABLE_ALWAYS_INLINE,1,[Define if force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX])
 fi
-
-AC_CANONICAL_HOST
-
-case "$host_cpu" in
-  i*86 | x86_64)
-    build_for_x86="yes"
-    ;;
-esac
-AM_CONDITIONAL([MPL_BUILD_FOR_X86], [test "x$build_for_x86" = "xyes"])
 
 # check if compiler supports avx, avx512f
 # also check if the building machine can run them if not force enabled
@@ -1303,6 +1306,8 @@ for word in $CFLAGS; do
 done
 NO_OPT_CFLAGS="$NO_OPT_CFLAGS -O0"
 AC_SUBST([NO_OPT_CFLAGS])
+
+AC_SUBST(SUMMARY_MESSAGE)
 
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
