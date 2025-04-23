@@ -28,6 +28,12 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
     int external_size = comm_ptr->num_external;
     int external_rank = comm_ptr->external_rank;
 
+    if (local_size == comm_size || external_size == comm_size) {
+        mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag);
+        goto fn_exit;
+    }
+
     MPIR_Comm *node_comm, *node_roots_comm;
     node_comm = MPIR_Comm_get_node_comm(comm_ptr);
     MPIR_Assert(node_comm);
