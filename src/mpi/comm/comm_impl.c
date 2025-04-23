@@ -575,10 +575,49 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     goto fn_exit;
 }
 
-/* a restricted implementation of MPI_Intercomm_create_from_groups.
- * Require comm_world, and remote_group part of comm_world.
- * TODO: remote_group from different comm_world
- */
+static int lpid_cmp(MPIR_Lpid lpid_a, MPIR_Lpid lpid_b);
+static int create_peer_comm(MPIR_Lpid my_lpid, MPIR_Lpid remote_lpid,
+                            MPIR_Session * session, const char *stringtag,
+                            MPIR_Errhandler * errhan_ptr,
+                            MPIR_Comm ** peer_comm_out, int *remote_rank_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    bool is_low_group = (lpid_cmp(my_lpid, remote_lpid) < 0);
+
+    MPIR_Lpid peer_map[2];
+    int my_rank, remote_rank;
+    if (is_low_group) {
+        peer_map[0] = my_lpid;
+        peer_map[1] = remote_lpid;
+        my_rank = 0;
+        remote_rank = 1;
+    } else {
+        peer_map[0] = remote_lpid;
+        peer_map[1] = my_lpid;
+        my_rank = 1;
+        remote_rank = 0;
+    }
+
+    MPIR_Group *peer_group;
+    mpi_errno = MPIR_Group_create_map(2, my_rank, session, peer_map, &peer_group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm *peer_comm;
+    mpi_errno = MPIR_Comm_create_from_group_impl(peer_group, stringtag, NULL, errhan_ptr,
+                                                 &peer_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Group_free_impl(peer_group);
+    *peer_comm_out = peer_comm;
+    *remote_rank_out = remote_rank;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int local_leader,
                                            MPIR_Group * remote_group_ptr, int remote_leader,
                                            const char *stringtag,
@@ -587,23 +626,46 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(MPIR_Process.comm_world);
+    MPIR_Session *session = local_group_ptr->session_ptr;
+    MPIR_ERR_CHKANDJUMP(session != remote_group_ptr->session_ptr, mpi_errno, MPI_ERR_OTHER,
+                        "**session_mixed");
 
+    bool is_leader = (local_group_ptr->rank == local_leader);
+
+    /* first, create local comm */
     MPIR_Comm *local_comm;
     mpi_errno = MPIR_Comm_create_from_group_impl(local_group_ptr, stringtag, info_ptr, errhan_ptr,
                                                  &local_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* next, create peer_comm between the leaders */
+    MPIR_Comm *peer_comm = NULL;
+    int remote_rank = -1;
+    if (is_leader) {
+        MPIR_Lpid my_lpid = MPIR_Group_rank_to_lpid(local_group_ptr, local_leader);
+        MPIR_Lpid remote_lpid = MPIR_Group_rank_to_lpid(remote_group_ptr, remote_leader);
+
+        mpi_errno = create_peer_comm(my_lpid, remote_lpid, session, stringtag, errhan_ptr,
+                                     &peer_comm, &remote_rank);
+    }
+
+    /* synchronize mpi_errno */
+    int tmp_err = mpi_errno;
+    mpi_errno = MPIR_Bcast_impl(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
+                                MPIR_COLL_ATTR_SYNC);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = tmp_err;
+    MPIR_ERR_CHECK(mpi_errno);
+
     int tag = get_tag_from_stringtag(stringtag);
-    /* FIXME: ensure lpid is from comm_world */
-    MPIR_Lpid remote_lpid = MPIR_Group_rank_to_lpid(remote_group_ptr, remote_leader);
-    MPIR_Assert(remote_lpid < MPIR_Process.size);
-    mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader,
-                                           MPIR_Process.comm_world, (int) remote_lpid,
+    mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader, peer_comm, remote_rank,
                                            tag, p_newintercom_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_release(local_comm);
+    if (is_leader) {
+        MPIR_Comm_release(peer_comm);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -773,31 +835,38 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
 /* arbitrarily determine which group is the low_group by comparing
  * world namespaces and world ranks */
+static int lpid_cmp(MPIR_Lpid lpid_a, MPIR_Lpid lpid_b)
+{
+    int indx_a = MPIR_LPID_WORLD_INDEX(lpid_a);;
+    int rank_a = MPIR_LPID_WORLD_RANK(lpid_a);
+    int indx_b = MPIR_LPID_WORLD_INDEX(lpid_b);
+    int rank_b = MPIR_LPID_WORLD_RANK(lpid_b);
+
+    if (lpid_a == lpid_b) {
+        return 0;
+    } else if (indx_a == indx_b) {
+        /* same world, just compare world ranks */
+        if (rank_a < rank_b) {
+            return -1;
+        } else {
+            return 1;
+        }
+    } else {
+        /* different world, compare namespace */
+        return strncmp(MPIR_Worlds[indx_a].namespace, MPIR_Worlds[indx_b].namespace,
+                       MPIR_NAMESPACE_MAX);
+    }
+
+}
+
 static int determine_low_group(MPIR_Lpid remote_lpid, bool * is_low_group_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int my_world_idx = 0;
-    int my_world_rank = MPIR_Process.rank;
-    int remote_world_idx = MPIR_LPID_WORLD_INDEX(remote_lpid);
-    int remote_world_rank = MPIR_LPID_WORLD_RANK(remote_lpid);
+    int cmp_result = lpid_cmp(MPIR_Process.rank, remote_lpid);
+    MPIR_Assert(cmp_result != 0);
 
-    if (my_world_idx == remote_world_idx) {
-        /* same world, just compare world ranks */
-        MPIR_Assert(my_world_idx == 0);
-        *is_low_group_out = (my_world_rank < remote_world_rank);
-    } else {
-        /* different world, compare namespace */
-        int cmp_result = strncmp(MPIR_Worlds[my_world_idx].namespace,
-                                 MPIR_Worlds[remote_world_idx].namespace,
-                                 MPIR_NAMESPACE_MAX);
-        MPIR_Assert(cmp_result != 0);
-        if (cmp_result < 0)
-            *is_low_group_out = false;
-        else
-            *is_low_group_out = true;
-    }
-
+    *is_low_group_out = (cmp_result < 0);
     return mpi_errno;
 }
 
