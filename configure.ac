@@ -4398,6 +4398,28 @@ cat <<EOF
 ***
 EOF
 fi
+
+CFLAGS_PRINT=""
+for word in $CFLAGS; do
+    CFLAGS_PRINT="$CFLAGS_PRINT $word"
+done
+
+MPICC_CFLAGS_PRINT=""
+for word in $MPICH_MPICC_CFLAGS; do
+    MPICC_CFLAGS_PRINT="$MPICC_CFLAGS_PRINT $word"
+done
+
+for word in $WRAPPER_CFLAGS; do
+    MPICC_CFLAGS_PRINT="$MPICC_CFLAGS_PRINT $word"
+done
+
+cat <<EOF
+*** MPICH Flags:
+***   libmpi.so CFLAGS: ${CFLAGS_PRINT}
+***   mpicc CFLAGS: ${MPICC_CFLAGS_PRINT}
+***   ${MPL_SUMMARY_MESSAGE}
+***
+EOF
 echo '*****************************************************'
 
 echo 'Configuration completed.'
