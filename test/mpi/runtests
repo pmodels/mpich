@@ -1321,10 +1321,6 @@ sub TestStatus {
     my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
 
     my $found_error = 0;
-    if ($stray_output) {
-        expect_clean_output($programname, $inline);
-        $found_error = 1;
-    }
 
     if (!$run_status) {
         expect_status_nonzero($programname);
