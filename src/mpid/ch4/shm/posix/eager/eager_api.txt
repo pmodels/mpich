@@ -1,0 +1,16 @@
+# noinline
+int shm_size(int local_size);
+int shm_vci_size(int local_size, int max_vci);
+int init(void *slab, int rank, int size);
+int set_vcis(void *slab, MPIR_Comm * comm, int num_vcis);
+int finalize(void);
+
+# inline
+int send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void *am_hdr, MPI_Aint am_hdr_sz, const void *buf, MPI_Aint count, MPI_Datatype datatype, MPI_Aint offset, int src_vci, int dst_vci, MPI_Aint * bytes_sent);
+int recv_begin(int vci, MPIDI_POSIX_eager_recv_transaction_t * transaction);
+void recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction, void *dst, const void *src, size_t size);
+void recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction);
+void recv_posted_hook(int grank);
+void recv_completed_hook(int grank);
+size_t payload_limit(void);
+size_t buf_limit(void);

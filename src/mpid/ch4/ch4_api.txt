@@ -34,13 +34,7 @@ Non Native API:
   init_local: int
       NM : tag_bits
      SHM : tag_bits
-  init_world: int
-      NM : void
-     SHM : void
   mpi_finalize_hook : int
-      NM : void
-     SHM : void
-  post_init : int
       NM : void
      SHM : void
   progress : int

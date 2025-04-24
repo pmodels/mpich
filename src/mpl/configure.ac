@@ -1245,6 +1245,13 @@ AC_CHECK_FUNCS(getpid)
 dnl Check for shm
 PAC_ARG_SHARED_MEMORY
 
+dnl always check POSIX shared memory
+AC_CHECK_FUNC(shm_open)
+if test "$ac_cv_func_shm_open" = yes ; then
+    AC_DEFINE(HAVE_POSIX_SHM, 1, [Define if we have POSIX shared memory])
+    AC_DEFINE(HAVE_INITSHM, 1, [Define if we have mpl_initshm_ facility])
+fi
+
 #######################################################################
 ## END OF SHM CODE
 #######################################################################
@@ -1288,7 +1295,7 @@ if test "$pac_have_cuda" = "yes" ; then
         fi
         if test -n "$CC" ; then
             # - pgcc/nvc doesn't work, use pgc++/nvc++ instead
-            # - Extra optins such as `gcc -std=gnu99` doesn't work, strip the option
+            # - Extra options such as `gcc -std=gnu99` doesn't work, strip the option
             NVCC_CCBIN=$(echo "$CC" | sed -e 's/nvc/nvc++/g' -e 's/pgcc/pgc++/g' -e's/ -std=.*//g')
             NVCC="$NVCC -ccbin $NVCC_CCBIN"
         fi

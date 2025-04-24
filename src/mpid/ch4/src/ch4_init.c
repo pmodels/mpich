@@ -442,8 +442,6 @@ int MPID_Init(int requested, int *provided)
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_global.is_initialized = 0;
-
     switch (requested) {
         case MPI_THREAD_SINGLE:
         case MPI_THREAD_SERIALIZED:
@@ -631,47 +629,6 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
-/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_pre_hook() */
-int MPIDI_world_pre_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDU_Init_shm_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_init_world();
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-    mpi_errno = MPIDI_NM_init_world();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_post_hook() */
-int MPIDI_world_post_init(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-    mpi_errno = MPIDI_NM_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_global.is_initialized = 1;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPID_Stream_create_hook(MPIR_Stream * stream)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -733,9 +690,6 @@ int MPID_Finalize(void)
     MPIDU_genq_private_pool_destroy(MPIDI_global.gpu_coll_pool);
 
     MPIDIU_avt_finalize();
-
-    mpi_errno = MPIDU_Init_shm_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_stream_workq_finalize();
     MPIR_ERR_CHECK(mpi_errno);
