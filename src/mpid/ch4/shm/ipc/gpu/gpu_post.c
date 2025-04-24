@@ -174,10 +174,7 @@ static int ipc_track_cache_remove(const void *addr)
         MPL_free(entry);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* -- mapped_track_tree -- */
@@ -235,10 +232,7 @@ static int ipc_mapped_cache_insert(const void *remote_addr, int remote_rank, int
                  MPL_MEM_SHM);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int ipc_mapped_cache_delete(const void *remote_addr, int remote_rank)
