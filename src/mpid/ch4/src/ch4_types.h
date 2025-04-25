@@ -295,7 +295,9 @@ typedef struct MPIDI_CH4_Global_t {
 
     MPIDI_CH4_configurations_t settings;
     void *csel_root;
+    const char *csel_source;
     void *csel_root_gpu;
+    const char *csel_source_gpu;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_SHM_Global_t shm;
