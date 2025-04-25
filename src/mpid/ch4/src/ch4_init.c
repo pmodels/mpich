@@ -171,6 +171,20 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static const char *devcollstr(void)
+{
+    if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) {
+        return "all";
+    } else if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_none) {
+        return "none";
+    } else if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) {
+        return "percoll";
+    } else {
+        MPIR_Assert(0);
+    }
+    return NULL;
+}
+
 static void *create_container(struct json_object *obj)
 {
     MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
@@ -494,14 +508,6 @@ int MPID_Init(int requested, int *provided)
     if (mpi_errno != MPI_SUCCESS)
         return mpi_errno;
 
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
-        print_runtime_configurations();
-#endif
-        fprintf(stdout, "==== Various sizes and limits ====\n");
-        fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
-    }
-
     /* These mutex are used for the lockless MT model. */
     if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS) {
         for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
@@ -556,9 +562,11 @@ int MPID_Init(int requested, int *provided)
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
                                               create_container, &MPIDI_global.csel_root);
+        MPIDI_global.csel_source = "MPIDI_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
                                                create_container, &MPIDI_global.csel_root);
+        MPIDI_global.csel_source = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -566,9 +574,11 @@ int MPID_Init(int requested, int *provided)
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
                                               create_container, &MPIDI_global.csel_root_gpu);
+        MPIDI_global.csel_source_gpu = "MPIDI_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU,
                                                create_container, &MPIDI_global.csel_root_gpu);
+        MPIDI_global.csel_source_gpu = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -592,6 +602,32 @@ int MPID_Init(int requested, int *provided)
                                        host_alloc_registered,
                                        host_free_registered, &MPIDI_global.gpu_coll_pool);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+        print_runtime_configurations();
+#endif
+        fprintf(stdout, "==== Various sizes and limits ====\n");
+        fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
+        printf("==== collective selection ====\n");
+        printf("MPIR_CVAR_DEVICE_COLLECTIVES: %s\n", devcollstr());
+        MPIR_Assert(MPIR_Csel_source);
+        printf("MPIR: %s\n", MPIR_Csel_source);
+        MPIR_Assert(MPIDI_global.csel_source);
+        printf("MPID: %s\n", MPIDI_global.csel_source);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIR_Assert(MPIDI_global.shm.posix.csel_source);
+        printf("MPID/shm: %s\n", MPIDI_global.shm.posix.csel_source);
+#endif
+        if (MPIR_CVAR_ENABLE_GPU) {
+            MPIR_Assert(MPIDI_global.csel_source_gpu);
+            printf("MPID (GPU): %s\n", MPIDI_global.csel_source_gpu);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIR_Assert(MPIDI_global.shm.posix.csel_source_gpu);
+            printf("MPID/shm (GPU): %s\n", MPIDI_global.shm.posix.csel_source_gpu);
+#endif
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;

@@ -107,6 +107,7 @@ MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
+const char *MPIR_Csel_source;
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
@@ -181,9 +182,11 @@ int MPII_Coll_init(void)
     if (!strcmp(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPII_coll_generic_json,
                                               MPII_Create_container, &MPIR_Csel_root);
+        MPIR_Csel_source = "MPII_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE,
                                                MPII_Create_container, &MPIR_Csel_root);
+        MPIR_Csel_source = MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
