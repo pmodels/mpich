@@ -29,7 +29,9 @@ struct MPIR_Request;
 
 typedef struct {
     void *csel_root;
+    const char *csel_source;
     void *csel_root_gpu;
+    const char *csel_source_gpu;
 } MPIDI_POSIX_Global_t;
 
 extern char MPIDI_POSIX_coll_generic_json[];
