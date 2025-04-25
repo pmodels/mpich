@@ -399,9 +399,11 @@ static int posix_coll_init(void)
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
                                               create_container, &MPIDI_global.shm.posix.csel_root);
+        MPIDI_global.shm.posix.csel_source = "MPIDI_POSIX_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE,
                                                create_container, &MPIDI_global.shm.posix.csel_root);
+        MPIDI_global.shm.posix.csel_source = MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -410,10 +412,13 @@ static int posix_coll_init(void)
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
                                               create_container,
                                               &MPIDI_global.shm.posix.csel_root_gpu);
+        MPIDI_global.shm.posix.csel_source_gpu = "MPIDI_POSIX_coll_generic_json";
     } else {
         mpi_errno =
             MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
                                        create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+        MPIDI_global.shm.posix.csel_source_gpu =
+            MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
