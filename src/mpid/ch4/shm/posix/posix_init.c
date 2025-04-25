@@ -299,7 +299,6 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        int slab_size = MPIDI_POSIX_eager_shm_size(size);
         mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
         MPIR_ERR_CHECK(mpi_errno);
 #endif
