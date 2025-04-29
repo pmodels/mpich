@@ -11,4 +11,4 @@ EXTRA_DIST = testlist
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
 noinst_PROGRAMS =  \
-    parrived_wait
+    mt_parrived_wait
