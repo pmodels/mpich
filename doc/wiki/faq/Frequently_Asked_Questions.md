@@ -6,7 +6,7 @@
 
 A: MPICH is a freely available, portable implementation of MPI, the
 Standard for message-passing libraries. It implements all versions of
-the MPI standard including MPI-1, MPI-2, MPI-2.1, MPI-2.2, and MPI-3.
+the MPI standard including MPI-1, MPI-2, MPI-3, and MPI-4.
 
 #### Q: What does MPICH stand for?
 
@@ -61,13 +61,10 @@ PMI (process management interface). Since the interface is (informally)
 standardized within MPICH and its derivatives, you can use any process
 manager from MPICH or its derivatives with any MPI application built
 with MPICH or any of its derivatives, as long as they follow the same
-wire protocol. There are three known implementations of the PMI wire
-protocol: "simple", "smpd" and "slurm". By default, MPICH and all its
-derivatives use the "simple" PMI wire protocol, but MPICH can be
-configured to use "smpd" or "slurm" as well.
+wire protocol.
 
 For example, MPICH provides several different process managers such as
-Hydra, MPD, Gforker and Remshell which follow the "simple" PMI wire
+Hydra, Gforker, and Remshell which follow the "simple" PMI wire
 protocol. MVAPICH2 provides a different process manager called "mpirun"
 that also follows the same wire protocol. OSC mpiexec follows the same
 wire protocol as well. You can mix and match an application built with
@@ -75,19 +72,8 @@ any MPICH derivative with any process manager. For example, an
 application built with Intel MPI can run with OSC mpiexec or MVAPICH2's
 mpirun or MPICH's Gforker.
 
-MPD has been the traditional default process manager for MPICH till the
-1.2.x release series. Starting the 1.3.x series, Hydra is the default
+Starting with the 1.3.x series, Hydra is the default
 process manager.
-
-SMPD is another process manager distributed with MPICH that uses the
-"smpd" PMI wire protocol. This is mainly used for running MPICH on
-Windows or a combination of UNIX and Windows machines. This will be
-deprecated in the future releases of MPICH in favour or Hydra. MPICH can
-be configured with SMPD using:
-
-```
- ./configure --with-pm=smpd --with-pmi=smpd
-```
 
 SLURM is an external process manager that uses MPICH's PMI interface as
 well.
@@ -98,11 +84,11 @@ However, if you want to use the srun tool to launch jobs instead of the
 default mpiexec, you can configure MPICH as follows:
 
 ```
- ./configure --with-pm=none --with-pmi=slurm
+ ./configure --with-pm=none --with-pmi=<path/to/slurm/pmi/library>
 ```
 
-Once configured with slurm, no internal process manager is built for
-MPICH; the user is expected to use SLURM's launch models (such as srun).
+Once configured with Slurm, no internal process manager is built for
+MPICH; the user is expected to use Slurm's launch models (such as srun).
 
 #### Q: Do I have to configure/make/install MPICH each time for each compiler I use?
 
@@ -552,23 +538,16 @@ When using MPD, you need to redirect stdin from /dev/null. For example:
 mpiexec -n 4 a.out < /dev/null &
 ```
 
-#### Q: How do I use MPICH with slurm?
+#### Q: How do I use MPICH with Slurm?
 
 A: MPICH's default process manager, Hydra, internally detects and
-functions correctly with SLURM. No special configuration is needed.
+functions correctly with Slurm. No special configuration is needed.
 
-However, if you want to use SLURM's launchers (such as srun), you will
+However, if you want to use Slurm's launchers (such as srun), you will
 need to configure MPICH with:
 
 ```
-./configure --with-pmi=slurm --with-pm=no
-```
-
-In addition, if your slurm installation is not in the default location,
-you will need to pass the actual installation location using:
-
-```
-./configure --with-pmi=slurm --with-pm=no --with-slurm=[path_to_slurm_install]
+./configure --with-pmi=<path/to/slurm/pmi> --with-pm=no
 ```
 
 #### Q: All my processes get rank 0.
@@ -588,21 +567,20 @@ process manager. Thus, many groups implemented their own PMI library in
 ways that were not compatible with each other with respect to the wire
 protocol (the interface is still common and as specified). Some examples
 of PMI library implementations are: (a) simple PMI (MPICH's default PMI
-library), (b) smpd PMI (for linux/windows compatibility; will be
-deprecated soon) and (c) slurm PMI (implemented by the slurm guys).
+library), and (b) Slurm PMI (implemented by SchedMD).
 
-MPD, Gforker, Remshell, Hydra, OSC mpiexec, OSU mpirun and probably many
-other process managers use the simple PMI wire protocol. So, as long as
+Gforker, Remshell, Hydra, OSC mpiexec, OSU mpirun and other process managers
+use the simple PMI wire protocol. So, as long as
 the MPI application is linked with the simple PMI library, you can use
 any of these process managers interchangeably. Simple PMI library is
 what you are linked to by default when you build MPICH using the default
 options.
 
-srun uses slurm PMI. When you configure MPICH using --with-pmi=slurm, it
-links with the slurm PMI library. Only srun is compatible with this
-slurm PMI library, so only that can be used. The slurm folks came out
+srun uses Slurm PMI. When you configure MPICH to use Slurm PMI, it
+links with the Slurm PMI library. Only srun is compatible with this
+Slurm PMI library, so only that can be used. The Slurm folks came out
 with their own "mpiexec" executable, which essentially wraps around
-srun, so that uses the slurm PMI as well.
+srun, so that uses the Slurm PMI as well.
 
 So, in some sense, mpiexec or srun is just a user interface for you to
 talk in the appropriate PMI wire protocol. If you have a mismatch, the
@@ -611,7 +589,7 @@ so all processes think they are rank 0.
 
 #### Q: How do I control which ports MPICH uses?
 
-A: The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
+A: The MPIR_CVAR_PORT_RANGE environment variable allows you to
 specify the range of TCP ports to be used by the process manager and the
 MPICH library. Set this variable before starting your application with
 mpiexec. The format of this variable is <low>:<high>. For example, to
@@ -619,13 +597,13 @@ allow the job launcher and MPICH to use ports only between 10000 and
 10100, if you're using the bash shell, you would use:
 
 ```
-export MPIR_CVAR_CH3_PORT_RANGE=10000:10100
+export MPIR_CVAR_PORT_RANGE=10000:10100
 ```
 
 #### Q: Why does my MPI program run much slower when I use more processes?
 
-A: The default channel in MPICH (starting with the 1.1 series) is
-`ch3:nemesis`. This channel uses busy polling in order to improve
+A: The default device in MPICH (starting with the 3.4.x series) is
+`ch4`. This device uses busy polling in order to improve
 intranode shared-memory communication performance. The downside to this
 is that performance will generally take a dramatic hit if you
 oversubscribe your nodes. Oversusbscription is the case where you run
@@ -706,7 +684,7 @@ sudo iptables status
 A: Totalview allows multiple levels of debugging for MPI programs. If
 you need to debug your application without any information from the
 MPICH stack, you just need to compile your program with mpicc -g (or
-mpif77 -g, etc) and run your application as:
+mpifort -g, etc) and run your application as:
 
 ```
 totalview mpiexec -a -f machinefile ./foo
@@ -805,57 +783,6 @@ synchronous sends (`MPI_Ssend`, and friends) or have the sender wait for
 an explicit ack message from the receiver. Of course you could optimize
 this where you're not doing the synchronization in every iteration of
 the loop, e.g., call `MPI_Barrier` every 100th iteration.
-
-#### Q: My MPD ring won't start, what's wrong?
-
-A: MPD is a temperamental piece of software and can fail to work
-correctly for a variety of reasons. Most commonly, however, networking
-configuration problems are the root cause. In general, we recommend
-[Using the Hydra Process Manager](../how_to/Using_the_Hydra_Process_Manager.md)
-instead of MPD. Hydra is the default process manager starting release 1.3. If you need
-to continue using MPD for some reason, here are some suggestions to try out.
-
-If you see error messages that look like any of the following, please
-try the troubleshooting steps listed in Appendix A of the 
-[MPICH Installer's Guide](http://www.mcs.anl.gov/research/projects/mpich2/documentation/files/mpich2-1.2.1-installguide.pdf):
-
-```
-mpdboot_hostname (handle_mpd_output 374): failed to ping mpd on node1; recvd output={}
-
-[1]+  Done                    mpd
-```
-
-```
-Case 1: start mpd on n1, OK.
-Case 2: start “mpd --trace" on n2, stuck at:
-            n2_60857: ENTER mpd_sockpair in
-/home/sl/mpi/bin/mpdlib.py at line 213; ARGS=()
-Case 3: start "mpdboot -n 2 -f mpd.hosts" on n1, OK. mpdtrace on each
-node shows "n1, n2"
-           mpdringtest OK.
-           mpiexec -n 2 date   // Fail, mpiexec_n1 (mpiexec 392): no msg recvd from mpd when expecting ack of request
-
-Case 4: start "mpdboot -n 2 -f mpd.hosts" on n2, failed with nothing output.
-```
-
-In particular, make sure to try the steps that involve the `mpdcheck`
-utility.
-
-If you are using MPD on CentOS Linux and `mpdboot` hangs and then
-elicits the following messages upon CTRL-C:
-
-```
-^[[CTraceback (most recent call last):
- File "/nfs/home/atchley/projects/mpich2-mx-1.2.1..6/build/shower/bin/mpdboot", line 476, in ?
-   mpdboot()
- File "/nfs/home/atchley/projects/mpich2-mx-1.2.1..6/build/shower/bin/mpdboot", line 347, in mpdboot
-   handle_mpd_output(fd,fd2idx,hostsAndInfo)
- File "/nfs/home/atchley/projects/mpich2-mx-1.2.1..6/build/shower/bin/mpdboot", line 385, in handle_mpd_output
-   for line in fd.readlines():    # handle output from shells that echo stuff
-KeyboardInterrupt
-```
-
-then you should see . This is a known issue that we have yet to resolve.
 
 #### Q: Why MPI_Put raises SIGBUS error inside docker?
 
