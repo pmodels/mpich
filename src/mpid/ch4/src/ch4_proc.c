@@ -338,3 +338,46 @@ void MPIDIU_upidhash_free(void)
     }
 }
 #endif
+
+/* A common util for exchange business card over PMI. */
+int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int addrnamelen,
+                                  void *roots_names)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
+
+    MPIR_Comm *node_comm = MPIR_Comm_get_node_comm(comm);
+    MPIR_Assert(node_comm);
+
+    bool is_node_root = (node_comm->rank == 0);
+
+    int rc = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0);
+    if (rc == MPI_SUCCESS) {
+        /* MPIR_pmi_allgather_group is supported */
+        if (is_node_root) {
+            MPIR_Comm *node_roots_comm = MPIR_Comm_get_node_roots_comm(comm);
+            int external_size = node_roots_comm->local_size;
+
+            int *procs;
+            MPIR_CHKLMEM_MALLOC(procs, external_size * sizeof(int));
+            for (int i = 0; i < external_size; i++) {
+                procs[i] = MPIDIU_get_grank(i, node_roots_comm);
+            }
+            mpi_errno = MPIR_pmi_allgather_group("BC", addrname, addrnamelen,
+                                                 roots_names, addrnamelen, procs, external_size);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    } else {
+        /* use MPIR_pmi_allgather, all processes need participate in a PMI barrier */
+        MPIR_Assert(comm->local_size == MPIR_Process.size);
+        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen,
+                                       MPIR_PMI_DOMAIN_NODE_ROOTS);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
+}

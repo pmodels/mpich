@@ -485,7 +485,7 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
                                             int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  int pgid, int *rankmap,
+                                  int pgid, int *rankmap, int *min_node_id_p,
                                   int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
 HYD_status HYDU_gen_rankmap(int process_count, struct HYD_node *node_list, int **rankmap);
@@ -525,6 +525,23 @@ HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 /* launch */
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid, int idx);
+
+/* barrier */
+#define HYD_GROUP_ALL ((int *)0)
+
+struct HYD_barrier {
+    const char *name;           /* a string identifying process set. Support -
+                                 *   - WORLD, NODE, or
+                                 *   - 0,1,4,...   (CSV list of ranks)
+                                 */
+    int num_procs;
+    int barrier_count;
+
+    int *proc_list;             /* needed for sending "barrier_out". Accepts HYD_GROUP_ALL */
+    bool has_upstream;
+
+    UT_hash_handle hh;
+};
 
 /* others */
 int HYDU_dceil(int x, int y);

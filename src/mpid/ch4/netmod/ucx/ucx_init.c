@@ -99,15 +99,15 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
     }
 
     /* PMI allgather over node roots and av_insert to activate node_roots_comm */
+    char *roots_names = NULL;
     if (local_rank == 0) {
-        char *roots_names;
         MPIR_CHKLMEM_MALLOC(roots_names, external_size * addrnamelen);
+    }
 
-        MPIR_PMI_DOMAIN domain = MPIR_PMI_DOMAIN_NODE_ROOTS;
-        /* FIXME: use the actual addrname_len rather than MPID_MAX_BC_SIZE */
-        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen, domain);
-        MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIDIU_bc_exchange_node_roots(comm, addrname, addrnamelen, roots_names);
+    MPIR_ERR_CHECK(mpi_errno);
 
+    if (local_rank == 0) {
         /* insert av and activate node_roots_comm */
         MPIR_Comm *node_roots_comm = MPIR_Comm_get_node_roots_comm(comm);
         for (int i = 0; i < external_size; i++) {
@@ -116,11 +116,6 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
             MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(node_roots_comm, i);
             UCX_AV_INSERT(av, lpid, p);
         }
-    } else {
-        /* just for the PMI_Barrier */
-        MPIR_PMI_DOMAIN domain = MPIR_PMI_DOMAIN_NODE_ROOTS;
-        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, NULL, addrnamelen, domain);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   all_addrexch:
