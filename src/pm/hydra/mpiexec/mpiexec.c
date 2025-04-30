@@ -44,11 +44,6 @@ int main(int argc, char **argv)
 
     PMISERV_pg_init();
 
-    if (argc == 1) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "No executable provided. Try -h for usages.\n");
-    }
-
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
     HYDU_ERR_POP(status, "error parsing parameters\n");
@@ -59,6 +54,11 @@ int main(int argc, char **argv)
             HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
                                 "Missing executable. Try -h for usages.\n");
         }
+    }
+
+    if (!HYD_uii_mpx_exec_list) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
+                            "No executable provided. Try -h for usages.\n");
     }
 
     /* The demux engine should be initialized before any sockets are
