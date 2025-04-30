@@ -51,6 +51,11 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
         session_ptr->memory_alloc_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
     }
 
+    if (errhandler_ptr) {
+        session_ptr->errhandler = errhandler_ptr;
+        MPIR_Errhandler_add_ref(errhandler_ptr);
+    }
+
     *p_session_ptr = session_ptr;
 
   fn_exit:
