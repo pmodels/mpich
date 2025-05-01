@@ -484,9 +484,6 @@ int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 
 int MPIR_init_comm_self(void);
 int MPIR_init_comm_world(void);
-#ifdef MPID_NEEDS_ICOMM_WORLD
-int MPIR_init_icomm_world(void);
-#endif
 int MPIR_finalize_builtin_comms(void);
 
 void MPIR_Comm_set_session_ptr(MPIR_Comm * comm_ptr, MPIR_Session * session_ptr);

@@ -45,9 +45,7 @@ typedef struct MPIR_Process_t {
                                          * error handler */
     struct MPIR_Comm *comm_self;        /* Easy access to comm_self */
     struct MPIR_Comm *comm_parent;      /* Easy access to comm_parent */
-    struct MPIR_Comm *icomm_world;      /* An internal version of comm_world
-                                         * that is separate from user's
-                                         * versions */
+
     PreDefined_attrs attrs;     /* Predefined attribute values */
     int tag_bits;               /* number of tag bits supported */
     char *memory_alloc_kinds;   /* memory kinds supported in the world model */

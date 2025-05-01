@@ -287,12 +287,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
             mpi_errno = MPIR_init_comm_self();
             MPIR_ERR_CHECK(mpi_errno);
         }
-#ifdef MPID_NEEDS_ICOMM_WORLD
-        if (!MPIR_Process.icomm_world) {
-            mpi_errno = MPIR_init_icomm_world();
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-#endif
     }
 
     /**********************************************************************/

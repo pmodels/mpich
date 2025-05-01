@@ -203,14 +203,6 @@ int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
 
         MPIDI_VCR_Dup(&MPIDI_Process.my_pg->vct[MPIR_Process.rank], &comm->dev.vcrt->vcr_table[0]);
         goto done_vcrt;
-    } else if (comm == MPIR_Process.icomm_world) {
-        comm->rank        = MPIR_Process.rank;
-        comm->remote_size = MPIR_Process.size;
-        comm->local_size  = MPIR_Process.size;
-
-        MPIDI_VCRT_Add_ref(MPIR_Process.comm_world->dev.vcrt );
-        comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
-        goto done_vcrt;
     }
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -423,9 +415,9 @@ static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
     MPIR_FUNC_ENTER;
 
     /* handle common case fast */
-    if (comm == MPIR_Process.comm_world || comm == MPIR_Process.icomm_world) {
+    if (comm == MPIR_Process.comm_world) {
         *flag = TRUE;
-        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "comm is comm_world or icomm_world");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "comm is comm_world");
         goto fn_exit;
     }
     *flag = FALSE;
