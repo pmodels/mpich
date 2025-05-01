@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (!HYD_uii_mpx_exec_list) {
+    if (!HYD_uii_mpx_exec_list && !HYD_server_info.is_singleton) {
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
                             "No executable provided. Try -h for usages.\n");
     }
