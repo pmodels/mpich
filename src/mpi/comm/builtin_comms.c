@@ -7,9 +7,6 @@
 
 #define COMM_WORLD_CTXID (0 << MPIR_CONTEXT_PREFIX_SHIFT)
 #define COMM_SELF_CTXID  (1 << MPIR_CONTEXT_PREFIX_SHIFT)
-#ifdef MPID_NEEDS_ICOMM_WORLD
-#define ICOMM_WORLD_CTXID (2 << MPIR_CONTEXT_PREFIX_SHIFT)
-#endif
 
 int MPIR_init_comm_world(void)
 {
@@ -79,43 +76,6 @@ int MPIR_init_comm_self(void)
     goto fn_exit;
 }
 
-#ifdef MPID_NEEDS_ICOMM_WORLD
-int MPIR_init_icomm_world(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Assert(MPIR_Process.icomm_world == NULL);
-
-    MPIR_Process.icomm_world = MPIR_Comm_builtin + 2;
-    MPII_Comm_init(MPIR_Process.icomm_world);
-
-    MPIR_Process.icomm_world->rank = MPIR_Process.rank;
-    MPIR_Process.icomm_world->handle = MPIR_ICOMM_WORLD;
-    MPIR_Process.icomm_world->context_id = ICOMM_WORLD_CTXID;
-    MPIR_Process.icomm_world->recvcontext_id = MPIR_Process.icomm_world->context_id;
-    MPIR_Process.icomm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-
-    MPIR_Process.icomm_world->rank = MPIR_Process.rank;
-    MPIR_Process.icomm_world->remote_size = MPIR_Process.size;
-    MPIR_Process.icomm_world->local_size = MPIR_Process.size;
-
-    MPIR_Process.icomm_world->local_group = MPIR_GROUP_WORLD_PTR;
-    MPIR_Group_add_ref(MPIR_GROUP_WORLD_PTR);
-    MPIR_Process.icomm_world->remote_group = NULL;
-
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.icomm_world);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPL_strncpy(MPIR_Process.icomm_world->name, "MPI_ICOMM_WORLD", MPI_MAX_OBJECT_NAME);
-    MPII_COMML_REMEMBER(MPIR_Process.icomm_world);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
-
 static int finalize_builtin_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,15 +143,6 @@ int MPIR_finalize_builtin_comms(void)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.comm_parent = NULL;
     }
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    if (MPIR_Process.icomm_world) {
-        mpi_errno = finalize_builtin_comm(MPIR_Process.icomm_world);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Process.icomm_world = NULL;
-    } else {
-        MPIR_Free_contextid(ICOMM_WORLD_CTXID);
-    }
-#endif
 
   fn_exit:
     return mpi_errno;
