@@ -301,7 +301,7 @@ int mypreamble(void *data, ProcessState * pState)
     /* Add clique information */
     {
         int i, size = pState->app->nProcess;
-        char digits[10], ranks[1024];
+        char digits[20], ranks[1024];
         char key[256];
 
         /* Create the string of ranks.  These are ranks in comm_world */
