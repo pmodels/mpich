@@ -41,13 +41,17 @@ int MPIDI_GPU_init_local(void)
     int my_max_subdev_id;
 
     MPIDI_GPUI_global.initialized = 0;
-    int mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id, &my_max_subdev_id);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_dev_count");
 
-    MPIDI_GPUI_global.local_device_count = device_count;
-    MPL_gpu_free_hook_register(ipc_handle_free_hook);
+    if (MPIR_CVAR_ENABLE_GPU) {
+        int mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id, &my_max_subdev_id);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_get_dev_count");
 
-    MPIDI_GPUI_global.initialized = 1;
+        MPIDI_GPUI_global.local_device_count = device_count;
+        MPL_gpu_free_hook_register(ipc_handle_free_hook);
+
+        MPIDI_GPUI_global.initialized = 1;
+    }
 
   fn_exit:
     return mpi_errno;
