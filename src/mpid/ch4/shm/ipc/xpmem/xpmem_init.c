@@ -55,7 +55,7 @@ int MPIDI_XPMEM_init_local(void)
     /* Initialize other global parameters */
     MPIDI_XPMEMI_global.sys_page_sz = (size_t) sysconf(_SC_PAGESIZE);
 
-    for (i = 0; i < MPIR_Process.local_size; ++i) {
+    for (int i = 0; i < MPIR_Process.local_size; ++i) {
         /* Init AVL tree based segment cache */
         MPIDI_XPMEMI_segtree_init(&MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);       /* Initialize user buffer tree */
     }
@@ -87,18 +87,19 @@ int MPIDI_XPMEM_comm_bootstrap(MPIR_Comm * comm)
     if (local_size > 1) {
         /* NOTE: always run Allgather in case some process disable XPMEM inconsistently */
         MPIR_Comm *node_comm = MPIR_Comm_get_node_comm(comm);
+        MPIR_Assert(node_comm);
 
         xpmem_segid_t *all_segids;
         MPIR_CHKLMEM_MALLOC(all_segids, local_size * sizeof(xpmem_segid_t));
 
         mpi_errno = MPIR_Allgather_impl(&MPIDI_XPMEMI_global.segid, sizeof(xpmem_segid_t),
                                         MPIR_BYTE_INTERNAL, all_segids, sizeof(xpmem_segid_t),
-                                        MPIR_BYTE_INTERNAL, comm, MPIR_ERR_NONE);
+                                        MPIR_BYTE_INTERNAL, node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         int num_disabled = 0;
         for (int i = 0; i < local_size; i++) {
-            int grank = MPIDIU_get_grank(rank, comm);
+            int grank = MPIDIU_get_grank(i, node_comm);
             int local_id = MPIDI_SHM_global.local_ranks[grank];;
             MPIDI_XPMEMI_global.segmaps[local_id].remote_segid = all_segids[i];
             if (all_segids[i] == -1) {
