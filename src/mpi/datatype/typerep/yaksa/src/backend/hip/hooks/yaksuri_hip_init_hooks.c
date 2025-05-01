@@ -108,6 +108,9 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     hipError_t cerr;
 
     cerr = hipGetDeviceCount(&yaksuri_hipi_global.ndevices);
+    if (cerr == hipErrorNoDevice) {
+        goto fn_exit;
+    }
     YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
     if (getenv("HIP_VISIBLE_DEVICES") == NULL) {
