@@ -330,6 +330,9 @@ int MPL_gpu_init(int debug_summary)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret = hipGetDeviceCount(&device_count);
+    if (ret == hipErrorNoDevice) {
+        goto fn_exit;
+    }
     HIP_ERR_CHECK(ret);
 
     MPL_gpu_info.debug_summary = debug_summary;
