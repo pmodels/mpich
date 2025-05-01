@@ -159,14 +159,8 @@ void MPIR_context_id_init(void)
     for (i = 1; i < MPIR_MAX_CONTEXT_MASK; i++) {
         context_mask[i] = 0xFFFFFFFF;
     }
-    /* The first two values are already used (comm_world, comm_self).
-     * The third value is also used for the internal-only copy of
-     * comm_world, if needed by mpid. */
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    context_mask[0] = 0xFFFFFFF8;
-#else
+    /* reserve the first two values for comm_world and comm_self */
     context_mask[0] = 0xFFFFFFFC;
-#endif
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
     /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
