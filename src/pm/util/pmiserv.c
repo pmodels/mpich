@@ -793,7 +793,8 @@ static int fPMI_Handle_init(PMIProcess * pentry)
     /* check version compatibility with PMI client library */
     PMIU_getval("pmi_version", version, PMIU_MAXLINE);
     PMIU_getval("pmi_subversion", subversion, PMIU_MAXLINE);
-    if (PMI_VERSION == atoi(version) && PMI_SUBVERSION >= atoi(subversion))
+    /* Only check major version. This allows client to gracefully fallback if they request higher subversion */
+    if (PMI_VERSION == atoi(version))
         rc = 0;
     else
         rc = -1;
@@ -1274,7 +1275,8 @@ int PMI_InitSingletonConnection(int fd, PMIProcess * pmiprocess)
     /* check version compatibility with PMI client library */
     PMIU_getval("pmi_version", version, PMIU_MAXLINE);
     PMIU_getval("pmi_subversion", subversion, PMIU_MAXLINE);
-    if (PMI_VERSION == atoi(version) && PMI_SUBVERSION >= atoi(subversion))
+    /* NOTE: we only require major version match. */
+    if (PMI_VERSION == atoi(version))
         rc = 0;
     else
         rc = -1;
