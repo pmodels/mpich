@@ -36,6 +36,8 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
     /* disable strict finalize feature by default */
     (*p_session_ptr)->strict_finalize = false;
     (*p_session_ptr)->memory_alloc_kinds = NULL;
+    (*p_session_ptr)->num_psets = 0;
+    (*p_session_ptr)->psets = NULL;
 
     {
         int thr_err;

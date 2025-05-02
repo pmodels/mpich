@@ -5,12 +5,6 @@
 
 #include "mpiimpl.h"
 
-#define COMM_WORLD_CTXID (0 << MPIR_CONTEXT_PREFIX_SHIFT)
-#define COMM_SELF_CTXID  (1 << MPIR_CONTEXT_PREFIX_SHIFT)
-#ifdef MPID_NEEDS_ICOMM_WORLD
-#define ICOMM_WORLD_CTXID (2 << MPIR_CONTEXT_PREFIX_SHIFT)
-#endif
-
 int MPIR_init_comm_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -22,7 +16,7 @@ int MPIR_init_comm_world(void)
 
     MPIR_Process.comm_world->rank = MPIR_Process.rank;
     MPIR_Process.comm_world->handle = MPI_COMM_WORLD;
-    MPIR_Process.comm_world->context_id = COMM_WORLD_CTXID;
+    MPIR_Process.comm_world->context_id = MPIR_CTXID_COMM_WORLD;
     MPIR_Process.comm_world->recvcontext_id = MPIR_Process.comm_world->context_id;
     MPIR_Process.comm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
 
@@ -33,6 +27,8 @@ int MPIR_init_comm_world(void)
     MPIR_Process.comm_world->local_group = MPIR_GROUP_WORLD_PTR;
     MPIR_Group_add_ref(MPIR_GROUP_WORLD_PTR);
     MPIR_Process.comm_world->remote_group = NULL;
+
+    MPIR_Process.comm_world->attr = MPIR_COMM_ATTR__BOOTSTRAP;  /* device need bootstrap this comm */
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
@@ -55,7 +51,7 @@ int MPIR_init_comm_self(void)
     MPIR_Process.comm_self = MPIR_Comm_builtin + 1;
     MPII_Comm_init(MPIR_Process.comm_self);
     MPIR_Process.comm_self->handle = MPI_COMM_SELF;
-    MPIR_Process.comm_self->context_id = COMM_SELF_CTXID;
+    MPIR_Process.comm_self->context_id = MPIR_CTXID_COMM_SELF;
     MPIR_Process.comm_self->recvcontext_id = MPIR_Process.comm_self->context_id;
     MPIR_Process.comm_self->comm_kind = MPIR_COMM_KIND__INTRACOMM;
 
@@ -91,7 +87,7 @@ int MPIR_init_icomm_world(void)
 
     MPIR_Process.icomm_world->rank = MPIR_Process.rank;
     MPIR_Process.icomm_world->handle = MPIR_ICOMM_WORLD;
-    MPIR_Process.icomm_world->context_id = ICOMM_WORLD_CTXID;
+    MPIR_Process.icomm_world->context_id = MPIR_CTXID_ICOMM_WORLD;
     MPIR_Process.icomm_world->recvcontext_id = MPIR_Process.icomm_world->context_id;
     MPIR_Process.icomm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
 
@@ -167,7 +163,7 @@ int MPIR_finalize_builtin_comms(void)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.comm_self = NULL;
     } else {
-        MPIR_Free_contextid(COMM_SELF_CTXID);
+        MPIR_Free_contextid(MPIR_CTXID_COMM_SELF);
     }
 
     if (MPIR_Process.comm_world) {
@@ -175,7 +171,7 @@ int MPIR_finalize_builtin_comms(void)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.comm_world = NULL;
     } else {
-        MPIR_Free_contextid(COMM_WORLD_CTXID);
+        MPIR_Free_contextid(MPIR_CTXID_COMM_WORLD);
     }
 
     if (MPIR_Process.comm_parent) {
@@ -189,7 +185,7 @@ int MPIR_finalize_builtin_comms(void)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.icomm_world = NULL;
     } else {
-        MPIR_Free_contextid(ICOMM_WORLD_CTXID);
+        MPIR_Free_contextid(MPIR_CTXID_ICOMM_WORLD);
     }
 #endif
 
