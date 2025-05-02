@@ -216,6 +216,9 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
         } else if (strcmp(argv[i], "-l") == 0) {
             IOLabelSetDefault(1);
             optionArgs = 1;
+        } else if (strcmp(argv[i], "-v") == 0) {
+            /* TODO: add a verbose option */
+            optionArgs = 1;
         } else if (strcmp(argv[i], "-maxtime") == 0) {
             mypUniv->timeout = getInt(i + 1, argc, argv);
             optionArgs = 1;
