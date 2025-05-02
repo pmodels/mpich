@@ -363,10 +363,12 @@ static MPI_Datatype datatype_from_ofi(enum fi_datatype fi_dt)
             return MPIR_INT64;
         case FI_UINT64:
             return MPIR_UINT64;
+#ifdef FI_INT128
         case FI_INT128:
             return MPIR_INT128;
         case FI_UINT128:
             return MPIR_UINT128;
+#endif
         case FI_FLOAT:
             return MPIR_FLOAT32;
         case FI_DOUBLE:
