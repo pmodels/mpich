@@ -297,6 +297,7 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         if (!init_shm_initialized) {
             mpi_errno = MPIDU_Init_shm_init();
             MPIR_ERR_CHECK(mpi_errno);
+            init_shm_initialized = true;
         }
 
         mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
