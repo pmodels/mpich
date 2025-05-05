@@ -44,6 +44,15 @@
 # Added MPIX_BFLOAT16, and added software reduction support for MPIX_BFLOAT16
   and MPIX_C_FLOAT16.
 
+# Reworked AVX and AVX512 support. By default, MPICH will use runtime check to
+  detect if AVX or AVX512 is supported. If supported, MPICH will internally use
+  AVX and AVX512 for inter-NUMA and Intel GPU device memory copy operations. The
+  --enable-fast=avx and --enable-fast=avx512f options now does two things: 1)
+  skips the runtime check and force enables AVX and AVX512; 2) enables the usage
+  of AVX and AVX512 to build the entire libmpi.so (instead of selected memory
+  copy operations). A new summary in ./configure will report info on these
+  usages.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
