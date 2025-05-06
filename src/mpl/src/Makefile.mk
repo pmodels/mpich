@@ -6,6 +6,7 @@
 lib@MPLLIBNAME@_la_SOURCES += \
     src/mpl_rankmap.c
 
+include src/arch/Makefile.mk
 include src/atomic/Makefile.mk
 include src/bt/Makefile.mk
 include src/dbg/Makefile.mk
