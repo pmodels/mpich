@@ -58,7 +58,7 @@ typedef struct PMIGroup {
  * sockets and for sockets+shared memory can exceed 128 characters.
  */
 #define MAXKEYLEN    64 /* max length of key in keyval space */
-#define MAXVALLEN  4096 /* max length of value in keyval space */
+#define MAXVALLEN  1024 /* max length of value in keyval space */
 #define MAXNAMELEN  256 /* max length of various names */
 #define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
 typedef struct PMIKVPair {
