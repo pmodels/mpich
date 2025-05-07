@@ -85,7 +85,7 @@ static int find_file(void)
  * broadcast to all others */
 static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
 {
-    char *buffer, *token, *key, *val, *garbage;
+    char *buffer, *token, *key, *val;
     char *pos1 = NULL, *pos2 = NULL;
     int flag;
     ssize_t ret;
@@ -117,7 +117,7 @@ static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
         if ((val = strtok_r(NULL, " \t", &pos2)) == NULL)
             /* malformed line: found key without value */
             continue;
-        if ((garbage = strtok_r(NULL, " \t", &pos2)) != NULL)
+        if (strtok_r(NULL, " \t", &pos2) != NULL)
             /* malformed line: more than two items */
             continue;
 
