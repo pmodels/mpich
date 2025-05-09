@@ -609,12 +609,13 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     mpi_errno = MPIR_Group_incl_impl(parent_group, sub_size, procs, &subcomm->local_group);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Notify device of communicator creation */
-    mpi_errno = MPID_Comm_commit_pre_hook(subcomm);
+    /* Create collectives-specific infrastructure.
+     * Need to be done before device init because addr exchange uses collective. */
+    mpi_errno = MPIR_Coll_comm_init(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Create collectives-specific infrastructure */
-    mpi_errno = MPIR_Coll_comm_init(subcomm);
+    /* Notify device of communicator creation */
+    mpi_errno = MPID_Comm_commit_pre_hook(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* call post commit hooks */
@@ -808,12 +809,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Notify device of communicator creation */
-    mpi_errno = MPID_Comm_commit_pre_hook(comm);
+    /* Create collectives-specific infrastructure.
+     * Need to be done before device init because addr exchange uses collective. */
+    mpi_errno = MPIR_Coll_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Create collectives-specific infrastructure */
-    mpi_errno = MPIR_Coll_comm_init(comm);
+    /* Notify device of communicator creation */
+    mpi_errno = MPID_Comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* call post commit hooks */

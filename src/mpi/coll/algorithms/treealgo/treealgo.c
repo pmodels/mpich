@@ -22,6 +22,19 @@ int MPII_Treealgo_comm_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    comm->coll.topo_aware_tree_root = -1;
+    comm->coll.topo_aware_tree_k = 0;
+    comm->coll.topo_aware_tree = NULL;
+    comm->coll.topo_aware_k_tree_root = -1;
+    comm->coll.topo_aware_k_tree_k = 0;
+    comm->coll.topo_aware_k_tree = NULL;
+    comm->coll.topo_wave_tree_root = -1;
+    comm->coll.topo_wave_tree = NULL;
+    comm->coll.topo_wave_tree_overhead = 0;
+    comm->coll.topo_wave_tree_lat_diff_groups = 0;
+    comm->coll.topo_wave_tree_lat_diff_switches = 0;
+    comm->coll.topo_wave_tree_lat_same_switches = 0;
+
     return mpi_errno;
 }
 
@@ -30,6 +43,23 @@ int MPII_Treealgo_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    if (comm->coll.topo_aware_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_aware_tree);
+        MPL_free(comm->coll.topo_aware_tree);
+        comm->coll.topo_aware_tree = NULL;
+    }
+
+    if (comm->coll.topo_aware_k_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_aware_k_tree);
+        MPL_free(comm->coll.topo_aware_k_tree);
+        comm->coll.topo_aware_k_tree = NULL;
+    }
+
+    if (comm->coll.topo_wave_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_wave_tree);
+        MPL_free(comm->coll.topo_wave_tree);
+        comm->coll.topo_wave_tree = NULL;
+    }
     return mpi_errno;
 }
 
