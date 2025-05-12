@@ -536,6 +536,7 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     new_comm->remote_size = new_comm->local_size;
     new_comm->local_group = group_ptr;
     MPIR_Group_add_ref(group_ptr);
+    MPIR_Comm_set_session_ptr(new_comm, group_ptr->session_ptr);
 
     mpi_errno = MPIR_Comm_commit(new_comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -562,6 +563,13 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
 
     if (errhan_ptr) {
         MPIR_Comm_set_errhandler_impl(new_comm, errhan_ptr);
+    }
+
+    /* Try create stream communicator for sessions in cases user requested for less than MPI_THREAD_MULTIPLE */
+    /* NOTE: we always do this because not all processes may agree on thread levels */
+    if (new_comm->session_ptr) {
+        mpi_errno = MPIR_Comm_set_stream(new_comm, new_comm->session_ptr->stream);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
