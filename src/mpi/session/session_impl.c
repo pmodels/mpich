@@ -30,8 +30,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Get the strict finalize parameter via info object (if any) */
-    mpi_errno =
-        MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
+    mpi_errno = MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
@@ -50,8 +49,19 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 
     mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(provided == MPI_THREAD_MULTIPLE);
 
-    session_ptr->thread_level = provided;
+    if (thread_level < MPI_THREAD_MULTIPLE) {
+        mpi_errno = MPIR_Stream_create_impl(NULL, &session_ptr->stream);
+        if (mpi_errno == MPI_SUCCESS) {
+            /* we got a dedicated stream, honor user's requested thread-single thread_level */
+            session_ptr->thread_level = thread_level;
+        } else {
+            /* no extra streams available, we only can do MPI_THREAD_MULTIPLE */
+            mpi_errno = MPI_SUCCESS;
+            session_ptr->thread_level = MPI_THREAD_MULTIPLE;
+        }
+    }
 
     session_ptr->requested_thread_level = thread_level;
     session_ptr->strict_finalize = strict_finalize;
@@ -66,6 +76,27 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
         MPIR_Assert(MPIR_Process.memory_alloc_kinds);
         session_ptr->memory_alloc_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
     }
+
+    if (errhandler_ptr) {
+        session_ptr->errhandler = errhandler_ptr;
+        MPIR_Errhandler_add_ref(errhandler_ptr);
+    }
+
+    /* populate psets */
+    session_ptr->num_psets = 2;
+    session_ptr->psets = MPL_malloc(session_ptr->num_psets * sizeof(struct MPIR_Pset),
+                                    MPL_MEM_GROUP);
+    MPIR_ERR_CHKANDJUMP(!session_ptr->psets, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    session_ptr->psets[0].name = MPL_strdup("mpi://WORLD");
+    mpi_errno = MPIR_Group_dup(MPIR_GROUP_WORLD_PTR, session_ptr, &session_ptr->psets[0].group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    session_ptr->psets[1].name = MPL_strdup("mpi://SELF");
+    mpi_errno = MPIR_Group_dup(MPIR_GROUP_SELF_PTR, session_ptr, &session_ptr->psets[1].group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* TODO: append a list of dynamically updated global psets */
 
     *p_session_ptr = session_ptr;
 
@@ -82,6 +113,21 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 int MPIR_Session_finalize_impl(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (session_ptr->stream) {
+        mpi_errno = MPIR_Stream_free_impl(session_ptr->stream);
+        MPIR_ERR_CHECK(mpi_errno);
+        session_ptr->stream = NULL;
+    }
+
+    for (int i = 0; i < session_ptr->num_psets; i++) {
+        mpi_errno = MPIR_Group_free_impl(session_ptr->psets[i].group);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_free(session_ptr->psets[i].name);
+    }
+    MPL_free(session_ptr->psets);
+    session_ptr->num_psets = 0;
 
     /* MPII_Finalize will free the session_ptr */
     mpi_errno = MPII_Finalize(session_ptr);

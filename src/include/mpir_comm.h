@@ -124,7 +124,7 @@ struct MPIR_Comm {
     MPID_Thread_mutex_t mutex;
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
-    int hierarchy_flags;        /* bit flags for hierarchy charateristics. See bit definitions below. */
+    int hierarchy_flags;        /* bit flags for hierarchy characteristics. See bit definitions below. */
     int local_rank;
     int num_local;
     int external_rank;
@@ -243,6 +243,7 @@ struct MPIR_Comm {
 /* Bit flags for comm->attr */
 #define MPIR_COMM_ATTR__SUBCOMM   0x1
 #define MPIR_COMM_ATTR__HIERARCHY 0x2
+#define MPIR_COMM_ATTR__BOOTSTRAP 0x4
 
 #define MPIR_COMM_HIERARCHY__NO_LOCAL    0x1
 #define MPIR_COMM_HIERARCHY__SINGLE_NODE 0x2
@@ -262,6 +263,7 @@ void MPIR_stream_comm_init(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
 int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm);
 int MPIR_get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
+int MPIR_Comm_set_stream(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr);
 
 MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_comm_rank_to_lpid(MPIR_Comm * comm_ptr, int rank)
 {
