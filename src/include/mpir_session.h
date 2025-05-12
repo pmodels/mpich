@@ -21,6 +21,7 @@ struct MPIR_Session {
     struct MPII_BsendBuffer *bsendbuffer;       /* for MPI_Session_attach_buffer */
     int requested_thread_level;
     int thread_level;
+    MPIR_Stream *stream;
     bool strict_finalize;
     char *memory_alloc_kinds;
     int num_psets;

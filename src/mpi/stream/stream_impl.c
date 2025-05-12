@@ -48,7 +48,7 @@ static int allocate_vci(int *vci, bool is_gpu_stream)
     return MPID_Allocate_vci(vci, false);
 }
 
-static int deallocate_vci(int *vci)
+static int deallocate_vci(int vci)
 {
     return MPID_Deallocate_vci(vci);
 }

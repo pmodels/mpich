@@ -49,8 +49,19 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 
     mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(provided == MPI_THREAD_MULTIPLE);
 
-    session_ptr->thread_level = provided;
+    if (thread_level < MPI_THREAD_MULTIPLE) {
+        mpi_errno = MPIR_Stream_create_impl(NULL, &session_ptr->stream);
+        if (mpi_errno == MPI_SUCCESS) {
+            /* we got a dedicated stream, honor user's requested thread-single thread_level */
+            session_ptr->thread_level = thread_level;
+        } else {
+            /* no extra streams available, we only can do MPI_THREAD_MULTIPLE */
+            mpi_errno = MPI_SUCCESS;
+            session_ptr->thread_level = MPI_THREAD_MULTIPLE;
+        }
+    }
 
     session_ptr->requested_thread_level = thread_level;
     session_ptr->strict_finalize = strict_finalize;
@@ -102,6 +113,12 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 int MPIR_Session_finalize_impl(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (session_ptr->stream) {
+        mpi_errno = MPIR_Stream_free_impl(session_ptr->stream);
+        MPIR_ERR_CHECK(mpi_errno);
+        session_ptr->stream = NULL;
+    }
 
     for (int i = 0; i < session_ptr->num_psets; i++) {
         mpi_errno = MPIR_Group_free_impl(session_ptr->psets[i].group);
