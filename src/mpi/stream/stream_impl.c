@@ -259,26 +259,8 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
     mpi_errno = MPII_Comm_dup(comm_ptr, NULL, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int vci, *vci_table;
-    if (stream_ptr) {
-        vci = stream_ptr->vci;
-    } else {
-        vci = 0;
-    }
-    vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    mpi_errno = MPIR_Allgather_impl(&vci, 1, MPIR_INT_INTERNAL,
-                                    vci_table, 1, MPIR_INT_INTERNAL, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Comm_set_stream(*newcomm_ptr, stream_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_SINGLE;
-    (*newcomm_ptr)->stream_comm.single.stream = stream_ptr;
-    (*newcomm_ptr)->stream_comm.single.vci_table = vci_table;
-
-    if (stream_ptr) {
-        MPIR_Object_add_ref(stream_ptr);
-    }
 
   fn_exit:
     return mpi_errno;
