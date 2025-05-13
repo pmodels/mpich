@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpir_threadcomm.h"
 
 /* Algorithm: Rabenseifner's Algorithm
  *
@@ -52,8 +53,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* need to allocate temporary buffer to store incoming data */
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
