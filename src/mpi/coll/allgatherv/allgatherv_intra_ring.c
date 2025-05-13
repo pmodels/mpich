@@ -36,8 +36,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     MPI_Aint recvtype_extent;
     MPI_Aint total_count;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     total_count = 0;
     for (i = 0; i < comm_size; i++)

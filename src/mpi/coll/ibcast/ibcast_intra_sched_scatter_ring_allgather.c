@@ -37,8 +37,7 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
 
     struct MPII_Ibcast_state *ibcast_state;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
