@@ -49,8 +49,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 
     MPIR_CHKLMEM_DECL();
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Create a temporary buffer */
 
