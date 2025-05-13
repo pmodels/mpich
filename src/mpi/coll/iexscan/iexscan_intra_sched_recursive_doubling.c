@@ -58,8 +58,7 @@ int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvb
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 

@@ -15,8 +15,7 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 

@@ -22,8 +22,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);

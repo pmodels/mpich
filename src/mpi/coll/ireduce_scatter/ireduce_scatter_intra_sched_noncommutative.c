@@ -26,8 +26,8 @@ int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *r
                                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size = comm_ptr->local_size;
-    int rank = comm_ptr->rank;
+    int comm_size;
+    int rank;
     int log2_comm_size;
     int i, k;
     MPI_Aint true_extent, true_lb;
@@ -35,6 +35,8 @@ int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *r
     void *tmp_buf0;
     void *tmp_buf1;
     void *result_ptr;
+
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 

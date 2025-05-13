@@ -36,8 +36,7 @@ int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* we do not handle in-place */
 #endif
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

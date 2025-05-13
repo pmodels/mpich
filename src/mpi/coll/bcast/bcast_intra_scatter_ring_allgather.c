@@ -38,8 +38,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     MPI_Aint true_extent, true_lb;
     MPIR_CHKLMEM_DECL();
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
