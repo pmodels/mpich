@@ -559,9 +559,9 @@ def dump_fallback(algo):
         elif a == "noinplace":
             cond_list.append("sendbuf != MPI_IN_PLACE")
         elif a == "power-of-two":
-            cond_list.append("comm_ptr->local_size == comm_ptr->coll.pof2")
+            cond_list.append("MPL_is_pof2(comm_ptr->local_size)")
         elif a == "size-ge-pof2":
-            cond_list.append("count >= comm_ptr->coll.pof2")
+            cond_list.append("count >= MPL_pof2(comm_ptr->local_size)")
         elif a == "commutative":
             cond_list.append("MPIR_Op_is_commutative(op)")
         elif a== "builtin-op":

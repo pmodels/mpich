@@ -201,9 +201,6 @@ struct MPIR_Comm {
                                          * use int array for fast access */
 
     struct {
-        int pof2;               /* Nearest (smaller than or equal to) power of 2
-                                 * to the number of ranks in the communicator.
-                                 * To be used during collective communication */
         int pofk[MAX_RADIX - 1];
         int k[MAX_RADIX - 1];
         int step1_sendto[MAX_RADIX - 1];
