@@ -30,7 +30,7 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
     MPI_Aint scatter_size, recv_size = 0;
     MPI_Aint curr_size, send_size;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     /* use long message algorithm: binomial tree scatter followed by an allgather */

@@ -39,7 +39,7 @@ int MPIR_Reduce_scatter_block_intra_noncommutative(const void *sendbuf,
     void *result_ptr;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 

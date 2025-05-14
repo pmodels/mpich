@@ -44,7 +44,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     MPI_Aint true_lb, true_extent, extent;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* NOTE: this algorithm is currently only correct for commutative operations */
     is_commutative = MPIR_Op_is_commutative(op);

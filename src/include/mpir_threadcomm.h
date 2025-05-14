@@ -123,16 +123,6 @@ MPL_STATIC_INLINE_PREFIX
         } \
     } while (0)
 
-#else
-#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
-        MPIR_Assert((comm)->threadcomm == NULL); \
-        rank_ = (comm)->rank; \
-        size_ = (comm)->local_size; \
-    } while (0)
-
-#endif
-
-#ifdef ENABLE_THREADCOMM
 typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
     int tid;

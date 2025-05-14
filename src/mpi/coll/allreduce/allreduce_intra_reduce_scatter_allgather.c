@@ -53,7 +53,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* need to allocate temporary buffer to store incoming data */
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);

@@ -76,7 +76,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
     int relative_rank, mask;
     MPI_Aint scatter_size, curr_size, recv_size, send_size;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     /* The scatter algorithm divides the buffer into nprocs pieces and
