@@ -16,7 +16,7 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     int dst, pof2, src, rem;
     void *tmp_buf;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);

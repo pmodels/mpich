@@ -56,7 +56,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
     int dst_tree_root, my_tree_root, tree_root;
     MPI_Aint recvtype_extent;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     /* Currently this algorithm can only handle power-of-2 comm_size.
