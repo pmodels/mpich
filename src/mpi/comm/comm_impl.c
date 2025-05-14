@@ -601,7 +601,10 @@ static int create_peer_comm(MPIR_Lpid my_lpid, MPIR_Lpid remote_lpid,
 
     bool is_low_group = (lpid_cmp(my_lpid, remote_lpid) < 0);
 
-    MPIR_Lpid peer_map[2];
+    MPIR_Lpid *peer_map;
+    peer_map = MPL_malloc(2 * sizeof(MPIR_Lpid), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!peer_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
     int my_rank, remote_rank;
     if (is_low_group) {
         peer_map[0] = my_lpid;
