@@ -407,6 +407,16 @@ int MPIR_Comm_commit(MPIR_Comm *);
 MPIR_Comm *MPIR_Comm_get_node_comm(MPIR_Comm * comm);
 MPIR_Comm *MPIR_Comm_get_node_roots_comm(MPIR_Comm * comm);
 
+#ifdef ENABLE_THREADCOMM
+#define MPIR_COMM_RANK_SIZE(comm, rank_, size_) MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_)
+#else
+#define MPIR_COMM_RANK_SIZE(comm, rank_, size_) do {            \
+        MPIR_Assert((comm)->threadcomm == NULL);                \
+        rank_ = (comm)->rank;                                   \
+        size_ = (comm)->local_size;                             \
+    } while (0)
+#endif
+
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 

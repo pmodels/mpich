@@ -31,7 +31,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, virt_rank;
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
     virt_rank = rank;
 
     /* get nearest power-of-two less than or equal to comm_size */

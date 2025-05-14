@@ -25,7 +25,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     struct MPII_Ibcast_state *ibcast_state;
     void *tmp_buf = NULL;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
     MPIR_Datatype_get_size_macro(datatype, type_size);

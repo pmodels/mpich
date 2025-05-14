@@ -58,7 +58,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
     void *partial_scan, *tmp_buf;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
