@@ -47,7 +47,7 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
     int rem, newdst, send_idx, recv_idx, last_idx;
     int pof2, old_i, newrank;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);

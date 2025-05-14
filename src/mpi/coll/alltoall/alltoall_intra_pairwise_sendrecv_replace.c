@@ -32,7 +32,7 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS, rank;
     MPI_Status status;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
