@@ -34,7 +34,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     total_count = 0;
     for (i = 0; i < comm_size; i++)

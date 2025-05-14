@@ -41,7 +41,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     if (rank == root)
         MPIR_Datatype_get_extent_macro(sendtype, extent);

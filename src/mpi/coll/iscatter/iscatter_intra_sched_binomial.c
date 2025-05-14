@@ -77,7 +77,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     void *tmp_buf = NULL;
     struct shared_state *ss = NULL;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     ss = MPIR_Sched_alloc_state(s, sizeof(struct shared_state));
     MPIR_ERR_CHKANDJUMP(!ss, mpi_errno, MPI_ERR_OTHER, "**nomem");

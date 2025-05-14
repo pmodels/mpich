@@ -24,7 +24,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
 #endif
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* need to allocate temporary buffer to store incoming data */
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
