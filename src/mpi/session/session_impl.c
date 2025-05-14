@@ -47,7 +47,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
      */
     int provided;
 
-    mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
+    mpi_errno = MPII_Init_thread(NULL, NULL, thread_level, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     session_ptr->thread_level = provided;
