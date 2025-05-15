@@ -37,8 +37,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     MPIR_Request **reqs;
     int num_reqs = 0;
 
-    comm_size = MPIR_Comm_size(comm_ptr);
-    rank = MPIR_Comm_rank(comm_ptr);
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);

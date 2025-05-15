@@ -19,8 +19,7 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
 
     MPIR_FUNC_ENTER;
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     if (mpi_errno)
