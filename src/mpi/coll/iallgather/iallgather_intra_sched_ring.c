@@ -29,8 +29,7 @@ int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MP
     int i, j, jnext, left, right;
     MPI_Aint recvtype_extent;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 

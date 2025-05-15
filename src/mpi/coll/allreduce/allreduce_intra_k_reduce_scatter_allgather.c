@@ -36,8 +36,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
 
     MPIR_Assert(k > 1);
 
-    rank = comm->rank;
-    nranks = comm->local_size;
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
     MPIR_Assert(MPIR_Op_is_commutative(op));
 
     /* need to allocate temporary buffer to store incoming data */

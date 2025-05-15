@@ -1280,7 +1280,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-                if (get_count(coll_info) < coll_info.comm_ptr->coll.pof2)
+                if (get_count(coll_info) < MPL_pof2(coll_info.comm_ptr->local_size))
                     node = node->success;
                 else
                     node = node->failure;

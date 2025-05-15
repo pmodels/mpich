@@ -49,8 +49,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 
     MPIR_CHKLMEM_DECL();
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Create a temporary buffer */
 
@@ -74,7 +73,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
