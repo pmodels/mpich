@@ -14,7 +14,9 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative = MPIR_Op_is_commutative(op);
-    int nranks = comm->local_size;
+    int nranks;
+    int rank;
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -50,7 +52,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
 
         case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_tsp_tree:
             /*Only knomial_1 tree supports non-commutative operations */
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, is_commutative ||
+            MPII_COLLECTIVE_FALLBACK_CHECK(rank, is_commutative ||
                                            MPIR_Iallreduce_tree_type ==
                                            MPIR_TREE_TYPE_KNOMIAL_1, mpi_errno,
                                            "Iallreduce gentran_tree cannot be applied.\n");
@@ -64,7 +66,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
             break;
 
         case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_tsp_ring:
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, is_commutative, mpi_errno,
+            MPII_COLLECTIVE_FALLBACK_CHECK(rank, is_commutative, mpi_errno,
                                            "Iallreduce gentran_ring cannot be applied.\n");
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype,
@@ -76,7 +78,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
              * number of ranks. If it not commutative or if the
              * count < nranks, MPIR_Iallreduce_sched algorithm
              * will be run */
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, is_commutative &&
+            MPII_COLLECTIVE_FALLBACK_CHECK(rank, is_commutative &&
                                            count >= nranks, mpi_errno,
                                            "Iallreduce gentran_recexch_reduce_scatter_recexch_allgatherv cannot be applied.\n");
             mpi_errno =

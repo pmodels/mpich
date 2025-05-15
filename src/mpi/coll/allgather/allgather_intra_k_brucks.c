@@ -30,8 +30,9 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     int nphases = 0;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
 
-    int rank = MPIR_Comm_rank(comm);
-    int size = MPIR_Comm_size(comm);
+    int rank;
+    int size;
+    MPIR_COMM_RANK_SIZE(comm, rank, size);
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int max = size - 1;
     MPIR_Request **reqs;

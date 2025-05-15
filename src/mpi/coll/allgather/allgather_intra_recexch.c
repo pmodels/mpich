@@ -37,8 +37,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Request **recv_reqs = NULL, **send_reqs = NULL;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
@@ -74,7 +73,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             comm->coll.step1_nrecvs[index] = 0;
             comm->coll.step2_nphases[index] = 0;
             mpi_errno =
-                MPII_Recexchalgo_get_neighbors(comm->rank, comm->local_size, &comm->coll.k[index],
+                MPII_Recexchalgo_get_neighbors(rank, nranks, &comm->coll.k[index],
                                                &comm->coll.step1_sendto[index],
                                                &comm->coll.step1_recvfrom[index],
                                                &comm->coll.step1_nrecvs[index],
