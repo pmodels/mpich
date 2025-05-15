@@ -133,8 +133,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
 
-    rank = MPIR_Comm_rank(comm);
-    size = MPIR_Comm_size(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, size);
 
     nphases = 0;
     max = size - 1;

@@ -52,8 +52,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t e
     MPIR_Request *sreqs[MAX_RADIX], *rreqs[MAX_RADIX * 2];
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     if (nranks == 1)
         goto fn_exit;

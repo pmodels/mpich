@@ -31,9 +31,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 
     MPIR_FUNC_ENTER;
 
-
-    size = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, size);
     lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
 
     if (rank == root)

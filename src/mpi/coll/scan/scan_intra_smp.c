@@ -12,7 +12,9 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
-    int rank = comm_ptr->rank;
+    int rank;
+    int size ATTRIBUTE((unused));
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
     MPI_Status status;
     void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
     MPI_Aint true_lb, true_extent, extent;
