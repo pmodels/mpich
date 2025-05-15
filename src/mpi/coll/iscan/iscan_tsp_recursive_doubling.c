@@ -30,8 +30,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
