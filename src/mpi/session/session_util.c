@@ -127,6 +127,8 @@ int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlev
 
     if (!flag) {
         /* Key thread_level not found in info object */
+        mpi_errno = thread_level_to_int(MPIR_CVAR_DEFAULT_THREAD_LEVEL, threadlevel);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
