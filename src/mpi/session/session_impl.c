@@ -30,8 +30,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Get the strict finalize parameter via info object (if any) */
-    mpi_errno =
-        MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
+    mpi_errno = MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
@@ -48,12 +47,10 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
      */
     int provided;
 
-    mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
+    mpi_errno = MPII_Init_thread(NULL, NULL, thread_level, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(provided == MPIR_ThreadInfo.thread_provided);
 
-    session_ptr->thread_level = provided;
-
-    session_ptr->requested_thread_level = thread_level;
     session_ptr->strict_finalize = strict_finalize;
 
     /* Get memory allocation kinds requested by the user (if any). This depends on CVAR
@@ -143,7 +140,7 @@ int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_
 int MPIR_Session_get_info_impl(MPIR_Session * session_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    const char *buf_thread_level = MPII_threadlevel_name(session_ptr->thread_level);
+    const char *buf_thread_level = MPII_threadlevel_name(MPIR_ThreadInfo.thread_provided);
 
     int len_strict_finalize = snprintf(NULL, 0, "%d", session_ptr->strict_finalize) + 1;
     char *buf_strict_finalize = MPL_malloc(len_strict_finalize, MPL_MEM_BUFFER);

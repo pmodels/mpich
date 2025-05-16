@@ -19,7 +19,7 @@ MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0, 0, 0, 0,
     {0}
 };
 
-int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
+int MPIR_Session_create(MPIR_Session ** p_session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -31,8 +31,6 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
 
     (*p_session_ptr)->errhandler = NULL;
     (*p_session_ptr)->bsendbuffer = NULL;
-    /* FIXME: actually do something with session thread_level */
-    (*p_session_ptr)->thread_level = thread_level;
     /* disable strict finalize feature by default */
     (*p_session_ptr)->strict_finalize = false;
     (*p_session_ptr)->memory_alloc_kinds = NULL;
@@ -129,6 +127,8 @@ int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlev
 
     if (!flag) {
         /* Key thread_level not found in info object */
+        mpi_errno = thread_level_to_int(MPIR_CVAR_DEFAULT_THREAD_LEVEL, threadlevel);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
