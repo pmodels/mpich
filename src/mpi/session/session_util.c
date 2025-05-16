@@ -31,7 +31,6 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr)
 
     (*p_session_ptr)->errhandler = NULL;
     (*p_session_ptr)->bsendbuffer = NULL;
-    (*p_session_ptr)->thread_level = MPI_THREAD_MULTIPLE;
     /* disable strict finalize feature by default */
     (*p_session_ptr)->strict_finalize = false;
     (*p_session_ptr)->memory_alloc_kinds = NULL;
