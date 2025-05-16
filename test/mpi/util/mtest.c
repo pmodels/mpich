@@ -879,11 +879,10 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
 int MTestTestIntercomm(MPI_Comm comm)
 {
     int local_size, remote_size, rank, **bufs, *bufmem, rbuf[2], j;
-    int errs = 0, wrank, nsize;
+    int errs = 0, nsize;
     char commname[MPI_MAX_OBJECT_NAME + 1];
     MPI_Request *reqs;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(comm, &local_size);
     MPI_Comm_remote_size(comm, &remote_size);
     MPI_Comm_rank(comm, &rank);
@@ -894,22 +893,21 @@ int MTestTestIntercomm(MPI_Comm comm)
 
     reqs = (MPI_Request *) malloc(remote_size * sizeof(MPI_Request));
     if (!reqs) {
-        printf("[%d] Unable to allocated %d requests for testing intercomm %s\n",
-               wrank, remote_size, commname);
+        printf("Unable to allocated %d requests for testing intercomm %s\n", remote_size, commname);
         errs++;
         return errs;
     }
     bufs = (int **) malloc(remote_size * sizeof(int *));
     if (!bufs) {
-        printf("[%d] Unable to allocated %d int pointers for testing intercomm %s\n",
-               wrank, remote_size, commname);
+        printf("Unable to allocated %d int pointers for testing intercomm %s\n",
+               remote_size, commname);
         errs++;
         return errs;
     }
     bufmem = (int *) malloc(remote_size * 2 * sizeof(int));
     if (!bufmem) {
-        printf("[%d] Unable to allocated %d int data for testing intercomm %s\n",
-               wrank, 2 * remote_size, commname);
+        printf("Unable to allocated %d int data for testing intercomm %s\n",
+               2 * remote_size, commname);
         errs++;
         return errs;
     }
@@ -930,12 +928,12 @@ int MTestTestIntercomm(MPI_Comm comm)
     for (j = 0; j < remote_size; j++) {
         MPI_Recv(rbuf, 2, MPI_INT, j, 0, comm, MPI_STATUS_IGNORE);
         if (rbuf[0] != j) {
-            printf("[%d] Expected rank %d but saw %d in %s\n", wrank, j, rbuf[0], commname);
+            printf("Expected rank %d but saw %d in %s\n", j, rbuf[0], commname);
             errs++;
         }
         if (rbuf[1] != rank) {
-            printf("[%d] Expected target rank %d but saw %d from %d in %s\n",
-                   wrank, rank, rbuf[1], j, commname);
+            printf("Expected target rank %d but saw %d from %d in %s\n",
+                   rank, rbuf[1], j, commname);
             errs++;
         }
     }
