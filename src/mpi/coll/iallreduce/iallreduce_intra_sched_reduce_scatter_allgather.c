@@ -24,8 +24,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
 #endif
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* need to allocate temporary buffer to store incoming data */
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -45,7 +44,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_size);
 
     rem = comm_size - pof2;
 

@@ -22,14 +22,12 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
     int comm_size, rank;
     MPI_Aint extent;
 
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            comm_size = comm_ptr->local_size;
-        else
+        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
             comm_size = comm_ptr->remote_size;
 
         MPIR_Datatype_get_extent_macro(recvtype, extent);

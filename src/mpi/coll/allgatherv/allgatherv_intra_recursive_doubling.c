@@ -38,8 +38,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint position, send_offset, recv_offset, offset;
     MPIR_CHKLMEM_DECL();
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     /* Currently this algorithm can only handle power-of-2 comm_size.
