@@ -203,7 +203,7 @@ for arg in "$@" ; do
     nativelinking=yes
     addarg=no
     ;;
-    -help)
+    --help|-help|-h)
     NC=`echo "$FC" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
         . $sysconfdir/mpixxx_opts.conf
