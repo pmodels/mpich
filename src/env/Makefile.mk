@@ -7,6 +7,8 @@ bin_SCRIPTS +=           \
     src/env/mpicc        \
     src/env/parkill
 
+sysconf_DATA += src/env/mpixxx_opts.conf
+
 bin_PROGRAMS += src/env/mpichversion \
     src/env/mpivars
 
