@@ -25,7 +25,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     int thread_level;
     bool strict_finalize;
     char *memory_alloc_kinds;
-    /* Get the thread level requested by the user via info object (if any) */
+    /* Get the thread level requested by the user via info object or set the default */
     mpi_errno = MPIR_Session_get_thread_level_from_info(info_ptr, &thread_level);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -33,20 +33,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     mpi_errno = MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
-     * concurrently, so significant work is needed to support per-session MPI_THREAD_SINGLE.
-     * For now, it probably still works with MPI_THREAD_SINGLE since we use MPL_Initlock_lock
-     * for cross-session locks in MPII_Init_thread.
-     *
-     * The MPI4 standard recommends users to _not_ request MPI_THREAD_SINGLE thread
-     * support level for sessions "because this will conflict with other components of an
-     * application requesting higher levels of thread support" (Sec. 11.3.1).
-     *
-     * TODO: support per-session MPI_THREAD_SINGLE, use user-requested thread level here
-     * instead of MPI_THREAD_MULTIPLE, and optimize
-     */
     int provided;
-
     mpi_errno = MPII_Init_thread(NULL, NULL, thread_level, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(provided == MPIR_ThreadInfo.thread_provided);
