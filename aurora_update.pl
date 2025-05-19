@@ -1,31 +1,77 @@
-my $dry_run = 0;
+my ($branch, $from_commit, $to_commit) = @ARGV;
+if (!$from_commit or $branch !~ /^(aurora|aurora_test)$/) {
+    die "Usage: perl aurora_update.pl (aurora|aurora_test) from_commit to_commit\n";
+}
 
-open In, "last_main" or die "Can't read last_main\n";
-my $last_main = <In>;
-close In;
-chomp $last_main;
-print "  last_main: $last_main\n";
+if (!$to_commit) {
+    if ($branch eq "aurora") {
+        die "Missing explicit to_commit\n";
+    }
+    # default to main HEAD
+    $to_commit = substr(`git rev-parse main`, 0, 10);
+}
 
-open In, "git log --oneline --no-merges --pretty=format:%h $last_main..main |" or die "git log failed\n";
+my $cur_commit = substr(`git rev-parse $branch`, 0, 10);
+
+# -- a list of commits that we should skip
+my %skip_commits = (
+    "053d58109c" => 1,
+);
+
+my @logs;
+my $failed;
+
+# -- grab commits
+open In, "git log --oneline --no-merges --pretty=\"format:%h %as %s\" $from_commit..$to_commit |" or die "git log failed\n";
 my @commits = <In>;
 close In;
 
+# -- switch branch and apply commits
+if ($branch eq "aurora") {
+    system("git checkout aurora")==0 or die "git switch aurora failed\n";
+}
+
 my $n_commits = @commits;
 for (my $i=0; $i < $n_commits; $i++) {
-    my $commit = $commits[$n_commits - $i - 1];
-    chomp $commit;
+    my $line = $commits[$n_commits - $i - 1];
+    push @logs, $line;
+    my $commit;
+    if ($line =~ /^(\S+) /) {
+        $commit = $1;
+    }
+    if ($skip_commits{$commit}) {
+        next;
+    }
     print "pick $i / $n_commits - $commit\n";
-    if (!$dry_run) {
-        system("git cherry-pick --allow-empty $commit") == 0 or die "cherry-pick failed\n";
+    if (system("git cherry-pick --allow-empty $commit") != 0) {
+        print "cherry-pick failed\n";
+        $failed = 1;
+        last;
     }
 }
 
-my $main_head = substr(`git rev-parse main`, 0, 10);
-print "      write: $main_head > last_main\n";
-if (!$dry_run) {
-    open Out, "> last_main" or die "Can't write last_main\n";
-    print Out "$main_head\n";
-    close Out;
-} else {
-    print "[This was a dry run]\n";
+# -- reset branch if failed
+if ($failed) {
+    system("git reset --hard $cur_commit")==0 or die "git reset --hard $cur_commit failed\n";
+}
+
+if ($branch eq "aurora") {
+    system("git checkout aurora_test")==0 or die "git switch aurora_test failed\n";
+}
+
+# -- save log
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+my $logfile = sprintf("%4d%02d%02d_$branch.log", $year + 1900, $mon + 1, $mday);
+
+open LOG, "> update_logs/$logfile" or die "Can't open update_logs/$logfile\n";
+print LOG "UPDATE $branch $from_commit $to_commit\n\n";
+print LOG "    current $branch HEAD $cur_commit\n\n";
+for my $l (@logs) {
+    print LOG $l;
+}
+close LOG;
+
+# -- commit log if success
+if (!$failed) {
+    system("git add -f update_logs/$logfile && git commit -m \"add update_logs/$logfile\"")==0 or die "Commit log file failed.\n";
 }
