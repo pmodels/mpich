@@ -115,6 +115,7 @@ int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlev
     char *thread_level_s = NULL;
     int flag = 0;
     const char key[] = "thread_level";
+    MPIR_CHKLMEM_DECL();
 
     /* No info pointer, nothing todo here */
     if (info_ptr == NULL) {
@@ -127,24 +128,23 @@ int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlev
 
     if (!flag) {
         /* Key thread_level not found in info object */
-        goto fn_exit;
+        /* The MPI specification recommends to default MPI_THREAD_MULTIPLE in MPI_Session_init */
+        *threadlevel = MPI_THREAD_MULTIPLE;
+    } else {
+        /* Get thread level value. No need to check flag afterwards
+         * because we would not be here if thread_level key was not in info object.
+         */
+        MPIR_CHKLMEM_MALLOC(thread_level_s, buflen + 1);
+        mpi_errno = MPIR_Info_get_impl(info_ptr, key, buflen, thread_level_s, &flag);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Set requested thread level value as output */
+        mpi_errno = thread_level_to_int(thread_level_s, threadlevel);
+        MPIR_ERR_CHECK(mpi_errno);
     }
-
-    /* Get thread level value. No need to check flag afterwards
-     * because we would not be here if thread_level key was not in info object.
-     */
-    thread_level_s = MPL_malloc(buflen + 1, MPL_MEM_BUFFER);
-    mpi_errno = MPIR_Info_get_impl(info_ptr, key, buflen, thread_level_s, &flag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Set requested thread level value as output */
-    mpi_errno = thread_level_to_int(thread_level_s, threadlevel);
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    if (thread_level_s) {
-        MPL_free(thread_level_s);
-    }
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
