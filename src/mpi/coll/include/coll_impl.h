@@ -45,6 +45,7 @@ extern void *MPIR_Csel_root;
 extern char MPII_coll_generic_json[];
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str);
+int get_ccl_from_string(const char *ccl_str);
 
 /* Function to initialize communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm);
