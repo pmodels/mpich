@@ -1530,6 +1530,7 @@
 /session/session_psets
 /session/session_self
 /session/session_bsend
+/session/session_local_only
 /spawn/concurrent_spawns
 /spawn/disconnect
 /spawn/disconnect2
