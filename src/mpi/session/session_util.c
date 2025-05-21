@@ -19,7 +19,7 @@ MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0, 0, 0, 0,
     {0}
 };
 
-int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
+int MPIR_Session_create(MPIR_Session ** p_session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -31,11 +31,13 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
 
     (*p_session_ptr)->errhandler = NULL;
     (*p_session_ptr)->bsendbuffer = NULL;
-    /* FIXME: actually do something with session thread_level */
-    (*p_session_ptr)->thread_level = thread_level;
+    (*p_session_ptr)->thread_level = MPI_THREAD_MULTIPLE;
+    (*p_session_ptr)->stream = NULL;
     /* disable strict finalize feature by default */
     (*p_session_ptr)->strict_finalize = false;
     (*p_session_ptr)->memory_alloc_kinds = NULL;
+    (*p_session_ptr)->num_psets = 0;
+    (*p_session_ptr)->psets = NULL;
 
     {
         int thr_err;
