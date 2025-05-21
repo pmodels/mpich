@@ -1532,6 +1532,7 @@
 /session/session_inter
 /session/session_4x4
 /session/session_bsend
+/session/session_local_only
 /spawn/concurrent_spawns
 /spawn/disconnect
 /spawn/disconnect2
