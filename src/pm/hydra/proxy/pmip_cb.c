@@ -154,8 +154,8 @@ static HYD_status handle_pmi_cmd(struct pmip_downstream *p, char *buf, int bufle
 
     if (handler) {
         struct PMIU_cmd pmi;
-        status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
-        HYDU_ERR_POP(status, "unable to parse PMI command\n");
+        int pmi_errno = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
+        HYDU_ASSERT(!pmi_errno, status);
 
         if (HYD_pmcd_pmip.user_global.debug) {
             int pgid = PMIP_pg_from_downstream(p)->pgid;
@@ -414,8 +414,8 @@ static HYD_status handle_pmi_response(struct pmip_pg *pg, int buflen, int pmi_ve
     if (handler) {
         struct PMIU_cmd pmi;
         /* note: buf is modified during parsing; make sure do not forward */
-        status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
-        HYDU_ERR_POP(status, "unable to parse PMI command\n");
+        int pmi_errno = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
+        HYDU_ASSERT(!pmi_errno, status);
 
         status = handler(pg, &pmi);
         HYDU_ERR_POP(status, "PMI handler returned error\n");
