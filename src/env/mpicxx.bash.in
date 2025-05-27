@@ -199,7 +199,7 @@ for arg in "$@" ; do
     mpi_abi=yes
     addarg=no
     ;;
-    --help|-help|-h)
+    -help)
     NC=`echo "$CXX" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
         . $sysconfdir/mpixxx_opts.conf
