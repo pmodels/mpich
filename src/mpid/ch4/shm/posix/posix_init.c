@@ -277,6 +277,7 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         sprintf(MPIDI_POSIX_global.shm_name, "mpich_shm_%x_%d", world_id, node_id);
         sprintf(MPIDI_POSIX_global.shm_vci_name, "mpich_vci_%x_%d", world_id, node_id);
 
+        static MPL_atomic_int_t root_ready = MPL_ATOMIC_INT_T_INITIALIZER(0);
         bool is_root;
         slab = MPL_initshm_open(MPIDI_POSIX_global.shm_name, slab_size, &is_root);
         MPIR_ERR_CHKANDJUMP(!slab, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -284,9 +285,9 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         if (is_root) {
             memset(slab, 0, sizeof(MPIDI_POSIX_shm_t));
             MPL_atomic_relaxed_store_uint64(&slab->shm_limit_counter, 0);
-            MPL_atomic_store_int(&slab->root_ready, MPIDI_POSIX_READY_FLAG);
+            MPL_atomic_store_int(&root_ready, MPIDI_POSIX_READY_FLAG);
         } else {
-            while (MPL_atomic_load_int(&slab->root_ready) != MPIDI_POSIX_READY_FLAG) {
+            while (MPL_atomic_load_int(&root_ready) != MPIDI_POSIX_READY_FLAG) {
                 MPID_Thread_yield();
             }
         }
