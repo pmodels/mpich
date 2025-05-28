@@ -283,7 +283,7 @@ static void test_ALLGATHERV(MPI_Count count, MPI_Datatype datatype, int stride, 
     MPI_Aint displs[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count;
     }
 
     void *sendbuf, *recvbuf;
@@ -362,7 +362,7 @@ static void test_ALLTOALLV(MPI_Count count, MPI_Datatype datatype, int stride, b
     MPI_Aint displs[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count;
     }
 
     void *sendbuf, *recvbuf;
@@ -395,7 +395,7 @@ static void test_ALLTOALLW(MPI_Count count, MPI_Datatype datatype, int stride, b
     MPI_Datatype types[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count;
         types[i] = datatype;
     }
 
@@ -489,7 +489,7 @@ static void test_GATHERV(MPI_Count count, MPI_Datatype datatype, int stride, boo
     if (rank == root) {
         for (int i = 0; i < nprocs; i++) {
             counts[i] = count;
-            displs[i] = i * (count * stride * sizeof(CTYPE));
+            displs[i] = i * count;
         }
     }
 
@@ -585,7 +585,7 @@ static void test_SCATTERV(MPI_Count count, MPI_Datatype datatype, int stride, bo
     if (rank == root) {
         for (int i = 0; i < nprocs; i++) {
             counts[i] = count;
-            displs[i] = i * (count * stride * sizeof(CTYPE));
+            displs[i] = i * count;
         }
     }
 
