@@ -48,6 +48,10 @@ MPI_Init:
        external state of the program, such as opening files, reading standard
        input or writing to standard output.
 
+    Thread Level:
+        MPICH by default set thread level to MPI_THREAD_SINGLE. This can be changed
+        by setting MPIR_CVAR_DEFAULT_THREAD_LEVEL.
+
     Thread and Signal Safety:
         This routine must be called by one thread only.  That thread is called
         the `main thread` and must be the thread that calls 'MPI_Finalize'.
@@ -132,6 +136,18 @@ MPI_Query_thread:
 MPI_Session_init:
     .desc: Initialize an MPI session
     .skip: initcheck
+/*
+    Info Hints:
+        Following keys are supported:
+        "thread_level" - Set MPI thread level. The default is MPI_THREAD_MULTIPLE.
+                         Note this is different from the default in MPI_Init.
+                         MPICH does not support different thread levels in different
+                         sessions. The provided thread level will be the one set by
+                         the first MPI_Session_init, MPI_Init, or MPI_Init_thread.
+        "mpi_memory_alloc_kinds" - Set the memory allocation kinds to be used by
+                                   by the calling MPI process on MPI objects derived
+                                   from the Session.
+*/
 
 MPI_Session_finalize:
     .desc: Finalize an MPI Session
