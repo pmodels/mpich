@@ -185,6 +185,9 @@ coll_large 4 arg=-option=1 arg=-coll=all arg=-nonblock timeLimit=300 mem=80
 #   count = INT_MAX+100, noncontig datatypes
 coll_large 4 arg=-option=2 arg=-coll=all timeLimit=1800 mem=100
 coll_large 4 arg=-option=2 arg=-coll=all arg=-nonblock timeLimit=1800 mem=100
+#   count = 1024, noncontig datatypes
+coll_large 4 arg=-option=3 arg=-coll=all
+coll_large 4 arg=-option=3 arg=-coll=all arg=-nonblock
 
 # Tests for persistent collectives
 p_bcast 4
