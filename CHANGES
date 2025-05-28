@@ -61,6 +61,10 @@
   support KVS exchange and barrier over a group of processes rather than the
   world. Usage in multiple threads is supported.
 
+# MPI_Session_init default to MPI_THREAD_MULTIPLE. Thread levels are global. The
+  first MPI_Session_init, MPI_Init, or MPI_Init_thread sets the thread level;
+  the later init will ignore users request and inherit the global thread level.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
