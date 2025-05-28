@@ -17,7 +17,7 @@
 #define MPITYPE MPI_INT
 #else
 #define CTYPE   char
-#define MPITYPE MPI_CHAR
+#define MPITYPE MPI_SIGNED_CHAR
 #endif
 
 #define MAX_PROC 20
