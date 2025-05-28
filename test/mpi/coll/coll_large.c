@@ -162,6 +162,16 @@ int main(int argc, char **argv)
 
             MPI_Op_create(uop, 1, &use_op);
             break;
+        case 3:
+            /* small count, non-contig datatype */
+            count = 1024;
+            MPI_Type_create_resized(MPITYPE, 0, sizeof(CTYPE) * STRIDE, &datatype);
+            MPI_Type_commit(&datatype);
+            stride = STRIDE;
+            datatype_need_free = true;
+
+            MPI_Op_create(uop, 1, &use_op);
+            break;
         default:
             if (rank == 0) {
                 printf("Unexpected option: %d\n", option);
