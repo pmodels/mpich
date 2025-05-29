@@ -53,6 +53,8 @@
   copy operations). A new summary in ./configure will report info on these
   usages.
 
+# PMI 2 is now deprecated. Please consider switching to PMI 1.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
