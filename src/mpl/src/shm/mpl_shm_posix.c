@@ -66,6 +66,19 @@ void *MPL_initshm_open(const char *name, int size, bool * is_root_p)
         if (!fd) {
             goto fn_fail;
         }
+
+        /* wait until the region size is set by the root */
+        struct stat statbuf;
+        do {
+            int rc = fstat(fd, &statbuf);
+            if (rc) {
+                goto fn_fail;
+            }
+        } while (statbuf.st_size == 0);
+
+        if (statbuf.st_size < size) {
+            goto fn_fail;
+        }
     }
 
     p->initshm = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
