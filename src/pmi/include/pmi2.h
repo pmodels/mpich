@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+/* WARNING: PMI 2 is DEPRECATED. New features will be developed in PMI 1. */
+
 /*D
 PMI2_CONSTANTS - PMI2 definitions
 
