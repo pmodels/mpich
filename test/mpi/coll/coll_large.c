@@ -72,6 +72,7 @@ static void test_REDUCE_SCATTER_BLOCK(MPI_Count count, MPI_Datatype datatype, in
 static void test_REDUCE_LOCAL(MPI_Count count, MPI_Datatype datatype, int stride, bool is_nonblock);
 
 static void uop(void *inbuf, void *inoutbuf, int *count, MPI_Datatype * dtype);
+static void uop_c(void *inbuf, void *inoutbuf, MPI_Count * count, MPI_Datatype * dtype);
 
 TEST_FN tests[ALLCOLL] = {
     0,
@@ -160,7 +161,7 @@ int main(int argc, char **argv)
             stride = STRIDE;
             datatype_need_free = true;
 
-            MPI_Op_create(uop, 1, &use_op);
+            MPI_Op_create_c(uop_c, 1, &use_op);
             break;
         case 3:
             /* small count, non-contig datatype */
@@ -267,6 +268,15 @@ static void uop(void *inbuf, void *inoutbuf, int *count, MPI_Datatype * dtype)
     CTYPE *in = inbuf;
     CTYPE *inout = inoutbuf;
     for (int i = 0; i < (*count * STRIDE); i += STRIDE) {
+        inout[i] += in[i];
+    }
+}
+
+static void uop_c(void *inbuf, void *inoutbuf, MPI_Count * count, MPI_Datatype * dtype)
+{
+    CTYPE *in = inbuf;
+    CTYPE *inout = inoutbuf;
+    for (MPI_Count i = 0; i < (*count * STRIDE); i += STRIDE) {
         inout[i] += in[i];
     }
 }
