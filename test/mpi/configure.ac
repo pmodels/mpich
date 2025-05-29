@@ -821,6 +821,14 @@ AC_SUBST([cuda_CPPFLAGS])
 AC_SUBST([cuda_LDFLAGS])
 AC_SUBST([cuda_LIBS])
 
+if test "$pac_have_cuda" = "yes" ; then
+    PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
+    if test "$pac_have_nccl" = "yes" ; then
+        have_ccl=yes
+        AC_DEFINE([ENABLE_NCCL], 1, [define if have libnccl])
+    fi
+fi
+
 if test "$have_gpu" = "no" ; then
     # Check Level Zero availability when no other GPU library is available
     PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
@@ -894,6 +902,9 @@ default_testlist=testlist
 default_testdirs=
 if test $have_gpu = "yes" ; then
     default_testlist="${default_testlist},testlist.gpu"
+fi
+if test "$have_ccl" = "yes" ; then
+    default_testlist="${default_testlist},testlist.ccl"
 fi
 if test $enable_dtpools = "yes" ; then
     default_testlist="${default_testlist},testlist.dtp"

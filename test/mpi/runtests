@@ -444,6 +444,17 @@ sub LoadTests {
 
             if ($#args >= 1) { $np = $args[1]; }
 
+            # global env for GPU feature, can be overridden by per-test envs
+            if ($g_opt{has_gpu_test}) {
+                if ($test_opt->{gpu}) {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
+                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\bcuda$/) {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
+                } else {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
+                }
+            }
+
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
@@ -476,16 +487,6 @@ sub LoadTests {
             if ($g_opt{mpitest_singleton} and ($np != 1 or @{$test_opt->{mpiexecargs}})) {
                 # skip if we need test singleton init and the test require multiple processes or mpiexec argument
                 next;
-            }
-
-            if ($g_opt{has_gpu_test}) {
-                if ($test_opt->{gpu}) {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\bcuda$/) {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                } else {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
-                }
             }
 
             # Set a default timeout on tests (3 minutes for now)
