@@ -7,10 +7,15 @@ MPI_Op_create:
     .poly_impl: separate
 /*
     Notes on the user function:
-    The calling list for the user function type is
+    For MPI_Op_create, the calling list for the user function type is
     .vb
         typedef void (MPI_User_function) (void * a,
                       void * b, int * len, MPI_Datatype *);
+    .ve
+    For MPI_Op_create_c, the calling list for the user function type is
+    .vb
+        typedef void (MPI_User_function_c) (void * a,
+                      void * b, MPI_Count * len, MPI_Datatype *);
     .ve
     where the operation is 'b[i] = a[i] op b[i]', for 'i=0,...,len-1'.  A pointer
     to the datatype given to the MPI collective computation routine (i.e.,
