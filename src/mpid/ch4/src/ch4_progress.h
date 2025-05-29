@@ -23,6 +23,19 @@ cvars:
       description : >-
         If on, poll global progress every once a while. With per-vci configuration, turning global progress off may improve the threading performance.
 
+    - name        : MPIR_CVAR_CH4_PROGRESS_THROTTLE
+      category    : CH4
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        When running high PPN (high number of processes on a single node), keep polling progress may monopolize
+        the underlying atomic queue and preventing packets being enqueued. A work around is to hold back progress
+        polling. Setting MPIR_CVAR_CH4_PROGRESS_THROTTLE=true will throttle the progress polling by injecting
+        usleep(1) every once a while.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -35,7 +48,8 @@ extern MPL_TLS int global_vci_poll_count;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
-    if (MPIDI_global.n_vcis == 1 || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
+    if ((MPIDI_global.n_vcis == 1 || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) &&
+        !MPIR_CVAR_CH4_PROGRESS_THROTTLE) {
         return 0;
     } else {
         global_vci_poll_count++;
@@ -132,6 +146,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     if (!is_explicit_vci && MPIDI_do_global_progress()) {
         for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
             MPIDI_PROGRESS(vci, true);
+        }
+        if (!made_progress && MPIR_CVAR_CH4_PROGRESS_THROTTLE) {
+            usleep(1);
         }
     } else {
         for (int i = 0; i < state->vci_count; i++) {
