@@ -3920,6 +3920,21 @@ if test -z "$NVCC" ; then
     fi
 fi
 
+# CCLs
+have_ccl=no
+
+if test $GPU_SUPPORT = "CUDA" ; then
+    PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
+    if test "$pac_have_nccl" = "yes" ; then
+        have_ccl=yes
+        AC_DEFINE([ENABLE_NCCL], 1, [define if have libnccl])
+    fi
+fi
+
+if test "$have_ccl" = "yes" ; then
+    AC_DEFINE([ENABLE_CCLCOMM], 1, [define if have any ccls])
+fi
+
 # Update the cache first with the results of the previous configure steps
 # We don't use the subdir cache because ensuring that the cache is consistent
 # with the way in which configure wishes to use it is very difficult and
