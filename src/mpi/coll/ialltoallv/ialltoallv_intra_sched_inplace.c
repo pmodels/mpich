@@ -18,8 +18,7 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
     MPI_Aint recvtype_extent, recvtype_sz;
     int dst, rank;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Get extent and size of recvtype, don't look at sendtype for MPI_IN_PLACE */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

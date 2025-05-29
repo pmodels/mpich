@@ -29,8 +29,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
     MPI_Aint recvtype_sz;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* The regular MPI_Alltoallw handles MPI_IN_PLACE using pairwise
      * sendrecv_replace calls.  We don't have a sendrecv_replace, so just

@@ -17,8 +17,7 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Create a temporary buffer */
 

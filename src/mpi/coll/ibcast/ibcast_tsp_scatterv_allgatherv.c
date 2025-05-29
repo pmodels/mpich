@@ -37,14 +37,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     MPIR_FUNC_ENTER;
 
+    MPIR_COMM_RANK_SIZE(comm, rank, size);
+    lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
                      "Scheduling scatter followed by recursive exchange allgather based broadcast on %d ranks, root=%d\n",
-                     MPIR_Comm_size(comm), root));
-
-    size = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
-    lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
+                     size, root));
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
