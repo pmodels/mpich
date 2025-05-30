@@ -101,7 +101,7 @@ BARRIER:
     Q: barrier_in
         group: STRING, optional=NULL
     R: barrier_out
-        group: STRING, optional=NULL
+        tag: INTEGER, optional=0
 
 PUBLISH:
     Q: publish_name

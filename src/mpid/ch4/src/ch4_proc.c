@@ -351,7 +351,7 @@ int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int ad
 
     bool is_node_root = (node_comm->rank == 0);
 
-    int rc = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0);
+    int rc = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0, 0);
     if (rc == MPI_SUCCESS) {
         /* MPIR_pmi_allgather_group is supported */
         if (is_node_root) {
