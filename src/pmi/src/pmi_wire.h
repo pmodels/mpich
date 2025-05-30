@@ -173,6 +173,8 @@ int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 
 /* read and parse PMI command */
 int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd);
+/* PMI 1.2 extensions to support nonblocking BARRIER */
+int PMIU_cmd_test_barrier(int fd, int tag, bool * flag_out);
 
 /* write PMI command to fd */
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd);
