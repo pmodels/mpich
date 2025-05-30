@@ -87,6 +87,10 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
         PMIU_verbose = atoi(p);
     }
 
+    /* enable PMIU_CS_{ENTER/EXIT} */
+    PMIU_is_threaded = 1;
+    PMIU_thread_init();
+
     /* Get the fd for PMI commands; if none, we're a singleton */
     bool do_handshake;
     rc = PMIU_get_pmi_fd(&PMI_fd, &do_handshake);
