@@ -9,12 +9,14 @@
 #include "pmi_common.h"
 #include "pmi_wire.h"
 #include "pmi_msg.h"
+#include "utlist.h"
 
 #include <ctype.h>
 
 #define MAX_TMP_BUF_SIZE 4096
 static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
 
+/* wire command parsing routines */
 #define IS_SPACE(c) ((c) == ' ')
 #define IS_EOS(c) ((c) == '\0')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
@@ -913,6 +915,99 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
     goto fn_exit;
 }
 
+struct barrier_response {
+    int tag;
+    struct barrier_response *prev;
+    struct barrier_response *next;
+};
+
+static struct barrier_response *barrier_response_queue;
+
+/* read a PMI command and enqueue any nonblocking barrier responses */
+static int cmd_read_expect(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd)
+{
+    int pmi_errno = PMIU_SUCCESS;
+    while (true) {
+        pmi_errno = PMIU_cmd_read(fd, pmicmd);
+        PMIU_ERR_POP(pmi_errno);
+
+        if (strcmp(expectedCmd, pmicmd->cmd) != 0) {
+            if (PMIU_is_threaded) {
+                /* allow certain query/response to be nonblocking;
+                 * enqueue and continue for such response when it not expected. */
+                if (strcmp("barrier_out", pmicmd->cmd) == 0) {
+                    const char *tag = PMIU_cmd_find_keyval(pmicmd, "tag");
+                    if (tag) {
+                        struct barrier_response *r = MPL_malloc(sizeof(struct barrier_response),
+                                                                MPL_MEM_OTHER);
+                        r->tag = atoi(tag);
+                        DL_APPEND(barrier_response_queue, r);
+                        continue;
+                    }
+                }
+            }
+            PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL,
+                                 "expecting cmd=%s, got %s\n", expectedCmd, pmicmd->cmd);
+        }
+        break;
+    }
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int PMIU_cmd_test_barrier(int fd, int tag, bool * flag_out)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    if (barrier_response_queue) {
+        struct barrier_response *elt, *tmp;
+        DL_FOREACH_SAFE(barrier_response_queue, elt, tmp) {
+            if (elt->tag == tag) {
+                DL_DELETE(barrier_response_queue, elt);
+                MPL_free(elt);
+                *flag_out = true;
+                goto fn_exit;
+            }
+        }
+    }
+    if (PMIU_poll(fd)) {
+        char *buf;
+        int buflen;
+        PMIU_read_cmd(fd, &buf, &buflen);
+        if (strncmp(buf, "cmd=barrier_out", 15) == 0) {
+            struct PMIU_cmd pmicmd;
+            PMIU_cmd_init_zero(&pmicmd);
+            pmi_errno = PMIU_cmd_parse(buf, strlen(buf), PMIU_WIRE_V1, &pmicmd);
+            PMIU_ERR_POP(pmi_errno);
+            const char *got_tag = PMIU_cmd_find_keyval(&pmicmd, "tag");
+            if (atoi(got_tag) == tag) {
+                *flag_out = true;
+            } else {
+                struct barrier_response *r = MPL_malloc(sizeof(struct barrier_response),
+                                                        MPL_MEM_OTHER);
+                r->tag = atoi(got_tag);
+                DL_APPEND(barrier_response_queue, r);
+                *flag_out = false;
+            }
+            pmicmd.buf_need_free = true;
+            PMIU_cmd_free_buf(&pmicmd);
+            goto fn_exit;
+        } else {
+            PMIU_unread(fd, buf, buflen);
+            *flag_out = false;
+            goto fn_exit;
+        }
+    }
+    *flag_out = false;
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -957,13 +1052,8 @@ int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd)
     pmi_errno = PMIU_cmd_send(fd, pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    pmi_errno = PMIU_cmd_read(fd, pmicmd);
+    pmi_errno = cmd_read_expect(fd, pmicmd, expectedCmd);
     PMIU_ERR_POP(pmi_errno);
-
-    if (strcmp(expectedCmd, pmicmd->cmd) != 0) {
-        PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL,
-                             "expecting cmd=%s, got %s\n", expectedCmd, pmicmd->cmd);
-    }
 
     /* check rc if included. */
     int rc;

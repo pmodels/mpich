@@ -25,6 +25,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <poll.h>
 #include <errno.h>
 
 #include "pmi.h"
@@ -223,6 +224,41 @@ struct last_read {
 
 struct last_read *last_read_list;
 
+int PMIU_unread(int fd, char *buf, int buflen)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    struct last_read *p;
+    p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+    PMIU_Assert(p);
+    p->fd = fd;
+    p->len = buflen;
+    p->buf = buf;
+    DL_PREPEND(last_read_list, p);
+
+    return pmi_errno;
+}
+
+bool PMIU_poll(int fd)
+{
+    if (last_read_list) {
+        return true;
+    }
+
+    struct pollfd fds[1];
+    int timeout_msecs = 0;
+    fds[0].fd = fd;
+    fds[0].events = POLLIN;
+
+    int ret;
+    ret = poll(fds, 1, timeout_msecs);
+    if (ret == 1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -318,15 +354,11 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
         if (got_full_cmd) {
             /* save the remainder for next read if any */
             if (buflen > cmd_len) {
-                struct last_read *p;
-                p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
-                PMIU_Assert(p);
-                p->fd = fd;
-                p->len = buflen - cmd_len;
-                p->buf = MPL_malloc(p->len, MPL_MEM_OTHER);
-                PMIU_Assert(p->buf);
-                memcpy(p->buf, buf + cmd_len, p->len);
-                DL_APPEND(last_read_list, p);
+                int len = buflen - cmd_len;
+                char *buf_copy = MPL_malloc(len, MPL_MEM_OTHER);
+                PMIU_Assert(buf_copy);
+                memcpy(buf_copy, buf + cmd_len, len);
+                PMIU_unread(fd, buf_copy, len);
             }
             break;
         }
