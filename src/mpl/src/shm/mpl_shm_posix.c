@@ -53,7 +53,7 @@ void *MPL_initshm_open(const char *name, int size, bool * is_root_p)
     p->is_root = false;
 
     int fd = shm_open(name, O_CREAT | O_RDWR | O_EXCL, S_IRUSR | S_IWUSR);
-    if (fd > 0) {
+    if (fd != -1) {
         /* first process creates the shared memory and it is responsible for ftruncate the size */
         p->is_root = true;
         int rc = ftruncate(fd, size);
@@ -63,7 +63,7 @@ void *MPL_initshm_open(const char *name, int size, bool * is_root_p)
     } else {
         /* shared memory exist, just open it */
         fd = shm_open(name, O_RDWR, S_IRUSR | S_IWUSR);
-        if (!fd) {
+        if (fd == -1) {
             goto fn_fail;
         }
 
