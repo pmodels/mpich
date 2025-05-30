@@ -226,7 +226,7 @@ static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask(void);
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
+static void get_max_dev_id(int *dev_id, int *subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int update_lru_mapped_order(void *ipc_buf, int dev_id);
@@ -1302,28 +1302,28 @@ static int parse_affinity_mask(void)
 }
 
 /* Get the max dev_id and subdev_id based on the environment */
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
+static void get_max_dev_id(int *dev_id, int *subdev_id)
 {
     /* This function assumes that parse_affinity_mask was previously called */
-    *max_dev_id = *max_subdev_id = 0;
+    *dev_id = *subdev_id = 0;
 
     /* Values based on ZE_AFFINITY_MASK */
     for (int i = 0; i < mask_contents.num_dev; ++i) {
-        if (mask_contents.dev_id[i] > *max_dev_id)
-            *max_dev_id = mask_contents.dev_id[i];
-        if (mask_contents.subdev_id[i] > *max_subdev_id)
-            *max_subdev_id = mask_contents.subdev_id[i];
+        if (mask_contents.dev_id[i] > *dev_id)
+            *dev_id = mask_contents.dev_id[i];
+        if (mask_contents.subdev_id[i] > *subdev_id)
+            *subdev_id = mask_contents.subdev_id[i];
     }
 
     /* If ZE_AFFINITY_MASK wasn't set */
     if (mask_contents.num_dev == 0) {
-        *max_dev_id = device_count - 1;
+        *dev_id = device_count - 1;
     }
 
     /* Include subdevices that weren't detected in parse_affinity_mask */
     for (int i = 0; i < device_count; ++i) {
-        if (subdevice_count[i] > 0 && (subdevice_count[i] - 1) > *max_subdev_id) {
-            *max_subdev_id = subdevice_count[i] - 1;
+        if (subdevice_count[i] > 0 && (subdevice_count[i] - 1) > *subdev_id) {
+            *subdev_id = subdevice_count[i] - 1;
         }
     }
 }
