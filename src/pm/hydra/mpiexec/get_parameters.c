@@ -281,16 +281,18 @@ static HYD_status check_environment(void)
 
 static HYD_status process_config_token(char *token, int newline, void *data)
 {
-    static int idx = 0;
     UT_array *args = data;
 
     char **last_arg = (char **) utarray_back(args);
-    if (idx && newline && strcmp(*last_arg, ":")) {
-        /* If this is a newline, but not the first one, and the
-         * previous token was not a ":", add an executable delimiter
-         * ':' */
-        static const char *colon = ":";
-        utarray_push_back(args, &colon, MPL_MEM_OTHER);
+    if (last_arg && newline) {
+        if (strcmp(*last_arg, "\\") == 0) {
+            /* remove the trailing line-continuation mark */
+            utarray_pop_back(args);
+        } else if (strcmp(*last_arg, ":") != 0) {
+            /* add ":" delimiter unless it is already there */
+            static const char *colon = ":";
+            utarray_push_back(args, &colon, MPL_MEM_OTHER);
+        }
     }
 
     utarray_push_back(args, &token, MPL_MEM_OTHER);

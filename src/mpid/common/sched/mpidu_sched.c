@@ -178,8 +178,10 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     if (start != MPI_UNDEFINED) {
         MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
         DL_FOREACH(all_schedules.head, elt) {
-            if (elt->tag >= start && elt->tag < end) {
-                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+            if (comm_ptr == elt->req->comm) {
+                if (elt->tag >= start && elt->tag < end) {
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+                }
             }
         }
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);

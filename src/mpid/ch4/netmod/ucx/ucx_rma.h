@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
         /* Create an MPI request and return. The completion cb will complete
          * the request and release ucp_request. */
         MPIR_Request *req = NULL;
-        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
+        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, vci, 2);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         ucp_request->req = req;
         *reqptr = req;
@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
         /* Create an MPI request and return. The completion cb will complete
          * the request and release ucp_request. */
         MPIR_Request *req = NULL;
-        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0, 2);
+        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, vci, 2);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         ucp_request->req = req;
         *reqptr = req;

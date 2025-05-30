@@ -22,7 +22,7 @@
         end
 !
         subroutine MTest_Finalize( errs )
-        use mpi
+        use mpi_f08
         integer errs
         integer rank, toterrs, ierr
 
@@ -108,7 +108,7 @@
         end
 
         subroutine MTestSpawnPossible( can_spawn, errs )
-        use mpi
+        use mpi_f08
         integer can_spawn
         integer errs
         integer(kind=MPI_ADDRESS_KIND) val

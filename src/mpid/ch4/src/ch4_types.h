@@ -300,6 +300,7 @@ extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;
 extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
+extern MPL_dbg_class MPIDI_CH4_DBG_IPC;
 #endif
 
 #endif /* CH4_TYPES_H_INCLUDED */

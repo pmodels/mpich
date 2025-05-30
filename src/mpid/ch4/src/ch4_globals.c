@@ -163,4 +163,5 @@ MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 MPL_dbg_class MPIDI_CH4_DBG_MAP;
 MPL_dbg_class MPIDI_CH4_DBG_COMM;
 MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
+MPL_dbg_class MPIDI_CH4_DBG_IPC;
 #endif

@@ -19,10 +19,11 @@ The MPI standard suggests the following arguments and their meanings\:
 + \-n <np> - Specify the number of processes to use
 . \-host <hostname> - Name of host on which to run processes
 . \-wdir <working directory> - cd to this one `before` running executable
-- \-configfile <name> - file containing specifications of host/program,
-   one per line, with # as a comment indicator, e.g., the usual
-   mpiexec input. The lines excluding comments are concatenated with newlines
-   replaced with spaces, and are then parsed as command line options.
+- \-configfile <name> - file containing command-line options.
+   The lines are of the form separated by the colons in the commandline form:
+       mpiexec {<option arguments>} : {...} : {...} : ... : {...}
+   Lines beginning with '#' are comments, and lines may be continued by
+   terminating the partial line with '\'.
 
 The following options are reserved by the MPI standard, but they are not
 supported by MPICH (hydra)\:

@@ -124,6 +124,11 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         /* still to do: tune this a bit for a variety of file systems. there's
          * no good default value so just leave it unset */
         fd->hints->min_fdomain_size = 0;
+        /* incorporate this hint into the default hints: otherwise,
+         * non-aggregators might have this hint set while aggregators opening a
+         * traditional unix or gpfs file might not, and the "check if all same"
+         * logic below won't work properly. */
+        ADIOI_Info_set(info, "striping_unit", "0");
         fd->hints->striping_unit = 0;
 
         /* temporally synchronizing flush: I think this is going to be a useful

@@ -57,7 +57,7 @@ FINALIZE:
 
 ABORT:
     Q: abort
-        exitcode: INTEGER, optional=1
+        exitcode: INTEGER
         message: STRING, optional=NULL
 
 MAXES:

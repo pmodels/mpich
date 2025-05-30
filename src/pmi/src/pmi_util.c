@@ -600,3 +600,11 @@ int PMIU_get_pmi_fd(int *pmi_fd, bool * do_handshake)
   fn_fail:
     goto fn_exit;
 }
+
+bool PMIU_detect_pmix_launcher(void)
+{
+    if (getenv("PMIX_VERSION") || getenv("PMIX_RANK") || getenv("PRTE_LAUNCHED")) {
+        return true;
+    }
+    return false;
+}
