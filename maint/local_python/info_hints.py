@@ -10,7 +10,12 @@ def collect_info_hint_blocks(root_dir):
     """Collect INFO_HINT_BLOCKS from source files and return a function-name-keyed dictionary"""
     infos_by_funcname = {}
 
-    files = subprocess.check_output("find %s -name '*.[ch]' |xargs grep -l BEGIN_INFO_HINT_BLOCK" % root_dir, shell=True).splitlines()
+    # xargs may process files in batches and return a non-zero exit code if grep comes up empty
+    # use "|| true" to avoid terminating the script in those instances
+    # https://stackoverflow.com/questions/26540813/got-exit-code-123-in-find-xargs-grep
+    files = subprocess.check_output(
+        "find %s -name '*.[ch]' |xargs grep -l BEGIN_INFO_HINT_BLOCK || true" % root_dir,
+        shell=True).splitlines()
     for f in files:
         infos = parse_info_block(f)
         for info in infos:
