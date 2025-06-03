@@ -283,8 +283,12 @@ static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, voi
 
 #define ZE_ERR_CHECK(ret) \
     do { \
-        if (unlikely((ret) != ZE_RESULT_SUCCESS)) \
+        if (unlikely((ret) != ZE_RESULT_SUCCESS)) { \
+            const char *ppString; \
+            zeDriverGetLastErrorDescription(ze_driver_handle, &ppString); \
+            MPL_internal_error_printf("ZE Error: (%s:%s,%d): %#x:%s\n", __func__, __FILE__, __LINE__, ret, ppString); \
             goto fn_fail; \
+        } \
     } while (0)
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *max_dev_id, int *max_subdev_id)
