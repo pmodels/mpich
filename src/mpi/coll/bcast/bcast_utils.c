@@ -24,15 +24,15 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                            MPI_Aint nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t errflag)
 {
     MPI_Status status;
-    int rank, comm_size, src, dst;
+    int rank, group_size, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint scatter_size, recv_size = 0;
     MPI_Aint curr_size, send_size;
 
-    comm_size = comm_ptr->local_size;
+    group_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
+    relative_rank = (rank >= root) ? rank - root : rank - root + group_size;
 
     /* use long message algorithm: binomial tree scatter followed by an allgather */
 
@@ -46,16 +46,16 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
      * scattered data is stored at the same offset in the buffer as it is
      * on the root process. */
 
-    scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
+    scatter_size = (nbytes + group_size - 1) / group_size;        /* ceiling division */
     curr_size = (rank == root) ? nbytes : 0;    /* root starts with all the
                                                  * data */
 
     mask = 0x1;
-    while (mask < comm_size) {
+    while (mask < group_size) {
         if (relative_rank & mask) {
             src = rank - mask;
             if (src < 0)
-                src += comm_size;
+                src += group_size;
             recv_size = nbytes - relative_rank * scatter_size;
             /* recv_size is larger than what might actually be sent by the
              * sender. We don't need compute the exact value because MPI
@@ -84,14 +84,14 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
 
     mask >>= 1;
     while (mask > 0) {
-        if (relative_rank + mask < comm_size) {
+        if (relative_rank + mask < group_size) {
             send_size = curr_size - scatter_size * mask;
             /* mask is also the size of this process's subtree */
 
             if (send_size > 0) {
                 dst = rank + mask;
-                if (dst >= comm_size)
-                    dst -= comm_size;
+                if (dst >= group_size)
+                    dst -= group_size;
                 mpi_errno = MPIC_Send(((char *) tmp_buf +
                                        scatter_size * (relative_rank + mask)),
                                       send_size, MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG, comm_ptr,
@@ -108,4 +108,108 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+int MPII_Scatter_for_bcast_group(void *buffer ATTRIBUTE((unused)), 
+                            MPI_Aint count ATTRIBUTE((unused)), 
+                            MPI_Datatype datatype ATTRIBUTE((unused)),
+                           int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPI_Aint nbytes, void *tmp_buf,
+                           int is_contig, MPIR_Errflag_t errflag) 
+{
+    MPI_Status status;
+    int rank, src, dst;
+    int relative_rank, mask;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint scatter_size, recv_size = 0;
+    MPI_Aint curr_size, send_size;
+    
+    rank = comm_ptr->rank;
+    int group_rank, group_root;
+    bool found_rank_in_group;
+
+    found_rank_in_group = find_local_rank_linear(group, group_size, rank, root, &group_rank, &group_root);
+
+    
+    relative_rank = (group_rank >= group_root) ? group_rank - group_root : group_rank - group_root + group_size;
+
+    scatter_size = (nbytes + group_size - 1) / group_size;        /* ceiling division */
+    curr_size = (rank == root) ? nbytes : 0;    /* root starts with all the
+                                                 * data */
+
+    mask = 0x1;
+    while (mask < group_size) {
+        if (relative_rank & mask) {
+            src = group_rank - mask;
+            if (src < 0)
+                src += group_size;
+            recv_size = nbytes - relative_rank * scatter_size;
+            
+            if (recv_size <= 0) {
+                curr_size = 0;  
+            } else {
+                mpi_errno = MPIC_Recv(((char *) tmp_buf +
+                                       relative_rank * scatter_size),
+                                      recv_size, MPI_BYTE, group[src], MPIR_BCAST_TAG, comm_ptr, &status);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                if (mpi_errno) {
+                    curr_size = 0;
+                } else
+                    /* query actual size of data received */
+                    MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
+            }
+            break;
+        }
+        mask <<= 1;
+    }
+
+    /* This process is responsible for all processes that have bits
+     * set from the LSB up to (but not including) mask.  Because of
+     * the "not including", we start by shifting mask back down
+     * one. */
+
+    mask >>= 1;
+    while (mask > 0) {
+        if (relative_rank + mask < group_size) {
+            send_size = curr_size - scatter_size * mask;
+            /* mask is also the size of this process's subtree */
+
+            if (send_size > 0) {
+                dst = group_rank + mask;
+                if (dst >= group_size)
+                    dst -= group_size;
+                mpi_errno = MPIC_Send(((char *) tmp_buf +
+                                       scatter_size * (relative_rank + mask)),
+                                      send_size, MPI_BYTE, group[dst], MPIR_BCAST_TAG, comm_ptr, errflag);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+
+                curr_size -= send_size;
+            }
+        }
+        mask >>= 1;
+    }
+
+    return mpi_errno_ret;
+}
+
+/* A linear search function to find the local rank of a rank within a subgroup. 
+    This also retrieves the local rank of the root process for that group. Returns 0 on failure and 1 on success. */
+bool find_local_rank_linear(int* group, int group_size, int rank, int root, int* group_rank, int* group_root) {
+    
+    if (!group) return 0;
+
+    bool found_rank = 0;
+    bool found_root = 0;
+
+    for (int i = 0; i < group_size; i++) {
+        if (group[i] == rank) {
+            *group_rank = i;
+            found_rank = 1; 
+        }
+        if (group[i] == root) {
+            *group_root = i;
+            found_root = 1;
+        }
+    }
+
+    return found_rank && found_root;
 }
