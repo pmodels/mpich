@@ -190,7 +190,7 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
         HYDU_dump(stdout, "forwarding command upstream:\n");
         HYD_pmcd_pmi_dump(&pmi);
     }
-    status = send_cmd_upstream(pg, &pmi, 0 /* dummy fd */);
+    status = send_cmd_upstream(pg, &pmi, -1 /* dummy fd */);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     utarray_clear(pg->kvs_batch);
@@ -680,7 +680,7 @@ HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
             /* FIXME: skip if the group is within the node */
             cache_put_flush(pg);
 
-            status = send_cmd_upstream(pg, pmi, p->pmi_fd);
+            status = send_cmd_upstream(pg, pmi, -1);
             HYDU_ERR_POP(status, "error sending command upstream\n");
         } else {
             status = barrier_group_finish(pg, s, pmi);
