@@ -9,6 +9,8 @@
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 extern MPL_shm_hnd_t shm_limit_handle;
 
+#include "ch4_progress.h"
+
 #define RELEASE_GATHER_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm, release_gather).field
 
@@ -29,6 +31,7 @@ extern MPL_shm_hnd_t shm_limit_handle;
                 DEBUG_PROGRESS_CHECK; \
             }                                                      \
         }                                                          \
+        no_progress_counter = 0;                                   \
     }                                                              \
     while (0)
 #define MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE (sizeof(MPL_atomic_uint64_t))
