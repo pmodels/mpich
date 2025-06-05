@@ -642,6 +642,9 @@ int MPID_InitCompleted(void)
 
     MPIR_FUNC_ENTER;
 
+    mpi_errno = MPIR_nodeid_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (MPIR_Process.has_parent) {
         MPIR_Assert(MPID_MAX_PORT_NAME >= MPI_MAX_PORT_NAME);
         char parent_port[MPID_MAX_PORT_NAME];
