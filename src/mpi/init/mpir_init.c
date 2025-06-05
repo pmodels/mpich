@@ -323,9 +323,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /**********************************************************************/
 
     if (is_world_model) {
-        mpi_errno = MPIR_nodeid_init();
-        MPIR_ERR_CHECK(mpi_errno);
-
         mpi_errno = MPID_InitCompleted();
         MPIR_ERR_CHECK(mpi_errno);
     }
