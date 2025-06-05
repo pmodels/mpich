@@ -10,9 +10,13 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories:
+    - name        : PMI
+      description : cvars that control behavior of the PMI interface
+
 cvars:
     - name        : MPIR_CVAR_PMI_VERSION
-      category    : NODEMAP
+      category    : PMI
       type        : enum
       default     : 1
       class       : none
@@ -23,6 +27,16 @@ cvars:
         1        - PMI (default)
         2        - PMI2
         x        - PMIx
+
+    - name        : MPIR_CVAR_PMI_DISABLE_GROUP
+      category    : PMI
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Set this cvar to true if PMI_Barrier_group or PMIx_Fence over a group is not supported.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -184,6 +198,11 @@ int MPIR_pmi_init(void)
 
     /* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
     mpi_errno = MPIR_build_locality();
+
+    /* if MPIR_pmi_barrier_group is not supported, set MPIR_CVAR_PMI_DISABLE_GROUP */
+    if (MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0, NULL) != MPI_SUCCESS) {
+        MPIR_CVAR_PMI_DISABLE_GROUP = 1;
+    }
 
     if (strcmp(MPIR_CVAR_COORDINATES_FILE, "")) {
         mpi_errno = parse_coord_file(MPIR_CVAR_COORDINATES_FILE);
@@ -739,11 +758,7 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (group == MPIR_PMI_GROUP_WORLD) {
-        mpi_errno = MPIR_pmi_allgather(sendbuf, sendsize, recvbuf, recvsize, MPIR_PMI_DOMAIN_ALL);
-        goto fn_exit;
-    }
-
+    MPIR_Assert(!MPIR_CVAR_PMI_DISABLE_GROUP);
     MPIR_Assert(count > 0);
 
     /* check the support of MPIR_pmi_barrier_group */
