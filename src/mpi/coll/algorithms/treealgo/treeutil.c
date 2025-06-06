@@ -604,8 +604,9 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
                                            MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
+    int rank;
+    int nranks;
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     UT_array hierarchy[MAX_HIERARCHY_DEPTH];
     int dim = MPIR_Process.coords_dims - 1;
@@ -699,8 +700,9 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                                              MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
+    int rank;
+    int nranks;
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     /* fall back to MPII_Treeutil_tree_topology_aware_init if k is less or equal to 2 */
     if (k <= 2) {
@@ -1116,8 +1118,9 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
                                           int lat_same_switches, MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
+    int rank;
+    int nranks;
+    MPIR_COMM_RANK_SIZE(comm, rank, nranks);
     int root_gr_sorted_idx = 0;
     int root_sw_sorted_idx = 0;
     int group_offset = 0;

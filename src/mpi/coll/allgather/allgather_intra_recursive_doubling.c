@@ -34,8 +34,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
     MPI_Status status;
     int mask, dst_tree_root, my_tree_root, nprocs_completed, k, tmp_mask, tree_root;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     /* Currently this algorithm can only handle power-of-2 comm_size.

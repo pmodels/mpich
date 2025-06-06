@@ -23,7 +23,7 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
     MPIR_Comm *newcomm_ptr = NULL;
 
     remote_size = comm_ptr->remote_size;
-    local_size = comm_ptr->local_size;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, local_size);
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -38,8 +38,6 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
          * to root. */
         MPI_Aint sendtype_sz;
         void *tmp_buf = NULL;
-
-        rank = comm_ptr->rank;
 
         if (rank == 0) {
             MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);

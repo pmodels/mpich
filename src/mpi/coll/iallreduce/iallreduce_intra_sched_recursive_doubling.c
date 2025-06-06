@@ -15,8 +15,7 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -38,7 +37,7 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_size);
 
     rem = comm_size - pof2;
 
