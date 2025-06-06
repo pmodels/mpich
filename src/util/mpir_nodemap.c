@@ -398,7 +398,7 @@ UT_icd hostname_icd = { MAX_HOSTNAME_LEN, NULL, NULL, NULL };
 /* Lookup node_id in MPIR_Process.node_hostnames, insert and return next_node_id if it's new hostname */
 int MPIR_nodeid_lookup(const char *hostname, int *node_id)
 {
-    if (MPIR_pmi_has_local_cliques()) {
+    if (!MPIR_Process.node_hostnames) {
         *node_id = -1;
         goto fn_exit;
     }
@@ -424,6 +424,9 @@ int MPIR_nodeid_lookup(const char *hostname, int *node_id)
 
 
 /* Initialize MPIR_Process.node_hostnames after comm_world is initialized */
+/* TODO: make this work in sessions. The idea is to treat all processes dynamically and
+ *       populate node_hostnames and assign node_id as we go.
+ */
 int MPIR_nodeid_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -472,13 +475,11 @@ int MPIR_nodeid_init(void)
 
 int MPIR_nodeid_free(void)
 {
-    if (MPIR_pmi_has_local_cliques()) {
-        goto fn_exit;
+    if (MPIR_Process.node_hostnames) {
+        utarray_free(MPIR_Process.node_hostnames);
+        MPIR_Process.node_hostnames = NULL;
     }
 
-    utarray_free(MPIR_Process.node_hostnames);
-
-  fn_exit:
     return MPI_SUCCESS;
 }
 
