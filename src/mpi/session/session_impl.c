@@ -30,8 +30,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Get the strict finalize parameter via info object (if any) */
-    mpi_errno =
-        MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
+    mpi_errno = MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
