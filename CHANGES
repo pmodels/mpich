@@ -53,6 +53,10 @@
   copy operations). A new summary in ./configure will report info on these
   usages.
 
+# MPI_Session_init default to MPI_THREAD_MULTIPLE. Thread levels are global. The
+  first MPI_Session_init, MPI_Init, or MPI_Init_thread sets the thread level;
+  the later init will ignore users request and inherit the global thread level.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
