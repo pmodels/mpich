@@ -251,7 +251,7 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "cb_buffer_size", "8388608");
 
     /* number of processes that actually perform I/O in collective I/O */
-    sprintf(value, "%d", nprocs / 2);
+    snprintf(value, sizeof(value), "%d", nprocs / 2);
     MPI_Info_set(info, "cb_nodes", value);
 
     /* buffer size for data sieving in independent reads */
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
      * If not set by the file system, the default value is 0.
      */
     if (default_striping_factor > 0) {
-        sprintf(value, "%d", default_striping_factor);
+        snprintf(value, sizeof(value), "%d", default_striping_factor);
         MPI_Info_set(info, "striping_factor", value);
     }
 
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
      * accepted only if 0 <= value < default_striping_factor - 1
      * ignored otherwise */
     if (default_striping_factor > 1)
-        sprintf(value, "%d", default_striping_factor - 2);
+        snprintf(value, sizeof(value), "%d", default_striping_factor - 2);
     else
         strcpy(value, "0");
     MPI_Info_set(info, "start_iodevice", value);

@@ -337,7 +337,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count)
         group_str = MPL_malloc(count * 8, MPL_MEM_OTHER);       /* assume each integer fits in 8 chars */
         char *s = group_str;
         for (int i = 0; i < count; i++) {
-            int n = sprintf(s, "%d,", group[i]);
+            int n = snprintf(s, 8, "%d,", group[i]);
             s += n;
         }
         /* overwrite the last comma */

@@ -215,7 +215,7 @@ pmix_status_t PMIx_Fence(const pmix_proc_t procs[], size_t nprocs,
             group_str = MPL_malloc(nprocs * 8, MPL_MEM_OTHER);  /* assume each integer fits in 8 chars */
             char *s = group_str;
             for (int i = 0; i < nprocs; i++) {
-                int n = sprintf(s, "%d,", procs[i].rank);
+                int n = snprintf(s, 8, "%d,", procs[i].rank);
                 s += n;
             }
             /* overwrite the last comma */
