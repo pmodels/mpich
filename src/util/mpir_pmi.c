@@ -376,12 +376,13 @@ int MPIR_pmi_barrier_local(void)
     return mpi_errno;
 }
 
-int MPIR_pmi_barrier_group(int *group, int count)
+/* Barrier over a group of processes. If stringtag is not NULL, it should work from multiple threads. */
+int MPIR_pmi_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
-    SWITCH_PMI(mpi_errno = pmi1_barrier_group(group, count),
-               mpi_errno = pmi2_barrier_group(group, count),
-               mpi_errno = pmix_barrier_group(group, count));
+    SWITCH_PMI(mpi_errno = pmi1_barrier_group(group, count, stringtag),
+               mpi_errno = pmi2_barrier_group(group, count, stringtag),
+               mpi_errno = pmix_barrier_group(group, count, stringtag));
     return mpi_errno;
 }
 
@@ -746,7 +747,7 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
     MPIR_Assert(count > 0);
 
     /* check the support of MPIR_pmi_barrier_group */
-    mpi_errno = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0);
+    mpi_errno = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
 
@@ -761,7 +762,8 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
     mpi_errno = put_ex(key, sendbuf, sendsize, is_local);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_pmi_barrier_group(group, count);
+    /* FIXME: set stringtag to thread id */
+    mpi_errno = MPIR_pmi_barrier_group(group, count, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 0; i < count; i++) {

@@ -122,7 +122,7 @@ static int pmi2_barrier_local(void)
     return pmi2_barrier();
 }
 
-static int pmi2_barrier_group(int *group, int count)
+static int pmi2_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
 
