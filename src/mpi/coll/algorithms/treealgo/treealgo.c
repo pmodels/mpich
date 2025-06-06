@@ -228,7 +228,7 @@ static void dump_node(MPIR_Treealgo_tree_t * node, FILE * output_stream)
 static void dump_tree(int tree_type, int rank, MPIR_Treealgo_tree_t * ct)
 {
     char outfile_name[PATH_MAX];
-    sprintf(outfile_name, "%s%d.json", "colltree", rank);
+    snprintf(outfile_name, sizeof(outfile_name), "%s%d.json", "colltree", rank);
     fprintf(stdout, "tree_type=%d: dumping %s\n", tree_type, outfile_name);
     FILE *outfile = fopen(outfile_name, "w");
     dump_node(ct, outfile);

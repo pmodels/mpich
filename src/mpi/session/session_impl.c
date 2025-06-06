@@ -193,7 +193,7 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
     }
 
     char buf[20];
-    sprintf(buf, "%d", mpi_size);
+    snprintf(buf, sizeof(buf), "%d", mpi_size);
     mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_size", buf);
     MPIR_ERR_CHECK(mpi_errno);
 

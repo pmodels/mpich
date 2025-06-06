@@ -556,7 +556,7 @@ static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int rank, int nran
     /* Dump hierarchy for debugging */
     if (MPIR_CVAR_HIERARCHY_DUMP) {
         char outfile_name[PATH_MAX];
-        sprintf(outfile_name, "%s%d", "hierarchy", rank);
+        snprintf(outfile_name, sizeof(outfile_name), "%s%d", "hierarchy", rank);
         FILE *outfile = fopen(outfile_name, "w");
         tree_topology_dump_hierarchy(hierarchy, rank, outfile);
         fclose(outfile);
