@@ -34,4 +34,8 @@ typedef struct {
     int dummy;
 } MPIDI_STUBNM_addr_t;
 
+typedef struct {
+    int dummy;
+} MPIDI_STUBNM_part_t;
+
 #endif /* STUBNM_PRE_H_INCLUDED */

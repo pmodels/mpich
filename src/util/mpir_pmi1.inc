@@ -54,7 +54,9 @@ static void pmi1_exit(void)
 
 static void pmi1_abort(int exit_code, const char *error_msg)
 {
-    PMI_Abort(exit_code, error_msg);
+    /* abort messages may contain spaces. Since there is no specific use case for error_msg,
+     * simplify it with a stub message. */
+    PMI_Abort(exit_code, "abort");
 }
 
 static int pmi1_put(const char *key, const char *val)

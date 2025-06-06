@@ -1269,6 +1269,44 @@ AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
 ])
 
 dnl
+dnl PAC_FC_CHECK_IGNORE_TKR_D check directives to ignore "DEVICE" attribute.
+dnl set pac_fc_ignore_tkr_d to a type if supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR_D],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([directives for Fortran compiler to ignore TKR(d) check])
+    pac_fc_ignore_tkr_d=no
+    for a in dir ; do
+        case $a in
+            dir)
+                # flang
+                decl='!DIR$ IGNORE_TKR(d) buf'
+                ;;
+        esac
+
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+            program main
+                IMPLICIT NONE
+                INTERFACE
+                  SUBROUTINE FUNC_A(buf)
+                    TYPE(*), DIMENSION(..) :: buf
+                    $decl
+                  END SUBROUTINE
+                END INTERFACE
+
+                REAL A(10)
+                CALL FUNC_A(A)
+            end
+        ])],[pac_fc_ignore_tkr_d=$a],[])
+        if test $pac_fc_ignore_tkr_d != no ; then
+            break
+        fi
+    done
+    AC_MSG_RESULT([$pac_fc_ignore_tkr_d])
+    AC_LANG_POP(Fortran)
+])
+
+dnl
 dnl PAC_FC_ISO_C_BINDING check whether ISO_C_BINDING is supported.
 dnl set pac_fc_iso_c_binding to yes if it's supported, otherwise, no.
 dnl
