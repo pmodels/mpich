@@ -1397,6 +1397,7 @@ cvars:
         smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
         recursive_multiplying    - Force recursive multiplying algorithm
+        circ_vring               - Force latency-bound circulant graph algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         tree                     - Force pipelined tree algorithm
         recexch                  - Force generic transport recursive exchange algorithm
