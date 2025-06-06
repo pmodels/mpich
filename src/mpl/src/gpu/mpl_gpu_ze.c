@@ -314,7 +314,7 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
         for (int i = 0; i < device_count; ++i) {
             int str_len = snprintf(NULL, 0, "%d", i);
             device_list[i] = (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
-            sprintf(device_list[i], "%d", i);
+            snprintf(device_list[i], str_len + 1, "%d", i);
         }
 
         *dev_count = device_count;
@@ -376,7 +376,7 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
                 int str_len = snprintf(NULL, 0, "%d.%d", i, j);
                 device_list[idx] =
                     (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
-                sprintf(device_list[idx], "%d.%d", i, j);
+                snprintf(device_list[idx], str_len + 1, "%d.%d", i, j);
                 device_list[idx][str_len] = 0;
                 idx++;
             }
@@ -1200,7 +1200,7 @@ static int gpu_ze_init_driver(void)
             strcpy(uuid_str, "uuid: ");
             for (int j = 0; j < ZE_MAX_DRIVER_UUID_SIZE; j++) {
                 char s[128];
-                sprintf(s, "%x ", device_properties.uuid.id[j]);
+                snprintf(s, sizeof(s), "%x ", device_properties.uuid.id[j]);
                 strcat(uuid_str, s);
             }
             fprintf(stderr, "  %s\n", uuid_str);

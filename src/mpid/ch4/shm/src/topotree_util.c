@@ -34,7 +34,7 @@ void MPIDI_SHM_print_topotree_file(const char *s, int rand_val, int rank,
     char fname[256];
     int c;
 
-    sprintf(fname, "FILE_%s_%d__%d_%d_.tree", s, rand_val, getpid(), rank);
+    snprintf(fname, sizeof(fname), "FILE_%s_%d__%d_%d_.tree", s, rand_val, getpid(), rank);
     file = fopen(fname, "w");
     if (file) {
         fprintf(file, "Children:: ");

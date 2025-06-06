@@ -17,15 +17,15 @@ int check_type(ADIOI_Flatlist_node * flat_type,
     /* MPI standard requires the displacements of etype and filetype be
      * non-negative */
     if (flat_type->flag & ADIOI_TYPE_NEGATIVE) {
-        sprintf(err_msg, "displacements of %s must be non-negative", type_kind);
+        snprintf(err_msg, sizeof(err_msg), "displacements of %s must be non-negative", type_kind);
         goto err_check;
     }
 
     /* MPI standard requires the displacements of etype and filetype be in a
      * monotonically nondecreasing order */
     if (flat_type->flag & ADIOI_TYPE_DECREASE) {
-        sprintf(err_msg, "displacements of %s must be in a monotonically nondecreasing order",
-                type_kind);
+        snprintf(err_msg, sizeof(err_msg),
+                 "displacements of %s must be in a monotonically nondecreasing order", type_kind);
         goto err_check;
     }
 
@@ -34,7 +34,8 @@ int check_type(ADIOI_Flatlist_node * flat_type,
      */
     if (((access_mode & ADIO_WRONLY) || (access_mode & ADIO_RDWR)) &&
         (flat_type->flag & ADIOI_TYPE_OVERLAP)) {
-        sprintf(err_msg, "%s is not permitted to contain overlapping regions", type_kind);
+        snprintf(err_msg, sizeof(err_msg), "%s is not permitted to contain overlapping regions",
+                 type_kind);
         goto err_check;
     }
 
