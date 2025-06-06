@@ -45,7 +45,7 @@ static inline int MPL_shm_get_uniq_str(char *str, int strlen)
 {
     LARGE_INTEGER perfCnt;
     QueryPerformanceCounter(&perfCnt);
-    return (snprintf(str, strlen, "MPICH_NEM_%d_%I64d", GetCurrentThreadId(), (perfCnt.QuadPart)));
+    return (snprintf(str, strlen, "MPICH_NEM_%lu_%I64d", GetCurrentThreadId(), (perfCnt.QuadPart)));
 }
 #endif
 
