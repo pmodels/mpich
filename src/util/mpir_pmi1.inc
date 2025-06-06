@@ -131,7 +131,7 @@ static int pmi1_barrier_local(void)
     return pmi1_barrier();
 }
 
-static int pmi1_barrier_group(int *group, int count)
+static int pmi1_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -139,7 +139,7 @@ static int pmi1_barrier_group(int *group, int count)
     MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_WORLD == PMI_GROUP_WORLD);
     MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_SELF == PMI_GROUP_SELF);
 
-    pmi_errno = PMI_Barrier_group(group, count);
+    pmi_errno = PMI_Barrier_group(group, count, stringtag);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_barrier_group", "**pmi_barrier_group %d", pmi_errno);
 
