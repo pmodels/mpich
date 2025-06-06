@@ -52,7 +52,7 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
     for (int i = 0; i < device_count; ++i) {
         int str_len = snprintf(NULL, 0, "%d", i);
         device_list[i] = (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
-        sprintf(device_list[i], "%d", i);
+        snprintf(device_list[i], str_len + 1, "%d", i);
     }
 
     *dev_count = device_count;

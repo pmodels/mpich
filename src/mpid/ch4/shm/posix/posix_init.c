@@ -274,8 +274,10 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         /* MPICH supports local cliques, so we need node_id in shm name to avoid collision */
         unsigned world_id = MPIR_Process.world_id;
         int node_id = MPIR_Process.node_map[MPIR_Process.rank];
-        sprintf(MPIDI_POSIX_global.shm_name, "mpich_shm_%x_%d", world_id, node_id);
-        sprintf(MPIDI_POSIX_global.shm_vci_name, "mpich_vci_%x_%d", world_id, node_id);
+        snprintf(MPIDI_POSIX_global.shm_name, sizeof(MPIDI_POSIX_global.shm_name),
+                 "mpich_shm_%x_%d", world_id, node_id);
+        snprintf(MPIDI_POSIX_global.shm_vci_name, sizeof(MPIDI_POSIX_global.shm_vci_name),
+                 "mpich_vci_%x_%d", world_id, node_id);
 
         bool is_root;
         slab = MPL_initshm_open(MPIDI_POSIX_global.shm_name, slab_size, &is_root);
