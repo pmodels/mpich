@@ -327,7 +327,7 @@ static int pmix_barrier_local(void)
     goto fn_exit;
 }
 
-static int pmix_barrier_group(int *group, int count)
+static int pmix_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
