@@ -371,7 +371,7 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
     } else {
         buf[cmd_len] = '\0';
         *buf_out = buf;
-        *buflen_out = cmd_len + 1;
+        *buflen_out = cmd_len;
     }
 
   fn_exit:
