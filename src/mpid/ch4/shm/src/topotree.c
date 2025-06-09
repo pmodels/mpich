@@ -170,13 +170,13 @@ void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
     MPIR_Assert(my_tree->children);
     utarray_reserve(my_tree->children, num_children, MPL_MEM_COLL);
     char str[1024], tmp[128];
-    sprintf(str, "----**Rank %d, Parent, %d, Child(%d)[", rank, parent, num_children);
+    snprintf(str, sizeof(str), "----**Rank %d, Parent, %d, Child(%d)[", rank, parent, num_children);
     for (int c = 0; c < num_children; ++c) {
         utarray_push_back(my_tree->children, &my_children[c], MPL_MEM_COLL);
         if (my_children[c] == 0) {
             *topotree_fail = 1;
         }
-        sprintf(tmp, "%d, ", my_children[c]);
+        snprintf(tmp, sizeof(tmp), "%d, ", my_children[c]);
         strcat(str, tmp);
         my_tree->num_children++;
     }
@@ -432,10 +432,10 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
     if (MPIDI_SHM_TOPOTREE_DEBUG) {
         char str[1024], tmp[128];
         for (i = 0; i < num_ranks; ++i) {
-            sprintf(str, "*BaseTreeRank %d, parent %d, children=%d [", i,
-                    MPIDI_SHM_TOPOTREE_PARENT(&tree, i), MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i));
+            snprintf(str, sizeof(str), "*BaseTreeRank %d, parent %d, children=%d [", i,
+                     MPIDI_SHM_TOPOTREE_PARENT(&tree, i), MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i));
             for (j = 0; j < MPIDI_SHM_TOPOTREE_NUM_CHILD(&tree, i); ++j) {
-                sprintf(tmp, "%d, ", MPIDI_SHM_TOPOTREE_CHILD(&tree, i, j));
+                snprintf(tmp, sizeof(tmp), "%d, ", MPIDI_SHM_TOPOTREE_CHILD(&tree, i, j));
                 strcat(str, tmp);
             }
             fprintf(stderr, "%s]\n", str);
