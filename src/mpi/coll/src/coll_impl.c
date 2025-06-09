@@ -150,6 +150,8 @@ int get_ccl_from_string(const char *ccl_str)
         ccl = MPIR_CVAR_ALLREDUCE_CCL_auto;
     else if (0 == strcmp(ccl_str, "nccl"))
         ccl = MPIR_CVAR_ALLREDUCE_CCL_nccl;
+    else if (0 == strcmp(ccl_str, "rccl"))
+        ccl = MPIR_CVAR_ALLREDUCE_CCL_rccl;
     return ccl;
 }
 

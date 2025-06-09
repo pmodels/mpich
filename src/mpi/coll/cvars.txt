@@ -1550,6 +1550,7 @@ cvars:
         CCL to use for CCL allreduce
         auto - Internal algorithm selection (use the value from the .json tuning file)
         nccl - Force NCCL
+        rccl - Force RCCL
 
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
