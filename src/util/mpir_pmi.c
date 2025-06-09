@@ -433,7 +433,7 @@ static int put_ex_segs(const char *key, const void *buf, int bufsize, int is_loc
         MPIR_ERR_CHECK(mpi_errno);
         for (int i = 0; i < num_segs; i++) {
             char seg_key[50];
-            sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
+            snprintf(seg_key, sizeof(seg_key), "%s-seg-%d/%d", key, i + 1, num_segs);
             int n = segsize;
             if (i == num_segs - 1) {
                 n = bufsize - segsize * (num_segs - 1);
@@ -472,7 +472,7 @@ static int get_ex_segs(int src, const char *key, void *buf, int *p_size, int is_
         got_size = 0;
         for (int i = 0; i < num_segs; i++) {
             char seg_key[50];
-            sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
+            snprintf(seg_key, sizeof(seg_key), "%s-seg-%d/%d", key, i + 1, num_segs);
             mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
             rc = MPL_hex_decode(val, (char *) buf + i * segsize, bufsize - i * segsize, &len_out);
@@ -588,7 +588,7 @@ int MPIR_pmi_bcast(void *buf, int bufsize, MPIR_PMI_DOMAIN domain)
         }
         /* add root to the key since potentially we may have multiple root(s)
          * on a single node due to odd-even-cliques */
-        sprintf(key, "-bcast-%d-%d", bcast_seq, root);
+        snprintf(key, sizeof(key), "-bcast-%d-%d", bcast_seq, root);
 
         if (is_root) {
             mpi_errno = put_ex(key, buf, bufsize, is_local);
@@ -629,7 +629,7 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
     allgather_seq++;
 
     char key[50];
-    sprintf(key, "-allgather-%d-%d", allgather_seq, MPIR_Process.rank);
+    snprintf(key, sizeof(key), "-allgather-%d-%d", allgather_seq, MPIR_Process.rank);
 
     if (in_domain) {
         mpi_errno = put_ex(key, sendbuf, sendsize, 0);
@@ -650,7 +650,7 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
             if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
                 rank = MPIR_Process.node_root_map[i];
             }
-            sprintf(key, "-allgather-%d-%d", allgather_seq, rank);
+            snprintf(key, sizeof(key), "-allgather-%d-%d", allgather_seq, rank);
             int got_size = recvsize;
             mpi_errno = get_ex(rank, key, (unsigned char *) recvbuf + i * recvsize, &got_size, 0);
             MPIR_ERR_CHECK(mpi_errno);
@@ -688,7 +688,7 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
     allgather_shm_seq++;
 
     char key[50];
-    sprintf(key, "-allgather-shm-%d-%d", allgather_shm_seq, rank);
+    snprintf(key, sizeof(key), "-allgather-shm-%d-%d", allgather_shm_seq, rank);
 
     /* in roots-only, non-roots would skip the put */
     if (domain != MPIR_PMI_DOMAIN_NODE_ROOTS || is_node_root) {
@@ -717,7 +717,7 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
         if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
             src = MPIR_Process.node_root_map[i];
         }
-        sprintf(key, "-allgather-shm-%d-%d", allgather_shm_seq, src);
+        snprintf(key, sizeof(key), "-allgather-shm-%d-%d", allgather_shm_seq, src);
         int got_size = recvsize;
         mpi_errno = get_ex(src, key, (unsigned char *) shm_buf + i * recvsize, &got_size, 0);
         MPIR_ERR_CHECK(mpi_errno);
