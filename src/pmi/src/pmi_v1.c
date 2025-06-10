@@ -287,23 +287,7 @@ PMI_API_PUBLIC int PMI_Get_appnum(int *appnum)
 
 PMI_API_PUBLIC int PMI_Barrier(void)
 {
-    int pmi_errno = PMI_SUCCESS;
-
-    struct PMIU_cmd pmicmd;
-    PMIU_cmd_init_zero(&pmicmd);
-
-    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, NULL);
-
-        pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
-        PMIU_ERR_POP(pmi_errno);
-    }
-
-  fn_exit:
-    PMIU_cmd_free_buf(&pmicmd);
-    return pmi_errno;
-  fn_fail:
-    goto fn_exit;
+    return PMI_Barrier_group(PMI_GROUP_WORLD, 0, NULL);
 }
 
 PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *tag)
@@ -370,7 +354,9 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
         PMIU_CS_EXIT;
         PMIU_ERR_POP(pmi_errno);
     } else {
+        PMIU_CS_ENTER;
         pmi_errno = PMIU_cmd_send(PMI_fd, &pmicmd);
+        PMIU_CS_EXIT;
         PMIU_ERR_POP(pmi_errno);
 
         while (true) {
@@ -559,6 +545,7 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM && strncmp(key, "PMI_", 4) == 0) {
         return PMI_FAIL;
     }
+
     /* Connect to the PM if we haven't already.  This is needed in case
      * we're doing an MPI_Comm_join or MPI_Comm_connect/accept from
      * the singleton init case.  This test is here because, in the way in
