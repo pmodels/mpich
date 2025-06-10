@@ -122,6 +122,7 @@ struct MPIR_Comm {
     MPIR_Group *local_group;    /* Groups in communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     MPID_Thread_mutex_t mutex;
+    const char *stringtag;      /* A string tag used to support multi-threaded MPI_Comm_create_from_group */
     struct MPIR_CCLcomm *cclcomm;       /* Not NULL only if CCL subcommunication is enabled */
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */

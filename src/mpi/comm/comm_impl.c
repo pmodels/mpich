@@ -530,6 +530,7 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     MPIR_ERR_CHECK(mpi_errno);
 
     new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
+    new_comm->stringtag = stringtag;
     new_comm->context_id = MPIR_CTXID_BOOTSTRAP;
     new_comm->recvcontext_id = new_comm->context_id;
     new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
@@ -566,6 +567,8 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     if (errhan_ptr) {
         MPIR_Comm_set_errhandler_impl(new_comm, errhan_ptr);
     }
+
+    new_comm->stringtag = NULL;
 
   fn_exit:
     *p_newcom_ptr = new_comm;
