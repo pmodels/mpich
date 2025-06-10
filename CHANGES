@@ -55,6 +55,12 @@
 
 # PMI 2 is now deprecated. Please consider switching to PMI 1.
 
+# PMI 2 thread support is removed.
+
+# PMI 1 upgraded to PMI 1.2, adding new API PMI_Barrier_group. PMI_Barrier_group
+  support KVS exchange and barrier over a group of processes rather than the
+  world. Usage in multiple threads is supported.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
