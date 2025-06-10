@@ -327,6 +327,11 @@ static int pmix_barrier_local(void)
     goto fn_exit;
 }
 
+static void fence_cb(pmix_status_t status, void *cbdata)
+{
+    MPL_atomic_store_int((MPL_atomic_int_t *) cbdata, 1);
+}
+
 static int pmix_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -348,9 +353,18 @@ static int pmix_barrier_group(int *group, int count, const char *stringtag)
     PMIX_INFO_CREATE(info, 1);
     PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
-    pmi_errno = PMIx_Fence(procs, count, info, 1);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
-                         "**pmix_fence %d", pmi_errno);
+    MPL_atomic_int_t done_flag;
+    MPL_atomic_store_int(&done_flag, 0);
+
+    pmi_errno = PMIx_Fence_nb(procs, count, info, 1, fence_cb, &done_flag);
+    if (pmi_errno == PMIX_OPERATION_SUCCEEDED) {
+        MPL_atomic_store_int(&done_flag, 1);
+    }
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence_nb",
+                         "**pmix_fence_nb %d", pmi_errno);
+    while (MPL_atomic_load_int(&done_flag) == 0) {
+        PMIx_Progress();
+    }
 
     PMIX_INFO_FREE(info, 1);
     PMIX_PROC_FREE(procs, count);
