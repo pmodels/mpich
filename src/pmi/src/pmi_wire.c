@@ -871,8 +871,6 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
 
-    PMIU_CS_ENTER;
-
     pmicmd->buf = NULL;
     while (pmicmd->buf == NULL) {
         char *recvbuf;
@@ -910,7 +908,6 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
     }
 
   fn_exit:
-    PMIU_CS_EXIT;
     return pmi_errno;
   fn_fail:
     goto fn_exit;
@@ -919,8 +916,6 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
-
-    PMIU_CS_ENTER;
 
     char *buf = NULL;
     int buflen = 0;
@@ -940,7 +935,6 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
     PMIU_cmd_free_buf(pmicmd);
 
   fn_exit:
-    PMIU_CS_EXIT;
     return pmi_errno;
   fn_fail:
     goto fn_exit;
