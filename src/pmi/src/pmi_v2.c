@@ -31,32 +31,12 @@ static char cached_singinit_val[PMI2_MAX_VALLEN];
 
 static int PMIi_InitIfSingleton(void);
 
-/* ------------------------------------------------------------------------- */
-/* PMI API Routines */
-/* ------------------------------------------------------------------------- */
-PMI_API_PUBLIC int PMI2_Set_threaded(int is_threaded)
-{
-#ifndef HAVE_THREADS
-    if (is_threaded) {
-        return PMI2_FAIL;
-    }
-    return PMI2_SUCCESS;
-
-#else
-    PMIU_is_threaded = is_threaded;
-    return PMI2_SUCCESS;
-
-#endif
-}
-
 PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init_zero(&pmicmd);
-
-    PMIU_thread_init();
 
     /* FIXME: Why is setvbuf commented out? */
     /* FIXME: What if the output should be fully buffered (directed to file)?

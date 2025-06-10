@@ -140,19 +140,6 @@ S*/
     int PMI2_Finalize(void);
 
 /*@
-  PMI2_Set_threaded - set whether the PMI will be called from multiple threads
-
-  Return values:
-  Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
-
-  Notes:
-  The default is to assume all PMI is issued from a single thread. Use this
-  function to set is_threaded to TRUE before calling PMI from multiple threads.
-
-@*/
-    int PMI2_Set_threaded(int is_threaded);
-
-/*@
   PMI2_Initialized - check if PMI has been initialized
 
   Return values:
