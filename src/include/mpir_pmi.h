@@ -95,7 +95,8 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
  *   * if count is 0, then group must be one of the special value PMI_GROUP_WORLD.
  */
 int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize,
-                             void *recvbuf, int recvsize, int *group, int count);
+                             void *recvbuf, int recvsize, int *group, int count,
+                             const char *stringtag);
 
 /* * bcast_local: all processes will participate.
  *   Each local leader bcast to each local proc (within a node).
