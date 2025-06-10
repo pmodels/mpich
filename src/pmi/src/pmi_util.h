@@ -217,8 +217,6 @@ extern int PMIU_is_threaded;
 extern MPL_thread_mutex_t PMIU_mutex;
 
 void PMIU_thread_init(void);
-void PMIU_cs_enter(void);
-void PMIU_cs_exit(void);
 
 #define PMIU_CS_ENTER do { \
     if (PMIU_is_threaded) { \
