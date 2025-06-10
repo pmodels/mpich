@@ -275,6 +275,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     comm_p->attr = 0;
     comm_p->hierarchy_flags = 0;
+    comm_p->stringtag = NULL;
 
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
