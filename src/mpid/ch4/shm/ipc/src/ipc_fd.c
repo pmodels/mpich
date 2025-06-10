@@ -46,8 +46,8 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
     }
 
     int already_initialized;
-    mpi_errno = MPIR_Allreduce(&ipc_fd_initialized, &already_initialized, 1, MPIR_INT_INTERNAL,
-                               MPI_MAX, node_comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allreduce_impl(&ipc_fd_initialized, &already_initialized, 1, MPIR_INT_INTERNAL,
+                                    MPI_MAX, node_comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (already_initialized) {
