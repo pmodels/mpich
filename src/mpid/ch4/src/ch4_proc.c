@@ -364,7 +364,8 @@ int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int ad
                 procs[i] = MPIDIU_get_grank(i, node_roots_comm);
             }
             mpi_errno = MPIR_pmi_allgather_group("BC", addrname, addrnamelen,
-                                                 roots_names, addrnamelen, procs, external_size);
+                                                 roots_names, addrnamelen, procs, external_size,
+                                                 comm->stringtag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
