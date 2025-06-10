@@ -735,7 +735,7 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
  *       omit the last barrier.
  */
 int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize, void *recvbuf,
-                             int recvsize, int *group, int count)
+                             int recvsize, int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -763,7 +763,7 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: set stringtag to thread id */
-    mpi_errno = MPIR_pmi_barrier_group(group, count, NULL);
+    mpi_errno = MPIR_pmi_barrier_group(group, count, stringtag);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 0; i < count; i++) {
