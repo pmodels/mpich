@@ -52,7 +52,6 @@ typedef struct MPIR_PMI_KEYVAL {
 int MPIR_pmi_init(void);
 void MPIR_pmi_finalize(void);
 void MPIR_pmi_abort(int exit_code, const char *error_msg);
-int MPIR_pmi_set_threaded(int is_threaded);
 
 /* PMI getters for private fields */
 int MPIR_pmi_max_key_size(void);
