@@ -381,7 +381,6 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATT
         break;
     default:
         MPIR_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
-        break;
     }
 
     *rreqp = NULL;

@@ -228,7 +228,6 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPIR_Request *req,
             break;
         default:
             MPIR_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
-            break;
     }
 
     iov[0].iov_base = (void *) cookie_pkt;

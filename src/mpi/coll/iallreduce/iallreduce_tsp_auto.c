@@ -147,7 +147,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                 default:
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
                     goto fallback;
-                    break;
             }
     }
 

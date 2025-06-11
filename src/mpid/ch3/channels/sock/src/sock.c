@@ -2399,7 +2399,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
-    size_t nb;
+    ssize_t nb;
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
