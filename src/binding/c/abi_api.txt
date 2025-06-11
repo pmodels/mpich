@@ -1,7 +1,43 @@
 # vim: set ft=c:
 
+MPI_Abi_get_fortran_booleans:
+    .desc: Get the size of Fortran logical type and the .TRUE. and .FALSE. value
+{
+    MPI_Datatype type = MPI_LOGICAL;
+    MPIR_DATATYPE_REPLACE_BUILTIN(type);
+    if (type == MPI_DATATYPE_NULL) {
+        *is_set = 0;
+        /* do we leave other outputs unset? */
+    } else {
+        *is_set = 1;
+        int exp_logical_size = MPIR_Datatype_get_basic_size(type);
+        if (logical_size != exp_logical_size) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_wrong", "**logical_size_wrong %d", exp_logical_size);
+        }
+        switch(logical_size) {
+            case 1:
+                *(int8_t *) logical_true = MPII_F_TRUE;
+                *(int8_t *) logical_false = MPII_F_FALSE;
+                break;
+            case 2:
+                *(int16_t *) logical_true = MPII_F_TRUE;
+                *(int16_t *) logical_false = MPII_F_FALSE;
+                break;
+            case 4:
+                *(int32_t *) logical_true = MPII_F_TRUE;
+                *(int32_t *) logical_false = MPII_F_FALSE;
+                break;
+            case 8:
+                *(int64_t *) logical_true = MPII_F_TRUE;
+                *(int64_t *) logical_false = MPII_F_FALSE;
+                break;
+            default:
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_unexp", "**logical_size_unexp %d", logical_size);
+        }
+    }
+}
+
 MPI_Abi_get_fortran_info:
-    info: INFO, direction=out, [info object]
     .desc: Return an info object that provides information related to the Fortran ABI
     .seealso: MPI_Abi_get_info
 {
@@ -58,7 +94,6 @@ MPI_Abi_get_fortran_info:
 }
 
 MPI_Abi_get_info:
-    info: INFO, direction=out, [info object]
     .desc: Return an info object that provides information related to the ABI
     .seealso: MPI_Abi_get_version, MPI_Abi_get_fortran_info
     .skip: initcheck
@@ -81,8 +116,6 @@ MPI_Abi_get_info:
 }
 
 MPI_Abi_get_version:
-    abi_major: VERSION, direction=out, [version number]
-    abi_minor: VERSION, direction=out, [subversion number]
     .desc: Return the standard ABI version
     .seealso: MPI_Abi_get_info
     .skip: initcheck
@@ -99,6 +132,19 @@ MPI_Abi_get_version:
         goto fn_fail;
 }
 
+MPI_Abi_set_fortran_booleans:
+    .desc: Set Fortran logical type size and the value for .TRUE. and .FALSE.
+{
+    mpi_errno = MPI_ERR_ABI;
+    goto fn_fail;
+}
+
+MPI_Abi_set_fortran_info:
+    .desc: Set Fortran datatype sizes and whether optional Fortran types are supported
+{
+    mpi_errno = MPI_ERR_ABI;
+    goto fn_fail;
+}
 
 MPI_Comm_toint:
     .return: INTEGER
