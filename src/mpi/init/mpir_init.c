@@ -159,7 +159,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
-        mpi_errno = MPIR_Session_create(p_session_ptr, user_required);
+        mpi_errno = MPIR_Session_create(p_session_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
