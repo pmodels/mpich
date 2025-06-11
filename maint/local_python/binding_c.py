@@ -748,7 +748,7 @@ def process_func_parameters(func):
                 validation_list.append({'kind': "COUNT", 'name': name})
             else:
                 validation_list.append({'kind': "ARGNEG", 'name': name})
-        elif RE.match(r'(.*_PI)', kind):
+        elif RE.match(r'(.*_PI|TYPECLASS_SIZE)', kind):
             validation_list.append({'kind': "ARGNONPOS", 'name': name})
         elif kind == "STRING" and name == "key":
             validation_list.append({'kind': "infokey", 'name': name})

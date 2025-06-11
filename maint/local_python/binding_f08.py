@@ -1466,6 +1466,8 @@ def get_F_c_interface_decl(func, p, f_mapping, c_mapping):
         return "%s, %s :: %s" % (t_f, intent, p['name'])
     elif p['length'] is not None or RE.match(r'STRING_(2D)?ARRAY', p['kind']):
         return get_array()
+    elif p['kind'] == 'LOGICAL_VOID':
+        return "LOGICAL, %s :: %s" % (intent, p['name'])
     elif RE.match(r'(out|inout)', p['param_direction'], re.IGNORECASE):
         if t_c == 'int':
             return "INTEGER(c_int), %s :: %s" % (intent, p['name'])
@@ -1590,6 +1592,8 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
     elif RE.match(r'MPI_(Fint|Aint|Count|Offset)', t_c):
         return None
     elif RE.match(r'TYPE\((c_ptr)\)', t_f, re.IGNORECASE):
+        return None
+    elif p['kind'] == "LOGICAL_VOID":
         return None
     else:
         print("get_F_c_decl: unhandled type %s: %s - %s" % (p['name'], t_f, t_c))
