@@ -245,19 +245,6 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
                pmi2_abort(exit_code, error_msg), pmix_abort(exit_code, error_msg));
 }
 
-/* This function is currently unused in MPICH because we always call
- * PMI functions from a single thread or within a critical section.
- */
-int MPIR_pmi_set_threaded(int is_threaded)
-{
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
-#ifdef HAVE_PMI2_SET_THREADED
-        PMI2_Set_threaded(is_threaded);
-#endif
-    }
-    return MPI_SUCCESS;
-}
-
 /* getters for internal constants */
 int MPIR_pmi_max_key_size(void)
 {
@@ -389,12 +376,13 @@ int MPIR_pmi_barrier_local(void)
     return mpi_errno;
 }
 
-int MPIR_pmi_barrier_group(int *group, int count)
+/* Barrier over a group of processes. If stringtag is not NULL, it should work from multiple threads. */
+int MPIR_pmi_barrier_group(int *group, int count, const char *stringtag)
 {
     int mpi_errno = MPI_SUCCESS;
-    SWITCH_PMI(mpi_errno = pmi1_barrier_group(group, count),
-               mpi_errno = pmi2_barrier_group(group, count),
-               mpi_errno = pmix_barrier_group(group, count));
+    SWITCH_PMI(mpi_errno = pmi1_barrier_group(group, count, stringtag),
+               mpi_errno = pmi2_barrier_group(group, count, stringtag),
+               mpi_errno = pmix_barrier_group(group, count, stringtag));
     return mpi_errno;
 }
 
@@ -759,7 +747,7 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
     MPIR_Assert(count > 0);
 
     /* check the support of MPIR_pmi_barrier_group */
-    mpi_errno = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0);
+    mpi_errno = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
 
@@ -774,7 +762,8 @@ int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize
     mpi_errno = put_ex(key, sendbuf, sendsize, is_local);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_pmi_barrier_group(group, count);
+    /* FIXME: set stringtag to thread id */
+    mpi_errno = MPIR_pmi_barrier_group(group, count, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 0; i < count; i++) {

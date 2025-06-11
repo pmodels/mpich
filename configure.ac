@@ -1672,9 +1672,6 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
         AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
             AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
         ],[[#include "pmi2.h"]])
-        AC_CHECK_FUNCS([PMI2_Set_threaded],[
-            AC_DEFINE([HAVE_PMI2_SET_THREADED], 1, [Define if PMI2_Set_threaded exist])
-        ])
     fi
     PAC_POP_FLAG([LIBS])
 fi

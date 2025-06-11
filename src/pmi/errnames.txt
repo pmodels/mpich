@@ -109,6 +109,8 @@
 **pmix_commit %d:PMIx_Commit returned %d
 **pmix_fence:PMIx_Fence failed
 **pmix_fence %d:PMIx_Fence returned %d
+**pmix_fence_nb:PMIx_Fence_nb failed
+**pmix_fence_nb %d:PMIx_Fence_nb returned %d
 **pmix_resolve_nodes: PMIx_Resolve_nodes failed
 **pmix_resolve_nodes %d: PMIx_Resolve_nodes returned %d
 **pmix_resolve_peers: PMIx_Resolve_peers failed

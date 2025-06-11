@@ -263,8 +263,11 @@ When such constants are used, the count parameter is ignored.
 This function will not return until all the processes in the group have
 called. Upon return, previous KVS keys via PMI_Put will be available for
 subsequent PMI_Get for the processes within the group.
+
+This function is allowed to be used in multiple threads. Use stringtag
+to distinguish between thread groups.
 @*/
-    int PMI_Barrier_group(const int *group, int count);
+    int PMI_Barrier_group(const int *group, int count, const char *stringtag);
 
 /*@
 PMI_Abort - abort the process group associated with this process

@@ -190,7 +190,7 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
         HYDU_dump(stdout, "forwarding command upstream:\n");
         HYD_pmcd_pmi_dump(&pmi);
     }
-    status = send_cmd_upstream(pg, &pmi, 0 /* dummy fd */);
+    status = send_cmd_upstream(pg, &pmi, -1 /* dummy fd */);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     utarray_clear(pg->kvs_batch);
@@ -565,67 +565,36 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     return status;
 }
 
-static struct HYD_barrier *barrier_group_create(struct pmip_pg *pg, struct pmip_downstream *p,
-                                                const char *group)
+static HYD_status send_barrier_in(struct pmip_pg *pg, struct pmip_barrier *s)
 {
-    struct HYD_barrier *s;
-    s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
-    if (!s) {
-        goto fn_exit;
-    }
+    HYD_status status = HYD_SUCCESS;
 
-    s->name = MPL_strdup(group);
-    s->barrier_count = 0;
+    cache_put_flush(pg);
 
-    if (strcmp(group, "WORLD") == 0) {
-        s->num_procs = pg->num_procs;
-        s->proc_list = HYD_GROUP_ALL;
-        s->has_upstream = true;
-    } else if (strcmp(group, "NODE") == 0) {
-        s->num_procs = pg->num_procs;
-        s->proc_list = HYD_GROUP_ALL;
-        s->has_upstream = false;
-    } else {
-        s->proc_list = MPL_malloc(pg->num_procs * sizeof(int), MPL_MEM_OTHER);
+    /* barrier_in to server */
+    struct PMIU_cmd pmi_query;
+    PMIU_cmd_init_static(&pmi_query, 1, "barrier_in");
+    PMIU_cmd_add_str(&pmi_query, "group", s->name);
+    PMIU_cmd_add_int(&pmi_query, "count", s->num_procs);
+    PMIU_cmd_add_int(&pmi_query, "total_count", s->total_count);
 
-        int num_procs = 0;
-        int has_upstream = false;
-        const char *str = group;
-        while (*str) {
-            int global_id = atoi(str);
-            int local_id = PMIP_pg_global_to_local_id(pg, global_id);
-            if (local_id == -1) {
-                has_upstream = true;
-            } else {
-                s->proc_list[num_procs++] = local_id;
-            }
-            /* skip to next comma-separated id */
-            while (*str && *str != ',') {
-                str++;
-            }
-            if (*str == ',') {
-                str++;
-            }
-        }
+    /* internal command use process_fd = -1 */
+    status = send_cmd_upstream(pg, &pmi_query, -1);
 
-        s->num_procs = num_procs;
-        s->has_upstream = has_upstream;
-    }
-
-  fn_exit:
-    return s;
+    s->stage = PMIP_BARRIER_WAIT_UPSTREAM;
+    return status;
 }
 
-static HYD_status barrier_group_finish(struct pmip_pg *pg, struct HYD_barrier *s,
-                                       struct PMIU_cmd *pmi)
+static HYD_status send_barrier_out(struct pmip_pg *pg, struct pmip_barrier *s, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
     /* barrier_out */
     struct PMIU_cmd pmi_response;
     PMIU_cmd_init_static(&pmi_response, pmi->version, "barrier_out");
+    PMIU_cmd_add_int(&pmi_response, "tag", s->tag);
 
-    if (s->proc_list == HYD_GROUP_ALL) {
+    if (s->proc_list == PMIP_GROUP_ALL) {
         for (int i = 0; i < pg->num_procs; i++) {
             status = send_cmd_downstream(pg->downstreams[i].pmi_fd, &pmi_response);
             HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -638,18 +607,13 @@ static HYD_status barrier_group_finish(struct pmip_pg *pg, struct HYD_barrier *s
         }
     }
 
-    HASH_DEL(pg->barriers, s);
-    MPL_free(s->name);
-    if (s->proc_list != HYD_GROUP_ALL) {
-        MPL_free(s->proc_list);
-    }
-    MPL_free(s);
-
   fn_exit:
     return status;
   fn_fail:
     goto fn_exit;
 }
+
+
 
 HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
@@ -666,25 +630,33 @@ HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     struct pmip_pg *pg = PMIP_pg_from_downstream(p);
 
-    struct HYD_barrier *s;
-    HASH_FIND_STR(pg->barriers, group, s);
-    if (!s) {
-        s = barrier_group_create(pg, p, group);
-        HYDU_ASSERT(s, status);
-        HASH_ADD_KEYPTR(hh, pg->barriers, s->name, strlen(s->name), s, MPL_MEM_OTHER);
+    struct pmip_barrier *barrier;
+    struct pmip_barrier_epoch *epoch;
+    status = PMIP_barrier_find(pg, group, p->idx, &barrier, &epoch);
+    HYDU_ERR_POP(status, "error calling HYDU_barrier_find");
+
+    if (!barrier) {
+        status = PMIP_barrier_create(pg, group, p->idx, &barrier, &epoch);
+        HYDU_ERR_POP(status, "PMIP_barrier_create");
     }
 
-    s->barrier_count++;
-    if (s->barrier_count == s->num_procs) {
-        if (s->has_upstream) {
-            /* FIXME: skip if the group is within the node */
-            cache_put_flush(pg);
+    status = PMIP_barrier_epoch_in(barrier, epoch, p->idx);
+    HYDU_ERR_POP(status, "error PMIP_barrier_epoch_in\n");
 
-            status = send_cmd_upstream(pg, pmi, p->pmi_fd);
-            HYDU_ERR_POP(status, "error sending command upstream\n");
-        } else {
-            status = barrier_group_finish(pg, s, pmi);
+    if (barrier->has_upstream) {
+        /* only the top epoch should push upstream */
+        if (barrier->stage == PMIP_BARRIER_LOCAL_COMPLETE) {
+            status = send_barrier_in(pg, barrier);
+            HYDU_ERR_POP(status, "error sending barrier_in upstream\n");
+        }
+    } else {
+        /* only the top epoch can be local_complete */
+        if (barrier->stage == PMIP_BARRIER_LOCAL_COMPLETE) {
+            status = send_barrier_out(pg, barrier, pmi);
             HYDU_ERR_POP(status, "error sending barrier_out downstream\n");
+
+            status = PMIP_barrier_complete(pg, &barrier);
+            HYDU_ERR_POP(status, "error PMIP_barrier_finish");
         }
     }
 
@@ -702,15 +674,27 @@ HYD_status fn_barrier_out(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     const char *group;
-    int pmi_errno = PMIU_msg_get_query_barrier(pmi, &group);
-    HYDU_ASSERT(!pmi_errno, status);
+    PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmi, "group", group, NULL);
+    HYDU_ASSERT(group != NULL, status);
 
-    struct HYD_barrier *s;
-    HASH_FIND_STR(pg->barriers, group, s);
-    HYDU_ASSERT(s, status);
+    struct pmip_barrier *barrier;
+    struct pmip_barrier_epoch *epoch;
 
-    status = barrier_group_finish(pg, s, pmi);
+    status = PMIP_barrier_find(pg, group, -1, &barrier, &epoch);
+    HYDU_ERR_POP(status, "error PMIP_barrier_find");
+
+    /* only has_upstream==true get here, and only the top epoch finish */
+    status = send_barrier_out(pg, barrier, pmi);
     HYDU_ERR_POP(status, "error sending barrier_out downstream\n");
+
+    status = PMIP_barrier_complete(pg, &barrier);
+    HYDU_ERR_POP(status, "error PMIP_barrier_finish");
+
+    /* send upstream next epoch if needed */
+    if (barrier && barrier->stage == PMIP_BARRIER_LOCAL_COMPLETE) {
+        status = send_barrier_in(pg, barrier);
+        HYDU_ERR_POP(status, "error sending barrier_in upstream\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

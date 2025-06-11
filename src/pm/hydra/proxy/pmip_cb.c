@@ -428,6 +428,9 @@ static HYD_status handle_pmi_response(struct pmip_pg *pg, int buflen, int pmi_ve
         HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", cmd);
     }
 
+    /* internal command (uses process_fd = -1) should not reach here */
+    HYDU_ASSERT(process_fd != -1, status);
+
     status = HYDU_sock_write(process_fd, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
