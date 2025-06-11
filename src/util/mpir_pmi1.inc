@@ -136,10 +136,16 @@ static int pmi1_barrier_group(int *group, int count)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-    MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_WORLD == PMI_GROUP_WORLD);
-    MPL_COMPILE_TIME_ASSERT(MPIR_PMI_GROUP_SELF == PMI_GROUP_SELF);
+    int *use_group;
+    if (group == MPIR_PMI_GROUP_WORLD) {
+        use_group = PMI_GROUP_WORLD;
+    } else if (group == MPIR_PMI_GROUP_SELF) {
+        use_group = PMI_GROUP_SELF;
+    } else {
+        use_group = group;
+    }
 
-    pmi_errno = PMI_Barrier_group(group, count);
+    pmi_errno = PMI_Barrier_group(use_group, count);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_barrier_group", "**pmi_barrier_group %d", pmi_errno);
 
