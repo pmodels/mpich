@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+/* WARNING: PMI 2 is DEPRECATED. New features will be developed in PMI 1. */
+
 /*D
 PMI2_CONSTANTS - PMI2 definitions
 
@@ -136,19 +138,6 @@ S*/
 
 @*/
     int PMI2_Finalize(void);
-
-/*@
-  PMI2_Set_threaded - set whether the PMI will be called from multiple threads
-
-  Return values:
-  Returns 'MPI_SUCCESS' on success and an MPI error code on failure.
-
-  Notes:
-  The default is to assume all PMI is issued from a single thread. Use this
-  function to set is_threaded to TRUE before calling PMI from multiple threads.
-
-@*/
-    int PMI2_Set_threaded(int is_threaded);
 
 /*@
   PMI2_Initialized - check if PMI has been initialized

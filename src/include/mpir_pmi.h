@@ -52,7 +52,6 @@ typedef struct MPIR_PMI_KEYVAL {
 int MPIR_pmi_init(void);
 void MPIR_pmi_finalize(void);
 void MPIR_pmi_abort(int exit_code, const char *error_msg);
-int MPIR_pmi_set_threaded(int is_threaded);
 
 /* PMI getters for private fields */
 int MPIR_pmi_max_key_size(void);
@@ -69,7 +68,7 @@ int MPIR_pmi_barrier_only(void);
 /* * barrier over local set. More efficient for PMIx. Same as MPIR_pmi_barrier for PMI1/2. */
 int MPIR_pmi_barrier_local(void);
 /* barrier over a group of processes. Supported with PMIx or PMI-1.2 */
-int MPIR_pmi_barrier_group(int *group, int count);
+int MPIR_pmi_barrier_group(int *group, int count, const char *stringtag);
 /* * put, to global domain */
 int MPIR_pmi_kvs_put(const char *key, const char *val);
 /* * get. src in [0..size-1] or -1 for anysrc. val_size <= MPIR_pmi_max_val_size(). */
@@ -100,7 +99,8 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
  *   * if count is 0, then group must be one of the special value PMI_GROUP_WORLD.
  */
 int MPIR_pmi_allgather_group(const char *name, const void *sendbuf, int sendsize,
-                             void *recvbuf, int recvsize, int *group, int count);
+                             void *recvbuf, int recvsize, int *group, int count,
+                             const char *stringtag);
 
 /* * bcast_local: all processes will participate.
  *   Each local leader bcast to each local proc (within a node).

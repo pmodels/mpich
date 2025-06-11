@@ -237,6 +237,18 @@ pmix_status_t PMIx_Fence(const pmix_proc_t procs[], size_t nprocs,
     goto fn_exit;
 }
 
+pmix_status_t PMIx_Fence_nb(const pmix_proc_t procs[], size_t nprocs,
+                            const pmix_info_t info[], size_t ninfo,
+                            pmix_op_cbfunc_t cbfunc, void *cbdata)
+{
+    return PMIX_ERR_NOT_SUPPORTED;
+}
+
+void PMIx_Progress(void)
+{
+    /* no-op */
+}
+
 pmix_status_t PMIx_Get(const pmix_proc_t * proc, const char key[],
                        const pmix_info_t info[], size_t ninfo, pmix_value_t ** val)
 {
