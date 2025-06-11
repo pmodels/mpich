@@ -96,6 +96,7 @@ def main():
     def dump_c_binding():
         G.out = []
         G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("#include \"mpii_fortlogical.h\"")
         G.out.append("")
         for func in func_list:
             G.err_codes = {}
