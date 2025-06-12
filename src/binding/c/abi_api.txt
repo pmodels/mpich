@@ -16,20 +16,20 @@ MPI_Abi_get_fortran_booleans:
         }
         switch(logical_size) {
             case 1:
-                *(int8_t *) logical_true = MPII_F_TRUE;
-                *(int8_t *) logical_false = MPII_F_FALSE;
+                *(int8_t *) logical_true = MPIR_fortran_true;
+                *(int8_t *) logical_false = MPIR_fortran_false;
                 break;
             case 2:
-                *(int16_t *) logical_true = MPII_F_TRUE;
-                *(int16_t *) logical_false = MPII_F_FALSE;
+                *(int16_t *) logical_true = MPIR_fortran_true;
+                *(int16_t *) logical_false = MPIR_fortran_false;
                 break;
             case 4:
-                *(int32_t *) logical_true = MPII_F_TRUE;
-                *(int32_t *) logical_false = MPII_F_FALSE;
+                *(int32_t *) logical_true = MPIR_fortran_true;
+                *(int32_t *) logical_false = MPIR_fortran_false;
                 break;
             case 8:
-                *(int64_t *) logical_true = MPII_F_TRUE;
-                *(int64_t *) logical_false = MPII_F_FALSE;
+                *(int64_t *) logical_true = MPIR_fortran_true;
+                *(int64_t *) logical_false = MPIR_fortran_false;
                 break;
             default:
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_unexp", "**logical_size_unexp %d", logical_size);
@@ -134,17 +134,9 @@ MPI_Abi_get_version:
 
 MPI_Abi_set_fortran_booleans:
     .desc: Set Fortran logical type size and the value for .TRUE. and .FALSE.
-{
-    mpi_errno = MPI_ERR_ABI;
-    goto fn_fail;
-}
 
 MPI_Abi_set_fortran_info:
     .desc: Set Fortran datatype sizes and whether optional Fortran types are supported
-{
-    mpi_errno = MPI_ERR_ABI;
-    goto fn_fail;
-}
 
 MPI_Comm_toint:
     .return: INTEGER
