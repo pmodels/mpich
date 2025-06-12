@@ -356,6 +356,7 @@ algorithms:
             smp
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
+            circ_vring
 	    tree
 		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
 		.MPIR_CVAR_BCAST_IS_NON_BLOCKING=1
