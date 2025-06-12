@@ -914,6 +914,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **valuetoolarge:Value is too large to store
 
 **abi:Fortran ABI already set
+**abi_set_fortran:Info missing key values
+**abi_set_fortran %s:Info missing key \"%s\"
 
 #
 # mpi functions
