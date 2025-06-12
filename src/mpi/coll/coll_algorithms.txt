@@ -66,6 +66,9 @@ bcast-intra:
     binomial
     scatter_recursive_doubling_allgather
     scatter_ring_allgather
+    circ_vring
+        extra_params: n_chunk
+        cvar_params: CIRC_VRING_N_CHUNK
     smp
         restrictions: parent-comm
     tree
