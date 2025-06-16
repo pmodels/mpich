@@ -503,6 +503,11 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    if (conn->state == CONN_STATE_DISCARD) {
+        /* this is a replaced CONN_STATE_CONNECTING. Just ignore. */
+        goto fn_exit;
+    }
     
     /* --BEGIN ERROR HANDLING-- */
     if (event_error != MPI_SUCCESS) {
