@@ -504,8 +504,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
                                     RELEASE_GATHER_FIELD(comm_ptr, flags_shm_size));
 
     /* destroy and detach shared memory used for flags */
-    mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, flags_addr));
-    MPIR_ERR_CHECK(mpi_errno);
+    if (RELEASE_GATHER_FIELD(comm_ptr, flags_addr) != NULL) {
+        mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, flags_addr));
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
         if (comm_ptr->rank == 0)
