@@ -321,6 +321,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_ERR_CHKANDJUMP(dev_id == -1, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_get_dev_id_from_attr");
 
+            MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
             if (gpu_req == NULL) {
                 MPL_gpu_request req;
                 mpl_errno = MPL_gpu_imemcpy(recv_ptr, send_ptr, copy_sz, dev_id, dir, enginetype,
@@ -340,6 +341,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                                     "**mpl_gpu_imemcpy");
                 gpu_req->type = MPIR_GPU_REQUEST;
             }
+            MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
         }
 #else /* !MPL_HAVE_ZE */
         goto fn_fallback;
