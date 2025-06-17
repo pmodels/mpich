@@ -19,6 +19,7 @@ MPID_Thread_mutex_t MPIR_THREAD_VCI_CTX_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_PMI_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_BSEND_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[MPIR_REQUEST_NUM_POOLS];
+MPID_Thread_mutex_t MPIR_THREAD_VCI_GPU_MUTEX;
 #endif /* MPICH_THREAD_GRANULARITY */
 
 /* called the first thing in init so it can enter critical section immediately */
@@ -41,6 +42,9 @@ void MPII_thread_mutex_create(void)
     MPIR_Assert(err == 0);
 
     MPID_Thread_mutex_create(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_GPU_MUTEX, &err);
     MPIR_Assert(err == 0);
 
     for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
@@ -83,6 +87,9 @@ void MPII_thread_mutex_destroy(void)
     MPIR_Assert(err == 0);
 
     MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_GPU_MUTEX, &err);
     MPIR_Assert(err == 0);
 
     for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
