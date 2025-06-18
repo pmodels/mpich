@@ -10,8 +10,9 @@
 #include "pmiserv_utils.h"
 #include "bsci.h"
 #include "uthash.h"
+#include "utarray.h"
 
-static struct HYD_barrier *barrier_group_create(struct HYD_pg *pg, const char *group)
+static struct HYD_barrier *barrier_group_create(struct HYD_pg *pg, const char *group, int count)
 {
     struct HYD_barrier *s;
     s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
@@ -20,40 +21,9 @@ static struct HYD_barrier *barrier_group_create(struct HYD_pg *pg, const char *g
     }
 
     s->name = MPL_strdup(group);
+    s->total_count = count;
     s->barrier_count = 0;
-    s->has_upstream = false;    /* not used */
-
-    if (strcmp(group, "WORLD") == 0) {
-        s->num_procs = pg->proxy_count;
-        s->proc_list = HYD_GROUP_ALL;
-    } else if (strcmp(group, "NODE") == 0) {
-        assert(0);
-    } else {
-        int *proxy_map = MPL_calloc(pg->proxy_count, sizeof(int), MPL_MEM_OTHER);
-        const char *str = group;
-        while (*str) {
-            int rank = atoi(str);
-            int proxy_id = pg->rankmap[rank] - pg->min_node_id;
-            proxy_map[proxy_id]++;
-            /* skip to next comma-separated id */
-            while (*str && *str != ',') {
-                str++;
-            }
-            if (*str == ',') {
-                str++;
-            }
-        }
-
-        /* populate barrier's proc_list (actually proxy list) */
-        s->proc_list = MPL_malloc(pg->proxy_count * sizeof(int), MPL_MEM_OTHER);
-        int num_proxy = 0;
-        for (int i = 0; i < pg->proxy_count; i++) {
-            if (proxy_map[i]) {
-                s->proc_list[num_proxy++] = i;
-            }
-        }
-        s->num_procs = num_proxy;
-    }
+    utarray_new(s->proxy_list, &ut_int_icd, MPL_MEM_OTHER);
 
   fn_exit:
     return s;
@@ -66,26 +36,20 @@ static HYD_status barrier_group_finish(struct HYD_pg *pg, struct HYD_barrier *s,
 
     /* barrier_out */
     struct PMIU_cmd pmi_response;
-    PMIU_msg_set_response_barrier(pmi, &pmi_response, false /* is_static */ , s->name);
+    PMIU_cmd_init(&pmi_response, 1, "barrier_out");
+    PMIU_cmd_add_str(&pmi_response, "group", s->name);
 
-    if (s->proc_list == HYD_GROUP_ALL) {
-        for (int i = 0; i < pg->proxy_count; i++) {
-            status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], process_fd, &pmi_response);
-            HYDU_ERR_POP(status, "error sending PMI response\n");
-        }
-    } else {
-        for (int i = 0; i < s->num_procs; i++) {
-            int j = s->proc_list[i];
-            status = HYD_pmiserv_pmi_reply(&pg->proxy_list[j], process_fd, &pmi_response);
-            HYDU_ERR_POP(status, "error sending PMI response\n");
-        }
+    for (int *p = (int *)utarray_front(s->proxy_list); p != NULL;
+         p = (int *) utarray_next(s->proxy_list, p)) {
+        status = HYD_pmiserv_pmi_reply(&pg->proxy_list[*p], process_fd, &pmi_response);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
     }
+
+    PMIU_cmd_free_buf(&pmi_response);
 
     HASH_DEL(pg->barriers, s);
     MPL_free(s->name);
-    if (s->proc_list != HYD_GROUP_ALL) {
-        MPL_free(s->proc_list);
-    }
+    utarray_free(s->proxy_list);
     MPL_free(s);
 
   fn_exit:
@@ -102,12 +66,11 @@ HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int process_fd, int pgid
     HYDU_FUNC_ENTER();
 
     const char *group;
-    int pmi_errno = PMIU_msg_get_query_barrier(pmi, &group);
-    HYDU_ASSERT(!pmi_errno, status);
-
-    if (!group) {
-        group = "WORLD";
-    }
+    int count, total_count;
+    PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmi, "group", group, "WORLD");
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmi, "count", count, 0);
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmi, "total_count", total_count, 0);
+    HYDU_ASSERT(count > 0 && total_count > 0, status);
 
     struct HYD_pg *pg;
     pg = PMISERV_pg_by_id(proxy->pgid);
@@ -115,13 +78,15 @@ HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int process_fd, int pgid
     struct HYD_barrier *s;
     HASH_FIND_STR(pg->barriers, group, s);
     if (!s) {
-        s = barrier_group_create(pg, group);
+        s = barrier_group_create(pg, group, total_count);
         HYDU_ASSERT(s, status);
         HASH_ADD_KEYPTR(hh, pg->barriers, s->name, strlen(s->name), s, MPL_MEM_OTHER);
     }
 
-    s->barrier_count++;
-    if (s->barrier_count == s->num_procs) {
+    int proxy_id = proxy->proxy_id;
+    utarray_push_back(s->proxy_list, &proxy_id, MPL_MEM_OTHER);
+    s->barrier_count += count;
+    if (s->barrier_count == s->total_count) {
         HYD_pmiserv_bcast_keyvals(proxy, process_fd);
 
         status = barrier_group_finish(pg, s, process_fd, pmi);
