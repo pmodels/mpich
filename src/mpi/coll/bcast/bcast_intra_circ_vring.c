@@ -1,8 +1,20 @@
 #include "mpiimpl.h"
 
-int all_blocks(int r, int r_, int s, int e, int k, int** args);
-void gen_rsched(int* sched, int r, int q, int p, int bb, int** args);
-void gen_ssched(int* sched, int r, int q, int p, int bb, int** args);
+struct sched_args_t {
+    int* skips;
+    int* send_sched;
+    int* next;
+    int* prev;
+    int* extra;
+    int tree_depth;
+    int comm_size;
+};
+
+int all_blocks(int r, int r_, int s, int e, int k, int* buffer, struct sched_args_t* args);
+void gen_rsched(int r, int* buffer, struct sched_args_t* args);
+void gen_ssched(int r, struct sched_args_t* args);
+
+int get_baseblock(int r, struct sched_args_t* args);
 
 int MPIR_Bcast_intra_circ_vring(void *buffer,
                                 MPI_Aint count,
@@ -14,53 +26,24 @@ int MPIR_Bcast_intra_circ_vring(void *buffer,
 
     int comm_size = comm->local_size;
     int rank = comm->rank;
-    // int rel_rank = (rank - root + comm_size) % comm_size;
 
     if (comm_size < 2) {
         goto fn_exit;
     }
     
-    // Depth of ~~doubling tree ("n skips" or "q")
     int depth = 1;
-    while (0x1<<depth <= comm_size) {
+    while (0x1<<depth < comm_size) {
         depth++;
     }
 
-    /////////////////////////////////////////////////////////////////////
-    // IMPORTANT: if `MPIR_CHKLMEM_MALLOC` ordering is changed, it may //
-    //   be necessary to update helper various helper functions        //
-    //                                                                 //
-    //   `gen_rsched` expects:                                         //
-    //   - mpiu_chklmem_stk_[0] = next_                                //
-    //   - mpiu_chklmem_stk_[1] = prev_                                //
-    //   - mpiu_chklmem_stk_[2] = skips                                //
-    //   - mpiu_chklmem_stk_[3] = recv_sched                           //
-    //                                                                 //
-    //   `all_blocks` expects:                                         //
-    //   - mpiu_chklmem_stk_[0] = next_                                //
-    //   - mpiu_chklmem_stk_[1] = prev_                                //
-    //   - mpiu_chklmem_stk_[2] = skips                                //
-    //   - mpiu_chklmem_stk_[3] = recv_sched                           //
-    //                                                                 //
-    //   `gen_ssched` expects:                                         //
-    //   - mpiu_chklmem_stk_[2] = skips                                //
-    //   - mpiu_chklmem_stk_[3] = recv_sched                           //
-    //   - mpiu_chklmem_stk_[5] = scratch_                             //
-    /////////////////////////////////////////////////////////////////////
     MPIR_CHKLMEM_DECL();
-    {
-        int* next_; int* prev_;
-        MPIR_CHKLMEM_MALLOC(next_, (depth + 2) * sizeof(int));
-        MPIR_CHKLMEM_MALLOC(prev_, (depth + 2) * sizeof(int));
-    }
-    int* skips; int* recv_sched; int* send_sched;
+    int* skips; int* recv_sched; int* send_sched; int* next; int* prev; int* extra;
     MPIR_CHKLMEM_MALLOC(skips, (depth + 1) * sizeof(int));
     MPIR_CHKLMEM_MALLOC(recv_sched, depth * sizeof(int));
     MPIR_CHKLMEM_MALLOC(send_sched, depth * sizeof(int));
-    {
-        int* scratch_;
-        MPIR_CHKLMEM_MALLOC(scratch_, depth * sizeof(int));
-    }
+    MPIR_CHKLMEM_MALLOC(next, (depth + 2) * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(prev, (depth + 2) * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(extra, depth * sizeof(int));
     
     // Precalculate skips
     //   (hard to do at runtime during the `all_blocks` subroutine)
@@ -69,45 +52,29 @@ int MPIR_Bcast_intra_circ_vring(void *buffer,
         skips[i] = (skips[i+1] / 2) + (skips[i+1] & 0x1);
     }
 
-    // Get baseblock
-    int baseblock = -1;
-    {
-        int r_ = 0;
-        for (int i = depth - 1; i > 0; i--) {
-            if (r_ + skips[i] == rank) {
-                baseblock = i;
-                break;
-            } else if (r_ + skips[i] < rank) {
-                r_ += skips[i];
-            }
-
-            if (i == 1) baseblock = depth;
-        }
-    }
-
     // Generate schedules
-    gen_rsched(recv_sched, rank, depth, comm_size, baseblock, (int**) mpiu_chklmem_stk_);
-    gen_ssched(send_sched, rank, depth, comm_size, baseblock, (int**) mpiu_chklmem_stk_);
+    struct sched_args_t args = {
+        skips, send_sched, next + 1, prev + 1, extra,
+        depth, comm_size
+    };
+    gen_rsched(rank, recv_sched, &args);
+    gen_ssched(rank, &args);
     
-
-    // Loop variables
-    int x = (depth - ((n_chunk - 1) % depth)) % depth;
+    // Run schedule
+    int x = (((depth - ((n_chunk - 1) % depth)) % depth) + depth) % depth;
     int offset = -x;
-    int current_skip = (comm_size - 1) % (comm_size & 0x1);
-
-    // Run Schedule
     MPIR_Request* requests[1];
     for (int i = x; i < n_chunk - 1 + depth + x; i++) {
         int k = i % depth;
 
         if (send_sched[k] + offset >= 0) {
-            int peer = (rank + current_skip) % comm_size;
+            int peer = (rank + skips[k]) % comm_size;
             mpi_errno = MPIC_Isend(buffer, count, datatype, peer, MPIR_BCAST_TAG, comm, &requests[0], errflag);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIC_Waitall(1, requests, MPI_STATUSES_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (recv_sched[k] + offset >= 0) {
-            int peer = (rank - current_skip + comm_size) % comm_size;
+            int peer = (rank - skips[k] + comm_size) % comm_size;
             mpi_errno = MPIC_Irecv(buffer, count, datatype, peer, MPIR_BCAST_TAG, comm, &requests[0]);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIC_Waitall(1, requests, MPI_STATUSES_IGNORE);
@@ -118,9 +85,10 @@ int MPIR_Bcast_intra_circ_vring(void *buffer,
             offset += depth;
         }
     }
+    
+    MPIR_CHKLMEM_FREEALL();
 
 fn_exit:
-    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -128,104 +96,106 @@ fn_fail:
 
 //////// HELPER FUNCTIONS ////////
 
-int all_blocks(int r, int r_, int s, int e, int k, int** args) {
-    // If you change how `args` gets indexed,
-    //   you MUST update `MPIR_Bcast_intra_circ_vring`
-    int* next = args[0] + 1;
-    int* prev = args[1] + 1;
-    int* skips = args[2];
-    int* recv_sched = args[3];
-
+int all_blocks(int r, int r_, int s, int e, int k, int* buffer, struct sched_args_t* args) {
     while (e != -1) {
-        if ((r_ + skips[e] <= r - skips[e]) && (r_ + skips[e] < s)) {
-            if (r_ + skips[e] <= r - skips[k+1]) {
-                k = all_blocks(r, r_ + skips[e], s, e, k, args);
+        if ((r_ + args->skips[e] <= r - args->skips[k])
+         && (r_ + args->skips[e] < s)) {
+            if (r_ + args->skips[e] <= r - args->skips[k+1]) {
+                k = all_blocks(r, r_ + args->skips[e], s, e, k, buffer, args);
             }
-            if (r_ > r - skips[k+1]) {
+            if (r_ > r - args->skips[k+1]) {
                 return k;
             }
-            s = r_ + skips[e];
-            recv_sched[k++] = e;
-            next[prev[e]] = next[e];
-            prev[next[e]] = prev[e];
+            s = r_ + args->skips[e];
+            buffer[k] = e;
+            k += 1;
+            args->next[args->prev[e]] = args->next[e];
+            args->prev[args->next[e]] = args->prev[e];
         }
-        e = next[e];
+        e = args->next[e];
     }
     return k;
 }
 
-void gen_rsched(int* sched, int r, int q, int p, int bb, int** args) {
-    // If you change how `args` gets indexed,
-    //   you MUST update `MPIR_Bcast_intra_circ_vring`
-    //               AND `gen_ssched`
-    int* next = ((int*) args[0]) + 1;
-    int* prev = ((int*) args[1]) + 1;
-
-    for (int i = 0; i <= q; i++) {
-        next[i] = i - 1;
-        prev[i] = i + 1;
+void gen_rsched(int r, int* buffer, struct sched_args_t* args) {
+    for (int i = 0; i <= args->tree_depth; i++) {
+        args->next[i] = i - 1;
+        args->prev[i] = i + 1;
     }
-    prev[q] = -1;
-    next[-1] = q;
-    prev[-1] = 0;
-    next[prev[bb]] = next[bb];
-    prev[next[bb]] = prev[bb];
+    args->prev[args->tree_depth] = -1;
+    args->next[-1] = args->tree_depth;
+    args->prev[-1] = 0;
 
-    all_blocks(p + r, 0, p + p, q, 0, args);
-
-    for (int i = 0; i < q; i++) {
-        if (sched[i] == q) {
-            sched[i] = bb;
+    int b = get_baseblock(r, args);
+    
+    args->next[args->prev[b]] = args->next[b];
+    args->prev[args->next[b]] = args->prev[b];
+    
+    all_blocks(args->comm_size + r, 0, args->comm_size * 2, args->tree_depth, 0, buffer, args);
+    
+    for (int i = 0; i < args->tree_depth; i++) {
+        if (buffer[i] == args->tree_depth) {
+            buffer[i] = b;
         } else {
-            sched[i] = sched[i] - q;
+            buffer[i] = buffer[i] - args->tree_depth;
         }
     }
 }
 
-void gen_ssched(int* sched, int r, int q, int p, int bb, int** args) {
-    int* skips = args[2];
-    int* temp_sched = args[5];
-
+void gen_ssched(int r, struct sched_args_t* args) {
     if (r == 0) {
-        for (int i = 0; i < q; i++) {
-            sched[i] = i;
+        for (int i = 0; i < args->tree_depth; i++) {
+            args->send_sched[i] = i;
         }
         return;
     }
 
+    int b = get_baseblock(r, args);
+
     int r_ = r;
-    int c = bb;
-    int e = p;
-    for (int i = q - 1; i > 0; i--) {
-        if (r_ < skips[i]) {
-            if ((r_ + skips[i] < e)
-             || (e < skips[i-1])
+    int c = b;
+    int e = args->comm_size;
+    for (int i = args->tree_depth - 1; i > 0; i--) {
+        if (r_ < args->skips[i]) {
+            if ((r_ + args->skips[i] < e)
+             || (e < args->skips[i-1])
              || ((i == 1)
-             && (bb  > 0))) {
-                sched[i] = c;
+              && (b > 0))) {
+                args->send_sched[i] = c;
             } else {
-                int* x[4] = { args[0], args[1], args[2], temp_sched };
-                gen_rsched(temp_sched, (r + skips[i]) % p, q, p, bb, x);
-                sched[i] = temp_sched[i];
+                gen_rsched((r + args->skips[i]) % args->comm_size, args->extra, args);
+                args->send_sched[i] = args->extra[i];
             }
-            if (e > skips[i]) {
-                e = skips[i];
+            if (e > args->skips[i]) {
+                e = args->skips[i];
             }
         } else {
-            c = i - q;
-            e = e - skips[i];
-            if ((r_ > skips[i])
+            c = i - args->tree_depth;
+            e = e - args->skips[i];
+            if ((r_ > args->skips[i])
              || (r_ <= e)
              || (i == 1)
-             || (e < skips[i-1])) {
-                sched[i] = c;
+             || (e < args->skips[i-1])) {
+                args->send_sched[i] = c;
             } else {
-                int* x[4] = { args[0], args[1], args[2], temp_sched };
-                gen_rsched(temp_sched, (r + skips[i]) % p, q, p, bb, x);
-                sched[i] = temp_sched[i];
+                gen_rsched((r + args->skips[i]) % args->comm_size, args->extra, args);
+                args->send_sched[i] = args->extra[i];
             }
-            r_ -= skips[i];
+            r_ -= args->skips[i];
         }
     }
-    sched[0] = bb - q;
+    args->send_sched[0] = b - args->tree_depth;
+}
+
+int get_baseblock(int r, struct sched_args_t* args) {
+    int baseblock = -1;
+    int r_ = 0;
+    for (int i = args->tree_depth - 1; i >= 0; i--) {
+        if (r_ + args->skips[i] == r) {
+            return i;
+        } else if (r_ + args->skips[i] < r) {
+            r_ += args->skips[i];
+        }
+    }
+    return args->tree_depth;
 }
