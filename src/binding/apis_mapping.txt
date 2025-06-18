@@ -101,6 +101,7 @@ LIS_KIND_MAP:
     LOGICAL: logical
     LOGICAL_BOOLEAN: boolean
     LOGICAL_OPTIONAL: integer
+    LOGICAL_VOID: logical
     MATH: integer
     MESSAGE: handle
     NOTHING: None
@@ -290,6 +291,7 @@ BASE_C_KIND_MAP:
     LOGICAL: int
     LOGICAL_BOOLEAN: int
     LOGICAL_OPTIONAL: int
+    LOGICAL_VOID: void
     MATH: int
     MESSAGE: MPI_Message
     NOTHING: void
@@ -519,6 +521,7 @@ BASE_F90_KIND_MAP:
     LOGICAL: LOGICAL
     LOGICAL_BOOLEAN: LOGICAL
     LOGICAL_OPTIONAL: None
+    LOGICAL_VOID: LOGICAL
     MATH: INTEGER
     MESSAGE: INTEGER
     NOTHING: None
