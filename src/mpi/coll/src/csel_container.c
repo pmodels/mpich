@@ -95,6 +95,16 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_circ_vring:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                        cnt->u.bcast.intra_circ_vring.chunk_size = atoi(ckey + strlen("chunk_size="));
+                    MPL_free(ckey);
+                }
+            }
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_tree:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -413,6 +423,8 @@ void *MPII_Create_container(struct json_object *obj)
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_recursive_multiplying"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recursive_multiplying;
+        else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_circ_vring"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_circ_vring;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_reduce_scatter_allgather;
@@ -482,6 +494,8 @@ void *MPII_Create_container(struct json_object *obj)
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_recursive_doubling_allgather;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_scatter_ring_allgather"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_scatter_ring_allgather;
+        else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_circ_vring"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_circ_vring;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_smp"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_smp;
         else if (!strcmp(ckey, "algorithm=MPIR_Bcast_intra_tree"))
