@@ -199,7 +199,6 @@ cvars:
         nb                                      - Force nonblocking algorithm
         smp                                     - Force smp algorithm
         scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
-        circ_vring                              - Force circulant variable ring algorithm
         scatter_ring_allgather                  - Force Scatter Ring
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
@@ -229,16 +228,6 @@ cvars:
         topology_aware - topology_aware tree type
         topology_aware_k - topology_aware tree type with branching factor k
         topology_wave - topology_wave tree type
-        
-    - name        : MPIR_CVAR_BCAST_CIRC_VRING_CHUNK_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Determines message chunk size (0 forces single message send)
 
     - name        : MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE
       category    : COLLECTIVE
@@ -1408,7 +1397,6 @@ cvars:
         smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
         recursive_multiplying    - Force recursive multiplying algorithm
-        circ_vring               - Force latency-bound circulant graph algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         tree                     - Force pipelined tree algorithm
         recexch                  - Force generic transport recursive exchange algorithm

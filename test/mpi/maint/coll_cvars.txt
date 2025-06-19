@@ -237,8 +237,7 @@ algorithms:
             smp
             recursive_doubling
             recursive_multiplying
-                .MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL=2,3,4
-            circ_vring
+                .MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL=2,3,4 
             reduce_scatter_allgather
 	    tree
                 .MPIR_CVAR_ALLREDUCE_TREE_TYPE=knomial_1,knomial_2,kary
@@ -356,8 +355,6 @@ algorithms:
             smp
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
-            circ_vring
-            .MPIR_CVAR_BCAST_CIRC_VRING_CHUNK_SIZE=0,1,4,16,64,256
 	    tree
 		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
 		.MPIR_CVAR_BCAST_IS_NON_BLOCKING=1
