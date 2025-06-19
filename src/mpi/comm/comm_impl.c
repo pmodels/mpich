@@ -523,6 +523,18 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
 
     int tag = get_tag_from_stringtag(stringtag);
 
+#ifdef MPID_SESSION_USE_WORLD
+    MPL_initlock_lock(&MPIR_init_lock);
+    if (!MPIR_Process.comm_world) {
+        /* !! require collective over all processes */
+        mpi_errno = MPIR_init_comm_world();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    MPL_initlock_unlock(&MPIR_init_lock);
+
+    mpi_errno = MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#else
     MPIR_Comm *new_comm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
     MPIR_ERR_CHKANDJUMP(!new_comm, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
@@ -569,9 +581,10 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     }
 
     new_comm->stringtag = NULL;
+    *p_newcom_ptr = new_comm;
+#endif
 
   fn_exit:
-    *p_newcom_ptr = new_comm;
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
