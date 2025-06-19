@@ -230,15 +230,15 @@ cvars:
         topology_aware_k - topology_aware tree type with branching factor k
         topology_wave - topology_wave tree type
         
-    - name        : MPIR_CVAR_BCAST_CIRC_VRING_N_CHUNK
+    - name        : MPIR_CVAR_BCAST_CIRC_VRING_CHUNK_SIZE
       category    : COLLECTIVE
       type        : int
-      default     : 1
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Determines how many algorithmic chunks to split the broadcasted message into
+        Determines message chunk size (0 forces single message send)
 
     - name        : MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE
       category    : COLLECTIVE
