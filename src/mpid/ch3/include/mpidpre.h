@@ -21,6 +21,7 @@ struct MPIR_Request;
 #endif
 
 #define MPID_TAG_DEV_BITS 0
+#define MPID_SESSION_USE_WORLD 1
 
 typedef struct {
 #ifdef HAVE_HCOLL
