@@ -20,7 +20,7 @@ int MPIR_Bcast_intra_circ_vring(void *buffer,
                                 MPI_Aint count,
                                 MPI_Datatype datatype,
                                 int root, MPIR_Comm* comm,
-                                const int n_chunk, MPIR_Errflag_t errflag)
+                                const int chunk_size, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -61,6 +61,9 @@ int MPIR_Bcast_intra_circ_vring(void *buffer,
     gen_ssched(rank, &args);
     
     // Run schedule
+
+    int n_chunk = 1;
+
     int x = (((depth - ((n_chunk - 1) % depth)) % depth) + depth) % depth;
     int offset = -x;
     MPIR_Request* requests[1];
