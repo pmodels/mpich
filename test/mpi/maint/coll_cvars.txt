@@ -357,6 +357,7 @@ algorithms:
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
             circ_vring
+            .MPIR_CVAR_BCAST_CIRC_VRING_CHUNK_SIZE=0,1,4,16,64,256
 	    tree
 		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
 		.MPIR_CVAR_BCAST_IS_NON_BLOCKING=1

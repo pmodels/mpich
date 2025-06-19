@@ -328,7 +328,7 @@ typedef struct {
                 int recv_pre_posted;
             } intra_pipelined_tree;
             struct {
-                int n_chunk;
+                int chunk_size;
             } intra_circ_vring;
         } bcast;
         struct {

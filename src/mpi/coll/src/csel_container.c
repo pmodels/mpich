@@ -99,8 +99,8 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             {
                 json_object_object_foreach(obj, key, val) {
                     ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "n_chunk=", strlen("n_chunk=")))
-                        cnt->u.bcast.intra_circ_vring.n_chunk = atoi(ckey + strlen("n_chunk="));
+                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                        cnt->u.bcast.intra_circ_vring.chunk_size = atoi(ckey + strlen("chunk_size="));
                     MPL_free(ckey);
                 }
             }
