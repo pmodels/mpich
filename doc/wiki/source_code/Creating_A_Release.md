@@ -49,9 +49,6 @@ Check all tests. This includes
       - Before committing `CHANGES`, it is recommended to send
         `CHANGES`, at least, to core@mpich.org in order to make sure
         everything is clear.
-  - Update the `RELEASE_NOTES` file. This requires input from everyone,
-    and generally requires asking each person (in person) if the current
-    restrictions still apply, and if any new ones should be added.
   - Update the `README.vin` if necessary.
 
 ## Create a final tarball for the release using the release.pl script
