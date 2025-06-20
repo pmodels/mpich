@@ -332,7 +332,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
         snprintf(group_str, 20, "NODE:%d", inttag);
     } else {
         /* convert the int array into a comma-separated int list */
-        int size = count * 8;
+        int size = count * 8 + 10;      /* Enough space for 7-digit ranks plus a 9-digit tag */
         group_str = MPL_malloc(size, MPL_MEM_OTHER);
         char *s = group_str;
         for (int i = 0; i < count; i++) {
@@ -349,9 +349,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
     PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
 
     if (!PMIU_is_threaded) {
-        PMIU_CS_ENTER;
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
-        PMIU_CS_EXIT;
         PMIU_ERR_POP(pmi_errno);
     } else {
         PMIU_CS_ENTER;

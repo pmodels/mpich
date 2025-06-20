@@ -16,6 +16,8 @@ noinst_PROGRAMS = \
     session_re_init \
     session_psets \
     session_self \
+    session_inter \
+    session_4x4 \
     session_bsend
 
 session_mult_init_SOURCES = session.c
