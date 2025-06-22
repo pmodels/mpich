@@ -219,7 +219,7 @@ HYD_status PMIP_barrier_complete(struct pmip_pg *pg, struct pmip_barrier **barri
 
     if (!barrier->epochs) {
         /* free the barrier */
-        MPL_free(barrier->name);
+        MPL_free((char *) barrier->name);
         MPL_free(barrier->proc_list);
         HASH_DEL(pg->barriers, barrier);
         MPL_free(barrier);
