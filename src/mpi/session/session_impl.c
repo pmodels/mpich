@@ -38,6 +38,9 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(provided == MPIR_ThreadInfo.thread_provided);
 
+    /* Enter global CS after system initialized */
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
     session_ptr->strict_finalize = strict_finalize;
 
     /* Get memory allocation kinds requested by the user (if any). This depends on CVAR
@@ -75,6 +78,9 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     *p_session_ptr = session_ptr;
 
   fn_exit:
+    if (session_ptr) {
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    }
     return mpi_errno;
 
   fn_fail:
