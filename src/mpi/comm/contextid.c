@@ -159,7 +159,8 @@ void MPIR_context_id_init(void)
     for (i = 1; i < MPIR_MAX_CONTEXT_MASK; i++) {
         context_mask[i] = 0xFFFFFFFF;
     }
-    context_mask[0] = MPIR_CONTEXT_MASK_0;
+    /* reserve the first two values for comm_world and comm_self */
+    context_mask[0] = 0xFFFFFFFC;
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
     /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
