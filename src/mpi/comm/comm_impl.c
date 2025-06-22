@@ -514,6 +514,21 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
+#ifndef MPID_SESSION_USE_WORLD
+static int calc_context_id(MPIR_Group * group_ptr, const char *stringtag)
+{
+    unsigned hash1, hash2, hash3;
+    HASH_VALUE(stringtag, strlen(stringtag), hash1);
+    HASH_VALUE(&group_ptr->size, sizeof(int), hash2);
+    if (group_ptr->pmap.use_map) {
+        HASH_VALUE(group_ptr->pmap.u.map, group_ptr->size * sizeof(MPIR_Lpid), hash3);
+    } else {
+        HASH_VALUE(&group_ptr->pmap.u.stride, 2 * sizeof(MPIR_Lpid), hash3);
+    }
+    return (hash1 ^ hash2 ^ hash3) & ((1 << MPIR_CONTEXT_ID_BITS) - 1);
+}
+#endif
+
 int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
                                      MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
                                      MPIR_Comm ** p_newcom_ptr)
@@ -543,7 +558,7 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
 
     new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
     new_comm->stringtag = stringtag;
-    new_comm->context_id = MPIR_CTXID_BOOTSTRAP;
+    new_comm->context_id = MPIR_CONTEXT_DYNAMIC_PROC_MASK | calc_context_id(group_ptr, stringtag);
     new_comm->recvcontext_id = new_comm->context_id;
     new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
     new_comm->rank = group_ptr->rank;
