@@ -352,7 +352,7 @@ static int pmi2_barrier_local(void)
     return MPI_ERR_INTERN;
 }
 
-static int pmi2_barrier_group(int *group, int count)
+static int pmi2_barrier_group(int *group, int count, const char *stringtag)
 {
     return MPI_ERR_INTERN;
 }
