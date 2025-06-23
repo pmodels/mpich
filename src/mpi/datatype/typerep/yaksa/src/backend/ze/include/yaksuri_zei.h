@@ -51,6 +51,7 @@ extern "C" {
 #define YAKSURI_ZEI_ZE_ERR_CHKANDJUMP(zerr, rc, fn_fail)                \
     do {                                                                \
         if (zerr != ZE_RESULT_SUCCESS) {                                \
+            const char *ppString;                                       \
             zeDriverGetLastErrorDescription(yaksuri_zei_global.driver, &ppString); \
             fprintf(stderr, "ZE Error (%s:%s,%d): %#x:%s\n", __func__, __FILE__, __LINE__, zerr, ppString); \
             rc = YAKSA_ERR__INTERNAL;                                   \
