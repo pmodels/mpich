@@ -9,8 +9,8 @@
 #if defined(MPL_HAVE_AVX)
 
 #ifdef MPL_USE_MEMORY_TRACING
-#undef malloc(a)
-#undef free(a)
+#undef malloc
+#undef free
 #endif
 
 #include <string.h>
