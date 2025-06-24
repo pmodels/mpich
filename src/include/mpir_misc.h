@@ -18,11 +18,20 @@
  * functions.  If an error needs to be returned, these values can be
  * used to signal such.  More details can be found further down in the
  * code with the bitmasking logic */
+/* NOTE: we are changing the semantics of MPIR_Errflag_t into coll_attr.
+ *       We'll finish the renaming after confirmation from testing.
+ */
 typedef enum {
-    MPIR_ERR_NONE = MPI_SUCCESS,
-    MPIR_ERR_PROC_FAILED = MPIX_ERR_PROC_FAILED,
-    MPIR_ERR_OTHER = MPI_ERR_OTHER
+    MPIR_ERR_NONE = 0,
+    MPIR_COLL_ATTR_SYNC = 0x1,  /* It's an internal collective.
+                                 * Internal collectives are more focused on
+                                 * synchronization and robustness than
+                                 * performance latency. */
+    MPIR_ERR_PROC_FAILED = 0x2,
+    MPIR_ERR_OTHER = 0x4,
 } MPIR_Errflag_t;
+
+#define MPIR_COLL_ATTR_ERR_MASK 0x6
 
 /*E
   MPIR_Lang_t - Known language bindings for MPI
