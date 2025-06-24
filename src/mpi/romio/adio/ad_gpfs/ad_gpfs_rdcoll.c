@@ -1072,7 +1072,7 @@ static void ADIOI_R_Exchange_data_alltoallv(ADIO_File fd, void *buf, ADIOI_Flatl
     char **recv_buf = NULL;
     MPI_Request *requests = NULL;
     MPI_Status *statuses = NULL;
-    int rtail, stail;
+    MPI_Count rtail, stail;
     char *sbuf_ptr, *from_ptr;
     size_t len;                 /* for memcpy: must be size_t */
     MPI_Aint *sdispls, *rdispls;
@@ -1163,7 +1163,7 @@ static void ADIOI_R_Exchange_data_alltoallv(ADIO_File fd, void *buf, ADIOI_Flatl
         if (rdispls[i - 1] != rdispls[i]) {
             DBG_FPRINTF(stderr, "\t\t[%d]%2ld,", i, rdispls[i]);
         }
-    DBG_FPRINTF(stderr, "\ttails = %4d, %4d\n", stail, rtail);
+    DBG_FPRINTF(stderr, "\ttails = %4lld, %4lld\n", (long long) stail, (long long) rtail);
     if (nprocs_send) {
         DBG_FPRINTF(stderr, "\tall_send_buf =  [%d]%2d,", 0, all_send_buf[0]);
         /* someone at some point found it useful to look at the 128th kilobyte of data from each processor, but this segfaults in many situations if "all debugging" enabled */
