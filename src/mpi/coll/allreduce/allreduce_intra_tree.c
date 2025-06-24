@@ -32,7 +32,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     int num_children;
     int root = 0;
     bool is_tree_leaf;
-    int i, j, tag;
+    int i, j;
 
     MPIR_Request **reqs;
     int num_reqs = 0;
@@ -135,9 +135,6 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
         MPIR_ERR_CHKANDJUMP(!reduce_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
