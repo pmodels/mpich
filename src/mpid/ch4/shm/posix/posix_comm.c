@@ -47,7 +47,7 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
             mpi_errno = MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size,
                                                 MPIR_BYTE_INTERNAL,
                                                 local_rank_topo, topo_info_size, MPIR_BYTE_INTERNAL,
-                                                node_comm, MPIR_ERR_NONE);
+                                                node_comm, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
 
             for (int i = 0; i < MPIR_Process.local_size; i++) {

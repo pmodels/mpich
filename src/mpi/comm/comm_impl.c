@@ -287,7 +287,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 
         mpi_errno = MPIC_Sendrecv(info, 2, MPIR_INT_INTERNAL, 0, 0,
                                   rinfo, 2, MPIR_INT_INTERNAL, 0, 0, comm_ptr, MPI_STATUS_IGNORE,
-                                  MPIR_ERR_NONE);
+                                  MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
         context_id = rinfo[0];
         remote_size = rinfo[1];
@@ -306,26 +306,28 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         /* Populate and exchange the ranks */
         mpi_errno = MPIC_Sendrecv(mapping, group_ptr->size, MPIR_INT_INTERNAL, 0, 0,
                                   remote_mapping, remote_size, MPIR_INT_INTERNAL, 0, 0,
-                                  comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                  comm_ptr, MPI_STATUS_IGNORE, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
+                               MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
-                               comm_ptr->local_comm, MPIR_ERR_NONE);
+                               comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
+                               MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         context_id = rinfo[0];
         remote_size = rinfo[1];
         MPIR_CHKLMEM_MALLOC(remote_mapping, remote_size * sizeof(int));
         mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
-                               comm_ptr->local_comm, MPIR_ERR_NONE);
+                               comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -934,7 +936,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
          * context rather than the point-to-point context. */
         mpi_errno = MPIC_Sendrecv(&local_high, 1, MPIR_INT_INTERNAL, 0, 0,
                                   &remote_high, 1, MPIR_INT_INTERNAL, 0, 0, comm_ptr,
-                                  MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                  MPI_STATUS_IGNORE, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* If local_high and remote_high are the same, then order is arbitrary.
@@ -953,7 +955,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
      * of processes had the same value for high
      */
     mpi_errno = MPIR_Bcast(&local_high, 1, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
-                           MPIR_ERR_NONE);
+                           MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /*

@@ -348,7 +348,7 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
         bcast_data.remote_data_size = remote_data_size;
     }
     mpi_errno = MPIR_Bcast_impl(&bcast_data, 2, MPIR_INT_INTERNAL,
-                                local_leader, local_comm, MPIR_ERR_NONE);
+                                local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* error checking of previous leader exchange */
@@ -367,7 +367,7 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
     }
 
     mpi_errno = MPIR_Bcast_impl(remote_data, remote_data_size, MPIR_BYTE_INTERNAL,
-                                local_leader, local_comm, MPIR_ERR_NONE);
+                                local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Stage 3: Each process extract data (if necessary: add worlds, convert lpids) */
