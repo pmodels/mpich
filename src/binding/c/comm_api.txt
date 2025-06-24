@@ -301,7 +301,7 @@ MPI_Intercomm_merge:
      * error to make */
     acthigh = high ? 1 : 0;     /* Clamp high into 1 or 0 */
     mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &acthigh, 1, MPIR_INT_INTERNAL,
-                                MPI_SUM, intercomm_ptr->local_comm, MPIR_ERR_NONE);
+                                MPI_SUM, intercomm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     /* acthigh must either == 0 or the size of the local comm */
     if (acthigh != 0 && acthigh != intercomm_ptr->local_size) {

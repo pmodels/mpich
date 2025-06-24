@@ -30,7 +30,7 @@ static int MPIR_NCCLcomm_init(MPIR_Comm * comm_ptr, int rank)
     }
 
     mpi_errno = MPIR_Bcast_impl(&(ncclcomm->id), sizeof(ncclcomm->id), MPIR_UINT8, 0, comm_ptr,
-                                MPIR_ERR_NONE);
+                                MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     ret = cudaStreamCreate(&(ncclcomm->stream));

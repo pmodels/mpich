@@ -89,7 +89,7 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
      */
     mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
                                                   all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
-                                                  comm, MPIR_ERR_NONE);
+                                                  comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* av insert, skipping over existing entries */

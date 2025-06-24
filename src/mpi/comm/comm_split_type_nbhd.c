@@ -276,7 +276,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
         MPIR_Assert(num_processes_at_node != NULL);
         /* Send the count to processes */
         mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes,
-                                   MPIR_INT_INTERNAL, MPI_SUM, comm_ptr, MPIR_ERR_NONE);
+                                   MPIR_INT_INTERNAL, MPI_SUM, comm_ptr, MPIR_COLL_ATTR_SYNC);
 
         if (topo_type == MPIR_NETTOPO_TYPE__FAT_TREE ||
             topo_type == MPIR_NETTOPO_TYPE__CLOS_NETWORK) {
@@ -376,7 +376,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
             /* get min tree depth to all processes */
             MPIR_Allreduce(&tree_depth, &min_tree_depth, 1, MPIR_INT_INTERNAL, MPI_MIN, node_comm,
-                           MPIR_ERR_NONE);
+                           MPIR_COLL_ATTR_SYNC);
 
             if (min_tree_depth) {
                 int num_hwloc_objs_at_depth;
@@ -390,7 +390,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
                 /* get parent_idx to all processes */
                 MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPIR_INT_INTERNAL,
-                               node_comm, MPIR_ERR_NONE);
+                               node_comm, MPIR_COLL_ATTR_SYNC);
 
                 /* reorder parent indices */
                 for (i = 0; i < num_procs - 1; i++) {
