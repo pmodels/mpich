@@ -47,7 +47,7 @@ int MPIDI_FD_comm_bootstrap(MPIR_Comm * comm)
 
     int already_initialized;
     mpi_errno = MPIR_Allreduce_impl(&ipc_fd_initialized, &already_initialized, 1, MPIR_INT_INTERNAL,
-                                    MPI_MAX, node_comm, MPIR_ERR_NONE);
+                                    MPI_MAX, node_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (already_initialized) {
@@ -141,7 +141,7 @@ static int MPIDI_IPC_mpi_socks_init(MPIR_Comm * node_comm, pid_t * all_pids, int
                                                              MPIR_STRERROR_BUF_SIZE), errno);
     }
 
-    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create clients for higher ranks */
@@ -226,7 +226,7 @@ static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
     all_pids[local_rank] = getpid();
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, sizeof(pid_t), MPIR_BYTE_INTERNAL,
                                     all_pids, sizeof(pid_t), MPIR_BYTE_INTERNAL,
-                                    node_comm, MPIR_ERR_NONE);
+                                    node_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize fd_socks */
@@ -252,10 +252,10 @@ static int MPIDI_IPC_mpi_fd_init(MPIR_Comm * node_comm)
     if (node_comm->rank == 0) {
         mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank, all_pids, fd_socks);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIDI_IPC_mpi_fd_cleanup(local_size, local_rank, all_pids, fd_socks);
         MPIR_ERR_CHECK(mpi_errno);

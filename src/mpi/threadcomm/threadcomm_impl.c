@@ -35,7 +35,7 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     MPIR_ERR_CHKANDJUMP(!threads_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     mpi_errno = MPIR_Allgather_impl(&num_threads, 1, MPIR_INT_INTERNAL, threads_table, 1,
-                                    MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
+                                    MPIR_INT_INTERNAL, comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     int *rank_offset_table;;

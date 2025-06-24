@@ -52,7 +52,7 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     all_num_vcis[comm->rank].n_total_vcis = num_vcis_actual;
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
-                                    comm, MPIR_ERR_NONE);
+                                    comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
@@ -123,7 +123,7 @@ static int check_num_nics(void)
 
     /* Confirm that all processes have the same number of NICs */
     mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPIR_INT_INTERNAL,
-                                            MPI_MIN, MPIR_Process.comm_world, MPIR_ERR_NONE);
+                                            MPI_MIN, MPIR_Process.comm_world, MPIR_COLL_ATTR_SYNC);
     MPIDI_OFI_global.num_vcis = tmp_num_vcis;
     MPIDI_OFI_global.num_nics = tmp_num_nics;
     MPIR_ERR_CHECK(mpi_errno);
@@ -310,7 +310,8 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vci
     }
     /* Allgather */
     mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPIR_BYTE_INTERNAL,
-                                        all_names, my_len, MPIR_BYTE_INTERNAL, comm, MPIR_ERR_NONE);
+                                        all_names, my_len, MPIR_BYTE_INTERNAL, comm,
+                                        MPIR_COLL_ATTR_SYNC);
 
     /* insert and store non-root nic/vci on the root context */
     for (int r = 0; r < size; r++) {
@@ -353,7 +354,7 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vci
         MPIDI_OFI_AV(av).root_offset = root_offset;
     }
 
-    mpi_errno = MPIR_Barrier_fallback(comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_fallback(comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

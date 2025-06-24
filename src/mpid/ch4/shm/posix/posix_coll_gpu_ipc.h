@@ -102,7 +102,7 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
     mpi_errno =
         MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPIR_BYTE_INTERNAL,
                             ipc_handles, sizeof(MPIDI_IPCI_ipc_handle_t), MPIR_BYTE_INTERNAL, comm,
-                            MPIR_ERR_NONE);
+                            MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check the ipc_handles to make sure all the buffers are on GPU */
