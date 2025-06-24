@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             MPIR_ERR_CHKANDJUMP2(recv_bytes != count, mpi_errno, MPI_ERR_OTHER,
                                  "**collective_size_mismatch",
                                  "**collective_size_mismatch %d %d", (int) recv_bytes, (int) count);
-            MPIR_Assert(recv_errflag == MPI_SUCCESS);
+            MPIR_Assert(!MPIR_COLL_ATTR_HAS_ERR(recv_errflag));
             mpi_errno =
                 MPIR_Localcopy((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
                                datatype, local_buf, count, datatype);
