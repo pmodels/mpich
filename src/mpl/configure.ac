@@ -246,6 +246,20 @@ AC_LINK_IFELSE(
   [AC_MSG_RESULT([no])]
 )
 
+# Check for __builtin_cpu_supports("avx512f")
+AC_MSG_CHECKING([whether __builtin_cpu_supports("avx512f") is available])
+AC_LINK_IFELSE(
+  [AC_LANG_SOURCE([[
+    int main() {
+      __builtin_cpu_init();
+      return __builtin_cpu_supports("avx512f");
+    }
+  ]])],
+  [AC_MSG_RESULT([yes])
+   AC_DEFINE([HAVE_BUILTIN_CPU_SUPPORTS_AVX512F], [1], [Define if __builtin_cpu_supports("avx512f") is available])],
+  [AC_MSG_RESULT([no])]
+)
+
 #######################################################################
 # valgrind support
 AC_ARG_WITH([valgrind],

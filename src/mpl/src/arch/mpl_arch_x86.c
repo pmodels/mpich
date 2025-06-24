@@ -66,9 +66,11 @@ void MPL_check_arch_features(void)
     mpl_arch_features = 0;
 #ifdef MPL_HAVE_BUILTIN_CPU_SUPPORTS
     __builtin_cpu_init();
+#ifdef MPL_HAVE_BUILTIN_CPU_SUPPORTS_AVX512F
     if (__builtin_cpu_supports("avx512f")) {
         mpl_arch_features |= MPL_ARCH_FLAG__AVX512F;
     }
+#endif
     if (__builtin_cpu_supports("avx")) {
         mpl_arch_features |= MPL_ARCH_FLAG__AVX;
     }
