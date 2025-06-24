@@ -112,7 +112,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
     }
     /* Gather information on the local group of processes */
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 2, MPIR_INT_INTERNAL, table, 2, MPIR_INT_INTERNAL,
-                               local_comm_ptr, MPIR_ERR_NONE);
+                               local_comm_ptr, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Step 2: How many processes have our same color? */
@@ -157,7 +157,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         mypair.color = color;
         mypair.key = key;
         mpi_errno = MPIR_Allgather(&mypair, 2, MPIR_INT_INTERNAL, remotetable, 2, MPIR_INT_INTERNAL,
-                                   comm_ptr, MPIR_ERR_NONE);
+                                   comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Each process can now match its color with the entries in the table */
@@ -212,11 +212,11 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         if (comm_ptr->rank == 0) {
             mpi_errno = MPIC_Sendrecv(&new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                                      0, 0, comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                      0, 0, comm_ptr, MPI_STATUS_IGNORE, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           MPIR_ERR_NONE);
+                           MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (!in_newcomm) {
@@ -226,7 +226,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
             /* Broadcast to the other members of the local group */
             mpi_errno =
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           MPIR_ERR_NONE);
+                           MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
