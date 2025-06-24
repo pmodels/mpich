@@ -497,7 +497,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
                                             int vci_src, int vci_dst,
-                                            MPIR_Request ** request, bool is_am, bool syncflag)
+                                            MPIR_Request ** request,
+                                            bool is_am, bool syncflag, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -556,7 +557,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         }
     }
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag &&
+    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_init &&
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
         do_inject = true;
     }
@@ -784,9 +785,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     } else {
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
+        bool is_init = (bool) MPIR_PT2PT_ATTR_GET_INITFLAG(attr);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vci_src, vci_dst, request,
-                                   false /* is_am */ , syncflag);
+                                   false /* is_am */ , syncflag, is_init);
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     }
@@ -833,7 +835,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
     MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
     mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                0 /* context_offset */ , addr, vci_src, vci_dst, &ofi_req,
-                               true /* is_am */ , false /* syncflag */);
+                               true /* is_am */ , false /* syncflag */ , false /* is_init */);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_OFI_REQUEST(ofi_req, am_req) = sreq;
