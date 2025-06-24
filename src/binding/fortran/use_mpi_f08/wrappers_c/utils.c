@@ -75,7 +75,8 @@ extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, 
                 break;
         }
 
-        strncpy(cur_start, &strs_f[str_len * num_strs], index + 1);     /* index may be -1 */
+        size_t maxlen = (index > 0 ? index : 0);
+        strncpy(cur_start, &strs_f[str_len * num_strs], maxlen);        /* index may be -1 */
         cur_start[index + 1] = '\0';
         (*strs_c)[num_strs] = cur_start;
         cur_start += index + 2; /* Move to start of next string */
