@@ -52,6 +52,8 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t e
     MPIR_Request *sreqs[MAX_RADIX], *rreqs[MAX_RADIX * 2];
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
 
+    MPIR_CHKLMEM_DECL();
+
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     if (nranks == 1)
@@ -68,11 +70,8 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t e
      * we allocate memory for requests here. Otherwise we use the requests defined
      * in the communicator for allreduce/barrier recexch */
     if (k > MAX_RADIX) {
-        recv_reqs =
-            (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!recv_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        send_reqs = (MPIR_Request **) MPL_malloc((k - 1) * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!send_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_CHKLMEM_MALLOC(recv_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
+        MPIR_CHKLMEM_MALLOC(send_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
     } else {
         send_reqs = sreqs;
         recv_reqs = rreqs;
@@ -121,10 +120,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t e
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    if (k > MAX_RADIX) {
-        MPL_free(recv_reqs);
-        MPL_free(send_reqs);
-    }
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;

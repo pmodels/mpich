@@ -34,6 +34,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
     int send_nreq = 0, recv_nreq = 0, total_phases = 0;
 
+    MPIR_CHKLMEM_DECL();
+
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -70,12 +72,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                        &step2_nbrs, &step2_nphases, &p_of_k, &T);
         /* Allocate requests */
         if (step1_sendto == -1) {
-            recv_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!recv_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            send_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!send_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            MPIR_CHKLMEM_MALLOC(recv_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
+            MPIR_CHKLMEM_MALLOC(send_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
         }
     } else {
         index = k - 2;  /* we calculate starting k = 2 */
@@ -285,12 +283,9 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             MPL_free(step2_nbrs[i]);
         MPL_free(step2_nbrs);
         MPL_free(step1_recvfrom);
-        if (in_step2) {
-            MPL_free(recv_reqs);
-            MPL_free(send_reqs);
-        }
     }
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;

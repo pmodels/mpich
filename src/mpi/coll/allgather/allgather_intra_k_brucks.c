@@ -94,8 +94,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     if (rank == 0)
         tmp_recvbuf = recvbuf;
     else {
-        tmp_recvbuf = (int *) MPL_malloc(size * recvcount * recvtype_extent, MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_CHKLMEM_MALLOC(tmp_recvbuf, size * recvcount * recvtype_extent);
     }
 
     /* Step1: copy own data from sendbuf to top of recvbuf. */
@@ -177,8 +176,6 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (rank != 0)
-        MPL_free(tmp_recvbuf);
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:

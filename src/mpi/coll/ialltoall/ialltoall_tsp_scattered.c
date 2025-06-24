@@ -53,6 +53,7 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
     int is_inplace;
     int tag = 0;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -65,12 +66,9 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
     is_inplace = (sendbuf == MPI_IN_PLACE);
 
     /* vtcs is twice the batch size to store both send and recv ids */
-    vtcs = (int *) MPL_malloc(sizeof(int) * 2 * batch_size, MPL_MEM_COLL);
-    recv_id = (int *) MPL_malloc(sizeof(int) * bblock, MPL_MEM_COLL);
-    send_id = (int *) MPL_malloc(sizeof(int) * bblock, MPL_MEM_COLL);
-    MPIR_Assert(vtcs);
-    MPIR_Assert(recv_id);
-    MPIR_Assert(send_id);
+    MPIR_CHKLMEM_MALLOC(vtcs, sizeof(int) * 2 * batch_size);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * bblock);
+    MPIR_CHKLMEM_MALLOC(send_id, sizeof(int) * bblock);
 
     if (bblock > size)
         bblock = size;
@@ -149,11 +147,8 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
         }
     }
 
-    MPL_free(vtcs);
-    MPL_free(recv_id);
-    MPL_free(send_id);
-
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
     return mpi_errno;
 

@@ -205,10 +205,8 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPIR_CHKLMEM_MALLOC(tmp_rbuf, sizeof(void *) * (k - 1));
 
     for (j = 0; j < k - 1; j++) {
-        tmp_sbuf[j] = (void *) MPL_malloc(r_extent * recvcnt * p_of_k, MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!tmp_sbuf[j], mpi_errno, MPI_ERR_OTHER, "**nomem");
-        tmp_rbuf[j] = (void *) MPL_malloc(r_extent * recvcnt * p_of_k, MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!tmp_rbuf[j], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_CHKLMEM_MALLOC(tmp_sbuf[j], r_extent * recvcnt * p_of_k);
+        MPIR_CHKLMEM_MALLOC(tmp_rbuf[j], r_extent * recvcnt * p_of_k);
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -291,11 +289,6 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Step 3: data rearrangement scheduled\n"));
-
-    for (i = 0; i < k - 1; i++) {
-        MPL_free(tmp_sbuf[i]);
-        MPL_free(tmp_rbuf[i]);
-    }
 
     MPIR_CHKLMEM_FREEALL();
 

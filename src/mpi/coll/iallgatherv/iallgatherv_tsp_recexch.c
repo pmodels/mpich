@@ -261,6 +261,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     int *recv_id = NULL;
     int tag;
 
+    MPIR_CHKLMEM_DECL();
+
     MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -281,7 +283,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                    &step2_nbrs, &step2_nphases, &p_of_k, &T);
     is_instep2 = (step1_sendto == -1);  /* whether this rank participates in Step 2 */
     log_pofk = step2_nphases;
-    recv_id = (int *) MPL_malloc(sizeof(int) * ((step2_nphases * (k - 1)) + 1), MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * ((step2_nphases * (k - 1)) + 1));
 
     if (!is_inplace && is_instep2) {
         /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
@@ -330,12 +332,12 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                                    nrecvs, recv_id, tag, recvtype, comm, sched);
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     /* free the memory */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
-    MPL_free(recv_id);
 
     MPIR_FUNC_EXIT;
 
