@@ -29,8 +29,8 @@
     } while (0)
 
 /* bit 0: context_offset */
-#define MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr) ((attr) & 0x01)
-#define MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, context_offset) (attr) |= (context_offset)
+#define MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)     ((attr) & 0x01)
+#define MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr) (attr) |= 0x01
 
 /* bit 1-2: errflag */
 #define MPIR_PT2PT_ATTR_GET_ERRFLAG(attr) \
@@ -40,7 +40,7 @@
 #define MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag) \
     do { \
         if (errflag) { \
-            if (errflag == MPIR_ERR_PROC_FAILED) { \
+            if ((errflag) == MPIR_ERR_PROC_FAILED) { \
                 (attr) |= 0x2; \
             } else { \
                 (attr) |= 0x4; \
@@ -51,6 +51,10 @@
 /* bit 3: syncflag */
 #define MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr)  (((attr) & 0x8) ? 1 : 0)
 #define MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr)  (attr) |= 0x8
+
+/* bit 4: init - avoid optional features and unstable features during init */
+#define MPIR_PT2PT_ATTR_GET_INITFLAG(attr)  (((attr) & 0x10) ? 1 : 0)
+#define MPIR_PT2PT_ATTR_SET_INITFLAG(attr)  (attr) |= 0x10
 
 int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPIR_Comm * comm_ptr, MPI_Request * request);
