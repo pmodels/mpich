@@ -33,6 +33,8 @@ typedef enum {
 
 #define MPIR_COLL_ATTR_ERR_MASK 0x6
 
+#define MPIR_COLL_ATTR_HAS_ERR(errflag) ((errflag) & MPIR_COLL_ATTR_ERR_MASK)
+
 /*E
   MPIR_Lang_t - Known language bindings for MPI
 
