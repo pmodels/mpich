@@ -158,7 +158,8 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
         }
 
         mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &errflag, 1, MPIR_INT_INTERNAL, MPI_MAX,
-                                         comm_ptr, new_group_ptr, MPIR_SHRINK_TAG, MPIR_ERR_NONE);
+                                         comm_ptr, new_group_ptr, MPIR_SHRINK_TAG,
+                                         MPIR_COLL_ATTR_SYNC);
         MPIR_Group_release(new_group_ptr);
 
         if (errflag) {

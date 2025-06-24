@@ -456,14 +456,14 @@ int MPIR_nodeid_init(void)
 
         mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, MAX_HOSTNAME_LEN, MPIR_CHAR_INTERNAL,
                                         allhostnames, MAX_HOSTNAME_LEN, MPIR_CHAR_INTERNAL,
-                                        node_roots_comm, MPIR_ERR_NONE);
+                                        node_roots_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Comm *node_comm = MPIR_Process.comm_world->node_comm;
     if (node_comm) {
         mpi_errno = MPIR_Bcast_impl(allhostnames, MAX_HOSTNAME_LEN * MPIR_Process.num_nodes,
-                                    MPIR_CHAR_INTERNAL, 0, node_comm, MPIR_ERR_NONE);
+                                    MPIR_CHAR_INTERNAL, 0, node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

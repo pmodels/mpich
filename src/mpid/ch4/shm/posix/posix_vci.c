@@ -18,7 +18,7 @@ int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
 
     int max_vcis;
     mpi_errno = MPIR_Allreduce_impl(&num_vcis, &max_vcis, 1, MPIR_INT_INTERNAL, MPI_MAX,
-                                    node_comm, MPIR_ERR_NONE);
+                                    node_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (max_vcis > 1) {
@@ -33,7 +33,7 @@ int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
         slab = MPL_initshm_open(MPIDI_POSIX_global.shm_vci_name, slab_size, NULL);
         MPIR_ERR_CHKANDJUMP(!slab, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 #else
         mpi_errno = MPIDU_Init_shm_comm_alloc(comm, slab_size, (void *) &slab);
@@ -44,7 +44,7 @@ int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
         mpi_errno = MPIDI_POSIX_eager_set_vcis(MPIDI_POSIX_global.shm_vci_slab, comm, max_vcis);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

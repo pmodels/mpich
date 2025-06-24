@@ -161,7 +161,7 @@ int MPIDI_POSIX_iqueue_set_vcis(void *slab, MPIR_Comm * comm, int max_vcis)
     MPIR_Comm *node_comm = MPIR_Comm_get_node_comm(comm);
     MPIR_Assert(node_comm);
 
-    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

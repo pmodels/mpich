@@ -69,7 +69,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         bcast_ints[0] = total_num_processes;
         bcast_ints[1] = mpi_errno;
     }
-    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     if (comm_ptr->rank != root) {
         total_num_processes = bcast_ints[0];
@@ -89,7 +89,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
         mpi_errno = MPIR_Bcast(pmi_errcodes, total_num_processes, MPIR_INT_INTERNAL,
-                               root, comm_ptr, MPIR_ERR_NONE);
+                               root, comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < total_num_processes; i++) {
@@ -378,10 +378,10 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
 
       fn_fail:
         /* In case root fails, we bcast mpi_errno so other ranks will abort too */
-        MPIR_Bcast_impl(&mpi_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Bcast_impl(&mpi_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
     } else {
         int root_errno;
-        MPIR_Bcast_impl(&root_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Bcast_impl(&root_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
         if (root_errno) {
             MPIR_ERR_SET(mpi_errno, MPI_ERR_PORT, "**comm_connect_fail");
         }

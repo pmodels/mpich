@@ -107,7 +107,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
              * NIC id from each rank, i.e., one MPI_INT. */
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPIR_INT_INTERNAL,
                                                     pref_nic_copy, 1, MPIR_INT_INTERNAL, comm,
-                                                    MPIR_ERR_NONE);
+                                                    MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (MPIDI_OFI_COMM(comm).pref_nic == NULL) {

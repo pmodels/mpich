@@ -27,7 +27,7 @@ int MPIDI_UCX_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     all_num_vcis[comm->rank].n_total_vcis = num_implicit + num_reserved;;
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
-                                    comm, MPIR_ERR_NONE);
+                                    comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 1; i < MPIDI_UCX_global.num_vcis; i++) {
@@ -77,7 +77,7 @@ static int all_vcis_address_exchange(MPIR_Comm * comm)
     /* Allgather */
     mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPIR_BYTE_INTERNAL,
                                             all_names, my_len, MPIR_BYTE_INTERNAL,
-                                            comm, MPIR_ERR_NONE);
+                                            comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* insert the addresses */
