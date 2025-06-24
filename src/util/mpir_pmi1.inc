@@ -335,7 +335,7 @@ static int pmi1_barrier_local(void)
     return MPI_ERR_INTERN;
 }
 
-static int pmi1_barrier_group(int *group, int count)
+static int pmi1_barrier_group(int *group, int count, const char *string)
 {
     return MPI_ERR_INTERN;
 }
