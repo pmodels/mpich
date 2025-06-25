@@ -75,18 +75,18 @@ extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, 
                 break;
         }
 
-        size_t maxlen = (index > 0 ? index : 0);
-        strncpy(cur_start, &strs_f[str_len * num_strs], maxlen);        /* index may be -1 */
-        cur_start[index + 1] = '\0';
+        size_t maxlen = (index >= 0 ? index + 1 : 0);   /* index may be -1 */
+        strncpy(cur_start, &strs_f[str_len * num_strs], maxlen);
+        cur_start[maxlen] = '\0';
         (*strs_c)[num_strs] = cur_start;
-        cur_start += index + 2; /* Move to start of next string */
+        cur_start += maxlen + 1;        /* Move to start of next string */
 
         num_strs++;
 
         if (know_size) {
             if (num_strs == size)
                 reached_the_end = 1;    /* Reached the last element */
-        } else if (index < 0) {
+        } else if (maxlen == 0) {
             reached_the_end = 1;        /* Find the terminating blank line */
             (*strs_c)[num_strs - 1] = NULL;     /* Rewrite the last pointer as NULL */
         }
