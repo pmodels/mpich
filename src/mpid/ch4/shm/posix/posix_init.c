@@ -269,6 +269,7 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         int eager_shm_size = MPIDI_POSIX_eager_shm_size(MPIR_Process.local_size);
         int head_shm_size = calc_head_shm_size(MPIR_Process.local_size);
         int slab_size = head_shm_size + eager_shm_size;
+        MPIDI_POSIX_global.shm_slab_size = slab_size;
 
 #ifdef MPL_HAVE_INITSHM
         /* MPICH supports local cliques, so we need node_id in shm name to avoid collision */
@@ -286,11 +287,14 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         if (is_root) {
             memset(slab, 0, sizeof(MPIDI_POSIX_shm_t));
             MPL_atomic_relaxed_store_uint64(&slab->shm_limit_counter, 0);
-            MPL_atomic_store_int(&slab->root_ready, MPIDI_POSIX_READY_FLAG);
+            MPL_atomic_store_int(&slab->num_shared, 1);
+            MPL_atomic_store_int(&slab->num_shared_vci, 0);
+            MPL_atomic_store_int(&slab->shm_ready, MPIDI_POSIX_READY_FLAG);
         } else {
-            while (MPL_atomic_load_int(&slab->root_ready) != MPIDI_POSIX_READY_FLAG) {
+            while (MPL_atomic_load_int(&slab->shm_ready) != MPIDI_POSIX_READY_FLAG) {
                 MPID_Thread_yield();
             }
+            MPL_atomic_fetch_add_int(&slab->num_shared, 1);
         }
 #else
         /* Init_shm requires collective over node */
@@ -356,7 +360,17 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
         utarray_free(shm_mutex_free_list);
 
 #ifdef MPL_HAVE_INITSHM
-        MPL_initshm_freeall();
+        MPIDI_POSIX_shm_t *slab = MPIDI_POSIX_global.shm_slab;
+        if (MPIDI_POSIX_global.shm_vci_slab) {
+            int in_use = MPL_atomic_fetch_sub_int(&slab->num_shared_vci, 1) - 1;
+            MPL_initshm_free(MPIDI_POSIX_global.shm_vci_name, MPIDI_POSIX_global.shm_vci_slab,
+                             MPIDI_POSIX_global.shm_vci_slab_size, !in_use);
+        }
+        {
+            int in_use = MPL_atomic_fetch_sub_int(&slab->num_shared, 1) - 1;
+            MPL_initshm_free(MPIDI_POSIX_global.shm_name, MPIDI_POSIX_global.shm_slab,
+                             MPIDI_POSIX_global.shm_slab_size, !in_use);
+        }
 #else
         mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_slab);
         MPIR_ERR_CHECK(mpi_errno);
