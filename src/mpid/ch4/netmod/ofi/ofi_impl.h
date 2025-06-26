@@ -58,6 +58,7 @@ ATTRIBUTE((unused));
 
 int MPIDI_OFI_progress_uninlined(int vci);
 int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
+int MPIDI_OFI_flush_send_queue(void);
 
 /*
  * Helper routines and macros for request completion
