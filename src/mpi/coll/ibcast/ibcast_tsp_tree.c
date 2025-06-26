@@ -52,8 +52,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         struct MPII_Ibcast_state *ibcast_state = NULL;
 
         ibcast_state = MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
-        if (ibcast_state == NULL)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
         ibcast_state->n_bytes = msgsize * type_size;
 #endif
 

@@ -105,9 +105,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     } else if (!is_inplace) {
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf, recvcount, recvtype);
     }
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* All following sends/recvs and copies depend on this dtcopy */
 
@@ -171,16 +169,12 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             MPIR_Localcopy((char *) tmp_recvbuf + (size - rank) * recvcount * recvtype_extent,
                            rank * recvcount, recvtype, (char *) recvbuf, rank * recvcount,
                            recvtype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Localcopy((char *) tmp_recvbuf, (size - rank) * recvcount, recvtype,
                                    (char *) recvbuf + rank * recvcount * recvtype_extent,
                                    (size - rank) * recvcount, recvtype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (rank != 0)
