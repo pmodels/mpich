@@ -868,7 +868,8 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
     goto fn_exit;
 }
 
-static int flush_send_queue(void)
+/* flush send_queue to ensure injected messages are out. Needed by some providers e.g. socket */
+int MPIDI_OFI_flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -929,11 +930,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send. */
-        mpi_errno = flush_send_queue();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+    if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
         /* skip collective work arounds */
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
                || strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
