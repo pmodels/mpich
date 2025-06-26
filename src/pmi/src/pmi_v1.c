@@ -88,10 +88,6 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
         PMIU_verbose = atoi(p);
     }
 
-    /* enable PMIU_CS_{ENTER/EXIT} */
-    PMIU_is_threaded = 1;
-    PMIU_thread_init();
-
     /* Get the fd for PMI commands; if none, we're a singleton */
     bool do_handshake;
     rc = PMIU_get_pmi_fd(&PMI_fd, &do_handshake);
@@ -170,6 +166,12 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
 
     pmi_errno = PMII_init(&PMI_server_version, &PMI_server_subversion);
     PMIU_ERR_POP(pmi_errno);
+
+    if (PMI_server_version * 100 + PMI_server_subversion > 101) {
+        /* enable PMIU_CS_{ENTER/EXIT} for PMI 1.2 and above */
+        PMIU_is_threaded = 1;
+        PMIU_thread_init();
+    }
 
     pmi_errno = PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
     PMIU_ERR_POP(pmi_errno);
@@ -369,9 +371,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
     PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
 
     if (!PMIU_is_threaded) {
-        PMIU_CS_ENTER;
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
-        PMIU_CS_EXIT;
         PMIU_ERR_POP(pmi_errno);
     } else {
         PMIU_CS_ENTER;
