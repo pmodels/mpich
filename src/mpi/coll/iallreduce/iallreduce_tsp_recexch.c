@@ -17,7 +17,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int dtcopy_id = -1;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     int is_commutative;
     int nranks, rank;

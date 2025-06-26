@@ -17,7 +17,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;
     int recv_id, *reduce_id, nvtcs, vtcs;
