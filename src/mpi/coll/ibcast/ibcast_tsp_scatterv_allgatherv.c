@@ -15,13 +15,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;
     int i, j, x, is_contig;
     void *tmp_buf = NULL;
     MPI_Aint *cnts, *displs;
-    size_t nbytes;
+    MPI_Aint nbytes;
     int tree_type, vtx_id, recv_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int current_child, next_child, lrank, total_count, sink_id;
