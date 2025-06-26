@@ -24,7 +24,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int nranks, rank;
-    size_t recv_extent;
+    MPI_Aint recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int partner, offset, count, send_count, recv_count, send_offset, recv_offset, nbr, phase = 0;
