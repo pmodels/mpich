@@ -46,8 +46,8 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
     int invtcs;
     void *data_buf;
     int *vtcs, *recv_id, *send_id;
-    size_t recvtype_extent;
-    size_t sendtype_extent;
+    MPI_Aint recvtype_extent;
+    MPI_Aint sendtype_extent;
     MPI_Aint recvtype_lb, sendtype_lb, sendtype_true_extent, recvtype_true_extent;
     int size, rank, vtx_id;
     int is_inplace;

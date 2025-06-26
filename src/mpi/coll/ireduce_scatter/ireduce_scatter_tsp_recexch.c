@@ -40,7 +40,7 @@ Input Parameters:
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *tmp_recvbuf,
                                                        const MPI_Aint * recvcounts,
                                                        MPI_Aint * displs, MPI_Datatype datatype,
-                                                       MPI_Op op, size_t extent, int tag,
+                                                       MPI_Op op, MPI_Aint extent, int tag,
                                                        MPIR_Comm * comm, int k, int is_dist_halving,
                                                        int step2_nphases, int **step2_nbrs,
                                                        int rank, int nranks, int sink_id,
@@ -135,7 +135,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0;
     int in_step2;

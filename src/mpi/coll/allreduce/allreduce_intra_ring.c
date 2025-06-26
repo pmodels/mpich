@@ -15,7 +15,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;    /* Created for the allgatherv call */
     int send_rank, recv_rank, total_count;

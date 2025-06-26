@@ -28,7 +28,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     int num_children;
     int root = 0;
     bool is_tree_leaf;
