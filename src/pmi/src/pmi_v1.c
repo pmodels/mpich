@@ -171,6 +171,11 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     pmi_errno = PMII_init(&PMI_server_version, &PMI_server_subversion);
     PMIU_ERR_POP(pmi_errno);
 
+    if (PMI_server_version != 1 || PMI_server_subversion < 2) {
+        /* thread-safety not needed for older protocol */
+        PMIU_is_threaded = 0;
+    }
+
     pmi_errno = PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
     PMIU_ERR_POP(pmi_errno);
 
@@ -293,6 +298,7 @@ PMI_API_PUBLIC int PMI_Barrier(void)
 PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *tag)
 {
     int pmi_errno = PMI_SUCCESS;
+    char *group_str = NULL;
 
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init_zero(&pmicmd);
@@ -309,6 +315,10 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
          *       user can use the return from PMI_Barrier_group(PMI_GROUP_SELF, 0)
          *       to check whether it is supported.
          */
+        if (group == PMI_GROUP_WORLD) {
+            PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, NULL);
+            goto barrier_started;
+        }
         pmi_errno = PMI_FAIL;
         goto fn_fail;
     } else if (group == PMI_GROUP_SELF) {
@@ -323,7 +333,6 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
         inttag = abs(inttag);
     }
 
-    char *group_str;
     if (group == PMI_GROUP_WORLD) {
         group_str = MPL_malloc(20, MPL_MEM_OTHER);
         snprintf(group_str, 20, "WORLD:%d", inttag);
@@ -348,6 +357,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
 
     PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
 
+  barrier_started:
     if (!PMIU_is_threaded) {
         PMIU_CS_ENTER;
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
