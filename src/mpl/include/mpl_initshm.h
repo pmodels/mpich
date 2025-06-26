@@ -21,6 +21,6 @@
  */
 
 void *MPL_initshm_open(const char *name, int size, bool * is_root);
-int MPL_initshm_freeall(void);
+int MPL_initshm_free(const char *name, void *slab, int size, bool need_unlink);
 
 #endif /* MPL_INITSHM_H_INCLUDED */
