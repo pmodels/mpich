@@ -29,8 +29,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                                           MPI_Aint count,
                                                           MPI_Datatype datatype,
                                                           int root,
-                                                          MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t errflag)
+                                                          MPIR_Comm * comm_ptr, int coll_attr)
 {
     MPI_Status status;
     int rank, comm_size, dst;
@@ -79,7 +78,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                       nbytes, tmp_buf, is_contig, errflag);
+                                       nbytes, tmp_buf, is_contig, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* curr_size is the amount of data that this process now has stored in
@@ -120,7 +119,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                       ((char *) tmp_buf + recv_offset),
                                       (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
                                       MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG, comm_ptr, &status,
-                                      errflag);
+                                      coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 recv_size = 0;
@@ -185,7 +184,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                      * fflush(stdout); */
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
                                           recv_size, MPIR_BYTE_INTERNAL, dst,
-                                          MPIR_BCAST_TAG, comm_ptr, errflag);
+                                          MPIR_BCAST_TAG, comm_ptr, coll_attr);
                     /* recv_size was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */

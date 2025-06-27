@@ -646,7 +646,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
         mpi_errno = MPIC_Sendrecv(send_ints, 3, MPIR_INT_INTERNAL, 0,
                                      sendtag++, recv_ints, 3, MPIR_INT_INTERNAL,
                                      0, recvtag++, tmp_comm,
-                                     MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                     MPI_STATUS_IGNORE, 0);
         if (mpi_errno != MPI_SUCCESS) {
             /* this is a no_port error because we may fail to connect
                on the send if the port name is invalid */
@@ -656,7 +656,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     /* broadcast the received info to local processes */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"broadcasting the received 3 ints");
-    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check if root was unable to connect to the port */
@@ -685,7 +685,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 				  MPIR_INT_INTERNAL, 0, sendtag++,
 				  remote_translation, remote_comm_size * 2, 
 				  MPIR_INT_INTERNAL, 0, recvtag++, tmp_comm,
-				  MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+				  MPI_STATUS_IGNORE, 0);
 	MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef MPICH_DBG_OUTPUT
@@ -706,7 +706,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     /* Broadcast out the remote rank translation array */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Broadcasting remote translation");
     mpi_errno = MPIR_Bcast_allcomm_auto(remote_translation, remote_comm_size * 2, MPIR_INT_INTERNAL,
-                                 root, comm_ptr, MPIR_ERR_NONE);
+                                 root, comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef MPICH_DBG_OUTPUT
@@ -736,7 +736,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
         mpi_errno = MPIC_Sendrecv(&i, 0, MPIR_INT_INTERNAL, 0,
                                      sendtag++, &j, 0, MPIR_INT_INTERNAL,
                                      0, recvtag++, tmp_comm,
-                                     MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                     MPI_STATUS_IGNORE, 0);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* All communication with remote root done. Release the communicator. */
@@ -744,7 +744,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     }
 
     /*printf("connect:barrier\n");fflush(stdout);*/
-    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Free new_vc. It was explicitly allocated in MPIDI_CH3_Connect_to_root.*/
@@ -790,7 +790,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
         /* notify other processes to return an error */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"broadcasting 3 ints: error case");
-        mpi_errno2 = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+        mpi_errno2 = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, 0);
         if (mpi_errno2) MPIR_ERR_ADD(mpi_errno, mpi_errno2);
         goto fn_fail;
     }
@@ -937,7 +937,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 
 	/* Broadcast the size and data to the local communicator */
 	/*printf("accept:broadcasting 1 int\n");fflush(stdout);*/
-	mpi_errno = MPIR_Bcast_allcomm_auto(&j, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast_allcomm_auto(&j, 1, MPIR_INT_INTERNAL, root, comm_ptr, 0);
 	MPIR_ERR_CHECK(mpi_errno);
 
 	if (rank != root) {
@@ -948,7 +948,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	    }
 	}
 	/*printf("accept:broadcasting string of length %d\n", j);fflush(stdout);*/
-	mpi_errno = MPIR_Bcast_allcomm_auto(pg_str, j, MPIR_CHAR_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast_allcomm_auto(pg_str, j, MPIR_CHAR_INTERNAL, root, comm_ptr, 0);
 	MPIR_ERR_CHECK(mpi_errno);
 	/* Then reconstruct the received process group.  This step
 	   also initializes the created process group */
@@ -990,7 +990,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    mpi_errno = MPIR_Bcast( &n_local_pgs, 1, MPIR_INT_INTERNAL, root, comm_p, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast( &n_local_pgs, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     pg_list = pg_head;
@@ -1010,7 +1010,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
-	mpi_errno = MPIR_Bcast( &len, 1, MPIR_INT_INTERNAL, root, comm_p, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast( &len, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
         MPIR_ERR_CHECK(mpi_errno);
 	if (rank != root) {
 	    pg_str = (char *)MPL_malloc(len, MPL_MEM_DYNAMIC);
@@ -1019,7 +1019,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast( pg_str, len, MPIR_CHAR_INTERNAL, root, comm_p, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast( pg_str, len, MPIR_CHAR_INTERNAL, root, comm_p, 0);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );
@@ -1075,13 +1075,13 @@ static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
 	pg_iter = pg_list;
 	i = pg_iter->lenStr;
 	/*printf("connect:sending 1 int: %d\n", i);fflush(stdout);*/
-	mpi_errno = MPIC_Send(&i, 1, MPIR_INT_INTERNAL, 0, sendtag++, tmp_comm, MPIR_ERR_NONE);
+	mpi_errno = MPIC_Send(&i, 1, MPIR_INT_INTERNAL, 0, sendtag++, tmp_comm, 0);
 	*sendtag_p = sendtag;
 	MPIR_ERR_CHECK(mpi_errno);
 	
 	/* printf("connect:sending string length %d\n", i);fflush(stdout); */
 	mpi_errno = MPIC_Send(pg_iter->str, i, MPIR_CHAR_INTERNAL, 0, sendtag++,
-			      tmp_comm, MPIR_ERR_NONE);
+			      tmp_comm, 0);
 	*sendtag_p = sendtag;
 	MPIR_ERR_CHECK(mpi_errno);
 	
@@ -1173,13 +1173,13 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
         mpi_errno = MPIC_Sendrecv(send_ints, 3, MPIR_INT_INTERNAL, 0,
                                      sendtag++, recv_ints, 3, MPIR_INT_INTERNAL,
                                      0, recvtag++, tmp_comm,
-                                     MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                     MPI_STATUS_IGNORE, 0);
 	MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* broadcast the received info to local processes */
     /*printf("accept:broadcasting 2 ints - %d and %d\n", recv_ints[0], recv_ints[1]);fflush(stdout);*/
-    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPIR_INT_INTERNAL, root, comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
 
@@ -1208,7 +1208,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 				  MPIR_INT_INTERNAL, 0, sendtag++,
 				  remote_translation, remote_comm_size * 2, 
 				  MPIR_INT_INTERNAL, 0, recvtag++, tmp_comm,
-				  MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+				  MPI_STATUS_IGNORE, 0);
         MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef MPICH_DBG_OUTPUT
@@ -1230,7 +1230,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     /* Broadcast out the remote rank translation array */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Broadcast remote_translation");
     mpi_errno = MPIR_Bcast_allcomm_auto(remote_translation, remote_comm_size * 2, MPIR_INT_INTERNAL,
-                                 root, comm_ptr, MPIR_ERR_NONE);
+                                 root, comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 #ifdef MPICH_DBG_OUTPUT
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE,"[%d]accept:Received remote_translation after broadcast:\n", rank);
@@ -1258,7 +1258,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
         mpi_errno = MPIC_Sendrecv(&i, 0, MPIR_INT_INTERNAL, 0,
                                      sendtag++, &j, 0, MPIR_INT_INTERNAL,
                                      0, recvtag++, tmp_comm,
-                                     MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                     MPI_STATUS_IGNORE, 0);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* All communication with remote root done. Release the communicator. */
@@ -1266,7 +1266,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     }
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Free new_vc once the connection is completed. It was explicitly 
@@ -1345,7 +1345,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     MPIR_ERR_CHECK(mpi_errno);
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:

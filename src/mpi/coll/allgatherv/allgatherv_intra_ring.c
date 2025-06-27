@@ -28,7 +28,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
                                void *recvbuf,
                                const MPI_Aint * recvcounts,
                                const MPI_Aint * displs,
-                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, rank, i, left, right;
     int mpi_errno = MPI_SUCCESS;
@@ -113,13 +113,13 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */
             mpi_errno =
-                MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+                MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
         } else {        /* There's data to be sent and received */
             mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                       rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
-                                      comm_ptr, &status, errflag);
+                                      comm_ptr, &status, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
             torecv -= recvnow;

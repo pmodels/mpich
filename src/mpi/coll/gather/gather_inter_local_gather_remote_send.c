@@ -16,7 +16,7 @@
 int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                               MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
@@ -65,12 +65,12 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
                                 tmp_buf, sendcount * sendtype_sz, MPIR_BYTE_INTERNAL, 0,
-                                newcomm_ptr, errflag);
+                                newcomm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, sendcount * local_size * sendtype_sz, MPIR_BYTE_INTERNAL,
-                                  root, MPIR_GATHER_TAG, comm_ptr, errflag);
+                                  root, MPIR_GATHER_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
