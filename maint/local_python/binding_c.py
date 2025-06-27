@@ -1148,7 +1148,7 @@ def dump_abi_wrappers(func, is_large):
                 return True
         return False
     # ----
-    re_Handle = r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b'
+    re_Handle = get_abi_re_Handle()
     for p in func['c_parameters']:
         skip_abi_swap = False
         param_type = mapping[p['kind']]
@@ -2959,6 +2959,10 @@ def dump_validate_get_topo_size(func):
 
 # ---- supporting routines (reusable) ----
 
+def get_abi_re_Handle():
+    # the following handle types need perform ABI-swap for abi bindings
+    return r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b'
+
 def is_type_create(func):
     last_p = func['c_parameters'][-1]
     return (last_p['kind'] == 'DATATYPE' and last_p['param_direction'] == 'out')
@@ -2974,16 +2978,10 @@ def get_declare_function(func, is_large, kind=""):
     name = get_function_name(func, is_large)
     mapping = get_kind_map('C', is_large)
 
-    ret = "int"
-    if 'return' in func:
-        ret = mapping[func['return']]
-        if func['return'] == 'EXTRA_STATE':
-            ret = 'void *'
+    ret = get_C_return(func, mapping, kind == 'abi')
 
-    params = get_C_params(func, mapping)
+    params = get_C_params(func, mapping, kind == 'abi')
     s_param = ', '.join(params)
-    if kind == 'abi':
-        s_param = re.sub(r'\bMPI_', 'ABI_', s_param)
     s = "%s %s(%s)" % (ret, name, s_param)
 
     if kind == 'proto':
@@ -2993,10 +2991,25 @@ def get_declare_function(func, is_large, kind=""):
         s += " MPICH_API_PUBLIC"
     return s
 
-def get_C_params(func, mapping):
+def get_C_return(func, mapping, is_abi=False):
+    ret = "int"
+    if 'return' in func:
+        ret = mapping[func['return']]
+        if func['return'] == 'EXTRA_STATE':
+            ret = 'void *'
+        if is_abi:
+            re_Handle = get_abi_re_Handle()
+            ret = re.sub(re_Handle, r'ABI_\1', ret)
+    return ret
+
+def get_C_params(func, mapping, is_abi=False):
     param_list = []
+    re_Handle = get_abi_re_Handle()
     for p in func['c_parameters']:
-        param_list.append(get_C_param(p, func, mapping))
+        param = get_C_param(p, func, mapping)
+        if is_abi:
+            param = re.sub(re_Handle, r'ABI_\1', param)
+        param_list.append(param)
     if not len(param_list):
         return ["void"]
     else:
