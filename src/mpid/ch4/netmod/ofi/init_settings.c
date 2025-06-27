@@ -227,11 +227,7 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
      * The FI_ORDER_NONE macro is deprecated as of OFI 2.0.0
      * 0 (no flags set) is the equivalent replacement in newer OFI versions
      */
-#if FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION) < FI_VERSION(2, 0)
-    hints->tx_attr->comp_order = FI_ORDER_NONE; /* FI_ORDER_NONE is an alias for the value 0 */
-#else
-    hints->tx_attr->comp_order = 0;
-#endif
+    hints->tx_attr->comp_order = 0;     /* FI_ORDER_NONE is an alias for the value 0 */
     hints->rx_attr->op_flags = FI_COMPLETION;
     hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
     hints->ep_attr->type = FI_EP_RDM;
