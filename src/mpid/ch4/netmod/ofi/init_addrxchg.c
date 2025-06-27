@@ -17,12 +17,7 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
-    /* only comm_world for now
-     * TODO: Use an attribute to mark whether this is a comm from
-     *       MPI_Comm_create_from_group and to be checked in NM_mpi_comm_pre_hook.
-     */
-    MPIR_Assert(comm == MPIR_Process.comm_world);
-
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__BOOTSTRAP);
     MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 
     /* First, each get its own name */
@@ -89,7 +84,7 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
      */
     mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
                                                   all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
-                                                  comm, MPIR_ERR_NONE);
+                                                  comm, MPIR_COLL_ATTR_INIT);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* av insert, skipping over existing entries */

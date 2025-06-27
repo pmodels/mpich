@@ -46,8 +46,10 @@ typedef struct {
 /* the structure of MPIDI_POSIX_global.shm_slab */
 #define MPIDI_POSIX_READY_FLAG 0x12345678       /* arbitrary sentinel to avoid coincidence */
 typedef struct {
+    MPL_atomic_int_t num_shared;        /* number of processes currently using shm_slab */
+    MPL_atomic_int_t num_shared_vci;    /* number of processes currently using shm_vci_slab */
+    MPL_atomic_int_t shm_ready; /* root (1st proc that allocates shm_slab) set it to MPIDI_POSIX_READY_FLAG */
     MPL_atomic_uint64_t shm_limit_counter;      /* release_gather use this to track total amount of shared memory allocated */
-    MPL_atomic_int_t root_ready;        /* root (1st proc that allocates shm_slab) set it to MPIDI_POSIX_READY_FLAG */
     MPL_atomic_int_t eager_ready[];     /* size of local_size. Each process update its flag to MPIDI_POSIX_READY_FLAG */
 } MPIDI_POSIX_shm_t;
 
@@ -66,6 +68,8 @@ typedef struct {
 #endif
     void *shm_slab;             /* the main shared memory slab */
     void *shm_vci_slab;         /* extra shared memory slab for multiple vcis */
+    int shm_slab_size;
+    int shm_vci_slab_size;
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;

@@ -28,6 +28,12 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
     int external_size = comm_ptr->num_external;
     int external_rank = comm_ptr->external_rank;
 
+    if (local_size == comm_size || external_size == comm_size) {
+        mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag);
+        goto fn_exit;
+    }
+
     MPIR_Comm *node_comm, *node_roots_comm;
     node_comm = MPIR_Comm_get_node_comm(comm_ptr);
     MPIR_Assert(node_comm);
@@ -75,19 +81,19 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
         local_recvbuf = (char *) recvbuf + displs[external_rank] * recvtype_extent;
     }
     mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype,
-                                 local_recvbuf, recvcount, recvtype, 0, node_comm, MPIR_ERR_NONE);
+                                 local_recvbuf, recvcount, recvtype, 0, node_comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* -- allgatherv over node roots -- */
     if (local_rank == 0) {
         mpi_errno = MPIR_Allgatherv_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                          recvbuf, counts, displs, recvtype,
-                                         node_roots_comm, MPIR_ERR_NONE);
+                                         node_roots_comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* -- bcast over node -- */
-    mpi_errno = MPIR_Bcast_impl(recvbuf, total_count, recvtype, 0, node_comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast_impl(recvbuf, total_count, recvtype, 0, node_comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

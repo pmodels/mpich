@@ -275,6 +275,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     comm_p->attr = 0;
     comm_p->hierarchy_flags = 0;
+    comm_p->stringtag = NULL;
 
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
@@ -780,7 +781,8 @@ static int init_comm_seq(MPIR_Comm * comm)
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
-        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPIR_INT_INTERNAL, 0, comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPIR_INT_INTERNAL, 0, comm,
+                                            MPIR_COLL_ATTR_INIT);
         MPIR_ERR_CHECK(mpi_errno);
 
         comm->seq = tmp;

@@ -81,9 +81,6 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
-    /* only comm_world for now */
-    MPIR_Assert(comm == MPIR_Process.comm_world);
-
     MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 
     char *addrname = (void *) MPIDI_UCX_global.ctx[0].if_address;
@@ -142,7 +139,7 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
     /* Use an smp algorithm explicitly that only require a working node_comm and node_roots_comm. */
     mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
                                                   all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
-                                                  comm, MPIR_ERR_NONE);
+                                                  comm, MPIR_COLL_ATTR_INIT);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create av, skipping existing entries */

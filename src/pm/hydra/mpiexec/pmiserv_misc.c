@@ -48,7 +48,7 @@ static HYD_status barrier_group_finish(struct HYD_pg *pg, struct HYD_barrier *s,
     PMIU_cmd_free_buf(&pmi_response);
 
     HASH_DEL(pg->barriers, s);
-    MPL_free(s->name);
+    MPL_free((char *) s->name);
     utarray_free(s->proxy_list);
     MPL_free(s);
 

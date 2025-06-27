@@ -38,6 +38,9 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(provided == MPIR_ThreadInfo.thread_provided);
 
+    /* Enter global CS after system initialized */
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
     session_ptr->strict_finalize = strict_finalize;
 
     /* Get memory allocation kinds requested by the user (if any). This depends on CVAR
@@ -51,9 +54,33 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
         session_ptr->memory_alloc_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
     }
 
+    if (errhandler_ptr) {
+        session_ptr->errhandler = errhandler_ptr;
+        MPIR_Errhandler_add_ref(errhandler_ptr);
+    }
+
+    /* populate psets */
+    session_ptr->num_psets = 2;
+    session_ptr->psets = MPL_malloc(session_ptr->num_psets * sizeof(struct MPIR_Pset),
+                                    MPL_MEM_GROUP);
+    MPIR_ERR_CHKANDJUMP(!session_ptr->psets, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    session_ptr->psets[0].name = MPL_strdup("mpi://WORLD");
+    mpi_errno = MPIR_Group_dup(MPIR_GROUP_WORLD_PTR, session_ptr, &session_ptr->psets[0].group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    session_ptr->psets[1].name = MPL_strdup("mpi://SELF");
+    mpi_errno = MPIR_Group_dup(MPIR_GROUP_SELF_PTR, session_ptr, &session_ptr->psets[1].group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* TODO: append a list of dynamically updated global psets */
+
     *p_session_ptr = session_ptr;
 
   fn_exit:
+    if (session_ptr) {
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    }
     return mpi_errno;
 
   fn_fail:
@@ -67,7 +94,33 @@ int MPIR_Session_finalize_impl(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* MPII_Finalize will free the session_ptr */
+    /* account the reference taken by psets and self */
+    int session_refs = MPIR_Object_get_ref(session_ptr) - session_ptr->num_psets - 1;
+
+    if ((session_refs > 0) && session_ptr->strict_finalize) {
+        /* For strict_finalize, we return an error if there still exist
+         * other refs to the session (other than the self-ref).
+         * In addition, we call MPID_Progress_poke() to allow users to
+         * poll for success of the session finalize.
+         */
+        MPID_Progress_poke();
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_PENDING, "**sessioninuse", "**sessioninuse %d",
+                                         session_refs - 1);
+        goto fn_fail;
+    }
+
+    for (int i = 0; i < session_ptr->num_psets; i++) {
+        mpi_errno = MPIR_Group_free_impl(session_ptr->psets[i].group);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_free(session_ptr->psets[i].name);
+    }
+    MPL_free(session_ptr->psets);
+
+    mpi_errno = MPIR_Session_release(session_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPII_Finalize(session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
