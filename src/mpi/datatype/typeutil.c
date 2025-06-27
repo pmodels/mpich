@@ -463,3 +463,114 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
     *flattened = dt_ptr->flattened;
     *flattened_sz = dt_ptr->flattened_sz;
 }
+
+/* Support routines for Fortran datatypes */
+
+/* I believe all sane compilers will use values that fit in an int.
+ * Use int for .TRUE. and .FALSE. values until we encounter the first odd Fortran compiler.
+ */
+#if !defined(F77_TRUE_VALUE_SET)
+bool MPIR_fortran_booleans_is_set = false;
+int MPIR_fortran_true = 1;
+int MPIR_fortran_false = 0;
+#else
+bool MPIR_fortran_booleans_is_set = true;
+int MPIR_fortran_true = F77_TRUE_VALUE;
+int MPIR_fortran_false = F77_FALSE_VALUE;
+#endif
+
+int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, void *logical_false)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_fortran_booleans_is_set) {
+        mpi_errno = MPI_ERR_ABI;
+        goto fn_fail;
+    }
+
+    MPIR_fortran_booleans_is_set = true;
+    switch (logical_size) {
+        case 1:
+            MPIR_fortran_true = *(int8_t *) logical_true;
+            MPIR_fortran_false = *(int8_t *) logical_false;
+            break;
+        case 2:
+            MPIR_fortran_true = *(int16_t *) logical_true;
+            MPIR_fortran_false = *(int16_t *) logical_false;
+            break;
+        case 4:
+            MPIR_fortran_true = *(int32_t *) logical_true;
+            MPIR_fortran_false = *(int32_t *) logical_false;
+            break;
+        case 8:
+            MPIR_fortran_true = *(int64_t *) logical_true;
+            MPIR_fortran_false = *(int64_t *) logical_false;
+            break;
+        default:
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_unexp",
+                                 "**logical_size_unexp %d", logical_size);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#define MPIR_ABI_FORTRAN_IS_SET (MPIR_Internal_types[MPI_INTEGER & 0xff].internal_type != MPI_DATATYPE_NULL)
+    if (MPIR_ABI_FORTRAN_IS_SET) {
+        return MPI_ERR_ABI;
+    }
+
+    const char *str_val;
+#define SET_TYPE_INFO(mpi_type, keyname, mpir_type) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        MPIR_ERR_CHKANDJUMP1(!str_val, mpi_errno, MPI_ERR_ABI, "**abi_set_fortran", "**abi_set_fortran %s", (keyname)); \
+        int i = (mpi_type) & 0xff; \
+        int typesize = atoi(str_val); \
+        /* FIXME: sanity check typesize */ \
+        MPIR_Internal_types[i].internal_type = MPIR_FIXED0 | (mpir_type) | (typesize << 8) | i; \
+    } while (0)
+    SET_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size", MPIR_TYPE_SIGNED);
+    SET_TYPE_INFO(MPI_INTEGER, "mpi_integer_size", MPIR_TYPE_SIGNED);
+    SET_TYPE_INFO(MPI_REAL, "mpi_real_size", MPIR_TYPE_FLOAT);
+    SET_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size", MPIR_TYPE_FLOAT);
+
+#define SET_TYPE_SUPPORTED(mpi_type, keyname, mpir_type) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            int i = (mpi_type) & 0xff; \
+            MPIR_Internal_types[i].internal_type = mpir_type; \
+        } \
+    } while (0)
+    SET_TYPE_SUPPORTED(MPI_LOGICAL1, "mpi_logical1_supported", MPIR_INT8);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL2, "mpi_logical2_supported", MPIR_INT16);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL4, "mpi_logical4_supported", MPIR_INT32);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL8, "mpi_logical8_supported", MPIR_INT64);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL16, "mpi_logical16_supported", MPIR_INT128);
+    SET_TYPE_SUPPORTED(MPI_INTEGER1, "mpi_integer1_supported", MPIR_INT8);
+    SET_TYPE_SUPPORTED(MPI_INTEGER2, "mpi_integer2_supported", MPIR_INT16);
+    SET_TYPE_SUPPORTED(MPI_INTEGER4, "mpi_integer4_supported", MPIR_INT32);
+    SET_TYPE_SUPPORTED(MPI_INTEGER8, "mpi_integer8_supported", MPIR_INT64);
+    SET_TYPE_SUPPORTED(MPI_INTEGER16, "mpi_integer16_supported", MPIR_INT128);
+    SET_TYPE_SUPPORTED(MPI_REAL2, "mpi_real2_supported", MPIR_FLOAT16);
+    SET_TYPE_SUPPORTED(MPI_REAL4, "mpi_real4_supported", MPIR_FLOAT32);
+    SET_TYPE_SUPPORTED(MPI_REAL8, "mpi_real8_supported", MPIR_FLOAT64);
+    SET_TYPE_SUPPORTED(MPI_REAL16, "mpi_real16_supported", MPIR_FLOAT128);
+    SET_TYPE_SUPPORTED(MPI_COMPLEX4, "mpi_complex4_supported", MPIR_COMPLEX16);
+    SET_TYPE_SUPPORTED(MPI_COMPLEX8, "mpi_complex8_supported", MPIR_COMPLEX32);
+    SET_TYPE_SUPPORTED(MPI_COMPLEX16, "mpi_complex16_supported", MPIR_COMPLEX64);
+    SET_TYPE_SUPPORTED(MPI_COMPLEX32, "mpi_complex32_supported", MPIR_COMPLEX128);
+    SET_TYPE_SUPPORTED(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported", MPIR_COMPLEX64);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
