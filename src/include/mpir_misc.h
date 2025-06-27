@@ -14,27 +14,21 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
-/* Define a typedef for the errflag value used by many internal
- * functions.  If an error needs to be returned, these values can be
- * used to signal such.  More details can be found further down in the
- * code with the bitmasking logic */
-/* NOTE: we are changing the semantics of MPIR_Errflag_t into coll_attr.
- *       We'll finish the renaming after confirmation from testing.
+/* Define values for collective attribute. Collective attributes pass
+ * down contexts including error flags.
  */
-typedef enum {
-    MPIR_ERR_NONE = 0,
-    MPIR_COLL_ATTR_SYNC = 0x1,  /* It's an internal collective.
-                                 * Internal collectives are more focused on
-                                 * synchronization and robustness than
-                                 * performance latency. */
-    MPIR_ERR_PROC_FAILED = 0x2,
-    MPIR_ERR_OTHER = 0x4,
-} MPIR_Errflag_t;
-
+#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
+                                         * on synchronization rather than batch latency.
+                                         * In particular, advise netmod to avoid using
+                                         * injection send. */
+#define MPIR_ERR_PROC_FAILED 0x2
+#define MPIR_ERR_OTHER       0x4
 #define MPIR_COLL_ATTR_ERR_MASK 0x6
 
-#define MPIR_COLL_ATTR_HAS_ERR(errflag) ((errflag) & MPIR_COLL_ATTR_ERR_MASK)
+#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
+#define MPIR_ERR_NONE 0 /* FIXME: transition hack */
+typedef int MPIR_Errflag_t;     /* FIXME: transition hack */
 /*E
   MPIR_Lang_t - Known language bindings for MPI
 
