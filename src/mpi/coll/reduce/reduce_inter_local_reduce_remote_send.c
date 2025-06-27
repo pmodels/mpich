@@ -18,8 +18,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
                                                MPI_Op op,
-                                               int root,
-                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                               int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -63,12 +62,12 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do a local reduce on this intracommunicator */
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
+        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
-                                  MPIR_REDUCE_TAG, comm_ptr, errflag);
+                                  MPIR_REDUCE_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

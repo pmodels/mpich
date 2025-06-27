@@ -200,12 +200,12 @@ int MPIDU_Init_shm_comm_alloc(MPIR_Comm * comm, size_t len, void **ptr)
         MPIR_Assert(serialized_hnd_size <= MPIDU_INIT_SHM_BLOCK_SIZE);
         if (node_comm) {
             mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPIDU_INIT_SHM_BLOCK_SIZE,
-                                        MPIR_BYTE_INTERNAL, 0, node_comm, MPIR_ERR_NONE);
+                                        MPIR_BYTE_INTERNAL, 0, node_comm, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
         mpi_errno = MPIR_Bcast_impl(serialized_hnd_buffer, MPIDU_INIT_SHM_BLOCK_SIZE,
-                                    MPIR_BYTE_INTERNAL, 0, node_comm, MPIR_ERR_NONE);
+                                    MPIR_BYTE_INTERNAL, 0, node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
         serialized_hnd = serialized_hnd_buffer;
         serialized_hnd_size = strlen(serialized_hnd) + 1;       /* add 1 for null char */
@@ -222,7 +222,7 @@ int MPIDU_Init_shm_comm_alloc(MPIR_Comm * comm, size_t len, void **ptr)
     }
 
     if (node_comm) {
-        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
     if (need_remove) {

@@ -24,8 +24,7 @@
 int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
                                    const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
                                    const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
-                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t errflag)
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, i;
     MPI_Aint send_extent, recv_extent;
@@ -85,7 +84,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,
                                            sendcounts[dst], sendtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr,
-                                           &reqarray[req_cnt], errflag);
+                                           &reqarray[req_cnt], coll_attr);
                     MPIR_ERR_CHECK(mpi_errno);
                     req_cnt++;
                 }

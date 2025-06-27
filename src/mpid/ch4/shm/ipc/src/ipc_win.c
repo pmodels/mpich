@@ -150,7 +150,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                                MPI_DATATYPE_NULL,
                                ipc_shared_table,
                                sizeof(win_shared_info_t), MPIR_BYTE_INTERNAL, shm_comm_ptr,
-                               MPIR_ERR_NONE);
+                               MPIR_COLL_ATTR_SYNC);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 

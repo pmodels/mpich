@@ -142,7 +142,7 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
     /* Use an smp algorithm explicitly that only require a working node_comm and node_roots_comm. */
     mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
                                                   all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
-                                                  comm, MPIR_ERR_NONE);
+                                                  comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create av, skipping existing entries */

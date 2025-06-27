@@ -758,9 +758,9 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
             } else {
                 /* rank level - build a tree on the ranks */
                 /* Do an allgather to know the current num_children on each rank */
-                MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+                int coll_attr = 0;
                 MPIR_Allgather_impl(&(ct->num_children), 1, MPIR_INT_INTERNAL,
-                                    num_childrens, 1, MPIR_INT_INTERNAL, comm, errflag);
+                                    num_childrens, 1, MPIR_INT_INTERNAL, comm, coll_attr);
                 if (mpi_errno) {
                     goto fn_fail;
                 }

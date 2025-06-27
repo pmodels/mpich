@@ -107,7 +107,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
              * NIC id from each rank, i.e., one MPI_INT. */
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPIR_INT_INTERNAL,
                                                     pref_nic_copy, 1, MPIR_INT_INTERNAL, comm,
-                                                    MPIR_ERR_NONE);
+                                                    MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (MPIDI_OFI_COMM(comm).pref_nic == NULL) {
@@ -206,8 +206,17 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
+    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+        /* sockets provider need flush any last lightweight send. */
+        mpi_errno = MPIDI_OFI_flush_send_queue();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)
