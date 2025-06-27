@@ -1783,9 +1783,9 @@ def push_impl_decl(func, impl_name=None):
     if func['_impl_param_list']:
         params = ', '.join(func['_impl_param_list'])
         if func['dir'] == 'coll':
-            # block collective use an extra errflag
+            # block collective use an extra coll_attr
             if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
-                params = params + ", MPIR_Errflag_t errflag"
+                params = params + ", int coll_attr"
     else:
         params="void"
 
@@ -1841,7 +1841,7 @@ def dump_body_coll(func):
         dump_error_check("")
     else:
         # blocking collectives
-        dump_line_with_break("mpi_errno = %s(%s, MPIR_ERR_NONE);" % (mpir_name, args))
+        dump_line_with_break("mpi_errno = %s(%s, 0);" % (mpir_name, args))
         dump_error_check("")
 
 def dump_coll_v_swap(func):
@@ -2980,10 +2980,8 @@ def get_declare_function(func, is_large, kind=""):
         if func['return'] == 'EXTRA_STATE':
             ret = 'void *'
 
-    params = get_C_params(func, mapping)
+    params = get_C_params(func, mapping, kind == 'abi')
     s_param = ', '.join(params)
-    if kind == 'abi':
-        s_param = re.sub(r'\bMPI_', 'ABI_', s_param)
     s = "%s %s(%s)" % (ret, name, s_param)
 
     if kind == 'proto':
@@ -2993,10 +2991,14 @@ def get_declare_function(func, is_large, kind=""):
         s += " MPICH_API_PUBLIC"
     return s
 
-def get_C_params(func, mapping):
+def get_C_params(func, mapping, is_abi=False):
     param_list = []
+    re_Handle = r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b'
     for p in func['c_parameters']:
-        param_list.append(get_C_param(p, func, mapping))
+        param = get_C_param(p, func, mapping)
+        if is_abi:
+            param = re.sub(re_Handle, r'ABI_\1', param)
+        param_list.append(param)
     if not len(param_list):
         return ["void"]
     else:
