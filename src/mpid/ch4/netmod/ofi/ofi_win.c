@@ -82,7 +82,7 @@ static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
      * Accumulate ordering cannot easily be changed once the window has been created.
      * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
      * after window is created. */
-    finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
+    finfo->tx_attr->msg_order = 0;      /* FI_ORDER_NONE is deprecated since OFI 2.0.0 */
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAR) ==
         MPIDIG_ACCU_ORDER_RAR)
 #ifdef FI_ORDER_ATOMIC_RAR
