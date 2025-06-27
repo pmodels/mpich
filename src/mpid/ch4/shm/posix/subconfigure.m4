@@ -97,7 +97,7 @@ MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
     AC_SUBST(ch4_posix_eager_pre_include)
     AC_SUBST(ch4_posix_eager_recv_transaction_decl)
 
-    if test "$ch4_posix_eager_array_sz" = "1" && (test "$enable_ch4_shm_inline" = "yes" || test "$enable_ch4_shm_direct" = "yes") ;  then
+    if test "$ch4_posix_eager_array_sz" = "1" && test "$enable_ch4_shm_inline" = "yes" ;  then
         PAC_APPEND_FLAG([-DPOSIX_EAGER_INLINE=__posix_eager_inline_${ch4_posix_eager_modules}__], [CPPFLAGS])
     fi
 

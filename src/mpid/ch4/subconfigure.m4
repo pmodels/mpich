@@ -256,6 +256,14 @@ if test "${enable_ch4_direct}" = "yes" ; then
     AC_MSG_ERROR([do not use --enable-ch4-direct; use --without-ch4-shmmods instead])
 fi
 
+AC_ARG_ENABLE(ch4-shm-inline,
+    [--enable-ch4-shm-inline
+       Enables inlined shared memory build when a single shared memory module is used
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ch4_shm_inline=yes)
+
 # setup shared memory submodules
 AC_ARG_WITH(ch4-shmmods,
     [  --with-ch4-shmmods@<:@=ARG@:>@ Comma-separated list of shared memory modules for MPICH/CH4.
