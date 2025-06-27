@@ -763,8 +763,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
-    MPIR_Assert(errflag == 0);
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    MPIR_Assert(coll_attr == 0);
 
     int vci_src, vci_dst;
     MPIDI_OFI_SEND_VNIS(vci_src, vci_dst);      /* defined just above */
@@ -773,7 +773,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
         mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                     vci_src, vci_dst, request, syncflag, errflag);
+                                     vci_src, vci_dst, request, syncflag, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (0 /* TODO */) {
         /* TODO: It is more robust to use MPIDI_OFI_send_fallback during init and comm bootstrapping.

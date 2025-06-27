@@ -32,15 +32,15 @@
 #define MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)     ((attr) & 0x01)
 #define MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr) (attr) |= 0x01
 
-/* bit 1-2: errflag */
+/* bit 1-2: coll_attr */
 #define MPIR_PT2PT_ATTR_GET_ERRFLAG(attr) \
-    ((!((attr) & 0x6)) ? MPIR_ERR_NONE : \
+    ((!((attr) & 0x6)) ? 0 : \
         (((attr) & 0x2) ? MPIX_ERR_PROC_FAILED : MPI_ERR_OTHER))
 
-#define MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag) \
+#define MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, coll_attr) \
     do { \
-        if (errflag) { \
-            if ((errflag) == MPIR_ERR_PROC_FAILED) { \
+        if (coll_attr) { \
+            if ((coll_attr) == MPIR_ERR_PROC_FAILED) { \
                 (attr) |= 0x2; \
             } else { \
                 (attr) |= 0x4; \

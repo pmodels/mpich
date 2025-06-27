@@ -16,7 +16,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                                     MPI_Datatype datatype,
                                     int root, MPIR_Comm * comm_ptr, int tree_type,
                                     int branching_factor, int is_nb, int chunk_size,
-                                    int recv_pre_posted, MPIR_Errflag_t errflag)
+                                    int recv_pre_posted, int coll_attr)
 {
     int rank, comm_size, i, j, k, *p, src = -1, dst, offset = 0;
     int is_contig;
@@ -188,11 +188,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 if (!is_nb) {
                     mpi_errno =
                         MPIC_Send((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
-                                  MPIR_BCAST_TAG, comm_ptr, errflag);
+                                  MPIR_BCAST_TAG, comm_ptr, coll_attr);
                 } else {
                     mpi_errno =
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
-                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], coll_attr);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -205,11 +205,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 if (!is_nb) {
                     mpi_errno =
                         MPIC_Send((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
-                                  MPIR_BCAST_TAG, comm_ptr, errflag);
+                                  MPIR_BCAST_TAG, comm_ptr, coll_attr);
                 } else {
                     mpi_errno =
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
-                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], coll_attr);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
             }

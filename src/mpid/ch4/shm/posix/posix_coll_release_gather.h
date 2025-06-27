@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                                                                   MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   int root, MPIR_Comm * comm_ptr,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  int coll_attr)
 {
     MPIR_FUNC_ENTER;
 
@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 #ifdef HAVE_ERROR_CHECKING
     /* When error checking is enabled, only (cellsize-(2*cacheline_size)) bytes are reserved for data.
      * Initial 2 cacheline_size bytes are reserved to put the amount of data being placed and the
-     errflag respectively */
+     coll_attr respectively */
     cellsize -= (2 * MPIDU_SHM_CACHE_LINE_LEN);
 #endif
 
@@ -122,13 +122,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release(MPIR_get_contig_ptr(buffer, offset + true_lb),
                                                    chunk_count, MPIR_BYTE_INTERNAL, root, comm_ptr,
-                                                   errflag,
+                                                   coll_attr,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_gather(NULL, NULL, 0, MPI_DATATYPE_NULL,
-                                                  MPI_OP_NULL, root, comm_ptr, errflag,
+                                                  MPI_OP_NULL, root, comm_ptr, coll_attr,
                                                   MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
         MPIR_ERR_CHECK(mpi_errno);
         offset += chunk_count;
@@ -152,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     goto fn_exit;
   fallback:
     /* Fall back to other algo as release_gather based bcast cannot be used */
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -168,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
                                                                    MPI_Datatype datatype,
                                                                    MPI_Op op, int root,
                                                                    MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   int coll_attr)
 {
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -230,7 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release(NULL, chunk_count, datatype, root,
-                                                   comm_ptr, errflag,
+                                                   comm_ptr, coll_attr,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -238,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
             MPIDI_POSIX_mpi_release_gather_gather((char *) sendbuf + offset * extent,
                                                   (char *) recvbuf + offset * extent,
                                                   chunk_count, datatype, op, root, comm_ptr,
-                                                  errflag,
+                                                  coll_attr,
                                                   MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
         MPIR_ERR_CHECK(mpi_errno);
         offset += chunk_count;
@@ -251,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     goto fn_exit;
   fallback:
     /* Fall back to other algo as release_gather algo cannot be used */
-    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -266,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
                                                                       MPI_Datatype datatype,
                                                                       MPI_Op op,
                                                                       MPIR_Comm * comm_ptr,
-                                                                      MPIR_Errflag_t errflag)
+                                                                      int coll_attr)
 {
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -325,14 +325,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
             MPIDI_POSIX_mpi_release_gather_gather((char *) sendbuf + offset * extent,
                                                   (char *) recvbuf + offset * extent,
                                                   chunk_count, datatype, op, 0, comm_ptr,
-                                                  errflag,
+                                                  coll_attr,
                                                   MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release((char *) recvbuf + offset * extent, chunk_count,
                                                    datatype, 0,
-                                                   comm_ptr, errflag,
+                                                   comm_ptr, coll_attr,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE);
         MPIR_ERR_CHECK(mpi_errno);
         offset += chunk_count;
@@ -346,7 +346,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -355,7 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
  * framework.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -378,12 +378,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
 
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_gather(NULL, NULL, 0, MPI_DATATYPE_NULL, MPI_OP_NULL, 0,
-                                              comm_ptr, errflag,
+                                              comm_ptr, coll_attr,
                                               MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
-        MPIDI_POSIX_mpi_release_gather_release(NULL, 0, MPI_DATATYPE_NULL, 0, comm_ptr, errflag,
+        MPIDI_POSIX_mpi_release_gather_release(NULL, 0, MPI_DATATYPE_NULL, 0, comm_ptr, coll_attr,
                                                MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -395,7 +395,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }

@@ -185,7 +185,7 @@ int MPIR_NCCL_check_requirements_red_op(const void *sendbuf, void *recvbuf, MPI_
 }
 
 int MPIR_NCCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                        MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     cudaError_t ret;
