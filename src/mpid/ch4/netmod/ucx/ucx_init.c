@@ -189,10 +189,10 @@ int MPIDI_UCX_init_local(int *tag_bits)
         UCP_PARAM_FIELD_REQUEST_SIZE |
         UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
 
-    if (MPICH_IS_THREADED) {
-        ucp_params.mt_workers_shared = 1;
-        ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
-    }
+#ifdef MPICH_IS_THREADED
+    ucp_params.mt_workers_shared = 1;
+    ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
+#endif
 
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
