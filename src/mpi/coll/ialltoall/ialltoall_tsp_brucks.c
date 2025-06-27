@@ -53,6 +53,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
     int sink_id, vtx_id;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -68,8 +69,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
     /* distance between non-consecutive occurrences of digitval */
     delta = (k - 1) * pow_k_phase;
 
-    dtcopy_id = MPL_malloc(sizeof(int) * comm_size, MPL_MEM_COLL);      /* NOTE: We do not need this much large array - make it more accurate */
-    MPIR_Assert(dtcopy_id != NULL);
+    MPIR_CHKLMEM_MALLOC(dtcopy_id, sizeof(int) * comm_size);    /* NOTE: We do not need this much large array - make it more accurate */
     counter = 0;
     *pupsize = 0;       /* points to the first empty location in pupbuf */
     while (offset < comm_size) {
@@ -103,11 +103,10 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
     mpi_errno = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id, &sink_id);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_free(dtcopy_id);
-
     *sink_id_out = sink_id;
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -224,10 +223,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_CHKLMEM_MALLOC(tmp_rbuf, sizeof(void **) * nphases);
 
     for (i = 0; i < nphases; i++) {
-        tmp_sbuf[i] = (void **) MPL_malloc(sizeof(void *) * (k - 1), MPL_MEM_COLL);
-        MPIR_Assert(tmp_sbuf[i] != NULL);
-        tmp_rbuf[i] = (void **) MPL_malloc(sizeof(void *) * (k - 1), MPL_MEM_COLL);
-        MPIR_Assert(tmp_rbuf[i] != NULL);
+        MPIR_CHKLMEM_MALLOC(tmp_sbuf[i], sizeof(void *) * (k - 1));
+        MPIR_CHKLMEM_MALLOC(tmp_rbuf[i], sizeof(void *) * (k - 1));
         for (j = 0; j < k - 1; j++) {
             if (i == 0 || buffer_per_phase == 1) {      /* allocate new memory if buffer_per_phase is set to true */
                 tmp_sbuf[i][j] =
@@ -342,10 +339,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     }
 
   fn_exit:
-    for (i = 0; i < nphases; i++) {
-        MPL_free(tmp_sbuf[i]);
-        MPL_free(tmp_rbuf[i]);
-    }
     MPIR_CHKLMEM_FREEALL();
 
     MPIR_FUNC_EXIT;

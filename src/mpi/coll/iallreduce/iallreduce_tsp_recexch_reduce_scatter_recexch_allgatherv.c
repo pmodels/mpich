@@ -22,7 +22,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
     int dtcopy_id = -1;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     int is_commutative;
     int nranks, rank;
@@ -63,10 +63,10 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
                                    &step2_nbrs, &step2_nphases, &p_of_k, &T);
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
     log_pofk = step2_nphases;
-    send_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);        /* to store send vertex ids */
-    reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
-    recv_id = (int *) MPL_malloc(sizeof(int) * ((step2_nphases * (k - 1)) + 1), MPL_MEM_COLL);  /* to store receive vertex ids */
-    vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(send_id, sizeof(int) * k);      /* to store send vertex ids */
+    MPIR_CHKLMEM_MALLOC(reduce_id, sizeof(int) * k);    /* to store reduce vertex ids */
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * step2_nphases * (k - 1));        /* to store receive vertex ids */
+    MPIR_CHKLMEM_MALLOC(vtcs, sizeof(int) * (step2_nphases) * k);
     tmp_recvbuf = MPIR_TSP_sched_malloc(count * extent, sched);
 
 
@@ -88,8 +88,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
                                                   comm, sched);
 
     mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);   /* sink for all the tasks up to end of Step 1 */
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Step 2 */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
@@ -156,10 +155,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
         MPL_free(step2_nbrs[i]);
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
-    MPL_free(send_id);
-    MPL_free(reduce_id);
-    MPL_free(recv_id);
-    MPL_free(vtcs);
     if (in_step2)
         MPL_free(step1_recvbuf);
 

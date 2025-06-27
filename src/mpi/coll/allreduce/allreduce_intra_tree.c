@@ -28,11 +28,11 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     int num_children;
     int root = 0;
     bool is_tree_leaf;
-    int i, j, tag;
+    int i, j;
 
     MPIR_Request **reqs;
     int num_reqs = 0;
@@ -110,17 +110,13 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     if (!is_tree_leaf) {
         MPIR_CHKLMEM_MALLOC(child_buffer, sizeof(void *) * num_children);
-        child_buffer[0] = MPL_malloc(extent * count, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!child_buffer[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_CHKLMEM_MALLOC(child_buffer[0], extent * count);
 
         child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
-        MPIR_ERR_CHKANDJUMP(!child_buffer[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
-                child_buffer[i] = MPL_malloc(extent * count, MPL_MEM_BUFFER);
-                MPIR_ERR_CHKANDJUMP(!child_buffer[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+                MPIR_CHKLMEM_MALLOC(child_buffer[i], extent * count);
                 child_buffer[i] = (void *) ((char *) child_buffer[i] - type_lb);
-                MPIR_ERR_CHKANDJUMP(!child_buffer[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
             } else {
                 child_buffer[i] = child_buffer[0];
             }
@@ -135,9 +131,6 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
         MPIR_ERR_CHKANDJUMP(!reduce_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
@@ -199,14 +192,6 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (!is_tree_leaf) {
-        MPL_free(child_buffer[0]);
-        for (i = 1; i < num_children; i++) {
-            if (buffer_per_child) {
-                MPL_free(child_buffer[i]);
-            }
-        }
-    }
     MPIR_Treealgo_tree_free(&my_tree);
     MPIR_CHKLMEM_FREEALL();
 

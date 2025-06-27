@@ -10,7 +10,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
                                                                   int p_of_k, int log_pofk, int T,
                                                                   void *recvbuf,
                                                                   MPI_Datatype recvtype,
-                                                                  size_t recv_extent,
+                                                                  MPI_Aint recv_extent,
                                                                   const MPI_Aint * recvcounts,
                                                                   const MPI_Aint * displs, int tag,
                                                                   MPIR_Comm * comm,
@@ -69,7 +69,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
 static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                           int step1_nrecvs, int is_inplace,
                                                           int rank, int tag, const void *sendbuf,
-                                                          void *recvbuf, size_t recv_extent,
+                                                          void *recvbuf, MPI_Aint recv_extent,
                                                           const MPI_Aint * recvcounts,
                                                           const MPI_Aint * displs,
                                                           MPI_Datatype recvtype, int n_invtcs,
@@ -117,7 +117,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    int **step2_nbrs, int rank, int nranks, int k,
                                                    int p_of_k, int log_pofk, int T, int *nrecvs_,
                                                    int **recv_id_, int tag, void *recvbuf,
-                                                   size_t recv_extent, const MPI_Aint * recvcounts,
+                                                   MPI_Aint recv_extent,
+                                                   const MPI_Aint * recvcounts,
                                                    const MPI_Aint * displs, MPI_Datatype recvtype,
                                                    int is_dist_halving, MPIR_Comm * comm,
                                                    MPIR_TSP_sched_t sched)
@@ -249,7 +250,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
     int nranks, rank;
-    size_t recv_extent;
+    MPI_Aint recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
@@ -259,6 +260,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     int nrecvs;
     int *recv_id = NULL;
     int tag;
+
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -280,7 +283,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                    &step2_nbrs, &step2_nphases, &p_of_k, &T);
     is_instep2 = (step1_sendto == -1);  /* whether this rank participates in Step 2 */
     log_pofk = step2_nphases;
-    recv_id = (int *) MPL_malloc(sizeof(int) * ((step2_nphases * (k - 1)) + 1), MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * ((step2_nphases * (k - 1)) + 1));
 
     if (!is_inplace && is_instep2) {
         /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
@@ -329,12 +332,12 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                                    nrecvs, recv_id, tag, recvtype, comm, sched);
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     /* free the memory */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
-    MPL_free(recv_id);
 
     MPIR_FUNC_EXIT;
 

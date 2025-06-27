@@ -25,7 +25,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int nranks, rank;
-    size_t recv_extent;
+    MPI_Aint recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int partner, offset, count, send_count, recv_count, send_offset, recv_offset, nbr, phase = 0;
@@ -35,6 +35,8 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     int iter = 0, recv_phase = 0;
     MPIR_Request *rreqs[MAX_RADIX * 2], *sreqs[MAX_RADIX * 2];
     MPIR_Request **recv_reqs = NULL, **send_reqs = NULL;
+
+    MPIR_CHKLMEM_DECL();
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
@@ -55,12 +57,8 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
 
         /* Allocate requests */
         if (step1_sendto == -1) {
-            recv_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!recv_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            send_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!send_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            MPIR_CHKLMEM_MALLOC(recv_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
+            MPIR_CHKLMEM_MALLOC(send_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
         }
     } else {
         int index = k - 2;      /* we calculate starting K = 2 */
@@ -129,8 +127,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_ERR_CHECK(mpi_errno);
             }
             mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -241,8 +238,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 }
                 /* wait on prev recvs */
                 mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
                     phase--;
@@ -251,8 +247,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             }
         }
         mpi_errno = MPIC_Waitall(num_sreq, send_reqs, MPI_STATUSES_IGNORE);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     num_rreq = 0;
@@ -270,8 +265,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     }
 
     mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
-    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!comm_alloc) {
         /* free the memory */
@@ -279,13 +273,10 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             MPL_free(step2_nbrs[i]);
         MPL_free(step2_nbrs);
         MPL_free(step1_recvfrom);
-        if (is_instep2) {
-            MPL_free(recv_reqs);
-            MPL_free(send_reqs);
-        }
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;

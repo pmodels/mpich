@@ -110,20 +110,14 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         tmp_recvbuf = MPIR_TSP_sched_malloc(total_recvcount * recvtype_extent, sched);
     MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-
-    r_counts = (int **) MPL_malloc(sizeof(int *) * nphases, MPL_MEM_COLL);
-    if (nphases > 0)
-        MPIR_ERR_CHKANDJUMP(!r_counts, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    s_counts = (int **) MPL_malloc(sizeof(int *) * nphases, MPL_MEM_COLL);
-    if (nphases > 0)
-        MPIR_ERR_CHKANDJUMP(!s_counts, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    if (nphases > 0) {
+        MPIR_CHKLMEM_MALLOC(r_counts, sizeof(int *) * nphases);
+        MPIR_CHKLMEM_MALLOC(s_counts, sizeof(int *) * nphases);
+    }
 
     for (i = 0; i < nphases; i++) {
-        r_counts[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!r_counts[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
-        s_counts[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!s_counts[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_CHKLMEM_MALLOC(r_counts[i], sizeof(int) * (k - 1));
+        MPIR_CHKLMEM_MALLOC(s_counts[i], sizeof(int) * (k - 1));
     }
 
     MPI_Aint index_sum;
@@ -266,13 +260,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
         }
     }
-
-    for (i = 0; i < nphases; i++) {
-        MPL_free(r_counts[i]);
-        MPL_free(s_counts[i]);
-    }
-    MPL_free(r_counts);
-    MPL_free(s_counts);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

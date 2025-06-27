@@ -46,8 +46,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE && count > 0) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* If k value is greater than the maximum radix for which nbrs
@@ -61,12 +60,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                        &step2_nbrs, &step2_nphases, &p_of_k, &T);
         /* Allocate requests */
         if (step1_sendto == -1) {
-            recv_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!recv_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            send_reqs =
-                (MPIR_Request **) MPL_malloc((k - 1) * 2 * sizeof(MPIR_Request *), MPL_MEM_BUFFER);
-            MPIR_ERR_CHKANDJUMP(!send_reqs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            MPIR_CHKLMEM_MALLOC(recv_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
+            MPIR_CHKLMEM_MALLOC(send_reqs, (k - 1) * 2 * sizeof(MPIR_Request *));
         }
     } else {
         index = k - 2;  /* we calculate starting k = 2 */
@@ -98,8 +93,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
         send_reqs = sreqs;
     }
     /* allocate temp buffer for receiving in reduce scatter phase */
-    tmp_recvbuf = MPL_malloc(count * extent, MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_CHKLMEM_MALLOC(tmp_recvbuf, count * extent);
 
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
     if (!in_step2) {    /* even */
@@ -287,12 +281,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
             MPL_free(step2_nbrs[i]);
         MPL_free(step2_nbrs);
         MPL_free(step1_recvfrom);
-        if (in_step2) {
-            MPL_free(recv_reqs);
-            MPL_free(send_reqs);
-        }
     }
-    MPL_free(tmp_recvbuf);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
