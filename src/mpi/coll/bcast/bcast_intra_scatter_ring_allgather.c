@@ -24,7 +24,7 @@
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
@@ -70,7 +70,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                       nbytes, tmp_buf, is_contig, errflag);
+                                       nbytes, tmp_buf, is_contig, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
@@ -104,7 +104,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                   MPIR_BYTE_INTERNAL, right, MPIR_BCAST_TAG,
                                   (char *) tmp_buf + left_disp, left_count,
                                   MPIR_BYTE_INTERNAL, left, MPIR_BCAST_TAG, comm_ptr, &status,
-                                  errflag);
+                                  coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
         curr_size += recvd_size;

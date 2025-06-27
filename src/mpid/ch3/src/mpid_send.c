@@ -31,10 +31,10 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
 
-    switch (errflag) {
-        case MPIR_ERR_NONE:
+    switch (coll_attr) {
+        case 0:
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);

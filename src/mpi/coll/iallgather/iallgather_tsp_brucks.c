@@ -18,7 +18,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int n_invtcs;
     int tag;
     int src, dst, p_of_k = 0;   /* Largest power of k that is (strictly) smaller than 'size' */
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
 
     int rank;
     int size;

@@ -19,7 +19,7 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
     int *srcs, *dsts;
     int tag, vtx_id;
     MPI_Aint recvtype_extent;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
 
     MPIR_FUNC_ENTER;
 

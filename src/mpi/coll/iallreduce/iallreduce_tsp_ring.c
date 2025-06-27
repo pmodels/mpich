@@ -24,7 +24,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
 
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL();

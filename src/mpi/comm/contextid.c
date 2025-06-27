@@ -727,7 +727,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
              */
             /* FIXME: study and resolve */
             /*
-             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL, MPI_MIN, st->comm_ptr, MPIR_ERR_NONE);
+             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL, MPI_MIN, st->comm_ptr, 0);
              * MPIR_ERR_CHECK(mpi_errno);
              */
             if (minfree > 0) {

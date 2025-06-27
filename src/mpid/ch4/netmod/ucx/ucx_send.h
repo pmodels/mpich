@@ -145,9 +145,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     int vci_src, vci_dst;
     MPIDI_UCX_SEND_VNIS(vci_src, vci_dst);
 
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
-    switch (errflag) {
-        case MPIR_ERR_NONE:
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    switch (coll_attr) {
+        case 0:
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);

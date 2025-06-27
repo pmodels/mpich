@@ -26,7 +26,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     int nvtcs, vtcs[2];
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
 
     MPIR_FUNC_ENTER;
 

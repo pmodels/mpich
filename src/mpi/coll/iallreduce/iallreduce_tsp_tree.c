@@ -32,7 +32,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     int nvtcs;
     int tag, vtx_id;
     int root = 0;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;

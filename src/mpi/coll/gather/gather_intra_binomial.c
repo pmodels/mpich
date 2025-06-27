@@ -39,7 +39,7 @@ cvars:
  */
 int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -198,11 +198,11 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
             if (!tmp_buf_size) {
                 /* leaf nodes send directly from sendbuf */
                 mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, dst,
-                                      MPIR_GATHER_TAG, comm_ptr, errflag);
+                                      MPIR_GATHER_TAG, comm_ptr, coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                 mpi_errno = MPIC_Send(tmp_buf, curr_cnt, MPIR_BYTE_INTERNAL, dst,
-                                      MPIR_GATHER_TAG, comm_ptr, errflag);
+                                      MPIR_GATHER_TAG, comm_ptr, coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 MPI_Aint blocks[2];
@@ -227,7 +227,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                 MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIC_Send(MPI_BOTTOM, 1, tmp_type, dst,
-                                      MPIR_GATHER_TAG, comm_ptr, errflag);
+                                      MPIR_GATHER_TAG, comm_ptr, coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Type_free_impl(&tmp_type);
                 if (types[1] != MPIR_BYTE_INTERNAL)

@@ -43,8 +43,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                                   void *recvbuf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
-                                                  MPI_Op op,
-                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                  MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
 {
     MPIR_CHKLMEM_DECL();
     int comm_size, rank;
@@ -84,7 +83,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+                                  datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
@@ -172,7 +171,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                       (char *) tmp_buf +
                                       disps[recv_idx] * extent,
                                       recv_cnt, datatype, dst,
-                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* tmp_buf contains data received in this step.
@@ -231,7 +230,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                       (char *) recvbuf +
                                       disps[recv_idx] * extent,
                                       recv_cnt, datatype, dst,
-                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (newrank > newdst)
@@ -246,7 +245,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     if (rank < 2 * rem) {
         if (rank % 2)   /* odd */
             mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+                                  datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr, coll_attr);
         else    /* even */
             mpi_errno = MPIC_Recv(recvbuf, count,
                                   datatype, rank + 1,
