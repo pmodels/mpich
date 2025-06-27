@@ -205,7 +205,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     int flags_num_pages, fallback = 0;
     size_t flags_shm_size = 0;
     const long pg_sz = sysconf(_SC_PAGESIZE);
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int coll_attr = 0;
     int topotree_fail[2] = { -1, -1 };  /* -1 means topo trees not created due to reasons like not
                                          * specifying binding, no hwloc etc. 0 means topo trees were
                                          * created successfully. 1 means topo trees were created
@@ -303,17 +303,18 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 }
 
                 fallback = 1;
-                MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, errflag);
+                MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, coll_attr);
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             } else {
                 /* More shm can be created, update the shared counter */
                 MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
                 fallback = 0;
-                mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, errflag);
+                mpi_errno =
+                    MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         } else {
-            mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
             if (fallback) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
@@ -359,7 +360,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 topotree_fail[1] = -1;
             }
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, topotree_fail, 2, MPIR_INT_INTERNAL,
-                                            MPI_MAX, comm_ptr, errflag);
+                                            MPI_MAX, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             topotree_fail[0] = -1;
@@ -423,7 +424,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                         release_gather_info_ptr->release_state);
 
         /* Make sure all the flags are set before ranks start reading each other's flags from shm */
-        mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier_impl(comm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -491,7 +492,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = 0;
 
     /* Clean up is not required for NULL struct */
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {

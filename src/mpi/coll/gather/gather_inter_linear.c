@@ -15,7 +15,7 @@
 
 int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                             MPIR_Comm * comm_ptr, int coll_attr)
 {
     int remote_size, mpi_errno = MPI_SUCCESS;
     int i;
@@ -40,7 +40,7 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
         }
     } else {
         mpi_errno =
-            MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, errflag);
+            MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

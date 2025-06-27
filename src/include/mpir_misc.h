@@ -27,8 +27,6 @@
 
 #define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
-#define MPIR_ERR_NONE 0 /* FIXME: transition hack */
-typedef int MPIR_Errflag_t;     /* FIXME: transition hack */
 /*E
   MPIR_Lang_t - Known language bindings for MPI
 

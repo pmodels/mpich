@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     int mpi_errno = MPI_SUCCESS;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
 
     int vci_src, vci_dst;
@@ -58,7 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
             am_hdr.src_rank = comm->rank;
             am_hdr.tag = tag;
             am_hdr.context_id = comm->context_id + context_offset;
-            am_hdr.error_bits = errflag;
+            am_hdr.error_bits = coll_attr;
             am_hdr.sreq_ptr = NULL;
             am_hdr.flags = MPIDIG_AM_SEND_FLAGS_NONE;
             am_hdr.data_sz = data_sz;
@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     }
     if (!done) {
         mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                     vci_src, vci_dst, request, syncflag, errflag);
+                                     vci_src, vci_dst, request, syncflag, coll_attr);
     }
     MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
 

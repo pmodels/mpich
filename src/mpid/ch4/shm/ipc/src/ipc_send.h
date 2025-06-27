@@ -23,7 +23,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     int vci_src, vci_dst;
     /* note: MPIDI_POSIX_SEND_VSIS defined in posix_send.h */
     MPIDI_POSIX_SEND_VSIS(vci_src, vci_dst);
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (do_ipc) {
         mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
                                         rank, tag, comm, context_offset, addr, ipc_attr,
-                                        vci_src, vci_dst, request, errflag);
+                                        vci_src, vci_dst, request, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
         *done = true;
     }

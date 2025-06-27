@@ -47,16 +47,16 @@
 #define MPIDI_OFI_ERR_PROC_FAILED (0x2ULL)
 
 /* Set the error bits */
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, int errflag)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, int coll_attr)
 {
-    switch (errflag) {
+    switch (coll_attr) {
         case MPIR_ERR_OTHER:
             *data_field = (*data_field) | (MPIDI_OFI_ERR_OTHER << MPIDI_OFI_IDATA_SRC_BITS);
             break;
         case MPIR_ERR_PROC_FAILED:
             *data_field = (*data_field) | (MPIDI_OFI_ERR_PROC_FAILED << MPIDI_OFI_IDATA_SRC_BITS);
             break;
-        case MPIR_ERR_NONE:
+        case 0:
             /*do nothing */
             break;
     }

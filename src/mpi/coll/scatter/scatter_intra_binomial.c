@@ -28,7 +28,7 @@
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPIR_Comm * comm_ptr, int coll_attr)
 {
     MPI_Status status;
     MPI_Aint extent = 0;
@@ -151,14 +151,15 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
                 mpi_errno = MPIC_Send(((char *) sendbuf +
                                        extent * sendcount * mask),
                                       send_subtree_cnt,
-                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, coll_attr);
             } else {
                 /* non-zero root and others */
                 send_subtree_cnt = curr_cnt - nbytes * mask;
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) tmp_buf + nbytes * mask),
                                       send_subtree_cnt,
-                                      MPIR_BYTE_INTERNAL, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      MPIR_BYTE_INTERNAL, dst, MPIR_SCATTER_TAG, comm_ptr,
+                                      coll_attr);
             }
             MPIR_ERR_CHECK(mpi_errno);
             curr_cnt -= send_subtree_cnt;

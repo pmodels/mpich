@@ -16,8 +16,7 @@
 int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                 int root, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t errflag)
+                                                 int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
@@ -36,7 +35,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
         /* root sends all data to rank 0 on remote group and returns */
         mpi_errno =
             MPIC_Send(sendbuf, sendcount * remote_size, sendtype, 0, MPIR_SCATTER_TAG, comm_ptr,
-                      errflag);
+                      coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     } else {
@@ -67,7 +66,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
-                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, errflag);
+                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

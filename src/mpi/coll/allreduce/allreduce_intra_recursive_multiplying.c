@@ -26,8 +26,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
                                                MPI_Op op,
-                                               MPIR_Comm * comm_ptr,
-                                               const int k, MPIR_Errflag_t errflag)
+                                               MPIR_Comm * comm_ptr, const int k, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, virt_rank;
@@ -84,7 +83,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             int pre_dst = rank % pofk;
             /* This is follower so send data */
             mpi_errno = MPIC_Send(recvbuf, count, datatype,
-                                  pre_dst, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+                                  pre_dst, MPIR_ALLREDUCE_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
             /* Set virtual rank so this rank is not used in main stage */
             virt_rank = -1;
@@ -133,7 +132,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             for (int dst = rank_offset; dst < starting_rank + next_distance; dst += distance) {
                 if (dst != rank) {
                     mpi_errno = MPIC_Isend(recvbuf, count, datatype, dst, MPIR_ALLREDUCE_TAG,
-                                           comm_ptr, &reqs[num_reqs++], errflag);
+                                           comm_ptr, &reqs[num_reqs++], coll_attr);
                     MPIR_ERR_CHECK(mpi_errno);
                     mpi_errno = MPIC_Irecv(((char *) tmp_buf) + exchanges * single_size,
                                            count, datatype, dst, MPIR_ALLREDUCE_TAG, comm_ptr,
@@ -197,7 +196,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             /* This is process is in the algorithm, so send data */
             for (int post_dst = (rank % pofk) + pofk; post_dst < comm_size; post_dst += pofk) {
                 mpi_errno = MPIC_Isend(recvbuf, count, datatype, post_dst, MPIR_ALLREDUCE_TAG,
-                                       comm_ptr, &reqs[num_reqs++], errflag);
+                                       comm_ptr, &reqs[num_reqs++], coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 

@@ -60,10 +60,10 @@ int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype
     if (comm_ptr->rank == root) {
         mpi_errno =
             MPIR_Reduce_intra_binomial(MPI_IN_PLACE, local_buf, byte_count, MPIR_BYTE_INTERNAL,
-                                       MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
+                                       MPIX_EQUAL, root, comm_ptr, 0);
     } else {
         mpi_errno = MPIR_Reduce_intra_binomial(local_buf, NULL, byte_count, MPIR_BYTE_INTERNAL,
-                                               MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
+                                               MPIX_EQUAL, root, comm_ptr, 0);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -89,7 +89,7 @@ int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datat
     /* Not all algorithm will work. In particular, we can't split the message */
     mpi_errno = MPIR_Allreduce_intra_recursive_doubling(MPI_IN_PLACE, local_buf,
                                                         byte_count, MPIR_BYTE_INTERNAL,
-                                                        MPIX_EQUAL, comm_ptr, MPIR_ERR_NONE);
+                                                        MPIX_EQUAL, comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     *is_equal = local_buf->is_equal;
