@@ -8,8 +8,6 @@
 #include "../posix/posix_noinline.h"
 #include "../ipc/src/ipc_noinline.h"
 
-MPIDI_SHM_global_t MPIDI_SHM_global;
-
 int MPIDI_SHM_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;

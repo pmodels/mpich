@@ -29,12 +29,6 @@
 /* Not-inlined shm functions */
 #include "shm_noinline.h"
 
-typedef struct {
-    int *local_ranks;
-} MPIDI_SHM_global_t;
-
-extern MPIDI_SHM_global_t MPIDI_SHM_global;
-
 int MPIDI_SHM_comm_bootstrap(MPIR_Comm * comm);
 
 #endif /* SHM_IMPL_H_INCLUDED */
