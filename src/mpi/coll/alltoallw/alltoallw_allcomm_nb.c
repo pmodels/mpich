@@ -8,8 +8,7 @@
 int MPIR_Alltoallw_allcomm_nb(const void *sendbuf, const MPI_Aint sendcounts[],
                               const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                               void *recvbuf, const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                              const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
-                              MPIR_Errflag_t errflag)
+                              const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;

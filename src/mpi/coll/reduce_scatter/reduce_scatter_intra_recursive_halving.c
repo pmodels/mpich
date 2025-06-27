@@ -36,8 +36,7 @@
  */
 int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvbuf,
                                                 const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                                MPI_Op op, MPIR_Comm * comm_ptr,
-                                                MPIR_Errflag_t errflag)
+                                                MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -111,7 +110,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIC_Send(tmp_results, total_count,
-                                  datatype, rank + 1, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                  datatype, rank + 1, MPIR_REDUCE_SCATTER_TAG, comm_ptr, coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
@@ -196,7 +195,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
                                           newdisps[recv_idx] * extent,
                                           recv_cnt, datatype, dst,
                                           MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                          MPI_STATUS_IGNORE, errflag);
+                                          MPI_STATUS_IGNORE, coll_attr);
             else if ((send_cnt == 0) && (recv_cnt != 0))
                 mpi_errno = MPIC_Recv((char *) tmp_recvbuf +
                                       newdisps[recv_idx] * extent,
@@ -206,7 +205,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
                 mpi_errno = MPIC_Send((char *) tmp_results +
                                       newdisps[send_idx] * extent,
                                       send_cnt, datatype,
-                                      dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                      dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, coll_attr);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -246,7 +245,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
                 mpi_errno = MPIC_Send((char *) tmp_results +
                                       disps[rank - 1] * extent, recvcounts[rank - 1],
                                       datatype, rank - 1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         } else {        /* even */

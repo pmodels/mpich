@@ -17,7 +17,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     int mpi_errno = MPI_SUCCESS;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
 
     int vci_src, vci_dst;
@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_src));
     mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                 vci_src, vci_dst, request, syncflag, errflag);
+                                 vci_src, vci_dst, request, syncflag, coll_attr);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_src));
 
     return mpi_errno;
