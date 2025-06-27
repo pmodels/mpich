@@ -136,7 +136,7 @@ int MPIC_Wait(MPIR_Request * request_ptr)
    this is OK since there is no data that can be received corrupted. */
 
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+              MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -154,7 +154,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    SET_ATTR(attr, errflag);
+    SET_ATTR(attr, coll_attr);
 
     DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -230,7 +230,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
-                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
+                  MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -247,7 +247,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPIR_ERR_CHKANDJUMP1((recvcount < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", recvcount);
 
-    SET_ATTR(attr, errflag);
+    SET_ATTR(attr, coll_attr);
 
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
@@ -311,7 +311,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
                           int source, int recvtag,
-                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
+                          MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
@@ -331,7 +331,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
 
-    SET_ATTR(attr, errflag);
+    SET_ATTR(attr, coll_attr);
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size(count, datatype, &tmpbuf_size);
@@ -404,7 +404,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 }
 
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
+               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -422,7 +422,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    SET_ATTR(attr, errflag);
+    SET_ATTR(attr, coll_attr);
 
     DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -494,7 +494,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
     mpi_errno = MPIR_Waitall(numreq, requests, status_array);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* The errflag value here is for all requests, not just a single one.  If
+    /* The coll_attr value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
