@@ -1646,15 +1646,10 @@ elif test "$with_pmi" = "pmix" ; then
 elif test "$with_pmilib" = "default" -o "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
     enable_pmi1="yes"
     enable_pmi2="yes"
-    enable_pmix="yes"
     # mpich's libpmi support both PMI1 and PMI2 unless 3rd party pmi is loaded
     if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
         enable_pmi1="no"
         enable_pmi2="no"
-    fi
-    # use PMIx client in libpmi unless an external library is configured
-    if test "$pac_have_pmix" = "yes" ; then
-        enable_pmix="no"
     fi
 fi
 
