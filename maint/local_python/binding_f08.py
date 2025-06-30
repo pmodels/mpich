@@ -810,8 +810,8 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         # defined in src/binding/fortran/mpif_h/user_proxy.c
         c_name = "MPII_op_create"
     else:
-        # uses PMPI c binding directly
-        c_name = 'P' + get_function_name(func, is_large)
+        # uses MPI c binding directly
+        c_name = get_function_name(func, is_large)
     dump_interface_function(func, name, c_name, is_large)
 
 def dump_interface_function(func, name, c_name, is_large):
