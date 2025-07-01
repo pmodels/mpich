@@ -2835,7 +2835,7 @@ def get_C_return(func, mapping, is_abi=False):
         ret = mapping[func['return']]
         if func['return'] == 'EXTRA_STATE':
             ret = 'void *'
-        if is_abi:
+        if is_abi and func['dir'] != 'io':
             re_Handle = get_abi_re_Handle()
             ret = re.sub(re_Handle, r'ABI_\1', ret)
     return ret
@@ -2845,7 +2845,7 @@ def get_C_params(func, mapping, is_abi=False):
     re_Handle = get_abi_re_Handle()
     for p in func['c_parameters']:
         param = get_C_param(p, func, mapping)
-        if is_abi:
+        if is_abi and func['dir'] != 'io':
             param = re.sub(re_Handle, r'ABI_\1', param)
         param_list.append(param)
     if not len(param_list):
