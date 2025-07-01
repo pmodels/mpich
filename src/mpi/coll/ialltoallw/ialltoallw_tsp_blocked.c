@@ -19,8 +19,6 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
     size_t sendtype_size, recvtype_size;
     int nranks, rank;
     int i, j, comm_block, dst;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);

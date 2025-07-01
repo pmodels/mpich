@@ -22,7 +22,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
     int k, l;
     int *srcs, *dsts;
     int tag, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
     MPI_Aint sendtype_extent, recvtype_extent;
 
     MPIR_FUNC_ENTER;

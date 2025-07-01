@@ -52,8 +52,6 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
     int size, rank, vtx_id;
     int is_inplace;
     int tag = 0;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the
