@@ -18,8 +18,6 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
     MPI_Aint extent;
     int i;
     int tag, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);

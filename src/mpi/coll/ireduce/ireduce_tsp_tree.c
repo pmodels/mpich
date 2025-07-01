@@ -37,7 +37,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int dtcopy_id = -1;
     int nvtcs;
     int tag;
-    int coll_attr ATTRIBUTE((unused)) = 0;
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;

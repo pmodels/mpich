@@ -27,7 +27,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int current_child, next_child, lrank, total_count, sink_id;
     int num_children, *child_subtree_size = NULL;
     int num_send_dependencies;
-    int coll_attr ATTRIBUTE((unused)) = 0;
     MPIR_CHKLMEM_DECL();
 
     /* For correctness, transport based collectives need to get the

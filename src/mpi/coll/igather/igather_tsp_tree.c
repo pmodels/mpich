@@ -25,7 +25,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int next_child, num_children, *child_subtree_size = NULL;
     int num_dependencies;
-    int coll_attr ATTRIBUTE((unused)) = 0;
     MPI_Aint *child_data_offset;
     MPIR_CHKLMEM_DECL();
 
