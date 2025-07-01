@@ -21,8 +21,6 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     void *partial_scan = NULL;
     void *tmp_buf = NULL;
     int tag = 0, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     /* For correctness, transport based collectives need to get the

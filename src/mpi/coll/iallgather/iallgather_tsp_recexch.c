@@ -17,8 +17,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int n
 {
     int mpi_errno = MPI_SUCCESS;
     int partner, offset, count, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     /* get the partner with whom I should exchange data */
@@ -70,9 +68,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
     int mpi_errno = MPI_SUCCESS;
     int i;
     int vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
-
     MPIR_FUNC_ENTER;
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
@@ -117,9 +112,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
     int phase, i, j, count, nbr, offset, rank_for_offset;
     int *recv_id = *recv_id_;
     int nrecvs = 0, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
-
     MPIR_FUNC_ENTER;
 
     if (is_dist_halving == 1) {
@@ -195,8 +187,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
 {
     int mpi_errno = MPI_SUCCESS;
     int i, vtx_id;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     if (step1_sendto != -1) {
@@ -248,7 +238,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
     int nrecvs;
     int *recv_id;
     int tag;
-    int coll_attr ATTRIBUTE((unused)) = 0;
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;

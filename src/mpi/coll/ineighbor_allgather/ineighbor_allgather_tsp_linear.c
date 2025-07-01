@@ -19,8 +19,6 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
     int *srcs, *dsts;
     int tag, vtx_id;
     MPI_Aint recvtype_extent;
-    int coll_attr ATTRIBUTE((unused)) = 0;
-
     MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL();
