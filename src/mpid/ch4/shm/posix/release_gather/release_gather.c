@@ -489,10 +489,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 /* Cleanup the release_gather data structures and free the allocated memory */
 int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 {
-    MPIR_FUNC_ENTER;
-
     int mpi_errno = MPI_SUCCESS;
-    int coll_attr ATTRIBUTE((unused)) = 0;
+    MPIR_FUNC_ENTER;
 
     /* Clean up is not required for NULL struct */
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
