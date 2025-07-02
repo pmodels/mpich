@@ -65,6 +65,11 @@
   first MPI_Session_init, MPI_Init, or MPI_Init_thread sets the thread level;
   the later init will ignore users request and inherit the global thread level.
 
+# Internal collective interface replaces the last parameter "MPIR_Errflag_t errflag"
+  with "int coll_attr". Use MPIR_COLL_ATTR_SYNC for internal collective usages
+  where completing the synchronization is more critical than batch latency.
+
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
