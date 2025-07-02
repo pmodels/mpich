@@ -1,0 +1,256 @@
+UPDATE aurora 9f67af6e47..34c92f0acf
+
+    current aurora HEAD acac389c22
+
+c722010d1b 2025-01-21 mpir/init: Move GPU init after PMI5bee22e2a1 2025-01-21 romio: fix recursive CS_ENTER in MPIOI_Register_datarep
+1c9e5d0c20 2025-01-21 ch4/ofi: add MPIR_CVAR_CH4_OFI_ENABLE_SHARED_AV
+9f3316c58a 2025-01-22 config: Rename SAVE_LDFLAGS to WRAPPER_DEPENDENCY_LDFLAGS
+6564c95fca 2025-01-17 confdb: Add hwloc link flags to wrappers for static builds
+2916b87a2c 2024-10-02 test/bench: misc refactoring in macros
+d127a73fda 2024-10-02 test/bench: add barrier and bcast bench test
+8ee0c518e8 2024-11-03 test/bench: osu-style bcast benchmark
+d637e579ca 2025-01-17 test/bench: add get_bw and put_bw
+16d18096df 2024-12-06 romio: fix a potential warning
+1311107d79 2023-09-05 mpi.h: define MPI-IO constants in mpi.h
+7eecb9f57c 2023-08-31 binding/c: add io_api.txt
+57a62d4d8d 2024-12-01 binding/c: fixup for MPI_Register_datarep
+94abfde9f1 2024-12-06 binding/c: suppress warnings on missing validations
+fea20c59e9 2024-12-04 binding/python: refactor gen_binding_c.py
+afb96e89dd 2024-12-06 binding/python: refactor binding_c.py
+2105814db0 2024-12-02 binding/fortran: fixup double listing io functions
+fe2b01684d 2024-12-03 romio: skip binding sources if FROM_MPICH
+1c5d90be2d 2024-12-05 Makefile: fix abi build using romio
+1049ac866c 2023-09-01 binding/python: generate io bindings
+014d053468 2024-12-05 binding/python: generate io abi bindings
+15c0f79a18 2025-01-22 romio: warning fixes
+ec176dc89e 2025-01-22 romio: daos: missing headers
+aa1e42fa23 2025-01-22 shadow declaration fix
+d9383d17f4 2025-01-23 python/f08: use bind C f2c/c2f functions
+f9a9427fd5 2025-01-23 python/fortran: remove -no-mpiio option
+6173e9ba4c 2025-01-24 binding/cxx: remove usage of HAVE_CXX_IO and HAVE_ROMIO
+0561934b7d 2025-01-24 mpi.h: add ROMIO_VERSION in mpi.h.in
+c0d61e08b8 2025-01-24 romio: remove unused CFLAG -DHAVE_ROMIOCONF_H
+6723d57831 2025-01-24 romio: skip install mpio.h if FROM_MPICH
+95d0e55eac 2025-01-24 binding/io: skip validatation for buf in split end routines
+bfc69217f0 2025-01-25 test: suppress misc warning messages
+4add88c95c 2025-01-26 configure: set AC macro FORTRAN_MPI_OFFSET
+3f3276319a 2025-01-26 test: check --disable-romio option in mpichversion
+bc8b7cb9db 2025-02-03 doc: update shortlog creation in release instructions
+018f38b848 2025-02-04 binding/io: skip error checking in MPI_Register_datarep
+053d58109c 2025-01-31 doc: Update version to 5.0.x
+37dd1e8230 2024-12-29 mpl: add MPL_MEM_LOCAL
+00ee450453 2024-12-29 mpir_mem: simplify MPIR_CHKLMEM macros
+a32923df75 2024-12-30 mpir_mem: simplify MPIR_CHKPMEM macros
+0660ece3b5 2025-02-04 doc: update CHANGES for MPIR_CHK[LP]MEM_ changes
+78f44af06a 2025-01-21 request: always enable DEBUG_PROGRESS_START/CHECK
+0c0a4781a7 2025-01-21 request: new cvar name MPIR_CVAR_PROGRESS_TIMEOUT
+6e738c8be7 2025-01-21 config: add progress to --enable-g=all
+f021e02b80 2025-02-05 ch4/xpmem: fix MPIR_CHKPMEM_MALLOC
+76a537fb94 2025-02-05 ch3: Fix uninitialized bytes caused by MPIDI_Pkt_init
+bcd34e792d 2025-02-05 ch3: Default to initialize packet headers
+d998b954db 2025-01-29 yaksa: move yaksa from external submodule into mpich
+335a0a71fa 2025-01-30 yaksa: rename subconfigure.m4 to subcfg.m4
+f53d968b0c 2025-01-30 yaksa: remove test
+f52125baed 2025-01-30 config: update configure to reflect yaksa move
+e22101c826 2025-01-30 doc: update CHANGES for romio bindings and yaksa move
+478c4870a2 2025-02-06 hydra: fix line-continuation in --configfile option
+4caed1bcbd 2025-01-08 hydra: remove dependency on libslurm
+efcce48dce 2025-02-07 configure/f08: check ignore_tkr(d)
+c27fcf27e9 2025-02-07 binding/f08: apply ignore_tkr(d) when available
+ae03fc5b65 2025-02-07 ch4: fix unused variable warning
+e6af52fa30 2025-02-10 confdb: Add helper for creating comma-separated lists
+06c520ade7 2025-02-10 configure: Expand output at end of configuration
+9a926b8214 2024-12-10 test: remove unused test glpid
+bb2b550324 2024-12-10 group: remove unused groupdebug.c
+066ed81748 2024-12-10 group: abstract group access and lpid integer type
+6fc034b4a0 2024-12-10 misc: use the new group rank/lpid conversion routines
+08b7d055fb 2024-12-10 comm: use MPIR_Group_create_{map, stride)
+9042933bc0 2024-12-10 group: rearange functions in group_impl.c
+a834f5f347 2024-12-10 group: refactor group_impl.c to use new group interfaces
+fed0a7f181 2024-12-10 group: refactor MPIR_Group
+37bf8320a7 2025-02-10 group: make MPIR_Lpid int64_t
+d5d81c775a 2024-12-24 group: optimize grouputil
+4dea633c37 2025-01-26 romio: remove fortran-binding code in ROMIO
+f36d0b67b7 2025-02-11 mpid/sched: match communicator when checking tag space
+712c7e1b91 2025-02-05 dataloop: Use calloc to allocate dataloop structure
+cef7aa04fe 2025-02-12 group: avoid divide by zero with empty group
+c2139fe532 2025-02-12 group: remove assertion in MPIR_Group_check_subset
+a358508cca 2024-12-30 ch4/iqueue: avoid Init_shm_get when localsize is 1
+bfa64a02de 2024-12-30 init_shm: shortcut the trivial case of local_size is 1
+7a0671f6f8 2024-12-11 mpid/ch4: remove MPIDI_NM_comm_get_gpid
+f3212a8111 2024-12-11 mpid: replace usage of uint64_t lpid with MPIR_Lpid
+8336b22a80 2024-12-11 group: add MPIR_Worlds
+8b0807dea2 2024-12-11 group: add builtin MPIR_GROUP_{WORLD,SELF}
+64c2738d28 2024-12-13 group: add MPIR_Group_dup
+f4fb758c7a 2024-12-12 binding/group: remove error check in MPI_Group_free
+8127c59f3d 2024-12-11 comm: always set local_group and remote_group
+3ac1cb83ed 2024-12-12 group: avoid freeing MPIR_Group_empty
+1d7a39ace4 2024-12-12 ch4: release init_comm->local_group
+9818070abb 2024-12-12 ch4: assert group before communicator commit
+b7199c8844 2025-01-12 datatype: add internal datatypes
+801e649f7d 2025-01-22 configure: map from MPI to internal types and to C
+fe8b1e1c10 2025-01-22 mpi.h: fix all MPI datatype constants
+f0a27bdd14 2025-01-15 mpi.h: reorder MPI datatype definitions
+fa074d6dd4 2025-01-22 datatype: set MPIR_Internal_types table
+99a31e32ac 2025-01-19 datatype: rename type_create_pairtype.c to pairtypes.c
+7768e367ee 2025-01-29 datatype: revamp pairtype creations
+33ee9c6e33 2025-01-13 binding/c: swap builtin datatypes with internal types
+48c44c97c6 2025-01-14 binding/c: refactor getting comm_size
+44736cabbc 2025-01-14 binding/c: use MPIR_CHLMEM_MALLOC for temp arrays
+c530d8d50d 2025-01-14 binding/c: swap input datatype for internal builtins
+29bef464f5 2025-01-23 binding/fortran: update loading datatype constants
+fb424dc1f0 2025-01-26 datatype: swap builtin types in type creation routines
+2231dd654b 2025-01-31 ch3: avoid MPIR_OP_TYPE_MACRO in defining packet header
+718dc6a878 2025-01-31 op: remove type_name_ from MPIR_OP_TYPE_MACRO
+d6af1b21dc 2025-01-13 op: update mpir_op_util.h for macros with internal types
+5d0e822204 2025-01-17 op: use internal type groups in op functions
+eb986fd017 2025-01-31 datatype: use internal types in create_f90.c
+7884628f69 2025-01-22 datatype: support internal types in yaksa and dataloop
+f1a029533a 2025-01-30 ch3: update to use internal types
+39216dfeac 2025-01-20 ch4/ofi: use fi_datatype and fi_op to index win_op_table
+ad1e426cea 2025-01-20 ch4/ofi: use internal datatypes in MPIDI_OFI_datatype_to_ofi
+66a4027a78 2025-01-14 all: use internal datatypes internally
+08d192173e 2025-01-14 datatype: avoid access ptr of builtin datatypes
+c7fc51b83c 2025-01-23 datatype: refactor MPIR_Type_match_size_impl
+cbcfb69e6c 2025-01-27 misc: use original datatype in some routines
+e1e90eb5fd 2025-01-29 datatype: revise get_elements_x
+c6aac05c91 2025-02-13 op: disallow MPI_BYTE with op MPI_MAX or MPI_MIN
+9fc56a3b32 2025-02-18 mpl/gavl: Fix typo destory->destroy
+4ad63310f6 2025-02-18 mpl/gavl: Return node directly when searching
+34e0c9b0b0 2025-02-19 mpl/gpu: Add MPL_gpu_ipc_handle_is_valid API
+9e5b801052 2025-02-19 ch4/ipc: Validate cached GPU IPC handles
+683bb74d43 2025-02-19 mpl/cuda: Use IPC handle validation instead of free hooks
+b84fe89d2f 2025-02-24 mpl/hip: Use IPC handle validation instead of free hooks
+52c9443492 2025-02-24 ch4/ipc: Add debug logging for sender ipc handle cache
+4360325e26 2025-02-25 ch4/ipc: skip usage of initshm if local_size is 1
+d0b305034e 2025-02-27 test/mpi/f08: switch to 'use mpi_f08' in util
+bfcae94b6e 2025-02-27 mpl/ze: Implement MPL_gpu_ipc_handle_is_valid
+9433e36f53 2025-02-26 mpl/ze: Fix bug in IPC handle creation
+b565c83df9 2025-02-27 mpl/ze: Simplify cache cleanup when stale handle is detected
+6cb771e5a5 2025-02-11 abi: sync mpi_abi.h
+02e1706f07 2024-12-19 api: add handle to/from int conversion apis
+09d4315c0e 2024-12-19 python: suppress missing error checking messages
+53e79f1bcd 2025-02-11 abi: add MPI ABI-specific functions
+af62fc2b1b 2025-02-11 binding/abi: implement MPI_Abi_get_info
+a6db5442b6 2025-02-11 abi: disable MPI_LOGICALx for now
+f860382d1f 2025-02-24 abi: check MPI_FILE_NULL in ABI File conversions
+7a3f2a5ae7 2025-03-03 configure: check the case when long double is double
+8f54a45ee1 2025-03-03 ch4/ofi: sort all nics before setting num_nics
+f073893620 2025-03-04 datatype: avoid adding refcount for struct of pairtypes
+cd5ede2676 2024-12-21 misc: spellchecks
+5f278209b5 2024-12-20 test/runtests: capture stray output in run_mpitests
+6bd373392b 2024-12-17 comm: add MPIR_comm_rank_to_lpid and make it inline
+0325bd8a65 2024-12-16 group: add LPID macros
+e1ace8bb36 2024-12-18 group: misc fixups for grouputil
+ba00af3b13 2024-12-18 ch3: add ch3_vcrt to MPIR_Group
+41c1830353 2024-12-19 ch3: shortcut tmp_comm used in MPI_Comm_accept/connect
+5dc8895590 2024-12-18 ch3: use group to build vcrt instead of mapper
+dd953e422d 2024-12-20 ch3: remove the isDisconnected arg from MPIDI_VCRT_Release
+f32d4cc4d4 2024-12-20 comm: avoid creating invalid intercomm then destroy it
+fcc937c7c0 2025-02-25 comm: whitespace clean up from the last commit
+f6434a0336 2024-12-27 comm: refactor comm->is_tainted to comm->vcis_enabled
+cd56d2f6f2 2024-12-27 vci: directly use MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES
+61a856d397 2024-12-27 ch4: delay setting multiple vcis until post_init
+81d71481d7 2024-12-28 ch4: refactor vci init/finalize
+6eb73f331a 2025-03-07 ch4: move MPIDI_Comm_set_vcis from post_init to comm post hook
+0bd074fffd 2025-03-07 ch4/vci: refactor MPIDI_Comm_set_vcis
+865cec2cae 2024-12-26 ch4: add netmod/shm API comm_set_vcis
+5ec8ab4f62 2024-12-29 ch4: do multiple vci creations in MPIDI_Comm_set_vcis
+482c631d41 2025-03-09 ch4: move vci info in DEBUG_SUMMARY to comm_set_vcis
+085b237824 2025-03-10 ch4/rma: fix hard coded 0 for vci
+d5c271e9e8 2025-03-11 all: spelling fixes
+50eea8411d 2025-03-06 datatype: add MPIR_DATATYPE_ASSERT_BUILTIN
+24e43be494 2025-03-06 all: replace external builtin types with internal types
+1b6adee41a 2025-03-10 pt2pt/bsend: clean up in bsendutil.c
+2d6608686e 2025-03-10 doc: add CHANGES on internal datatypes
+de230a67af 2025-03-11 doc: add design doc Internal_Datatypes.md
+687d875d21 2025-03-11 mpl/ze: call putIpcHandle only if the ptr is still valid allocation
+5acc59605d 2025-03-12 ch4/shm: replace Init_shm usage in post_init
+d1e3092e12 2025-03-06 abi: sync mpi_abi.h with upstream
+1f8f4786f4 2025-03-06 abi: avoid -Wstringop-overread warnings
+ad90f3fae3 2025-03-06 abi: remove MPI_Abi_is_supported
+f44f0f9406 2025-03-06 abi: return MPI_ABI_[SUB]VERSION in MPI_Abi_get_version
+7d421ac3d0 2025-03-06 binding/abi: skip f2c/c2f functions
+846686741c 2025-03-06 abi: insolate internal Fint-related code from ABI
+958fb26acd 2025-03-06 test: remove test of c2f/f2c functions under abi
+5012e0870b 2025-03-07 binding/abi: pass MPI_FILE_NULL to internal
+887cea84b7 2025-02-03 datatype: use separate functions for op-type validation
+d6f3296956 2025-02-03 datatype: remove MPIR_Op_get_alt_datatype
+c5e74d5cbf 2025-02-03 datatype: skip check_dtype in MPI_Type_match_size
+33b20689b8 2025-02-03 op: remove _check_dtype routines
+3a0e2a85b4 2025-02-04 op: cosolidate all op functions into op_fns.c
+73a80c7b5c 2025-03-04 datatype: preserve internal type MPI_DATATYPE_NULL
+be2a28df3e 2025-03-04 datatype: non-standard special type/op cases
+96ce972c41 2025-03-14 datatype: check unavailable builtin-types in validation
+b1c5d6510d 2025-03-13 datatype: Fix pack external by using the MPIR layer
+075153d37c 2025-03-14 abi: set so version for libmpi_abi.so
+9d41fd1250 2025-03-11 mpl/ze: Add debug logging for specialized ipc handle cache
+cf5f247c8e 2025-03-20 mpi: update MPI_VERSION/MPI_SUBVERSION to 5.0
+d2298b97ac 2025-03-13 ch4/ipc: default MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD to 64K
+ad92d77210 2025-03-20 ch4/ipc: add MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD
+d032945d9f 2025-01-03 ch4/proc: use calloc to zero MPIDI_global.avt_mgr.av_table0
+477718a492 2025-01-07 ch4/ofi: use both local and remote vci/nic in av_to_phys
+5e2c277b51 2024-12-28 ch4/ofi: delay allocate addrs for multiple vci/nic
+ac717dd3b1 2024-12-28 ch4/ofi: refactor vci-related initialization code
+c4189eb04f 2025-03-09 ch4/ofi: expand set_sep_counters
+076c509ee2 2024-12-29 ch4/ofi: gather vci init in MPIDI_OFI_vci_init
+d6a1df7a5e 2024-12-29 ch4/ofi: delay setting MPIDI_OFI_global.num_nics
+462e0fc1b3 2025-01-07 ch4/ofi: relax av insertion order of non-root vcis
+77dae9381f 2025-03-12 ch4/ofi: remove redundant allgather in addr_exchange_all_ctx
+fc11664050 2025-03-17 ch4/ofi: clean up MPIDI_OFI_AV_ADDR macros
+a9a39dc67e 2025-03-21 test: update baseenv tests for MPI_VERSION
+d6b745e5af 2025-01-23 mpi: add MPI_LOGICAL{1,2,4,8,16}
+f8ae768537 2025-03-17 datatype: remove adding MPI_TYPECLASS_LOGICAL
+0f9e6c312f 2025-01-31 mpi: add MPIX_BFLOAT16
+db50fcdf87 2025-02-01 op: add software SUM support for MPIX_C_FLOAT16
+7d24ccf08a 2025-01-31 test: add allreduce test of MPIX_BFLOAT16
+e39ebe063d 2025-03-17 doc: update CHANGES for adding MPI_LOGICAL1 etc.
+6f85fd79ad 2025-03-18 datatype: complete cases in MPIR_Datatype_builtintype_alignment
+24b0df3d1c 2025-03-18 configure: systematically configure internal types
+5f7721cf44 2025-03-18 datatype: cleanup usage of internal types
+ae6ba670eb 2025-03-19 configure: disable fortran datatypes if fortran is disabled
+57a0702006 2025-03-20 datatype: add missing cases for MPIR_FORTRAN_LOGICALs
+e2b6f0453a 2025-03-25 ch4: remove netmod api init_vcis
+bb5d7a0639 2025-03-25 ch4/ipc: move MPIDI_IPCI_is_repeat_addr to globals.c
+c911252046 2025-03-25 ch4/ipc: add count to MPIDI_IPCI_is_repeat_addr
+6da42ca60c 2025-03-25 ch4/xpmem: only use xpmem ipc_send for repeated addr
+5a27aec694 2025-03-26 typerep: Call device commit hook when unflattening type
+3a4f0cffa2 2025-01-05 ch4/ucx: move multivci code to ucx_vci.c
+4dea369fa1 2025-03-24 ch4: remove the usage of MPIDI_global.is_initialized
+14d4ada688 2024-12-29 ch4/shm: refactor iqueue shmem allocation
+3d4ee337e8 2024-12-29 ch4/shm: move vci setup from post_init to set_vcis
+1e90bb0d91 2025-01-08 mpid/shm: remove MPIDU_shm_seg_t and refactor
+a7a561809c 2024-12-30 init_shm: add MPIDU_Init_shm_comm_alloc
+8b52d55da7 2024-12-30 posix/iqueue: support comm_set_vcis
+c2da5f40b4 2024-12-23 mpir: split lpid headers to mpir_lpid.h
+e830ac111b 2024-12-24 group: use MPIR_Group_lpid_to_rank in MPIR_Group_check_subset
+051b791f24 2024-12-24 group: simplify strided pmap by removing blocksize
+b4c0411f5c 2024-12-24 group: remove pmap->size
+2c73d5d1e4 2024-12-24 ch3: return error code in create_vcrt_from_group
+53d811fa4b 2024-12-22 mpid: remove unused MPID_INTERCOMM_NO_DYNPROC
+6236d47d16 2024-12-17 ch4: add MPIDIU_lpid_to_av and MPIDIU_lpid_to_av_slow
+483c1612f5 2024-12-17 ch4: re-implement MPIDIU_comm_rank_to_av
+db12f3426d 2024-12-17 ch4: add utils to support dynamic av
+226ee9b06d 2024-12-12 ch4: new netmod api to support dynamic processes
+4b4239b3e5 2024-12-16 ADI/comm: exchange context_id in MPID_Intercomm_exchange
+033520222a 2024-12-18 ADI: remove MPID_Comm_get_lpid
+6e9cce03ec 2025-03-21 comm: temporary replacement code for determine_low_group
+c80ccaf976 2025-03-22 ch4/spawn: enter lock in ch4-layer for dynamic apis
+90b9564b69 2025-03-31 doc: update CHANGES for new process addressing design
+7c70154d41 2024-12-16 ch4: refactor MPID_Intercomm_exchange
+6efabea24a 2024-12-17 ch4: refactor ch4_spawn
+97230918f7 2024-12-18 comm: remove mapper
+7792d9f9b9 2024-12-20 ch4: remove MPIDI_rank_map_t
+9d3aea66a4 2024-12-20 ch4: rewrite MPIDIU_rank_to_lpid
+41e3d1bbbb 2024-12-20 ch4: remove MPIDIU_comm_rank_to_pid
+9abc679e4d 2024-12-22 ch4: track lpid in upid_hash
+6d7088e8e2 2024-12-22 ch4: remove netmod api upids_to_lpids
+cd1c735562 2024-12-23 ch4: replace MPIDIU_get_av
+3b3e8c51ce 2024-12-24 ch4/ofi: add a way to tell whether an av entry is empty
+296d27e5fb 2025-03-31 ch4/ofi: improve the readability of MPIDI_OFI_insert_upid
+26cbb41811 2024-12-25 ch4: remove av table ref_count
+327593a27e 2025-03-18 ch4: remove unused lock in struct MPIDI_per_vci
+6799c4d890 2025-03-23 Revert "comm: temporary replacement code for determine_low_group"
+9b405c0688 2025-03-24 test: enable spawn tests for ch4:ucx
+2b7a99563e 2025-03-24 ch4/ucx: fixups in ucx_spawn.c
+2b84634430 2025-03-31 ch4/ucx: remove a leftover declaration
