@@ -937,13 +937,14 @@ static int cmd_read_expect(int fd, struct PMIU_cmd *pmicmd, const char *expected
                  * enqueue and continue for such response when it not expected. */
                 if (strcmp("barrier_out", pmicmd->cmd) == 0) {
                     const char *tag = PMIU_cmd_find_keyval(pmicmd, "tag");
-                    if (tag) {
-                        struct barrier_response *r = MPL_malloc(sizeof(struct barrier_response),
-                                                                MPL_MEM_OTHER);
-                        r->tag = atoi(tag);
-                        DL_APPEND(barrier_response_queue, r);
-                        continue;
-                    }
+                    PMIU_Assert(tag);
+                    struct barrier_response *r = MPL_malloc(sizeof(struct barrier_response),
+                                                            MPL_MEM_OTHER);
+                    r->tag = atoi(tag);
+                    DL_APPEND(barrier_response_queue, r);
+                    pmicmd->buf_need_free = true;
+                    PMIU_cmd_free_buf(pmicmd);
+                    continue;
                 }
             }
             PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL,

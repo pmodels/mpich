@@ -514,72 +514,137 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
-static bool is_world_group(MPIR_Group * group_ptr)
+#ifndef MPID_SESSION_USE_WORLD
+static int calc_context_id(MPIR_Group * group_ptr, const char *stringtag)
 {
-    return (group_ptr->size == MPIR_Process.size && group_ptr->size > 1);
+    unsigned hash1, hash2, hash3;
+    HASH_VALUE(stringtag, strlen(stringtag), hash1);
+    HASH_VALUE(&group_ptr->size, sizeof(int), hash2);
+    if (group_ptr->pmap.use_map) {
+        HASH_VALUE(group_ptr->pmap.u.map, group_ptr->size * sizeof(MPIR_Lpid), hash3);
+    } else {
+        HASH_VALUE(&group_ptr->pmap.u.stride, 2 * sizeof(MPIR_Lpid), hash3);
+    }
+    return (hash1 ^ hash2 ^ hash3) & ((1 << MPIR_CONTEXT_ID_BITS) - 1);
 }
-
-static bool is_self_group(MPIR_Group * group_ptr)
-{
-    return (group_ptr->size == 1);
-}
+#endif
 
 int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
                                      MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
                                      MPIR_Comm ** p_newcom_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int use_comm_world = 0;
+    MPIR_FUNC_ENTER;
 
-    /* NOTE: only world or self is supported without first establishing comm_world.  */
+    int tag = get_tag_from_stringtag(stringtag);
 
+#ifdef MPID_SESSION_USE_WORLD
     MPL_initlock_lock(&MPIR_init_lock);
-    if (MPIR_Process.comm_world) {
-        use_comm_world = 1;
-    } else if (is_world_group(group_ptr)) {
+    if (!MPIR_Process.comm_world) {
+        /* !! require collective over all processes */
         mpi_errno = MPIR_init_comm_world();
-        use_comm_world = 1;
-    } else if (!MPIR_Process.comm_self && is_self_group(group_ptr)) {
-        mpi_errno = MPIR_init_comm_self();
+        MPIR_ERR_CHECK(mpi_errno);
     }
     MPL_initlock_unlock(&MPIR_init_lock);
+
+    mpi_errno = MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+#else
+    MPIR_Comm *new_comm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
+    MPIR_ERR_CHKANDJUMP(!new_comm, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    mpi_errno = MPII_Comm_init(new_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (use_comm_world) {
-        /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
-        int tag = get_tag_from_stringtag(stringtag);
+    new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
+    new_comm->stringtag = stringtag;
+    new_comm->context_id = MPIR_CONTEXT_DYNAMIC_PROC_MASK | calc_context_id(group_ptr, stringtag);
+    new_comm->recvcontext_id = new_comm->context_id;
+    new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+    new_comm->rank = group_ptr->rank;
+    new_comm->local_size = group_ptr->size;
+    new_comm->remote_size = new_comm->local_size;
+    new_comm->local_group = group_ptr;
+    MPIR_Group_add_ref(group_ptr);
+    MPIR_Comm_set_session_ptr(new_comm, group_ptr->session_ptr);
 
-        /* Because the group_ptr may not be derived from a communicator, local_group in
-         * comm_world may not have been created */
-        static MPL_initlock_t lock = MPL_INITLOCK_INITIALIZER;
-        MPL_initlock_lock(&lock);
-        if (!MPIR_Process.comm_world->local_group) {
-            mpi_errno = comm_create_local_group(MPIR_Process.comm_world);
-        }
-        MPL_initlock_unlock(&lock);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno =
-            MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Comm_commit(new_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* allocate a new context id */
+    int new_context_id;
+    mpi_errno = MPIR_Get_contextid_sparse_group(new_comm, group_ptr, tag, &new_context_id, 0);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    new_comm->context_id = new_context_id;
+    new_comm->recvcontext_id = new_comm->context_id;
+    if (new_comm->node_comm) {
+        new_comm->node_comm->context_id = new_context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+        new_comm->node_comm->recvcontext_id = new_comm->node_comm->context_id;
+    }
+    if (new_comm->node_roots_comm) {
+        new_comm->node_roots_comm->context_id = new_context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+        new_comm->node_roots_comm->recvcontext_id = new_comm->node_roots_comm->context_id;
+    }
+
+    if (info_ptr) {
+        MPII_Comm_set_hints(new_comm, info_ptr, true);
+    }
+
+    if (errhan_ptr) {
+        MPIR_Comm_set_errhandler_impl(new_comm, errhan_ptr);
+    }
+
+    new_comm->stringtag = NULL;
+    *p_newcom_ptr = new_comm;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int lpid_cmp(MPIR_Lpid lpid_a, MPIR_Lpid lpid_b);
+static int create_peer_comm(MPIR_Lpid my_lpid, MPIR_Lpid remote_lpid,
+                            MPIR_Session * session, const char *stringtag,
+                            MPIR_Errhandler * errhan_ptr,
+                            MPIR_Comm ** peer_comm_out, int *remote_rank_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    bool is_low_group = (lpid_cmp(my_lpid, remote_lpid) < 0);
+
+    MPIR_Lpid *peer_map;
+    peer_map = MPL_malloc(2 * sizeof(MPIR_Lpid), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!peer_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    int my_rank, remote_rank;
+    if (is_low_group) {
+        peer_map[0] = my_lpid;
+        peer_map[1] = remote_lpid;
+        my_rank = 0;
+        remote_rank = 1;
     } else {
-        /* Currently only self comm is allowed here */
-        MPIR_Assert(is_self_group(group_ptr));
-
-        mpi_errno = MPIR_Comm_dup_impl(MPIR_Process.comm_self, p_newcom_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_Comm_set_session_ptr(*p_newcom_ptr, group_ptr->session_ptr);
+        peer_map[0] = remote_lpid;
+        peer_map[1] = my_lpid;
+        my_rank = 1;
+        remote_rank = 0;
     }
 
-    if (*p_newcom_ptr) {
-        if (info_ptr) {
-            MPII_Comm_set_hints(*p_newcom_ptr, info_ptr, true);
-        }
+    MPIR_Group *peer_group;
+    mpi_errno = MPIR_Group_create_map(2, my_rank, session, peer_map, &peer_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        if (errhan_ptr) {
-            MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
-        }
-    }
+    MPIR_Comm *peer_comm;
+    mpi_errno = MPIR_Comm_create_from_group_impl(peer_group, stringtag, NULL, errhan_ptr,
+                                                 &peer_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Group_free_impl(peer_group);
+    *peer_comm_out = peer_comm;
+    *remote_rank_out = remote_rank;
 
   fn_exit:
     return mpi_errno;
@@ -587,10 +652,6 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     goto fn_exit;
 }
 
-/* a restricted implementation of MPI_Intercomm_create_from_groups.
- * Require comm_world, and remote_group part of comm_world.
- * TODO: remote_group from different comm_world
- */
 int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int local_leader,
                                            MPIR_Group * remote_group_ptr, int remote_leader,
                                            const char *stringtag,
@@ -599,23 +660,46 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(MPIR_Process.comm_world);
+    MPIR_Session *session = local_group_ptr->session_ptr;
+    MPIR_ERR_CHKANDJUMP(session != remote_group_ptr->session_ptr, mpi_errno, MPI_ERR_OTHER,
+                        "**session_mixed");
 
+    bool is_leader = (local_group_ptr->rank == local_leader);
+
+    /* first, create local comm */
     MPIR_Comm *local_comm;
     mpi_errno = MPIR_Comm_create_from_group_impl(local_group_ptr, stringtag, info_ptr, errhan_ptr,
                                                  &local_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* next, create peer_comm between the leaders */
+    MPIR_Comm *peer_comm = NULL;
+    int remote_rank = -1;
+    if (is_leader) {
+        MPIR_Lpid my_lpid = MPIR_Group_rank_to_lpid(local_group_ptr, local_leader);
+        MPIR_Lpid remote_lpid = MPIR_Group_rank_to_lpid(remote_group_ptr, remote_leader);
+
+        mpi_errno = create_peer_comm(my_lpid, remote_lpid, session, stringtag, errhan_ptr,
+                                     &peer_comm, &remote_rank);
+    }
+
+    /* synchronize mpi_errno */
+    int tmp_err = mpi_errno;
+    mpi_errno = MPIR_Bcast_impl(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
+                                MPIR_COLL_ATTR_SYNC);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = tmp_err;
+    MPIR_ERR_CHECK(mpi_errno);
+
     int tag = get_tag_from_stringtag(stringtag);
-    /* FIXME: ensure lpid is from comm_world */
-    MPIR_Lpid remote_lpid = MPIR_Group_rank_to_lpid(remote_group_ptr, remote_leader);
-    MPIR_Assert(remote_lpid < MPIR_Process.size);
-    mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader,
-                                           MPIR_Process.comm_world, (int) remote_lpid,
+    mpi_errno = MPIR_Intercomm_create_impl(local_comm, local_leader, peer_comm, remote_rank,
                                            tag, p_newintercom_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_release(local_comm);
+    if (is_leader) {
+        MPIR_Comm_release(peer_comm);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -785,31 +869,38 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
 /* arbitrarily determine which group is the low_group by comparing
  * world namespaces and world ranks */
+static int lpid_cmp(MPIR_Lpid lpid_a, MPIR_Lpid lpid_b)
+{
+    int indx_a = MPIR_LPID_WORLD_INDEX(lpid_a);;
+    int rank_a = MPIR_LPID_WORLD_RANK(lpid_a);
+    int indx_b = MPIR_LPID_WORLD_INDEX(lpid_b);
+    int rank_b = MPIR_LPID_WORLD_RANK(lpid_b);
+
+    if (lpid_a == lpid_b) {
+        return 0;
+    } else if (indx_a == indx_b) {
+        /* same world, just compare world ranks */
+        if (rank_a < rank_b) {
+            return -1;
+        } else {
+            return 1;
+        }
+    } else {
+        /* different world, compare namespace */
+        return strncmp(MPIR_Worlds[indx_a].namespace, MPIR_Worlds[indx_b].namespace,
+                       MPIR_NAMESPACE_MAX);
+    }
+
+}
+
 static int determine_low_group(MPIR_Lpid remote_lpid, bool * is_low_group_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int my_world_idx = 0;
-    int my_world_rank = MPIR_Process.rank;
-    int remote_world_idx = MPIR_LPID_WORLD_INDEX(remote_lpid);
-    int remote_world_rank = MPIR_LPID_WORLD_RANK(remote_lpid);
+    int cmp_result = lpid_cmp(MPIR_Process.rank, remote_lpid);
+    MPIR_Assert(cmp_result != 0);
 
-    if (my_world_idx == remote_world_idx) {
-        /* same world, just compare world ranks */
-        MPIR_Assert(my_world_idx == 0);
-        *is_low_group_out = (my_world_rank < remote_world_rank);
-    } else {
-        /* different world, compare namespace */
-        int cmp_result = strncmp(MPIR_Worlds[my_world_idx].namespace,
-                                 MPIR_Worlds[remote_world_idx].namespace,
-                                 MPIR_NAMESPACE_MAX);
-        MPIR_Assert(cmp_result != 0);
-        if (cmp_result < 0)
-            *is_low_group_out = false;
-        else
-            *is_low_group_out = true;
-    }
-
+    *is_low_group_out = (cmp_result < 0);
     return mpi_errno;
 }
 

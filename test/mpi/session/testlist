@@ -4,4 +4,6 @@ session_mult_init 4 arg=5
 session_re_init 4
 session_psets 1
 session_self 1
+session_inter 5
+session_4x4 16
 session_bsend 2

@@ -16,6 +16,7 @@
 **sessionnull: NULL MPI_Session
 **sessioninuse:MPI_Session is referenced and cannot be released
 **sessioninuse %d:MPI_Session is referenced by %d other objects and cannot be released
+**session_mixed: groups are from different session
 **nomem:Out of memory
 **nomem %s %d:Out of memory (unable to allocate a '%s' of size %d)
 **nomem %s:Out of memory (unable to allocate a '%s')
