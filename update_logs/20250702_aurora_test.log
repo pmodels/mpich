@@ -1,0 +1,239 @@
+UPDATE aurora_test 2b84634430 dd1ba19426
+
+    current aurora_test HEAD 8d644cb707
+
+a055063e96 2023-04-20 Add more hints to default list of hints683beec942 2025-04-01 remove a bunch of obsolete platform specific stuff
+2724657605 2025-04-03 ch3: MPID_Get_node_id not to depend on vcr_table
+a0a5be6d8c 2025-04-03 ch3: use MPIR_Get_intranode_rank rather than intranode_table
+75f0b1dc6d 2025-04-03 ch4: use MPIR_Get_intranode_rank rather than intranode_table
+b630cf9fbd 2025-04-02 comm: refactor MPIR_Subcomm_create/free
+0bee339285 2025-04-06 comm: propagate vci settings to subcomm after post_hook
+128936a309 2025-04-01 comm: refactor check_hierarchy
+3100760307 2025-04-02 comm: remove MPIR_Find_{local,external} etc.
+70f4621bc8 2025-04-01 ch4/comm: clean up MPIDI_Comm_create_multi_leaders
+b518764628 2025-04-02 comm: add comm->attr and MPIR_COMM_ATTR__HIERARCHY
+929b724df3 2025-04-02 comm: add MPIR_COMM_ATTR__SUBCOMM
+75b82302ae 2025-04-03 comm: rearrange MPIR_Comm fields
+a2f98d13bd 2025-04-05 comm: add hierarchy_flags
+90bd72db65 2025-04-03 comm: remove comm->hierarchy_kind
+61688644f4 2025-04-02 comm: refactor comm hierarchical checking routines
+2d0c1a4f09 2025-04-02 coll/csel: check MPIR_COMM_ATTR_HIERARCHY
+9d604ba7e0 2025-04-05 comm: avoid storing rank tables for canonical comm
+7a39b93463 2025-04-07 comm: add MPIR_Comm_get_{node,node_roots}_comm
+8757072ffa 2025-04-07 init: Check builtin comms exist in MPII_Init_thread
+13720672d0 2025-04-07 ch4/posix: use MPIR_Comm_get_node_comm in post_hook
+e5de5d446f 2025-04-07 doc: add entries on hierarchy and subcomm in CHANGES
+cd9e2c18ef 2025-04-08 comm: do not call MPII_COMML_REMEMBER for subcomm
+c1af5ce839 2025-04-08 configure: set enable_nolocal when with_ch4_shmmods is no
+24fb82a15f 2025-04-08 mpid/shm: add MPIDU_Init_shm_atomic_ for ENABLE_NO_LOCAL
+19628cb44f 2025-04-06 ch4/posix: move coll_init into MPIDI_POSIX_init_local
+90502a9e07 2025-04-06 comm: create subcomms before MPID_Comm_commit_post_hook
+f07b5a3af6 2025-04-08 comm: set csel_comm to NULL in MPII_Comm_init
+dbe3da76b9 2025-04-01 coll: add allgather_intra_smp_no_order algorithm
+729d0b00da 2025-04-07 coll: optimize MPIR_Allgather_intra_smp_no_order
+6dd05f8a7b 2025-04-02 coll: fallback in auto algorithm when comm_csel is unset
+c777d05585 2025-03-31 ch4: run SHM before NM for comm_commit_pre_hook
+ee2edd9d54 2025-04-01 ch4/ofi: revise macro MPIDI_OFI_AV_IS_UNSET
+3632f1da84 2025-04-01 ch4/ofi: add MPIDI_OFI_comm_addr_exchange
+713f931695 2025-04-01 ch4/ofi: call MPIDI_OFI_comm_addr_exchange in world_init
+dc2086022e 2025-04-07 ch4/ofi: insert local av in MPIDI_OFI_init_local
+98f1518c06 2025-04-07 ch4/ofi: skip ofi_initialized if world size is 1
+ac37d0e41c 2025-04-07 ch4/ofi: use actual size in MPIDI_OFI_get_local_upids
+f573ee6ad4 2025-04-07 ch4/ofi: cleanup unused fields in MPIDI_OFI_global
+2a035fa586 2025-04-02 ch4/ucx: add MPIDI_UCX_comm_addr_exchange
+b081590ab9 2025-04-07 ch4/ucx: insert self address before addr_exchange
+9138e1f830 2025-04-08 ch4/ucx: check whether av is set in finalize
+5b76ee33cc 2025-04-07 mpid/common: remove src/mpid/common/bc
+878333cf57 2025-04-07 ch4: remove init_comm
+3d870bdabb 2025-04-10 ch4/progress: do not skip netmod under global progress
+892d830226 2025-04-11 configure: use AC_LINK_IFELSE to check __fp16
+7ec56342d5 2025-04-14 abi: sync mpi_abi.h
+41eabb66f5 2025-04-14 abi: add MPI_ERR_ABI
+0861deb126 2025-04-14 abi: update MPI_Abi_get_info, add MPI_Abi_get_fortran_info
+58dc7ae95e 2025-04-15 ch4: fix wrong initialization of MPIDI_global.n_reserved_vcis
+0ba0c5350e 2025-04-16 binding/c: suppress warning on unused fn_fail label
+aafc11ba72 2025-03-05 ch4/ipc: Replace mapped GPU IPC handle cache
+a9c3477daf 2025-03-06 ch4/ipc: Replace GPU IPC handle cache
+b5584fae55 2025-03-11 ch4/ipc: Implement GPU IPC sender handle cleanup
+e519bc5621 2025-03-10 ch4/ipc: Remove syncflag from IPC send signature
+1c42d52345 2025-03-14 ch4/ipc: Check errors when completing request
+e2e3d32718 2025-03-11 ch4/ipc: Move check for MPI_BOTTOM up a level
+dad88d3c67 2025-03-14 ch4/ipc: Remove cached pointer to node group
+60be96fc5e 2025-03-17 ch4/ipc: Move receive handling code directly into callback
+cf21f1022f 2025-04-16 ch4/ipc: Remove GPU global_max_dev_id
+c4f8dffcac 2025-04-16 ch4/ipc: Simplify condition for unmapping GPU IPC handles
+c062454a95 2025-04-14 mpir/pmi: do not skip MPIR_pmi_barrier in MPIR_pmi_allgather
+5863c0b1f1 2025-04-16 datatype: set default datatype alignment
+265f48bf6d 2025-04-17 ch4/vci: allgather the number of both implicit and total vcis
+09f538a406 2025-04-15 maint: Include .inc files in extracterrmsgs
+cadc609847 2025-04-15 mpir/pmi: Do not always assume singleton if PMIx_Init fails
+0abe6735a4 2025-04-19 ch4/gpu: suppress bogus warning on memset
+ad63abfc66 2025-04-04 doc: add documentation for multiple features tuning params
+7dab6203fe 2025-04-15 mpl/ze: refactor device mappings
+d6bda796c3 2025-04-15 mpl/gpu: remove MPL_gpu_init_device_mappings
+1ded2e068f 2025-04-18 mpl/ze: cleanup affinity mask routines
+9280639a61 2025-04-18 mpl/ze: cleanup naming of global_{dev,subdev}_count
+03afdeaeac 2025-04-24 ch4/gpu: remove unused fn_fail labels in gpu_post.c
+183786a6df 2025-04-09 mpl: configure check POSIX shared memory
+f396a6d368 2025-04-09 mpl: add mpl_initshm interface
+14feed1d3a 2025-04-09 ch4: remove MPIDI_{SHM,NM}_init_world
+aa61be6a4c 2025-04-14 ch4/xpmem: MPIDI_XPMEM_comm_bootstrap not assuming comm_world
+32997381ba 2025-04-18 ch4/gpu: remove init_shm collective getting max_dev_id
+031c77bcaa 2025-04-18 ch4/shm: add MPIDI_SHM_global and local_ranks table
+a89dd8556a 2025-04-20 ch4/ipc/gpu: replace fd init with MPIDI_FD_comm_bootstrap
+8575d5f628 2025-04-20 ch4/ipc_fd: remove init_hook and finalize_hook
+dbaa62747b 2025-04-20 ch4/ipc_fd: replace the context to node_comm
+f9ce10034b 2025-04-19 ch4/ipc_fd: cleanup MPIDI_IPCI_global_fd_pids
+307303a53c 2025-04-19 ch4/ipc_fd: cleanup MPIDI_IPCI_global_fd_socks
+9a2baeb8a4 2025-04-19 ch4/ipc_fd: cleanup
+3b1c75fbed 2025-04-20 ch4/gpu: refactor MPIDI_GPU_comm_bootstrap
+bb3b32ba1f 2025-04-20 ch4/posix: generate eager api boilerplates
+884e0c3fac 2025-04-20 ch4/posix: add eager API shm_size and shm_vci_size
+dfc8075b44 2025-04-20 ch4/posix: allocate eager slab in posix-layer
+15d62f78c8 2025-04-20 ch4/posix: replace MPIDU_Init_shm usages
+db807637a1 2025-04-20 ch4: remove MPIDI_global.is_initialized
+070b3b5577 2025-04-20 ch4/posix: move allgather of topo to comm_commit_hook
+adb059066d 2025-04-20 ch4: remove world pre_init and post_init
+374038f3fd 2025-04-22 ch4/posix: do not skip bootstrap if local_size is 1
+0b3450336f 2025-04-22 pmi: Return an error if incompatible launcher detected
+bdc1bf37fc 2025-04-24 test/runtests: do not check stray_output in TestStatus
+1fb713bfec 2025-04-24 test: xfail some pmix spawn tests
+3a0c2db2db 2025-04-24 mpl/gpu: fix debug logging class for ZE
+cac96b5e53 2025-04-24 ch4/shm: remove duplication of slab_size
+1b733493f8 2025-04-28 mpir/pmix: picking PMIX_PREFIX fix from psmpi
+b48e3af77f 2025-04-28 Partially Revert "test: xfail some pmix spawn tests"
+7e87562555 2025-04-30 hydra/mpiexec: fix segfaults when no executable provided
+36d30eb83c 2025-04-29 Update Frequently_Asked_Questions.md
+60a5486d79 2025-03-28 pmi: skip optional attributes in pmi command
+d383c9f5a5 2025-03-30 pmi: internally track PMI server versions
+8f5ad407b6 2025-03-27 pmi: PMI version 1.2 to support PMI_Barrier_group
+1c54e50f04 2025-03-30 pmi: query with version 1.1 for backward compatibility
+8a1caf4e2b 2025-03-30 hydra: accept PMI 1.2
+b0e4b16583 2025-03-30 hydra/proxy: add local/global rank conversion functions
+30c5aaf2ce 2025-03-30 hydra/mpiexec: store min_node_id in pg for proxy lookup
+4c2a5032d4 2025-03-27 hydra: support group-level PMI_Barrier
+60febd9433 2025-03-30 pmi: add example barrier_group.c
+b689f65f1e 2025-04-22 pmi: support procs array in PMIx_Fence
+8f6801f07c 2025-04-21 mpir/pmi: add MPIR_pmi_allgather_group
+e95481dadb 2025-04-21 ch4: use MPIR_pmi_allgather_group in comm_addr_exchange
+b8cb712a98 2025-04-29 test/threads/part: rename mt variant of parrived_wait to avoid name clash
+ef6de6ad85 2025-05-01 hydra: fix singleton init
+e6ec6b6fe6 2025-05-01 all: remove icomm_world
+75aa114e0e 2025-05-01 yaksa: Skip CUDA initialization if no devices present
+37a1cfbbec 2025-05-01 yaksa: Skip HIP initialization if no devices present
+36f842bc92 2025-05-01 mpl/hip: Skip HIP initialization if no devices present
+ca542e55f4 2025-05-01 mpl/ze: Skip ZE initialization if no devices present
+8046634a59 2025-05-01 ch4/ipc: Check MPIR_CVAR_ENABLE_GPU during initialization
+bc22a0ea34 2025-05-01 gforker: silence -Wformat-truncation warning
+34e72d962c 2025-05-01 pm/gforker: allow -v option
+95b8bc2d6a 2025-05-02 pm/gforker: only check PMI major version in server
+07aae2bc94 2025-04-16 cvar: add alias of MPIR_CVAR_PROGRESS_TIMEOUT
+7d32c5b0c0 2025-03-13 ch4/ofi: default MPIR_CVAR_CH4_OFI_MAX_NICS to 1
+5fda075fae 2025-05-02 ch4/ofi: Skip FI_INT128 support if not available
+563cd3a8a5 2025-05-03 mpir/pmi1: use stub error_msg in MPIR_pmi_abort
+cf7ba4a22e 2025-05-04 pmi: do not make exitcode optional in PMI Abort
+73236e222d 2025-04-20 confdb: add __int128 in get_c_int_type
+44d53984ed 2025-04-20 confdb: remove unused function to_hex and to_dec
+604324cdbf 2025-03-27 mpl: Always do compile-time and runtime check for SSE2, AVX, AVX512F
+f0660c9f76 2025-03-28 configure: updating instruction set related fast options
+46b6d7b241 2025-04-01 mpl: remove the SSE2 version of stream memcpy
+312f7e30dc 2025-04-01 mpl/gpu: remove redundant implementation of GPU copy
+c08a3bf5c1 2025-04-01 mpl: add AVX512F version of stream memcpy
+2b42d72efb 2025-04-16 maint: ignore generated files
+16d7fba5ce 2025-04-16 mpl: add runtime check of CPU features
+aa8ccfac54 2025-04-18 mpl: refactor AVX-based memcpy
+d5b5cee606 2025-04-23 configure: add report on configure flags and CFLAGS
+a28401788d 2025-05-05 Update changes for AVX, AVX512 rework
+243377ba07 2025-05-06 pm/gforker: set MAXVALLEN to 1024
+abc215cef0 2025-05-01 ch4/xpmem: fix xpmem_init
+592d71cb53 2025-05-02 ch4/posix: fix neglected setting init_shm_initialized
+d62047b580 2025-05-02 mpl/config: use AC_SEARCH_LIBS for checking shm_open
+c85cd6412d 2024-09-24 ch4/posix: making topology aware SHM default to enabled
+cbc3c82d87 2025-05-08 comm: fix memleak in init related to collective init
+1b0fe0b2ec 2025-05-16 env: Install mpixxx_opts.conf file
+f1d88f8c59 2025-05-19 env: Add --help and -h options for help text in wrappers
+244aef7c10 2025-04-25 ch4: Add collective selection debug summary
+f6b9031f06 2025-05-27 Revert "env: Add --help and -h options for help text in wrappers"
+87b221ab7a 2025-02-07 coll: NCCL Allreduce Backend
+ef3bfb7adf 2025-05-29 test: add tests for NCCL integration
+f20390fbef 2025-05-28 mpl/shm: Fix race in MPL_initshm_open
+f41e95501d 2025-05-30 mpl/shm: Fix error checking for shm_open
+e82b90d866 2025-06-03 maint/python: Fix info_hints.py if files are processed in batches
+27237da4ba 2025-05-13 coll: Remove stray comment
+082105bb33 2025-05-14 coll: Remove redundant header includes
+019c12d437 2025-05-13 coll: Use threadcomm macro
+2ec5d7885e 2025-05-13 coll: Always do pof2 calculations on the fly
+13f8fef144 2025-05-14 comm: Add MPIR_COMM_RANK_SIZE macro
+84d0a2de0a 2025-05-15 coll: More use of MPIR_COMM_RANK_SIZE
+e1d79848d5 2025-05-28 test: fix wrong displs coll_large.c
+5588d6e909 2025-05-28 test: use MPI_SIGNED_CHAR in coll_large.c
+da56e5e762 2025-05-28 test: fix noncontig test in coll_large.c
+0208d98526 2025-05-28 test: add noncontig small count coll_large tests
+31924b7a78 2025-05-29 test: use MPI_Op_create_c in coll_large
+bfcdbd6a31 2025-05-29 doc: add notes to MPI_Op_create_c
+67651a4515 2025-06-06 draft
+5d6583d9b9 2025-06-06 mpi/session: Fixup whitespace
+83cd099c5e 2025-06-06 misc: Replace sprintf usage with snprintf
+1039d07c3f 2025-06-05 ch4: move MPIR_nodeid_init into MPID_InitCompleted
+89a2ef4aef 2025-06-06 mpir/nodemap: make MPIR_Process.node_hostnames optional
+c7a2aad05d 2025-06-11 mpir/pmi: fix bad static assertion
+96b6656578 2025-06-12 bcast
+249ed0ed1a 2025-06-16 ch3: ignore CONN_STATE_DISCARD in _handle_connect_event
+b297761a4d 2025-05-29 pmi: deprecated PMI 2
+65d0317875 2025-06-10 pmi: remove MPIR_pmi_set_threaded and PMI2_Set_threaded
+8ba474898e 2025-06-10 pmi: remove thread CS in PMIU_cmd_read and PMIU_cmd_send
+80503d3ebf 2025-05-30 pmi: set PMIU_is_threaded in pmi_v1
+4780eb6990 2025-06-04 hydra: server/proxy internal command use process_fd=-1
+1d1f462ecc 2025-05-30 pmi: modify BARRIER protocol to support multithread
+c48ff6a5c3 2025-05-30 pmi: add support routines for nonblocking barriers
+9342c630d2 2025-06-02 pmi/v1: support multithread in PMI_Barrier_group
+31b21b98ad 2025-06-06 mpir/pmi: add stringtag to MPIR_pmi_barrier_group
+3cd92f2e75 2025-06-04 hydra: implement the new PMI barrier semantics
+c2f217d177 2025-06-10 pmi/examples: add example barrier_group_thread.c
+02a63aa329 2025-06-09 pmi: do not add 1 to cmd_len in PMIU_read_cmd
+b661404e8c 2025-06-10 pmi: alias PMI_Barrier to PMI_Barrier_group
+b62537175e 2025-06-10 doc: update entries in CHANGES
+7c4f1b3541 2025-06-10 mpir/pmix: use PMIx_Fence_nb to add thread support
+e5d955f67f 2025-06-10 pmi/pmix: add PMIx_Fence_nb and PMIx_Progress stubs
+89b3065651 2025-06-18 working broadcast
+bcdd6413bc 2025-06-16 ch4/release_gather: Check for shm buffer before free
+f472a653a1 2025-06-19 doc: Remove RELEASE_NOTES
+bd3acbfc1f 2025-06-19 fixed-chunk broadcast
+9f46b47d94 2025-06-19 Revert "Merge pull request #7466 from seenry/cga/all_reduce_vring"
+50da3ef5cf 2025-06-06 windows/compiler-warning: GetCurrentThreadId() returns an unsigned long.
+6b881bb42f 2025-06-10 ch4/ipc: Bypass csel collective selection during bootstrap
+1e9c11ffc5 2025-06-03 mpl/ze: Print error information when failure is detected
+4e4c4c5940 2025-06-11 yaksa: Update error output to match MPL
+d845e5d379 2025-05-12 session: default thread_level to MPI_THREAD_MULTIPLE
+69aad7ba2d 2025-05-13 session: whitespace fix
+cc0c1af74f 2025-05-13 session: init with the user requested thread_level
+a62273b22d 2025-05-16 session: remove per-session thread_level
+4a672f4f67 2025-05-19 session: set default thread_level in MPI_Session_init
+8e4f19fbac 2025-05-28 doc: document default thread level in MPI_Session_init
+f69ce21cae 2025-06-23 mpl: Fix undef for malloc/free
+cbc1638488 2025-06-23 mpir/pmi: Fix signatures of dummy group barrier functions
+0d572f4e7d 2025-06-23 gcc-13.3 warnings/errors on Aurora
+6022422ccb 2025-06-24 ensure signed to unsigned casting won't surprise us
+7858da7398 2025-06-24 mpir/pmi: Fix signatures of group barrier functions (again)
+12dd8a4a47 2025-06-24 mpl: compile-time check AVX512F support for `__builtin_cpu_supports`
+3ef27a3a70 2025-06-25 f08: fix broken string conversion
+583b9b2dfc 2025-06-17 misc/ze: add thread-safety for ZE memcpy routines
+9df8162e7e 2025-06-26 pmi: fallback to PMI_Barrier when applicable
+ace57f0d86 2025-06-26 pmi: only enable PMIU_is_threaded for PMI 1.2 and above
+90a74400b1 2025-06-26 misc/ze: missing declaration MPIR_THREAD_VCI_GPU_MUTEX
+f262c25b19 2025-06-27 ch4/ucx: fix threaded check
+aa5ddc67ac 2025-06-26 ch4/ofi: don't use deprecated macros for newer versions of libfabric
+ade6974776 2025-06-27 ch4/ofi: don't change between `FI_ORDER_NONE` and 0 for message order
+903bd9abb2 2025-06-27 ch4/posix: fix posix eager inline
+62fc8095a3 2025-06-27 ch4/shm: redefine MPIDI_SHM_global to MPIDI_global.shm
+564bc5c3a1 2025-06-27 binding/abi: fix declaration for HAVE_WEAK_ATTRIBUTE
+ad8082ba34 2025-07-01 fixup! binding/abi: fix declaration for HAVE_WEAK_ATTRIBUTE
+fa64f3ec16 2025-06-24 coll: redefine MPIR_errflag_t
+acbbffae01 2025-06-24 misc: add MPIR_COLL_ATTR_SYNC for internal collectives
+f3398a45bd 2025-06-24 ch4/ofi: avoid inject during init
+6733c9d354 2025-06-24 coll: use MPIR_COLL_ATTR_HAS_ERR to test errflag
+769bf8e31e 2025-06-26 ch4/ofi: flush_send_queue in comm_free_hook
+b9dba0cf93 2025-06-27 misc: redefine MPIR_Errflag_t as int
+16d09a932b 2025-06-27 all: rename errflag variable names
+156593a68d 2025-07-01 coll: remove unused coll_attr variable
+a94e69c563 2025-07-02 doc: update CHANGES for coll_attr
