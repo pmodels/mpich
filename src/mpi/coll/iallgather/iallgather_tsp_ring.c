@@ -22,8 +22,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int tag;
     int vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-
     MPI_Aint recvtype_lb, recvtype_extent;
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;

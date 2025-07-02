@@ -451,7 +451,7 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
                                   remote_leader, tag,
                                   remote_ints, 2, MPIR_INT_INTERNAL,
                                   remote_leader, tag,
-                                  peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
+                                  peer_comm_ptr, MPI_STATUS_IGNORE, 0 );
         MPIR_ERR_CHECK(mpi_errno);
 
         *remote_size = remote_ints[0];
@@ -473,7 +473,7 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
                                       remote_leader, tag,
                                       remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL,
                                       remote_leader, tag, peer_comm_ptr,
-                                      MPI_STATUS_IGNORE, MPIR_ERR_NONE );
+                                      MPI_STATUS_IGNORE, 0 );
         MPIR_ERR_CHECK(mpi_errno);
 
 
@@ -511,10 +511,10 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
         comm_info[0] = *remote_size;
         comm_info[1] = *remote_context_id;
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to bcast on local_comm");
-        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
+        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, 0 );
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL, local_leader,
-                                     local_comm_ptr, MPIR_ERR_NONE );
+                                     local_comm_ptr, 0 );
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"end of bcast on local_comm of size %d",
                        local_comm_ptr->local_size );
@@ -523,13 +523,13 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
     {
         /* we're the other processes */
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to receive bcast on local_comm");
-        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
+        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, 0 );
         MPIR_ERR_CHECK(mpi_errno);
         *remote_size = comm_info[0];
         MPIR_CHKLMEM_MALLOC(remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid));
         *remote_lpids = MPL_malloc((*remote_size)*sizeof(MPIR_Lpid), MPL_MEM_ADDRESS);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL, local_leader,
-                                     local_comm_ptr, MPIR_ERR_NONE );
+                                     local_comm_ptr, 0 );
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Extract the context and group sign information */
@@ -637,7 +637,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
     }
 
     /* See if everyone is happy */
-    mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPIR_INT_INTERNAL, MPI_LAND, comm_ptr, MPIR_ERR_NONE );
+    mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPIR_INT_INTERNAL, MPI_LAND, comm_ptr, 0 );
     MPIR_ERR_CHECK(mpi_errno);
     
     if (allfound) return MPI_SUCCESS;

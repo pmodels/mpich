@@ -28,7 +28,6 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
     int comm_size, rank;
     MPI_Aint extent;
     int tag;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 

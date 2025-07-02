@@ -56,8 +56,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int idx = 0, vtx_id;
     int prev_delta = 0;
     int count_length, top_count, bottom_count, left_count;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;

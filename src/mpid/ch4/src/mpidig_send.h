@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr, uint8_t flags,
                                                int src_vci, int dst_vci,
-                                               MPIR_Request ** request, int errflag)
+                                               MPIR_Request ** request, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
-    am_hdr.error_bits = errflag;
+    am_hdr.error_bits = coll_attr;
     am_hdr.sreq_ptr = sreq;
     am_hdr.flags = flags;
     if (flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
@@ -127,14 +127,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * addr, int src_vci, int dst_vci,
-                                              MPIR_Request ** request, bool syncflag, int errflag)
+                                              MPIR_Request ** request, bool syncflag, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     uint8_t flags = syncflag ? MPIDIG_AM_SEND_FLAGS_SYNC : MPIDIG_AM_SEND_FLAGS_NONE;
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  flags, src_vci, dst_vci, request, errflag);
+                                  flags, src_vci, dst_vci, request, coll_attr);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

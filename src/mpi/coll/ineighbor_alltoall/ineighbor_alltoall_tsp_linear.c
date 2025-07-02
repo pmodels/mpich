@@ -19,8 +19,6 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
     int *srcs, *dsts;
     MPI_Aint sendtype_extent, recvtype_extent;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-
     MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL();

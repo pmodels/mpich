@@ -14,15 +14,18 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
-/* Define a typedef for the errflag value used by many internal
- * functions.  If an error needs to be returned, these values can be
- * used to signal such.  More details can be found further down in the
- * code with the bitmasking logic */
-typedef enum {
-    MPIR_ERR_NONE = MPI_SUCCESS,
-    MPIR_ERR_PROC_FAILED = MPIX_ERR_PROC_FAILED,
-    MPIR_ERR_OTHER = MPI_ERR_OTHER
-} MPIR_Errflag_t;
+/* Define values for collective attribute. Collective attributes pass
+ * down contexts including error flags.
+ */
+#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
+                                         * on synchronization rather than batch latency.
+                                         * In particular, advise netmod to avoid using
+                                         * injection send. */
+#define MPIR_ERR_PROC_FAILED 0x2
+#define MPIR_ERR_OTHER       0x4
+#define MPIR_COLL_ATTR_ERR_MASK 0x6
+
+#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
 /*E
   MPIR_Lang_t - Known language bindings for MPI

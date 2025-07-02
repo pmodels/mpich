@@ -34,7 +34,7 @@ int MPIR_CCLcomm_free(MPIR_Comm * comm);
 int MPIR_NCCL_check_requirements_red_op(const void *sendbuf, void *recvbuf, MPI_Datatype datatype,
                                         MPI_Op op);
 int MPIR_NCCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+                        MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr);
 int MPIR_NCCLcomm_free(MPIR_Comm * comm);
 #endif /*ENABLE_NCCL */
 

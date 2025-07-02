@@ -25,8 +25,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     int num_children;
     MPIR_Treealgo_tree_t my_tree;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-
     MPIR_FUNC_ENTER;
 
     MPIR_COMM_RANK_SIZE(comm, rank, size);

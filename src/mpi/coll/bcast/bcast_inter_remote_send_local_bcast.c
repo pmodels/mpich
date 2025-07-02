@@ -14,7 +14,7 @@
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
                                              MPI_Aint count,
                                              MPI_Datatype datatype,
-                                             int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                             int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, mpi_errno;
     MPI_Status status;
@@ -28,7 +28,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         mpi_errno = MPI_SUCCESS;
     } else if (root == MPI_ROOT) {
         /* root sends to rank 0 on remote group and returns */
-        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
+        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. rank 0 on remote group receives from root */
@@ -50,7 +50,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
 
         /* now do the usual broadcast on this intracommunicator
          * with rank 0 as root. */
-        mpi_errno = MPIR_Bcast_allcomm_auto(buffer, count, datatype, 0, newcomm_ptr, errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(buffer, count, datatype, 0, newcomm_ptr, coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

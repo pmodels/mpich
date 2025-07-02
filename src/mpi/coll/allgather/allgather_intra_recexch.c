@@ -19,8 +19,7 @@
 int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                  MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                  MPI_Datatype recvtype, MPIR_Comm * comm,
-                                 int recexch_type, int k, int single_phase_recv,
-                                 MPIR_Errflag_t errflag)
+                                 int recexch_type, int k, int single_phase_recv, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -116,7 +115,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             buf_to_send = (void *) sendbuf;
         mpi_errno =
             MPIC_Send(buf_to_send, recvcount, recvtype, step1_sendto, MPIR_ALLGATHER_TAG, comm,
-                      errflag);
+                      coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         if (step1_nrecvs) {
@@ -159,7 +158,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                   recvtype, partner, MPIR_ALLGATHER_TAG,
                                   ((char *) recvbuf + recv_offset), recv_count * recvcount,
                                   recvtype, partner, MPIR_ALLGATHER_TAG, comm, MPI_STATUS_IGNORE,
-                                  errflag);
+                                  coll_attr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -209,7 +208,8 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks, &count, &offset);
             send_offset = offset * recv_extent * recvcount;
             mpi_errno = MPIC_Isend(((char *) recvbuf + send_offset), count * recvcount, recvtype,
-                                   nbr, MPIR_ALLGATHER_TAG, comm, &send_reqs[num_sreq++], errflag);
+                                   nbr, MPIR_ALLGATHER_TAG, comm, &send_reqs[num_sreq++],
+                                   coll_attr);
             MPIR_ERR_CHECK(mpi_errno);
         }
         /* wait on prev recvs */
@@ -236,7 +236,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                     mpi_errno =
                         MPIC_Isend(((char *) recvbuf + send_offset), count * recvcount,
                                    recvtype, nbr, MPIR_ALLGATHER_TAG, comm,
-                                   &send_reqs[num_sreq++], errflag);
+                                   &send_reqs[num_sreq++], coll_attr);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* wait on prev recvs */
@@ -265,7 +265,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
 
     for (i = 0; i < step1_nrecvs; i++) {
         mpi_errno = MPIC_Isend(recvbuf, recvcount * nranks, recvtype, step1_recvfrom[i],
-                               MPIR_ALLGATHER_TAG, comm, &recv_reqs[num_rreq++], errflag);
+                               MPIR_ALLGATHER_TAG, comm, &recv_reqs[num_rreq++], coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

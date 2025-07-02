@@ -31,7 +31,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPI_Aint offset, recv_size;
     int tag;
     int num_send_dependencies;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL();
 
     MPIR_COMM_RANK_SIZE(comm, rank, size);
