@@ -11,8 +11,6 @@ int MPIDI_IPC_init_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPL_COMPILE_TIME_ASSERT(offsetof(MPIDI_IPC_rts_t, ipc_hdr) == sizeof(MPIDIG_hdr_t));
-
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_IPCI_DBG_GENERAL = MPL_dbg_class_alloc("SHM_IPC", "shm_ipc");
 #endif

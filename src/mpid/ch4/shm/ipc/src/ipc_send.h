@@ -30,59 +30,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci_src);
 
-    bool do_ipc = false;
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    if (!do_ipc) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, rank, comm, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-        if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
-            /* GPU IPC is not supported but it is still a device memory,
-             * we can't do shared memory IPC either, so skip to fn_exit. */
-            goto fn_exit;
-        }
-        if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
-            do_ipc = true;
-        }
-    }
-#endif
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    if (!do_ipc) {
-        mpi_errno = MPIDI_XPMEM_get_ipc_attr(buf, count, datatype, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-        do_ipc = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
-    }
-#endif
-#ifdef MPIDI_CH4_SHM_ENABLE_CMA
-    if (!do_ipc) {
-        mpi_errno = MPIDI_CMA_get_ipc_attr(buf, count, datatype, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-        do_ipc = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
-    }
-#endif
+    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, rank, comm, sizeof(MPIDIG_hdr_t),
+                                        &ipc_attr);
 
-    if (!do_ipc) {
+    if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
         goto fn_exit;
     }
 
-    int dt_contig;
-    MPIR_Datatype_is_contig(datatype, &dt_contig);
-    if (!dt_contig) {
-        int flattened_sz;
-        void *flattened_dt;
-        MPIR_Datatype_get_flattened(datatype, &flattened_dt, &flattened_sz);
-        if (sizeof(MPIDI_IPC_rts_t) + flattened_sz > MPIDI_POSIX_am_hdr_max_sz()) {
-            do_ipc = false;
-        }
-    }
+    mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
+                                    rank, tag, comm, context_offset, addr, ipc_attr,
+                                    vci_src, vci_dst, request, coll_attr);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    if (do_ipc) {
-        mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
-                                        rank, tag, comm, context_offset, addr, ipc_attr,
-                                        vci_src, vci_dst, request, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-        *done = true;
-    }
+    *done = true;
+
   fn_exit:
     MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
     MPIR_FUNC_EXIT;

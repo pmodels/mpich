@@ -37,11 +37,6 @@ typedef struct MPIDI_IPC_rndv_hdr {
     MPI_Aint count;             /* only if it's non-contig */
 } MPIDI_IPC_hdr;
 
-typedef struct MPIDI_IPC_rts {
-    MPIDIG_hdr_t hdr;
-    MPIDI_IPC_hdr ipc_hdr;
-} MPIDI_IPC_rts_t;
-
 typedef struct MPIDI_IPC_ack {
     MPIDI_IPCI_type_t ipc_type;
     MPIR_Request *req_ptr;
