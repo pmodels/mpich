@@ -12,28 +12,88 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_IPC_ack_t *hdr = am_hdr;
-    MPIR_Request *sreq = hdr->req_ptr;
 
     MPIR_FUNC_ENTER;
-
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    /* cleanup any GPU resources created as part of the IPC */
-    if (MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
-        mpi_errno = MPIDI_GPU_send_complete(sreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-#endif
-
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
-    mpi_errno = MPID_Request_complete(sreq);
-    MPIR_ERR_CHECK(mpi_errno);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
     }
 
+    if (hdr->req_ptr->kind == MPIR_REQUEST_KIND__SEND) {
+        MPIR_Request *sreq = hdr->req_ptr;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        /* cleanup any GPU resources created as part of the IPC */
+        if (MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
+            mpi_errno = MPIDI_GPU_send_complete(sreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+#endif
+
+        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
+        mpi_errno = MPID_Request_complete(sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIR_Request *rreq = hdr->req_ptr;
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_IPC_write_t *hdr = am_hdr;
+    MPIR_FUNC_ENTER;
+
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
+        *req = NULL;
+    }
+
+    MPIR_Request *sreq = hdr->sreq;
+    MPIDIG_REQUEST(sreq, u.ipc.peer_req) = hdr->rreq;
+    /* ipc write only for gpu, for now */
+    MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    void *ipc_hdr = hdr + 1;
+    mpi_errno = MPIDI_GPU_write_data_async(ipc_hdr, sreq);
+#endif
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int reply_ipc_write(MPIDI_IPCI_ipc_attr_t * ipc_attr, MPI_Aint count, MPI_Datatype datatype,
+                           MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *hdr = NULL;
+    MPI_Aint hdr_sz;
+    mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype,
+                                           sizeof(MPIDI_IPC_write_t), rreq, &hdr, &hdr_sz);
+    MPIDI_IPC_write_t *am_hdr = hdr;
+    am_hdr->ipc_type = ipc_attr->ipc_type;
+    am_hdr->sreq = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    am_hdr->rreq = rreq;
+
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    CH4_CALL(am_send_hdr(rreq->status.MPI_SOURCE, rreq->comm, MPIDI_IPC_WRITE,
+                         hdr, hdr_sz, local_vci, remote_vci), 1, mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPL_free(hdr);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -48,6 +108,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     MPIDI_IPC_hdr *ipc_hdr = MPIDIG_REQUEST(rreq, rndv_hdr);
     uintptr_t data_sz, recv_data_sz;
     bool is_async_copy = false;
+    bool do_ipc_write = false;
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
 
@@ -61,6 +122,24 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
 
     MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = NULL;
 
+    if (ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__GPU) {
+        void *buf = MPIDIG_REQUEST(rreq, buffer);
+        MPI_Aint count = MPIDIG_REQUEST(rreq, count);
+        MPI_Datatype datatype = MPIDIG_REQUEST(rreq, datatype);
+
+        /* check if we should do recv-side ipc */
+        MPIDI_IPCI_ipc_attr_t ipc_attr;
+        mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype,
+                                            rreq->comm->rank, rreq->comm,
+                                            sizeof(MPIDI_IPC_write_t), &ipc_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
+            do_ipc_write = true;
+            mpi_errno = reply_ipc_write(&ipc_attr, count, datatype, rreq);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        }
+    }
     /* attach remote buffer */
     switch (ipc_hdr->ipc_type) {
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
@@ -103,7 +182,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
               recv_data_sz);
 
   fn_exit:
-    if (!is_async_copy) {
+    if (!do_ipc_write && !is_async_copy) {
         mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
     }
     MPIR_FUNC_EXIT;
@@ -121,13 +200,21 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int peer_rank;
+    if (rreq->kind == MPIR_REQUEST_KIND__RECV) {
+        peer_rank = rreq->status.MPI_SOURCE;
+    } else {
+        MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__SEND);
+        peer_rank = MPIDIG_REQUEST(rreq, u.send.dest);
+    }
+
     MPIDI_IPC_ack_t am_hdr;
     am_hdr.ipc_type = ipc_type;
     am_hdr.req_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(rreq->status.MPI_SOURCE, rreq->comm, MPIDI_IPC_ACK,
+    CH4_CALL(am_send_hdr(peer_rank, rreq->comm, MPIDI_IPC_ACK,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -135,7 +222,13 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type)
         MPIR_Datatype_free(MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr));
     }
 
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    if (rreq->kind == MPIR_REQUEST_KIND__RECV) {
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    } else {
+        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+        mpi_errno = MPID_Request_complete(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
