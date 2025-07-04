@@ -30,6 +30,8 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type);
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
+int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_has_ipc(void)
 {
@@ -130,8 +132,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_prepare_ipc_hdr(MPIDI_IPCI_ipc_attr_t * 
     ipc_hdr->flattened_sz = flattened_sz;
     ipc_hdr->count = count;
 
-    if (!is_contig) {
+    if (is_contig) {
+        MPI_Aint data_sz;
+        MPIR_Datatype_get_size_macro(datatype, data_sz);
+        /* contig case set count to number of bytes */
+        ipc_hdr->count = count * data_sz;
+    } else {
         memcpy(ipc_hdr + 1, flattened_dt, flattened_sz);
+        /* noncontig case count is the count of datatypes */
+        ipc_hdr->count = count;
     }
 
     switch (ipc_attr->ipc_type) {
