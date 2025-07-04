@@ -42,6 +42,12 @@ typedef struct MPIDI_IPC_ack {
     MPIR_Request *req_ptr;
 } MPIDI_IPC_ack_t;
 
+typedef struct MPIDI_IPC_write {
+    MPIDI_IPCI_type_t ipc_type;
+    MPIR_Request *sreq;
+    MPIR_Request *rreq;
+} MPIDI_IPC_write_t;
+
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #endif
