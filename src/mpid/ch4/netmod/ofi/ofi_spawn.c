@@ -6,10 +6,17 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
+#include "uthash.h"
 
 /* NOTE: all these functions assume the caller to enter VCI-0 critical section */
 
+/* NOTE: MPIDI_OFI_dynamic_{send,recv} is an "any source" message that is used for initial MPI_Comm_{connect/accept},
+ *       while MPIDI_OFI_dynamic_sendrecv require exact source matching. That latter uses get_dynamic_match_bits
+ *       for match_bits.
+ */
+
 static int cancel_dynamic_request(MPIDI_OFI_dynamic_process_request_t * dynamic_req, bool is_send);
+static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag);
 
 int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
@@ -113,6 +120,32 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     goto fn_exit;
 }
 
+static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag)
+{
+    uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+
+    if (!MPIDI_OFI_ENABLE_DATA) {
+        /* FI_DIRECTED_RECV is not enabled, we have embed source in the match_bits */
+        if (lpid == MPIR_LPID_INVALID) {
+            /* self */
+            lpid = MPIR_Process.rank;
+        }
+        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
+
+        char upid[FI_NAME_MAX];
+        size_t sz = FI_NAME_MAX;
+        fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_AV_ADDR_ROOT(av), upid, &sz);
+
+        unsigned upid_hash;
+        HASH_VALUE(upid, sz, upid_hash);
+        upid_hash &= (1 << MPIDI_OFI_SOURCE_BITS) - 1;
+
+        match_bits |= (upid_hash << MPIDI_OFI_TAG_BITS);
+    }
+
+    return match_bits;
+}
+
 int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
                                const void *send_buf, int send_size, void *recv_buf, int recv_size,
                                int timeout)
@@ -134,18 +167,11 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     send_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
     if (send_size > 0) {
-        uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
-        if (MPIDI_OFI_ENABLE_DATA) {
-            MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              send_buf, send_size, NULL, 0,
-                                              remote_addr, match_bits, (void *) &send_req.context),
-                                 vci, tsenddata);
-        } else {
-            MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, send_size, NULL,
-                                          remote_addr, match_bits, (void *) &send_req.context),
-                                 vci, tsend);
-        }
+        uint64_t match_bits = get_dynamic_match_bits(MPIR_LPID_INVALID, tag);
+        MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                      send_buf, send_size, NULL,
+                                      remote_addr, match_bits, (void *) &send_req.context),
+                             vci, tsend);
     } else {
         send_req.done = 1;
     }
@@ -156,7 +182,7 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
 
     if (recv_size > 0) {
         uint64_t mask_bits = 0;
-        uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+        uint64_t match_bits = get_dynamic_match_bits(remote_lpid, tag);
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf, recv_size, NULL,
                                       remote_addr, match_bits, mask_bits, &recv_req.context),
