@@ -356,7 +356,7 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
 }
 
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                              MPIDI_IPCI_ipc_handle_t * ipc_handle)
+                              MPIDI_IPCI_ipc_handle_t * ipc_handle, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpl_err;
@@ -418,6 +418,11 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     ipc_handle->gpu.node_rank = MPIR_Process.local_rank;
     ipc_handle->gpu.offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
     ipc_handle->gpu.handle_status = handle_status;
+
+    if (req && MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
+        /* needed in MPIDI_GPU_send_complete */
+        MPIDI_SHM_REQUEST(req, ipc.gpu_attr) = ipc_attr->u.gpu;
+    }
 
   fn_exit:
     return mpi_errno;

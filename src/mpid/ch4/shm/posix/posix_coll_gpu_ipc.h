@@ -92,7 +92,7 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
     MPIDI_IPCI_ipc_handle_t my_ipc_handle;
     memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
     if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
-        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle);
+        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle, NULL);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         my_ipc_handle.gpu.global_dev_id = -1;
