@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
                                                  MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset, MPIDI_av_entry_t * addr,
-                                                 MPIDI_IPCI_ipc_attr_t ipc_attr,
+                                                 MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                                  int vci_src, int vci_dst, MPIR_Request ** request,
                                                  int coll_attr)
 {
@@ -192,10 +192,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, u.send.dest) = rank;
     MPIDIG_REQUEST(sreq, count) = count;
-    MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr.ipc_type;
+    MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr->ipc_type;
 
     /* Allocate am_hdr and fill ipc_hdr */
-    mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(&ipc_attr, count, datatype, sizeof(MPIDIG_hdr_t),
+    mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype, sizeof(MPIDIG_hdr_t),
                                            sreq, &hdr, &hdr_sz);
     MPIR_ERR_CHECK(mpi_errno);
 
