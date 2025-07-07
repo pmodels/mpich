@@ -83,12 +83,13 @@ static int reply_ipc_write(MPIDI_IPCI_ipc_attr_t * ipc_attr, MPI_Aint count, MPI
                                            sizeof(MPIDI_IPC_write_t), rreq, &hdr, &hdr_sz);
     MPIDI_IPC_write_t *am_hdr = hdr;
     am_hdr->ipc_type = ipc_attr->ipc_type;
-    am_hdr->sreq = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    am_hdr->sreq = MPIDIG_REQUEST(rreq, u.ipc.peer_req);
     am_hdr->rreq = rreq;
 
+    int peer_rank = MPIDIG_REQUEST(rreq, u.ipc.peer_rank);
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(rreq->status.MPI_SOURCE, rreq->comm, MPIDI_IPC_WRITE,
+    CH4_CALL(am_send_hdr(peer_rank, rreq->comm, MPIDI_IPC_WRITE,
                          hdr, hdr_sz, local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -120,7 +121,10 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     /* Set receive status. NOTE: MPI_SOURCE/TAG already set at time of matching */
     MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
 
-    MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = NULL;
+    /* initialize the ipc fields */
+    MPIDIG_REQUEST(rreq, u.ipc.peer_rank) = rreq->status.MPI_SOURCE;
+    MPIDIG_REQUEST(rreq, u.ipc.peer_req) = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    MPIDIG_REQUEST(rreq, u.ipc.src_dt_ptr) = NULL;
 
     if (ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__GPU) {
         void *buf = MPIDIG_REQUEST(rreq, buffer);
@@ -196,37 +200,31 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type)
+int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int peer_rank;
-    if (rreq->kind == MPIR_REQUEST_KIND__RECV) {
-        peer_rank = rreq->status.MPI_SOURCE;
-    } else {
-        MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__SEND);
-        peer_rank = MPIDIG_REQUEST(rreq, u.send.dest);
-    }
-
     MPIDI_IPC_ack_t am_hdr;
     am_hdr.ipc_type = ipc_type;
-    am_hdr.req_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    am_hdr.req_ptr = MPIDIG_REQUEST(req, u.ipc.peer_req);
 
-    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
-    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(peer_rank, rreq->comm, MPIDI_IPC_ACK,
+    int peer_rank = MPIDIG_REQUEST(req, u.ipc.peer_rank);
+    int local_vci = MPIDIG_REQUEST(req, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(req, req->remote_vci);
+    CH4_CALL(am_send_hdr(peer_rank, req->comm, MPIDI_IPC_ACK,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr)) {
-        MPIR_Datatype_free(MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr));
+    if (MPIDIG_REQUEST(req, u.ipc.src_dt_ptr)) {
+        MPIR_Datatype_free(MPIDIG_REQUEST(req, u.ipc.src_dt_ptr));
     }
 
-    if (rreq->kind == MPIR_REQUEST_KIND__RECV) {
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    /* send/recv complete */
+    if (req->kind == MPIR_REQUEST_KIND__RECV) {
+        MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
     } else {
-        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-        mpi_errno = MPID_Request_complete(rreq);
+        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(req, datatype));
+        mpi_errno = MPID_Request_complete(req);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

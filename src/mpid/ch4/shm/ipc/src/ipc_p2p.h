@@ -26,7 +26,7 @@
  * and perform direct data transfer.
  */
 
-int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type);
+int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type);
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
@@ -198,8 +198,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIR_Comm_add_ref(comm);
     MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
     MPIDIG_REQUEST(sreq, datatype) = datatype;
-    MPIDIG_REQUEST(sreq, u.send.dest) = rank;
     MPIDIG_REQUEST(sreq, count) = count;
+    MPIDIG_REQUEST(sreq, u.ipc.peer_rank) = rank;
+    MPIDIG_REQUEST(sreq, u.ipc.peer_req) = NULL;
+    MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = NULL;
     MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr->ipc_type;
 
     /* Allocate am_hdr and fill ipc_hdr */
@@ -246,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
  * LMT_FIN ack to the sender.
  */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq,
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req,
                                                   const void *src_buf, MPI_Aint src_data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -254,9 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
     if (ipc_hdr->is_contig) {
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(src_buf, src_data_sz,
-                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq,
-                                                                                     count),
-                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes,
+                                        MPIDIG_REQUEST(req, buffer), MPIDIG_REQUEST(req, count),
+                                        MPIDIG_REQUEST(req, datatype), 0, &actual_unpack_bytes,
                                         MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (actual_unpack_bytes < src_data_sz) {
@@ -271,8 +272,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Localcopy(src_buf, ipc_hdr->count, dt->handle,
-                                   MPIDIG_REQUEST(rreq, buffer),
-                                   MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype));
+                                   MPIDIG_REQUEST(req, buffer),
+                                   MPIDIG_REQUEST(req, count), MPIDIG_REQUEST(req, datatype));
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Datatype_free(dt);
     }

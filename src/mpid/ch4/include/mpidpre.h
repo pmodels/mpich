@@ -98,9 +98,6 @@ typedef struct MPIDIG_rreq_t {
             MPI_Aint count;
             MPI_Datatype datatype;
         } mrcv;
-        struct {
-            MPIR_Datatype *src_dt_ptr;
-        } ipc;
     } u;
 
     MPIR_Request *peer_req_ptr;
@@ -215,11 +212,16 @@ typedef struct MPIDIG_req_t {
     MPI_Datatype datatype;
     union {
         struct {
-            int dest;
+            int dest;           /* needed for RNDV send */
         } send;
         struct {
-            int context_id;
+            int context_id;     /* needed for recvq matching */
         } recv;
+        struct {
+            int peer_rank;
+            MPIR_Request *peer_req;
+            MPIR_Datatype *src_dt_ptr;
+        } ipc;                  /* used by both sender and receiver */
         struct {
             int target_rank;
             MPI_Datatype target_datatype;
