@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     }
 
     mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
-                                    rank, tag, comm, context_offset, addr, ipc_attr,
+                                    rank, tag, comm, context_offset, addr, &ipc_attr,
                                     vci_src, vci_dst, request, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
