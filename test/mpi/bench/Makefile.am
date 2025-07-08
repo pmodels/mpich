@@ -14,6 +14,7 @@ noinst_PROGRAMS = \
     p2p_bw \
     get_bw \
     put_bw \
+    p2p_one \
     barrier \
     bcast
 
