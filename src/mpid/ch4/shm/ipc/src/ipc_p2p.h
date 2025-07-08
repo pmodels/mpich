@@ -28,6 +28,7 @@
 
 int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type);
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
+int MPIDI_IPC_do_cts(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
 int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
@@ -235,6 +236,60 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
 
   fn_exit:
     MPL_free(hdr);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_rndv(const void *buf, MPI_Aint count,
+                                                  MPI_Datatype datatype,
+                                                  int rank, int tag, MPIR_Comm * comm,
+                                                  int context_offset, MPIDI_av_entry_t * addr,
+                                                  int vci_src, int vci_dst, MPIR_Request ** request,
+                                                  int coll_attr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq = NULL;
+    MPIR_FUNC_ENTER;
+
+    /* Create send request */
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, vci_src, vci_dst);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    *request = sreq;
+    sreq->comm = comm;
+    MPIR_Comm_add_ref(comm);
+    MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
+    MPIDIG_REQUEST(sreq, datatype) = datatype;
+    MPIDIG_REQUEST(sreq, count) = count;
+    MPIDIG_REQUEST(sreq, u.send.dest) = rank;
+
+    /* Fill am hdr */
+    MPIDIG_hdr_t hdr;
+
+    MPI_Aint data_sz;
+    MPIR_Datatype_get_size_macro(datatype, data_sz);
+    data_sz *= count;
+
+    /* message matching info */
+    hdr.src_rank = comm->rank;
+    hdr.tag = tag;
+    hdr.context_id = comm->context_id + context_offset;
+    hdr.data_sz = data_sz;
+    hdr.rndv_hdr_sz = 0;
+    hdr.sreq_ptr = sreq;
+    hdr.error_bits = coll_attr;
+    hdr.flags = MPIDIG_AM_SEND_FLAGS_NONE;
+    MPIDIG_AM_SEND_SET_RNDV(hdr.flags, MPIDIG_RNDV_GENERIC_IPC);
+
+    CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, &hdr, sizeof(hdr), vci_src, vci_dst),
+             1 /* is_local */ , mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_REQUEST_SET_INFO(sreq, "MPIDI_IPCI_send_rndv: rank=%d, tag=%d, data_sz=%ld\n", rank, tag,
+                          data_sz);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

@@ -72,6 +72,7 @@ enum {
 enum {
     MPIDIG_RNDV_GENERIC = 0,
     MPIDIG_RNDV_IPC,
+    MPIDIG_RNDV_GENERIC_IPC,    /* used in IPC send to allow potential IPC write path */
 
     MPIDIG_RNDV_STATIC_MAX
 };
