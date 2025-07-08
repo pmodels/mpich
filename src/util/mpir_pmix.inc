@@ -363,7 +363,10 @@ static int pmix_barrier_group(int *group, int count, const char *stringtag)
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence_nb",
                          "**pmix_fence_nb %d", pmi_errno);
     while (MPL_atomic_load_int(&done_flag) == 0) {
+        /* NOTE: PMIx_Progress not needed unless progress threads are disabled */
+#if 0
         PMIx_Progress();
+#endif
     }
 
     PMIX_INFO_FREE(info, 1);
