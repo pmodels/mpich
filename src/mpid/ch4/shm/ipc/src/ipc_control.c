@@ -200,6 +200,56 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
+/* similar to MPIDIG_do_cts, but allow the possibility of an IPC write protocol */
+int MPIDI_IPC_do_cts(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* check ipc_attr and do IPC write if possible */
+    void *buf = MPIDIG_REQUEST(rreq, buffer);
+    MPI_Aint count = MPIDIG_REQUEST(rreq, count);
+    MPI_Datatype datatype = MPIDIG_REQUEST(rreq, datatype);
+
+    MPIDI_IPCI_ipc_attr_t ipc_attr;
+    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype,
+                                        rreq->comm->rank, rreq->comm,
+                                        sizeof(MPIDI_IPC_write_t), &ipc_attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
+        /* initialize the ipc fields */
+        MPIDIG_REQUEST(rreq, u.ipc.peer_rank) = rreq->status.MPI_SOURCE;
+        MPIDIG_REQUEST(rreq, u.ipc.peer_req) = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+        MPIDIG_REQUEST(rreq, u.ipc.src_dt_ptr) = NULL;
+
+        /* IPC write */
+        mpi_errno = reply_ipc_write(&ipc_attr, count, datatype, rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    /* generic rndv, same as MPIDIG_do_cts */
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    int source_rank = rreq->status.MPI_SOURCE;
+
+    MPIDIG_send_cts_msg_t am_hdr;
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
+    am_hdr.rreq_ptr = rreq;
+    am_hdr.tag = -1;
+    MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
+
+    CH4_CALL(am_send_hdr_reply(rreq->comm, source_rank, MPIDIG_SEND_CTS,
+                               &am_hdr, sizeof(am_hdr), local_vci, remote_vci),
+             MPIDI_REQUEST(rreq, is_local), mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type)
 {
     int mpi_errno = MPI_SUCCESS;
