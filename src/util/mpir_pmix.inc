@@ -50,7 +50,14 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     static int pmix_init_count = 0;
     pmix_init_count++;
     if (pmix_init_count == 1) {
-        pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
+        pmix_info_t *info;
+        PMIX_INFO_CREATE(info, 1);
+        int flag = 1;
+        PMIx_Info_load(info, PMIX_EXTERNAL_PROGRESS, &flag, PMIX_BOOL);
+
+        pmi_errno = PMIx_Init(&pmix_proc, info, 0);
+        PMIX_INFO_FREE(info, 1);
+
         if (pmi_errno == PMIX_ERR_UNREACH) {
             /* Failed to connect to server. Throw an error if an
              * incompatible server is detected (e.g. hydra), otherwise
