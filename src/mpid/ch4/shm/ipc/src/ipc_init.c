@@ -16,6 +16,7 @@ int MPIDI_IPC_init_local(void)
 #endif
 
     MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_IPC, &MPIDI_IPC_rndv_cb);
+    MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC_IPC, &MPIDI_IPC_do_cts);
     MPIDIG_am_reg_cb(MPIDI_IPC_ACK, NULL, &MPIDI_IPC_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDI_IPC_WRITE, NULL, &MPIDI_IPC_write_target_msg_cb);
 

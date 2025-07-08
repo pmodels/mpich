@@ -34,16 +34,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, rank, comm, sizeof(MPIDIG_hdr_t),
                                         &ipc_attr);
 
-    if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
-        goto fn_exit;
+    if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
+
+        mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
+                                        rank, tag, comm, context_offset, addr, &ipc_attr,
+                                        vci_src, vci_dst, request, coll_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+        *done = true;
+    } else {
+        MPI_Aint data_sz;
+        MPIDI_Datatype_check_size(datatype, count, data_sz);
+        if ((sizeof(MPIDIG_hdr_t) + data_sz) > MPIDI_POSIX_am_eager_limit()) {
+            mpi_errno = MPIDI_IPCI_send_rndv(buf, count, datatype, rank, tag, comm, context_offset,
+                                             addr, vci_src, vci_dst, request, coll_attr);
+            MPIR_ERR_CHECK(mpi_errno);
+            *done = true;
+        }
     }
-
-    mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
-                                    rank, tag, comm, context_offset, addr, &ipc_attr,
-                                    vci_src, vci_dst, request, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    *done = true;
 
   fn_exit:
     MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
