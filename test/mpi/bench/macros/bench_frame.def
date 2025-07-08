@@ -70,7 +70,7 @@ macros:
 #----------------------------------------
 subcode: _autoload
     $register_prefix(comm) MPI_Comm
-    $define MAX_BUFSIZE 5000000
+    $define MAX_BUFSIZE $(MAX_BUFSIZE)
     $define NUM_REPEAT 20
 
 subcode: foreach_size
