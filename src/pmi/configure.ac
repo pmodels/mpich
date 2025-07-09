@@ -63,16 +63,6 @@ AC_ARG_ENABLE([pmi2],
          AC_DEFINE(DISABLE_PMI2, 1, [Disable PMI2 protocol])
      fi
     ])
-AC_ARG_ENABLE([pmix],
-    AS_HELP_STRING([--disable-pmix], [disable PMIx protocol]),
-    [if test "$enableval" = "no" ; then
-         AC_DEFINE(DISABLE_PMIX, 1, [Disable PMIx protocol])
-         enable_pmix=false
-     else
-         enable_pmix=true
-     fi
-    ], [enable_pmix=true])
-AM_CONDITIONAL([DISABLE_PMIX], [test "x$enable_pmix" = "xfalse"])
 
 AC_ARG_WITH([thread-package],
     AS_HELP_STRING([--with-thread-package], [whether to enable threads]))
