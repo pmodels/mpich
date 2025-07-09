@@ -34,6 +34,7 @@ int MPIDI_OFI_vci_init(void)
 
 /* Address exchange within comm and setup multiple vcis */
 static int init_vcis(int num_vcis, int *num_vcis_actual);
+static int check_num_nics(MPIR_Comm * comm);
 static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vcis);
 
 int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved,
@@ -45,6 +46,10 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     int num_vcis = num_implicit + num_reserved;
     int num_vcis_actual;
     mpi_errno = init_vcis(num_vcis, &num_vcis_actual);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* All processes must have the same number of NICs */
+    mpi_errno = check_num_nics(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* gather the number of remote vcis */
@@ -79,7 +84,6 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
 
 /* init_vcis: locally create multiple vcis */
 
-static int check_num_nics(void);
 static int setup_additional_vcis(void);
 
 static int init_vcis(int num_vcis, int *num_vcis_actual)
@@ -94,10 +98,6 @@ static int init_vcis(int num_vcis, int *num_vcis_actual)
     MPIDI_OFI_global.num_nics = MPIDI_OFI_global.num_nics_available;
     MPIDI_OFI_global.num_vcis = num_vcis;
 
-    /* All processes must have the same number of NICs */
-    mpi_errno = check_num_nics();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* may update MPIDI_OFI_global.num_vcis */
     mpi_errno = setup_additional_vcis();
     MPIR_ERR_CHECK(mpi_errno);
@@ -110,38 +110,38 @@ static int init_vcis(int num_vcis, int *num_vcis_actual)
     goto fn_exit;
 }
 
-static int check_num_nics(void)
+static int check_num_nics(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int num_nics = MPIDI_OFI_global.num_nics;
-    int tmp_num_vcis = MPIDI_OFI_global.num_vcis;
-    int tmp_num_nics = MPIDI_OFI_global.num_nics;
+    /* We only can change the number of nics once */
+    static int can_change_nics = 1;
 
-    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
-    MPIDI_OFI_global.num_vcis = MPIDI_OFI_global.num_nics = 1;
+    if (!MPIR_CVAR_OFI_USE_MIN_NICS) {
+        can_change_nics = 0;
+    }
 
-    /* Confirm that all processes have the same number of NICs */
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPIR_INT_INTERNAL,
-                                            MPI_MIN, MPIR_Process.comm_world, MPIR_COLL_ATTR_SYNC);
-    MPIDI_OFI_global.num_vcis = tmp_num_vcis;
-    MPIDI_OFI_global.num_nics = tmp_num_nics;
+    /* Confirm that all processes have the same number of NICs, if not, all can change to minimum */
+    int my_nums[2] = { MPIDI_OFI_global.num_nics, can_change_nics };
+    int min_nums[2];
+    mpi_errno = MPIR_Allreduce_impl(my_nums, &min_nums, 2, MPIR_INT_INTERNAL,
+                                    MPI_MIN, comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
-     * NIC. */
-    if (tmp_num_nics != num_nics) {
-        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
-            MPIDI_OFI_global.num_nics = num_nics;
-
-            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
-            if (num_nics == 1) {
-                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
-            }
+    /* If num_nics disagree, fallback to fewer NICs if we can, otherwise throw an error */
+    if (my_nums[0] != min_nums[0]) {
+        if (min_nums[1]) {
+            /* all can change the number of nics */
+            MPIDI_OFI_global.num_nics = min_nums[0];
         } else {
-            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
-                                "**ofi_num_nics");
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ofi_num_nics");
         }
+    }
+    can_change_nics = 0;
+
+    /* If we fall down to 1 nic, turn off multi-nic optimizations. */
+    if (MPIDI_OFI_global.num_nics == 1) {
+        MPIDI_OFI_COMM(comm).enable_striping = 0;
     }
 
     /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
@@ -261,7 +261,6 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, MPIDI_num_vci_t * all_num_vci
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
-    MPIR_Assert(comm == MPIR_Process.comm_world);
     int size = comm->local_size;
     int rank = comm->rank;
 

@@ -29,7 +29,12 @@ int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
 
         void *slab;
         int slab_size = MPIDI_POSIX_eager_shm_vci_size(MPIR_Process.local_size, max_vcis);
+        MPIDI_POSIX_global.shm_vci_slab_size = slab_size;
 #ifdef MPL_HAVE_INITSHM
+        MPL_atomic_int_t *num_shared =
+            &((MPIDI_POSIX_shm_t *) MPIDI_POSIX_global.shm_slab)->num_shared_vci;
+        MPL_atomic_fetch_add_int(num_shared, 1);
+        /* FIXME: do we worry about leaking num_shared in the error case? */
         slab = MPL_initshm_open(MPIDI_POSIX_global.shm_vci_name, slab_size, NULL);
         MPIR_ERR_CHKANDJUMP(!slab, mpi_errno, MPI_ERR_OTHER, "**nomem");
 

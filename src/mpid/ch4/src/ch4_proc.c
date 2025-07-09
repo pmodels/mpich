@@ -351,8 +351,13 @@ int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int ad
 
     bool is_node_root = (node_comm->rank == 0);
 
-    int rc = MPIR_pmi_barrier_group(MPIR_PMI_GROUP_SELF, 0, 0);
-    if (rc == MPI_SUCCESS) {
+    if (MPIR_CVAR_PMI_DISABLE_GROUP) {
+        /* use MPIR_pmi_allgather, all processes need participate in a PMI barrier */
+        MPIR_Assert(comm->local_size == MPIR_Process.size);
+        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen,
+                                       MPIR_PMI_DOMAIN_NODE_ROOTS);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
         /* MPIR_pmi_allgather_group is supported */
         if (is_node_root) {
             MPIR_Comm *node_roots_comm = MPIR_Comm_get_node_roots_comm(comm);
@@ -364,15 +369,10 @@ int MPIDIU_bc_exchange_node_roots(MPIR_Comm * comm, const char *addrname, int ad
                 procs[i] = MPIDIU_get_grank(i, node_roots_comm);
             }
             mpi_errno = MPIR_pmi_allgather_group("BC", addrname, addrnamelen,
-                                                 roots_names, addrnamelen, procs, external_size);
+                                                 roots_names, addrnamelen, procs, external_size,
+                                                 comm->stringtag);
             MPIR_ERR_CHECK(mpi_errno);
         }
-    } else {
-        /* use MPIR_pmi_allgather, all processes need participate in a PMI barrier */
-        MPIR_Assert(comm->local_size == MPIR_Process.size);
-        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen,
-                                       MPIR_PMI_DOMAIN_NODE_ROOTS);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
