@@ -118,7 +118,7 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     for (int i = 0; i < *size; i++) {
         proc.rank = i;
         pmi_errno = PMIx_Get(&proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
-        if (pmi_errno != PMIX_SUCCESS) {
+        if (pmi_errno != PMIX_SUCCESS || PMIX_COORD != val->type) {
             MPIR_Process.coords = NULL;
             break;
         }
