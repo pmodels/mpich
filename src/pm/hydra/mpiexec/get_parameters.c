@@ -206,6 +206,9 @@ static void set_default_values(void)
 
     if (HYD_server_info.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_UNSET)
         HYD_server_info.user_global.gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
+
+    if (HYD_server_info.user_global.topo_debug == -1)
+        HYD_server_info.user_global.topo_debug = 0;
 }
 
 /* In case a boolean environment value is unparsable (not 1|0|yes|no|true|false|on|off),
@@ -225,7 +228,7 @@ static HYD_status check_environment(void)
     if (!HYD_server_info.user_global.debug)
         ENV2BOOL("HYDRA_DEBUG", &HYD_server_info.user_global.debug);
 
-    if (!HYD_server_info.user_global.topo_debug)
+    if (HYD_server_info.user_global.topo_debug == -1)
         ENV2BOOL("HYDRA_TOPO_DEBUG", &HYD_server_info.user_global.topo_debug);
 
     /* don't clobber existing iface values from the command line */
