@@ -11,14 +11,14 @@ int MPIDI_IPC_init_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPL_COMPILE_TIME_ASSERT(offsetof(MPIDI_IPC_rts_t, ipc_hdr) == sizeof(MPIDIG_hdr_t));
-
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_IPCI_DBG_GENERAL = MPL_dbg_class_alloc("SHM_IPC", "shm_ipc");
 #endif
 
     MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_IPC, &MPIDI_IPC_rndv_cb);
+    MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC_IPC, &MPIDI_IPC_do_cts);
     MPIDIG_am_reg_cb(MPIDI_IPC_ACK, NULL, &MPIDI_IPC_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDI_IPC_WRITE, NULL, &MPIDI_IPC_write_target_msg_cb);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     mpi_errno = MPIDI_XPMEM_init_local();

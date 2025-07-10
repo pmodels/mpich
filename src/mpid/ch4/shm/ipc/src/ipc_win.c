@@ -98,7 +98,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
-            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE));
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE), NULL);
             break;
 #endif
         default:
