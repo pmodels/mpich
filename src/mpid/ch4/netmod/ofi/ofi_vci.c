@@ -55,9 +55,9 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     /* gather the number of remote vcis */
     all_num_vcis[comm->rank].n_vcis = MPL_MIN(num_implicit, num_vcis_actual);
     all_num_vcis[comm->rank].n_total_vcis = num_vcis_actual;
-    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                    all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
-                                    comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                        all_num_vcis, sizeof(MPIDI_num_vci_t), MPIR_BYTE_INTERNAL,
+                                        comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
@@ -124,8 +124,8 @@ static int check_num_nics(MPIR_Comm * comm)
     /* Confirm that all processes have the same number of NICs, if not, all can change to minimum */
     int my_nums[2] = { MPIDI_OFI_global.num_nics, can_change_nics };
     int min_nums[2];
-    mpi_errno = MPIR_Allreduce_impl(my_nums, &min_nums, 2, MPIR_INT_INTERNAL,
-                                    MPI_MIN, comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allreduce_fallback(my_nums, &min_nums, 2, MPIR_INT_INTERNAL,
+                                        MPI_MIN, comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* If num_nics disagree, fallback to fewer NICs if we can, otherwise throw an error */
