@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf,
                                                  MPI_Datatype datatype,
                                                  int rank,
                                                  int tag,
-                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIR_Comm * comm, int attr,
                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,6 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf,
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     }
 
+    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                  vci, request, 1, NULL);
     if (need_lock) {
