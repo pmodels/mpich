@@ -317,9 +317,9 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status topo_debug_fn(char *arg, char ***argv)
+static HYD_status report_bindings_fn(char *arg, char ***argv)
 {
-    HYD_pmcd_pmip.user_global.topo_debug = 1;
+    HYD_pmcd_pmip.user_global.report_bindings = 1;
     return HYD_SUCCESS;
 }
 
@@ -625,7 +625,7 @@ struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     {"proxy-id", proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
-    {"topo-debug", topo_debug_fn, NULL},
+    {"report-bindings", report_bindings_fn, NULL},
     {"usize", usize_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
     {"gpus-per-proc", gpus_per_proc_fn, NULL},
@@ -709,7 +709,8 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");
 
     status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
-                            HYD_pmcd_pmip.user_global.topo_debug);
+                            HYD_pmcd_pmip.user_global.debug,
+                            HYD_pmcd_pmip.user_global.report_bindings);
     HYDU_ERR_POP(status, "proxy unable to initialize topology library\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
