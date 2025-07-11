@@ -675,7 +675,7 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
         id = idx % HYDT_topo_hwloc_info.num_bitmaps;
 
-        if (HYDT_topo_info.debug) {
+        if (HYDT_topo_info.report_bindings) {
             /* Print the binding bitmaps for debugging. */
             int i;
             char *binding;

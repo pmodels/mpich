@@ -63,8 +63,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     if (HYD_server_info.user_global.debug)
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--debug"), status);
 
-    if (HYD_server_info.user_global.topo_debug)
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--topo-debug"), status);
+    if (HYD_server_info.user_global.report_bindings)
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--report-bindings"), status);
 
     if (HYDT_bsci_info.rmk) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
