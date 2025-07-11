@@ -20,7 +20,6 @@ subcode: report_header
     printf("%12s %10s %12s\n", "msgsize", "latency(sec)", "bandwidth(GB/s)");
 
 subcode: report_one
-    tf_latency
     tf_bw = size / tf_latency / 1e9
     printf("%12d %10.3f %12.3f\n", size, tf_latency, tf_bw);
 
@@ -35,15 +34,17 @@ page: p2p_one, bench_frame
     dst = 1
     size = MAX_BUFSIZE
 
-    $if rank == src
-        tf_start = MPI_Wtime()
-        $call @send_side
-        MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
-        tf_latency = MPI_Wtime() - tf_start
-        $call report_one
-    $elif rank == dst
-        $call @recv_side
-        MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
+    /* Repeat a few times to see variations or the need to warm up */
+    $for iter=0:5
+        $if rank == src
+            tf_start = MPI_Wtime()
+            $call @send_side
+            MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
+            tf_latency = MPI_Wtime() - tf_start
+            $call report_one
+        $elif rank == dst
+            $call @recv_side
+            MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
 
     subcode: send_side
         MPI_Send($(data), dst, TAG, comm)
