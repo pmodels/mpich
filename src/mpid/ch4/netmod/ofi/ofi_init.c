@@ -883,18 +883,22 @@ int MPIDI_OFI_flush_send_queue(void)
     /* Apparently by sending self messages can flush the send queue */
     int rank = MPIR_Process.rank;
     for (int vci = 0; vci < num_vcis; vci++) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         mpi_errno = flush_send(rank, 0, vci, &reqs[vci * 2]);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = flush_recv(rank, 0, vci, &reqs[vci * 2 + 1]);
         MPIR_ERR_CHECK(mpi_errno);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     bool all_done = false;
     while (!all_done) {
         int made_progress;
         for (int vci = 0; vci < num_vcis; vci++) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
             mpi_errno = MPIDI_NM_progress(vci, &made_progress);
             MPIR_ERR_CHECK(mpi_errno);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         }
         all_done = true;
         for (int i = 0; i < num_reqs; i++) {
