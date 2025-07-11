@@ -6,255 +6,11 @@
 #include "mpiimpl.h"
 #include "mpl.h"
 #include "mpir_csel.h"
+#include "csel_internal.h"
 #include <fcntl.h>      /* open */
 #include <sys/mman.h>   /* mmap */
 #include <sys/stat.h>
 #include <json.h>
-
-typedef enum {
-    /* global operator types */
-    CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED = 0,
-
-    /* comm-specific operator types */
-    CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTRA,
-    CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTER,
-
-    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT,
-    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE,
-    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2,
-
-    CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY,
-    CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE,
-
-    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE,
-    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT,
-
-    /* collective selection operator */
-    CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,
-
-    /* message-specific operator types */
-    CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT,
-    CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT,
-
-    CSEL_NODE_TYPE__OPERATOR__COUNT_LE,
-    CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2,
-
-    CSEL_NODE_TYPE__OPERATOR__IS_SBUF_INPLACE,
-    CSEL_NODE_TYPE__OPERATOR__IS_BLOCK_REGULAR,
-    CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE,
-    CSEL_NODE_TYPE__OPERATOR__IS_OP_BUILT_IN,
-
-    /* any - has to be the last branch in an array */
-    CSEL_NODE_TYPE__OPERATOR__ANY,
-
-    /* container type */
-    CSEL_NODE_TYPE__CONTAINER,
-} csel_node_type_e;
-
-typedef struct csel_node {
-    csel_node_type_e type;
-
-    union {
-        /* global types */
-        struct {
-            int val;
-        } is_multi_threaded;
-
-        /* comm-specific operator types */
-        struct {
-            int val;
-        } comm_size_le;
-        struct {
-            int val;
-        } comm_size_lt;
-
-        /* collective selection operator */
-        struct {
-            MPIR_Csel_coll_type_e coll_type;
-        } collective;
-
-        /* message-specific operator types */
-        struct {
-            int val;
-        } avg_msg_size_le;
-        struct {
-            int val;
-        } avg_msg_size_lt;
-        struct {
-            int val;
-        } total_msg_size_le;
-        struct {
-            int val;
-        } total_msg_size_lt;
-        struct {
-            int val;
-        } count_le;
-        struct {
-            bool val;
-        } is_commutative;
-        struct {
-            bool val;
-        } is_sbuf_inplace;
-        struct {
-            bool val;
-        } is_op_built_in;
-        struct {
-            bool val;
-        } is_block_regular;
-        struct {
-            bool val;
-        } is_node_consecutive;
-        struct {
-            int val;
-        } comm_avg_ppn_le;
-        struct {
-            int val;
-        } comm_avg_ppn_lt;
-        struct {
-            bool val;
-        } comm_hierarchy;
-        struct {
-            void *container;
-        } cnt;
-    } u;
-
-    struct csel_node *success;
-    struct csel_node *failure;
-} csel_node_s;
-
-typedef enum {
-    CSEL_TYPE__ROOT,
-    CSEL_TYPE__PRUNED,
-} csel_type_e;
-
-typedef struct {
-    csel_type_e type;
-
-    union {
-        struct {
-            csel_node_s *tree;
-        } root;
-        struct {
-            /* one tree for each collective */
-            csel_node_s *coll_trees[MPIR_CSEL_COLL_TYPE__END];
-        } pruned;
-    } u;
-} csel_s;
-
-static int nesting = -1;
-#define nprintf(...)                            \
-    do {                                        \
-        for (int i = 0; i < nesting; i++)       \
-            printf("  ");                       \
-        printf(__VA_ARGS__);                    \
-    } while (0)
-
-static void print_tree(csel_node_s * node) ATTRIBUTE((unused));
-static void print_tree(csel_node_s * node)
-{
-    nesting++;
-
-    if (node == NULL)
-        return;
-
-    switch (node->type) {
-        case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
-            nprintf("MPI library is multithreaded\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTRA:
-            nprintf("comm_type is intra\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTER:
-            nprintf("comm_type is inter\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
-            nprintf("collective: %d\n", node->u.collective.coll_type);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE:
-            nprintf("comm_size <= %d\n", node->u.comm_size_le.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
-            nprintf("comm_size < %d\n", node->u.comm_size_lt.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2:
-            nprintf("comm_size is power-of-two\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-            nprintf("comm_size is the same as node_comm_size\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE:
-            nprintf("avg_msg_size <= %d\n", node->u.avg_msg_size_le.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT:
-            nprintf("avg_msg_size < %d\n", node->u.avg_msg_size_lt.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE:
-            nprintf("total_msg_size <= %d\n", node->u.total_msg_size_le.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
-            nprintf("total_msg_size < %d\n", node->u.total_msg_size_lt.val);
-            break;
-        case CSEL_NODE_TYPE__CONTAINER:
-            nprintf("container\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
-            nprintf("count <= %d\n", node->u.count_le.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-            nprintf("count < nearest power-of-two less than comm size\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__IS_SBUF_INPLACE:
-            nprintf("source buffer is MPI_IN_PLACE\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__IS_BLOCK_REGULAR:
-            nprintf("all blocks have the same count\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-            if (node->u.comm_hierarchy.val)
-                nprintf("communicator has hierarchical structure\n");
-            else
-                nprintf("communicator does not have hierarchical structure\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE:
-            nprintf("process ranks are consecutive on the node\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-            nprintf("communicator's avg ppn <= %d\n", node->u.comm_avg_ppn_le.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-            nprintf("communicator's avg ppn < %d\n", node->u.comm_avg_ppn_lt.val);
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
-            if (node->u.is_commutative.val == true)
-                nprintf("operation is commutative\n");
-            else
-                nprintf("operation is not commutative\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__IS_OP_BUILT_IN:
-            nprintf("other operators\n");
-            break;
-        case CSEL_NODE_TYPE__OPERATOR__ANY:
-            nprintf("any\n");
-            break;
-        default:
-            nprintf("unknown operator\n");
-            MPIR_Assert(0);
-    }
-
-    if (node->type != CSEL_NODE_TYPE__CONTAINER) {
-        print_tree(node->success);
-        if (node->failure) {
-            nesting--;
-            print_tree(node->failure);
-            nesting++;
-        }
-    }
-
-    nesting--;
-}
 
 static void validate_tree(csel_node_s * node)
 {
@@ -350,7 +106,10 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             prevnode->failure = tmp;
         prevnode = tmp;
 
-        if (!strcmp(ckey, "is_multi_threaded=yes")) {
+        /* =any condition must be checked first */
+        if (key_is_any(ckey)) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
+        } else if (!strcmp(ckey, "is_multi_threaded=yes")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED;
             tmp->u.is_multi_threaded.val = true;
         } else if (!strcmp(ckey, "is_multi_threaded=no")) {
@@ -364,95 +123,16 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COLLECTIVE;
 
             char *str = ckey + strlen("collective=");
-            if (!strcmp(str, "allgather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHER;
-            else if (!strcmp(str, "allgatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHERV;
-            else if (!strcmp(str, "allreduce"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE;
-            else if (!strcmp(str, "alltoall"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALL;
-            else if (!strcmp(str, "alltoallv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLV;
-            else if (!strcmp(str, "alltoallw"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLW;
-            else if (!strcmp(str, "barrier"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__BARRIER;
-            else if (!strcmp(str, "bcast"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__BCAST;
-            else if (!strcmp(str, "exscan"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__EXSCAN;
-            else if (!strcmp(str, "gather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__GATHER;
-            else if (!strcmp(str, "gatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__GATHERV;
-            else if (!strcmp(str, "iallgather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLGATHER;
-            else if (!strcmp(str, "iallgatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLGATHERV;
-            else if (!strcmp(str, "iallreduce"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLREDUCE;
-            else if (!strcmp(str, "ialltoall"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLTOALL;
-            else if (!strcmp(str, "ialltoallv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLTOALLV;
-            else if (!strcmp(str, "ialltoallw"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IALLTOALLW;
-            else if (!strcmp(str, "ibarrier"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IBARRIER;
-            else if (!strcmp(str, "ibcast"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IBCAST;
-            else if (!strcmp(str, "iexscan"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IEXSCAN;
-            else if (!strcmp(str, "igather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IGATHER;
-            else if (!strcmp(str, "igatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IGATHERV;
-            else if (!strcmp(str, "ineighbor_allgather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLGATHER;
-            else if (!strcmp(str, "ineighbor_allgatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLGATHERV;
-            else if (!strcmp(str, "ineighbor_alltoall"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALL;
-            else if (!strcmp(str, "ineighbor_alltoallv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALLV;
-            else if (!strcmp(str, "ineighbor_alltoallw"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALLW;
-            else if (!strcmp(str, "ireduce"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE;
-            else if (!strcmp(str, "ireduce_scatter"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER;
-            else if (!strcmp(str, "ireduce_scatter_block"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER_BLOCK;
-            else if (!strcmp(str, "iscan"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ISCAN;
-            else if (!strcmp(str, "iscatter"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ISCATTER;
-            else if (!strcmp(str, "iscatterv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__ISCATTERV;
-            else if (!strcmp(str, "neighbor_allgather"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLGATHER;
-            else if (!strcmp(str, "neighbor_allgatherv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLGATHERV;
-            else if (!strcmp(str, "neighbor_alltoall"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALL;
-            else if (!strcmp(str, "neighbor_alltoallv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALLV;
-            else if (!strcmp(str, "neighbor_alltoallw"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALLW;
-            else if (!strcmp(str, "reduce"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__REDUCE;
-            else if (!strcmp(str, "reduce_scatter"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER;
-            else if (!strcmp(str, "reduce_scatter_block"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK;
-            else if (!strcmp(str, "scan"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCAN;
-            else if (!strcmp(str, "scatter"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTER;
-            else if (!strcmp(str, "scatterv"))
-                tmp->u.collective.coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV;
-            else {
+
+            bool matched = false;
+            for (int idx = 0; idx < MPIR_CSEL_COLL_TYPE__END; idx++) {
+                if (strcmp(str, Csel_coll_type_str[idx]) == 0) {
+                    tmp->u.collective.coll_type = idx;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
                 MPIR_Assert(0);
             }
         } else if (!strcmp(ckey, "comm_size=pow2")) {
@@ -518,20 +198,17 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         } else if (!strncmp(ckey, "comm_avg_ppn<", strlen("comm_avg_ppn<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT;
             tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
-        } else if (!strcmp(ckey, "comm_hierarchy=parent")) {
+        } else if (!strncmp(ckey, "comm_hierarchy=", strlen("comm_hierarchy="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = true;
-        } else if (!strcmp(ckey, "comm_hierarchy=node_roots")) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = false;
-        } else if (!strcmp(ckey, "comm_hierarchy=node")) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = false;
-        } else if (!strcmp(ckey, "comm_hierarchy=flat")) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = false;
-        } else if (key_is_any(ckey)) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
+
+            char *str = ckey + strlen("comm_hierarchy=");
+
+            for (int idx = 0; idx < MPIR_CSEL_COMM_HIERARCHY__END; idx++) {
+                if (strcmp(str, Csel_comm_hierarchy_str[idx]) == 0) {
+                    tmp->u.comm_hierarchy.val = idx;
+                    break;
+                }
+            }
         } else {
             fprintf(stderr, "unknown key %s\n", key);
             fflush(stderr);
@@ -562,6 +239,16 @@ int MPIR_Csel_create_from_buf(const char *json,
 
     json_object_put(tree);
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        printf("====================================\n");
+        printf("Processed Collective Selection Tree:\n");
+        Csel_print_tree(csel->u.root.tree);
+        printf("==========================================\n");
+        printf("Summary of rules per collective algorithm:\n");
+        Csel_print_rules(csel->u.root.tree);
+
+    }
+
   fn_exit:
     *csel_ = csel;
     return 0;
@@ -582,6 +269,10 @@ int MPIR_Csel_create_from_file(const char *json_file,
     stat(json_file, &st);
     char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
+
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        printf("Loaded Collective Selection Tree from %s:\n", json_file);
+    }
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
@@ -638,7 +329,8 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (MPIR_Comm_is_parent_comm(comm_ptr) == node->u.comm_hierarchy.val)
+                if (MPIR_Comm_is_parent_comm(comm_ptr)
+                    && (node->u.comm_hierarchy.val == MPIR_CSEL_COMM_HIERARCHY__PARENT))
                     node = node->success;
                 else
                     node = node->failure;
