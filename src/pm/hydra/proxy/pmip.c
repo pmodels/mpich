@@ -16,7 +16,7 @@ static HYD_status init_params(void)
     HYD_status status = HYD_SUCCESS;
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
-    HYD_pmcd_pmip.user_global.topo_debug = 0;
+    HYD_pmcd_pmip.user_global.report_bindings = 0;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
