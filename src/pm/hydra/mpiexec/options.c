@@ -1120,12 +1120,12 @@ static HYD_status report_bindings_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_ui_mpich_info.reading_config_file && HYD_server_info.user_global.topo_debug != -1) {
+    if (HYD_ui_mpich_info.reading_config_file && HYD_server_info.user_global.report_bindings != -1) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_int(arg, &HYD_server_info.user_global.topo_debug, 1);
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.report_bindings, 1);
     HYDU_ERR_POP(status, "error setting topo debug");
 
   fn_exit:
