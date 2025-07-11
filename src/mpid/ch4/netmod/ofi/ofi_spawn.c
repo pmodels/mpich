@@ -120,32 +120,6 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     goto fn_exit;
 }
 
-static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag)
-{
-    uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
-
-    if (!MPIDI_OFI_ENABLE_DATA) {
-        /* FI_DIRECTED_RECV is not enabled, we have embed source in the match_bits */
-        if (lpid == MPIR_LPID_INVALID) {
-            /* self */
-            lpid = MPIR_Process.rank;
-        }
-        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
-
-        char upid[FI_NAME_MAX];
-        size_t sz = FI_NAME_MAX;
-        fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_AV_ADDR_ROOT(av), upid, &sz);
-
-        unsigned upid_hash;
-        HASH_VALUE(upid, sz, upid_hash);
-        upid_hash &= (1 << MPIDI_OFI_SOURCE_BITS) - 1;
-
-        match_bits |= (upid_hash << MPIDI_OFI_TAG_BITS);
-    }
-
-    return match_bits;
-}
-
 int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
                                const void *send_buf, int send_size, void *recv_buf, int recv_size,
                                int timeout)
@@ -217,34 +191,6 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
                 break;
             }
         }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int cancel_dynamic_request(MPIDI_OFI_dynamic_process_request_t * dynamic_req, bool is_send)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    struct fid_ep *ep;
-    if (is_send) {
-        ep = MPIDI_OFI_global.ctx[0].tx;
-    } else {
-        ep = MPIDI_OFI_global.ctx[0].rx;
-    }
-    int rc;
-    rc = fi_cancel((fid_t) ep, (void *) &dynamic_req->context);
-    if (rc && rc != -FI_ENOENT) {
-        MPIR_ERR_CHKANDJUMP2(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
-                             "**ofid_cancel %s %s", MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(-rc));
-
-    }
-    while (!dynamic_req->done) {
-        mpi_errno = MPIDI_OFI_progress_uninlined(0);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -347,6 +293,62 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname,
                                     1, &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
         MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* -- internal static routines */
+
+static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag)
+{
+    uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+
+    if (!MPIDI_OFI_ENABLE_DATA) {
+        /* FI_DIRECTED_RECV is not enabled, we have embed source in the match_bits */
+        if (lpid == MPIR_LPID_INVALID) {
+            /* self */
+            lpid = MPIR_Process.rank;
+        }
+        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
+
+        char upid[FI_NAME_MAX];
+        size_t sz = FI_NAME_MAX;
+        fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_AV_ADDR_ROOT(av), upid, &sz);
+
+        unsigned upid_hash;
+        HASH_VALUE(upid, sz, upid_hash);
+        upid_hash &= (1 << MPIDI_OFI_SOURCE_BITS) - 1;
+
+        match_bits |= (upid_hash << MPIDI_OFI_TAG_BITS);
+    }
+
+    return match_bits;
+}
+
+static int cancel_dynamic_request(MPIDI_OFI_dynamic_process_request_t * dynamic_req, bool is_send)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct fid_ep *ep;
+    if (is_send) {
+        ep = MPIDI_OFI_global.ctx[0].tx;
+    } else {
+        ep = MPIDI_OFI_global.ctx[0].rx;
+    }
+    int rc;
+    rc = fi_cancel((fid_t) ep, (void *) &dynamic_req->context);
+    if (rc && rc != -FI_ENOENT) {
+        MPIR_ERR_CHKANDJUMP2(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
+                             "**ofid_cancel %s %s", MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(-rc));
+
+    }
+    while (!dynamic_req->done) {
+        mpi_errno = MPIDI_OFI_progress_uninlined(0);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
