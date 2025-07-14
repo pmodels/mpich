@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "mpir_threadcomm.h"
 
 /* Algorithm: Rabenseifner's Algorithm
  *
