@@ -15,12 +15,11 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;    /* Created for the allgatherv call */
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
-    int tag;
     MPIR_Request *reqs[2];      /* one send and one recv per transfer */
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -55,9 +54,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     /* Phase 1: copy to tmp buf */
     if (!is_inplace) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* Phase 2: Ring based send recv reduce scatter */
@@ -72,15 +69,12 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
         recv_rank = (nranks + rank - 2 - i) % nranks;
         send_rank = (nranks + rank - 1 - i) % nranks;
 
-        /* get a new tag to prevent out of order messages */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
+        mpi_errno =
+            MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, MPIR_ALLREDUCE_TAG, comm, &reqs[0]);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                               datatype, dst, tag, comm, &reqs[1], coll_attr);
+                               datatype, dst, MPIR_ALLREDUCE_TAG, comm, &reqs[1], coll_attr);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);

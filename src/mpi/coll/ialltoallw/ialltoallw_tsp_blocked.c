@@ -16,7 +16,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
 {
     int mpi_errno = MPI_SUCCESS;
     int tag, vtx_id;
-    size_t sendtype_size, recvtype_size;
+    MPI_Aint sendtype_size, recvtype_size;
     int nranks, rank;
     int i, j, comm_block, dst;
     MPIR_FUNC_ENTER;

@@ -17,7 +17,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     int i, j, t;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     MPI_Aint type_lb, true_extent;
     int is_commutative;
     int size;
@@ -187,8 +187,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
 
         /* Broadcast start here */
         mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Receive message from parent */
         int bcast_recv_id = sink_id;

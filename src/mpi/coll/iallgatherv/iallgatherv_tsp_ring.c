@@ -13,7 +13,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
                                           MPIR_TSP_sched_t sched)
 {
-    size_t extent;
+    MPI_Aint extent;
     MPI_Aint lb, true_extent;
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;

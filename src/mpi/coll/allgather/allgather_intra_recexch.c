@@ -24,7 +24,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int nranks, rank;
-    size_t recv_extent;
+    MPI_Aint recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int partner, offset, count, send_count, recv_count, send_offset, recv_offset, nbr, phase = 0;
@@ -128,8 +128,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_ERR_CHECK(mpi_errno);
             }
             mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -241,8 +240,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 }
                 /* wait on prev recvs */
                 mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
                     phase--;
@@ -251,8 +249,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             }
         }
         mpi_errno = MPIC_Waitall(num_sreq, send_reqs, MPI_STATUSES_IGNORE);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     num_rreq = 0;
@@ -270,8 +267,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     }
 
     mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
-    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!comm_alloc) {
         /* free the memory */

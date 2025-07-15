@@ -15,13 +15,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;
     int i, j, x, is_contig;
     void *tmp_buf = NULL;
     MPI_Aint *cnts, *displs;
-    size_t nbytes;
+    MPI_Aint nbytes;
     int tree_type, vtx_id, recv_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int current_child, next_child, lrank, total_count, sink_id;
@@ -143,8 +143,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 #ifdef HAVE_ERROR_CHECKING
         struct MPII_Ibcast_state *ibcast_state =
             MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
-        if (ibcast_state == NULL)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
         ibcast_state->n_bytes = recv_size;
         mpi_errno =
             MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size,
@@ -199,8 +198,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_TSP_sched_sink(sched, &sink_id);   /* wait for allgather to complete */
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
                 MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count,
