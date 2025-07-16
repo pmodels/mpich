@@ -236,45 +236,32 @@ int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Aint count, MPI_Datatype dat
      * the corresponding signed integer type, which will not work with
      * most op other than REPLACE.
      */
-    if (datatype == MPI_UNSIGNED_CHAR ||
-        datatype == MPI_UNSIGNED_SHORT ||
-        datatype == MPI_UNSIGNED ||
-        datatype == MPI_UNSIGNED_LONG ||
-        datatype == MPI_UNSIGNED_LONG_LONG ||
-        datatype == MPI_UINT8_T ||
-        datatype == MPI_UINT16_T || datatype == MPI_UINT32_T || datatype == MPI_UINT64_T) {
+    int mpir_type = datatype & MPIR_TYPE_TYPE_MASK;
+    int type_size = MPIR_Datatype_get_basic_size(datatype);
+
+    if (mpir_type == MPIR_TYPE_UNSIGNED) {
         return 0;
     }
 
-    if ((datatype == MPI_DOUBLE || datatype == MPI_C_DOUBLE_COMPLEX) &&
-        (!MPIR_CVAR_GPU_DOUBLE_SUPPORT))
-        return 0;
-    if ((datatype == MPI_LONG_DOUBLE || datatype == MPI_C_LONG_DOUBLE_COMPLEX) &&
-        (!MPIR_CVAR_GPU_LONG_DOUBLE_SUPPORT))
-        return 0;
+    if (mpir_type == MPIR_TYPE_FLOAT) {
+        if (!MPIR_CVAR_GPU_DOUBLE_SUPPORT && type_size == 8) {
+            return 0;
+        }
+        if (!MPIR_CVAR_GPU_LONG_DOUBLE_SUPPORT && type_size > 8) {
+            return 0;
+        }
+    }
 
-    if ((datatype == MPI_C_COMPLEX || datatype == MPI_C_DOUBLE_COMPLEX ||
-         datatype == MPI_C_LONG_DOUBLE_COMPLEX) && (!MPIR_CVAR_YAKSA_COMPLEX_SUPPORT))
+    if (mpir_type == MPIR_TYPE_COMPLEX) {
+        if (!MPIR_CVAR_YAKSA_COMPLEX_SUPPORT) {
+            return 0;
+        }
+    }
+
+    if ((mpir_type != MPIR_TYPE_SIGNED && mpir_type != MPIR_TYPE_UNSIGNED) &&
+        (op == MPI_LXOR || op == MPI_LAND || op == MPI_LOR)) {
         return 0;
-#ifdef HAVE_FORTRAN_BINDING
-    if ((datatype == MPI_COMPLEX || datatype == MPI_DOUBLE_COMPLEX || datatype == MPI_COMPLEX8 ||
-         datatype == MPI_COMPLEX16) && (!MPIR_CVAR_YAKSA_COMPLEX_SUPPORT))
-        return 0;
-    if (datatype == MPI_DOUBLE_COMPLEX && (!MPIR_CVAR_GPU_DOUBLE_SUPPORT))
-        return 0;
-#endif
-#ifdef HAVE_CXX_BINDING
-    if ((datatype == MPI_CXX_FLOAT_COMPLEX || datatype == MPI_CXX_DOUBLE_COMPLEX ||
-         datatype == MPI_CXX_LONG_DOUBLE_COMPLEX) && (!MPIR_CVAR_YAKSA_COMPLEX_SUPPORT))
-        return 0;
-    if (datatype == MPI_CXX_DOUBLE_COMPLEX && (!MPIR_CVAR_GPU_DOUBLE_SUPPORT))
-        return 0;
-    if (datatype == MPI_CXX_LONG_DOUBLE_COMPLEX && (!MPIR_CVAR_GPU_LONG_DOUBLE_SUPPORT))
-        return 0;
-#endif
-    if ((datatype == MPI_FLOAT || datatype == MPI_DOUBLE || datatype == MPI_LONG_DOUBLE) &&
-        (op == MPI_LXOR || op == MPI_LAND || op == MPI_LOR))
-        return 0;
+    }
 
     yaksa_op = MPII_Typerep_get_yaksa_op(op);
 
