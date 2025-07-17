@@ -102,7 +102,7 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
@@ -118,10 +118,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha:
             mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta:
             mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, coll_attr);
             break;
         default:
@@ -192,7 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
         .u.bcast.root = root,
     };
 
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     if (MPIR_CVAR_COLL_HYBRID_MEMORY) {
         cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
@@ -213,19 +213,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta:
             mpi_errno =
                 MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta:
             mpi_errno =
                 MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, coll_attr);
             break;
@@ -333,7 +333,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
                                                                       int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
     int num_leads = 0, node_comm_size = 0;
 
     MPIR_Csel_coll_sig_s coll_sig = {
@@ -356,22 +356,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
                                                         comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
                                                        comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
                                                         comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 MPIDI_Allreduce_fill_multi_leads_info(comm);
                 if (comm->node_comm)
@@ -527,7 +527,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size, data_size;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -560,7 +560,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha:
             /* make sure that the algo can be run */
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                 MPIDI_Allgather_fill_multi_leads_info(comm);
@@ -573,7 +573,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
                                                         recvbuf, recvcount, recvtype,
                                                         comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
                                            "Allgather composition beta cannot be applied.\n");
@@ -683,7 +683,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
                                              MPI_Datatype recvtype, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHERV,
@@ -711,7 +711,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Allgatherv_intra_composition_alpha(sendbuf, sendcount, sendtype,
                                                          recvbuf, recvcounts, displs,
@@ -736,7 +736,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
                                           int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTER,
@@ -763,7 +763,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Scatter_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcount, recvtype, root, comm, coll_attr);
@@ -787,7 +787,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
                                            int root, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV,
@@ -815,7 +815,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Scatterv_intra_composition_alpha(sendbuf, sendcounts, displs, sendtype,
                                                        recvbuf, recvcount, recvtype, root,
@@ -840,7 +840,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
                                          int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHER,
@@ -868,7 +868,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Gather_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                                      recvcount, recvtype, root, comm, coll_attr);
@@ -893,7 +893,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
                                           int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHERV,
@@ -921,7 +921,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Gatherv_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcounts, displs, recvtype, root,
@@ -978,7 +978,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
         data_size = recvcount * type_size;
     }
 
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALL,
@@ -1002,7 +1002,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                 MPIDI_Alltoall_fill_multi_leads_info(comm);
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
@@ -1015,7 +1015,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
                                                        coll_attr);
             break;
 
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
                                            "Alltoall composition beta cannot be applied.\n");
@@ -1124,7 +1124,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
                                             MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLV,
@@ -1153,7 +1153,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Alltoallv_intra_composition_alpha(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
@@ -1180,7 +1180,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
                                             int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLW,
@@ -1209,7 +1209,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Alltoallw_intra_composition_alpha(sendbuf, sendcounts, sdispls,
                                                         sendtypes, recvbuf, recvcounts,
@@ -1235,7 +1235,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
                                                                    int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE,
@@ -1258,17 +1258,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
                                                      root, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
                                                     root, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
                                                      root, comm, coll_attr);
@@ -1350,7 +1350,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
                                                  MPI_Op op, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER,
@@ -1375,7 +1375,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_scatter_intra_composition_alpha(sendbuf, recvbuf, recvcounts,
                                                              datatype, op, comm, coll_attr);
@@ -1398,7 +1398,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
                                                        MPI_Op op, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
@@ -1424,7 +1424,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_scatter_block_intra_composition_alpha(sendbuf, recvbuf, recvcount,
                                                                    datatype, op, comm, coll_attr);
@@ -1447,7 +1447,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
                                        int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCAN,
@@ -1471,12 +1471,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Scan_intra_composition_alpha(sendbuf, recvbuf, count,
                                                    datatype, op, comm, coll_attr);
             break;
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta:
             mpi_errno =
                 MPIDI_Scan_intra_composition_beta(sendbuf, recvbuf, count,
                                                   datatype, op, comm, coll_attr);
@@ -1499,7 +1499,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
                                          int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_Csel_container_s *cnt = NULL;
+    const MPII_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__EXSCAN,
@@ -1523,7 +1523,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     }
 
     switch (cnt->id) {
-        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha:
+        case MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Exscan_intra_composition_alpha(sendbuf, recvbuf, count,
                                                      datatype, op, comm, coll_attr);
