@@ -3923,6 +3923,14 @@ if test $GPU_SUPPORT = "CUDA" ; then
     fi
 fi
 
+if test $GPU_SUPPORT = "HIP" ; then
+    PAC_CHECK_HEADER_LIB_OPTIONAL([rccl], [rccl/rccl.h], [rccl], [ncclCommInitAll],, [-D__HIP_PLATFORM_AMD__])
+    if test "$pac_have_rccl" = "yes" ; then
+        have_ccl=yes
+        AC_DEFINE([ENABLE_RCCL], 1, [define if have librccl])
+    fi
+fi
+
 if test "$have_ccl" = "yes" ; then
     AC_DEFINE([ENABLE_CCLCOMM], 1, [define if have any ccls])
 fi
