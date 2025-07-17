@@ -185,92 +185,6 @@ static const char *devcollstr(void)
     return NULL;
 }
 
-static void *create_container(struct json_object *obj)
-{
-    MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
-
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
-
-        if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_delta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_beta"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_gamma"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoallv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoallw_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_beta"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Gather_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Gatherv_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scatter_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scatterv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_block_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Exscan_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha;
-        else {
-            fprintf(stderr, "unrecognized key %s\n", ckey);
-            MPIR_Assert(0);
-        }
-
-        MPL_free(ckey);
-    }
-
-    return (void *) cnt;
-}
-
 static int choose_netmod(void);
 
 static int choose_netmod(void)
@@ -561,11 +475,11 @@ int MPID_Init(int requested, int *provided)
     /* Initialize collective selection */
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
-                                              create_container, &MPIDI_global.csel_root);
+                                              MPII_Create_container, &MPIDI_global.csel_root);
         MPIDI_global.csel_source = "MPIDI_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
-                                               create_container, &MPIDI_global.csel_root);
+                                               MPII_Create_container, &MPIDI_global.csel_root);
         MPIDI_global.csel_source = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -573,11 +487,11 @@ int MPID_Init(int requested, int *provided)
     /* Initialize collective selection for gpu */
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
-                                              create_container, &MPIDI_global.csel_root_gpu);
+                                              MPII_Create_container, &MPIDI_global.csel_root_gpu);
         MPIDI_global.csel_source_gpu = "MPIDI_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU,
-                                               create_container, &MPIDI_global.csel_root_gpu);
+                                               MPII_Create_container, &MPIDI_global.csel_root_gpu);
         MPIDI_global.csel_source_gpu = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
     MPIR_ERR_CHECK(mpi_errno);
