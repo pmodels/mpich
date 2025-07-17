@@ -245,6 +245,9 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta,
     MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha,
 
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma,
+
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;
 
@@ -366,6 +369,14 @@ typedef struct {
                 int chunk_size;
                 int recv_pre_posted;
             } intra_pipelined_tree;
+            struct {
+                int k;
+                int tree_type;
+            } triggered_tagged;
+            struct {
+                int k;
+                int tree_type;
+            } triggered_rma;
         } bcast;
         struct {
             struct {
