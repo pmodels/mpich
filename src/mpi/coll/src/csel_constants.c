@@ -506,5 +506,10 @@ const char *Csel_container_type_str[] = {
     /* MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha */
     "MPIDI_Exscan_intra_composition_alpha",
 
+    /* MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged */
+    "MPIDI_OFI_Bcast_intra_triggered_tagged",
+    /* MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma */
+    "MPIDI_OFI_Bcast_intra_triggered_rma",
+
     /* MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count */ "END_OF_MPIR_ALGO"
 };
