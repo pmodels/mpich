@@ -893,6 +893,14 @@ if test "$have_gpu" = "no" ; then
     AC_SUBST([hip_CPPFLAGS])
     AC_SUBST([hip_LDFLAGS])
     AC_SUBST([hip_LIBS])
+
+    if test "$pac_have_hip" = "yes" ; then
+        PAC_CHECK_HEADER_LIB_OPTIONAL([rccl], [rccl/rccl.h], [rccl], [ncclCommInitAll],, [-D__HIP_PLATFORM_AMD__])
+        if test "$pac_have_rccl" = "yes" ; then
+            have_ccl=yes
+            AC_DEFINE([ENABLE_RCCL], 1, [define if have librccl])
+        fi
+    fi
 fi
 AM_CONDITIONAL([HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
 

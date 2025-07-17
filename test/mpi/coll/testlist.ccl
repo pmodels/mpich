@@ -4,3 +4,8 @@ allred 4 arg=-counts=10,100 arg=-oddmemtype=device arg=-evenmemtype=device env=M
 allred 7 arg=-counts=10 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=nccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
 allred2 4 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=nccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
 allred2 12 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=nccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
+
+~ allred 4 arg=-counts=10,100 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=rccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
+~ allred 7 arg=-counts=10 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=rccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
+~ allred2 4 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=rccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
+~ allred2 12 arg=-oddmemtype=device arg=-evenmemtype=device env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=ccl env=MPIR_CVAR_ALLREDUCE_CCL=rccl env=MPIR_CVAR_ENABLE_GPU=1 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
