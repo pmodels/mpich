@@ -21,7 +21,6 @@
 #include "shmpre.h"
 #endif
 #include "uthash.h"
-#include "ch4_csel_container.h"
 
 #define MPID_TAG_DEV_BITS 0
 #define MPID_MAX_BC_SIZE 4096

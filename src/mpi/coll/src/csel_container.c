@@ -395,6 +395,20 @@ void *MPII_Create_container(struct json_object *obj)
             if (!matched) {
                 MPIR_Assert(0);
             }
+        } else if (!strncmp(ckey, "composition=", strlen("composition="))) {
+            char *str = ckey + strlen("composition=");
+
+            bool matched = false;
+            for (int idx = 0; idx < MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count; idx++) {
+                if (strcmp(str, Csel_container_type_str[idx]) == 0) {
+                    cnt->id = idx;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                MPIR_Assert(0);
+            }
         } else {
             fprintf(stderr, "unrecognized key %s\n", key);
             MPIR_Assert(0);
