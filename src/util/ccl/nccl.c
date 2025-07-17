@@ -29,8 +29,8 @@ static int MPIR_NCCLcomm_init(MPIR_Comm * comm_ptr, int rank)
         ncclGetUniqueId(&(ncclcomm->id));
     }
 
-    mpi_errno = MPIR_Bcast_impl(&(ncclcomm->id), sizeof(ncclcomm->id), MPIR_UINT8, 0, comm_ptr,
-                                MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast(&(ncclcomm->id), sizeof(ncclcomm->id), MPIR_UINT8, 0, comm_ptr,
+                           MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     ret = cudaStreamCreate(&(ncclcomm->stream));
@@ -151,6 +151,7 @@ static int MPIR_NCCL_get_datatype(MPI_Datatype dtype, ncclDataType_t * nccl_dtyp
             break;
         case MPIR_FLOAT16:
             *nccl_dtype = ncclFloat16;
+            break;
         case MPIR_FLOAT32:
             *nccl_dtype = ncclFloat32;
             break;
