@@ -77,7 +77,6 @@ cvars:
 #ifndef CH4_COLL_IMPL_H_INCLUDED
 #define CH4_COLL_IMPL_H_INCLUDED
 
-#include "ch4_csel_container.h"
 #include "ch4_comm.h"
 #include "algo_common.h"
 
