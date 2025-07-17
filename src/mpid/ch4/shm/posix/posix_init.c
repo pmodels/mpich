@@ -56,7 +56,6 @@ cvars:
 
 #include "posix_eager.h"
 #include "posix_noinline.h"
-#include "posix_csel_container.h"
 #include "mpidu_genq.h"
 
 #include "utarray.h"
@@ -119,39 +118,6 @@ static int choose_posix_eager(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static void *create_container(struct json_object *obj)
-{
-    MPIDI_POSIX_csel_container_s *cnt =
-        MPL_malloc(sizeof(MPIDI_POSIX_csel_container_s), MPL_MEM_COLL);
-
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
-
-        if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_ipc_read"))
-            cnt->id = MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
-        else {
-            fprintf(stderr, "unrecognized key %s\n", key);
-            MPIR_Assert(0);
-        }
-
-        MPL_free(ckey);
-    }
-
-    return cnt;
 }
 
 int MPIDI_POSIX_init_vci(int vci)
@@ -413,26 +379,27 @@ static int posix_coll_init(void)
 
     /* Initialize collective selection */
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE, "")) {
-        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
-                                              create_container, &MPIDI_global.shm.posix.csel_root);
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json, MPII_Create_container,
+                                              &MPIDI_global.shm.posix.csel_root);
         MPIDI_global.shm.posix.csel_source = "MPIDI_POSIX_coll_generic_json";
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE,
-                                               create_container, &MPIDI_global.shm.posix.csel_root);
+                                               MPII_Create_container,
+                                               &MPIDI_global.shm.posix.csel_root);
         MPIDI_global.shm.posix.csel_source = MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collective selection for gpu */
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
-        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
-                                              create_container,
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json, MPII_Create_container,
                                               &MPIDI_global.shm.posix.csel_root_gpu);
         MPIDI_global.shm.posix.csel_source_gpu = "MPIDI_POSIX_coll_generic_json";
     } else {
         mpi_errno =
             MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
-                                       create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+                                       MPII_Create_container,
+                                       &MPIDI_global.shm.posix.csel_root_gpu);
         MPIDI_global.shm.posix.csel_source_gpu =
             MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
