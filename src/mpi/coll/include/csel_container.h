@@ -204,6 +204,17 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatter_allcomm_nb,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb,
+
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_impl,
+
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;
 
