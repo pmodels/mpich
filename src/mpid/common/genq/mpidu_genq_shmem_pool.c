@@ -128,6 +128,7 @@ int MPIDU_genq_shmem_pool_create(void *slab, int slab_size,
     pool_obj->rank = rank;
     pool_obj->gpu_registered = false;
     pool_obj->slab = slab;
+    pool_obj->slab_size = slab_size;
 
     /* the global_block_index is at the end of the slab to avoid extra need of alignment */
     int total_cells_size = num_proc * num_free_queue * cells_per_free_queue
@@ -184,12 +185,7 @@ int MPIDU_genqi_shmem_pool_register(MPIDU_genqi_shmem_pool_s * pool_obj)
 
     MPIR_FUNC_ENTER;
 
-    int total_cells_size =
-        pool_obj->num_proc * pool_obj->cells_per_free_queue * pool_obj->cell_alloc_size;
-    int free_queue_size = pool_obj->num_proc * sizeof(MPIDU_genq_shmem_queue_u);
-    uintptr_t slab_size = total_cells_size + free_queue_size;
-
-    rc = MPIR_gpu_register_host(pool_obj->slab, slab_size);
+    rc = MPIR_gpu_register_host(pool_obj->slab, pool_obj->slab_size);
     MPIR_ERR_CHECK(rc);
     pool_obj->gpu_registered = true;
 
