@@ -57,6 +57,12 @@ int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     MPIR_Request *sreq = hdr->sreq;
     MPIDIG_REQUEST(sreq, u.ipc.peer_req) = hdr->rreq;
+    if (MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) == MPIDI_IPCI_TYPE__NONE) {
+        /* convert the request for ipc */
+        MPIDIG_REQUEST(sreq, u.ipc.peer_rank) = MPIDIG_REQUEST(sreq, u.send.dest);
+        MPIDIG_REQUEST(sreq, u.ipc.peer_req) = hdr->rreq;
+        MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = NULL;
+    }
     /* ipc write only for gpu, for now */
     MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
