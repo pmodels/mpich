@@ -444,7 +444,7 @@ sub LoadTests {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
                     my $key = $1;
                     my $value = $2;
-                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem|gpu)$/) {
+                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem)$/) {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
