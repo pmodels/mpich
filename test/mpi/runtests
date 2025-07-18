@@ -73,7 +73,6 @@ $g_opt{memory_total} = 4;       # Total memory in GB
 $g_opt{memory_multiplier} = 1;  # No of simultaneous jobs
 $g_opt{cleanup} = 1;            # Whether to remove the compiled programs
 $g_opt{start_time} = time();    # So we can track accumulative test duration
-$g_opt{has_gpu_test} = 0;       # will set MPIR_CVAR_ENABLE_GPU for optimizations
 $g_opt{strict} = 0;             # will skip tests marked as "strict=false"
 $g_opt{runxfail} = 0;           # will run xfailed tests
 $g_opt{exeext} = "";
@@ -302,10 +301,6 @@ OpenOutputs();
 #
 # Process any files
 
-if ($g_opt{listfiles} =~ /testlist\.gpu/) {
-    $g_opt{has_gpu_test} = 1;
-}
-
 my @all_tests;
 if ($g_opt{listfiles} eq "") {
     if ($g_opt{batchRun}) {
@@ -444,23 +439,12 @@ sub LoadTests {
 
             if ($#args >= 1) { $np = $args[1]; }
 
-            # global env for GPU feature, can be overridden by per-test envs
-            if ($g_opt{has_gpu_test}) {
-                if ($test_opt->{gpu}) {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\bcuda$/) {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                } else {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
-                }
-            }
-
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
                     my $key = $1;
                     my $value = $2;
-                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem|gpu)$/) {
+                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem)$/) {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
