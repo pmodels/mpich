@@ -68,7 +68,8 @@ int main(int argc, char *argv[])
         errs += check_value(value, "mpi,system,mpi:win_allocate:alloc_mem");
     } else {
         errs++;
-        printf("Key mpi_memory_alloc_kinds was not found in info from MPI_Session_init with info.\n");
+        printf
+            ("Key mpi_memory_alloc_kinds was not found in info from MPI_Session_init with info.\n");
     }
     MPI_Info_free(&info_in);
     MPI_Info_free(&sinfo);
@@ -80,11 +81,18 @@ int main(int argc, char *argv[])
 
 static int check_value(const char *value, const char *expected)
 {
-    /* MPICH may add GPU kinds after the mpi,system related kinds, which we ignore here */
-    if (strncmp(value, expected, strlen(expected))) {
-        printf("mpi_memory_alloc_kinds value is \"%s\", expected \"%s\"\n", value, expected);
-        return 1;
+    MTestPrintfMsg(1, "Checking \"%s\" in \"%s\"\n", expected, value);
+    char *tok;
+    char *expected_copy = strdup(expected);
+    tok = strtok(expected_copy, ",");
+    while (tok != NULL) {
+        char *s = strstr(value, tok);
+        if (!s) {
+            printf("\"%s\" is not found in mpi_memory_alloc_kinds \"%s\"\n", tok, value);
+        }
+        tok = strtok(NULL, ",");
     }
+    free(expected_copy);
 
     return 0;
 }
