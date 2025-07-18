@@ -60,6 +60,7 @@ enum {
     MPIDIG_COMM_ABORT,
 
     MPIDI_IPC_ACK,
+    MPIDI_IPC_WRITE,
 
     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
     MPIDI_OFI_AM_RDMA_READ_ACK,
@@ -71,6 +72,7 @@ enum {
 enum {
     MPIDIG_RNDV_GENERIC = 0,
     MPIDIG_RNDV_IPC,
+    MPIDIG_RNDV_GENERIC_IPC,    /* used in IPC send to allow potential IPC write path */
 
     MPIDIG_RNDV_STATIC_MAX
 };

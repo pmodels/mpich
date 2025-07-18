@@ -49,12 +49,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CMA_get_ipc_attr(const void *buf, MPI_Aint co
     if (MPIR_CVAR_CH4_CMA_ENABLE) {
         MPI_Aint data_sz, num_blocks;
         if (HANDLE_IS_BUILTIN(datatype)) {
-            data_sz = MPIR_Datatype_get_basic_size(datatype);
+            data_sz = count * MPIR_Datatype_get_basic_size(datatype);
             num_blocks = 1;
         } else {
             MPIR_Datatype *dt_ptr;
             MPIR_Datatype_get_ptr(datatype, dt_ptr);
-            data_sz = dt_ptr->size;
+            data_sz = count * dt_ptr->size;
             if (dt_ptr->is_contig) {
                 num_blocks = 1;
             } else {
