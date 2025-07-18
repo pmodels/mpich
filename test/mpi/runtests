@@ -448,7 +448,7 @@ sub LoadTests {
             if ($g_opt{has_gpu_test}) {
                 if ($test_opt->{gpu}) {
                     push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\bcuda$/) {
+                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\b(?:cuda|hip)$/) {
                     push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
                 } else {
                     push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
