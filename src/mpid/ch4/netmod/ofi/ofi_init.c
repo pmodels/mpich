@@ -879,8 +879,10 @@ int MPIDI_OFI_flush_send_queue(void)
 
     /* Apparently by sending self messages can flush the send queue */
     int rank = MPIR_Process.rank;
+    int in_vci_cs = -1;
     for (int vci = 0; vci < num_vcis; vci++) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+        in_vci_cs = vci;
 
         MPIDI_OFI_dynamic_process_request_t reqs[2];
         mpi_errno = flush_send(rank, 0, vci, &reqs[0]);
@@ -899,6 +901,9 @@ int MPIDI_OFI_flush_send_queue(void)
   fn_exit:
     return mpi_errno;
   fn_fail:
+    if (in_vci_cs != -1) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(in_vci_cs));
+    }
     goto fn_exit;
 }
 
