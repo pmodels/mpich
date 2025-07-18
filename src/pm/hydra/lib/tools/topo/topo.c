@@ -14,7 +14,7 @@ struct HYDT_topo_info HYDT_topo_info;
 
 static int ignore_binding = 0;
 
-HYD_status HYDT_topo_init(char *user_topolib, int topo_debug)
+HYD_status HYDT_topo_init(char *user_topolib, int debug, int report_bindings)
 {
     const char *topolib = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -33,7 +33,8 @@ HYD_status HYDT_topo_init(char *user_topolib, int topo_debug)
         HYDT_topo_info.topolib = NULL;
     }
 
-    HYDT_topo_info.debug = topo_debug;
+    HYDT_topo_info.debug = debug;
+    HYDT_topo_info.report_bindings = report_bindings;
 
     HYDU_FUNC_EXIT();
     return status;

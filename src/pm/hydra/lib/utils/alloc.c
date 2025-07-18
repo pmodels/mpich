@@ -13,6 +13,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
 
     user_global->binding = NULL;
     user_global->topolib = NULL;
+    user_global->report_bindings = -1;
 
     user_global->demux = NULL;
     user_global->iface = NULL;
