@@ -514,7 +514,6 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
-#ifndef MPID_SESSION_USE_WORLD
 static int calc_context_id(MPIR_Group * group_ptr, const char *stringtag)
 {
     unsigned hash1, hash2, hash3;
@@ -527,7 +526,6 @@ static int calc_context_id(MPIR_Group * group_ptr, const char *stringtag)
     }
     return (hash1 ^ hash2 ^ hash3) & ((1 << MPIR_CONTEXT_ID_BITS) - 1);
 }
-#endif
 
 int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringtag,
                                      MPIR_Info * info_ptr, MPIR_Errhandler * errhan_ptr,
@@ -539,65 +537,72 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     int tag = get_tag_from_stringtag(stringtag);
 
 #ifdef MPID_SESSION_USE_WORLD
-    MPL_initlock_lock(&MPIR_init_lock);
-    if (!MPIR_Process.comm_world) {
-        /* !! require collective over all processes */
-        mpi_errno = MPIR_init_comm_world();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    MPL_initlock_unlock(&MPIR_init_lock);
-
-    mpi_errno = MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+    int use_comm_world = 1;
 #else
-    MPIR_Comm *new_comm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
-    MPIR_ERR_CHKANDJUMP(!new_comm, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    int use_comm_world = MPIR_CVAR_PMI_DISABLE_GROUP;
+#endif
+    if (use_comm_world) {
+        MPL_initlock_lock(&MPIR_init_lock);
+        if (!MPIR_Process.comm_world) {
+            /* !! require collective over all processes */
+            mpi_errno = MPIR_init_comm_world();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        MPL_initlock_unlock(&MPIR_init_lock);
 
-    mpi_errno = MPII_Comm_init(new_comm);
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno =
+            MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIR_Comm *new_comm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
+        MPIR_ERR_CHKANDJUMP(!new_comm, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
-    new_comm->stringtag = stringtag;
-    new_comm->context_id = MPIR_CONTEXT_DYNAMIC_PROC_MASK | calc_context_id(group_ptr, stringtag);
-    new_comm->recvcontext_id = new_comm->context_id;
-    new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-    new_comm->rank = group_ptr->rank;
-    new_comm->local_size = group_ptr->size;
-    new_comm->remote_size = new_comm->local_size;
-    new_comm->local_group = group_ptr;
-    MPIR_Group_add_ref(group_ptr);
-    MPIR_Comm_set_session_ptr(new_comm, group_ptr->session_ptr);
+        mpi_errno = MPII_Comm_init(new_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Comm_commit(new_comm);
-    MPIR_ERR_CHECK(mpi_errno);
+        new_comm->attr |= MPIR_COMM_ATTR__BOOTSTRAP;
+        new_comm->stringtag = stringtag;
+        new_comm->context_id =
+            MPIR_CONTEXT_DYNAMIC_PROC_MASK | calc_context_id(group_ptr, stringtag);
+        new_comm->recvcontext_id = new_comm->context_id;
+        new_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+        new_comm->rank = group_ptr->rank;
+        new_comm->local_size = group_ptr->size;
+        new_comm->remote_size = new_comm->local_size;
+        new_comm->local_group = group_ptr;
+        MPIR_Group_add_ref(group_ptr);
+        MPIR_Comm_set_session_ptr(new_comm, group_ptr->session_ptr);
 
-    /* allocate a new context id */
-    int new_context_id;
-    mpi_errno = MPIR_Get_contextid_sparse_group(new_comm, group_ptr, tag, &new_context_id, 0);
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIR_Comm_commit(new_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    new_comm->context_id = new_context_id;
-    new_comm->recvcontext_id = new_comm->context_id;
-    if (new_comm->node_comm) {
-        new_comm->node_comm->context_id = new_context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
-        new_comm->node_comm->recvcontext_id = new_comm->node_comm->context_id;
-    }
-    if (new_comm->node_roots_comm) {
-        new_comm->node_roots_comm->context_id = new_context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
-        new_comm->node_roots_comm->recvcontext_id = new_comm->node_roots_comm->context_id;
+        /* allocate a new context id */
+        int new_context_id;
+        mpi_errno = MPIR_Get_contextid_sparse_group(new_comm, group_ptr, tag, &new_context_id, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        new_comm->context_id = new_context_id;
+        new_comm->recvcontext_id = new_comm->context_id;
+        if (new_comm->node_comm) {
+            new_comm->node_comm->context_id = new_context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+            new_comm->node_comm->recvcontext_id = new_comm->node_comm->context_id;
+        }
+        if (new_comm->node_roots_comm) {
+            new_comm->node_roots_comm->context_id = new_context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+            new_comm->node_roots_comm->recvcontext_id = new_comm->node_roots_comm->context_id;
+        }
+        new_comm->stringtag = NULL;
+
+        *p_newcom_ptr = new_comm;
     }
 
     if (info_ptr) {
-        MPII_Comm_set_hints(new_comm, info_ptr, true);
+        MPII_Comm_set_hints(*p_newcom_ptr, info_ptr, true);
     }
 
     if (errhan_ptr) {
-        MPIR_Comm_set_errhandler_impl(new_comm, errhan_ptr);
+        MPIR_Comm_set_errhandler_impl(*p_newcom_ptr, errhan_ptr);
     }
-
-    new_comm->stringtag = NULL;
-    *p_newcom_ptr = new_comm;
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;
