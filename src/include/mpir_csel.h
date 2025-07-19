@@ -57,6 +57,14 @@ typedef enum {
     MPIR_CSEL_COLL_TYPE__END,
 } MPIR_Csel_coll_type_e;
 
+typedef enum {
+    MPIR_CSEL_COMM_HIERARCHY__FLAT = 0,
+    MPIR_CSEL_COMM_HIERARCHY__NODE,
+    MPIR_CSEL_COMM_HIERARCHY__NODE_ROOTS,
+    MPIR_CSEL_COMM_HIERARCHY__PARENT,
+    MPIR_CSEL_COMM_HIERARCHY__END,
+} MPIR_Csel_comm_hierarchy_e;
+
 typedef struct {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
