@@ -124,6 +124,10 @@
 **pmix_load_topo %d: PMIx_Load_topology failed with error %d
 **pmix_unknown_topo: PMIx_Load_topology returns unknown topology
 **pmix_unknown_topo %s: PMIx_Load_topology returns unknown topology with error %s
+**pmix_register_event_handler:PMIX_Register_event_handler failed
+**pmix_register_event_handler %s:PMIX_Register_event_handler returned %s
+**pmix_deregister_event_handler:PMIX_Deregister_event_handler failed
+**pmix_deregister_event_handler %s:PMIX_Deregister_event_handler returned %s
 #
 # PMI finalize exit handler registration
 #

@@ -130,4 +130,7 @@ typedef struct MPIR_pmi_topology {
 int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo);
 #endif
 
+int MPIR_pmi_pset_event_init(void);
+int MPIR_pmi_pset_event_finalize(void);
+
 #endif /* MPIR_PMI_H_INCLUDED */
