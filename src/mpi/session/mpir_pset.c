@@ -75,8 +75,15 @@ int MPIR_Pset_init(void)
 
     utarray_new(pset_array, &pset_array_icd, MPL_MEM_GROUP);
     MPID_Thread_mutex_create(&pset_mutex, &mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_pmi_pset_event_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Finalize global external pset facilities */
@@ -84,10 +91,17 @@ int MPIR_Pset_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    mpi_errno = MPIR_pmi_pset_event_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
     utarray_free(pset_array);
     MPID_Thread_mutex_destroy(&pset_mutex, &mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Add an external pset to the global list (thread-safe)
