@@ -1189,3 +1189,17 @@ static int parse_coord_file(const char *filename)
     fclose(coords_file);
     goto fn_fail;
 }
+
+int MPIR_pmi_pset_event_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    SWITCH_PMI(break, break, mpi_errno = pmix_register_event_handlers());
+    return mpi_errno;
+}
+
+int MPIR_pmi_pset_event_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    SWITCH_PMI(break, break, mpi_errno = pmix_deregister_event_handlers());
+    return mpi_errno;
+}

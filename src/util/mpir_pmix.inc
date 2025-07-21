@@ -35,6 +35,11 @@ static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const in
                            size_t * njob_info);
 static int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank);
 
+/* For PMIx Psets */
+static int pmix_pset_define_hdlr = -1;
+static int pmix_register_event_handlers(void);
+static int pmix_deregister_event_handlers(void);
+
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -986,6 +991,184 @@ int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int pa
     goto fn_exit;
 }
 
+static
+void pmix_pset_define_callback(size_t refid, pmix_status_t status, const pmix_proc_t * source,
+                               pmix_info_t * info, size_t ninfo, pmix_info_t * results,
+                               size_t nresults, pmix_event_notification_cbfunc_fn_t cbfunc,
+                               void *cbdata)
+{
+    pmix_status_t cb_status = PMIX_EVENT_ACTION_COMPLETE;
+    int mpi_errno = MPI_SUCCESS;
+    char *pset_name = NULL;
+    pmix_proc_t *membership = NULL;
+
+    int group_rank = -1;
+    int group_size = 0;
+    int i;
+
+    MPIR_Pset *new_pset = NULL;
+    MPIR_Lpid *lpids = NULL;
+
+    /* Extract pset name and membership from the info object */
+    for (i = 0; i < ninfo; i++) {
+        if (PMIX_CHECK_KEY(&(info[i]), PMIX_PSET_NAME)) {
+            pset_name = info[i].value.data.string;
+        } else if (PMIX_CHECK_KEY(&(info[i]), PMIX_PSET_MEMBERS)) {
+            membership = (pmix_proc_t *) info[i].value.data.darray->array;
+            MPIR_Assert(info[i].value.data.darray->size <= INT_MAX);
+            group_size = (int) info[i].value.data.darray->size;
+            MPIR_Assert(group_size >= 0);
+        }
+        if (pset_name && membership) {
+            break;
+        }
+    }
+
+    /* ##### Sanitiy checks */
+
+    if ((pset_name == NULL) || (membership == NULL)) {
+        /* Error in pmix info data */
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                 "Error in PMIx info data in pset define cb."));
+        cb_status = PMIX_EVENT_NO_ACTION_TAKEN;
+        goto fn_exit;
+    }
+
+    if (group_size == 0) {
+        /* Prevent adding empty psets (no error) */
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST, "Pset '%s' is empty, skipped.",
+                                                 pset_name));
+        goto fn_exit;
+    }
+
+    /* Check if this process is in the pset */
+    for (i = 0; i < group_size; i++) {
+        if (PMIX_CHECK_PROCID(&(membership[i]), &pmix_proc)) {
+            group_rank = i;
+            break;
+        }
+    }
+
+    if (group_rank < 0) {
+        /* If this process is not in the pset, there is nothing todo for us. */
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                 "Not a member of pset '%s', skipped.",
+                                                 pset_name));
+        goto fn_exit;
+    }
+
+     /* ##### End of sanitiy checks */
+
+    /* Create lpids for new MPIR_Group/Pset  */
+    lpids = (MPIR_Lpid *) MPL_malloc(group_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+    if (lpids == NULL) {
+        /* malloc error */
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                 "Malloc error for lpids in pset define cb for pset '%s'.",
+                                                 pset_name));
+        cb_status = PMIX_EVENT_NO_ACTION_TAKEN;
+        goto fn_exit;
+    }
+    for (i = 0; i < group_size; i++) {
+        pmix_proc_t proc = membership[i];
+        int world_idx = MPIR_find_world(proc.nspace);
+        if (world_idx < 0) {
+            /* TODO: proc is in unknown world */
+            MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                     "pset '%s' includes process from unknown world; namespace: %s. \
+                                                     This is not supported yet and the pset is ignored.", pset_name, proc.nspace));
+            goto fn_exit;
+        }
+        MPIR_Assert(proc.rank <= INT_MAX);
+        lpids[i] = MPIR_LPID_FROM(world_idx, (int) proc.rank);
+    }
+
+    /* Create the new pset */
+    new_pset = (MPIR_Pset *) MPL_malloc(sizeof(MPIR_Pset), MPL_MEM_GROUP);
+    new_pset->name = MPL_strdup(pset_name);
+    mpi_errno = MPIR_Group_create_map(group_size, group_rank, NULL,
+                                      lpids, &(new_pset->group));
+    if (mpi_errno != MPI_SUCCESS) {
+        cb_status = PMIX_EVENT_NO_ACTION_TAKEN;
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                 "Error creating group for pset '%s'.", pset_name));
+        goto fn_exit;
+    }
+
+    /* Add the new pset */
+    if (!MPIR_Pset_add(new_pset)) {
+        cb_status = PMIX_EVENT_NO_ACTION_TAKEN;
+        MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
+                                                 "Pset '%s' already exists, not added again.",
+                                                 pset_name));
+        goto fn_exit;
+    }
+
+  fn_exit:
+    if ((lpids != NULL) && (new_pset == NULL))
+        MPL_free(lpids);
+    if (new_pset != NULL) {
+        if (new_pset->name) {
+            MPL_free(new_pset->name);
+        }
+        if (new_pset->group) {
+            MPIR_Group_free_impl(new_pset->group);
+        }
+        MPL_free(new_pset);
+    }
+
+    /* If a callback function is provided, we have to call it.
+     * We cannot treat errors here, but we can give a hint via cbfunc status that something went wrong */
+    if (NULL != cbfunc) {
+        cbfunc(cb_status, NULL, 0, NULL, NULL, cbdata);
+    }
+
+    return;
+}
+
+static
+int pmix_register_event_handlers(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    pmix_status_t pmi_errno = PMIX_SUCCESS;
+    pmix_status_t code;
+
+    /* Register pset define handler */
+    if (pmix_pset_define_hdlr < 0) {
+        code = PMIX_PROCESS_SET_DEFINE;
+        pmi_errno = PMIx_Register_event_handler(&code, 1, NULL, 0, pmix_pset_define_callback, NULL, NULL);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno < 0, mpi_errno,
+                             MPI_ERR_OTHER, "**pmix_register_event_handler",
+                             "**pmix_register_event_handler %s", PMIx_Error_string(pmi_errno));
+        pmix_pset_define_hdlr = (int) pmi_errno;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static
+int pmix_deregister_event_handlers(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    pmix_status_t pmi_errno = PMIX_SUCCESS;
+
+    if (pmix_pset_define_hdlr >= 0) {
+        pmi_errno = PMIx_Deregister_event_handler((size_t) pmix_pset_define_hdlr, NULL, NULL);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_deregister_event_handler", "**pmix_deregister_event_handler %s",
+                             PMIx_Error_string(pmi_errno));
+        pmix_pset_define_hdlr = -1;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #else /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
@@ -1092,6 +1275,16 @@ static int pmix_lookup(const char name[], char port[], int port_len)
 }
 
 static int pmix_unpublish(const char name[])
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmix_register_event_handlers(void)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmix_deregister_event_handlers(void)
 {
     return MPI_ERR_INTERN;
 }
