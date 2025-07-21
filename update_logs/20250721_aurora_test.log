@@ -1,0 +1,59 @@
+UPDATE aurora_test dd1ba19426 8272b54768
+
+    current aurora_test HEAD 7548964cc8
+
+c2afda48d8 2025-06-13 romio: fix quobyte build error0e59419890 2025-07-07 mpir/pmi: fix a bug in getting fabric coordinates
+70dedf9027 2025-06-27 mpir/pmi: Remove support for internal PMIx
+b37c214a74 2025-06-27 pmi: Remove PMIx implementation
+0f51887c08 2025-04-23 coll: shortcut in MPIR_Allgather_intra_smp_no_order
+ba74472f78 2025-04-30 session: set errhandler in MPIR_Session_init_impl
+9897ffe577 2025-03-21 session: implement psets per session
+17be59fb7b 2025-04-07 comm: add MPIR_COMM_ATTR__BOOTSTRAP
+2706cd38b2 2025-04-22 ch4/ofi: remove comm_world from MPIDI_OFI_comm_set_vcis
+38ea0241bb 2025-04-22 ch4/ipc_win: remove unreferenced ranks_in_shm_grp
+a90f26ff52 2025-04-22 ch4/mpidig_win: do not assume comm_world exist
+180eb99dc5 2025-04-22 ch4: comm_world is no longer special
+bb03b7cdd3 2025-04-22 comm: reserve MPIR_CTXID_BOOTSTRAP
+4aa86fc5e4 2025-04-22 comm: re-implement MPIR_Comm_create_from_group_impl
+317e52018d 2025-04-23 comm: MPI_Intercomm_create_from_groups without comm_world
+2f2f4b3441 2025-06-10 misc: support stringtag in comm bootstrapping
+e8c84bf81d 2025-06-18 mpid: add MPID_SESSION_USE_WORLD
+11895ac0c9 2025-04-23 test: add test session/session_4x4
+b668ab41d2 2025-04-23 test: add test for MPI_Intercomm_create_from_groups
+1283703be0 2025-05-16 test: remove dependency on MPI_COMM_WORLD in MTestGetIntercomm
+26bcc46c68 2025-05-13 comm: fix memory error in create_peer_comm
+ccbf8c7039 2025-05-13 session: check ref_count in MPIR_Session_finalize_impl
+5dfb5c5673 2025-06-05 mpir/pmi: add MPIR_CVAR_PMI_DISABLE_GROUP
+4c56c2c4ee 2025-06-19 pmi/v1: reserve enough space for group string
+a3806a970f 2025-06-19 pmi: fix a memory leak in cmd_read_expect
+aed8d2012b 2025-06-21 Revert "comm: reserve MPIR_CTXID_BOOTSTRAP"
+a727203227 2025-06-21 comm: use unique dynamic context_id in comm bootstrap
+598a05c0f9 2025-06-22 session: missing global CS in session_init
+864c2c6013 2025-06-22 hydra: suppress warnings freeing barrier name
+fb4db6bee2 2025-06-26 shm: fix initshm unlinking
+ed1c554a36 2025-07-08 mpir/pmix: do not call explicit PMIx_Progress
+9d7d77388a 2025-07-11 ch4/ofi: add thread CS in MPIDI_OFI_flush_send_queue
+7dd97babab 2025-07-11 ch4/ofi: refactor MPIDI_OFI_flush_send_queue
+2729188ba3 2025-07-11 ch4: use fallback collectives during init or bootstrap
+2c1be81ccd 2025-07-11 ch4: fix am_fallback_recv
+8fe32eba2d 2025-06-24 coll: Use standard allreduce tag in blocking algorithms
+6b9e846d79 2025-06-26 coll: Use more concise error checking macros
+4097039371 2025-06-26 coll: Use MPI_Aint for datatype size or extent
+f96e18525a 2025-07-14 coll: Remove unnecessary header include
+c0b2a88ce4 2025-07-03 ch4/ofi: fix potential mismatch in dynamic_sendrecv
+97f1143008 2025-07-11 ch4/ofi: move and group static routines
+6f4d970778 2025-07-11 ch4/ofi: separate the tag space in dynamic send/recv
+9646a5bee3 2025-07-10 pm/hydra: Add support for -report-bindings flag
+f82308bdfe 2025-07-11 pm/hydra: Make process bindings output standalone
+88a697226c 2025-07-07 test/bench: add p2p_one
+2c495acf25 2025-07-07 ch4/ipc/cma: fix calculation of data_sz
+2c103b6e9a 2025-07-02 ch4/ipc: refactor filling ipc header
+974beb5739 2025-07-07 ch4/ipc: pass ipc_attr by pointer in MPIDI_IPCI_send_lmt
+93bff4271f 2025-07-07 ch4/ipc: add req to MPIDI_GPU_fill_ipc_handle
+3fc65c6974 2025-07-03 ch4/ipc: extend ipc with ipc write
+99922b3ab3 2025-07-07 ch4/ipc: refactor request fields for ipc
+d7132afcec 2025-07-07 ch4/ipc: add IPC write path in generic RNDV
+5fe26268a2 2025-07-10 fixup! test/bench: add p2p_one
+4988e66f50 2025-07-18 genq: fix gpu register of shmem slab with wrong size
+de0d4828f3 2025-07-18 ch4/ofi: fix leak of critical sections in flush_send_queue
+d01509123d 2025-06-24 romio/gpfs: fix a datatype to avoid integer overflow
