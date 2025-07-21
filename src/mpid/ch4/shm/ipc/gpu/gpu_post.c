@@ -752,7 +752,7 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
         mpi_errno = MPIR_Typerep_unflatten(dt_ptr, flattened_type);
         MPIR_ERR_CHECK(mpi_errno);
 
-        src_count = ipc_hdr->count;
+        dst_count = ipc_hdr->count;
         dst_datatype = dt_ptr->handle;
         /* remember the flattened type so we can free it later */
         MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = dt_ptr;
