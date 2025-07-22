@@ -557,7 +557,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         }
     }
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_init &&
+    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_init && !is_am && !do_gpu_pipelining &&
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
         do_inject = true;
     }
@@ -604,8 +604,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     uint64_t match_bits;
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_am &&
-        (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
+    if (do_inject) {
         /* inject path */
         void *pack_buf = NULL;
         if (need_pack) {
