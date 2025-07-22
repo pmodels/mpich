@@ -83,6 +83,10 @@ int MPIDI_XPMEM_comm_bootstrap(MPIR_Comm * comm)
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL();
 
+    if (!MPIR_CVAR_CH4_XPMEM_ENABLE) {
+        goto fn_exit;
+    }
+
     int local_size = comm->num_local;
     if (local_size > 1) {
         /* NOTE: always run Allgather in case some process disable XPMEM inconsistently */
