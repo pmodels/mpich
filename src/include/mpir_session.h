@@ -18,6 +18,7 @@ struct MPIR_Session {
     char *memory_alloc_kinds;
     int num_psets;
     struct MPIR_Pset *psets;
+    unsigned global_pset_idx;
 };
 
 extern MPIR_Object_alloc_t MPIR_Session_mem;
