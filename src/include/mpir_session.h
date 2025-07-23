@@ -8,11 +8,6 @@
 
 #include "mpiimpl.h"
 
-typedef struct MPIR_Pset {
-    char *name;
-    struct MPIR_Group *group;
-} MPIR_Pset;
-
 /* Session structure */
 struct MPIR_Session {
     MPIR_OBJECT_HEADER;
@@ -64,4 +59,4 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
 int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
                            MPIR_Session ** session_ptr);
 
-#endif /* MPIR_SESSSION_H_INCLUDED */
+#endif /* MPIR_SESSION_H_INCLUDED */
