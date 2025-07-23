@@ -54,8 +54,10 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     mpi_errno = MPIR_Pset_add_defaults(session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-
-    /* TODO: append a list of dynamically updated global psets */
+    /* Append a list of dynamically updated global psets
+     * (updated via session pset procedures) */
+    mpi_errno = MPIR_Pset_update_list(session_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *p_session_ptr = session_ptr;
 
@@ -115,9 +117,17 @@ int MPIR_Session_finalize_impl(MPIR_Session * session_ptr)
 int MPIR_Session_get_num_psets_impl(MPIR_Session * session_ptr, MPIR_Info * info_ptr,
                                     int *npset_names)
 {
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Pset_update_list(session_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *npset_names = session_ptr->num_psets;
 
+  fn_exit:
     return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_ptr,
@@ -125,6 +135,8 @@ int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_
 {
     int mpi_errno = MPI_SUCCESS;
 
+    mpi_errno = MPIR_Pset_update_list(session_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (n >= session_ptr->num_psets) {
         MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidn",
@@ -192,7 +204,10 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
                                     MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int found = 0, mpi_size, i;
+    int found = 0, mpi_size, is_valid, i;
+
+    mpi_errno = MPIR_Pset_update_list(session_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Info_alloc(info_p_p);
     MPIR_ERR_CHECK(mpi_errno);
@@ -201,6 +216,7 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
         if (strcmp(pset_name, session_ptr->psets[i].name) == 0) {
             found = 1;
             mpi_size = session_ptr->psets[i].group->size;
+            is_valid = session_ptr->psets[i].is_valid;
             break;
         }
     }
@@ -209,6 +225,10 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
     char buf[20];
     snprintf(buf, sizeof(buf), "%d", mpi_size);
     mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_size", buf);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    snprintf(buf, sizeof(buf), "%d", is_valid);
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "pset_valid", buf);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
