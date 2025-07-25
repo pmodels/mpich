@@ -1,0 +1,10 @@
+UPDATE aurora_test 8272b54768 1a06ea1bf0
+
+    current aurora_test HEAD fc87683a7d
+
+46baf30c55 2025-07-14 comm/session: use comm_world if MPIR_CVAR_PMI_DISABLE_GROUPf105d6e652 2025-07-22 ch4/xpmem: check MPIR_CVAR_CH4_XPMEM_ENABLE in comm_bootstrap
+5d69e15e64 2025-07-21 ch4/ipc: fix typo in MPIDI_GPU_write_data_async
+516f8d304f 2025-07-14 test/gpu: remove setting MPIR_CVAR_ENABLE_GPU
+13d854d692 2025-07-18 test: fix test memory_alloc_kinds
+02c1bb74d8 2025-07-18 Revert "test/runtests: add gpu attribute for individual tests"
+c450d931d5 2025-07-18 ch4/ipc: fix missing fields in IPC write
