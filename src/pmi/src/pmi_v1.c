@@ -169,7 +169,7 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
 
     if (PMI_server_version * 100 + PMI_server_subversion > 101) {
         /* enable PMIU_CS_{ENTER/EXIT} for PMI 1.2 and above */
-        PMIU_is_threaded = 1;
+        PMIU_supports_threading = 1;
         PMIU_thread_init();
     }
 
@@ -342,7 +342,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
     }
 
     char *group_str;
-    if (group == PMI_GROUP_WORLD && !tag && !PMIU_is_threaded) {
+    if (group == PMI_GROUP_WORLD && !tag && !PMIU_supports_threading) {
         /* Backward-compatible PMI_Barrier */
         pmi_errno = PMI_Barrier();
         goto fn_exit;
@@ -370,7 +370,7 @@ PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count, const char *ta
 
     PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
 
-    if (!PMIU_is_threaded) {
+    if (!PMIU_supports_threading) {
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
         PMIU_ERR_POP(pmi_errno);
     } else {
