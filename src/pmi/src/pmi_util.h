@@ -215,13 +215,13 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
 
-extern int PMIU_is_threaded;
+extern int PMIU_supports_threading;
 extern MPL_thread_mutex_t PMIU_mutex;
 
 void PMIU_thread_init(void);
 
 #define PMIU_CS_ENTER do { \
-    if (PMIU_is_threaded) { \
+    if (PMIU_supports_threading) { \
         int err; \
         MPL_thread_mutex_lock(&PMIU_mutex, &err, MPL_THREAD_PRIO_HIGH); \
         PMIU_Assert(err == 0); \
@@ -229,7 +229,7 @@ void PMIU_thread_init(void);
 } while (0)
 
 #define PMIU_CS_EXIT do { \
-    if (PMIU_is_threaded) { \
+    if (PMIU_supports_threading) { \
         int err; \
         MPL_thread_mutex_unlock(&PMIU_mutex, &err); \
         PMIU_Assert(err == 0); \
