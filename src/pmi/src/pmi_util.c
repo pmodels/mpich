@@ -35,7 +35,7 @@
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
 
-int PMIU_is_threaded = 0;
+int PMIU_supports_threading = 0;
 MPL_thread_mutex_t PMIU_mutex;
 
 int PMIU_verbose = 0;           /* Set this to true to print PMI debugging info */

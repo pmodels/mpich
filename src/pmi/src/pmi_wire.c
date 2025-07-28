@@ -860,7 +860,7 @@ int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
         }
     } else {
         /* PMIU_WIRE_V2 */
-        if (PMIU_is_threaded) {
+        if (PMIU_supports_threading) {
             pmi_add_thrid(pmicmd);
         }
         pmi_errno = PMIU_cmd_output_v2(pmicmd, buf_out, buflen_out);
@@ -932,7 +932,7 @@ static int cmd_read_expect(int fd, struct PMIU_cmd *pmicmd, const char *expected
         PMIU_ERR_POP(pmi_errno);
 
         if (strcmp(expectedCmd, pmicmd->cmd) != 0) {
-            if (PMIU_is_threaded) {
+            if (PMIU_supports_threading) {
                 /* allow certain query/response to be nonblocking;
                  * enqueue and continue for such response when it not expected. */
                 if (strcmp("barrier_out", pmicmd->cmd) == 0) {
