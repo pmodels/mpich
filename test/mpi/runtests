@@ -73,6 +73,7 @@ $g_opt{memory_total} = 4;       # Total memory in GB
 $g_opt{memory_multiplier} = 1;  # No of simultaneous jobs
 $g_opt{cleanup} = 1;            # Whether to remove the compiled programs
 $g_opt{start_time} = time();    # So we can track accumulative test duration
+$g_opt{hasgpu} = {};            # will run tests marked as "hasgpu=<value>"
 $g_opt{strict} = 0;             # will skip tests marked as "strict=false"
 $g_opt{runxfail} = 0;           # will run xfailed tests
 $g_opt{exeext} = "";
@@ -227,6 +228,11 @@ if (defined($ENV{'MPITEST_MPIEXECARG'})) {
 if (defined($ENV{'MPITEST_SINGLETON'})) {
     $g_opt{mpitest_singleton} = $ENV{'MPITEST_SINGLETON'};
 }
+if (defined($ENV{'MPITEST_HASGPU'})) {
+    foreach my $lib (split /,\s*/, $ENV{'MPITEST_HASGPU'}) {
+        $g_opt{hasgpu}{$lib} = 1;
+    }
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -251,6 +257,7 @@ foreach $_ (@ARGV) {
     elsif (/--?batchdir=(.*)/) { $g_opt{batrundir} = $1; }
     elsif (/--?batch/) { $g_opt{batchRun} = 1; }
     elsif (/--?timeoutarg=(.*)/) { $g_opt{timeoutarg} = $1; }
+    elsif (/--?hasgpu=(.*)/) { $g_opt{hasgpu}{$1} = 1; }
     elsif (/--?strict/) { $g_opt{strict} = 1; }
     elsif (/--?runxfail/) { $g_opt{runxfail} = 1; }
     elsif (/--?xmlfile=(.*)/) {
@@ -436,6 +443,8 @@ sub LoadTests {
 
             my $np = "";
             my $requiresStrict = "";
+            my @requiresGPU;
+            my $hasGPU = 0;
 
             if ($#args >= 1) { $np = $args[1]; }
 
@@ -461,6 +470,12 @@ sub LoadTests {
                     }
                     elsif ($key eq "strict") {
                         $requiresStrict = $value
+                    }
+                    elsif ($key eq "hasgpu") {
+                        push @requiresGPU, $value;
+                        if (exists $g_opt{hasgpu}{$value} or $value eq "any") {
+                            $hasGPU = 1;
+                        }
                     }
                     else {
                         print STDERR "Unrecognized key $key in $listfile_path\n";
@@ -498,6 +513,13 @@ sub LoadTests {
                 # TODO: allow absolute path
                 $test_opt->{dir} .= "/$1";
                 $test_opt->{name} = $2;
+            }
+
+            if (@requiresGPU && !$hasGPU) {
+                # Skip tests requiring gpu if not explicitly set.
+                SkippedTest($test_opt, "one of the following gpu libraries
+                    needed, but not provided: " . join(", ", @requiresGPU));
+                next;
             }
 
             # Check whether strict is required by MPI but not by the
