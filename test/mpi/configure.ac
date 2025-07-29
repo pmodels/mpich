@@ -792,6 +792,7 @@ AC_SUBST(cudadir)
 AC_ARG_VAR([NVCC], [nvcc compiler to use])
 if test "X${pac_have_cuda}" = "Xyes" ; then
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    RUNTESTS_OPTS="$RUNTESTS_OPTS -hasgpu=cuda"
     have_gpu="yes"
     if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
         cuda_CPPFLAGS="-I${with_cuda}/include"
@@ -837,6 +838,7 @@ if test "$have_gpu" = "no" ; then
     ze_LIBS=""
     if test "X${pac_have_ze}" = "Xyes" ; then
         AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+        RUNTESTS_OPTS="$RUNTESTS_OPTS -hasgpu=ze"
         have_gpu="yes"
         if test -n "${with_ze}" -a "$with_ze" != "no" ; then
             ze_CPPFLAGS="-I${with_ze}/include"
@@ -866,6 +868,7 @@ if test "$have_gpu" = "no" ; then
     hip_LIBS=""
     if test "X$pac_have_hip" = "Xyes" ; then
        AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+       RUNTESTS_OPTS="$RUNTESTS_OPTS -hasgpu=hip"
        have_gpu="yes"
        if test -n "${with_hip}" -a "$with_hip" != "no" ; then
           hip_CPPFLAGS="-I${with_hip}/include"
