@@ -172,6 +172,7 @@ int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Grou
     /* initialize fields */
     new_group->size = old_group->size;
     new_group->rank = old_group->rank;
+    new_group->session_ptr = NULL;
     MPIR_Group_set_session_ptr(new_group, session_ptr);
     memcpy(&new_group->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
     if (old_group->pmap.use_map) {
