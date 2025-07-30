@@ -704,6 +704,23 @@ as shown in Table V.
 + ---------- + ----------------------------------------------- + ------------------------------------ +
 ```
 
+
+
+### 2.7. Fallback Behavior for Collective Algorithm
+ 
+MPICH will fallback if the selected algorithm is not applicable to the
+arguments passed in by the user, such as, number of ranks, or commutative
+operation. MPICH provides a CVAR `MPIR_CVAR_COLLECTIVE_FALLBACK` so that
+the user can change the fallback behavior. The possible values of
+this environment variable are error, print, and silent. The default value
+is silent, where MPICH will silently fallback to the internally determined
+fallback algorithm. When the value is set to error, MPICH will throw
+an error and abort. When the value is set to print, MPICH will print
+an error message and fallback to the internally determined fallback algorithm.
+  
+This CVAR applies to all the algorithms described above, such as the blocking,
+non-blocking, intra-node. It also applies to the composition selection.
+
 ## 3. Multi-threading
 
 MPI provides four different threading modes: `MPI_THREAD_SINGLE`,
@@ -901,6 +918,10 @@ mapped to using one NIC which is the first provider in the list of providers ret
 `fi_getinfo()`. There is an upper bound for this value: the compile-time constant, 
 `MPIDI_OFI_MAX_NICS`.
 
+`MPIR_CVAR_CH4_OFI_PREF_NIC`: Accept a NIC value from the user. This can be set on per rank basis for
+multi NIC systems. It cannot be used with `multi_nic_pref_nic` info hint and does not provide the support
+that `multi_nic_pref_nic` hint provides. This CVAR is not recommended for use with multi threading codes.
+
 `MPIR_CVAR_DEBUG_SUMMARY`: Prints out lots of debug information at initialization time to help find 
 problems with OFI provider selection.
 
@@ -1026,6 +1047,23 @@ the GPU. The users can disable reduction in GPU by using
 `MPIR_CVAR_ENABLE_YAKSA_REDUCTION = 0`; this enables the fallback path
 (host-based) for reduction.
 
+* `MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD`: This CVAR determines the threshold to
+perform the reduction operation in the GPU. If `MPIR_CVAR_ENABLE_YAKSA_REDUCTION` == 1
+and the message size is smaller than `MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD`, then
+the reduction operations will be performed in the GPU. For message sizes larger
+than this threshold the data are copied to the CPU and the reduction is
+performed in the CPU. Notice that there is another environment variable 
+`MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ` that applies when using a collective
+composition (see Section 2) and specifies that if the message is smaller than
+`MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ`, the data are copied to the CPU and the
+collective performed in the CPU. Thus, if going through a composition, for message
+sizes larger than `MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ`, and smaller than
+`MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD`, the reduction operation will be performed
+in the GPU. For messages smaller than `MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ`,
+the reduction operation will be performed in the CPU and for messages
+larger than `MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD` the reduction operation will be
+performed in the CPU.
+
 As of now, Intel GPUs do not support operations for all datatypes. For
 example, DG1 does not support operations with ` double` type (64 bits);
 ATS supports operations with `double` but not `long double` (128 bits).
@@ -1067,9 +1105,11 @@ fd-based shareable IPC handle, or `pidfd`, which uses an implementation
 based on pidfd_getfd syscall (only available after Linux kernel 5.6.0).
 
 * `MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE`: select engine type to do the IPC
-copying, can be 0|1|2|auto. Default is using main copy engine. "auto"
-mode will use main copy engine when two buffers are on the same root
-device, otherwise use link copy engine.
+copying, can be `auto`, `compute`, `copy_high_bandwidth` or `copy_low_latency`.
+Default is `auto`. `auto` mode will use `copy_high_bandwith`
+when two buffers are on the same root device, otherwise use 
+`copy_low_latency`. `copy_high_bandwidth` is also used when copying
+between GPU and host memory.
 
 * `MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL`:  choose read/write/auto
 protocol for IPC. Default is read. Auto will prefer write protocol when
@@ -1145,6 +1185,12 @@ Misc:
 
 * `MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST`:  to use immediate command
 lists, instead of normal command lists plus command queues
+
+* `MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES`: It is used to determine how
+to use the command queues to perform a GPU memory copy. The default is false.
+If false, only the command queue of index 0 will be used, and L0 chooses
+the engine. If true, the command queues will be rotated in a round-robin
+fashion by MPICH. 
 
 * `MPIR_CVAR_DEBUG_SUMMARY` + `MPIR_CVAR_ENABLE_GPU`: when enabled together,
 print GPU hardware information
