@@ -46,6 +46,9 @@
 **pmi_job_getid %d:PMI2_Job_GetId returned %d
 **pmi_kvs_get_parent_port:PMI_KVS_Get parent port failed
 **pmi_kvs_get_parent_port %d:PMI_KVS_Get parent port failed %d
+**pmi_version_auto_ambiguous: Auto-detection of PMI version failed. Found both env vars PMI_SIZE and PMIX_NAMESPACE. There is likely something wrong with the runtime environment! Aborting.
+**pmi_version_auto_not_supported: Runtime environment uses unsupported PMI version. Aborting.
+**pmi_version_auto_not_supported %s: Runtime environment uses unsupported PMI version %s. Aborting.
 #
 # pmi2
 #

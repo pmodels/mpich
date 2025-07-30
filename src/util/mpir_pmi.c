@@ -18,7 +18,7 @@ cvars:
     - name        : MPIR_CVAR_PMI_VERSION
       category    : PMI
       type        : enum
-      default     : 1
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -27,6 +27,7 @@ cvars:
         1        - PMI (default)
         2        - PMI2
         x        - PMIx
+        auto     - Auto-detect PMI version
 
     - name        : MPIR_CVAR_PMI_DISABLE_GROUP
       category    : PMI
@@ -99,34 +100,104 @@ static char *hwloc_topology_xmlfile;
 
 static int check_MPIR_CVAR_PMI_VERSION(void)
 {
-    /* Adjust MPIR_CVAR_PMI_VERSION if the default is disabled */
-#ifndef ENABLE_PMI1
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_1) {
-#if defined(ENABLE_PMI2)
-        MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_2;
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_auto) {
+        /* Auto-detection of PMI version */
+        int have_pmi, have_pmix, env_int;
+        const char *env_str = NULL;
+
+        /* Env var PMI_SIZE is used for both PMI-1 and PMI-2. If enabled, PMI-1
+         * has precedence over PMI-2 in the auto-detection. */
+        if ((have_pmi = MPL_env2int("PMI_SIZE", &env_int)) < 0) {
+            return MPI_ERR_INTERN;
+        }
+
+        if (!have_pmi) {
+            int have_pmi_port, have_pmi_id;
+            /* If neither of the two are set, check for PMI_PORT and PMI_ID
+             * to cover hydra's -pmi-port option. */
+            have_pmi_port = MPL_env2str("PMI_PORT", &env_str);
+            have_pmi_id = MPL_env2int("PMI_ID", &env_int);
+            if (have_pmi_id < 0) {
+                return MPI_ERR_INTERN;
+            }
+            have_pmi = (have_pmi_port > 0) && (have_pmi_id > 0);
+        }
+
+        /* Env var PMIX_NAMESPACE is checked for PMIx */
+        have_pmix = MPL_env2str("PMIX_NAMESPACE", &env_str);
+
+        if (have_pmi && have_pmix) {
+            /* There is something wrong with the runtime environment.
+             * Multiple PMI versions are detected. */
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_INTERN, "**pmi_version_auto_ambiguous");
+        } else if (!have_pmi && !have_pmix) {
+            /* No PMI version could be detected: Assume singleton case.
+             * Use any available interface to ensure MPI rank, size etc. are
+             * initialized for singleton in later steps. */
+#ifdef ENABLE_PMI1
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_1;
+#elif defined(ENABLE_PMI2)
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_2;
 #elif defined(ENABLE_PMIX)
-        MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
 #else
-        return MPI_ERR_INTERN;
+            /* Never end up here, at least one of the three interfaces needs to be available. */
+            return MPI_ERR_INTERN;
 #endif
-    }
+        } else if (have_pmi) {
+#ifdef ENABLE_PMI1
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_1;
+#elif defined(ENABLE_PMI2)
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_2;
+#else
+            /* Runtime environment uses PMI-1 or PMI-2 but none of the two
+             * is enabled in the MPI lib. We cannot proceed. */
+            MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**pmi_version_auto_not_supported",
+                          "**pmi_version_auto_not_supported %s", "PMI-1 or PMI-2");
 #endif
 
-    /* Error if user select PMI2 but it is disabled */
+        } else if (have_pmix) {
+#ifdef ENABLE_PMIX
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
+#else
+            /* Runtime environment uses PMIx but this is not enabled in the
+             * MPI lib. We cannot proceed. */
+            MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**pmi_version_auto_not_supported",
+                          "**pmi_version_auto_not_supported %s", "PMIx");
+#endif
+        }
+    } else {
+        /* Adjust MPIR_CVAR_PMI_VERSION if the default is disabled */
+#ifndef ENABLE_PMI1
+        if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_1) {
+#if defined(ENABLE_PMI2)
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_2;
+#elif defined(ENABLE_PMIX)
+            MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
+#else
+            return MPI_ERR_INTERN;
+#endif
+        }
+#endif
+
+        /* Error if user select PMI2 but it is disabled */
 #ifndef ENABLE_PMI2
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
-        return MPI_ERR_INTERN;
-    }
+        if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
+            return MPI_ERR_INTERN;
+        }
 #endif
 
-    /* Error if user select PMI2 but it is disabled */
+        /* Error if user select PMIx but it is disabled */
 #ifndef ENABLE_PMIX
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
-        return MPI_ERR_INTERN;
-    }
+        if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
+            return MPI_ERR_INTERN;
+        }
 #endif
+    }
 
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
 
 /* When user call MPIR_pmi_finalize, we will postpone the actual PMI_Finalize
