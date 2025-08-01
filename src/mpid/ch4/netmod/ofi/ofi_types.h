@@ -109,7 +109,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_HUGE_SEND_0         16ULL
 #define MPIDI_OFI_RNDV_SEND_0         24ULL
 /* these two are really tag-carried meta data, thus require to be masked in receive */
-#define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_HUGE_SEND_0)
+#define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_HUGE_SEND_0 | MPIDI_OFI_RNDV_SEND_0)
 
 /* Define constants for default bits allocation. The actual bits are defined in
  * ofi_capability_sets.h, which may use these defaults or define its own.
@@ -205,6 +205,8 @@ enum {
     MPIDI_OFI_EVENT_SEND_NOPACK,
     MPIDI_OFI_EVENT_SSEND_ACK,
     MPIDI_OFI_EVENT_RNDV_CTS,
+    MPIDI_OFI_EVENT_PIPELINE_SEND_CHUNK,
+    MPIDI_OFI_EVENT_PIPELINE_RECV_CHUNK,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
     MPIDI_OFI_EVENT_HUGE_CHUNK_DONE,
