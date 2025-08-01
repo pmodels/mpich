@@ -185,9 +185,40 @@ typedef struct {
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_t;
 
+typedef struct {
+    const void *buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    /* cached fields */
+    MPL_pointer_attr_t attr;
+    MPI_Aint data_sz;
+    /* tracking fields */
+    union {
+        struct {
+            MPI_Aint copy_offset;
+            int copy_infly;
+            int send_infly;
+        } send;
+        struct {
+            MPI_Aint recv_offset;
+            int recv_infly;
+        } recv;
+    } u;
+    int chunk_index;
+    MPI_Aint remain_sz;
+    /* send/recv fields */
+    int vci_local;
+    int vci_remote;
+    struct MPIDI_av_entry *av;
+    uint64_t match_bits;
+} MPIDI_OFI_pipeline_t;
+
 typedef union {
     MPIDI_OFI_am_t am;
+    MPIDI_OFI_pipeline_t pipeline;
 } MPIDI_OFI_am_request_t;
+
+#define MPIDI_OFI_REQ_PIPELINE(req) ((req)->dev.ch4.am.netmod_am.ofi.pipeline)
 
 enum MPIDI_OFI_req_kind {
     MPIDI_OFI_req_kind__any,
