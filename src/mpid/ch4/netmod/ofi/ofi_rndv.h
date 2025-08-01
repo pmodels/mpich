@@ -28,7 +28,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* declare send/recv functions for rndv protocols */
+int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag);
+int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_dst);
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];

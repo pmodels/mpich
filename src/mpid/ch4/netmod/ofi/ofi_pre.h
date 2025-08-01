@@ -189,6 +189,31 @@ typedef struct {
 } MPIDI_OFI_rndv_common_t;
 
 typedef struct {
+    const void *buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    /* cached fields */
+    MPL_pointer_attr_t attr;
+    MPI_Aint data_sz;
+    /* tracking fields */
+    union {
+        struct {
+            MPI_Aint copy_offset;
+            int copy_infly;
+            int send_infly;
+        } send;
+        struct {
+            MPI_Aint recv_offset;
+            int recv_infly;
+        } recv;
+    } u;
+    int chunk_index;
+    MPI_Aint remain_sz;
+    /* send/recv fields */
+    int vci_local;
+    int vci_remote;
+    struct MPIDI_av_entry *av;
+    uint64_t match_bits;
 } MPIDI_OFI_pipeline_t;
 
 typedef struct {
