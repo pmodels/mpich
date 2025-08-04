@@ -482,6 +482,7 @@ int MPID_Init(int requested, int *provided)
                                                MPII_Create_container, &MPIDI_global.csel_root);
         MPIDI_global.csel_source = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE;
     }
+    MPIR_Csel_debug_summary(MPIDI_global.csel_source, MPIDI_global.csel_root);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collective selection for gpu */
@@ -494,6 +495,7 @@ int MPID_Init(int requested, int *provided)
                                                MPII_Create_container, &MPIDI_global.csel_root_gpu);
         MPIDI_global.csel_source_gpu = MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
+    MPIR_Csel_debug_summary(MPIDI_global.csel_source_gpu, MPIDI_global.csel_root_gpu);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Override split_type */
