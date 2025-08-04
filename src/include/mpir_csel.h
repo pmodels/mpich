@@ -217,4 +217,6 @@ int MPIR_Csel_free(void *csel);
 int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel);
 void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s coll_sig);
 
+void MPIR_Csel_debug_summary(const char *name, void *csel_);
+
 #endif /* MPIR_CSEL_H_INCLUDED */
