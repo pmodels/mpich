@@ -388,6 +388,7 @@ static int posix_coll_init(void)
                                                &MPIDI_global.shm.posix.csel_root);
         MPIDI_global.shm.posix.csel_source = MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE;
     }
+    MPIR_Csel_debug_summary(MPIDI_global.shm.posix.csel_source, MPIDI_global.shm.posix.csel_root);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collective selection for gpu */
@@ -403,6 +404,8 @@ static int posix_coll_init(void)
         MPIDI_global.shm.posix.csel_source_gpu =
             MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU;
     }
+    MPIR_Csel_debug_summary(MPIDI_global.shm.posix.csel_source_gpu,
+                            MPIDI_global.shm.posix.csel_root_gpu);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

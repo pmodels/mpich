@@ -12,6 +12,27 @@
 #include <sys/stat.h>
 #include <json.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_COLLECTIVE_SELECTION_REPORT
+      category    : COLLECTIVE
+      type        : enum
+      default     : none
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select report type.
+        none    - No print out
+        summary - Print a summary of each algorithm
+        tree    - Print the collective selection tree
+        all     - Print both tree and summary
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static void validate_tree(csel_node_s * node)
 {
     static int coll = -1;
@@ -241,19 +262,32 @@ int MPIR_Csel_create_from_buf(const char *json,
 
     json_object_put(tree);
 
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        printf("====================================\n");
-        printf("Processed Collective Selection Tree:\n");
-        Csel_print_tree(csel->u.root.tree);
-        printf("==========================================\n");
-        printf("Summary of rules per collective algorithm:\n");
-        Csel_print_rules(csel->u.root.tree);
-
-    }
-
   fn_exit:
     *csel_ = csel;
     return 0;
+}
+
+void MPIR_Csel_debug_summary(const char *name, void *csel_)
+{
+    csel_s *csel = (csel_s *) csel_;
+    if (MPIR_Process.rank != 0) {
+        return;
+    }
+
+    if (MPIR_CVAR_COLLECTIVE_SELECTION_REPORT == MPIR_CVAR_COLLECTIVE_SELECTION_REPORT_tree
+        || MPIR_CVAR_COLLECTIVE_SELECTION_REPORT == MPIR_CVAR_COLLECTIVE_SELECTION_REPORT_all) {
+        printf("Processed Collective Selection Tree for %s:\n", name);
+        printf("============================================================\n");
+        Csel_print_tree(csel->u.root.tree);
+        printf("============================================================\n");
+    }
+    if (MPIR_CVAR_COLLECTIVE_SELECTION_REPORT == MPIR_CVAR_COLLECTIVE_SELECTION_REPORT_summary
+        || MPIR_CVAR_COLLECTIVE_SELECTION_REPORT == MPIR_CVAR_COLLECTIVE_SELECTION_REPORT_all) {
+        printf("Summary of rules per collective algorithm for %s:\n", name);
+        printf("============================================================\n");
+        Csel_print_rules(csel->u.root.tree);
+        printf("============================================================\n");
+    }
 }
 
 int MPIR_Csel_create_from_file(const char *json_file,
@@ -271,10 +305,6 @@ int MPIR_Csel_create_from_file(const char *json_file,
     stat(json_file, &st);
     char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
-
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        printf("Loaded Collective Selection Tree from %s:\n", json_file);
-    }
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
