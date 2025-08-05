@@ -89,6 +89,7 @@ void csel_node_update(csel_node_s * node, csel_node_s node_value)
 }
 
 static void csel_tree_merge_anys(csel_node_s ** node);
+static void csel_tree_convert_lt2le(csel_node_s ** node);
 
 static void csel_tree_merge_anys(csel_node_s ** node)
 {
@@ -100,6 +101,40 @@ static void csel_tree_merge_anys(csel_node_s ** node)
     }
 }
 
+static void csel_tree_convert_lt2le(csel_node_s ** node)
+{
+    int val = 0;
+    MPIR_Assert((*node));
+    switch ((*node)->type) {
+        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
+            val = (*node)->u.value_lt.val;
+            MPIR_Assert(val > 0);
+            (*node)->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE;
+            (*node)->u.value_le.val = val - 1;
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+            val = (*node)->u.value_lt.val;
+            MPIR_Assert(val > 0);
+            (*node)->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE;
+            (*node)->u.value_le.val = val - 1;
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT:
+            val = (*node)->u.value_lt.val;
+            MPIR_Assert(val > 0);
+            (*node)->type = CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE;
+            (*node)->u.value_le.val = val - 1;
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
+            val = (*node)->u.value_lt.val;
+            MPIR_Assert(val > 0);
+            (*node)->type = CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE;
+            (*node)->u.value_le.val = val - 1;
+            break;
+        default:
+            break;
+    }
+}
+
 void csel_tree_optimize(csel_node_s ** node)
 {
     if (*node == NULL) {
@@ -107,6 +142,7 @@ void csel_tree_optimize(csel_node_s ** node)
     }
 
     csel_tree_merge_anys(node);
+    csel_tree_convert_lt2le(node);
 
     if ((*node)->success) {
         csel_tree_optimize(&((*node)->success));

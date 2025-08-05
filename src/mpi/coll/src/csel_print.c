@@ -77,10 +77,10 @@ void Csel_print_node(csel_node_s * node)
             printf("collective: %s", Csel_coll_type_str[node->u.collective.coll_type]);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE:
-            printf("comm_size <= %d", node->u.comm_size_le.val);
+            printf("comm_size <= %d", node->u.value_le.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
-            printf("comm_size < %d", node->u.comm_size_lt.val);
+            printf("comm_size < %d", node->u.value_lt.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2:
             printf("comm_size is power-of-two");
@@ -89,22 +89,22 @@ void Csel_print_node(csel_node_s * node)
             printf("comm_size == node_comm_size");
             break;
         case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE:
-            printf("avg_msg_size <= %d", node->u.avg_msg_size_le.val);
+            printf("avg_msg_size <= %d", node->u.value_le.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT:
-            printf("avg_msg_size < %d", node->u.avg_msg_size_lt.val);
+            printf("avg_msg_size < %d", node->u.value_lt.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE:
-            printf("total_msg_size <= %d", node->u.total_msg_size_le.val);
+            printf("total_msg_size <= %d", node->u.value_le.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
-            printf("total_msg_size < %d", node->u.total_msg_size_lt.val);
+            printf("total_msg_size < %d", node->u.value_lt.val);
             break;
         case CSEL_NODE_TYPE__CONTAINER:
             Csel_print_container(node->u.cnt.container);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
-            printf("count <= %d", node->u.count_le.val);
+            printf("count <= %d", node->u.value_le.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
             printf("count < nearest power-of-two less than comm size");
@@ -122,10 +122,10 @@ void Csel_print_node(csel_node_s * node)
             printf("process ranks are consecutive on the node");
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-            printf("comm avg ppn <= %d", node->u.comm_avg_ppn_le.val);
+            printf("comm avg ppn <= %d", node->u.value_le.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-            printf("comm avg ppn < %d", node->u.comm_avg_ppn_lt.val);
+            printf("comm avg ppn < %d", node->u.value_lt.val);
             break;
         case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
             if (node->u.is_commutative.val == true)

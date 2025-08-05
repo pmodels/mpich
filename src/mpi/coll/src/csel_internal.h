@@ -19,7 +19,7 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTER,
 
     CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT,
+    CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT,     /* Deprecated */
     CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE,
     CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2,
 
@@ -27,16 +27,16 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE,
 
     CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE,
-    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT,
+    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT,  /* Deprecated */
 
     /* collective selection operator */
     CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,
 
     /* message-specific operator types */
     CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT,
+    CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT,  /* Deprecated */
     CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE,
-    CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT,
+    CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT,        /* Deprecated */
 
     CSEL_NODE_TYPE__OPERATOR__COUNT_LE,
     CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2,
@@ -63,12 +63,6 @@ typedef struct csel_node {
         } is_multi_threaded;
 
         /* comm-specific operator types */
-        struct {
-            int val;
-        } comm_size_le;
-        struct {
-            int val;
-        } comm_size_lt;
 
         /* collective selection operator */
         struct {
@@ -76,21 +70,6 @@ typedef struct csel_node {
         } collective;
 
         /* message-specific operator types */
-        struct {
-            int val;
-        } avg_msg_size_le;
-        struct {
-            int val;
-        } avg_msg_size_lt;
-        struct {
-            int val;
-        } total_msg_size_le;
-        struct {
-            int val;
-        } total_msg_size_lt;
-        struct {
-            int val;
-        } count_le;
         struct {
             bool val;
         } is_commutative;
@@ -108,16 +87,18 @@ typedef struct csel_node {
         } is_node_consecutive;
         struct {
             int val;
-        } comm_avg_ppn_le;
-        struct {
-            int val;
-        } comm_avg_ppn_lt;
-        struct {
-            int val;
         } comm_hierarchy;
         struct {
             void *container;
         } cnt;
+
+        /* value le lt node for comm_size, msg_size, ppn, count */
+        struct {
+            int val;
+        } value_le;
+        struct {
+            int val;
+        } value_lt;
     } u;
 
     struct csel_node *success;
