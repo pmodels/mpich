@@ -260,6 +260,8 @@ int MPIR_Csel_create_from_buf(const char *json,
     if (csel->u.root.tree)
         validate_tree(csel->u.root.tree);
 
+    csel_tree_optimize(&csel->u.root.tree);
+
     json_object_put(tree);
 
   fn_exit:
