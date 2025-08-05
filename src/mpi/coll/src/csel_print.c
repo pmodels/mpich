@@ -54,7 +54,7 @@ void Csel_print_tree(csel_node_s * node)
 
 void Csel_print_container(MPII_Csel_container_s * cnt)
 {
-    printf("Algorithm: %s\n", Csel_container_type_str[cnt->id]);
+    printf("Algorithm: %s", Csel_container_type_str[cnt->id]);
 }
 
 void Csel_print_node(csel_node_s * node)

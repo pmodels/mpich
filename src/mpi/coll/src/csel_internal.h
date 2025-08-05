@@ -152,4 +152,11 @@ void Csel_print_container(MPII_Csel_container_s * cnt);
 void Csel_print_tree(csel_node_s * node);
 void Csel_print_rules(csel_node_s * node);
 
+csel_node_s *csel_node_create(csel_node_type_e type);
+void csel_node_free(csel_node_s ** node);
+void csel_tree_free(csel_node_s ** node);
+csel_node_s *csel_node_swap_success(csel_node_s * node, csel_node_s * new_succ);
+csel_node_s *csel_node_swap_failure(csel_node_s * node, csel_node_s * new_fail);
+void csel_node_update(csel_node_s * node, csel_node_s node_value);
+
 #endif /* CSEL_INTERNAL_CONTAINER_H_INCLUDED */

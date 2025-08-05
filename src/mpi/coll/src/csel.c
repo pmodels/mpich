@@ -92,6 +92,8 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             !strncmp(ckey, "algorithm=", strlen("algorithm="))) {
             tmp->type = CSEL_NODE_TYPE__CONTAINER;
             tmp->u.cnt.container = create_container(obj);
+            tmp->success = NULL;
+            tmp->failure = NULL;
             MPL_free(ckey);
             return tmp;
         }
@@ -410,27 +412,13 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
     return mpi_errno;
 }
 
-static void free_tree(csel_node_s * node)
-{
-    if (node->type == CSEL_NODE_TYPE__CONTAINER) {
-        MPL_free(node->u.cnt.container);
-        MPL_free(node);
-    } else {
-        if (node->success)
-            free_tree(node->success);
-        if (node->failure)
-            free_tree(node->failure);
-        MPL_free(node);
-    }
-}
-
 int MPIR_Csel_free(void *csel_)
 {
     int mpi_errno = MPI_SUCCESS;
     csel_s *csel = (csel_s *) csel_;
 
     if (csel->type == CSEL_TYPE__ROOT && csel->u.root.tree)
-        free_tree(csel->u.root.tree);
+        csel_tree_free(&csel->u.root.tree);
 
     MPL_free(csel);
     return mpi_errno;
