@@ -470,6 +470,26 @@ cvars:
       description : >-
         If true, enable OFI triggered ops for MPI collectives.
 
+    - name        : MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ
+      category    : CH4_OFI
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the chunk size (in bytes) for pipeline data transfer.
+
+    - name        : MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS
+      category    : CH4_OFI
+      type        : int
+      default     : 32
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of chunk buffers for pipeline data transfer.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE
       category    : CH4_OFI
       type        : boolean
@@ -983,6 +1003,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
+
+    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+    }
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
@@ -1587,6 +1611,15 @@ static void dump_global_settings(void)
 int MPIDI_OFI_am_init(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    /* Create chunk buffer pool (for pipeline etc.) */
+    mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ,
+                                               MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
+                                               MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
+                                               host_alloc_registered,
+                                               host_free_registered,
+                                               &MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
