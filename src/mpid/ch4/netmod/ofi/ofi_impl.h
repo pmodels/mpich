@@ -56,6 +56,8 @@ ATTRIBUTE((unused));
                                     MPIDI_OFI_global.prov_use[nic]->domain_attr->name : "(n/a)")
 #define MPIDI_OFI_DEFAULT_NIC_NAME (MPIDI_OFI_NIC_NAME(0))
 
+#define MPIDI_OFI_EAGER_THRESH (MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD == -1 ? MPIDI_OFI_global.max_msg_size : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD)
+
 int MPIDI_OFI_progress_uninlined(int vci);
 int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 int MPIDI_OFI_flush_send_queue(void);
