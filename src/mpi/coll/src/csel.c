@@ -164,27 +164,27 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE;
         } else if (!strncmp(ckey, "comm_size<=", strlen("comm_size<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE;
-            tmp->u.comm_size_le.val = atoi(ckey + strlen("comm_size<="));
+            tmp->u.value_le.val = atoi(ckey + strlen("comm_size<="));
         } else if (!strncmp(ckey, "comm_size<", strlen("comm_size<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT;
-            tmp->u.comm_size_lt.val = atoi(ckey + strlen("comm_size<"));
+            tmp->u.value_lt.val = atoi(ckey + strlen("comm_size<"));
         } else if (!strncmp(ckey, "count<=", strlen("count<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_LE;
-            tmp->u.count_le.val = atoi(ckey + strlen("count<="));
+            tmp->u.value_lt.val = atoi(ckey + strlen("count<="));
         } else if (!strcmp(ckey, "count<pow2")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2;
         } else if (!strncmp(ckey, "avg_msg_size<=", strlen("avg_msg_size<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE;
-            tmp->u.avg_msg_size_le.val = atoi(ckey + strlen("avg_msg_size<="));
+            tmp->u.value_le.val = atoi(ckey + strlen("avg_msg_size<="));
         } else if (!strncmp(ckey, "avg_msg_size<", strlen("avg_msg_size<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT;
-            tmp->u.avg_msg_size_lt.val = atoi(ckey + strlen("avg_msg_size<"));
+            tmp->u.value_lt.val = atoi(ckey + strlen("avg_msg_size<"));
         } else if (!strncmp(ckey, "total_msg_size<=", strlen("total_msg_size<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE;
-            tmp->u.total_msg_size_le.val = atoi(ckey + strlen("total_msg_size<="));
+            tmp->u.value_le.val = atoi(ckey + strlen("total_msg_size<="));
         } else if (!strncmp(ckey, "total_msg_size<", strlen("total_msg_size<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT;
-            tmp->u.total_msg_size_lt.val = atoi(ckey + strlen("total_msg_size<"));
+            tmp->u.value_lt.val = atoi(ckey + strlen("total_msg_size<"));
         } else if (!strcmp(ckey, "is_commutative=yes")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE;
             tmp->u.is_commutative.val = true;
@@ -217,10 +217,10 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->u.is_node_consecutive.val = false;
         } else if (!strncmp(ckey, "comm_avg_ppn<=", strlen("comm_avg_ppn<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE;
-            tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<="));
+            tmp->u.value_le.val = atoi(ckey + strlen("comm_avg_ppn<="));
         } else if (!strncmp(ckey, "comm_avg_ppn<", strlen("comm_avg_ppn<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT;
-            tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
+            tmp->u.value_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
         } else if (!strncmp(ckey, "comm_hierarchy=", strlen("comm_hierarchy="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
 
@@ -335,14 +335,14 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE:
-                if (comm_ptr->local_size <= node->u.comm_size_le.val)
+                if (comm_ptr->local_size <= node->u.value_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
-                if (comm_ptr->local_size < node->u.comm_size_lt.val)
+                if (comm_ptr->local_size < node->u.value_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
@@ -379,7 +379,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
                 if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
-                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                    comm_ptr->local_size <= node->u.value_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -387,7 +387,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
                 if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
-                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                    comm_ptr->local_size < node->u.value_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -922,14 +922,14 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE:
-                if (comm_ptr->local_size <= node->u.comm_size_le.val)
+                if (comm_ptr->local_size <= node->u.value_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
-                if (comm_ptr->local_size <= node->u.comm_size_lt.val)
+                if (comm_ptr->local_size <= node->u.value_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
@@ -957,35 +957,35 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE:
-                if (get_avg_msgsize(coll_info) <= node->u.avg_msg_size_le.val)
+                if (get_avg_msgsize(coll_info) <= node->u.value_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT:
-                if (get_avg_msgsize(coll_info) < node->u.avg_msg_size_lt.val)
+                if (get_avg_msgsize(coll_info) < node->u.value_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE:
-                if (get_total_msgsize(coll_info) <= node->u.total_msg_size_le.val)
+                if (get_total_msgsize(coll_info) <= node->u.value_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
-                if (get_total_msgsize(coll_info) < node->u.total_msg_size_lt.val)
+                if (get_total_msgsize(coll_info) < node->u.value_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
-                if (get_count(coll_info) <= node->u.count_le.val)
+                if (get_count(coll_info) <= node->u.value_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1036,7 +1036,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
                 if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
-                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                    comm_ptr->local_size <= node->u.value_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1044,7 +1044,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
                 if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
-                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                    comm_ptr->local_size < node->u.value_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
