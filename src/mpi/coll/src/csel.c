@@ -59,6 +59,16 @@ static void validate_tree(csel_node_s * node)
             fprintf(stderr, "unexpected non-NULL failure path for coll %d\n", coll);
             MPIR_Assert(0);
         }
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE ||
+               node->type == CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE ||
+               node->type == CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE ||
+               node->type == CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE ||
+               node->type == CSEL_NODE_TYPE__OPERATOR__COUNT_LE) {
+        if (node->u.value_le.val < INT_MAX && node->failure == NULL) {
+            fprintf(stderr, "unexpected NULL failure path for non-max LE node value_le.val %d\n",
+                    node->u.value_le.val);
+            MPIR_Assert(0);
+        }
     } else if (node->type != CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED &&
                node->type != CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTRA &&
                node->type != CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTER &&
@@ -131,7 +141,24 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
 
         /* =any condition must be checked first */
         if (key_is_any(ckey)) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
+            if (!strncmp(ckey, "comm_size=", strlen("comm_size="))) {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE;
+                tmp->u.value_le.val = INT_MAX;
+            } else if (!strncmp(ckey, "avg_msg_size=", strlen("avg_msg_size="))) {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE;
+                tmp->u.value_le.val = INT_MAX;
+            } else if (!strncmp(ckey, "total_msg_size=", strlen("total_msg_size="))) {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE;
+                tmp->u.value_le.val = INT_MAX;
+            } else if (!strncmp(ckey, "comm_avg_ppn=", strlen("comm_avg_ppn="))) {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE;
+                tmp->u.value_le.val = INT_MAX;
+            } else if (!strncmp(ckey, "count=", strlen("count="))) {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_LE;
+                tmp->u.value_le.val = INT_MAX;
+            } else {
+                tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
+            }
         } else if (!strcmp(ckey, "is_multi_threaded=yes")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED;
             tmp->u.is_multi_threaded.val = true;
@@ -1048,6 +1075,33 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                     node = node->success;
                 else
                     node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__RANGE_SET:
+                switch (node->u.range_set.nodes[0]->type) {
+                    case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_RANGE:
+                        node = csel_tree_range_match(node, comm_ptr->local_size);
+                        break;
+                    case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_RANGE:
+                        node = csel_tree_range_match(node, get_avg_msgsize(coll_info));
+                        break;
+                    case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_RANGE:
+                        node = csel_tree_range_match(node, get_total_msgsize(coll_info));
+                        break;
+                    case CSEL_NODE_TYPE__OPERATOR__COUNT_RANGE:
+                        node = csel_tree_range_match(node, get_count(coll_info));
+                        break;
+                    case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_RANGE:
+                        if (comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) {
+                            node = csel_tree_range_match(node, comm_ptr->local_size
+                                                         / comm_ptr->num_external);
+                        } else {
+                            node = node->failure;
+                        }
+                        break;
+                    default:
+                        MPIR_Assert(0);
+                }
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:

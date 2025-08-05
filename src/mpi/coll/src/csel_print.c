@@ -7,7 +7,7 @@
 #include "csel_internal.h"
 #include "utlist.h"
 
-static int nesting = -1;
+static int nesting = 0;
 
 #define printf_indent(indent)                                \
     do {                                                     \
@@ -28,33 +28,78 @@ typedef struct Csel_decision_rule {
     struct Csel_decision_rule *prev, *next;
 } Csel_decision_rule;
 
+static void print_range_node(csel_node_s * node);
+
 void Csel_print_tree(csel_node_s * node)
 {
-    nesting++;
-
     if (node == NULL) {
         return;
     }
 
-    printf_indent(nesting);
-    Csel_print_node(node);
-    printf_newline();
-
-    if (node->type != CSEL_NODE_TYPE__CONTAINER) {
-        Csel_print_tree(node->success);
-        if (node->failure) {
-            nesting--;
-            Csel_print_tree(node->failure);
-            nesting++;
-        }
+    if (node->type == CSEL_NODE_TYPE__OPERATOR__RANGE_SET) {
+        Csel_print_node(node);
+    } else {
+        printf_indent(nesting);
+        Csel_print_node(node);
+        printf_newline();
     }
 
-    nesting--;
+    if (node->success) {
+        nesting++;
+        Csel_print_tree(node->success);
+        nesting--;
+    }
+    if (node->failure) {
+        Csel_print_tree(node->failure);
+    }
 }
 
 void Csel_print_container(MPII_Csel_container_s * cnt)
 {
     printf("Algorithm: %s", Csel_container_type_str[cnt->id]);
+}
+
+static void print_range_node(csel_node_s * node)
+{
+    switch (node->type) {
+        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_RANGE:
+            if (node->u.range.val == 0) {
+                printf("comm: size == %d", node->u.range.val);
+            } else {
+                printf("comm: %d < size <= %d", node->u.range.prev_val, node->u.range.val);
+            }
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_RANGE:
+            if (node->u.range.val == 0) {
+                printf("msg: avg_size == %d", node->u.range.val);
+            } else {
+                printf("msg: %d < avg_size <= %d", node->u.range.prev_val, node->u.range.val);
+            }
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_RANGE:
+            if (node->u.range.val == 0) {
+                printf("msg: total_size == %d", node->u.range.val);
+            } else {
+                printf("msg: %d < total_size <= %d", node->u.range.prev_val, node->u.range.val);
+            }
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_RANGE:
+            if (node->u.range.val == 0) {
+                printf("comm: avg_ppn == %d", node->u.range.val);
+            } else {
+                printf("comm: %d < ave_ppn <= %d", node->u.range.prev_val, node->u.range.val);
+            }
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COUNT_RANGE:
+            if (node->u.range.val == 0) {
+                printf("param: count == %d", node->u.range.val);
+            } else {
+                printf("param: %d < count <= %d", node->u.range.prev_val, node->u.range.val);
+            }
+            break;
+        default:
+            MPIR_Assert(0);
+    }
 }
 
 void Csel_print_node(csel_node_s * node)
@@ -106,6 +151,26 @@ void Csel_print_node(csel_node_s * node)
         case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
             printf("count <= %d", node->u.value_le.val);
             break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_RANGE:
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_RANGE:
+        case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_RANGE:
+        case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_RANGE:
+        case CSEL_NODE_TYPE__OPERATOR__COUNT_RANGE:
+            print_range_node(node);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__RANGE_SET:{
+                if (nesting) {
+                    for (int idx = 0; idx < node->u.range_set.size; idx++) {
+                        Csel_print_tree(node->u.range_set.nodes[idx]);
+                    }
+                } else {        /* print only the range set node */
+                    printf("range_set:");
+                    for (int idx = 0; idx < node->u.range_set.size; idx++) {
+                        printf(" %d", node->u.range_set.nodes[idx]->u.range.val);
+                    }
+                }
+                break;
+            }
         case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
             printf("count < nearest power-of-two less than comm size");
             break;
@@ -152,8 +217,6 @@ static void collect_rules(csel_node_s * node);
 
 void collect_rules(csel_node_s * node)
 {
-    nesting++;
-
     if (node == NULL) {
         return;
     }
@@ -173,16 +236,20 @@ void collect_rules(csel_node_s * node)
             (csel_node_s **) MPL_malloc(sizeof(csel_node_s *) * nesting, MPL_MEM_OTHER);
         memcpy(new_rule->path, decision_path, sizeof(csel_node_s *) * new_rule->size);
         DL_APPEND(algorithms[alg_id], new_rule);
+    }
+    if (node->type == CSEL_NODE_TYPE__OPERATOR__RANGE_SET) {
+        for (int idx = 0; idx < node->u.range_set.size; idx++) {
+            collect_rules(node->u.range_set.nodes[idx]);
+        }
     } else {
         decision_path[nesting] = node;
+        nesting++;
         collect_rules(node->success);
+        nesting--;
         if (node->failure) {
-            nesting--;
             collect_rules(node->failure);
-            nesting++;
         }
     }
-    nesting--;
 }
 
 void Csel_print_rules(csel_node_s * node)
@@ -202,14 +269,17 @@ void Csel_print_rules(csel_node_s * node)
                 Csel_decision_rule *iter = NULL, *temp = NULL;
                 if (algorithms[i]->size == 1) {
                     printf_indent(1);
-                    printf(" >>> any\n");
+                    printf(" && any\n");
                     MPL_free(algorithms[i]->path);
                     MPL_free(algorithms[i]);
                 } else {
                     DL_FOREACH_SAFE(algorithms[i], iter, temp) {
                         printf_indent(1);
-                        for (int j = 1; j < iter->size; j++) {
-                            printf(" >>> ");
+                        int j = 1;
+                        Csel_print_node(iter->path[j]);
+                        j++;
+                        for (; j < iter->size; j++) {
+                            printf(" && ");
                             Csel_print_node(iter->path[j]);
                         }
                         printf_newline();
