@@ -289,10 +289,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
     }
 
-    /* Read ordering unnecessary for context_id, so use relaxed load */
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
-
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         data_sz = MPIDI_OFI_global.max_msg_size;
@@ -303,6 +299,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         data_sz = MPIDI_OFI_global.stripe_threshold;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
+
+    /* Simply posting a large recv buffer may take a overhead that defeats the benefit of e.g. pipeline.
+     * Sender will never directly send a message larger than EAGER_THRESH, so - */
+    if (data_sz > MPIDI_OFI_EAGER_THRESH && mode != MPIDI_OFI_AM_TAG_RECV) {
+        data_sz = MPIDI_OFI_EAGER_THRESH;
+    }
+
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 
     if (!flags) {
         fi_addr_t sender_addr;
