@@ -87,3 +87,31 @@ void csel_node_update(csel_node_s * node, csel_node_s node_value)
     node->type = node_value.type;
     node->u = node_value.u;
 }
+
+static void csel_tree_merge_anys(csel_node_s ** node);
+
+static void csel_tree_merge_anys(csel_node_s ** node)
+{
+    while ((*node)->type == CSEL_NODE_TYPE__OPERATOR__ANY) {
+        csel_node_s *any_node = *node;
+        *node = any_node->success;
+        any_node->success = NULL;
+        csel_node_free(&any_node);
+    }
+}
+
+void csel_tree_optimize(csel_node_s ** node)
+{
+    if (*node == NULL) {
+        return;
+    }
+
+    csel_tree_merge_anys(node);
+
+    if ((*node)->success) {
+        csel_tree_optimize(&((*node)->success));
+    }
+    if ((*node)->failure) {
+        csel_tree_optimize(&((*node)->failure));
+    }
+}

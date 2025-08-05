@@ -159,4 +159,5 @@ csel_node_s *csel_node_swap_success(csel_node_s * node, csel_node_s * new_succ);
 csel_node_s *csel_node_swap_failure(csel_node_s * node, csel_node_s * new_fail);
 void csel_node_update(csel_node_s * node, csel_node_s node_value);
 
+void csel_tree_optimize(csel_node_s ** node);
 #endif /* CSEL_INTERNAL_CONTAINER_H_INCLUDED */
