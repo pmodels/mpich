@@ -6,9 +6,20 @@
 #include "mpidimpl.h"
 #include "ofi_am_events.h"
 #include "ofi_events.h"
+#include "ofi_rndv.h"
 
 #define MPIDI_OFI_CTS_FLAG__NONE   0
 #define MPIDI_OFI_CTS_FLAG__PROBE  1
+
+static int get_rndv_protocol(void)
+{
+    if (MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL == MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_auto) {
+        /* hard code now, intelligence later */
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline;
+    } else {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL;
+    }
+}
 
 /* receiver -> sender */
 struct rndv_cts {
@@ -90,12 +101,23 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     hdr.am_tag = MPIDIG_get_next_am_tag(rreq->comm);
     hdr.flag = MPIDI_OFI_CTS_FLAG__NONE;
 
-    /* am_tag_recv */
-    mpi_errno = MPIDI_NM_am_tag_recv(rreq->status.MPI_SOURCE, rreq->comm,
-                                     MPIDIG_TAG_RECV_COMPLETE, hdr.am_tag,
-                                     MPIDIG_REQUEST(rreq, buffer),
-                                     MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
-                                     vci_src, vci_dst, rreq);
+    switch (get_rndv_protocol()) {
+        case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline:
+        case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read:
+        case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write:
+            /* not supported yet */
+            MPIR_Assert(0);
+            break;
+        case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct:
+            /* fall through */
+        default:
+            mpi_errno = MPIDI_NM_am_tag_recv(rreq->status.MPI_SOURCE, rreq->comm,
+                                             MPIDIG_TAG_RECV_COMPLETE, hdr.am_tag,
+                                             MPIDIG_REQUEST(rreq, buffer),
+                                             MPIDIG_REQUEST(rreq, count),
+                                             MPIDIG_REQUEST(rreq, datatype),
+                                             vci_src, vci_dst, rreq);
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
     /* send cts */
@@ -184,15 +206,24 @@ int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reques
 
     /* sreq is already an MPIDIG request (ref. ofi_send.h) */
     if (hdr->flag == MPIDI_OFI_CTS_FLAG__NONE) {
-        /* issue MPIDI_NM_am_tag_send, ref. MPIDIG_send_cts_target_msg_cb */
-        mpi_errno = MPIDI_NM_am_tag_send(MPIDIG_REQUEST(sreq, u.send.dest), sreq->comm,
-                                         MPIDIG_SEND_DATA, hdr->am_tag,
-                                         MPIDIG_REQUEST(sreq, buffer),
-                                         MPIDIG_REQUEST(sreq, count),
-                                         MPIDIG_REQUEST(sreq, datatype),
-                                         MPIDIG_REQUEST(sreq, req->local_vci),
-                                         MPIDIG_REQUEST(sreq, req->remote_vci), sreq);
-
+        switch (get_rndv_protocol()) {
+            case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline:
+            case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read:
+            case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write:
+                /* not supported yet */
+                MPIR_Assert(0);
+                break;
+            case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct:
+                /* fall through */
+            default:
+                mpi_errno = MPIDI_NM_am_tag_send(MPIDIG_REQUEST(sreq, u.send.dest), sreq->comm,
+                                                 MPIDIG_SEND_DATA, hdr->am_tag,
+                                                 MPIDIG_REQUEST(sreq, buffer),
+                                                 MPIDIG_REQUEST(sreq, count),
+                                                 MPIDIG_REQUEST(sreq, datatype),
+                                                 MPIDIG_REQUEST(sreq, req->local_vci),
+                                                 MPIDIG_REQUEST(sreq, req->remote_vci), sreq);
+        }
         MPL_free(ack_req->ack_hdr);
         MPL_free(ack_req);
     } else {
