@@ -301,6 +301,7 @@ typedef struct {
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
 
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
+    MPIDU_genq_private_pool_t pipeline_pool;
 
     /* Queue to store defferend am send */
     MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
