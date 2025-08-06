@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 {
     int mpi_errno = MPI_SUCCESS;
     size_t done = 0, curr_len, rem = 0;
-    MPIDI_OFI_am_request_t *am_req;
+    MPIDI_OFI_am_t *am_req;
     MPIR_Comm *comm;
     MPIR_FUNC_ENTER;
 
@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
     while (done != data_sz) {
         curr_len = MPL_MIN(rem, MPIDI_OFI_global.max_msg_size);
 
-        MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
+        MPIR_Assert(sizeof(MPIDI_OFI_am_t) <= MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci_local].am_hdr_buf_pool,
                                            (void **) &am_req);
         MPIR_Assert(am_req);

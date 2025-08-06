@@ -541,11 +541,11 @@ static int am_read_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
-    MPIDI_OFI_am_request_t *ofi_req;
+    MPIDI_OFI_am_t *ofi_req;
 
     MPIR_FUNC_ENTER;
 
-    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
+    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_t, context);
     rreq = (MPIR_Request *) ofi_req->rreq_hdr->rreq_ptr;
 
     if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {

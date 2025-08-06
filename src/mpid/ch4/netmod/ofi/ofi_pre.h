@@ -183,6 +183,10 @@ typedef struct {
                                                          * deferred */
     uint8_t am_type_choice;     /* save amtype to avoid double checking */
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
+} MPIDI_OFI_am_t;
+
+typedef union {
+    MPIDI_OFI_am_t am;
 } MPIDI_OFI_am_request_t;
 
 enum MPIDI_OFI_req_kind {
