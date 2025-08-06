@@ -264,6 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_rndv(const void *buf, MPI_Aint coun
     MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, count) = count;
     MPIDIG_REQUEST(sreq, u.send.dest) = rank;
+    MPIDI_REQUEST_SET_LOCAL(sreq, 1, NULL);
     /* needed in case of IPC write */
     MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = MPIDI_IPCI_TYPE__NONE;
 
