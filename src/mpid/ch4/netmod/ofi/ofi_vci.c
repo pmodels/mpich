@@ -65,8 +65,7 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        MPIDI_OFI_am_init(vci);
-        MPIDI_OFI_am_post_recv(vci, 0);
+        MPIDI_OFI_init_per_vci(vci);
     }
 
     if (MPIR_CVAR_DEBUG_SUMMARY && comm->rank == 0) {
