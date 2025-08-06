@@ -814,8 +814,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
     MPIDI_OFI_global.num_vcis = 1;
-    MPIDI_OFI_am_init(0);
-    MPIDI_OFI_am_post_recv(0, 0);
+    MPIDI_OFI_init_per_vci(0);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -1608,7 +1607,10 @@ static void dump_global_settings(void)
 
 /* static functions for AM */
 
-int MPIDI_OFI_am_init(int vci)
+static int am_init(int vci);
+static int am_post_recv(int vci, int nic);
+
+int MPIDI_OFI_init_per_vci(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1620,6 +1622,22 @@ int MPIDI_OFI_am_init(int vci)
                                                host_free_registered,
                                                &MPIDI_OFI_global.per_vci[vci].pipeline_pool);
     MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = am_init(vci);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = am_post_recv(vci, 0);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int am_init(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
@@ -1666,7 +1684,7 @@ int MPIDI_OFI_am_init(int vci)
     goto fn_exit;
 }
 
-int MPIDI_OFI_am_post_recv(int vci, int nic)
+static int am_post_recv(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
