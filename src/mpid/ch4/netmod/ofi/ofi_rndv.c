@@ -106,6 +106,8 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
             mpi_errno = MPIDI_OFI_pipeline_recv(rreq, hdr.am_tag, vci_src, vci_dst);
             break;
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read:
+            mpi_errno = MPIDI_OFI_rndvread_recv(rreq, hdr.am_tag, vci_src, vci_dst);
+            break;
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write:
             /* not supported yet */
             MPIR_Assert(0);
@@ -213,6 +215,8 @@ int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reques
                 mpi_errno = MPIDI_OFI_pipeline_send(sreq, hdr->am_tag);
                 break;
             case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read:
+                mpi_errno = MPIDI_OFI_rndvread_send(sreq, hdr->am_tag);
+                break;
             case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write:
                 /* not supported yet */
                 MPIR_Assert(0);

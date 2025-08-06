@@ -18,6 +18,7 @@ mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \
                       src/mpid/ch4/netmod/ofi/ofi_part.c \
                       src/mpid/ch4/netmod/ofi/ofi_events.c \
                       src/mpid/ch4/netmod/ofi/ofi_rndv.c \
+		      src/mpid/ch4/netmod/ofi/ofi_rndv_read.c \
                       src/mpid/ch4/netmod/ofi/ofi_pipeline.c \
                       src/mpid/ch4/netmod/ofi/ofi_huge.c \
                       src/mpid/ch4/netmod/ofi/ofi_progress.c \
