@@ -295,13 +295,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_retry_progress(int vci, int retry);
-int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-int MPIDI_OFI_recv_huge_control(int vci, int comm_id, int rank, int tag,
-                                MPIDI_OFI_huge_remote_info_t * info);
-int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-int MPIDI_OFI_huge_chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, void *req);
-int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
-                              uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_rndv_info_handler(void *am_hdr, void *data, MPI_Aint data_sz,
@@ -486,11 +479,6 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys_root(MPIDI_av_entry_t * 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 {
     return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_SYNC_SEND);
-}
-
-MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_huge(uint64_t match_bits)
-{
-    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_HUGE_SEND);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv(uint64_t match_bits)
