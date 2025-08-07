@@ -165,10 +165,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIR_Comm_add_ref(comm);
     }
 
-    if (!flags) {
-        MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;       /* for huge recv remote info */
-    }
-
     /* Calculate the correct NICs. */
     receiver_nic =
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, comm->rank, tag);

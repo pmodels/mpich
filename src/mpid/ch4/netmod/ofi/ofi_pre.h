@@ -330,10 +330,6 @@ typedef struct {
 
     enum MPIDI_OFI_req_kind kind;
     union {
-        struct fid_mr **send_mrs;
-        void *remote_info;
-    } huge;
-    union {
         struct {
             char *pack_buffer;
         } pack;
