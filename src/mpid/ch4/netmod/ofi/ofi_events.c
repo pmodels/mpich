@@ -14,7 +14,6 @@
 
 static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int inject_emu_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
@@ -37,9 +36,6 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
 
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_peek_rndv_event(vci, wc, rreq);
-        goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_peek_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
 
@@ -75,52 +71,6 @@ static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
-}
-
-static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int c, num_nics;
-    MPIR_FUNC_ENTER;
-
-    MPIR_cc_decr(sreq->cc_ptr, &c);
-
-    if (c == 0) {
-        MPIR_Comm *comm;
-        struct fid_mr **huge_send_mrs;
-
-        comm = sreq->comm;
-        num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
-        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge.send_mrs);
-
-        /* Clean up the memory region */
-        for (int i = 0; i < num_nics; i++) {
-            uint64_t key = fi_mr_key(huge_send_mrs[i]);
-            MPIDI_OFI_CALL(fi_close(&huge_send_mrs[i]->fid), mr_unreg);
-            if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-                MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
-            }
-        }
-        MPL_free(huge_send_mrs);
-
-        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
-        }
-
-        if (MPIDI_OFI_REQUEST(sreq, am_req)) {
-            MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
-            int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
-            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
-        }
-
-        MPIDI_CH4_REQUEST_FREE(sreq);
-    }
-    /* c != 0, ssend */
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
@@ -481,10 +431,6 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
                 break;
 
-            case MPIDI_OFI_EVENT_SEND_HUGE:
-                mpi_errno = send_huge_event(vci, wc, req);
-                break;
-
             case MPIDI_OFI_EVENT_SEND_PACK:
                 mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND_PACK);
                 break;
@@ -535,10 +481,6 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 
             case MPIDI_OFI_EVENT_CHUNK_DONE:
                 mpi_errno = chunk_done_event(vci, wc, req);
-                break;
-
-            case MPIDI_OFI_EVENT_HUGE_CHUNK_DONE:
-                mpi_errno = MPIDI_OFI_huge_chunk_done_event(vci, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_INJECT_EMU:

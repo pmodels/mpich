@@ -176,9 +176,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
         goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
-        goto fn_exit;
     }
 
     /* If synchronous, send ack */
