@@ -360,68 +360,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge(const void *data, MPI_Aint data
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_pipeline(const void *buf, MPI_Aint count,
-                                                     MPI_Datatype datatype,
-                                                     uint64_t cq_data, int dst_rank, int tag,
-                                                     MPIR_Comm * comm, uint64_t match_bits,
-                                                     MPIDI_av_entry_t * addr,
-                                                     int vci_local, int vci_remote,
-                                                     int sender_nic, int receiver_nic,
-                                                     MPIR_Request * sreq,
-                                                     int dt_contig, size_t data_sz,
-                                                     MPL_pointer_attr_t attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, sender_nic);
-
-    uint32_t n_chunks = 0;
-    int chunk_size = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
-    /* Update correct number of chunks in immediate data. */
-    chunk_size = MPIDI_OFI_gpu_pipeline_chunk_size(data_sz);
-    n_chunks = data_sz / chunk_size;
-    if (data_sz % chunk_size)
-        n_chunks++;
-    MPIDI_OFI_idata_set_gpuchunk_bits(&cq_data, n_chunks);
-
-    /* Update sender packed bit if necessary. */
-    uint64_t is_packed = datatype == MPI_PACKED ? 1 : 0;
-    MPIDI_OFI_idata_set_gpu_packed_bit(&cq_data, is_packed);
-    MPIR_ERR_CHKANDJUMP(is_packed, mpi_errno, MPI_ERR_OTHER, "**gpu_pipeline_packed");
-
-    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
-
-    /* Save pipeline information. */
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.chunk_sz) = chunk_size;
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.cq_data) = cq_data;
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr) =
-        MPIDI_OFI_av_to_phys(addr, vci_local, sender_nic, vci_remote, receiver_nic);
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.vci_local) = vci_local;
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.ctx_idx) = ctx_idx;
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.match_bits) = match_bits;
-    MPIDI_OFI_REQUEST(sreq, pipeline_info.data_sz) = data_sz;
-
-    /* send an empty message for tag matching */
-    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                        NULL,
-                                        0,
-                                        cq_data,
-                                        MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr),
-                                        match_bits), vci_local, tinjectdata);
-    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
-
-    MPIDI_OFI_gpu_pending_send_t *send_task =
-        MPIDI_OFI_create_send_task(sreq, (void *) buf, count, datatype, attr, data_sz, dt_contig);
-    DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
-    MPIDI_OFI_gpu_progress_send();
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint count,
                                                      MPI_Datatype datatype,
                                                      int dst_rank, int tag,
@@ -514,7 +452,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     bool need_mr = false;
     bool do_inject = false;
     bool do_iov = false;
-    bool do_gpu_pipelining = false;
     bool do_striping = false;
     bool do_huge = false;
 
@@ -547,12 +484,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 }
             }
         }
-
-        if (need_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
-            data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
-            do_gpu_pipelining = true;
-            need_pack = false;
-        }
     }
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_init &&
@@ -574,8 +505,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     /* noncontig? try iov or need pack */
     if (!need_pack && !dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !do_inject && !do_striping && !do_huge &&
-            !do_gpu_pipelining) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !do_inject && !do_striping && !do_huge) {
             MPI_Aint num_contig;
             MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
             if (num_contig <= MPIDI_OFI_global.tx_iov_limit) {
@@ -684,15 +614,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         } else {
             data = MPIR_get_contig_ptr(buf, dt_true_lb);
             MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
-        }
-
-        if (do_gpu_pipelining) {
-            mpi_errno = MPIDI_OFI_send_pipeline(buf, count, datatype, cq_data, dst_rank, tag, comm,
-                                                match_bits, addr, vci_src, vci_dst,
-                                                sender_nic, receiver_nic,
-                                                *request, dt_contig, data_sz, attr);
-            MPIR_ERR_CHECK(mpi_errno);
-            goto fn_exit;
         }
 
         if (do_huge) {
