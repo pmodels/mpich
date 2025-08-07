@@ -222,6 +222,12 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to create proxy list\n");
     }
 
+    if (pg->proxy_count == 1 && !HYD_server_info.user_global.launcher &&
+        !HYD_server_info.user_global.skip_launch_node) {
+        /* reset launcher to fork for local only launch */
+        HYDT_bsci_info.launcher = "fork";
+    }
+
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
     if (HYD_server_info.localhost == NULL) {
