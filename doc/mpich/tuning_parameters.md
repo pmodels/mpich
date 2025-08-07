@@ -1096,26 +1096,21 @@ GPU pipeline uses host buffer and pipelining technique to send internode
 messages instead of GPU RDMA. To enable this mode, use the following two
 CVARs:
 
-* `MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE`: This CVAR enables GPU pipeline
-for inter-node pt2pt messages
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD`: The threshold to start using
-GPU pipelining. Default is 1MB.
+* `MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD`: This CVAR enables enables the RNDV
+(rendezvous) path for large messages above the threshold. Recommended value
+is 1MB.
 
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ`: Specifies the chunk size
-(in bytes) for GPU pipeline data transfer.
+* `MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=pipeline`: Forces the RNDV algorithm to
+use pipelining. The default is "auto", which will select best algorithms
+based on message attributes. Other include protocols include "read" - RDMA
+read, and "direct", which relies on underlying network library implementations.
 
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK`: Specifies the
+* `MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ`: Specifies the chunk size
+(in bytes) for pipeline data transfer.
+
+* `MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS`: Specifies the
 number of buffers for GPU pipeline data transfer in each block/chunk of
 the pool.
-
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS`: Specifies the maximum
-total number of buffers MPICH buffer pool can allocate.
-
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE`: Specify engine type
-for copying from device to host (sender side), default 0
-
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE`: Specify engine type
-for copying from host to device (receiver side), default 0
 
 To enable GPU Direct RDMA support for pt2pt communication, use the
 following CVARs:
