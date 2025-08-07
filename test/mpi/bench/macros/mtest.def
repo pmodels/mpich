@@ -4,10 +4,10 @@ macros:
 subcode: mtest_malloc(size)
     MTestArgList *head = MTestArgListCreate(argc, argv)
     $(if:MEM_TYPES=sendrecv)
-        int send_rank = 0, recv_rank = 1;
-        $(for:a in send,recv)
-            $if grank == $(a)_rank
-                $call alloc_mem_dev, $(a)mem, $(a)dev
+        $if grank == gsrc
+            $call alloc_mem_dev, sendmem, senddev
+        $elif grank == gdst
+            $call alloc_mem_dev, recvmem, recvdev
     $(else)
         # all procs allocating the same memory types
         $call alloc_mem_dev, memtype, device
