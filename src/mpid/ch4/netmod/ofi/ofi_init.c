@@ -375,21 +375,6 @@ cvars:
         Specifies the maximum number of iovecs to allocate for RMA operations
         to/from noncontiguous buffers.
 
-    - name        : MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
-      category    : CH4_OFI
-      type        : int
-      default     : -1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        This cvar controls the message size at which OFI native path switches from eager to
-        rendezvous mode. It does not affect the AM path eager limit. Having this gives a way to
-        reliably test native non-path.
-        If the number is positive, OFI will init the MPIDI_OFI_global.max_msg_size to the value of
-        cvar. If the number is negative, OFI will init the MPIDI_OFI_globa.max_msg_size using
-        whatever provider gives (which might be unlimited for socket provider).
-
     - name        : MPIR_CVAR_CH4_OFI_MAX_NICS
       category    : CH4
       type        : int
@@ -1376,13 +1361,7 @@ static int update_global_limits(struct fi_info *prov)
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    if (MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE > 0 &&
-        MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
-        /* Truncate max_msg_size to a user-selected value */
-        MPIDI_OFI_global.max_msg_size = MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE;
-    } else {
-        MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
-    }
+    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     MPIDI_OFI_global.cq_data_size = prov->domain_attr->cq_data_size;
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
