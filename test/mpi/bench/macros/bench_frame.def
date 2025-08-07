@@ -23,10 +23,8 @@ subcode: bench_frame
         $global grank, gsize: int
         MPI_Comm_rank(MPI_COMM_WORLD, &grank);
         MPI_Comm_size(MPI_COMM_WORLD, &gsize);
-        $(if:MIN_PROCS)
-            $if gsize < $(MIN_PROCS)
-                printf("! Test $(_pagename) requires $(MIN_PROCS) processes !\n");
-                return 1
+
+        $call check_launch
 
         MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -60,6 +58,22 @@ subcode: bench_frame
             MTest_Finalize(0);
         $(else)
             MPI_Finalize();
+    # -----
+    subcode: check_launch
+        $(if:MIN_PROCS)
+            $if gsize < $(MIN_PROCS)
+                printf("! Test $(_pagename) requires $(MIN_PROCS) processes !\n");
+                return 1
+        $(if:MEM_TYPES=sendrecv)
+            $if gsize % 2 == 1
+                printf("! Test $(_pagename) requires even number of processes to form even/odd pairs !\n");
+            $global gsrc, gdst: int
+            $if grank % 2 == 0
+                gsrc = grank
+                gdst = grank + 1
+            $else
+                gsrc = grank - 1
+                gdst = grank
 
 macros:
     use_double: 1
