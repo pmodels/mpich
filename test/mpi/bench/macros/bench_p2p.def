@@ -15,7 +15,6 @@
  */
 
 macros:
-    MIN_PROCS: 2
     MEM_TYPES: sendrecv
 
 subcode: _autoload
