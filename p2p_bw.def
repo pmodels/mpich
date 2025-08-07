@@ -2,43 +2,45 @@ include: macros/bench_frame.def
 include: macros/bench_p2p.def
 include: macros/mtest.def
 
-subcode: _autoload
-    $define WINDOW_SIZE $(WINDOW_SIZE)
+subcode: bw_loop
+    $for j=0:window
+        buf = (char *) gbuf + j * size % (MAX_BUFSIZE - size)
+        BLOCK
 
 page: p2p_bw, bench_frame
-    WINDOW_SIZE: 64
-    MULTIPLICITY: WINDOW_SIZE
+    MAX_BUFSIZE: 10000000
+    WINDOW_MAX: 64
     data: buf, size, MPI_CHAR
 
     &call foreach_size
-        bench_p2p(comm, gsrc, gdst, buf, size)
+        bench_p2p(comm, gsrc, gdst, size)
 
     subcode: send_side
-        $my MPI_Request reqs[WINDOW_SIZE]
-        $for j=0:WINDOW_SIZE
+        $my MPI_Request reqs[$(WINDOW_MAX)]
+        &call bw_loop
             MPI_Isend($(data), dst, TAG, comm, &reqs[j])
-        MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
+        MPI_Waitall(window, reqs, MPI_STATUSES_IGNORE)
         MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
 
     subcode: recv_side
-        $my MPI_Request reqs[WINDOW_SIZE]
-        $for j=0:WINDOW_SIZE
+        $my MPI_Request reqs[$(WINDOW_MAX)]
+        &call bw_loop
             MPI_Irecv($(data), src, TAG, comm, &reqs[j])
-        MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
+        MPI_Waitall(window, reqs, MPI_STATUSES_IGNORE)
         MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
 
 page: get_bw, bench_frame
     IS_RMA: 1
-    WINDOW_SIZE: 100
-    MULTIPLICITY: WINDOW_SIZE
+    WINDOW_MAX: 100
+    data: buf, size, MPI_CHAR
 
     $for int size = 1; size < MAX_BUFSIZE; size *= 2
-        bench_p2p(comm, 0, 1, buf, size)
+        bench_p2p(comm, 0, 1, size)
 
     subcode: send_side
         MPI_Win_fence(0, win)
-        $for j=0:WINDOW_SIZE
-            MPI_Get(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+        &call bw_loop
+            MPI_Get($(data), dst, 0, size, MPI_CHAR, win)
         MPI_Win_fence(0, win)
 
     subcode: recv_side
@@ -47,16 +49,16 @@ page: get_bw, bench_frame
 
 page: put_bw, bench_frame
     IS_RMA: 1
-    WINDOW_SIZE: 100
-    MULTIPLICITY: WINDOW_SIZE
+    WINDOW_MAX: 100
+    data: buf, size, MPI_CHAR
 
     $for int size = 1; size < MAX_BUFSIZE; size *= 2
-        bench_p2p(comm, 0, 1, buf, size)
+        bench_p2p(comm, 0, 1, size)
 
     subcode: send_side
         MPI_Win_fence(0, win)
-        $for j=0:WINDOW_SIZE
-            MPI_Put(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+        &call bw_loop
+            MPI_Put($(data), dst, 0, size, MPI_CHAR, win)
         MPI_Win_fence(0, win)
 
     subcode: recv_side
