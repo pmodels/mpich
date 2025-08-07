@@ -174,41 +174,6 @@ void MPIDI_OFI_mr_key_allocator_destroy(void)
     MPID_THREAD_CS_EXIT(VCI, mr_key_allocator_lock);
 }
 
-int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
-                              uint32_t attr, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
-
-    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
-        *req = NULL;
-    }
-
-    int local_vci = MPIDIG_AM_ATTR_DST_VCI(attr);
-    MPIR_AssertDeclValue(int remote_vci, MPIDIG_AM_ATTR_SRC_VCI(attr));
-    switch (ctrlsend->type) {
-        case MPIDI_OFI_CTRL_HUGEACK:
-            mpi_errno = MPIDI_OFI_dispatch_function(local_vci, NULL, ctrlsend->u.huge_ack.ackreq);
-            break;
-
-        case MPIDI_OFI_CTRL_HUGE:
-            MPIR_Assert(local_vci == ctrlsend->u.huge.info.vci_dst);
-            MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vci_src);
-            mpi_errno = MPIDI_OFI_recv_huge_control(local_vci,
-                                                    ctrlsend->u.huge.info.comm_id,
-                                                    ctrlsend->u.huge.info.origin_rank,
-                                                    ctrlsend->u.huge.info.tag,
-                                                    &(ctrlsend->u.huge.info));
-            break;
-
-        default:
-            fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
-            MPIR_Assert(0);
-    }
-
-    return mpi_errno;
-}
-
 static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 {
     bool valid_flag = false;

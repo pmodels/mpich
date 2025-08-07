@@ -255,111 +255,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *data, MPI_Aint da
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge(const void *data, MPI_Aint data_sz,
-                                                 uint64_t cq_data, int dst_rank, int tag,
-                                                 MPIR_Comm * comm, uint64_t match_bits,
-                                                 MPIDI_av_entry_t * addr,
-                                                 int vci_local, int vci_remote,
-                                                 int sender_nic, int receiver_nic,
-                                                 MPIR_Request * sreq,
-                                                 MPL_pointer_attr_t attr, bool do_striping)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, sender_nic);
-
-    int num_nics;
-    uint64_t msg_size;
-    if (do_striping) {
-        num_nics = MPIDI_OFI_global.num_nics;
-        msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
-    } else {
-        num_nics = 1;
-        msg_size = MPIDI_OFI_global.max_msg_size;
-    }
-
-    uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
-    struct fid_mr **huge_send_mrs;
-    huge_send_mrs =
-        (struct fid_mr **) MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_BUFFER);
-    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        /* Set up a memory region for the lmt data transfer */
-        for (int i = 0; i < num_nics; i++) {
-            rma_keys[i] = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
-            MPIR_ERR_CHKANDJUMP(rma_keys[i] == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
-                                MPI_ERR_OTHER, "**ofid_mr_key");
-        }
-    } else {
-        /* zero them to avoid warnings */
-        for (int i = 0; i < num_nics; i++) {
-            rma_keys[i] = 0;
-        }
-    }
-
-    for (int i = 0; i < num_nics; i++) {
-        MPIDI_OFI_context_t *ctx = &MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci_local, i)];
-        MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, data, data_sz, FI_REMOTE_READ, 0ULL, rma_keys[i],
-                                 0ULL, &huge_send_mrs[i], NULL), mr_reg);
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], huge_send_mrs[i], ctx->ep,
-                                      NULL);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    MPIDI_OFI_REQUEST(sreq, huge.send_mrs) = huge_send_mrs;
-    if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        /* MR_BASIC */
-        for (int i = 0; i < num_nics; i++) {
-            rma_keys[i] = fi_mr_key(huge_send_mrs[i]);
-        }
-    }
-
-    /* Send the maximum amount of data that we can here to get things
-     * started, then do the rest using the MR below. This can be confirmed
-     * in the MPIDI_OFI_get_huge code where we start the offset at
-     * MPIDI_OFI_global.max_msg_size */
-    sreq->comm = comm;
-    MPIR_Comm_add_ref(comm);
-
-    /* send ctrl message first */
-    MPIDI_OFI_send_control_t ctrl;
-    ctrl.type = MPIDI_OFI_CTRL_HUGE;
-    for (int i = 0; i < num_nics; i++) {
-        ctrl.u.huge.info.rma_keys[i] = rma_keys[i];
-    }
-    ctrl.u.huge.info.comm_id = comm->context_id;
-    ctrl.u.huge.info.tag = tag;
-    ctrl.u.huge.info.origin_rank = comm->rank;
-    ctrl.u.huge.info.vci_src = vci_local;
-    ctrl.u.huge.info.vci_dst = vci_remote;
-    ctrl.u.huge.info.send_buf = (void *) data;
-    ctrl.u.huge.info.msgsize = data_sz;
-    ctrl.u.huge.info.ackreq = sreq;
-
-    mpi_errno = MPIDI_NM_am_send_hdr(dst_rank, comm, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                     &ctrl, sizeof(ctrl), vci_local, vci_remote);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* send main native message next */
-    MPIR_cc_inc(sreq->cc_ptr);
-    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
-
-    fi_addr_t dest = MPIDI_OFI_av_to_phys(addr, vci_local, sender_nic, vci_remote, receiver_nic);
-    match_bits |= MPIDI_OFI_HUGE_SEND;  /* Add the bit for a huge message */
-    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                      data, msg_size, NULL /* desc */ ,
-                                      cq_data, dest, match_bits,
-                                      (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                         vci_local, tsenddata);
-    /* FIXME: sender_nic may not be the actual nic */
-    MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
-    MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint count,
                                                      MPI_Datatype datatype,
                                                      int dst_rank, int tag,
@@ -452,8 +347,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     bool need_mr = false;
     bool do_inject = false;
     bool do_iov = false;
-    bool do_striping = false;
-    bool do_huge = false;
 
     /* check gpu */
     MPL_pointer_attr_t attr;
@@ -491,21 +384,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         do_inject = true;
     }
 
-    /* check striping path */
-    if (MPIDI_OFI_COMM(comm).enable_striping && data_sz >= MPIDI_OFI_global.stripe_threshold) {
-        syncflag = false;
-        do_striping = true;
-    }
-
-    /* check striping path */
-    if (!do_striping && data_sz >= MPIDI_OFI_global.max_msg_size) {
-        syncflag = false;
-        do_huge = true;
-    }
-
     /* noncontig? try iov or need pack */
     if (!need_pack && !dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !do_inject && !do_striping && !do_huge) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !do_inject) {
             MPI_Aint num_contig;
             MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
             if (num_contig <= MPIDI_OFI_global.tx_iov_limit) {
@@ -614,22 +495,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         } else {
             data = MPIR_get_contig_ptr(buf, dt_true_lb);
             MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
-        }
-
-        if (do_huge) {
-            mpi_errno = MPIDI_OFI_send_huge(data, data_sz, cq_data, dst_rank, tag, comm,
-                                            match_bits, addr, vci_src, vci_dst,
-                                            sender_nic, receiver_nic, *request, attr, false);
-            MPIR_ERR_CHECK(mpi_errno);
-            goto fn_exit;
-        }
-
-        if (do_striping) {
-            mpi_errno = MPIDI_OFI_send_huge(data, data_sz, cq_data, dst_rank, tag, comm,
-                                            match_bits, addr, vci_src, vci_dst,
-                                            sender_nic, receiver_nic, *request, attr, true);
-            MPIR_ERR_CHECK(mpi_errno);
-            goto fn_exit;
         }
 
         /* NOTE: all previous send modes contains sync semantics already */
