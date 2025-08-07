@@ -85,9 +85,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
         return MPI_SUCCESS;
     }
 
-    mpi_errno = MPIDI_OFI_gpu_progress(vci);
-    MPIR_ERR_CHECK(mpi_errno);
-
     if (unlikely(MPIDI_OFI_has_cq_buffered(vci))) {
         int num = MPIDI_OFI_get_buffered(vci, wc);
         mpi_errno = MPIDI_OFI_handle_cq_entries(vci, wc, num);
