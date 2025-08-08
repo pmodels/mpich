@@ -185,17 +185,60 @@ typedef struct {
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
+
+/* define common fields for the next 3 structs and common macros used to initialize these fields.
+ * These macros are "fragile" but they are not supposed to be used anywhere with ignorance.
+ * note: the missing semicolon on the last line is intentional.
+ */
+
+#define MPIDI_OFI_RNDV_COMMON_FIELDS \
+    const void *buf; \
+    MPI_Aint count; \
+    MPI_Datatype datatype; \
+    /* cached fields */ \
+    MPL_pointer_attr_t attr; \
+    MPI_Aint data_sz; \
+    /* send/recv fields */ \
+    int vci_local; \
+    int vci_remote; \
+    struct MPIDI_av_entry *av; \
+    uint64_t match_bits
+
+#define MPIDI_OFI_RNDV_INIT_COMMON(REQ) \
+    p->buf = MPIDIG_REQUEST(REQ, buffer); \
+    p->count = MPIDIG_REQUEST(REQ, count); \
+    p->datatype = MPIDIG_REQUEST(REQ, datatype); \
+    \
+    MPL_pointer_attr_t attr; \
+    MPIR_GPU_query_pointer_attr(p->buf, &attr); \
+    \
+    MPI_Aint data_sz; \
+    MPIR_Datatype_get_size_macro(p->datatype, data_sz); \
+    data_sz *= p->count; \
+    \
+    p->attr = attr; \
+    p->data_sz = data_sz;
+
+#define MPIDI_OFI_RNDV_INIT_COMMON_SEND \
+    MPIDI_OFI_RNDV_INIT_COMMON(sreq) \
+    p->av = MPIDIU_comm_rank_to_av(sreq->comm, MPIDIG_REQUEST(sreq, u.send.dest)); \
+    p->match_bits = MPIDI_OFI_init_sendtag(sreq->comm->context_id, 0, tag) | MPIDI_OFI_AM_SEND; \
+    p->vci_local = MPIDIG_REQUEST(sreq, req->local_vci); \
+    p->vci_remote = MPIDIG_REQUEST(sreq, req->remote_vci)
+
+#define MPIDI_OFI_RNDV_INIT_COMMON_RECV \
+    MPIDI_OFI_RNDV_INIT_COMMON(rreq) \
+    p->av = MPIDIU_comm_rank_to_av(rreq->comm, rreq->status.MPI_SOURCE); \
+    p->match_bits = MPIDI_OFI_init_sendtag(rreq->comm->recvcontext_id, 0, tag) | MPIDI_OFI_AM_SEND; \
+    p->vci_local = vci_dst; \
+    p->vci_remote = vci_src
+
 typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
 } MPIDI_OFI_rndv_common_t;
 
 typedef struct {
-    const void *buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-    /* cached fields */
-    MPL_pointer_attr_t attr;
-    MPI_Aint data_sz;
-    /* tracking fields */
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
     union {
         struct {
             MPI_Aint copy_offset;
@@ -209,22 +252,10 @@ typedef struct {
     } u;
     int chunk_index;
     MPI_Aint remain_sz;
-    /* send/recv fields */
-    int vci_local;
-    int vci_remote;
-    struct MPIDI_av_entry *av;
-    uint64_t match_bits;
 } MPIDI_OFI_pipeline_t;
 
 typedef struct {
-    const void *buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-    /* cached fields */
-    MPL_pointer_attr_t attr;
-    MPI_Aint data_sz;
-    /* tracking fields */
-    int num_nics;
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
     MPI_Aint sz_per_nic;
     union {
         struct {
@@ -246,14 +277,31 @@ typedef struct {
             bool all_issued;
         } recv;
     } u;
-    /* send/recv fields */
-    int vci_local;
-    int vci_remote;
-    struct MPIDI_av_entry *av;
-    uint64_t match_bits;
 } MPIDI_OFI_rndvread_t;
 
 typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
+    MPI_Aint sz_per_nic;
+    union {
+        struct {
+            bool need_pack;
+            union {
+                void *data;     /* !need_pack */
+                int copy_infly; /*  need_pack */
+            } u;
+            MPI_Aint remote_data_sz;
+            uint64_t remote_base;
+            uint64_t *rkeys;
+            MPI_Aint chunks_per_nic;
+            MPI_Aint cur_chunk_index;
+            int write_infly;
+            MPI_Aint chunks_remain;
+        } send;
+        struct {
+            const void *data;
+            struct fid_mr **mrs;
+        } recv;
+    } u;
 } MPIDI_OFI_rndvwrite_t;
 
 enum MPIDI_OFI_req_kind {
