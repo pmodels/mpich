@@ -44,7 +44,6 @@ static int rndv_event_common(int vci, MPIR_Request * rreq, int *vci_src_out, int
     /* if we were expecting an eager send, free the unneeded pack_buffer or iovs array */
     switch (MPIDI_OFI_REQUEST(rreq, event_id)) {
         case MPIDI_OFI_EVENT_RECV_PACK:
-        case MPIDI_OFI_EVENT_RECV_HUGE:
             MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
             break;
         case MPIDI_OFI_EVENT_RECV_NOPACK:

@@ -233,15 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
     }
 
-    if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
-        MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        data_sz = MPIDI_OFI_global.max_msg_size;
-    } else if (MPIDI_OFI_COMM(comm).enable_striping &&
-               (data_sz >= MPIDI_OFI_global.stripe_threshold)) {
-        MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        /* Receive has to be posted with size MPIDI_OFI_global.stripe_threshold to handle underflow */
-        data_sz = MPIDI_OFI_global.stripe_threshold;
-    } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
+    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     /* Simply posting a large recv buffer may take a overhead that defeats the benefit of e.g. pipeline.
