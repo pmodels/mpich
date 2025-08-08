@@ -689,6 +689,18 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = MPIDI_OFI_rndvread_ack_event(wc, req);
                 break;
 
+            case MPIDI_OFI_EVENT_RNDVWRITE_RECV_MRS:
+                mpi_errno = MPIDI_OFI_rndvwrite_recv_mrs_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVWRITE_WRITE_CHUNK:
+                mpi_errno = MPIDI_OFI_rndvwrite_write_chunk_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVWRITE_ACK:
+                mpi_errno = MPIDI_OFI_rndvwrite_ack_event(wc, req);
+                break;
+
             case MPIDI_OFI_EVENT_CHUNK_DONE:
                 mpi_errno = chunk_done_event(vci, wc, req);
                 break;
