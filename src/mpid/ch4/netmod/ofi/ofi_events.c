@@ -419,10 +419,6 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = peek_event(vci, wc, req);
                 break;
 
-            case MPIDI_OFI_EVENT_RECV_HUGE:
-                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
-                break;
-
             case MPIDI_OFI_EVENT_RECV_PACK:
                 mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_PACK);
                 break;
@@ -565,12 +561,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                         case MPIDI_OFI_EVENT_RECV:
                         case MPIDI_OFI_EVENT_RECV_PACK:
                         case MPIDI_OFI_EVENT_RECV_NOPACK:
-                        case MPIDI_OFI_EVENT_RECV_HUGE:
                             MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
                             MPIR_STATUS_SET_COUNT(req->status, 0);
                             MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
-                            if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
-                                 event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+                            if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
                                 MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
                                 MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
                             } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
