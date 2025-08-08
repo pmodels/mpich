@@ -32,6 +32,8 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag);
 int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_dst);
 int MPIDI_OFI_rndvread_send(MPIR_Request * sreq, int tag);
 int MPIDI_OFI_rndvread_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_dst);
+int MPIDI_OFI_rndvwrite_send(MPIR_Request * sreq, int tag);
+int MPIDI_OFI_rndvwrite_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_dst);
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
