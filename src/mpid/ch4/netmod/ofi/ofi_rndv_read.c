@@ -8,6 +8,10 @@
 #include "ofi_events.h"
 #include "ofi_rndv.h"
 
+#include "ofi_rndv_rdma_common.inc"
+
+#define MPIDI_OFI_RNDVREAD_INFLY_CHUNKS 10
+
 static int rndvread_read_poll(MPIX_Async_thing thing);
 static int recv_issue_read(MPIR_Request * parent_request, int event_id,
                            void *buf, MPI_Aint data_sz, MPI_Aint offset,
@@ -20,74 +24,6 @@ static int recv_copy_poll(MPIX_Async_thing thing);
 static void recv_copy_complete(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk_sz);
 static int check_recv_complete(MPIR_Request * rreq);
 
-struct rdma_info {
-    MPI_Aint data_sz;
-    uint64_t base;              /* 0 unless MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS is true */
-    int num_nics;               /* redundant since we assume sender/receiver agree on num_nics */
-    uint64_t rkeys[];
-};
-
-/* utility routine for calculating chunks */
-/* Each nic is assigned with chunks_per_nic chunks. The last nic may have less chunks */
-
-static MPI_Aint get_chunks_per_nic(MPI_Aint data_sz, int num_nics)
-{
-    MPI_Aint chunk_sz = MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ;
-    MPI_Aint num_chunks = data_sz / chunk_sz;
-    if (chunk_sz * num_chunks < data_sz) {
-        num_chunks++;
-    }
-
-    if (num_nics == 1) {
-        return num_chunks;
-    } else {
-        MPI_Aint chunks_per_nic = num_chunks / num_nics;
-        if (chunks_per_nic * num_nics < num_chunks) {
-            chunks_per_nic++;
-        }
-        return chunks_per_nic;
-    }
-}
-
-static void get_chunk_offsets(MPIDI_OFI_rndvread_t * p, MPI_Aint chunk_index,
-                              MPI_Aint * total_offset_out, int *nic_out, MPI_Aint * nic_offset_out,
-                              MPI_Aint * chunk_sz_out)
-{
-    MPI_Aint chunk_sz = MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ;
-    if (p->num_nics == 1) {
-        *nic_out = 0;
-        *nic_offset_out = *total_offset_out = chunk_index * chunk_sz;
-    } else {
-        int nic = chunk_index % p->num_nics;
-        MPI_Aint nic_chunk_index = chunk_index / p->u.recv.chunks_per_nic;
-        *total_offset_out = (nic * p->u.recv.chunks_per_nic + nic_chunk_index) * chunk_sz;
-        *nic_offset_out = nic_chunk_index * chunk_sz;
-    }
-    if (*total_offset_out + chunk_sz < p->u.recv.remote_data_sz) {
-        *chunk_sz_out = chunk_sz;
-    } else {
-        /* incomplete chunks */
-        *chunk_sz_out = MPL_MAX(0, p->u.recv.remote_data_sz - *total_offset_out);
-    }
-}
-
-static bool need_pack(bool dt_contig, MPL_pointer_attr_t * attr)
-{
-    if (!dt_contig) {
-        return true;
-    }
-
-    if (MPL_gpu_attr_is_dev(attr)) {
-        if (!MPIDI_OFI_ENABLE_HMEM) {
-            return true;
-        } else if (!MPL_gpu_attr_is_strict_dev(attr)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 /* -- sender side -- */
 
 int MPIDI_OFI_rndvread_send(MPIR_Request * sreq, int tag)
@@ -96,79 +32,31 @@ int MPIDI_OFI_rndvread_send(MPIR_Request * sreq, int tag)
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(sreq);
     MPIR_FUNC_ENTER;
 
-    /* initialize request header */
-    p->buf = MPIDIG_REQUEST(sreq, buffer);
-    p->count = MPIDIG_REQUEST(sreq, count);
-    p->datatype = MPIDIG_REQUEST(sreq, datatype);
-    p->vci_local = MPIDIG_REQUEST(sreq, req->local_vci);
-    p->vci_remote = MPIDIG_REQUEST(sreq, req->remote_vci);
-    p->av = MPIDIU_comm_rank_to_av(sreq->comm, MPIDIG_REQUEST(sreq, u.send.dest));
-    p->match_bits = MPIDI_OFI_init_sendtag(sreq->comm->context_id, 0, tag) | MPIDI_OFI_AM_SEND;
+    MPIDI_OFI_RNDV_INIT_COMMON_SEND;
 
-    MPI_Aint data_sz;
-    MPIR_Datatype_get_size_macro(p->datatype, data_sz);
-    data_sz *= p->count;
+    MPIR_Assert(!need_pack(p->datatype, &p->attr));
 
-    /* assuming contig datatype */
     MPI_Aint true_extent, true_lb;
     MPIR_Type_get_true_extent_impl(p->datatype, &true_lb, &true_extent);
     p->u.send.data = MPIR_get_contig_ptr(p->buf, true_lb);
 
-    p->data_sz = data_sz;
-    p->num_nics = MPIDI_OFI_global.num_nics;
-    p->u.send.mrs = MPL_malloc((p->num_nics * sizeof(struct fid_mr *)), MPL_MEM_OTHER);
+    int num_nics = MPIDI_OFI_global.num_nics;
+    p->u.send.mrs = MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_OTHER);
 
-    /* prepare mr and rkey */
-    uint64_t rkeys[MPIDI_OFI_MAX_NICS];
-    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        /* Set up a memory region for the lmt data transfer */
-        for (int i = 0; i < p->num_nics; i++) {
-            rkeys[i] = MPIDI_OFI_mr_key_alloc(MPIDI_OFI_LOCAL_MR_KEY, MPIDI_OFI_INVALID_MR_KEY);
-            MPIR_ERR_CHKANDJUMP(rkeys[i] == MPIDI_OFI_INVALID_MR_KEY, mpi_errno,
-                                MPI_ERR_OTHER, "**ofid_mr_key");
-        }
-    } else {
-        /* zero them to avoid warnings */
-        for (int i = 0; i < p->num_nics; i++) {
-            rkeys[i] = 0;
-        }
-    }
-    MPI_Aint chunks_per_nic = get_chunks_per_nic(p->data_sz, p->num_nics);
-    MPI_Aint chunk_sz = MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ;
-    MPI_Aint sz_per_nic = chunks_per_nic * chunk_sz;
-    for (int i = 0; i < p->num_nics; i++) {
-        MPIDI_OFI_context_t *ctx = &MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(p->vci_local, i)];
-        /* note: fi_mr_reg is expensive, distribute over num_nics */
-        void *data = (char *) p->u.send.data + i * sz_per_nic;
-        MPI_Aint sz = (i != p->num_nics - 1) ? sz_per_nic : (p->data_sz - i * sz_per_nic);
-        MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, data, sz, FI_REMOTE_READ, 0ULL,
-                                 rkeys[i], 0ULL, &p->u.send.mrs[i], NULL), mr_reg);
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], p->u.send.mrs[i], ctx->ep,
-                                      NULL);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        for (int i = 0; i < p->num_nics; i++) {
-            rkeys[i] = fi_mr_key(p->u.send.mrs[i]);
-        }
-    }
-
-    /* prepare rdma_info */
-    int hdr_sz = sizeof(struct rdma_info) + p->num_nics * sizeof(uint64_t);
+    int hdr_sz = sizeof(struct rdma_info) + num_nics * sizeof(uint64_t);
     struct rdma_info *hdr = MPL_malloc(hdr_sz, MPL_MEM_OTHER);
     MPIR_Assertp(hdr);
 
-    hdr->data_sz = p->data_sz;
-    hdr->base = (uintptr_t) p->u.send.data;
-    hdr->num_nics = p->num_nics;
-    for (int i = 0; i < p->num_nics; i++) {
-        hdr->rkeys[i] = rkeys[i];
-    }
+    mpi_errno = prepare_rdma_info((void *) p->buf, p->datatype, p->data_sz, p->vci_local,
+                                  FI_REMOTE_READ, p->u.send.mrs, hdr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* send rdma_info */
     mpi_errno = MPIDI_OFI_RNDV_send_hdr(hdr, hdr_sz,
                                         p->av, p->vci_local, p->vci_remote, p->match_bits);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(hdr);
 
     /* issue recv for ack */
     mpi_errno = MPIDI_OFI_RNDV_recv_hdr(sreq, MPIDI_OFI_EVENT_RNDVREAD_ACK, 0,
@@ -188,7 +76,8 @@ int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r
     MPIR_Request *sreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(sreq);
 
-    for (int i = 0; i < p->num_nics; i++) {
+    int num_nics = MPIDI_OFI_global.num_nics;
+    for (int i = 0; i < num_nics; i++) {
         uint64_t key = fi_mr_key(p->u.send.mrs[i]);
         MPIDI_OFI_CALL(fi_close(&p->u.send.mrs[i]->fid), mr_unreg);
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
@@ -216,23 +105,9 @@ int MPIDI_OFI_rndvread_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
     MPIR_FUNC_ENTER;
 
-    p->buf = MPIDIG_REQUEST(rreq, buffer);
-    p->count = MPIDIG_REQUEST(rreq, count);
-    p->datatype = MPIDIG_REQUEST(rreq, datatype);
-    p->vci_local = vci_dst;
-    p->vci_remote = vci_src;
-    p->av = MPIDIU_comm_rank_to_av(rreq->comm, rreq->status.MPI_SOURCE);
-    p->match_bits = MPIDI_OFI_init_sendtag(rreq->comm->recvcontext_id, 0, tag) | MPIDI_OFI_AM_SEND;
-    p->num_nics = MPIDI_OFI_global.num_nics;
+    MPIDI_OFI_RNDV_INIT_COMMON_RECV;
 
-    MPIR_GPU_query_pointer_attr(p->buf, &p->attr);
-
-    MPIR_Datatype_get_size_macro(p->datatype, p->data_sz);
-    p->data_sz *= p->count;
-
-    int dt_contig;
-    MPIR_Datatype_is_contig(p->datatype, &dt_contig);
-    p->u.recv.need_pack = need_pack(dt_contig, &p->attr);
+    p->u.recv.need_pack = need_pack(p->datatype, &p->attr);
 
     if (!p->u.recv.need_pack) {
         MPI_Aint true_extent, true_lb;
@@ -243,7 +118,8 @@ int MPIDI_OFI_rndvread_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     }
 
     /* recv the mrs */
-    MPI_Aint hdr_sz = sizeof(struct rdma_info) + p->num_nics * sizeof(uint64_t);
+    int num_nics = MPIDI_OFI_global.num_nics;
+    MPI_Aint hdr_sz = sizeof(struct rdma_info) + num_nics * sizeof(uint64_t);
     mpi_errno = MPIDI_OFI_RNDV_recv_hdr(rreq, MPIDI_OFI_EVENT_RNDVREAD_RECV_MRS, hdr_sz,
                                         p->av, p->vci_local, p->vci_remote, p->match_bits);
     MPIR_ERR_CHECK(mpi_errno);
@@ -262,18 +138,18 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPIR_Request *rreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
-    MPIR_Assert(hdr->num_nics == p->num_nics);
+    int num_nics = MPIDI_OFI_global.num_nics;
     p->u.recv.remote_data_sz = hdr->data_sz;
     p->u.recv.remote_base = hdr->base;
-    p->u.recv.rkeys = MPL_malloc(p->num_nics * sizeof(uint64_t), MPL_MEM_OTHER);
-    for (int i = 0; i < p->num_nics; i++) {
+    p->u.recv.rkeys = MPL_malloc(num_nics * sizeof(uint64_t), MPL_MEM_OTHER);
+    for (int i = 0; i < num_nics; i++) {
         p->u.recv.rkeys[i] = hdr->rkeys[i];
     }
 
     MPL_free(r);
 
     /* setup chunks */
-    p->u.recv.chunks_per_nic = get_chunks_per_nic(p->u.recv.remote_data_sz, p->num_nics);
+    p->u.recv.chunks_per_nic = get_chunks_per_nic(p->u.recv.remote_data_sz, num_nics);
 
     p->u.recv.cur_chunk_index = 0;
     p->u.recv.num_infly = 0;
@@ -290,13 +166,15 @@ static int rndvread_read_poll(MPIX_Async_thing thing)
     MPIR_Request *rreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
-    while (p->u.recv.cur_chunk_index < p->u.recv.chunks_per_nic * p->num_nics) {
-        if (p->u.recv.num_infly >= 10) {
+    int num_nics = MPIDI_OFI_global.num_nics;
+    while (p->u.recv.cur_chunk_index < p->u.recv.chunks_per_nic * num_nics) {
+        if (p->u.recv.num_infly >= MPIDI_OFI_RNDVREAD_INFLY_CHUNKS) {
             return MPIX_ASYNC_NOPROGRESS;
         }
         int nic;
         MPI_Aint total_offset, nic_offset, chunk_sz;
-        get_chunk_offsets(p, p->u.recv.cur_chunk_index,
+        get_chunk_offsets(p->u.recv.cur_chunk_index, num_nics,
+                          p->u.recv.chunks_per_nic, p->u.recv.remote_data_sz,
                           &total_offset, &nic, &nic_offset, &chunk_sz);
 
         if (chunk_sz > 0) {

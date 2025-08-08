@@ -52,28 +52,13 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    p->buf = MPIDIG_REQUEST(sreq, buffer);
-    p->count = MPIDIG_REQUEST(sreq, count);
-    p->datatype = MPIDIG_REQUEST(sreq, datatype);
-    p->vci_local = MPIDIG_REQUEST(sreq, req->local_vci);
-    p->vci_remote = MPIDIG_REQUEST(sreq, req->remote_vci);
+    MPIDI_OFI_RNDV_INIT_COMMON_SEND;
 
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(p->buf, &attr);
-
-    MPI_Aint data_sz;
-    MPIR_Datatype_get_size_macro(p->datatype, data_sz);
-    data_sz *= p->count;
-
-    p->attr = attr;
-    p->data_sz = data_sz;
     p->remain_sz = data_sz;
     p->chunk_index = 0;
     p->u.send.copy_offset = 0;
     p->u.send.copy_infly = 0;   /* control to avoid overwhelming async progress */
     p->u.send.send_infly = 0;   /* control to avoid overwhelming unexpected recv */
-    p->av = MPIDIU_comm_rank_to_av(sreq->comm, MPIDIG_REQUEST(sreq, u.send.dest));
-    p->match_bits = MPIDI_OFI_init_sendtag(sreq->comm->context_id, 0, tag) | MPIDI_OFI_AM_SEND;
 
     mpi_errno = MPIR_Async_things_add(pipeline_send_poll, sreq, NULL);
 
@@ -87,27 +72,12 @@ int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
 
-    p->buf = MPIDIG_REQUEST(rreq, buffer);
-    p->count = MPIDIG_REQUEST(rreq, count);
-    p->datatype = MPIDIG_REQUEST(rreq, datatype);
-    p->vci_local = vci_dst;
-    p->vci_remote = vci_src;
+    MPIDI_OFI_RNDV_INIT_COMMON_RECV;
 
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(p->buf, &attr);
-
-    MPI_Aint data_sz;
-    MPIR_Datatype_get_size_macro(p->datatype, data_sz);
-    data_sz *= p->count;
-
-    p->attr = attr;
-    p->data_sz = data_sz;
     p->remain_sz = data_sz;
     p->chunk_index = 0;
     p->u.recv.recv_offset = 0;
     p->u.recv.recv_infly = 0;   /* just need enough to match infly send */
-    p->av = MPIDIU_comm_rank_to_av(rreq->comm, rreq->status.MPI_SOURCE);
-    p->match_bits = MPIDI_OFI_init_sendtag(rreq->comm->recvcontext_id, 0, tag) | MPIDI_OFI_AM_SEND;
 
     mpi_errno = MPIR_Async_things_add(pipeline_recv_poll, rreq, NULL);
 
