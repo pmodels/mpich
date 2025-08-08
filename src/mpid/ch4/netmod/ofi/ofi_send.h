@@ -437,18 +437,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         MPIR_ERR_CHECK(mpi_errno);
     } else if (!is_am && data_sz > MPIDI_OFI_EAGER_THRESH) {
         /* new pipeline send */
-        MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2,
-                                                   vci_src /* local */ , vci_dst /* remote */);
-        MPIR_ERR_CHKANDJUMP(!sreq, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIR_Request *sreq;
+        MPIDI_OFI_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, vci_src);
         *request = sreq;
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
-        MPIDIG_REQUEST(sreq, req->local_vci) = vci_src;
-        MPIDIG_REQUEST(sreq, req->remote_vci) = vci_dst;
-        MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
-        MPIDIG_REQUEST(sreq, count) = count;
-        MPIDIG_REQUEST(sreq, datatype) = datatype;
-        MPIDIG_REQUEST(sreq, u.send.dest) = dst_rank;
+
+        MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(sreq);
+        p->buf = buf;
+        p->count = count;
+        p->datatype = datatype;
+        p->need_pack = MPIDI_OFI_rndv_need_pack(dt_contig, &attr);
+        p->attr = attr;
+        p->data_sz = data_sz;
+        p->vci_local = vci_src;
+        p->vci_remote = vci_dst;
+        p->av = addr;
+        p->remote_rank = dst_rank;
+        /* match_bits will be set at receiving CTS */
+
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
         mpi_errno = MPIDI_OFI_issue_ack_recv(sreq, comm, context_offset, dst_rank, tag, addr,
@@ -456,7 +463,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                              sizeof(MPIDI_OFI_ack_request_t));
         MPIR_ERR_CHECK(mpi_errno);
         /* inject a zero-size message with MPIDI_OFI_RNDV_SEND in match_bits */
-        match_bits |= MPIDI_OFI_RNDV_SEND;
+        if (p->need_pack) {
+            match_bits |= MPIDI_OFI_RNDV_PACK;
+        } else {
+            match_bits |= MPIDI_OFI_RNDV_SEND;
+        }
         MPIDI_OFI_idata_set_size(&cq_data, data_sz);    /* optionally use cq_data to carry data_sz */
         mpi_errno = MPIDI_OFI_send_lightweight(NULL, 0, cq_data, dst_rank, tag, comm,
                                                match_bits, addr,

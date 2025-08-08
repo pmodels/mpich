@@ -114,23 +114,3 @@ static void get_chunk_offsets(MPI_Aint chunk_index, int num_nics, MPI_Aint chunk
         *chunk_sz_out = MPL_MAX(0, data_sz - *total_offset_out);
     }
 }
-
-static bool need_pack(MPI_Datatype datatype, MPL_pointer_attr_t * attr)
-{
-    int dt_contig;
-    MPIR_Datatype_is_contig(datatype, &dt_contig);
-    if (!dt_contig) {
-        return true;
-    }
-
-    if (MPL_gpu_attr_is_dev(attr)) {
-        if (!MPIDI_OFI_ENABLE_HMEM) {
-            return true;
-        } else if (!MPL_gpu_attr_is_strict_dev(attr)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
