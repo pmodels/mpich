@@ -32,9 +32,7 @@ int MPIDI_OFI_rndvread_send(MPIR_Request * sreq, int tag)
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(sreq);
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_RNDV_INIT_COMMON_SEND;
-
-    MPIR_Assert(!need_pack(p->datatype, &p->attr));
+    MPIR_Assert(!p->need_pack);
 
     MPI_Aint true_extent, true_lb;
     MPIR_Type_get_true_extent_impl(p->datatype, &true_lb, &true_extent);
@@ -105,11 +103,7 @@ int MPIDI_OFI_rndvread_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_RNDV_INIT_COMMON_RECV;
-
-    p->u.recv.need_pack = need_pack(p->datatype, &p->attr);
-
-    if (!p->u.recv.need_pack) {
+    if (!p->need_pack) {
         MPI_Aint true_extent, true_lb;
         MPIR_Type_get_true_extent_impl(p->datatype, &true_lb, &true_extent);
         p->u.recv.u.data = MPIR_get_contig_ptr(p->buf, true_lb);
@@ -179,7 +173,7 @@ static int rndvread_read_poll(MPIX_Async_thing thing)
 
         if (chunk_sz > 0) {
             void *read_buf;
-            if (p->u.recv.need_pack) {
+            if (p->need_pack) {
                 /* alloc a chunk */
                 MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.
                                                    per_vci[p->vci_local].pipeline_pool, &read_buf);
@@ -261,7 +255,7 @@ int MPIDI_OFI_rndvread_read_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Requ
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
     p->u.recv.num_infly--;
-    if (!p->u.recv.need_pack) {
+    if (!p->need_pack) {
         check_recv_complete(rreq);
     } else {
         /* async copy */
@@ -341,7 +335,7 @@ static int check_recv_complete(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
     if (p->u.recv.all_issued && p->u.recv.num_infly == 0 &&
-        (!p->u.recv.need_pack || p->u.recv.u.copy_infly == 0)) {
+        (!p->need_pack || p->u.recv.u.copy_infly == 0)) {
         /* done. send ack */
         mpi_errno = MPIDI_OFI_RNDV_send_hdr(NULL, 0, p->av, p->vci_local, p->vci_remote,
                                             p->match_bits);

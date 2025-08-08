@@ -52,9 +52,7 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    MPIDI_OFI_RNDV_INIT_COMMON_SEND;
-
-    p->remain_sz = data_sz;
+    p->remain_sz = p->data_sz;
     p->chunk_index = 0;
     p->u.send.copy_offset = 0;
     p->u.send.copy_infly = 0;   /* control to avoid overwhelming async progress */
@@ -72,9 +70,8 @@ int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
 
-    MPIDI_OFI_RNDV_INIT_COMMON_RECV;
-
-    p->remain_sz = data_sz;
+    /* FIXME: need use sender data_sz in case they don't agree */
+    p->remain_sz = p->data_sz;
     p->chunk_index = 0;
     p->u.recv.recv_offset = 0;
     p->u.recv.recv_infly = 0;   /* just need enough to match infly send */

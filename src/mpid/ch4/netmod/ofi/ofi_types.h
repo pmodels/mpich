@@ -98,18 +98,18 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
     return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
 }
 
-#define MPIDI_OFI_PROTOCOL_BITS (6)
+#define MPIDI_OFI_PROTOCOL_BITS (5)
 /* define protocol bits without MPIDI_OFI_PROTOCOL_SHIFT */
+/* The first 3 bits defines separate tag spaces */
 #define MPIDI_OFI_ACK_SEND_0      1ULL
 #define MPIDI_OFI_DYNPROC_SEND_0       2ULL
-#define MPIDI_OFI_GPU_PIPELINE_SEND_0  4ULL
-#define MPIDI_OFI_AM_SEND_0           32ULL
-/* the above defines separate tag spaces */
+#define MPIDI_OFI_AM_SEND_0            4ULL
+/* the next 2 bits defines 3 meta values */
 #define MPIDI_OFI_SYNC_SEND_0          8ULL
-#define MPIDI_OFI_HUGE_SEND_0         16ULL
-#define MPIDI_OFI_RNDV_SEND_0         24ULL
+#define MPIDI_OFI_RNDV_SEND_0         16ULL
+#define MPIDI_OFI_RNDV_PACK_0         24ULL     /* sender require packing, thus only support pipeline or rndv write */
 /* these two are really tag-carried meta data, thus require to be masked in receive */
-#define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_HUGE_SEND_0 | MPIDI_OFI_RNDV_SEND_0)
+#define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_RNDV_SEND_0)
 
 /* Define constants for default bits allocation. The actual bits are defined in
  * ofi_capability_sets.h, which may use these defaults or define its own.
@@ -129,11 +129,10 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_PROTOCOL_SHIFT     (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS)
 #define MPIDI_OFI_ACK_SEND           (MPIDI_OFI_ACK_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_DYNPROC_SEND       (MPIDI_OFI_DYNPROC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_GPU_PIPELINE_SEND  (MPIDI_OFI_GPU_PIPELINE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_HUGE_SEND          (MPIDI_OFI_HUGE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_AM_SEND            (MPIDI_OFI_AM_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_RNDV_SEND          (MPIDI_OFI_RNDV_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_RNDV_PACK          (MPIDI_OFI_RNDV_PACK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 
 #define MPIDI_OFI_PROTOCOL_MASK      (MPIDI_OFI_PROTOCOL_MASK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
