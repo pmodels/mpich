@@ -107,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(rreq);
 #endif
-    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
@@ -185,12 +185,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
-                                wc->len);
-    }
     mpi_errno = MPIDI_OFI_recv_complete(rreq, event_id);
 
   fn_exit:
