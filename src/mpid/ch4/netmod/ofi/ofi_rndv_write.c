@@ -37,11 +37,7 @@ int MPIDI_OFI_rndvwrite_send(MPIR_Request * sreq, int tag)
     MPIDI_OFI_rndvwrite_t *p = &MPIDI_OFI_AMREQ_WRITE(sreq);
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_RNDV_INIT_COMMON_SEND;
-
-    p->u.send.need_pack = need_pack(p->datatype, &p->attr);
-
-    if (!p->u.send.need_pack) {
+    if (!p->need_pack) {
         MPI_Aint true_extent, true_lb;
         MPIR_Type_get_true_extent_impl(p->datatype, &true_lb, &true_extent);
         p->u.send.u.data = MPIR_get_contig_ptr(p->buf, true_lb);
@@ -297,9 +293,7 @@ int MPIDI_OFI_rndvwrite_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_
     MPIDI_OFI_rndvwrite_t *p = &MPIDI_OFI_AMREQ_WRITE(rreq);
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_RNDV_INIT_COMMON_RECV;
-
-    MPIR_Assert(!need_pack(p->datatype, &p->attr));
+    MPIR_Assert(!p->need_pack);
 
     int num_nics = MPIDI_OFI_global.num_nics;
     p->u.recv.mrs = MPL_malloc((num_nics * sizeof(struct fid_mr *)), MPL_MEM_OTHER);
