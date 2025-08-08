@@ -1,0 +1,110 @@
+include: macros/bench_frame.def
+include: macros/mtest.def
+
+/* Similar to p2p_one, but measure bandwidth of self messaging.
+ * The results should be comparable to a memcpy bandwidth.
+ */
+
+subcode: report_one
+    tf_bw = size / tf_latency / 1e9
+    printf("%12d %10.3f %12.3f\n", size, tf_latency, tf_bw);
+
+page: self_one, self_frame
+    MAX_BUFSIZE: 1000000000
+
+    comm = MPI_COMM_SELF
+    int tag = 0;
+    int size = $(MAX_BUFSIZE);
+
+    MPI_Request reqs[2];
+    $for iter=0:5
+        tf_start = MPI_Wtime()
+        MPI_Isend(send_buf, size, MPI_CHAR, 0, tag, comm, &reqs[0])
+        MPI_Irecv(recv_buf, size, MPI_CHAR, 0, tag, comm, &reqs[1])
+        MPI_Waitall(2, reqs, MPI_STATUSES_IGNORE)
+        tf_latency = MPI_Wtime() - tf_start
+        $call report_one
+
+    subcode: report_header
+        printf("%12s %10s %12s\n", "msgsize", "latency(sec)", "bandwidth(GB/s)");
+
+page: self_bw, self_frame
+    MAX_BUFSIZE: 5000000
+    WINDOW: 8
+
+    &call foreach_size
+        iter = bench_warmup(size)
+        &call run_stat, NUM_REPEAT, tf_latency
+            tf_latency = bench_bw(iter, size)
+            tf_latency /= (iter * $(WINDOW))
+        $call report_latency, size, 1
+
+    subcode: report_header
+        $call header_latency
+
+
+fncode: bench_warmup(size): int
+    &call warm_up, iter, tf_dur
+        tf_dur = bench_bw(iter, size)
+    return iter
+
+fncode: bench_bw(iter, size)
+    comm = MPI_COMM_SELF
+    int tag = 0
+    &call measure, iter
+        $my MPI_Request reqs[$(WINDOW) * 2]
+        $for j=0:$(WINDOW)
+            $my sbuf, rbuf: void *
+            sbuf = (char *) send_buf + j * size % (MAX_BUFSIZE - size)
+            rbuf = (char *) recv_buf + j * size % (MAX_BUFSIZE - size)
+            MPI_Isend(sbuf, size, MPI_CHAR, 0, tag, comm, &reqs[j * 2]);
+            MPI_Irecv(rbuf, size, MPI_CHAR, 0, tag, comm, &reqs[j * 2 + 1]);
+        MPI_Waitall($(WINDOW) * 2, reqs, MPI_STATUSES_IGNORE)
+    return tf_dur
+
+#------------------------------------------------------------
+subcode: self_frame
+    $register_name(iter) int
+    $include stdio
+    $include stdlib
+    $(if:HAS_MTEST)
+        $include mpitest.h
+    $(else)
+        $include mpi
+
+    $function main
+        $(if:HAS_MTEST)
+            MTest_Init(NULL, NULL);
+        $(else)
+            MPI_Init(NULL, NULL);
+
+        $call allocate_buffers
+
+        printf("TEST $(_pagename):\n")
+        $call @report_header
+        $call main
+        printf("\n")
+
+        $(if:HAS_MTEST)
+            MTest_Finalize(0);
+        $(else)
+            MPI_Finalize();
+
+subcode: allocate_buffers
+    $global send_buf, recv_buf: void *
+    $(set:size=MAX_BUFSIZE)
+    $(if:HAS_MTEST)
+        MTestArgList *head = MTestArgListCreate(argc, argv)
+        $my mtest_mem_type_e memtype, int device
+        $(for:send, recv)
+            memtype = MTestArgListGetMemType(head, "$1mem")
+            device = MTestArgListGetInt_with_default(head, "$1dev", 0)
+            MTestMalloc($(size), memtype, NULL, &$1_buf, device)
+        MTestArgListDestroy(head)
+    $(else)
+        send_buf = malloc($(size))
+        recv_buf = malloc($(size))
+    $if !send_buf || !recv_buf
+        printf("! Failed to allocate buffers (size=%d)\n", MAX_BUFSIZE)
+        return 1
+
