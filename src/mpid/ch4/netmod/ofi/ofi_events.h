@@ -91,12 +91,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     if (MPIDI_OFI_REQUEST(sreq, am_req)) {
         MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
         int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
-        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+        if (handler_id == -1) {
+            /* native rndv direct */
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_sreq);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_sreq);
+        } else {
+            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     MPIDI_Request_complete_fast(sreq);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int event_id)
@@ -138,8 +150,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         MPI_Status *status = &rreq->status;
         MPIR_Request *am_req = MPIDI_OFI_REQUEST(rreq, am_req);
         int am_recv_id = MPIDI_OFI_REQUEST(rreq, am_handler_id);
-        mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (am_recv_id == -1) {
+            /* native rndv direct */
+
+            /* copy COUNT and MPI_ERROR, but skip MPI_SOURCE and MPI_RANK */
+            am_req->status.count_lo = rreq->status.count_lo;
+            am_req->status.count_hi_and_cancelled = rreq->status.count_hi_and_cancelled;
+            am_req->status.MPI_ERROR = rreq->status.MPI_ERROR;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIDI_anysrc_free_partner(am_req);
+#endif
+
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_req);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_req);
+        } else {
+            mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
     MPIDI_Request_complete_fast(rreq);

@@ -196,42 +196,16 @@ typedef struct {
     MPI_Aint count; \
     MPI_Datatype datatype; \
     /* cached fields */ \
+    bool need_pack; \
     MPL_pointer_attr_t attr; \
     MPI_Aint data_sz; \
     /* send/recv fields */ \
     int vci_local; \
     int vci_remote; \
     struct MPIDI_av_entry *av; \
-    uint64_t match_bits
-
-#define MPIDI_OFI_RNDV_INIT_COMMON(REQ) \
-    p->buf = MPIDIG_REQUEST(REQ, buffer); \
-    p->count = MPIDIG_REQUEST(REQ, count); \
-    p->datatype = MPIDIG_REQUEST(REQ, datatype); \
-    \
-    MPL_pointer_attr_t attr; \
-    MPIR_GPU_query_pointer_attr(p->buf, &attr); \
-    \
-    MPI_Aint data_sz; \
-    MPIR_Datatype_get_size_macro(p->datatype, data_sz); \
-    data_sz *= p->count; \
-    \
-    p->attr = attr; \
-    p->data_sz = data_sz;
-
-#define MPIDI_OFI_RNDV_INIT_COMMON_SEND \
-    MPIDI_OFI_RNDV_INIT_COMMON(sreq) \
-    p->av = MPIDIU_comm_rank_to_av(sreq->comm, MPIDIG_REQUEST(sreq, u.send.dest)); \
-    p->match_bits = MPIDI_OFI_init_sendtag(sreq->comm->context_id, 0, tag) | MPIDI_OFI_AM_SEND; \
-    p->vci_local = MPIDIG_REQUEST(sreq, req->local_vci); \
-    p->vci_remote = MPIDIG_REQUEST(sreq, req->remote_vci)
-
-#define MPIDI_OFI_RNDV_INIT_COMMON_RECV \
-    MPIDI_OFI_RNDV_INIT_COMMON(rreq) \
-    p->av = MPIDIU_comm_rank_to_av(rreq->comm, rreq->status.MPI_SOURCE); \
-    p->match_bits = MPIDI_OFI_init_sendtag(rreq->comm->recvcontext_id, 0, tag) | MPIDI_OFI_AM_SEND; \
-    p->vci_local = vci_dst; \
-    p->vci_remote = vci_src
+    uint64_t match_bits; \
+    /* only needed for sender to am_tag_send or replying probe */ \
+    int remote_rank
 
 typedef struct {
     MPIDI_OFI_RNDV_COMMON_FIELDS;
@@ -263,7 +237,6 @@ typedef struct {
             struct fid_mr **mrs;
         } send;
         struct {
-            bool need_pack;
             union {
                 void *data;     /* !need_pack */
                 int copy_infly; /*  need_pack */
@@ -284,7 +257,6 @@ typedef struct {
     MPI_Aint sz_per_nic;
     union {
         struct {
-            bool need_pack;
             union {
                 void *data;     /* !need_pack */
                 int copy_infly; /*  need_pack */
@@ -351,6 +323,7 @@ typedef union {
     MPIDI_OFI_rndvwrite_t write;
 } MPIDI_OFI_request_t;
 
+#define MPIDI_OFI_AMREQ_COMMON(req)   ((req)->dev.ch4.netmod.ofi.common)
 #define MPIDI_OFI_AMREQ_PIPELINE(req) ((req)->dev.ch4.netmod.ofi.pipeline)
 #define MPIDI_OFI_AMREQ_READ(req)     ((req)->dev.ch4.netmod.ofi.read)
 #define MPIDI_OFI_AMREQ_WRITE(req)    ((req)->dev.ch4.netmod.ofi.write)
