@@ -125,6 +125,15 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     p->vci_remote = vci_src;
     p->av = MPIDIU_comm_rank_to_av(comm, src_rank);
 
+    MPI_Aint remote_data_sz = MPIDI_OFI_idata_get_size(wc->data);
+    if (remote_data_sz > 0) {
+        p->remote_data_sz = remote_data_sz;
+        MPIDI_OFI_RNDV_update_count(rreq, remote_data_sz);
+    } else {
+        /* mark remote_data_sz as unknown */
+        p->remote_data_sz = -1;
+    }
+
     int am_tag = MPIDIG_get_next_am_tag(comm);
     p->match_bits = MPIDI_OFI_init_sendtag(comm->recvcontext_id, 0, am_tag) | MPIDI_OFI_AM_SEND;
 
@@ -194,6 +203,7 @@ int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         hdr.rreq = rreq;
         hdr.am_tag = -1;        /* don't issue am_tag_recv yet */
         hdr.flag = MPIDI_OFI_CTS_FLAG__PROBE;
+        hdr.data_sz = 0;
 
         mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
         MPIR_ERR_CHECK(mpi_errno);
@@ -240,6 +250,8 @@ int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPIR_Request *sreq = ack_req->signal_req;
     struct rndv_cts *hdr = ack_req->ack_hdr;
     MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(sreq);
+
+    p->remote_data_sz = hdr->data_sz;
     p->match_bits =
         MPIDI_OFI_init_sendtag(sreq->comm->context_id, 0, hdr->am_tag) | MPIDI_OFI_AM_SEND;
 
