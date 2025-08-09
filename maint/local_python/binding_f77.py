@@ -811,6 +811,9 @@ def dump_f77_c_func(func, is_cptr=False):
                     else:    
                         dump_array_in(p['name'], c_type, count)
 
+            elif p['kind'] == 'LOGICAL_VOID':
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             else:
                 raise Exception("Unhandled: func %s - %s, kind = %s" % (func['name'], p['name'], p['kind']))
 

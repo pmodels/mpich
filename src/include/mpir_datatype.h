@@ -149,6 +149,8 @@ struct MPIR_Datatype_builtin_entry {
     const char *name;
 };
 extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
+extern int MPIR_fortran_true;
+extern int MPIR_fortran_false;
 
 /* Swap input builtin datatype with an equivalent internal type */
 #define MPIR_DATATYPE_REPLACE_BUILTIN(type) \
