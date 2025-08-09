@@ -36,6 +36,14 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+int MPIDI_OFI_pipeline_send_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_pipeline_recv_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_read_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_write_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(void)
 {
@@ -83,12 +91,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     if (MPIDI_OFI_REQUEST(sreq, am_req)) {
         MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
         int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
-        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+        if (handler_id == -1) {
+            /* native rndv direct */
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_sreq);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_sreq);
+        } else {
+            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     MPIDI_Request_complete_fast(sreq);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int event_id)
@@ -99,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(rreq);
 #endif
-    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
@@ -130,8 +150,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         MPI_Status *status = &rreq->status;
         MPIR_Request *am_req = MPIDI_OFI_REQUEST(rreq, am_req);
         int am_recv_id = MPIDI_OFI_REQUEST(rreq, am_handler_id);
-        mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (am_recv_id == -1) {
+            /* native rndv direct */
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_req);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_req);
+        } else {
+            mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
     MPIDI_Request_complete_fast(rreq);
@@ -168,9 +195,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
         goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
-        goto fn_exit;
     }
 
     /* If synchronous, send ack */
@@ -180,12 +204,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
-                                wc->len);
-    }
     mpi_errno = MPIDI_OFI_recv_complete(rreq, event_id);
 
   fn_exit:

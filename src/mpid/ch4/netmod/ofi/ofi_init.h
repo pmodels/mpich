@@ -34,8 +34,7 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **others, int nic_count);
 
 int MPIDI_OFI_create_vci_context(int vci, int nic);
-int MPIDI_OFI_am_init(int vci);
-int MPIDI_OFI_am_post_recv(int vci, int nic);
+int MPIDI_OFI_init_per_vci(int vci);
 
 bool MPIDI_OFI_nic_is_up(struct fi_info *prov);
 
