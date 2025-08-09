@@ -201,6 +201,7 @@ enum {
     MPIDI_OFI_EVENT_RNDV_CTS,
     MPIDI_OFI_EVENT_PIPELINE_SEND_CHUNK,
     MPIDI_OFI_EVENT_PIPELINE_RECV_CHUNK,
+    MPIDI_OFI_EVENT_PIPELINE_RECV_DATASIZE,
     MPIDI_OFI_EVENT_RNDVREAD_RECV_MRS,
     MPIDI_OFI_EVENT_RNDVREAD_READ_CHUNK,
     MPIDI_OFI_EVENT_RNDVREAD_ACK,
@@ -614,10 +615,12 @@ extern MPIDI_OFI_global_t MPIDI_OFI_global;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
+#define MPIDI_OFI_CAN_SEND_CQ_DATASIZE(data_sz) (MPIDI_OFI_global.cq_data_size == 8 && (data_sz) <= INT32_MAX)
+
 static inline void MPIDI_OFI_idata_set_size(uint64_t * data_field, MPI_Aint data_sz)
 {
     *data_field &= 0xffffffff;
-    if (MPIDI_OFI_global.cq_data_size == 8 && data_sz <= INT32_MAX) {
+    if (MPIDI_OFI_CAN_SEND_CQ_DATASIZE(data_sz)) {
         *data_field |= ((uint64_t) data_sz << 32);
     }
 }

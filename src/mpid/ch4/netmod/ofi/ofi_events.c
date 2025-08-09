@@ -443,6 +443,10 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = MPIDI_OFI_rndv_cts_event(vci, wc, req);
                 break;
 
+            case MPIDI_OFI_EVENT_PIPELINE_RECV_DATASIZE:
+                mpi_errno = MPIDI_OFI_pipeline_recv_datasize_event(wc, req);
+                break;
+
             case MPIDI_OFI_EVENT_PIPELINE_SEND_CHUNK:
                 mpi_errno = MPIDI_OFI_pipeline_send_chunk_event(wc, req);
                 break;
