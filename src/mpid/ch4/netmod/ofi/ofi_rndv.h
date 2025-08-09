@@ -90,6 +90,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_RNDV_recv_hdr(MPIR_Request * parent_reque
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_RNDV_update_count(MPIR_Request * rreq, MPI_Aint data_sz)
+{
+    MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(rreq);
+
+    MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+    if (data_sz > p->data_sz) {
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+    }
+}
+
 #define MPIDI_OFI_RNDV_GET_CONTROL_HDR(r) ((void *)((MPIDI_OFI_RNDV_control_req_t *)(r))->hdr)
 #define MPIDI_OFI_RNDV_GET_CONTROL_REQ(r) ((MPIDI_OFI_RNDV_control_req_t *)(r))->req
 

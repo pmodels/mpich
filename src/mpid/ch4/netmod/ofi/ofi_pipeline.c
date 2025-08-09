@@ -52,17 +52,26 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    p->remain_sz = p->data_sz;
+    p->remote_data_sz = MPL_MIN(p->remote_data_sz, p->data_sz);
+    p->remain_sz = p->remote_data_sz;
     p->chunk_index = 0;
     p->u.send.copy_offset = 0;
     p->u.send.copy_infly = 0;   /* control to avoid overwhelming async progress */
     p->u.send.send_infly = 0;   /* control to avoid overwhelming unexpected recv */
 
-    mpi_errno = MPIR_Async_things_add(pipeline_send_poll, sreq, NULL);
+    if (!MPIDI_OFI_CAN_SEND_CQ_DATASIZE(p->data_sz)) {
+        mpi_errno = MPIDI_OFI_RNDV_send_hdr(&p->data_sz, sizeof(MPI_Aint),
+                                            p->av, p->vci_local, p->vci_remote, p->match_bits);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
+    mpi_errno = MPIR_Async_things_add(pipeline_send_poll, sreq, NULL);
     /* poke progress? */
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_dst)
@@ -70,20 +79,47 @@ int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
 
-    /* FIXME: need use sender data_sz in case they don't agree */
-    p->remain_sz = p->data_sz;
     p->chunk_index = 0;
     p->u.recv.recv_offset = 0;
     p->u.recv.recv_infly = 0;   /* just need enough to match infly send */
 
-    mpi_errno = MPIR_Async_things_add(pipeline_recv_poll, rreq, NULL);
+    if (p->remote_data_sz != -1) {
+        p->remote_data_sz = MPL_MIN(p->remote_data_sz, p->data_sz);
+        p->remain_sz = p->remote_data_sz;
+    } else {
+        mpi_errno = MPIDI_OFI_RNDV_recv_hdr(rreq, MPIDI_OFI_EVENT_PIPELINE_RECV_DATASIZE,
+                                            sizeof(MPI_Aint), p->av, p->vci_local, p->vci_remote,
+                                            p->match_bits);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
+    mpi_errno = MPIR_Async_things_add(pipeline_recv_poll, rreq, NULL);
     /* poke progress? */
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* callback from MPIDI_OFI_dispatch_function in ofi_events.c */
+
+int MPIDI_OFI_pipeline_recv_datasize_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *rreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
+    MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
+
+    MPI_Aint *hdr_data_sz = MPIDI_OFI_RNDV_GET_CONTROL_HDR(r);
+    MPIDI_OFI_RNDV_update_count(rreq, *hdr_data_sz);
+
+    p->remote_data_sz = MPL_MIN(*hdr_data_sz, p->data_sz);
+    p->remain_sz = p->remote_data_sz;
+
+    MPL_free(r);
+    return mpi_errno;
+}
+
 int MPIDI_OFI_pipeline_send_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -115,7 +151,7 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
     MPIR_Request *sreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    while (p->u.send.copy_offset < p->data_sz) {
+    while (p->u.send.copy_offset < p->remote_data_sz) {
         /* limit copy_infly so it doesn't overwhelm async progress */
         if (p->u.send.copy_infly >= MPIDI_OFI_PIPILINE_INFLY_CHUNKS) {
             return MPIX_ASYNC_NOPROGRESS;
@@ -123,8 +159,8 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
 
         void *chunk_buf;
         MPI_Aint chunk_sz = MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ;
-        if (chunk_sz > p->data_sz - p->u.send.copy_offset) {
-            chunk_sz = p->data_sz - p->u.send.copy_offset;
+        if (chunk_sz > p->remote_data_sz - p->u.send.copy_offset) {
+            chunk_sz = p->remote_data_sz - p->u.send.copy_offset;
         }
 
         /* alloc a chunk */
@@ -284,7 +320,12 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
     MPIR_Request *rreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
 
-    while (p->u.recv.recv_offset < p->data_sz) {
+    if (p->remote_data_sz == -1) {
+        /* Maybe we can issue 1 chunk anyway? */
+        return MPIX_ASYNC_NOPROGRESS;
+    }
+
+    while (p->u.recv.recv_offset < p->remote_data_sz) {
         /* only need issue enough recv_infly to match send_infly */
         if (p->u.recv.recv_infly >= MPIDI_OFI_PIPILINE_INFLY_CHUNKS) {
             return MPIX_ASYNC_NOPROGRESS;
@@ -292,8 +333,8 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
 
         void *chunk_buf;
         MPI_Aint chunk_sz = MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ;
-        if (chunk_sz > p->data_sz - p->u.recv.recv_offset) {
-            chunk_sz = p->data_sz - p->u.recv.recv_offset;
+        if (chunk_sz > p->remote_data_sz - p->u.recv.recv_offset) {
+            chunk_sz = p->remote_data_sz - p->u.recv.recv_offset;
         }
 
         /* alloc a chunk */

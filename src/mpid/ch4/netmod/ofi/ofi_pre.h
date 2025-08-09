@@ -199,6 +199,7 @@ typedef struct {
     bool need_pack; \
     MPL_pointer_attr_t attr; \
     MPI_Aint data_sz; \
+    MPI_Aint remote_data_sz; \
     /* send/recv fields */ \
     int vci_local; \
     int vci_remote; \
@@ -241,7 +242,6 @@ typedef struct {
                 void *data;     /* !need_pack */
                 int copy_infly; /*  need_pack */
             } u;
-            MPI_Aint remote_data_sz;
             uint64_t remote_base;
             uint64_t *rkeys;
             MPI_Aint chunks_per_nic;
@@ -261,7 +261,6 @@ typedef struct {
                 void *data;     /* !need_pack */
                 int copy_infly; /*  need_pack */
             } u;
-            MPI_Aint remote_data_sz;
             uint64_t remote_base;
             uint64_t *rkeys;
             MPI_Aint chunks_per_nic;
