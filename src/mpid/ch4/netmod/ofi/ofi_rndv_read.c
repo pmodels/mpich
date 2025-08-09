@@ -132,8 +132,10 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPIR_Request *rreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
+    MPIDI_OFI_RNDV_update_count(rreq, hdr->data_sz);
+
     int num_nics = MPIDI_OFI_global.num_nics;
-    p->u.recv.remote_data_sz = hdr->data_sz;
+    p->remote_data_sz = MPL_MIN(hdr->data_sz, p->data_sz);
     p->u.recv.remote_base = hdr->base;
     p->u.recv.rkeys = MPL_malloc(num_nics * sizeof(uint64_t), MPL_MEM_OTHER);
     for (int i = 0; i < num_nics; i++) {
@@ -143,7 +145,7 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
     MPL_free(r);
 
     /* setup chunks */
-    p->u.recv.chunks_per_nic = get_chunks_per_nic(p->u.recv.remote_data_sz, num_nics);
+    p->u.recv.chunks_per_nic = get_chunks_per_nic(p->remote_data_sz, num_nics);
 
     p->u.recv.cur_chunk_index = 0;
     p->u.recv.num_infly = 0;
@@ -168,7 +170,7 @@ static int rndvread_read_poll(MPIX_Async_thing thing)
         int nic;
         MPI_Aint total_offset, nic_offset, chunk_sz;
         get_chunk_offsets(p->u.recv.cur_chunk_index, num_nics,
-                          p->u.recv.chunks_per_nic, p->u.recv.remote_data_sz,
+                          p->u.recv.chunks_per_nic, p->remote_data_sz,
                           &total_offset, &nic, &nic_offset, &chunk_sz);
 
         if (chunk_sz > 0) {

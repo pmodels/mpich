@@ -67,7 +67,7 @@ int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reque
     MPIDI_OFI_rndvwrite_t *p = &MPIDI_OFI_AMREQ_WRITE(sreq);
 
     int num_nics = MPIDI_OFI_global.num_nics;
-    p->u.send.remote_data_sz = hdr->data_sz;
+    p->remote_data_sz = MPL_MIN(hdr->data_sz, p->data_sz);
     p->u.send.remote_base = hdr->base;
     p->u.send.rkeys = MPL_malloc(num_nics * sizeof(uint64_t), MPL_MEM_OTHER);
     for (int i = 0; i < num_nics; i++) {
@@ -77,7 +77,7 @@ int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reque
     MPL_free(r);
 
     /* setup chunks */
-    p->u.send.chunks_per_nic = get_chunks_per_nic(p->u.send.remote_data_sz, num_nics);
+    p->u.send.chunks_per_nic = get_chunks_per_nic(p->remote_data_sz, num_nics);
     p->u.send.chunks_remain = p->u.send.chunks_per_nic * num_nics;
 
     p->u.send.cur_chunk_index = 0;
@@ -100,7 +100,7 @@ static int rndvwrite_write_poll(MPIX_Async_thing thing)
         int nic;
         MPI_Aint total_offset, nic_offset, chunk_sz;
         get_chunk_offsets(p->u.send.cur_chunk_index, num_nics,
-                          p->u.send.chunks_per_nic, p->u.send.remote_data_sz,
+                          p->u.send.chunks_per_nic, p->remote_data_sz,
                           &total_offset, &nic, &nic_offset, &chunk_sz);
 
         if (chunk_sz <= 0) {
@@ -274,9 +274,9 @@ int MPIDI_OFI_rndvwrite_write_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Re
     p->u.send.write_infly--;
     p->u.send.chunks_remain--;
     if (p->u.send.chunks_remain == 0) {
-        /* done. send ack */
-        mpi_errno = MPIDI_OFI_RNDV_send_hdr(NULL, 0, p->av, p->vci_local, p->vci_remote,
-                                            p->match_bits);
+        /* done. send ack. Also inform receiver our data_sz */
+        mpi_errno = MPIDI_OFI_RNDV_send_hdr(&p->data_sz, sizeof(MPI_Aint),
+                                            p->av, p->vci_local, p->vci_remote, p->match_bits);
         /* complete request */
         MPL_free(p->u.send.rkeys);
         MPIR_Datatype_release_if_not_builtin(p->datatype);
@@ -315,7 +315,8 @@ int MPIDI_OFI_rndvwrite_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_
     MPL_free(hdr);
 
     /* issue recv for ack */
-    mpi_errno = MPIDI_OFI_RNDV_recv_hdr(rreq, MPIDI_OFI_EVENT_RNDVWRITE_ACK, 0,
+    mpi_errno = MPIDI_OFI_RNDV_recv_hdr(rreq, MPIDI_OFI_EVENT_RNDVWRITE_ACK,
+                                        sizeof(MPI_Aint) /* remote data_sz */ ,
                                         p->av, p->vci_local, p->vci_remote, p->match_bits);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -331,6 +332,10 @@ int MPIDI_OFI_rndvwrite_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
     MPIDI_OFI_rndvwrite_t *p = &MPIDI_OFI_AMREQ_WRITE(rreq);
+
+    /* check sender data_sz */
+    MPI_Aint *hdr_data_sz = MPIDI_OFI_RNDV_GET_CONTROL_HDR(r);
+    MPIDI_OFI_RNDV_update_count(rreq, *hdr_data_sz);
 
     int num_nics = MPIDI_OFI_global.num_nics;
     for (int i = 0; i < num_nics; i++) {
