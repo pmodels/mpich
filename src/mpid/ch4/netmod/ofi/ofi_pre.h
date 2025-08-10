@@ -185,6 +185,18 @@ typedef struct {
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
+typedef struct {
+} MPIDI_OFI_rndv_common_t;
+
+typedef struct {
+} MPIDI_OFI_pipeline_t;
+
+typedef struct {
+} MPIDI_OFI_rndvread_t;
+
+typedef struct {
+} MPIDI_OFI_rndvwrite_t;
+
 enum MPIDI_OFI_req_kind {
     MPIDI_OFI_req_kind__any,
     MPIDI_OFI_req_kind__probe,
@@ -241,7 +253,19 @@ typedef struct {
         void *usm_host_buf;     /* recv */
         MPIR_Request *req;
     } pipeline_info;            /* GPU pipeline */
+} MPIDI_OFI_direct_t;
+
+typedef union {
+    MPIDI_OFI_direct_t direct;
+    MPIDI_OFI_rndv_common_t common;
+    MPIDI_OFI_pipeline_t pipeline;
+    MPIDI_OFI_rndvread_t read;
+    MPIDI_OFI_rndvwrite_t write;
 } MPIDI_OFI_request_t;
+
+#define MPIDI_OFI_AMREQ_PIPELINE(req) ((req)->dev.ch4.netmod.ofi.pipeline)
+#define MPIDI_OFI_AMREQ_READ(req)     ((req)->dev.ch4.netmod.ofi.read)
+#define MPIDI_OFI_AMREQ_WRITE(req)    ((req)->dev.ch4.netmod.ofi.write)
 
 typedef struct {
     int index;
