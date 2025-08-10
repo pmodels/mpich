@@ -267,6 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     MPIR_FUNC_ENTER;
 
     MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
+    MPIDI_OFI_REQUEST(*request, am_req) = NULL;
 
     MPIR_Request *sreq = *request;
 
@@ -476,6 +477,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     } else {
         /* normal path */
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
+        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
         MPIR_Request *sreq = *request;
 
         if (syncflag) {
@@ -578,7 +580,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         mpi_errno = MPIDI_OFI_send_fallback(buf, count, datatype, rank, tag, comm,
                                             context_offset, addr, vci_src, vci_dst, request);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     } else {
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
         bool is_init = (bool) MPIR_PT2PT_ATTR_GET_INITFLAG(attr);
@@ -586,7 +587,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                    context_offset, addr, vci_src, vci_dst, request,
                                    false /* is_am */ , syncflag, is_init);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     }
 
   fn_exit:
