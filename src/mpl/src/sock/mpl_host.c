@@ -90,11 +90,19 @@ static void init_lhost_list(void)
 int MPL_host_is_local(const char *host)
 {
     int i;
+    char ip_str[INET_ADDRSTRLEN] = "";
 
     init_lhost_list();
 
+    /* we also try the IP address in case of inconsistent use of FQDN */
+    struct hostent *he = gethostbyname(host);
+    if (he && he->h_addr_list[0]) {
+        struct in_addr *addr = (struct in_addr *) he->h_addr_list[0];
+        inet_ntop(AF_INET, addr, ip_str, sizeof(ip_str));
+    }
+
     for (i = 0; i < lhost_count; i++)
-        if (!strcmp(lhost[i], host))
+        if (!strcmp(lhost[i], host) || !strcmp(lhost[i], ip_str))
             return 1;
 
     return 0;
