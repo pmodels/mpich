@@ -1,0 +1,8 @@
+UPDATE aurora_test 1a06ea1bf0 4d18e44811
+
+    current aurora_test HEAD 3481487390
+
+88a2f04967 2025-07-28 pmi: rename `PMIU_is_threaded` to `PMIU_supports_threading`d56c67d70f 2025-07-28 pmi: fix assertion on `PMIU_CS_ENTER` with `MPL_THREAD_PACKAGE_NONE`
+2296b66e05 2025-08-06 ch4/ipc: Set locality of ipc rendezvous request
+ec37d1c74f 2024-12-02 submodule: Update UCX to v1.19.0
+db46cfc9ad 2025-08-07 yaksa: fix incompatibilities with CUDA 13 runtime API
