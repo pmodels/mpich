@@ -158,14 +158,18 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
 
 static int rndvread_read_poll(MPIX_Async_thing thing)
 {
+    int ret = MPIX_ASYNC_NOPROGRESS;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
+    /* CS required for genq pool and gpu imemcpy */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
+
     int num_nics = MPIDI_OFI_global.num_nics;
     while (p->u.recv.cur_chunk_index < p->u.recv.chunks_per_nic * num_nics) {
         if (p->u.recv.num_infly >= MPIDI_OFI_RNDVREAD_INFLY_CHUNKS) {
-            return MPIX_ASYNC_NOPROGRESS;
+            goto fn_exit;
         }
         int nic;
         MPI_Aint total_offset, nic_offset, chunk_sz;
@@ -180,7 +184,7 @@ static int rndvread_read_poll(MPIX_Async_thing thing)
                 MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.
                                                    per_vci[p->vci_local].pipeline_pool, &read_buf);
                 if (!read_buf) {
-                    return MPIX_ASYNC_NOPROGRESS;
+                    goto fn_exit;
                 }
             } else {
                 read_buf = (char *) p->u.recv.u.data + total_offset;
@@ -202,9 +206,14 @@ static int rndvread_read_poll(MPIX_Async_thing thing)
     }
 
     p->u.recv.all_issued = true;
-    return MPIX_ASYNC_DONE;
+    ret = MPIX_ASYNC_DONE;
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
+    return ret;
   fn_fail:
-    return MPIX_ASYNC_NOPROGRESS;
+    ret = MPIX_ASYNC_NOPROGRESS;
+    goto fn_exit;
 }
 
 struct read_req {
@@ -325,11 +334,13 @@ static void recv_copy_complete(MPIR_Request * rreq, void *chunk_buf, MPI_Aint ch
 {
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(rreq);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
                                       chunk_buf);
 
     p->u.recv.u.copy_infly--;
     check_recv_complete(rreq);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
 }
 
 static int check_recv_complete(MPIR_Request * rreq)
