@@ -1,6 +1,9 @@
 proberank 1
 truncmsg1 2
 truncmsg1 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384
+truncmsg1 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=pipeline
+truncmsg1 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=read
+truncmsg1 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=write
 truncmsg2 2
 truncmsg_mrecv 2
 # multiple completion ests
