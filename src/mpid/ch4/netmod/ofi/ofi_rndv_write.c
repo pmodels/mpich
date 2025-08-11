@@ -91,9 +91,13 @@ int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reque
 
 static int rndvwrite_write_poll(MPIX_Async_thing thing)
 {
+    int ret = MPIX_ASYNC_NOPROGRESS;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_rndvwrite_t *p = &MPIDI_OFI_AMREQ_WRITE(sreq);
+
+    /* CS required for genq pool and gpu imemcpy */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     int num_nics = MPIDI_OFI_global.num_nics;
     while (p->u.send.cur_chunk_index < p->u.send.chunks_per_nic * num_nics) {
@@ -118,7 +122,7 @@ static int rndvwrite_write_poll(MPIX_Async_thing thing)
 
         if (p->need_pack) {
             if (p->u.send.u.copy_infly >= MPIDI_OFI_RNDVWRITE_INFLY_CHUNKS) {
-                return MPIX_ASYNC_NOPROGRESS;
+                goto fn_exit;
             }
 
             /* alloc a chunk */
@@ -126,7 +130,7 @@ static int rndvwrite_write_poll(MPIX_Async_thing thing)
             MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
                                                &chunk_buf);
             if (!chunk_buf) {
-                return MPIX_ASYNC_NOPROGRESS;
+                goto fn_exit;
             }
             /* issue async copy */
             mpi_errno = async_send_copy(thing, sreq, nic, disp, chunk_buf, chunk_sz,
@@ -134,7 +138,7 @@ static int rndvwrite_write_poll(MPIX_Async_thing thing)
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             if (p->u.send.write_infly >= MPIDI_OFI_RNDVWRITE_INFLY_CHUNKS) {
-                return MPIX_ASYNC_NOPROGRESS;
+                goto fn_exit;
             }
             void *write_buf = (char *) p->u.send.u.data + total_offset;
             /* issue rdma write */
@@ -144,9 +148,13 @@ static int rndvwrite_write_poll(MPIX_Async_thing thing)
         p->u.send.cur_chunk_index++;
     }
 
-    return MPIX_ASYNC_DONE;
+    ret = MPIX_ASYNC_DONE;
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
+    return ret;
   fn_fail:
-    return MPIX_ASYNC_NOPROGRESS;
+    goto fn_exit;
 }
 
 struct send_copy {
@@ -211,7 +219,9 @@ static int send_copy_poll(MPIX_Async_thing thing)
     } else if (q->u.send.write_infly >= MPIDI_OFI_RNDVWRITE_INFLY_CHUNKS) {
         return MPIX_ASYNC_NOPROGRESS;
     } else {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(q->vci_local));
         int mpi_errno = send_issue_write(p->sreq, p->chunk_buf, p->chunk_sz, p->nic, p->disp);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(q->vci_local));
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
         MPL_free(p);
