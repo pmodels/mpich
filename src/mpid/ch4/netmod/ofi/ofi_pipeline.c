@@ -148,13 +148,17 @@ int MPIDI_OFI_pipeline_recv_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Requ
 /* async send chunks until done */
 static int pipeline_send_poll(MPIX_Async_thing thing)
 {
+    int ret = MPIX_ASYNC_NOPROGRESS;
     MPIR_Request *sreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
+
+    /* CS required for genq pool and gpu imemcpy */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     while (p->u.send.copy_offset < p->remote_data_sz) {
         /* limit copy_infly so it doesn't overwhelm async progress */
         if (p->u.send.copy_infly >= MPIDI_OFI_PIPILINE_INFLY_CHUNKS) {
-            return MPIX_ASYNC_NOPROGRESS;
+            goto fn_exit;
         }
 
         void *chunk_buf;
@@ -167,7 +171,7 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
                                            &chunk_buf);
         if (!chunk_buf) {
-            return MPIX_ASYNC_NOPROGRESS;
+            goto fn_exit;
         }
 
         /* async copy */
@@ -186,7 +190,10 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         p->u.send.copy_infly++;
     }
 
-    return MPIX_ASYNC_DONE;
+    ret = MPIX_ASYNC_DONE;
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
+    return ret;
 }
 
 /* ---- send_copy ---- */
@@ -325,10 +332,14 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
         return MPIX_ASYNC_NOPROGRESS;
     }
 
+    int ret = MPIX_ASYNC_NOPROGRESS;
+    /* CS required for genq pool and gpu imemcpy */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
+
     while (p->u.recv.recv_offset < p->remote_data_sz) {
         /* only need issue enough recv_infly to match send_infly */
         if (p->u.recv.recv_infly >= MPIDI_OFI_PIPILINE_INFLY_CHUNKS) {
-            return MPIX_ASYNC_NOPROGRESS;
+            goto fn_exit;
         }
 
         void *chunk_buf;
@@ -341,7 +352,7 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
                                            &chunk_buf);
         if (!chunk_buf) {
-            return MPIX_ASYNC_NOPROGRESS;
+            goto fn_exit;
         }
 
         struct recv_chunk_req *chunk_req =
@@ -367,10 +378,13 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
         p->u.recv.recv_infly++;
     }
 
-    return MPIX_ASYNC_DONE;
+    ret = MPIX_ASYNC_DONE;
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
+    return ret;
   fn_fail:
     MPIR_Assert(0);
-    return MPIX_ASYNC_NOPROGRESS;
+    goto fn_exit;
 }
 
 static void recv_chunk_copy(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk_sz,
@@ -433,6 +447,7 @@ static int recv_copy_poll(MPIX_Async_thing thing)
 static void recv_copy_complete(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk_sz)
 {
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(rreq);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
                                       chunk_buf);
@@ -442,4 +457,5 @@ static void recv_copy_complete(MPIR_Request * rreq, void *chunk_buf, MPI_Aint ch
         MPIR_Datatype_release_if_not_builtin(p->datatype);
         MPIDI_Request_complete_fast(rreq);
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
 }
