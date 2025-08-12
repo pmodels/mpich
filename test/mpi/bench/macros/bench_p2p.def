@@ -28,7 +28,7 @@ subcode: _autoload
 subcode: report_header
         $call header_latency
 
-fncode: bench_p2p(comm, src, dst, buf, size)
+fncode: bench_p2p(comm, src, dst, size)
     int rank;
     MPI_Comm_rank(comm, &rank)
 
@@ -36,21 +36,21 @@ fncode: bench_p2p(comm, src, dst, buf, size)
         $(set:MULTIPLICITY=1)
 
     $if rank == src
-        iter = bench_warmup(comm, dst, buf, size)
+        iter = bench_warmup(comm, dst, size)
         &call run_stat, NUM_REPEAT, tf_latency
-            tf_latency = bench_send(iter, comm, dst, buf, size)
+            tf_latency = bench_send(iter, comm, dst, size)
             tf_latency /= iter
         $call report_latency, size, $(MULTIPLICITY)
         $call send_stop
     $elif rank == dst
-        bench_recv(comm, src, buf, size)
+        bench_recv(comm, src, size)
 
     subcode: send_stop
         iter = 0;
         MPI_Send(&iter, 1, MPI_INT, dst, SYNC_TAG, comm)
 
 #---------------------------------------- 
-fncode: bench_send(int iter, comm, dst, buf, size)
+fncode: bench_send(int iter, comm, dst, size)
     # synchronize with receiver
     MPI_Send(&iter, 1, MPI_INT, dst, SYNC_TAG, comm);
 
@@ -59,7 +59,7 @@ fncode: bench_send(int iter, comm, dst, buf, size)
 
     return tf_dur
 
-fncode: bench_recv(comm, src, buf, size)
+fncode: bench_recv(comm, src, size)
     $while 1
         int iter;
         # synchronize with sender */
@@ -70,7 +70,7 @@ fncode: bench_recv(comm, src, buf, size)
         $for i=0:iter
             $call @recv_side
 
-fncode: bench_warmup(comm, dst, buf, size): int
+fncode: bench_warmup(comm, dst, size): int
     &call warm_up, iter, tf_dur
-        tf_dur = bench_send(iter, comm, dst, buf, size)
+        tf_dur = bench_send(iter, comm, dst, size)
     return iter

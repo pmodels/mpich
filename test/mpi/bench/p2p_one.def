@@ -27,6 +27,7 @@ page: p2p_one, bench_frame
     data: buf, size, MPI_CHAR
 
     size = MAX_BUFSIZE
+    buf = gbuf
 
     /* Repeat a few times to see variations or the need to warm up */
     $for iter=0:5
