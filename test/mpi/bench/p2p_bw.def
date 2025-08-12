@@ -11,11 +11,12 @@ page: p2p_bw, bench_frame
     data: buf, size, MPI_CHAR
 
     &call foreach_size
-        bench_p2p(comm, gsrc, gdst, buf, size)
+        bench_p2p(comm, gsrc, gdst, size)
 
     subcode: send_side
         $my MPI_Request reqs[WINDOW_SIZE]
         $for j=0:WINDOW_SIZE
+            buf = (char *) gbuf + j * size
             MPI_Isend($(data), dst, TAG, comm, &reqs[j])
         MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
         MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
@@ -23,6 +24,7 @@ page: p2p_bw, bench_frame
     subcode: recv_side
         $my MPI_Request reqs[WINDOW_SIZE]
         $for j=0:WINDOW_SIZE
+            buf = (char *) gbuf + j * size
             MPI_Irecv($(data), src, TAG, comm, &reqs[j])
         MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
         MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
@@ -31,14 +33,16 @@ page: get_bw, bench_frame
     IS_RMA: 1
     WINDOW_SIZE: 100
     MULTIPLICITY: WINDOW_SIZE
+    data: buf, size, MPI_CHAR
 
     $for int size = 1; size < MAX_BUFSIZE; size *= 2
-        bench_p2p(comm, 0, 1, buf, size)
+        bench_p2p(comm, 0, 1, size)
 
     subcode: send_side
         MPI_Win_fence(0, win)
         $for j=0:WINDOW_SIZE
-            MPI_Get(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+            buf = (char *) gbuf + j * size
+            MPI_Get($(data), dst, 0, size, MPI_CHAR, win)
         MPI_Win_fence(0, win)
 
     subcode: recv_side
@@ -49,14 +53,16 @@ page: put_bw, bench_frame
     IS_RMA: 1
     WINDOW_SIZE: 100
     MULTIPLICITY: WINDOW_SIZE
+    data: buf, size, MPI_CHAR
 
     $for int size = 1; size < MAX_BUFSIZE; size *= 2
-        bench_p2p(comm, 0, 1, buf, size)
+        bench_p2p(comm, 0, 1, size)
 
     subcode: send_side
         MPI_Win_fence(0, win)
         $for j=0:WINDOW_SIZE
-            MPI_Put(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+            buf = (char *) gbuf + j * size
+            MPI_Put($(data), dst, 0, size, MPI_CHAR, win)
         MPI_Win_fence(0, win)
 
     subcode: recv_side

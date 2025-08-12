@@ -28,12 +28,12 @@ subcode: bench_frame
 
         MPI_Comm comm = MPI_COMM_WORLD;
 
-        $my void *buf
+        $global void *gbuf
         $(if:HAS_MTEST)
-            $call mtest_malloc, MAX_BUFSIZE
+            $call mtest_malloc, gbuf, MAX_BUFSIZE
         $(else)
-            buf = malloc(MAX_BUFSIZE)
-        $if !buf
+            gbuf = malloc(MAX_BUFSIZE)
+        $if !gbuf
             printf("! Failed to allocate buffer (size=%d)\n", MAX_BUFSIZE)
             return 1
 
@@ -42,7 +42,7 @@ subcode: bench_frame
             $if grank == 0
                 MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win)
             $else
-                MPI_Win_create(buf, MAX_BUFSIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win)
+                MPI_Win_create(gbuf, MAX_BUFSIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win)
 
         $if grank == 0
             printf("TEST $(_pagename):\n")

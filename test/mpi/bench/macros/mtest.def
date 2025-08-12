@@ -1,7 +1,7 @@
 macros:
     HAS_MTEST: 1
 
-subcode: mtest_malloc(size)
+subcode: mtest_malloc(buf, size)
     MTestArgList *head = MTestArgListCreate(argc, argv)
     $(if:MEM_TYPES=sendrecv)
         $if grank == gsrc
@@ -17,5 +17,5 @@ subcode: mtest_malloc(size)
         $my mtest_mem_type_e memtype, int device
         memtype = MTestArgListGetMemType(head, "$(memtype)")
         device = MTestArgListGetInt_with_default(head, "$(memdev)", grank)
-        MTestMalloc($(size), memtype, NULL, &buf, device)
+        MTestMalloc($(size), memtype, NULL, &$(buf), device)
         MTestPrintfMsg(1, "[%d] Allocating buffer: memtype=%s, device=%d, size=%d\n", grank, MTest_memtype_name(memtype), device, $(size))
