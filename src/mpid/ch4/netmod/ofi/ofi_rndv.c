@@ -91,7 +91,7 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     /* if we were expecting an eager send, free the unneeded pack_buffer or iovs array */
     switch (MPIDI_OFI_REQUEST(rreq, event_id)) {
         case MPIDI_OFI_EVENT_RECV_PACK:
-            MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+            MPIDI_OFI_free_pack_buffer(rreq);
             break;
         case MPIDI_OFI_EVENT_RECV_NOPACK:
             MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
