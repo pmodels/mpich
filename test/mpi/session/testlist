@@ -7,3 +7,5 @@ session_self 1
 session_inter 5
 session_4x4 16
 session_bsend 2
+# args to session_local_only append ": -n 1 true" to mpiexec
+session_local_only 2 timeLimit=10 arg=: arg=-n arg=1 arg=true
