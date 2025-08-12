@@ -833,27 +833,36 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, siz
 #undef CQ_D_HEAD
 #undef CQ_D_TAIL
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t pack_size)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_malloc_pack_buffer(MPIR_Request * req, MPI_Aint pack_size)
 {
-    if (MPIDI_OFI_ENABLE_HMEM) {
-        return MPL_gpu_malloc_host(ptr, pack_size);
-    } else {
-#ifdef MPL_DEFINE_ALIGNED_ALLOC
-        *ptr = MPL_aligned_alloc(256, pack_size, MPL_MEM_BUFFER);
-#else
-        *ptr = MPL_malloc(pack_size, MPL_MEM_BUFFER);
-#endif
-        return 0;
+    void *pack_buf;
+    bool is_genq;
+    if (pack_size <= MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ) {
+        int vci = MPIR_REQUEST_POOL_FROM_HANDLE(req->handle);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci].pipeline_pool, &pack_buf);
+        is_genq = true;
     }
+    if (!pack_buf) {
+        pack_buf = MPL_aligned_alloc(64, pack_size, MPL_MEM_OTHER);
+        is_genq = false;
+    }
+    if (pack_buf) {
+        MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer) = pack_buf;
+        MPIDI_OFI_REQUEST(req, noncontig.pack.is_genq) = is_genq;
+    }
+    return pack_buf;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_free_pack_buffer(MPIR_Request * req)
 {
-    if (MPIDI_OFI_ENABLE_HMEM) {
-        return MPL_gpu_free_host(ptr);
-    } else {
-        MPL_free(ptr);
-        return 0;
+    if (MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
+        if (MPIDI_OFI_REQUEST(req, noncontig.pack.is_genq)) {
+            int vci = MPIR_REQUEST_POOL_FROM_HANDLE(req->handle);
+            MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vci[vci].pipeline_pool,
+                                              MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+        } else {
+            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+        }
     }
 }
 
