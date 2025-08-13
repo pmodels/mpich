@@ -511,6 +511,10 @@ unexpected messages queued.
 **mutex_create %s:MPID_Thread_mutex_create failed: %s
 **thread_create:MPID_Thread_create failed
 **thread_create %s:MPID_Thread_create failed: %s
+**logical_size_wrong: logical_size wrong
+**logical_size_wrong %d: logical_size wrong, should be %d
+**logical_size_unexp: logical_size unexpected
+**logical_size_unexp %d: logical_size %d unexpected
 
 #
 # Errors common to several devices
@@ -910,6 +914,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **valuetoolarge:Value is too large to store
 
 **abi:Fortran ABI already set
+**abi_set_fortran:Info missing key values
+**abi_set_fortran %s:Info missing key \"%s\"
 
 #
 # mpi functions
