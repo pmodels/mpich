@@ -199,10 +199,6 @@ static int MPIR_Topology_delete_internal(void *attr_val)
 {
     MPIR_Topology *topology = (MPIR_Topology *) attr_val;
 
-    MPL_UNREFERENCED_ARG(comm);
-    MPL_UNREFERENCED_ARG(keyval);
-    MPL_UNREFERENCED_ARG(extra_data);
-
     /* FIXME - free the attribute data structure */
 
     if (topology->kind == MPI_CART) {
