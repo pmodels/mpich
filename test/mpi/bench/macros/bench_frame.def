@@ -90,6 +90,9 @@ subcode: _autoload
 subcode: foreach_size
     $for int size = 0; size < $(MAX_BUFSIZE); size = (size==0)?1:size*2
         $(set:MSG_SIZE=size)
+        $(if:MIN_SIZE)
+            $if size < $(MIN_SIZE)
+                continue
         BLOCK
 
 # measure tf_dur over iter
