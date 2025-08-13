@@ -16,6 +16,10 @@
 
 #include "posix_impl.h"
 
+#undef IS_HOST
+#define IS_HOST(attr) \
+    ((attr).type & (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST))
+
 #define MPIDI_POSIX_SEND_VSIS(vci_src_, vci_dst_) \
     do { \
         MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vci_src_, vci_dst_); \
@@ -52,7 +56,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
             MPIDI_POSIX_am_header_t msg_hdr;
             msg_hdr.handler_id = MPIDIG_SEND;
             msg_hdr.am_hdr_sz = sizeof(MPIDIG_hdr_t);
-            msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+            MPL_pointer_attr_t attr;
+            MPIR_GPU_query_pointer_attr(buf, &attr);
+            if (IS_HOST(attr)) {
+                msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__SHORT_HOST;
+            } else {
+                msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+            }
 
             MPIDIG_hdr_t am_hdr;
             am_hdr.src_rank = comm->rank;
