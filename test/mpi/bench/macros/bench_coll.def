@@ -70,8 +70,8 @@ fncode: bench_barrier(comm)
     return sum1
 
 subcode: header_coll_latency
-    printf("%12s %8s %8s %8s     %6s  (in microseconds)\n", "msgsize", "min", "max", "avg", "sigma")
+    printf("%12s %8s %8s %8s     %6s  %12s\n", "msgsize", "min", "max", "avg", "sigma", "avgbw (GB/s)")
 
 subcode: report_coll_latency(MSGSIZE)
-    printf("%12d %8.3f %8.3f %8.3f     %6.3f\n", $(MSGSIZE), tf_min*1e6, tf_max*1e6, tf_avg*1e6, tf_sigma*1e6)
+    printf("%12d %8.3f %8.3f %8.3f     %6.3f  %6.3f\n", $(MSGSIZE), tf_min*1e6, tf_max*1e6, tf_avg*1e6, tf_sigma*1e6, $(MSGSIZE)*1e-9/tf_avg)
 
