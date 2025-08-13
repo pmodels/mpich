@@ -37,6 +37,7 @@ fncode: bench_p2p(comm, src, dst, size)
 
     $if rank == src
         iter = bench_warmup(comm, dst, size)
+        $call adjust_iter_for_window, iter
         &call run_stat, NUM_REPEAT, tf_latency
             tf_latency = bench_send(iter, comm, dst, size)
             tf_latency /= iter
@@ -50,12 +51,36 @@ fncode: bench_p2p(comm, src, dst, size)
         MPI_Send(&iter, 1, MPI_INT, dst, SYNC_TAG, comm)
 
 #---------------------------------------- 
+fncode: calc_window(int iter)
+    window = iter / 10
+    $if window == 0
+        window = 1
+    $elif window > $(WINDOW_MAX)
+        window = $(WINDOW_MAX)
+    return window
+
+subcode: adjust_iter_for_window(iter)
+    $(if:WINDOW_MAX)
+        int window = calc_window($(iter))
+        iter -= iter % window
+
+subcode: loop_with_window(iter)
+    $(if:WINDOW_MAX)
+        window = calc_window($(iter))
+        $for i=0:iter:window
+            BLOCK
+    $(else)
+        $for i=0:iter
+            BLOCK
+
 fncode: bench_send(int iter, comm, dst, size)
     # synchronize with receiver
     MPI_Send(&iter, 1, MPI_INT, dst, SYNC_TAG, comm);
 
-    &call measure, iter
+    tf_start = MPI_Wtime()
+    &call loop_with_window, iter
         $call @send_side
+    tf_dur = MPI_Wtime() - tf_start
 
     return tf_dur
 
@@ -67,7 +92,7 @@ fncode: bench_recv(comm, src, size)
         $if iter == 0
             # time to quit
             break
-        $for i=0:iter
+        &call loop_with_window, iter
             $call @recv_side
 
 fncode: bench_warmup(comm, dst, size): int
