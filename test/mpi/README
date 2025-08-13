@@ -143,6 +143,11 @@ mpiexecarg=string  : Run the program with string as an argument to mpiexec
 env=name=value : Run the program with environment variable "name" given the
                  value "value"
 
+hasgpu=lib : Setting this flag with a GPU library will allow the test to run
+             only if `-hasgpu=lib` was passed to runtest. Using `hasgpu=any`
+             allows the test to run solong as any GPU library was passed in
+             as a flag.
+
 strict=bool : If bool is false, only build and run the program if 
               --enable-strictmpi was not used in configuring the test suite.
 	      That is, a line such as 
