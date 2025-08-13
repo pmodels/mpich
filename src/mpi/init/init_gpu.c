@@ -22,7 +22,7 @@ int MPII_init_gpu(void)
     if (MPIR_CVAR_ENABLE_GPU) {
         int debug_summary = 0;
         if (MPIR_CVAR_DEBUG_SUMMARY) {
-            debug_summary = (MPIR_Process.rank == 0);
+            debug_summary = (MPIR_Process.rank == 0) ? MPIR_CVAR_DEBUG_SUMMARY : 0;
         }
 
         bool specialized_cache =
