@@ -78,18 +78,6 @@ int MPIDI_UCX_do_am_recv(MPIR_Request * rreq)
     MPI_Aint data_sz, in_data_sz;
     int vci = MPIDI_Request_get_vci(rreq);
 
-    MPIDIG_get_recv_buffer(&recv_buf, &data_sz, &is_contig, &in_data_sz, rreq);
-    if (!is_contig || in_data_sz > data_sz) {
-        /* non-contig datatype, need receive into pack buffer */
-        /* ucx will error out if buffer size is less than the promised data size,
-         * also use a pack buffer in this case */
-        recv_buf = MPL_malloc(in_data_sz, MPL_MEM_OTHER);
-        MPIR_Assert(recv_buf);
-        MPIDI_UCX_AM_RECV_REQUEST(rreq, pack_buffer) = recv_buf;
-    } else {
-        MPIDI_UCX_AM_RECV_REQUEST(rreq, pack_buffer) = NULL;
-    }
-
     MPIDI_UCX_ucp_request_t *ucp_request;
     size_t received_length;
     ucp_request_param_t param = {
@@ -97,6 +85,26 @@ int MPIDI_UCX_do_am_recv(MPIR_Request * rreq)
         .cb.recv_am = &MPIDI_UCX_am_recv_callback_nbx,
         .recv_info.length = &received_length,
     };
+
+    MPIDIG_get_recv_buffer(&recv_buf, &data_sz, &is_contig, &in_data_sz, rreq);
+    if (in_data_sz > data_sz) {
+        /* ucx will error out if buffer size is less than the promised data size,
+         * use a pack buffer in this case */
+        /* FIXME: what? how does UCX know the buffer size differs? */
+        recv_buf = MPL_malloc(in_data_sz, MPL_MEM_OTHER);
+        MPIR_Assert(recv_buf);
+        MPIDI_UCX_AM_RECV_REQUEST(rreq, pack_buffer) = recv_buf;
+    } else {
+        MPIDI_UCX_AM_RECV_REQUEST(rreq, pack_buffer) = NULL;
+        if (!is_contig) {
+            MPIR_Datatype *dt_ptr;
+            MPIR_Datatype_get_ptr(MPIDIG_REQUEST(rreq, datatype), dt_ptr);
+            param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+            param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
+            MPIR_Datatype_ptr_add_ref(dt_ptr);
+        }
+    }
+
     void *data_desc = MPIDI_UCX_AM_RECV_REQUEST(rreq, data_desc);
     /* note: use in_data_sz to match promised data size */
     ucp_request = ucp_am_recv_data_nbx(MPIDI_UCX_global.ctx[vci].worker,
