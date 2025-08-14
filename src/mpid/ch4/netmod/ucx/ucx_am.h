@@ -72,8 +72,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPIR_Assert(actual_pack_bytes == data_sz);
     }
     ucp_request_param_t param = {
-        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK,
+        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
         .cb.send = &MPIDI_UCX_am_isend_callback_nbx,
+        .user_data = sreq,
     };
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nbx(ep, MPIDI_UCX_AM_NBX_HANDLER_ID,
                                                               header, header_size,
@@ -88,7 +89,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = send_buf;
     MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
-    ucp_request->req = sreq;
     ucp_request_release(ucp_request);
 
 #else /* !HAVE_UCP_AM_NBX */

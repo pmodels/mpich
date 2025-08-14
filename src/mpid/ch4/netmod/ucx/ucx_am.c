@@ -186,13 +186,11 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
     /* note: only difference from MPIDI_UCX_am_isend_callback is we need
      * MPL_free in stead of MPIR_gpu_free_host
      */
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
+    MPIR_Request *req = user_data;
     int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
 
     MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
     MPIDIG_global.origin_cbs[handler_id] (req);
-    ucp_request->req = NULL;
 }
 #endif
