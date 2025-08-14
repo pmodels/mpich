@@ -15,8 +15,10 @@ noinst_PROGRAMS = \
     get_bw \
     put_bw \
     p2p_one \
+    p2p_self \
     barrier \
-    bcast
+    bcast \
+    allreduce
 
 .def.c:
 	mydef_page $<

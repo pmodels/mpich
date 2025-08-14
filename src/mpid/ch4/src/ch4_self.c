@@ -101,7 +101,10 @@ int MPIDI_Self_finalize(void)
         MPIR_Datatype_get_size_macro(recvtype, rdata_sz); \
         sdata_sz *= sendcnt; \
         rdata_sz *= recvcnt; \
-        MPIR_Localcopy(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype); \
+        MPIR_Localcopy_gpu(sendbuf, sendcnt, sendtype, 0, NULL, \
+                           recvbuf, recvcnt, recvtype, 0, NULL, \
+                           MPL_GPU_COPY_DIRECTION_NONE, \
+                           MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, 1); \
         status.MPI_SOURCE = 0; \
         status.MPI_TAG = tag; \
         if (sdata_sz > rdata_sz) { \

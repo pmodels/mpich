@@ -1,3 +1,28 @@
+subcode: bench_coll(measure_func)
+    $(if:NEED_ROOT)
+        int root = 0
+        $(set:params=iter, root, comm, size)
+    $(else)
+        $(set:params=iter, comm, size)
+    $(if:!SIZE_MIN)
+        $(set:SIZE_MIN=0)
+        $(set:SIZE_STEP=size=(size==0)?1:size*2)
+    $(else)
+        $(set:SIZE_STEP=size*=2)
+    $if grank == 0
+        $call header_coll_latency
+    $for int size = $(SIZE_MIN); size < $(MAX_BUFSIZE); $(SIZE_STEP)
+        $my tf_min, tf_max, tf_avg, tf_sigma
+        $(set:MIN_ITER=0.001/tf_max)
+        &call coll_warmup
+            $(measure_func)($(params), &tf_min, &tf_max, &tf_avg, &tf_sigma)
+            tf_dur = tf_max
+        $if iter < 100
+            iter = 100
+        $(measure_func)($(params), &tf_min, &tf_max, &tf_avg, &tf_sigma)
+        $if grank == 0
+            $call report_coll_latency, size
+
 subcode: coll_warmup
     $if grank == 0
         &call warm_up, iter, tf_dur
