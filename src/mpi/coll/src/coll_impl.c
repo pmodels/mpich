@@ -198,6 +198,7 @@ int MPII_Coll_init(void)
                                                MPII_Create_container, &MPIR_Csel_root);
         MPIR_Csel_source = MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE;
     }
+    MPIR_Csel_debug_summary(MPIR_Csel_source, MPIR_Csel_root);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

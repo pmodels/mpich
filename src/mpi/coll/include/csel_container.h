@@ -204,6 +204,50 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatter_allcomm_nb,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb,
+
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_impl,
+
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta,
+    MPII_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha,
+
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_tagged,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_rma,
+
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;
 
@@ -325,6 +369,14 @@ typedef struct {
                 int chunk_size;
                 int recv_pre_posted;
             } intra_pipelined_tree;
+            struct {
+                int k;
+                int tree_type;
+            } triggered_tagged;
+            struct {
+                int k;
+                int tree_type;
+            } triggered_rma;
         } bcast;
         struct {
             struct {
