@@ -9,7 +9,7 @@
 #include "mpitest.h"
 
 #define LARGE 10000
-int large_send_buf[LARGE];
+int large_buf[LARGE];
 
 /* Test Ibsend and Request_free */
 int main(int argc, char *argv[])
@@ -85,9 +85,8 @@ int main(int argc, char *argv[])
         MPI_Buffer_detach(&bbuf, &bsize);
         free(buf);
 
-        /* Send a large message that may require handshake, e.g. RNDV in shm,
-         * and test receive using truncated buffer and free without waiting. */
-        MPI_Isend(large_send_buf, LARGE, MPI_INT, dest, tag + 5, comm, &r);
+        /* Send a large message that may require handshake, e.g. RNDV in shm */
+        MPI_Isend(large_buf, LARGE, MPI_INT, dest, tag + 5, comm, &r);
         MPI_Wait(&r, MPI_STATUS_IGNORE);
     }
 
@@ -95,9 +94,10 @@ int main(int argc, char *argv[])
         MPI_Request r[6];
         int i;
 
-        for (i = 0; i < 6; i++) {
+        for (i = 0; i < 5; i++) {
             MPI_Irecv(&rmsg[i], 1, MPI_INT, src, tag + i, comm, &r[i]);
         }
+        MPI_Irecv(large_buf, LARGE, MPI_INT, src, tag + 5, comm, &r[i]);
         if (rank != src)        /* Just in case rank == src */
             MPI_Barrier(MPI_COMM_WORLD);
 
