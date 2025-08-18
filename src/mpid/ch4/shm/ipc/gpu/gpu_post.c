@@ -686,8 +686,7 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_A
         MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
                                     MPIDIG_REQUEST(req, buffer), MPIDIG_REQUEST(req, count),
-                                    MPIDIG_REQUEST(req, datatype), 0, &attr,
-                                    MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
+                                    MPIDIG_REQUEST(req, datatype), 0, &attr, engine, true, &yreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = gpu_ipc_async_start(req, &yreq, src_buf, ipc_hdr->ipc_handle.gpu);
@@ -749,8 +748,7 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
     MPL_gpu_engine_type_t engine =
         MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_datatype, 0, &attr,
-                                    dst_buf, dst_count, dst_datatype, 0, NULL,
-                                    MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
+                                    dst_buf, dst_count, dst_datatype, 0, NULL, engine, true, &yreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = gpu_ipc_async_start(sreq, &yreq, dst_buf, ipc_hdr->ipc_handle.gpu);
