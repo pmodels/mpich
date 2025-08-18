@@ -42,52 +42,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
 #ifdef HAVE_UCP_AM_NBX
     size_t header_size = sizeof(ucx_hdr) + am_hdr_sz;
-    void *send_buf, *header, *data_ptr;
-    /* note: since we are not copying large contig gpu data, it is less useful
-     * to use MPIR_gpu_malloc_host */
-    if (dt_contig) {
-        /* only need copy headers */
-        send_buf = MPL_malloc(header_size, MPL_MEM_OTHER);
-        MPIR_Assert(send_buf);
-        header = send_buf;
-
-        MPIR_Memcpy(header, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy((char *) header + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-        data_ptr = (char *) data + dt_true_lb;
-    } else {
-        /* need copy headers and pack data */
-        send_buf = MPL_malloc(header_size + data_sz, MPL_MEM_OTHER);
-        MPIR_Assert(send_buf);
-        header = send_buf;
-        data_ptr = (char *) send_buf + header_size;
-
-        MPIR_Memcpy(header, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy((char *) header + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-        MPI_Aint actual_pack_bytes;
-        mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0, data_ptr, data_sz,
-                                      &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_pack_bytes == data_sz);
-    }
+    void *header;
+    const void *data_ptr;
     ucp_request_param_t param = {
         .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
         .cb.send = &MPIDI_UCX_am_isend_callback_nbx,
         .user_data = sreq,
     };
+
+    header = MPL_malloc(header_size, MPL_MEM_OTHER);
+    MPIR_Assert(header);
+
+    MPIR_Memcpy(header, &ucx_hdr, sizeof(ucx_hdr));
+    MPIR_Memcpy((char *) header + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
+
+    if (dt_contig) {
+        data_ptr = (char *) data + dt_true_lb;
+    } else {
+        param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+        param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
+        data_ptr = data;
+        data_sz = count;
+    }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nbx(ep, MPIDI_UCX_AM_NBX_HANDLER_ID,
                                                               header, header_size,
                                                               data_ptr, data_sz, &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
     /* if send is done, free all resources and complete the request */
     if (ucp_request == NULL) {
-        MPL_free(send_buf);
+        MPL_free(header);
         MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
 
-    MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = send_buf;
+    MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = header;
     MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
     ucp_request_release(ucp_request);
 
