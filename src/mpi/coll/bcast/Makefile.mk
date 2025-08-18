@@ -13,6 +13,7 @@ mpi_core_sources +=											\
     src/mpi/coll/bcast/bcast_intra_binomial.c						\
     src/mpi/coll/bcast/bcast_intra_scatter_recursive_doubling_allgather.c	\
     src/mpi/coll/bcast/bcast_intra_scatter_ring_allgather.c		\
+	src/mpi/coll/bcast/bcast_intra_circ_qvring.c        \
     src/mpi/coll/bcast/bcast_intra_smp.c						\
     src/mpi/coll/bcast/bcast_intra_tree.c				\
     src/mpi/coll/bcast/bcast_intra_pipelined_tree.c			\
