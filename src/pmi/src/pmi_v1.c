@@ -829,6 +829,10 @@ static int PMII_singinit(void)
         newargv[i++] = charpid;
         newargv[i++] = NULL;
         PMIU_Assert(i <= 8);
+
+        /* close stdin to avoid confusions */
+        close(0);
+
         rc = execvp(newargv[0], (char **) newargv);
 
         /* never should return unless failed */
