@@ -494,7 +494,8 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv_pack(uint64_t match_bits)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_rndv_need_pack(int dt_contig, MPL_pointer_attr_t * attr)
 {
     /* assume noncontig data or device data can benefit from pipelined packing/unpacking */
-    return (!dt_contig || MPL_gpu_attr_is_dev(attr));
+    return (!dt_contig || (attr->type != MPL_GPU_POINTER_UNREGISTERED_HOST &&
+                           attr->type != MPL_GPU_POINTER_REGISTERED_HOST));
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(int contextid, int source, int tag)
