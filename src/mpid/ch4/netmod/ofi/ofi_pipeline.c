@@ -207,11 +207,9 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         MPIR_gpu_req async_req;
         int mpi_errno;
         int engine_type = MPIDI_OFI_gpu_get_send_engine_type();
-        int copy_dir = MPL_GPU_COPY_DIRECTION_NONE;
         mpi_errno = MPIR_Ilocalcopy_gpu(p->buf, p->count, p->datatype,
                                         p->u.send.copy_offset, &p->attr, chunk_buf, chunk_sz,
-                                        MPIR_BYTE_INTERNAL, 0, NULL, copy_dir, engine_type,
-                                        1, &async_req);
+                                        MPIR_BYTE_INTERNAL, 0, NULL, engine_type, 1, &async_req);
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
         struct send_chunk *chunk = spawn_send_copy(thing, sreq, &async_req,
                                                    p->chunk_index, chunk_buf, chunk_sz);
@@ -420,10 +418,9 @@ static void recv_chunk_copy(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk
 
     MPIR_gpu_req async_req;
     int engine_type = MPIDI_OFI_gpu_get_recv_engine_type();
-    int copy_dir = MPL_GPU_COPY_DIRECTION_NONE;
     mpi_errno = MPIR_Ilocalcopy_gpu(chunk_buf, chunk_sz, MPIR_BYTE_INTERNAL, 0, NULL,
                                     (void *) p->buf, p->count, p->datatype, offset, &p->attr,
-                                    copy_dir, engine_type, 1, &async_req);
+                                    engine_type, 1, &async_req);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     add_recv_copy(rreq, &async_req, chunk_buf, chunk_sz);
