@@ -95,9 +95,11 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR;
         /* send am_hdr if this is the first segment */
         if (is_topo_local) {
-            MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz, MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz,
+                              MPIR_TYPEREP_FLAG_H2H | MPIR_TYPEREP_FLAG_NONE);
         } else {
-            MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz, MPIR_TYPEREP_FLAG_STREAM);
+            MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz,
+                              MPIR_TYPEREP_FLAG_H2H | MPIR_TYPEREP_FLAG_STREAM);
         }
         /* make sure the data region starts at the boundary of MAX_ALIGNMENT */
         payload = payload + resized_am_hdr_sz;
@@ -114,13 +116,16 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
      * not reliable because the derived datatype could have zero block size which contains no
      * data. */
     if (bytes_sent) {
-        if (is_topo_local) {
-            MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size,
-                              MPIR_TYPEREP_FLAG_NONE);
-        } else {
-            MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size,
-                              MPIR_TYPEREP_FLAG_STREAM);
+        int typerep_flags = MPIR_TYPEREP_NONE;
+        if (msg_hdr == MPIDI_POSIX_AM_TYPE__SHORT_HOST
+            || msg_hdr == MPIDI_POSIX_AM_TYPE__PIPELINE_HOST) {
+            typerep_flags |= MPIR_TYPEREP_FLAG_H2H;
         }
+        if (!is_topo_local) {
+            typerep_flags |= MPIR_TYPEREP_FLAG_STREAM;
+        }
+        MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size,
+                          typerep_flags);
         cell->payload_size += packed_size;
         *bytes_sent = packed_size;
     }
