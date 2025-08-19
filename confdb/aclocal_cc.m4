@@ -381,7 +381,7 @@ AC_CACHE_CHECK([for multiple weak symbol support], pac_cv_prog_c_multiple_weak_s
         #pragma weak PFoo_ = Foo
         #pragma weak pfoo_ = Foo
         int Foo(int);
-        int Foo(a) { return a; }
+        int Foo(int a) { return a; }
     ]])],[AC_LANG_SOURCE([[
         extern int PFoo(int), PFoo_(int), pfoo_(int);
         int main() {
