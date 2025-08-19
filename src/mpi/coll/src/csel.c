@@ -744,115 +744,115 @@ int MPIR_Csel_free(void *csel_)
     return mpi_errno;
 }
 
-static inline bool is_sendbuf_inplace(MPIR_Csel_coll_sig_s coll_info)
+static inline bool is_sendbuf_inplace(MPIR_Csel_coll_sig_s coll_sig)
 {
     bool sendbuf_inplace = false;
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLTOALL:
-            sendbuf_inplace = (coll_info.u.alltoall.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.alltoall.sendbuf == MPI_IN_PLACE);
             break;
         case MPIR_CSEL_COLL_TYPE__IALLTOALL:
-            sendbuf_inplace = (coll_info.u.ialltoall.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.ialltoall.sendbuf == MPI_IN_PLACE);
             break;
         case MPIR_CSEL_COLL_TYPE__ALLTOALLV:
-            sendbuf_inplace = (coll_info.u.alltoallv.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.alltoallv.sendbuf == MPI_IN_PLACE);
             break;
         case MPIR_CSEL_COLL_TYPE__IALLTOALLV:
-            sendbuf_inplace = (coll_info.u.ialltoallv.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.ialltoallv.sendbuf == MPI_IN_PLACE);
             break;
         case MPIR_CSEL_COLL_TYPE__ALLTOALLW:
-            sendbuf_inplace = (coll_info.u.alltoallw.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.alltoallw.sendbuf == MPI_IN_PLACE);
             break;
         case MPIR_CSEL_COLL_TYPE__IALLTOALLW:
-            sendbuf_inplace = (coll_info.u.ialltoallw.sendbuf == MPI_IN_PLACE);
+            sendbuf_inplace = (coll_sig.u.ialltoallw.sendbuf == MPI_IN_PLACE);
             break;
         default:
             fprintf(stderr, "is_sendbuf_inplace not defined for coll_type %d\n",
-                    coll_info.coll_type);
+                    coll_sig.coll_type);
             MPIR_Assert(0);
             break;
     }
     return sendbuf_inplace;
 }
 
-static inline bool is_commutative(MPIR_Csel_coll_sig_s coll_info)
+static inline bool is_commutative(MPIR_Csel_coll_sig_s coll_sig)
 {
     bool commutative = false;
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
-            commutative = MPIR_Op_is_commutative(coll_info.u.allreduce.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.allreduce.op);
             break;
         case MPIR_CSEL_COLL_TYPE__IALLREDUCE:
-            commutative = MPIR_Op_is_commutative(coll_info.u.iallreduce.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.iallreduce.op);
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE:
-            commutative = MPIR_Op_is_commutative(coll_info.u.reduce.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.reduce.op);
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE:
-            commutative = MPIR_Op_is_commutative(coll_info.u.ireduce.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.ireduce.op);
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:
-            commutative = MPIR_Op_is_commutative(coll_info.u.reduce_scatter.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.reduce_scatter.op);
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER:
-            commutative = MPIR_Op_is_commutative(coll_info.u.ireduce_scatter.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.ireduce_scatter.op);
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK:
-            commutative = MPIR_Op_is_commutative(coll_info.u.reduce_scatter_block.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.reduce_scatter_block.op);
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER_BLOCK:
-            commutative = MPIR_Op_is_commutative(coll_info.u.ireduce_scatter_block.op);
+            commutative = MPIR_Op_is_commutative(coll_sig.u.ireduce_scatter_block.op);
             break;
         default:
-            fprintf(stderr, "is_commutative not defined for coll_type %d\n", coll_info.coll_type);
+            fprintf(stderr, "is_commutative not defined for coll_type %d\n", coll_sig.coll_type);
             MPIR_Assert(0);
             break;
     }
     return commutative;
 }
 
-static inline bool is_op_built_in(MPIR_Csel_coll_sig_s coll_info)
+static inline bool is_op_built_in(MPIR_Csel_coll_sig_s coll_sig)
 {
     bool op_built_in = false;
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
-            op_built_in = HANDLE_GET_KIND(coll_info.u.allreduce.op) == HANDLE_KIND_BUILTIN;
+            op_built_in = HANDLE_GET_KIND(coll_sig.u.allreduce.op) == HANDLE_KIND_BUILTIN;
             break;
         case MPIR_CSEL_COLL_TYPE__IALLREDUCE:
-            op_built_in = HANDLE_GET_KIND(coll_info.u.iallreduce.op) == HANDLE_KIND_BUILTIN;
+            op_built_in = HANDLE_GET_KIND(coll_sig.u.iallreduce.op) == HANDLE_KIND_BUILTIN;
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE:
-            op_built_in = HANDLE_GET_KIND(coll_info.u.reduce.op) == HANDLE_KIND_BUILTIN;
+            op_built_in = HANDLE_GET_KIND(coll_sig.u.reduce.op) == HANDLE_KIND_BUILTIN;
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE:
-            op_built_in = HANDLE_GET_KIND(coll_info.u.ireduce.op) == HANDLE_KIND_BUILTIN;
+            op_built_in = HANDLE_GET_KIND(coll_sig.u.ireduce.op) == HANDLE_KIND_BUILTIN;
             break;
         default:
-            fprintf(stderr, "is_op_builtin not defined for coll_type %d\n", coll_info.coll_type);
+            fprintf(stderr, "is_op_builtin not defined for coll_type %d\n", coll_sig.coll_type);
             MPIR_Assert(0);
             break;
     }
     return op_built_in;
 }
 
-static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
+static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_sig)
 {
     bool is_regular = true;
     int i = 0;
     const MPI_Aint *recvcounts = NULL;
 
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:
-            recvcounts = coll_info.u.reduce_scatter.recvcounts;
+            recvcounts = coll_sig.u.reduce_scatter.recvcounts;
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER:
-            recvcounts = coll_info.u.ireduce_scatter.recvcounts;
+            recvcounts = coll_sig.u.ireduce_scatter.recvcounts;
             break;
         default:
             MPIR_Assert(0);
             break;
     }
-    for (i = 0; i < (coll_info.comm_ptr->local_size - 1); ++i) {
+    for (i = 0; i < (coll_sig.comm_ptr->local_size - 1); ++i) {
         if (recvcounts[i] != recvcounts[i + 1]) {
             is_regular = false;
             break;
@@ -861,53 +861,53 @@ static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
     return is_regular;
 }
 
-static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
+static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_sig)
 {
     MPI_Aint msgsize = 0;
 
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.allreduce.datatype, msgsize);
-            msgsize *= coll_info.u.allreduce.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.allreduce.datatype, msgsize);
+            msgsize *= coll_sig.u.allreduce.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.iallreduce.datatype, msgsize);
-            msgsize *= coll_info.u.iallreduce.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.iallreduce.datatype, msgsize);
+            msgsize *= coll_sig.u.iallreduce.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__BCAST:
-            MPIR_Datatype_get_size_macro(coll_info.u.bcast.datatype, msgsize);
-            msgsize *= coll_info.u.bcast.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.bcast.datatype, msgsize);
+            msgsize *= coll_sig.u.bcast.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IBCAST:
-            MPIR_Datatype_get_size_macro(coll_info.u.ibcast.datatype, msgsize);
-            msgsize *= coll_info.u.ibcast.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ibcast.datatype, msgsize);
+            msgsize *= coll_sig.u.ibcast.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__REDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.reduce.datatype, msgsize);
-            msgsize *= coll_info.u.reduce.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.reduce.datatype, msgsize);
+            msgsize *= coll_sig.u.reduce.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.ireduce.datatype, msgsize);
-            msgsize *= coll_info.u.ireduce.count;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ireduce.datatype, msgsize);
+            msgsize *= coll_sig.u.ireduce.count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__ALLTOALL:
-            MPIR_Datatype_get_size_macro(coll_info.u.alltoall.sendtype, msgsize);
-            msgsize *= coll_info.u.alltoall.sendcount;
+            MPIR_Datatype_get_size_macro(coll_sig.u.alltoall.sendtype, msgsize);
+            msgsize *= coll_sig.u.alltoall.sendcount;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLTOALL:
-            MPIR_Datatype_get_size_macro(coll_info.u.ialltoall.sendtype, msgsize);
-            msgsize *= coll_info.u.ialltoall.sendcount;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ialltoall.sendtype, msgsize);
+            msgsize *= coll_sig.u.ialltoall.sendcount;
             break;
 
         default:
-            fprintf(stderr, "avg_msg_size not defined for coll_type %d\n", coll_info.coll_type);
+            fprintf(stderr, "avg_msg_size not defined for coll_type %d\n", coll_sig.coll_type);
             MPIR_Assert(0);
             break;
     }
@@ -915,56 +915,56 @@ static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
     return msgsize;
 }
 
-static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
+static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_sig)
 {
     MPI_Aint count = 0;
     int i = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+    int comm_size = coll_sig.comm_ptr->local_size;
 
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__BCAST:
-            count = coll_info.u.bcast.count;
+            count = coll_sig.u.bcast.count;
             break;
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
-            count = coll_info.u.allreduce.count;
+            count = coll_sig.u.allreduce.count;
             break;
         case MPIR_CSEL_COLL_TYPE__IALLREDUCE:
-            count = coll_info.u.iallreduce.count;
+            count = coll_sig.u.iallreduce.count;
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE:
-            count = coll_info.u.reduce.count;
+            count = coll_sig.u.reduce.count;
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE:
-            count = coll_info.u.ireduce.count;
+            count = coll_sig.u.ireduce.count;
             break;
         case MPIR_CSEL_COLL_TYPE__ALLGATHER:
-            count = coll_info.u.allgather.recvcount;
+            count = coll_sig.u.allgather.recvcount;
             break;
         case MPIR_CSEL_COLL_TYPE__ALLGATHERV:
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.allgatherv.recvcounts[i];
+                count += coll_sig.u.allgatherv.recvcounts[i];
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.reduce_scatter.recvcounts[i];
+                count += coll_sig.u.reduce_scatter.recvcounts[i];
             break;
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK:
-            count = coll_info.u.reduce_scatter_block.recvcount;
+            count = coll_sig.u.reduce_scatter_block.recvcount;
             break;
         case MPIR_CSEL_COLL_TYPE__IALLGATHER:
-            count = coll_info.u.iallgather.recvcount;
+            count = coll_sig.u.iallgather.recvcount;
             break;
         case MPIR_CSEL_COLL_TYPE__IALLGATHERV:
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.iallgatherv.recvcounts[i];
+                count += coll_sig.u.iallgatherv.recvcounts[i];
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER:
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.ireduce_scatter.recvcounts[i];
+                count += coll_sig.u.ireduce_scatter.recvcounts[i];
             break;
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER_BLOCK:
-            count = coll_info.u.ireduce_scatter_block.recvcount;
+            count = coll_sig.u.ireduce_scatter_block.recvcount;
             break;
         default:
             MPIR_Assert(0);
@@ -973,37 +973,37 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
     return count;
 }
 
-static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
+static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_sig)
 {
     MPI_Aint total_bytes = 0, i = 0, count = 0, typesize = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+    int comm_size = coll_sig.comm_ptr->local_size;
 
-    switch (coll_info.coll_type) {
+    switch (coll_sig.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.allreduce.datatype, total_bytes);
-            total_bytes *= coll_info.u.allreduce.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.allreduce.datatype, total_bytes);
+            total_bytes *= coll_sig.u.allreduce.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__BCAST:
-            MPIR_Datatype_get_size_macro(coll_info.u.bcast.datatype, total_bytes);
-            total_bytes *= coll_info.u.bcast.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.bcast.datatype, total_bytes);
+            total_bytes *= coll_sig.u.bcast.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__REDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.reduce.datatype, total_bytes);
-            total_bytes *= coll_info.u.reduce.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.reduce.datatype, total_bytes);
+            total_bytes *= coll_sig.u.reduce.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__ALLTOALL:
-            MPIR_Datatype_get_size_macro(coll_info.u.alltoall.sendtype, total_bytes);
-            total_bytes *= coll_info.u.alltoall.sendcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.alltoall.sendtype, total_bytes);
+            total_bytes *= coll_sig.u.alltoall.sendcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__ALLTOALLV:
-            MPIR_Datatype_get_size_macro(coll_info.u.alltoallv.sendtype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.alltoallv.sendtype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.alltoallv.sendcounts[i];
+                count += coll_sig.u.alltoallv.sendcounts[i];
             total_bytes *= count;
             break;
 
@@ -1011,91 +1011,91 @@ static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
             count = 0;
             typesize = 0;
             for (i = 0; i < comm_size; i++) {
-                MPIR_Datatype_get_size_macro(coll_info.u.alltoallw.sendtypes[i], typesize);
-                count = coll_info.u.alltoallw.sendcounts[i];
+                MPIR_Datatype_get_size_macro(coll_sig.u.alltoallw.sendtypes[i], typesize);
+                count = coll_sig.u.alltoallw.sendcounts[i];
                 total_bytes += (count * typesize);
             }
             break;
 
         case MPIR_CSEL_COLL_TYPE__ALLGATHER:
-            MPIR_Datatype_get_size_macro(coll_info.u.allgather.recvtype, total_bytes);
-            total_bytes *= coll_info.u.allgather.recvcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.allgather.recvtype, total_bytes);
+            total_bytes *= coll_sig.u.allgather.recvcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__ALLGATHERV:
-            MPIR_Datatype_get_size_macro(coll_info.u.allgatherv.recvtype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.allgatherv.recvtype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.allgatherv.recvcounts[i];
+                count += coll_sig.u.allgatherv.recvcounts[i];
             total_bytes *= count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__GATHER:
-            if (coll_info.u.gather.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_info.u.gather.recvtype, total_bytes);
+            if (coll_sig.u.gather.root == MPI_ROOT) {
+                MPIR_Datatype_get_size_macro(coll_sig.u.gather.recvtype, total_bytes);
                 /* use remote size for intercomm root */
-                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes = coll_info.u.gather.recvcount * (coll_info.comm_ptr->remote_size);
+                if (coll_sig.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+                    total_bytes = coll_sig.u.gather.recvcount * (coll_sig.comm_ptr->remote_size);
                 else
-                    total_bytes = coll_info.u.gather.recvcount * comm_size;
+                    total_bytes = coll_sig.u.gather.recvcount * comm_size;
             } else {
-                MPIR_Datatype_get_size_macro(coll_info.u.gather.sendtype, total_bytes);
-                total_bytes = coll_info.u.gather.sendcount * comm_size;
+                MPIR_Datatype_get_size_macro(coll_sig.u.gather.sendtype, total_bytes);
+                total_bytes = coll_sig.u.gather.sendcount * comm_size;
             }
             break;
 
         case MPIR_CSEL_COLL_TYPE__SCATTER:
-            if (coll_info.u.scatter.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_info.u.scatter.sendtype, total_bytes);
+            if (coll_sig.u.scatter.root == MPI_ROOT) {
+                MPIR_Datatype_get_size_macro(coll_sig.u.scatter.sendtype, total_bytes);
                 /* use remote size for intercomm root */
-                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes = coll_info.u.scatter.sendcount * (coll_info.comm_ptr->remote_size);
+                if (coll_sig.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+                    total_bytes = coll_sig.u.scatter.sendcount * (coll_sig.comm_ptr->remote_size);
                 else
-                    total_bytes = coll_info.u.scatter.sendcount * comm_size;
+                    total_bytes = coll_sig.u.scatter.sendcount * comm_size;
             } else {
-                MPIR_Datatype_get_size_macro(coll_info.u.scatter.recvtype, total_bytes);
-                total_bytes = coll_info.u.scatter.recvcount * comm_size;
+                MPIR_Datatype_get_size_macro(coll_sig.u.scatter.recvtype, total_bytes);
+                total_bytes = coll_sig.u.scatter.recvcount * comm_size;
             }
             break;
 
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER:
-            MPIR_Datatype_get_size_macro(coll_info.u.reduce_scatter.datatype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.reduce_scatter.datatype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.reduce_scatter.recvcounts[i];
+                count += coll_sig.u.reduce_scatter.recvcounts[i];
             total_bytes *= count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK:
-            MPIR_Datatype_get_size_macro(coll_info.u.reduce_scatter_block.datatype, total_bytes);
-            total_bytes *= coll_info.u.reduce_scatter_block.recvcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.reduce_scatter_block.datatype, total_bytes);
+            total_bytes *= coll_sig.u.reduce_scatter_block.recvcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.iallreduce.datatype, total_bytes);
-            total_bytes *= coll_info.u.iallreduce.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.iallreduce.datatype, total_bytes);
+            total_bytes *= coll_sig.u.iallreduce.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IBCAST:
-            MPIR_Datatype_get_size_macro(coll_info.u.ibcast.datatype, total_bytes);
-            total_bytes *= coll_info.u.ibcast.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ibcast.datatype, total_bytes);
+            total_bytes *= coll_sig.u.ibcast.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IREDUCE:
-            MPIR_Datatype_get_size_macro(coll_info.u.ireduce.datatype, total_bytes);
-            total_bytes *= coll_info.u.ireduce.count * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ireduce.datatype, total_bytes);
+            total_bytes *= coll_sig.u.ireduce.count * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLTOALL:
-            MPIR_Datatype_get_size_macro(coll_info.u.ialltoall.sendtype, total_bytes);
-            total_bytes *= coll_info.u.ialltoall.sendcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ialltoall.sendtype, total_bytes);
+            total_bytes *= coll_sig.u.ialltoall.sendcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLTOALLV:
-            MPIR_Datatype_get_size_macro(coll_info.u.ialltoallv.sendtype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.ialltoallv.sendtype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.ialltoallv.sendcounts[i];
+                count += coll_sig.u.ialltoallv.sendcounts[i];
             total_bytes *= count;
             break;
 
@@ -1103,64 +1103,63 @@ static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
             count = 0;
             typesize = 0;
             for (i = 0; i < comm_size; i++) {
-                MPIR_Datatype_get_size_macro(coll_info.u.ialltoallw.sendtypes[i], typesize);
-                count = coll_info.u.ialltoallw.sendcounts[i];
+                MPIR_Datatype_get_size_macro(coll_sig.u.ialltoallw.sendtypes[i], typesize);
+                count = coll_sig.u.ialltoallw.sendcounts[i];
                 total_bytes += (count * typesize);
             }
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLGATHER:
-            MPIR_Datatype_get_size_macro(coll_info.u.iallgather.recvtype, total_bytes);
-            total_bytes *= coll_info.u.iallgather.recvcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.iallgather.recvtype, total_bytes);
+            total_bytes *= coll_sig.u.iallgather.recvcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IALLGATHERV:
-            MPIR_Datatype_get_size_macro(coll_info.u.iallgatherv.recvtype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.iallgatherv.recvtype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.iallgatherv.recvcounts[i];
+                count += coll_sig.u.iallgatherv.recvcounts[i];
             total_bytes *= count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER:
-            MPIR_Datatype_get_size_macro(coll_info.u.ireduce_scatter.datatype, total_bytes);
+            MPIR_Datatype_get_size_macro(coll_sig.u.ireduce_scatter.datatype, total_bytes);
             count = 0;
             for (i = 0; i < comm_size; i++)
-                count += coll_info.u.ireduce_scatter.recvcounts[i];
+                count += coll_sig.u.ireduce_scatter.recvcounts[i];
             total_bytes *= count;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER_BLOCK:
-            MPIR_Datatype_get_size_macro(coll_info.u.ireduce_scatter_block.datatype, total_bytes);
-            total_bytes = coll_info.u.ireduce_scatter_block.recvcount * comm_size;
+            MPIR_Datatype_get_size_macro(coll_sig.u.ireduce_scatter_block.datatype, total_bytes);
+            total_bytes = coll_sig.u.ireduce_scatter_block.recvcount * comm_size;
             break;
 
         case MPIR_CSEL_COLL_TYPE__IGATHER:
-            if (coll_info.u.igather.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_info.u.igather.recvtype, total_bytes);
+            if (coll_sig.u.igather.root == MPI_ROOT) {
+                MPIR_Datatype_get_size_macro(coll_sig.u.igather.recvtype, total_bytes);
                 /* use remote size for intercomm root */
-                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes = coll_info.u.igather.recvcount * (coll_info.comm_ptr->remote_size);
+                if (coll_sig.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+                    total_bytes = coll_sig.u.igather.recvcount * (coll_sig.comm_ptr->remote_size);
                 else
-                    total_bytes = coll_info.u.igather.recvcount * comm_size;
+                    total_bytes = coll_sig.u.igather.recvcount * comm_size;
             } else {
-                MPIR_Datatype_get_size_macro(coll_info.u.igather.sendtype, total_bytes);
-                total_bytes = coll_info.u.igather.sendcount * comm_size;
+                MPIR_Datatype_get_size_macro(coll_sig.u.igather.sendtype, total_bytes);
+                total_bytes = coll_sig.u.igather.sendcount * comm_size;
             }
             break;
 
         case MPIR_CSEL_COLL_TYPE__ISCATTER:
-            if (coll_info.u.iscatter.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_info.u.iscatter.sendtype, total_bytes);
+            if (coll_sig.u.iscatter.root == MPI_ROOT) {
+                MPIR_Datatype_get_size_macro(coll_sig.u.iscatter.sendtype, total_bytes);
                 /* use remote size for intercomm root */
-                if (coll_info.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes =
-                        coll_info.u.iscatter.sendcount * (coll_info.comm_ptr->remote_size);
+                if (coll_sig.comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+                    total_bytes = coll_sig.u.iscatter.sendcount * (coll_sig.comm_ptr->remote_size);
                 else
-                    total_bytes = coll_info.u.iscatter.sendcount * comm_size;
+                    total_bytes = coll_sig.u.iscatter.sendcount * comm_size;
             } else {
-                MPIR_Datatype_get_size_macro(coll_info.u.iscatter.recvtype, total_bytes);
-                total_bytes = coll_info.u.iscatter.recvcount * comm_size;
+                MPIR_Datatype_get_size_macro(coll_sig.u.iscatter.recvtype, total_bytes);
+                total_bytes = coll_sig.u.iscatter.recvcount * comm_size;
             }
             break;
 
@@ -1172,11 +1171,11 @@ static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
     return total_bytes;
 }
 
-void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
+void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_sig)
 {
     csel_s *csel = (csel_s *) csel_;
     csel_node_s *node = NULL;
-    MPIR_Comm *comm_ptr = coll_info.comm_ptr;
+    MPIR_Comm *comm_ptr = coll_sig.comm_ptr;
 
     MPIR_Assert(csel_);
 
@@ -1184,7 +1183,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
     if (csel->type == CSEL_TYPE__ROOT)
         root = csel->u.root.tree;
     else
-        root = csel->u.pruned.coll_trees[coll_info.coll_type];
+        root = csel->u.pruned.coll_trees[coll_sig.coll_type];
 
     for (node = root; node;) {
         switch (node->type) {
@@ -1238,84 +1237,84 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
-                if (node->u.collective.coll_type == coll_info.coll_type)
+                if (node->u.collective.coll_type == coll_sig.coll_type)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LE:
-                if (get_avg_msgsize(coll_info) <= node->u.avg_msg_size_le.val)
+                if (get_avg_msgsize(coll_sig) <= node->u.avg_msg_size_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT:
-                if (get_avg_msgsize(coll_info) < node->u.avg_msg_size_lt.val)
+                if (get_avg_msgsize(coll_sig) < node->u.avg_msg_size_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE:
-                if (get_total_msgsize(coll_info) <= node->u.total_msg_size_le.val)
+                if (get_total_msgsize(coll_sig) <= node->u.total_msg_size_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
-                if (get_total_msgsize(coll_info) < node->u.total_msg_size_lt.val)
+                if (get_total_msgsize(coll_sig) < node->u.total_msg_size_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LE:
-                if (get_count(coll_info) <= node->u.count_le.val)
+                if (get_count(coll_sig) <= node->u.count_le.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-                if (get_count(coll_info) < MPL_pof2(coll_info.comm_ptr->local_size))
+                if (get_count(coll_sig) < MPL_pof2(coll_sig.comm_ptr->local_size))
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
-                if (is_commutative(coll_info) == node->u.is_commutative.val)
+                if (is_commutative(coll_sig) == node->u.is_commutative.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__IS_SBUF_INPLACE:
-                if (is_sendbuf_inplace(coll_info) == node->u.is_sbuf_inplace.val)
+                if (is_sendbuf_inplace(coll_sig) == node->u.is_sbuf_inplace.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__IS_OP_BUILT_IN:
-                if (is_op_built_in(coll_info) == node->u.is_op_built_in.val)
+                if (is_op_built_in(coll_sig) == node->u.is_op_built_in.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__IS_BLOCK_REGULAR:
-                if (is_block_regular(coll_info) == node->u.is_block_regular.val)
+                if (is_block_regular(coll_sig) == node->u.is_block_regular.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE:
-                if (MPII_Comm_is_node_consecutive(coll_info.comm_ptr) ==
+                if (MPII_Comm_is_node_consecutive(coll_sig.comm_ptr) ==
                     node->u.is_node_consecutive.val)
                     node = node->success;
                 else
