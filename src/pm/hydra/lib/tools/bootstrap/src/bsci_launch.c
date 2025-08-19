@@ -6,7 +6,7 @@
 #include "hydra.h"
 #include "bsci.h"
 
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                   int use_rmk, int *control_fd)
 {
     HYD_status status = HYD_SUCCESS;
