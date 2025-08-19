@@ -59,7 +59,7 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                           int use_rmk, int *control_fd)
 {
     struct HYD_proxy *proxy;
@@ -77,7 +77,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_l
                         HYDT_bscd_persist_node_count * sizeof(int), status);
 
     for (int i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
+        proxy = proxy_list[i];
         args[idx] = HYDU_int_to_str(i);
 
         /* connect to hydserv on each node */

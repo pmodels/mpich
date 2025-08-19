@@ -265,8 +265,8 @@ static HYD_status do_spawn(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    struct HYD_proxy *filtered_proxy_list;
-    filtered_proxy_list = MPL_malloc(pg->proxy_count * sizeof(struct HYD_proxy), MPL_MEM_OTHER);
+    struct HYD_proxy **filtered_proxy_list;
+    filtered_proxy_list = MPL_malloc(pg->proxy_count * sizeof(struct HYD_proxy *), MPL_MEM_OTHER);
     int rem_count = 0;
     for (int i = 0; i < pg->proxy_count; i++) {
         if (pg->proxy_list[i].node->control_fd != -1) {
@@ -274,7 +274,7 @@ static HYD_status do_spawn(void)
             pg->proxy_list[i].node->control_fd_refcnt++;
             status = HYD_send_exec_info(&pg->proxy_list[i]);
         } else {
-            filtered_proxy_list[rem_count] = pg->proxy_list[i];
+            filtered_proxy_list[rem_count] = &pg->proxy_list[i];
             rem_count++;
         }
     }
