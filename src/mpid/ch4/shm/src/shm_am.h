@@ -117,7 +117,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_A
     return (am_hdr_sz + data_sz) <= MPIDI_POSIX_am_eager_limit();
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_can_do_tag(void)
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_can_do_tag(MPIR_Request * rreq)
 {
     return false;
 }
