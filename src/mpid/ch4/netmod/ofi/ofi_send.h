@@ -23,20 +23,6 @@ cvars:
         Set MPIR_CVAR_CH4_OFI_ENABLE_INJECT=0 to disable buffered send for small messages. This
         may help avoid hang due to lack of global progress.
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
-      category    : CH4_OFI
-      type        : enum
-      default     : copy_low_latency
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : |-
-        Specifies GPU engine type for GPU pt2pt on the sender side.
-        compute - use a compute engine
-        copy_high_bandwidth - use a high-bandwidth copy engine
-        copy_low_latency - use a low-latency copy engine
-        yaksa - use Yaksa
-
     - name        : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD
       category    : CH4_OFI
       type        : int
@@ -54,21 +40,6 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
-
-MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(void)
-{
-    if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_compute) {
-        return MPL_GPU_ENGINE_TYPE_COMPUTE;
-    } else if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE ==
-               MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_high_bandwidth) {
-        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    } else if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE ==
-               MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_low_latency) {
-        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
-    } else {
-        return MPL_GPU_ENGINE_TYPE_LAST;
-    }
-}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_Comm * comm,
                                                       int context_offset, int dst_rank,

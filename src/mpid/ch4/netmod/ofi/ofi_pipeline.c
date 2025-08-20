@@ -4,6 +4,7 @@
  */
 
 #include "mpidimpl.h"
+#include "ofi_impl.h"
 #include "ofi_rndv.h"
 
 #define MPIDI_OFI_PIPILINE_INFLY_CHUNKS 10
