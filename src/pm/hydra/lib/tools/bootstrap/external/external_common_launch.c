@@ -94,11 +94,11 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                          int use_rmk, int *control_fd)
 {
     int idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
-    int *fd_list, *dummy;
+    int *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -179,12 +179,8 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     HYDT_bscu_pid_list_grow(num_hosts);
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
-                        status);
-    for (i = 0; i < HYD_bscu_fd_count; i++)
-        fd_list[i] = HYD_bscu_fd_list[i];
-    MPL_free(HYD_bscu_fd_list);
-    HYD_bscu_fd_list = fd_list;
+    HYDU_REALLOC_OR_JUMP(HYD_bscu_fd_list, int *,
+                         (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int), status);
 
     /* Check if the user disabled automatic forking */
     rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
@@ -193,7 +189,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
     targs[idx] = NULL;
     for (i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
+        proxy = proxy_list[i];
 
         MPL_free(targs[host_idx]);
         if (proxy->node->user == NULL) {
