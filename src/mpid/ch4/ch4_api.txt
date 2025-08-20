@@ -71,8 +71,8 @@ Non Native API:
       NM*: am_hdr_sz, data_sz, data, count, datatype, sreq
      SHM*: am_hdr_sz, data_sz, data, count, datatype, sreq
   am_can_do_tag: bool
-      NM*: void
-     SHM*: void
+      NM*: rreq
+     SHM*: rreq
   am_tag_send : int
       NM*: rank, comm, handler_id, tag, buf, count, datatype, src_vci, dst_vci, sreq
      SHM*: rank, comm, handler_id, tag, buf, count, datatype, src_vci, dst_vci, sreq
