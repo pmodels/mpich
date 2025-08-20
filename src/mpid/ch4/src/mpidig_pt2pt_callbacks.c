@@ -13,9 +13,10 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq);
 static int can_do_tag(MPIR_Request * rreq)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    return MPIDI_NM_am_can_do_tag();
+    return MPIDI_NM_am_can_do_tag(rreq);
 #else
-    return MPIDI_REQUEST(rreq, is_local) ? MPIDI_SHM_am_can_do_tag() : MPIDI_NM_am_can_do_tag();
+    return MPIDI_REQUEST(rreq, is_local) ?
+        MPIDI_SHM_am_can_do_tag(rreq) : MPIDI_NM_am_can_do_tag(rreq);
 #endif
 }
 
