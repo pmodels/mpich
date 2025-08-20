@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     int errs = 0, toterrs;
     MPI_File fh;
     MPI_Status status;
-    MPIO_Request request;
+    MPI_Request request;
     int errcode = 0;
 
     MPI_Init(&argc, &argv);
@@ -86,11 +86,7 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS) {
         handle_error(errcode, "MPI_File_iwrite");
     }
-#ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&request, &status);
-#else
-    MPIO_Wait(&request, &status);
-#endif
     MPI_File_close(&fh);
 
     /* reopen the file and read the data back */
@@ -111,11 +107,7 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS) {
         handle_error(errcode, "MPI_File_open");
     }
-#ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&request, &status);
-#else
-    MPIO_Wait(&request, &status);
-#endif
 
     MPI_File_close(&fh);
 
