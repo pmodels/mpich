@@ -42,6 +42,8 @@ extern MPIR_Tree_type_t MPIR_Bcast_tree_type;
 extern void *MPIR_Csel_root;
 extern const char *MPIR_Csel_source;
 extern char MPII_coll_generic_json[];
+extern char MPII_coll_composition_json[];
+extern char MPII_coll_selection_json[];
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str);
 int get_ccl_from_string(const char *ccl_str);
