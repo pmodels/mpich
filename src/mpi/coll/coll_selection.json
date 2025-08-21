@@ -5,89 +5,32 @@
         {
             "comm_size<8":
             {
-                "comm_hierarchy=parent":
-                {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    }
-                },
-                "comm_hierarchy=any":
-                {
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    }
-                }
+                "algorithm=MPIR_Bcast_intra_binomial":{}
             },
             "comm_size=pow2":
             {
-                "comm_hierarchy=parent":
+                "avg_msg_size<=12288":
                 {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Bcast_intra_binomial":{}
                 },
-                "comm_hierarchy=any":
+                "avg_msg_size<=524288":
                 {
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
+                },
+                "avg_msg_size=any":
+                {
+                    "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
                 }
             },
             "comm_size=any":
             {
-                "comm_hierarchy=parent":
+                "avg_msg_size<=12288":
                 {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Bcast_intra_binomial":{}
                 },
-                "comm_hierarchy=any":
+                "avg_msg_size=any":
                 {
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
                 }
             }
         },
@@ -100,17 +43,6 @@
     {
         "comm_type=intra":
         {
-            "avg_msg_size<=0":
-            {
-                "is_commutative=yes":
-                {
-                    "algorithm=MPIR_Allreduce_intra_smp":{}
-                },
-                "is_commutative=no":
-                {
-                    "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-                }
-            },
             "avg_msg_size<=8":
             {
                 "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
@@ -207,65 +139,26 @@
     {
         "comm_type=intra":
         {
-            "comm_hierarchy=parent":
+            "avg_msg_size<=2048":
             {
-                "avg_msg_size<=0":
-                {
-                    "is_commutative=yes":
-                    {
-                        "algorithm=MPIR_Reduce_intra_smp":{}
-                    },
-                    "is_commutative=no":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
-                    }
-                },
-                "avg_msg_size<=2048":
-                {
-                    "algorithm=MPIR_Reduce_intra_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Reduce_intra_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
-                        }
-                    },
-                    "is_op_built_in=no":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
-                    }
-                }
+                "algorithm=MPIR_Reduce_intra_binomial":{}
             },
-            "comm_hierarchy=any":
+            "avg_msg_size=any":
             {
-                "avg_msg_size<=2048":
+                "is_op_built_in=yes":
                 {
-                    "algorithm=MPIR_Reduce_intra_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Reduce_intra_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
-                        }
-                    },
-                    "is_op_built_in=no":
+                    "count<pow2":
                     {
                         "algorithm=MPIR_Reduce_intra_binomial":{}
+                    },
+                    "count=any":
+                    {
+                        "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
                     }
+                },
+                "is_op_built_in=no":
+                {
+                    "algorithm=MPIR_Reduce_intra_binomial":{}
                 }
             }
         },
@@ -391,21 +284,7 @@
     },
     "collective=scan":
     {
-        "comm_type=intra":
-        {
-            "is_node_consecutive=yes":
-            {
-                "algorithm=MPIR_Scan_intra_smp":{}
-            },
-            "is_node_consecutive=no":
-            {
-                "algorithm=MPIR_Scan_intra_recursive_doubling":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Scan_intra_smp":{}
-        }
+        "algorithm=MPIR_Scan_intra_recursive_doubling":{}
     },
     "collective=exscan":
     {
@@ -415,15 +294,8 @@
     {
         "comm_type=intra":
         {
-            "comm_hierarchy=parent":
-            {
-                "algorithm=MPIR_Barrier_intra_smp":{}
-            },
-            "comm_hierarchy=any":
-            {
-                "algorithm=MPIR_Barrier_intra_k_dissemination":{
+            "algorithm=MPIR_Barrier_intra_k_dissemination":{
                   "k=2": {}
-                }
             }
         },
         "comm_type=inter":
@@ -641,44 +513,37 @@
     {
         "comm_type=intra":
         {
-            "comm_hierarchy=parent":
+            "comm_size<8":
             {
-                "algorithm=MPIR_Ibcast_intra_sched_smp":{}
+                "avg_msg_size=any":
+                {
+                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
+                }
             },
-            "comm_hierarchy=any":
+            "comm_size=pow2":
             {
-                "comm_size<8":
+                "avg_msg_size<12288":
                 {
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    }
+                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
                 },
-                "comm_size=pow2":
+                "avg_msg_size<524288":
                 {
-                    "avg_msg_size<12288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    },
-                    "avg_msg_size<524288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather":{}
                 },
-                "comm_size=any":
+                "avg_msg_size=any":
                 {
-                    "avg_msg_size<12288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                    }
+                    "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
+                }
+            },
+            "comm_size=any":
+            {
+                "avg_msg_size<12288":
+                {
+                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
+                },
+                "avg_msg_size=any":
+                {
+                    "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
                 }
             }
         },
@@ -691,40 +556,26 @@
     {
         "comm_type=intra":
         {
-            "comm_hierarchy=parent":
+            "avg_msg_size<=2048":
             {
-                "is_commutative=yes":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_smp":{}
-                },
-                "is_commutative=no":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                }
+                "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
             },
-            "comm_hierarchy=any":
+            "avg_msg_size=any":
             {
-                "avg_msg_size<=2048":
+                "is_op_built_in=yes":
                 {
-                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
-                        }
-                    },
-                    "is_op_built_in=no":
+                    "count<pow2":
                     {
                         "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
+                    },
+                    "count=any":
+                    {
+                        "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
                     }
+                },
+                "is_op_built_in=no":
+                {
+                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
                 }
             }
         },
@@ -933,14 +784,7 @@
     },
     "collective=iscan":
     {
-        "comm_hierarchy=parent":
-        {
-            "algorithm=MPIR_Iscan_intra_sched_smp":{}
-        },
-        "comm_hierarchy=any":
-        {
-            "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
-        }
+        "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
     },
     "collective=ineighbor_allgather":
     {
