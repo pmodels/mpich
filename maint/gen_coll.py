@@ -21,6 +21,7 @@ def main():
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
+    G.out.append("#include \"coll_csel.h\"")
     for a in coll_names:
         dump_coll(a, "blocking")
         dump_coll(a, "nonblocking")

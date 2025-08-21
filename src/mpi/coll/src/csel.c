@@ -5,8 +5,7 @@
 
 #include "mpiimpl.h"
 #include "mpl.h"
-#include "mpir_csel.h"
-#include <json.h>
+#include "coll_csel.h"
 
 typedef enum {
     /* global operator types */

@@ -14,8 +14,6 @@
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
 
-#include "csel_container.h"
-
 #define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check, mpi_errno, ...)     \
     do {                                                                \
         if ((check) == 0) {                                             \
