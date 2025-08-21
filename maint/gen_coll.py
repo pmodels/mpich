@@ -101,7 +101,7 @@ def dump_allcomm_auto_blocking(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_root, &coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
@@ -176,7 +176,7 @@ def dump_allcomm_sched_auto(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_root, &coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 

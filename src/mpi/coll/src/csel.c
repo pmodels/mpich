@@ -524,12 +524,13 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
 int MPIR_Csel_create_from_buf(const char *json,
                               void *(*create_container) (struct json_object *), void **csel_)
 {
+    csel_node_s *csel_root = NULL;
     struct json_object *tree;
     tree = json_tokener_parse(json);
     if (tree == NULL)
         goto fn_exit;
 
-    csel_node_s *csel_root = parse_json_tree(tree, create_container);
+    csel_root = parse_json_tree(tree, create_container);
     if (csel_root) {
         validate_tree(csel_root);
     } else {
