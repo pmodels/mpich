@@ -7,12 +7,14 @@ page: p2p_latency, bench_frame
     data: buf, size, MPI_CHAR
 
     &call foreach_size
-        bench_p2p(comm, 0, 1, buf, size)
+        bench_p2p(comm, 0, 1, size)
 
     subcode: send_side
+        buf = (char *) gbuf + i * size % (MAX_BUFSIZE - size)
         MPI_Send($(data), dst, TAG, comm);
         MPI_Recv($(data), dst, TAG, comm, MPI_STATUS_IGNORE);
 
     subcode: recv_side
+        buf = (char *) gbuf + i * size % (MAX_BUFSIZE - size)
         MPI_Recv($(data), src, TAG, comm, MPI_STATUS_IGNORE);
         MPI_Send($(data), src, TAG, comm);

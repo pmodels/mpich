@@ -1,0 +1,36 @@
+include: macros/bench_frame.def
+include: macros/bench_coll.def
+include: macros/mtest.def
+
+page: bcast, bench_frame
+    data: buf, size, MPI_CHAR
+    NEED_ROOT: 1
+
+    $(if:0)
+        &call measure_with_barrier
+            MPI_Bcast($(data), root, comm)
+    $(else)
+        $call bench_coll, measure_bcast
+
+page: allreduce, bench_frame
+    SIZE_MIN: 4
+    data: buf, size/sizeof(int), MPI_INT
+
+    $call bench_coll, measure_allreduce
+
+#----------------------------------------
+subcode: measure_common
+    &call measure_coll_latency, iter
+        void *buf = (char *) gbuf + i * size % (MAX_BUFSIZE - size)
+        BLOCK
+    $(for:min,max,avg,sigma)
+        *pf_$1 = tf_$1
+
+fncode: measure_bcast(int iter, int root, comm, size, pf_min, pf_max, pf_avg, pf_sigma)
+    &call measure_common
+        MPI_Bcast($(data), root, comm)
+
+fncode: measure_allreduce(int iter, comm, size, pf_min, pf_max, pf_avg, pf_sigma)
+    &call measure_common
+        MPI_Allreduce(MPI_IN_PLACE, $(data), MPI_SUM, comm)
+

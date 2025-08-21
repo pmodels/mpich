@@ -1,13 +1,13 @@
 macros:
     HAS_MTEST: 1
 
-subcode: mtest_malloc(size)
+subcode: mtest_malloc(buf, size)
     MTestArgList *head = MTestArgListCreate(argc, argv)
     $(if:MEM_TYPES=sendrecv)
-        int send_rank = 0, recv_rank = 1;
-        $(for:a in send,recv)
-            $if grank == $(a)_rank
-                $call alloc_mem_dev, $(a)mem, $(a)dev
+        $if grank == gsrc
+            $call alloc_mem_dev, sendmem, senddev
+        $elif grank == gdst
+            $call alloc_mem_dev, recvmem, recvdev
     $(else)
         # all procs allocating the same memory types
         $call alloc_mem_dev, memtype, device
@@ -17,5 +17,5 @@ subcode: mtest_malloc(size)
         $my mtest_mem_type_e memtype, int device
         memtype = MTestArgListGetMemType(head, "$(memtype)")
         device = MTestArgListGetInt_with_default(head, "$(memdev)", grank)
-        MTestMalloc($(size), memtype, NULL, &buf, device)
+        MTestMalloc($(size), memtype, NULL, &$(buf), device)
         MTestPrintfMsg(1, "[%d] Allocating buffer: memtype=%s, device=%d, size=%d\n", grank, MTest_memtype_name(memtype), device, $(size))
