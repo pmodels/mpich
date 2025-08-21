@@ -251,6 +251,9 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatter_allcomm_nb,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb,
+    /* composition algorithms */
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto,
+    /* end */
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;
 
@@ -610,6 +613,11 @@ void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
 
 void *MPII_Create_container(struct json_object *obj);
 
-typedef int (*MPIR_Coll_algo_fn) (MPII_Csel_container_s * cnt, MPIR_Csel_coll_sig_s * coll_sig);
+typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+void MPIR_Coll_algo_init(void);
+/* NOTE: MPIR_Coll_auto is one of the composition container functions. However,
+ *       MPIR_Coll_composition_auto is a gate function, thus does not take "cnt" parameter. */
+int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 #endif /* MPIR_CSEL_H_INCLUDED */
