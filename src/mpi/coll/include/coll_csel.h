@@ -8,6 +8,12 @@
 
 #include "json.h"
 
+extern MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
+extern int *MPIR_Coll_cvar_table;
+extern const char **MPIR_Coll_type_names;
+extern const char **MPIR_Coll_algo_names;
+extern const char **MPIR_Csel_condition_names;
+
 int MPIR_Csel_create_from_file(const char *json_file,
                                void *(*create_container) (struct json_object *), void **csel);
 int MPIR_Csel_create_from_buf(const char *json,

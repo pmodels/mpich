@@ -12,6 +12,8 @@ typedef enum MPII_Csel_container_type MPII_Csel_container_type_e;
 typedef struct MPIR_Csel_coll_sig MPIR_Csel_coll_sig_s;
 typedef struct MPII_Csel_container MPII_Csel_container_s;
 
+typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+
 #include "coll_impl.h"
 #include "coll_algos.h"
 
