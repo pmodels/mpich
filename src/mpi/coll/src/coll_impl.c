@@ -39,6 +39,26 @@ cvars:
       description : >-
         Defines the location of tuning file.
 
+    - name        : MPIR_CVAR_COLL_SELECTION_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file that selects basic collective algorithms.
+
+    - name        : MPIR_CVAR_COLL_COMPOSITION_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file that selects composition collective algorithms.
+
     - name        : MPIR_CVAR_HIERARCHY_DUMP
       category    : COLLECTIVE
       type        : boolean
@@ -95,6 +115,10 @@ MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 const char *MPIR_Csel_source;
 
+/* TODO: remove the old MPIR_Csel_root etc. */
+void *MPIR_Csel_composition = NULL;
+void *MPIR_Csel_selection = NULL;
+
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
@@ -140,6 +164,16 @@ int get_ccl_from_string(const char *ccl_str)
         ccl = MPIR_CVAR_ALLREDUCE_CCL_rccl;
     return ccl;
 }
+
+#define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
+   do { \
+        if (!strcmp(cvar_name, "")) { \
+            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, MPII_Create_container, &csel_var); \
+        } else { \
+            mpi_errno = MPIR_Csel_create_from_file(cvar_name, MPII_Create_container, &csel_var); \
+        } \
+        MPIR_ERR_CHECK(mpi_errno); \
+   } while (0)
 
 int MPII_Coll_init(void)
 {
@@ -187,6 +221,12 @@ int MPII_Coll_init(void)
         MPIR_Csel_source = MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE;
     }
     MPIR_ERR_CHECK(mpi_errno);
+    /* TODO: remove the old MPIR_Csel_root etc. */
+
+    LOAD_CSEL_JSON(MPIR_Csel_composition,
+                   MPIR_CVAR_COLL_COMPOSITION_JSON_FILE, MPII_coll_composition_json);
+    LOAD_CSEL_JSON(MPIR_Csel_selection,
+                   MPIR_CVAR_COLL_SELECTION_JSON_FILE, MPII_coll_selection_json);
 
   fn_exit:
     return mpi_errno;
