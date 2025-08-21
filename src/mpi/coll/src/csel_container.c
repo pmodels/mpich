@@ -840,6 +840,8 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear;
         else if (!strcmp(ckey, "algorithm=MPIR_Scatterv_allcomm_nb"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb;
+        else if (!strcmp(ckey, "algorithm=MPIR_Coll_auto"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto;
         else {
             fprintf(stderr, "unrecognized key %s\n", key);
             MPIR_Assert(0);

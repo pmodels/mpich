@@ -398,3 +398,17 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
 }
+
+int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    return mpi_errno;
+}
+
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    return mpi_errno;
+}
