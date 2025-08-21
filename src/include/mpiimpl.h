@@ -178,7 +178,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_gpu.h"
 
 #include "coll_types.h"
-#include "coll_impl.h"
 
 /*****************************************************************************/
 /********************** PART 4: DEVICE PRE DECLARATION ***********************/
@@ -202,7 +201,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_progress_hook.h"
 #include "mpir_win.h"
 #include "mpir_coll.h"
-#include "mpir_csel.h"
 #include "mpir_func.h"
 #include "mpir_nbc.h"
 #include "mpir_bsend.h"
