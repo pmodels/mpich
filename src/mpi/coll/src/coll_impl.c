@@ -119,6 +119,9 @@ const char *MPIR_Csel_source;
 void *MPIR_Csel_composition = NULL;
 void *MPIR_Csel_selection = NULL;
 
+/* table of all collective algorithms */
+MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
+
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
@@ -228,6 +231,10 @@ int MPII_Coll_init(void)
     LOAD_CSEL_JSON(MPIR_Csel_selection,
                    MPIR_CVAR_COLL_SELECTION_JSON_FILE, MPII_coll_selection_json);
 
+    MPIR_Coll_algo_table = MPL_malloc(MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count *
+                                      sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
+    MPIR_Coll_algo_init();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -246,6 +253,8 @@ int MPII_Coll_finalize(void)
 
     mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(MPIR_Coll_algo_table);
 
   fn_exit:
     return mpi_errno;
@@ -399,18 +408,46 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
     }
 }
 
+void MPIR_Coll_algo_init(void)
+{
+    /* manual entries now, but we will replace it with autogen later */
+    MPIR_Coll_algo_table[MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto] = MPIR_Coll_auto;
+}
+
 int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* TODO: need a mechanism in coll_sig so we can assert and prevent a dead recursion loop */
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_composition, coll_sig);
+    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
+
+    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig)
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
+    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
+
+    /* TODO: assert the selected algorithm is not a composition algorithm */
+
+    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* blocking collectives by calling its nonblocking forms */
