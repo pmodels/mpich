@@ -82,11 +82,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
          * to do, so simply return.
          * NOTE: it is not an error since global progress will poll every vci.
          */
-        return MPI_SUCCESS;
+        goto fn_exit;
     }
-
-    mpi_errno = MPIDI_OFI_gpu_progress(vci);
-    MPIR_ERR_CHECK(mpi_errno);
 
     if (unlikely(MPIDI_OFI_has_cq_buffered(vci))) {
         int num = MPIDI_OFI_get_buffered(vci, wc);
@@ -107,10 +104,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
                 mpi_errno = MPI_SUCCESS;
             else
                 mpi_errno = MPIDI_OFI_handle_cq_error(vci, nic, ret);
+
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.per_vci[vci].deferred_am_isend_q)) {
             mpi_errno = MPIDI_OFI_handle_deferred_ops(vci);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

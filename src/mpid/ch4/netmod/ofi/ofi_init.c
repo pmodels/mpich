@@ -375,21 +375,6 @@ cvars:
         Specifies the maximum number of iovecs to allocate for RMA operations
         to/from noncontiguous buffers.
 
-    - name        : MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
-      category    : CH4_OFI
-      type        : int
-      default     : -1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        This cvar controls the message size at which OFI native path switches from eager to
-        rendezvous mode. It does not affect the AM path eager limit. Having this gives a way to
-        reliably test native non-path.
-        If the number is positive, OFI will init the MPIDI_OFI_global.max_msg_size to the value of
-        cvar. If the number is negative, OFI will init the MPIDI_OFI_globa.max_msg_size using
-        whatever provider gives (which might be unlimited for socket provider).
-
     - name        : MPIR_CVAR_CH4_OFI_MAX_NICS
       category    : CH4
       type        : int
@@ -470,30 +455,7 @@ cvars:
       description : >-
         If true, enable OFI triggered ops for MPI collectives.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE
-      category    : CH4_OFI
-      type        : boolean
-      default     : false
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, enable pipeline for GPU data transfer.
-        GPU pipeline does not support non-contiguous datatypes or mixed buffer types
-        (i.e. GPU send buffer, host recv buffer). If GPU pipeline is enabled, the unsupported
-        scenarios will cause undefined behavior if encountered.
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD
-      category    : CH4_OFI
-      type        : int
-      default     : 131072
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        This is the threshold to start using GPU pipeline.
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
+    - name        : MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ
       category    : CH4_OFI
       type        : int
       default     : 1048576
@@ -501,9 +463,9 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Specifies the buffer size (in bytes) for GPU pipeline data transfer.
+        Specifies the chunk size (in bytes) for pipeline data transfer.
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK
+    - name        : MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS
       category    : CH4_OFI
       type        : int
       default     : 32
@@ -511,40 +473,35 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Specifies the number of buffers for GPU pipeline data transfer in
-        each block/chunk of the pool.
+        Specifies the number of chunk buffers for pipeline data transfer.
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS
+    - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
       category    : CH4_OFI
-      type        : int
-      default     : 32
+      type        : enum
+      default     : copy_low_latency
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the total number of buffers for GPU pipeline data transfer
+      description : |-
+        Specifies GPU engine type for GPU pt2pt on the sender side.
+        compute - use a compute engine
+        copy_high_bandwidth - use a high-bandwidth copy engine
+        copy_low_latency - use a low-latency copy engine
+        yaksa - use Yaksa
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE
       category    : CH4_OFI
-      type        : int
-      default     : 0
+      type        : enum
+      default     : copy_low_latency
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the GPU engine type for GPU pipeline on the sender side,
-        default is MPL_GPU_ENGINE_TYPE_COMPUTE
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the GPU engine type for GPU pipeline on the receiver side,
-        default is MPL_GPU_ENGINE_TYPE_COMPUTE
+      description : |-
+        Specifies GPU engine type for GPU pt2pt on the receiver side.
+        compute - use a compute engine
+        copy_high_bandwidth - use a high-bandwidth copy engine
+        copy_low_latency - use a low-latency copy engine
+        yaksa - use Yaksa
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -647,15 +604,13 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
-                            offsetof(MPIDI_OFI_read_chunk_t, context));
-    MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_am_repost_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_ack_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_dynamic_process_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.am.netmod_am.ofi.context) ==
-                            offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.context));
+                            offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.direct.context));
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
 
     int err;
@@ -675,28 +630,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create the id to object maps     */
     /* -------------------------------- */
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
-
-    /* Create pack buffer pool for GPU pipeline */
-    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
-        mpi_errno =
-            MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
-                                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK,
-                                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS,
-                                           host_alloc_registered,
-                                           host_free_registered,
-                                           &MPIDI_OFI_global.gpu_pipeline_send_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno =
-            MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
-                                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK,
-                                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS,
-                                           host_alloc_registered,
-                                           host_free_registered,
-                                           &MPIDI_OFI_global.gpu_pipeline_recv_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_global.gpu_send_queue = NULL;
-        MPIDI_OFI_global.gpu_recv_queue = NULL;
-    }
 
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -794,8 +727,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
     MPIDI_OFI_global.num_vcis = 1;
-    MPIDI_OFI_am_init(0);
-    MPIDI_OFI_am_post_recv(0, 0);
+    MPIDI_OFI_init_per_vci(0);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -984,6 +916,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
+    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+    }
+
     if (MPIDI_OFI_ENABLE_AM) {
         for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
             while (MPIDI_OFI_global.per_vci[vci].am_unordered_msgs) {
@@ -1005,11 +941,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
                         MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail);
             MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
         }
-    }
-
-    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
-        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.gpu_pipeline_send_pool);
-        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.gpu_pipeline_recv_pool);
     }
 
     int err;
@@ -1458,13 +1389,7 @@ static int update_global_limits(struct fi_info *prov)
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    if (MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE > 0 &&
-        MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
-        /* Truncate max_msg_size to a user-selected value */
-        MPIDI_OFI_global.max_msg_size = MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE;
-    } else {
-        MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
-    }
+    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     MPIDI_OFI_global.cq_data_size = prov->domain_attr->cq_data_size;
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
@@ -1497,11 +1422,6 @@ static int update_global_limits(struct fi_info *prov)
     /* Check that the desired number of ranks is possible and abort if not */
     if (MPIDI_OFI_MAX_RANK_BITS < 32 && MPIR_Process.size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
-    }
-
-    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE && (prov->domain_attr->cq_data_size < 8 ||
-                                                  MPIDI_OFI_GPU_PIPELINE_SEND == 0)) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_small_cqdata");
     }
 
   fn_exit:
@@ -1584,7 +1504,35 @@ static void dump_global_settings(void)
 
 /* static functions for AM */
 
-int MPIDI_OFI_am_init(int vci)
+static int am_init(int vci);
+static int am_post_recv(int vci, int nic);
+
+int MPIDI_OFI_init_per_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Create chunk buffer pool (for pipeline etc.) */
+    mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ,
+                                               MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
+                                               MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
+                                               host_alloc_registered,
+                                               host_free_registered,
+                                               &MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = am_init(vci);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = am_post_recv(vci, 0);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int am_init(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1621,7 +1569,6 @@ int MPIDI_OFI_am_init(int vci)
         MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs = 0;
 
         if (vci == 0) {
-            MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
             MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
             MPIDIG_am_reg_cb(MPIDI_OFI_RNDV_INFO, NULL, &MPIDI_OFI_rndv_info_handler);
         }
@@ -1633,7 +1580,7 @@ int MPIDI_OFI_am_init(int vci)
     goto fn_exit;
 }
 
-int MPIDI_OFI_am_post_recv(int vci, int nic)
+static int am_post_recv(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -11,47 +11,20 @@
 #include "ofi_am_events.h"
 #include "utlist.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-cvars:
-    - name        : MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE
-      category    : CH4_OFI
-      type        : enum
-      default     : copy_low_latency
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : |-
-        Specifies GPU engine type for GPU pt2pt on the receiver side.
-        compute - use a compute engine
-        copy_high_bandwidth - use a high-bandwidth copy engine
-        copy_low_latency - use a low-latency copy engine
-        yaksa - use Yaksa
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-
-MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(void)
-{
-    if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
-        MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_compute) {
-        return MPL_GPU_ENGINE_TYPE_COMPUTE;
-    } else if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
-               MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_high_bandwidth) {
-        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    } else if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
-               MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_low_latency) {
-        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
-    } else {
-        return MPL_GPU_ENGINE_TYPE_LAST;
-    }
-}
+int MPIDI_OFI_pipeline_recv_datasize_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_pipeline_send_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_pipeline_recv_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_read_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_write_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_rndvwrite_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
@@ -83,12 +56,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     if (MPIDI_OFI_REQUEST(sreq, am_req)) {
         MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
         int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
-        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+        if (handler_id == -1) {
+            /* native rndv direct */
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_sreq);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_sreq);
+        } else {
+            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     MPIDI_Request_complete_fast(sreq);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int event_id)
@@ -99,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(rreq);
 #endif
-    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
@@ -130,8 +115,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         MPI_Status *status = &rreq->status;
         MPIR_Request *am_req = MPIDI_OFI_REQUEST(rreq, am_req);
         int am_recv_id = MPIDI_OFI_REQUEST(rreq, am_handler_id);
-        mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (am_recv_id == -1) {
+            /* native rndv direct */
+
+            /* copy COUNT and MPI_ERROR, but skip MPI_SOURCE and MPI_RANK */
+            am_req->status.count_lo = rreq->status.count_lo;
+            am_req->status.count_hi_and_cancelled = rreq->status.count_hi_and_cancelled;
+            am_req->status.MPI_ERROR = rreq->status.MPI_ERROR;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIDI_anysrc_free_partner(am_req);
+#endif
+
+            MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(am_req);
+            MPIR_Datatype_release_if_not_builtin(p->datatype);
+            MPIDI_Request_complete_fast(am_req);
+        } else {
+            mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
     MPIDI_Request_complete_fast(rreq);
@@ -168,9 +170,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
         goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
-        goto fn_exit;
     }
 
     /* If synchronous, send ack */
@@ -180,12 +179,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
-                                wc->len);
-    }
     mpi_errno = MPIDI_OFI_recv_complete(rreq, event_id);
 
   fn_exit:

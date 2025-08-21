@@ -35,10 +35,13 @@ rqstatus 2
 rqfree 4 resultTest=TestAllowWarnings env=MPIR_CVAR_FINALIZE_WAIT=1
 greq1 1
 probe_unexp 4
-probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=pipeline
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=read
+probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=write
 probe_unexp 4 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 probenull 1
-probenull 1 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+probenull 1 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384
 probenull 1 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 recvnull 1
 # For testing, scancel will run with 1 process as well
@@ -57,13 +60,19 @@ waitany_null 1
 # perhaps disable in the release tarball
 large_message 3 mem=6.5
 mprobe 2
-mprobe 2 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+mprobe 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384
+mprobe 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=pipeline
+mprobe 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=read
+mprobe 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=write
 mprobe 2 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 big_count_status 1
 many_isend 3
 manylmt 2
 huge_underflow 2
-huge_underflow 2 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+huge_underflow 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384
+huge_underflow 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=pipeline
+huge_underflow 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=read
+huge_underflow 2 env=MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD=16384 env=MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL=write
 huge_underflow 2 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 huge_anysrc 2
 huge_dupcomm 2

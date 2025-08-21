@@ -185,6 +185,96 @@ typedef struct {
     MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
+
+/* define common fields for the next 3 structs and common macros used to initialize these fields.
+ * These macros are "fragile" but they are not supposed to be used anywhere with ignorance.
+ * note: the missing semicolon on the last line is intentional.
+ */
+
+#define MPIDI_OFI_RNDV_COMMON_FIELDS \
+    const void *buf; \
+    MPI_Aint count; \
+    MPI_Datatype datatype; \
+    /* cached fields */ \
+    bool need_pack; \
+    MPL_pointer_attr_t attr; \
+    MPI_Aint data_sz; \
+    MPI_Aint remote_data_sz; \
+    /* send/recv fields */ \
+    int vci_local; \
+    int vci_remote; \
+    struct MPIDI_av_entry *av; \
+    uint64_t match_bits; \
+    /* only needed for sender to am_tag_send or replying probe */ \
+    int remote_rank
+
+typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
+} MPIDI_OFI_rndv_common_t;
+
+typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
+    union {
+        struct {
+            MPI_Aint copy_offset;
+            int copy_infly;
+            int send_infly;
+        } send;
+        struct {
+            MPI_Aint recv_offset;
+            int recv_infly;
+        } recv;
+    } u;
+    int chunk_index;
+    MPI_Aint remain_sz;
+} MPIDI_OFI_pipeline_t;
+
+typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
+    MPI_Aint sz_per_nic;
+    union {
+        struct {
+            const void *data;
+            struct fid_mr **mrs;
+        } send;
+        struct {
+            union {
+                void *data;     /* !need_pack */
+                int copy_infly; /*  need_pack */
+            } u;
+            uint64_t remote_base;
+            uint64_t *rkeys;
+            MPI_Aint chunks_per_nic;
+            MPI_Aint cur_chunk_index;
+            int num_infly;
+            bool all_issued;
+        } recv;
+    } u;
+} MPIDI_OFI_rndvread_t;
+
+typedef struct {
+    MPIDI_OFI_RNDV_COMMON_FIELDS;
+    MPI_Aint sz_per_nic;
+    union {
+        struct {
+            union {
+                void *data;     /* !need_pack */
+                int copy_infly; /*  need_pack */
+            } u;
+            uint64_t remote_base;
+            uint64_t *rkeys;
+            MPI_Aint chunks_per_nic;
+            MPI_Aint cur_chunk_index;
+            int write_infly;
+            MPI_Aint chunks_remain;
+        } send;
+        struct {
+            const void *data;
+            struct fid_mr **mrs;
+        } recv;
+    } u;
+} MPIDI_OFI_rndvwrite_t;
+
 enum MPIDI_OFI_req_kind {
     MPIDI_OFI_req_kind__any,
     MPIDI_OFI_req_kind__probe,
@@ -211,10 +301,6 @@ typedef struct {
 
     enum MPIDI_OFI_req_kind kind;
     union {
-        struct fid_mr **send_mrs;
-        void *remote_info;
-    } huge;
-    union {
         struct {
             char *pack_buffer;
         } pack;
@@ -226,22 +312,20 @@ typedef struct {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
-    struct {
-        fi_addr_t remote_addr;
-        int ctx_idx;
-        int vci_local;
-        int chunk_sz;
-        bool is_sync;
-        uint64_t cq_data;
-        uint64_t match_bits;
-        uint64_t mask_bits;
-        size_t offset;
-        size_t data_sz;
-        char *pack_recv_buf;
-        void *usm_host_buf;     /* recv */
-        MPIR_Request *req;
-    } pipeline_info;            /* GPU pipeline */
+} MPIDI_OFI_direct_t;
+
+typedef union {
+    MPIDI_OFI_direct_t direct;
+    MPIDI_OFI_rndv_common_t common;
+    MPIDI_OFI_pipeline_t pipeline;
+    MPIDI_OFI_rndvread_t read;
+    MPIDI_OFI_rndvwrite_t write;
 } MPIDI_OFI_request_t;
+
+#define MPIDI_OFI_AMREQ_COMMON(req)   ((req)->dev.ch4.netmod.ofi.common)
+#define MPIDI_OFI_AMREQ_PIPELINE(req) ((req)->dev.ch4.netmod.ofi.pipeline)
+#define MPIDI_OFI_AMREQ_READ(req)     ((req)->dev.ch4.netmod.ofi.read)
+#define MPIDI_OFI_AMREQ_WRITE(req)    ((req)->dev.ch4.netmod.ofi.write)
 
 typedef struct {
     int index;

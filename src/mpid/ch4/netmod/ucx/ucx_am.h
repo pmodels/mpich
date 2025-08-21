@@ -272,7 +272,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_can_do_tag(void)
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_can_do_tag(MPIR_Request * rreq)
 {
     return true;
 }

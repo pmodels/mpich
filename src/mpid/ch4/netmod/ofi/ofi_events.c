@@ -14,7 +14,6 @@
 
 static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int inject_emu_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
@@ -37,9 +36,6 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
 
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_peek_rndv_event(vci, wc, rreq);
-        goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_peek_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
 
@@ -75,211 +71,6 @@ static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
-}
-
-/* GPU pipeline events */
-static int pipeline_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int c;
-    MPIDI_OFI_gpu_pipeline_request *req;
-    MPIR_Request *sreq;
-    void *wc_buf = NULL;
-    MPIR_FUNC_ENTER;
-
-    req = (MPIDI_OFI_gpu_pipeline_request *) r;
-    /* get original mpi request */
-    sreq = req->parent;
-    wc_buf = req->buf;
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_send_pool, wc_buf);
-
-    MPIR_cc_decr(sreq->cc_ptr, &c);
-    if (c == 0) {
-        MPIR_Request_free(sreq);
-    }
-    MPL_free(r);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, int event_id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int vci_local, i;
-    MPIDI_OFI_gpu_pipeline_request *req;
-    MPIR_Request *rreq;
-    void *wc_buf = NULL;
-    int in_use MPL_UNUSED;
-    MPIDI_OFI_gpu_task_t *task = NULL;
-    MPL_gpu_engine_type_t engine_type =
-        (MPL_gpu_engine_type_t) MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE;
-
-    MPIR_FUNC_ENTER;
-
-    req = (MPIDI_OFI_gpu_pipeline_request *) r;
-    rreq = req->parent;
-    wc_buf = req->buf;
-    MPL_free(r);
-
-    void *recv_buf = MPIDI_OFI_REQUEST(rreq, buf);
-    size_t recv_count = MPIDI_OFI_REQUEST(rreq, count);
-    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
-
-    fi_addr_t remote_addr = MPIDI_OFI_REQUEST(rreq, pipeline_info.remote_addr);
-    vci_local = MPIDI_OFI_REQUEST(rreq, pipeline_info.vci_local);
-
-    if (event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
-        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-
-        if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.is_sync) = true;
-        }
-
-        uint32_t packed = MPIDI_OFI_idata_get_gpu_packed_bit(wc->data);
-        uint32_t n_chunks = MPIDI_OFI_idata_get_gpuchunk_bits(wc->data);
-        if (likely(packed == 0)) {
-            if (wc->len > 0) {
-                MPIR_Assert(n_chunks == 0);
-                /* First chunk arrives. */
-                MPI_Aint actual_unpack_bytes;
-                MPIR_gpu_req yreq;
-                mpi_errno =
-                    MPIR_Ilocalcopy_gpu(wc_buf, wc->len, MPIR_BYTE_INTERNAL, 0, NULL, recv_buf,
-                                        recv_count, datatype, 0, NULL, MPL_GPU_COPY_H2D,
-                                        engine_type, 1, &yreq);
-                MPIR_ERR_CHECK(mpi_errno);
-                actual_unpack_bytes = wc->len;
-                task =
-                    MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf,
-                                              actual_unpack_bytes, rreq, yreq);
-                DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vci_local], task);
-                MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
-            } else {
-                /* free this chunk */
-                MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool, wc_buf);
-                MPIR_Assert(n_chunks > 0);
-                /* Post recv for remaining chunks. */
-                MPIR_cc_dec(rreq->cc_ptr);
-                for (i = 0; i < n_chunks; i++) {
-                    MPIR_cc_inc(rreq->cc_ptr);
-
-                    size_t chunk_sz = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
-
-                    char *host_buf = NULL;
-                    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
-                                                       (void **) &host_buf);
-
-                    MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE;
-
-                    MPIDI_OFI_gpu_pipeline_request *chunk_req = NULL;
-                    chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
-                        MPL_malloc(sizeof(MPIDI_OFI_gpu_pipeline_request), MPL_MEM_BUFFER);
-                    if (chunk_req == NULL) {
-                        mpi_errno = MPIR_ERR_OTHER;
-                        goto fn_fail;
-                    }
-                    chunk_req->event_id = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE;
-                    chunk_req->parent = rreq;
-                    chunk_req->buf = host_buf;
-                    chunk_req->offset = chunk_sz * i;
-                    int ret = 0;
-                    if (!MPIDI_OFI_global.gpu_recv_queue && host_buf) {
-                        ret = fi_trecv
-                            (MPIDI_OFI_global.ctx
-                             [MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx)].rx,
-                             host_buf, chunk_sz, NULL, remote_addr,
-                             MPIDI_OFI_REQUEST(rreq,
-                                               pipeline_info.match_bits) |
-                             MPIDI_OFI_GPU_PIPELINE_SEND, MPIDI_OFI_REQUEST(rreq,
-                                                                            pipeline_info.
-                                                                            mask_bits),
-                             (void *) &chunk_req->context);
-                    }
-                    if (MPIDI_OFI_global.gpu_recv_queue || !host_buf || ret != 0) {
-                        MPIDI_OFI_gpu_pending_recv_t *recv_task =
-                            MPIDI_OFI_create_recv_task(chunk_req, i, n_chunks);
-                        DL_APPEND(MPIDI_OFI_global.gpu_recv_queue, recv_task);
-                    }
-                }
-            }
-        } else {
-            MPIR_ERR_CHKANDJUMP(true, mpi_errno, MPI_ERR_OTHER, "**gpu_pipeline_packed");
-        }
-    } else {
-        if (likely(event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE)) {
-            /* FIXME: current design unpacks all bytes from host buffer, overflow check is missing. */
-            MPI_Aint actual_unpack_bytes;
-            MPIR_gpu_req yreq;
-            mpi_errno =
-                MPIR_Ilocalcopy_gpu(wc_buf, (MPI_Aint) wc->len, MPIR_BYTE_INTERNAL, 0, NULL,
-                                    (char *) recv_buf, (MPI_Aint) recv_count, datatype,
-                                    req->offset, NULL, MPL_GPU_COPY_H2D, engine_type, 1, &yreq);
-            MPIR_ERR_CHECK(mpi_errno);
-            actual_unpack_bytes = wc->len;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
-            task =
-                MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf, actual_unpack_bytes,
-                                          rreq, yreq);
-            DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vci_local], task);
-        } else {
-            MPIR_ERR_CHKANDJUMP(true, mpi_errno, MPI_ERR_OTHER, "**gpu_pipeline_packed");
-        }
-    }
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    rreq->status.MPI_ERROR = mpi_errno;
-    goto fn_exit;
-}
-
-static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int c, num_nics;
-    MPIR_FUNC_ENTER;
-
-    MPIR_cc_decr(sreq->cc_ptr, &c);
-
-    if (c == 0) {
-        MPIR_Comm *comm;
-        struct fid_mr **huge_send_mrs;
-
-        comm = sreq->comm;
-        num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
-        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge.send_mrs);
-
-        /* Clean up the memory region */
-        for (int i = 0; i < num_nics; i++) {
-            uint64_t key = fi_mr_key(huge_send_mrs[i]);
-            MPIDI_OFI_CALL(fi_close(&huge_send_mrs[i]->fid), mr_unreg);
-            if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-                MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
-            }
-        }
-        MPL_free(huge_send_mrs);
-
-        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
-        }
-
-        if (MPIDI_OFI_REQUEST(sreq, am_req)) {
-            MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
-            int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
-            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
-        }
-
-        MPIDI_CH4_REQUEST_FREE(sreq);
-    }
-    /* c != 0, ssend */
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
@@ -622,23 +413,10 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
     } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ) {
         mpi_errno = am_read_event(vci, wc, req);
         goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND_GPU_PIPELINE) {
-        mpi_errno = pipeline_send_event(wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
-        mpi_errno = pipeline_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE) {
-        mpi_errno = pipeline_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_GPU_PIPELINE);
-        goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {
             case MPIDI_OFI_EVENT_PEEK:
                 mpi_errno = peek_event(vci, wc, req);
-                break;
-
-            case MPIDI_OFI_EVENT_RECV_HUGE:
-                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_PACK:
@@ -647,10 +425,6 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 
             case MPIDI_OFI_EVENT_RECV_NOPACK:
                 mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
-                break;
-
-            case MPIDI_OFI_EVENT_SEND_HUGE:
-                mpi_errno = send_huge_event(vci, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_SEND_PACK:
@@ -669,12 +443,44 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = MPIDI_OFI_rndv_cts_event(vci, wc, req);
                 break;
 
-            case MPIDI_OFI_EVENT_CHUNK_DONE:
-                mpi_errno = chunk_done_event(vci, wc, req);
+            case MPIDI_OFI_EVENT_PIPELINE_RECV_DATASIZE:
+                mpi_errno = MPIDI_OFI_pipeline_recv_datasize_event(wc, req);
                 break;
 
-            case MPIDI_OFI_EVENT_HUGE_CHUNK_DONE:
-                mpi_errno = MPIDI_OFI_huge_chunk_done_event(vci, wc, req);
+            case MPIDI_OFI_EVENT_PIPELINE_SEND_CHUNK:
+                mpi_errno = MPIDI_OFI_pipeline_send_chunk_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_PIPELINE_RECV_CHUNK:
+                mpi_errno = MPIDI_OFI_pipeline_recv_chunk_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVREAD_RECV_MRS:
+                mpi_errno = MPIDI_OFI_rndvread_recv_mrs_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVREAD_READ_CHUNK:
+                mpi_errno = MPIDI_OFI_rndvread_read_chunk_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVREAD_ACK:
+                mpi_errno = MPIDI_OFI_rndvread_ack_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVWRITE_RECV_MRS:
+                mpi_errno = MPIDI_OFI_rndvwrite_recv_mrs_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVWRITE_WRITE_CHUNK:
+                mpi_errno = MPIDI_OFI_rndvwrite_write_chunk_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDVWRITE_ACK:
+                mpi_errno = MPIDI_OFI_rndvwrite_ack_event(wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_CHUNK_DONE:
+                mpi_errno = chunk_done_event(vci, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_INJECT_EMU:
@@ -759,12 +565,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                         case MPIDI_OFI_EVENT_RECV:
                         case MPIDI_OFI_EVENT_RECV_PACK:
                         case MPIDI_OFI_EVENT_RECV_NOPACK:
-                        case MPIDI_OFI_EVENT_RECV_HUGE:
                             MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
                             MPIR_STATUS_SET_COUNT(req->status, 0);
                             MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
-                            if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
-                                 event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+                            if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
                                 MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
                                 MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
                             } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
