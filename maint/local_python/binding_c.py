@@ -1782,17 +1782,9 @@ def push_impl_decl(func, impl_name=None):
 
     if func['_impl_param_list']:
         params = ', '.join(func['_impl_param_list'])
-        if func['dir'] == 'coll':
-            # block collective use an extra coll_attr
-            if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
-                params = params + ", int coll_attr"
     else:
         params="void"
 
-    if func['dir'] == 'coll':
-        # collective also dump MPIR_Xxx(...)
-        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
-        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
     if func['dir'] == 'io':
         G.io_impl_declares.append("int %s(%s);" % (impl_name, params))
@@ -1820,29 +1812,6 @@ def dump_CHECKENUM(var, errname, t, type="ENUM"):
     G.out.append("MPIR_ERR_SET1(mpi_errno, MPI_ERR_ARG, \"**%s\", \"**%s %%d\", %s);" % (errname, errname, var))
     G.out.append("goto fn_fail;")
     dump_if_close()
-
-def dump_body_coll(func):
-    # collectives call MPIR_Xxx
-    mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
-
-    args = ", ".join(func['_impl_arg_list'])
-
-    if RE.match(r'MPI_(I.*|.*_init)$', func['name'], re.IGNORECASE):
-        # non-blocking collectives
-        G.out.append("MPIR_Request *request_ptr = NULL;")
-        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
-        dump_error_check("")
-        G.out.append("if (!request_ptr) {")
-        G.out.append("    request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);")
-        G.out.append("}")
-        G.out.append("*request = request_ptr->handle;")
-    elif RE.match(r'mpi_neighbor_', func['name'], re.IGNORECASE):
-        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
-        dump_error_check("")
-    else:
-        # blocking collectives
-        dump_line_with_break("mpi_errno = %s(%s, 0);" % (mpir_name, args))
-        dump_error_check("")
 
 def dump_coll_v_swap(func):
     # -- wrappers to make code cleaner
@@ -2064,8 +2033,6 @@ def dump_body_of_routine(func):
                 dump_body_topo_fns(func, RE.m.group(1))
             else:
                 print("Error: unhandled special impl: [%s]" % func['impl'])
-        elif func['dir'] == 'coll':
-            dump_body_coll(func)
         else:
             dump_body_impl(func, "mpir")
 
