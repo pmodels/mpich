@@ -84,6 +84,37 @@ int MPII_Coll_finalize(void);
         *sched_p = s; \
     } while (0)
 
+#define MPII_CSEL_CREATE_TSP_SCHED(coll_sig) \
+    do { \
+        if (coll_sig->sched == NULL) { \
+            coll_sig->sched_type = MPIR_SCHED_GENTRAN; \
+            MPIR_TSP_sched_create(&coll_sig->sched, coll_sig->is_persistent); \
+        } else { \
+            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_GENTRAN); \
+        } \
+    } while (0)
+
+#define MPII_CSEL_CREATE_SCHED(coll_sig) \
+    do { \
+        if (coll_sig->sched == NULL) { \
+            MPIR_Sched_t s = MPIR_SCHED_NULL; \
+            enum MPIR_Sched_kind sched_kind = MPIR_SCHED_KIND_REGULAR; \
+            if (coll_sig->is_persistent) { \
+                sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
+            } \
+            mpi_errno = MPIR_Sched_create(&s, sched_kind); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            int tag = -1; \
+            mpi_errno = MPIR_Sched_next_tag(coll_sig->comm_ptr, &tag); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            MPIR_Sched_set_tag(s, tag); \
+            coll_sig->sched_type = MPIR_SCHED_NORMAL; \
+            coll_sig->sched = s; \
+        } else { \
+            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_NORMAL); \
+        } \
+    } while (0)
+
 #define MPII_SCHED_START(sched_type, sched, comm_ptr, request) \
     do { \
         if (sched_type == MPIR_SCHED_NORMAL) { \
