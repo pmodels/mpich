@@ -533,17 +533,7 @@ def dump_mpir(name, blocking_type):
     if need_buffer_swap:
         dump_buffer_swap_pre()
 
-    cond1 = "MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all"
-    cond2 = "MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll"
-    cond3 = "MPIR_CVAR_%s_DEVICE_COLLECTIVE" % NAME
-    G.out.append("if ((%s) ||" % cond1)
-    G.out.append("    ((%s) &&" % cond2)
-    G.out.append("     %s)) {" % cond3)
-    G.out.append("INDENT")
-    dump_split(2, "mpi_errno = MPID_%s(%s);" % (Name, func_args))
-    dump_else()
-    dump_split(2, "mpi_errno = MPIR_%s_impl(%s);" % (Name, func_args))
-    dump_close("}")
+    dump_split(1, "mpi_errno = MPIR_%s_impl(%s);" % (Name, func_args))
     if need_buffer_swap:
         dump_buffer_swap_post()
     G.out.append("")
