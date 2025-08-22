@@ -260,6 +260,9 @@ typedef enum {
 typedef struct {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
+    void *sched;
+    enum MPIR_sched_type sched_type;
+    bool is_persistent;
 
     union {
         struct {
