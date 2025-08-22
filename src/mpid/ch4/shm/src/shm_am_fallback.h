@@ -10,7 +10,6 @@
 #include "shm_am_fallback_recv.h"
 #include "shm_am_fallback_probe.h"
 #include "shm_am_fallback_rma.h"
-#include "shm_am_fallback_coll.h"
 #include "shm_am_fallback_part.h"
 
 #endif /* SHM_AM_FALLBACK_H_INCLUDED */

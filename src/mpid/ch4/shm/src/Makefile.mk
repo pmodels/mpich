@@ -7,14 +7,12 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/src
 
 noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h    \
         src/mpid/ch4/shm/src/shm_am_fallback.h       \
-        src/mpid/ch4/shm/src/shm_am_fallback_coll.h  \
         src/mpid/ch4/shm/src/shm_am_fallback_probe.h \
         src/mpid/ch4/shm/src/shm_am_fallback_recv.h  \
         src/mpid/ch4/shm/src/shm_am_fallback_rma.h   \
         src/mpid/ch4/shm/src/shm_am_fallback_send.h  \
         src/mpid/ch4/shm/src/shm_am_fallback_part.h  \
         src/mpid/ch4/shm/src/shm_am.h      \
-        src/mpid/ch4/shm/src/shm_coll.h    \
         src/mpid/ch4/shm/src/shm_hooks.h   \
         src/mpid/ch4/shm/src/shm_progress.h \
         src/mpid/ch4/shm/src/shm_p2p.h     \
