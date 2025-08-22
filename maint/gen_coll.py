@@ -25,8 +25,154 @@ def main():
         dump_coll(a, "blocking")
         dump_coll(a, "nonblocking")
         dump_coll(a, "persistent")
+    # dump the container version of the algorithms
+    dump_algo_cnt_fns()
+    add_algo_prototypes()
+    for a in coll_names:
+        add_sched_auto_prototypes(a)
+
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_prototypes("src/mpi/coll/include/coll_algos.h", G.prototypes)
+
+def dump_algo_cnt_fns():
+    def get_coll_args(func, func_name):
+        args = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                args.append("coll_sig->comm_ptr")
+            else:
+                args.append("coll_sig->u.%s.%s" % (func_name, p['name']))
+        return ', '.join(args)
+
+    def get_algo_args(func, func_name, algo):
+        args = get_coll_args(func, func_name)
+        if 'extra_params' in algo:
+            args += ", " + get_algo_extra_args(algo, "csel")
+
+        if func_name.startswith('i'):
+            args += ", coll_sig->sched"
+        elif func_name.startswith('neighbor_'):
+            pass
+        else:
+            args += ", 0" # coll_attr
+
+        return args
+
+    def dump_algo_prep(func_name, algo):
+        if func_name.startswith('i'):
+            if algo['name'].startswith('tsp_'):
+                G.out.append("MPII_CSEL_CREATE_TSP_SCHED(coll_sig);")
+            else:
+                G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
+
+    algo_funcname_hash = {}
+    for func_commkind in sorted(G.algos):
+        func_name, commkind = func_commkind.split("-")
+        if func_name.startswith('i'):
+            # use blocking func for base parameters
+            func = G.FUNCS["mpi_" + func_name[1:]]
+        else:
+            func = G.FUNCS["mpi_" + func_name]
+        for algo in G.algos[func_commkind]:
+            if "allcomm" in algo and commkind == "inter":
+                continue
+            algo_funcname = get_algo_funcname(func_name, commkind, algo)
+            if algo_funcname in algo_funcname_hash:
+                # skip alias algorithms
+                continue
+            else:
+                algo_funcname_hash[algo_funcname] = 1
+            algo_args = get_algo_args(func, func_name, algo)
+            decl = "int %s_cnt(%s)" % (algo_funcname, "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
+            add_prototype(decl)
+            dump_split(0, decl)
+            dump_open('{')
+            G.out.append("int mpi_errno = MPI_SUCCESS;")
+            G.out.append("")
+            dump_algo_prep(func_name, algo)
+            dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
+            G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+            G.out.append("")
+            G.out.append("fn_exit:")
+            G.out.append("return mpi_errno;")
+            G.out.append("fn_fail:")
+            G.out.append("goto fn_exit;")
+            dump_close('}')
+            G.out.append("")
+
+def add_algo_prototypes():
+    def get_coll_params(func):
+        mapping = G.MAPS['SMALL_C_KIND_MAP']
+        params = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                params.append("MPIR_Comm * comm_ptr")
+            else:
+                s = get_C_param(p, func, mapping)
+                if p['kind'].startswith('POLY'):
+                    s = re.sub(r'\bint ', 'MPI_Aint ', s)
+                params.append(s)
+        return ', '.join(params)
+
+    def get_algo_params(func, func_name, algo):
+        params = get_coll_params(func)
+        if 'extra_params' in algo:
+            params += ", " + get_algo_extra_params(algo)
+
+        if func_name.startswith('i'):
+            if algo['name'].startswith('tsp_'):
+                params += ", MPIR_TSP_sched_t s"
+            else:
+                params += ", MPIR_Sched_t s"
+        elif func_name.startswith('neighbor_'):
+            pass
+        else:
+            params += ", int coll_attr" # coll_attr
+
+        return params
+
+    for func_commkind in sorted(G.algos):
+        func_name, commkind = func_commkind.split("-")
+        if func_name.startswith('i'):
+            # use blocking func for base parameters
+            func = G.FUNCS["mpi_" + func_name[1:]]
+        else:
+            func = G.FUNCS["mpi_" + func_name]
+
+        algo_funcname_hash = {}
+        for algo in G.algos[func_commkind]:
+            if "allcomm" in algo and commkind == "inter":
+                continue
+            algo_funcname = get_algo_funcname(func_name, commkind, algo)
+            if algo_funcname in algo_funcname_hash:
+                # skip alias algorithms
+                continue
+            else:
+                algo_funcname_hash[algo_funcname] = 1
+            algo_params = get_algo_params(func, func_name, algo)
+            decl = "int %s(%s)" % (algo_funcname, algo_params)
+            add_prototype(decl)
+
+def add_sched_auto_prototypes(name):
+    def get_coll_params(func):
+        mapping = G.MAPS['SMALL_C_KIND_MAP']
+        params = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                params.append("MPIR_Comm * comm_ptr")
+            else:
+                s = get_C_param(p, func, mapping)
+                if p['kind'].startswith('POLY'):
+                    s = re.sub(r'\bint ', 'MPI_Aint ', s)
+                params.append(s)
+        return ', '.join(params)
+
+    func = G.FUNCS["mpi_" + name]
+    params = get_coll_params(func)
+    params += ", MPIR_Sched_t s"
+    add_prototype("int MPIR_I%s_intra_sched_auto(%s)" % (name, params))
+    if not re.match(r'(scan|exscan|neighbor_)', name):
+        add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (name, params))
 
 def add_prototype(l):
     if RE.match(r'int\s+(\w+)\(', l):
@@ -110,7 +256,6 @@ def dump_allcomm_auto_blocking(name):
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     dump_open("switch (cnt->id) {")
@@ -178,19 +323,12 @@ def dump_allcomm_sched_auto(name):
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
-    # -- add shced_auto prototypes
-    sched_auto_params = get_func_params(params, name, "sched_auto")
-    add_prototype("int MPIR_%s_intra_sched_auto(%s)" % (Name, sched_auto_params))
-    if not re.match(r'(scan|exscan|neighbor_)', name):
-        add_prototype("int MPIR_%s_inter_sched_auto(%s)" % (Name, sched_auto_params))
-
     # -- switch
     def dump_cnt_algo_tsp(algo, commkind):
         G.out.append("MPII_GENTRAN_CREATE_SCHED_P();")
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
@@ -198,7 +336,6 @@ def dump_allcomm_sched_auto(name):
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     dump_open("switch (cnt->id) {")
@@ -577,6 +714,18 @@ def get_func_name(name, blocking_type):
         return 'i' + name
     elif blocking_type == "persistent":
         return name + "_init"
+
+def get_algo_funcname(func_name, commkind, algo):
+    if 'allcomm' in algo:
+        commkind = 'allcomm'
+    Name = func_name.capitalize()
+    if func_name.startswith('i'):
+        if algo['name'].startswith('tsp_'):
+            return "MPIR_TSP_%s_sched_%s_%s" % (Name, commkind, get_algo_name(algo))
+        else:
+            return "MPIR_%s_%s_%s" % (Name, commkind, get_algo_name(algo))
+    else:
+        return "MPIR_%s_%s_%s" % (Name, commkind, get_algo_name(algo))
 
 def get_params_and_args(func):
     mapping = G.MAPS['SMALL_C_KIND_MAP']
