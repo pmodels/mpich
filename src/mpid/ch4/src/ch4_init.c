@@ -171,20 +171,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static const char *devcollstr(void)
-{
-    if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) {
-        return "all";
-    } else if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_none) {
-        return "none";
-    } else if (MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) {
-        return "percoll";
-    } else {
-        MPIR_Assert(0);
-    }
-    return NULL;
-}
-
 static void *create_container(struct json_object *obj)
 {
     MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
@@ -610,7 +596,6 @@ int MPID_Init(int requested, int *provided)
         fprintf(stdout, "==== Various sizes and limits ====\n");
         fprintf(stdout, "sizeof(MPIDI_per_vci_t): %d\n", (int) sizeof(MPIDI_per_vci_t));
         printf("==== collective selection ====\n");
-        printf("MPIR_CVAR_DEVICE_COLLECTIVES: %s\n", devcollstr());
         MPIR_Assert(MPIR_Csel_source);
         printf("MPIR: %s\n", MPIR_Csel_source);
         MPIR_Assert(MPIDI_global.csel_source);
