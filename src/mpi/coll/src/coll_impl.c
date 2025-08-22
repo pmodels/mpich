@@ -14,20 +14,6 @@ categories :
      description : A category for collective communication variables.
 
 cvars:
-    - name        : MPIR_CVAR_DEVICE_COLLECTIVES
-      category    : COLLECTIVE
-      type        : enum
-      default     : percoll
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select whether the device can override the
-        MPIR-level collective algorithms.
-        all     - Always prefer the device collectives
-        none    - Never pick the device collectives
-        percoll - Use the per-collective CVARs to decide
-
     - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
       category    : COLLECTIVE
       type        : enum
