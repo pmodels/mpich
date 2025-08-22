@@ -6,8 +6,6 @@
 #ifndef MPIDPOST_H_INCLUDED
 #define MPIDPOST_H_INCLUDED
 
-#include "mpid_coll.h"
-
 /* FIXME: mpidpost.h is included by mpiimpl.h .  However, mpiimpl.h should 
    refer only to the ADI3 prototypes and should never include prototypes 
    specific to any particular device.  Factor the include files to maintain
