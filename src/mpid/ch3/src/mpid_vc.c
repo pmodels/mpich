@@ -637,7 +637,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
     }
 
     /* See if everyone is happy */
-    mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPIR_INT_INTERNAL, MPI_LAND, comm_ptr, 0 );
+    mpi_errno = MPIR_Allreduce_fallback( MPI_IN_PLACE, &allfound, 1, MPIR_INT_INTERNAL, MPI_LAND, comm_ptr, 0 );
     MPIR_ERR_CHECK(mpi_errno);
     
     if (allfound) return MPI_SUCCESS;
