@@ -27,6 +27,14 @@ def main():
         dump_coll_impl(a, "blocking")
         dump_coll_impl(a, "nonblocking")
         dump_coll_impl(a, "persistent")
+
+    # TEMP: dump mpir functions.
+    #       Current code base call MPIR_ functions in copositinal algorithms. Create a wrapper that call _impl
+    #       for now. We will refactor the compositional algorithms later.
+    for a in coll_names:
+        dump_coll_mpir(a, "blocking")
+        dump_coll_mpir(a, "nonblocking")
+
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
     add_algo_prototypes()
@@ -264,6 +272,34 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("return mpi_errno;")
     G.out.append("fn_fail:")
     G.out.append("goto fn_exit;")
+    dump_close('}')
+
+def dump_coll_mpir(name, blocking_type):
+    def get_func_args(func):
+        args = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                args.append('comm_ptr')
+            else:
+                args.append(p['name'])
+        return ', '.join(args)
+
+    func = G.FUNCS["mpi_" + name]
+    func_params = get_func_params(func, name, blocking_type)
+    func_args = get_func_args(func)
+    if blocking_type == "blocking":
+        func_params += ", int coll_attr"
+    else:
+        func_args += ", request"
+
+    func_name = get_func_name(name, blocking_type)
+    Name = func_name.capitalize()
+
+    G.out.append("")
+    add_prototype("int MPIR_%s(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s(%s)" % (Name, func_params))
+    dump_open('{')
+    G.out.append("return MPIR_%s_impl(%s);" % (Name, func_args))
     dump_close('}')
 
 # ----
