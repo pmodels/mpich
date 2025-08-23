@@ -19,6 +19,9 @@
 #define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling
 #define MPIR_Bcast_fallback      MPIR_Bcast_intra_binomial
 #define MPIR_Gather_fallback     MPIR_Gather_intra_binomial
+#define MPIR_Reduce_scatter_block_fallback MPIR_Reduce_scatter_block_intra_recursive_doubling
+/* used in MPIR_Comm_split_impl */
+#define MPIR_Allgather_inter_fallback MPIR_Allgather_inter_local_gather_remote_bcast
 
 
 /* Internal point-to-point communication for collectives */
