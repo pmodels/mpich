@@ -187,9 +187,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algorithms as gpu ipc bcast cannot be used */
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -278,10 +277,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algorithms as gpu ipc alltoall cannot be used */
-    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                   comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -370,10 +367,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algorithms as gpu ipc allgather cannot be used */
-    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                    comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -467,62 +462,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algorithms as gpu ipc allgatherv cannot be used */
-    mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                     recvtype, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
     goto fn_exit;
 }
 
-#else /* MPIDI_CH4_SHM_ENABLE_GPU */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
-                                                                MPI_Aint count,
-                                                                MPI_Datatype datatype,
-                                                                int root, MPIR_Comm * comm_ptr,
-                                                                int coll_attr)
-{
-    return MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, coll_attr);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *sendbuf,
-                                                                   MPI_Aint sendcount,
-                                                                   MPI_Datatype sendtype,
-                                                                   void *recvbuf,
-                                                                   MPI_Aint recvcount,
-                                                                   MPI_Datatype recvtype,
-                                                                   MPIR_Comm * comm_ptr,
-                                                                   int coll_attr)
-{
-    return MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                              comm_ptr, coll_attr);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *sendbuf,
-                                                                    MPI_Aint sendcount,
-                                                                    MPI_Datatype sendtype,
-                                                                    void *recvbuf,
-                                                                    MPI_Aint recvcount,
-                                                                    MPI_Datatype recvtype,
-                                                                    MPIR_Comm * comm_ptr,
-                                                                    int coll_attr)
-{
-    return MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                               comm_ptr, coll_attr);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void *sendbuf,
-                                                                     MPI_Aint sendcount,
-                                                                     MPI_Datatype sendtype,
-                                                                     void *recvbuf,
-                                                                     const MPI_Aint * recvcounts,
-                                                                     const MPI_Aint * displs,
-                                                                     MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     int coll_attr)
-{
-    return MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
-                                comm_ptr, coll_attr);
-}
 #endif /* !MPIDI_CH4_SHM_ENABLE_GPU */
 
 #endif /* POSIX_COLL_GPU_IPC_H_INCLUDED */
