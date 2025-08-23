@@ -164,7 +164,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPIR_Barrier((*win_ptr)->comm_ptr, 0);
+    mpi_errno = MPIR_Barrier_fallback((*win_ptr)->comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Free window resources in lower layer. */
