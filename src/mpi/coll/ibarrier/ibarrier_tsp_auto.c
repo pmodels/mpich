@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_csel.h"
 
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
 int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sched)

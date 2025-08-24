@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_csel.h"
 /* Algorithm: Tree-based bcast
  * For short messages, we use a kary/knomial tree-based algorithm.
  * Cost = lgp.alpha + n.lgp.beta
