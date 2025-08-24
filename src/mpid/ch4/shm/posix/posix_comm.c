@@ -83,24 +83,6 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
         }
     }
 
-    /* prune selection tree */
-    if (MPIDI_global.shm.posix.csel_root) {
-        mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root, comm,
-                                    &MPIDI_POSIX_COMM(comm, csel_comm));
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIDI_POSIX_COMM(comm, csel_comm) = NULL;
-    }
-
-    /* prune selection tree for gpu */
-    if (MPIDI_global.shm.posix.csel_root_gpu) {
-        mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root_gpu, comm,
-                                    &MPIDI_POSIX_COMM(comm, csel_comm_gpu));
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIDI_POSIX_COMM(comm, csel_comm_gpu) = NULL;
-    }
-
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
@@ -113,16 +95,6 @@ int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    if (MPIDI_POSIX_COMM(comm, csel_comm)) {
-        mpi_errno = MPIR_Csel_free(MPIDI_POSIX_COMM(comm, csel_comm));
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (MPIDI_POSIX_COMM(comm, csel_comm_gpu)) {
-        mpi_errno = MPIR_Csel_free(MPIDI_POSIX_COMM(comm, csel_comm_gpu));
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
     /* Release_gather primitives based collective algorithm works for Intra-comms only */
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
