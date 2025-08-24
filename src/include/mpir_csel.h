@@ -6,7 +6,6 @@
 #ifndef MPIR_CSEL_H_INCLUDED
 #define MPIR_CSEL_H_INCLUDED
 
-#include "json.h"
 #include "coll_impl.h"
 
 typedef enum {
