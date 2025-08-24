@@ -410,3 +410,32 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig)
 
     return mpi_errno;
 }
+
+/* blocking collectives by calling its nonblocking forms */
+int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Trick: blocking coll_type is even. Its nonblocking type is +1 */
+    MPIR_Assert(coll_sig->coll_type % 2 == 0);
+    coll_sig->coll_type += 1;
+
+    mpi_errno = MPIR_Coll_auto(coll_sig, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Request *req;
+    MPII_SCHED_START(coll_sig->sched_type, coll_sig->sched, coll_sig->comm_ptr, &req);
+
+    mpi_errno = MPIC_Wait(req);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Request_free(req);
+
+    /* clean up coll_sig just in case */
+    coll_sig->coll_type -= 1;
+    coll_sig->sched = NULL;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
