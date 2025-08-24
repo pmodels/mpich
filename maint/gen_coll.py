@@ -720,9 +720,7 @@ def get_algo_params(params, algo):
 
 def get_algo_name(algo):
     # the name used in algo function name
-    if "func_name" in algo:
-        return algo['func_name']
-    elif algo['name'].startswith('tsp_'):
+    if algo['name'].startswith('tsp_'):
         return algo['name'][4:]
     else:
         return algo['name']
