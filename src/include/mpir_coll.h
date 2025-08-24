@@ -20,6 +20,7 @@ typedef enum {
     MPIR_COLL_ALGORITHM_IDS(),
     /* composition algorithms */
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_nb,
     /* end */
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;

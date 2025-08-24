@@ -67,6 +67,7 @@ void MPIR_Coll_cvar_init(void);
  *       MPIR_Coll_composition_auto is a gate function, thus does not take "cnt" parameter. */
 int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
