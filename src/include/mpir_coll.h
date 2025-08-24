@@ -247,7 +247,7 @@ struct MPII_Csel_container {
             } intra_tsp_recexch_single_buffer;
             struct {
                 int k;
-            } intra_tsp_recexch_multiple_buffer;
+            } intra_tsp_recexch;
             struct {
                 int tree_type;
                 int k;
@@ -311,7 +311,7 @@ struct MPII_Csel_container {
             struct {
                 int scatterv_k;
                 int allgatherv_k;
-            } intra_tsp_scatterv_recexch_allgatherv;
+            } intra_tsp_scatterv_allgatherv;
             struct {
                 int scatterv_k;
             } intra_tsp_scatterv_ring_allgatherv;

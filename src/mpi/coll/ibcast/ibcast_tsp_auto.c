@@ -37,8 +37,7 @@ static int MPIR_Ibcast_sched_intra_tsp_flat_auto(void *buffer, MPI_Aint count,
         /* gentran scatterv recexch allgather with radix 2 */
         mpi_errno =
             MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root,
-                                                            comm_ptr,
-                                                            MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling,
+                                                            comm_ptr, 0,
                                                             scatterv_k, allgatherv_k, sched);
     }
     MPIR_ERR_CHECK(mpi_errno);

@@ -244,15 +244,15 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv:
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_allgatherv:
             {
                 json_object_object_foreach(obj, key, val) {
                     ckey = MPL_strdup_no_spaces(key);
                     if (!strncmp(ckey, "scatterv_k=", strlen("scatterv_k=")))
-                        cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.scatterv_k =
+                        cnt->u.ibcast.intra_tsp_scatterv_allgatherv.scatterv_k =
                             atoi(ckey + strlen("scatterv_k="));
                     else if (!strncmp(ckey, "allgatherv_k=", strlen("allgatherv_k=")))
-                        cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.allgatherv_k =
+                        cnt->u.ibcast.intra_tsp_scatterv_allgatherv.allgatherv_k =
                             atoi(ckey + strlen("allgatherv_k="));
                     MPL_free(ckey);
                 }
@@ -271,13 +271,12 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer:
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch:
             {
                 json_object_object_foreach(obj, key, val) {
                     ckey = MPL_strdup_no_spaces(key);
                     if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.iallreduce.intra_tsp_recexch_multiple_buffer.k =
-                            atoi(ckey + strlen("k="));
+                        cnt->u.iallreduce.intra_tsp_recexch.k = atoi(ckey + strlen("k="));
                     MPL_free(ckey);
                 }
             }
