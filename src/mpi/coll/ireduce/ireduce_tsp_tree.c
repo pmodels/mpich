@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "algo_common.h"
 #include "treealgo.h"
+#include "coll_csel.h"
 
 /* Routine to schedule a pipelined tree based reduce */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,

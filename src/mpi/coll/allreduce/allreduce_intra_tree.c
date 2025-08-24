@@ -9,6 +9,7 @@
 #include "mpiimpl.h"
 #include "algo_common.h"
 #include "treealgo.h"
+#include "coll_csel.h"
 
 int MPIR_Allreduce_intra_tree(const void *sendbuf,
                               void *recvbuf,

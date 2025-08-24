@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_csel.h"
 
 /* Provides a "flat" reduce that doesn't know anything about
  * hierarchy.  It will choose between several different algorithms

@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 #include "mpl.h"
-#include "mpir_csel.h"
+#include "coll_csel.h"
 #include <fcntl.h>      /* open */
 #include <sys/mman.h>   /* mmap */
 #include <sys/stat.h>
