@@ -204,7 +204,7 @@ struct MPIR_Request {
         struct {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
-            MPIR_TSP_sched_t sched;
+            void *sched;
         } persist;              /* kind : MPIR_REQUEST_KIND__PREQUEST_SEND or MPIR_REQUEST_KIND__PREQUEST_RECV */
         struct {
             struct MPIR_Request *real_request;

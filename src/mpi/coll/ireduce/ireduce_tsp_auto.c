@@ -4,15 +4,15 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_csel.h"
 
 /* Provides a "flat" reduce that doesn't know anything about
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
 /* Remove this function when gentran algos are in json file */
-static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf,
-                                                  MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                  int root, MPIR_Comm * comm_ptr,
-                                                  MPIR_TSP_sched_t sched)
+int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf,
+                                           MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
+                                           int root, MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
