@@ -12,61 +12,31 @@ typedef struct MPII_Csel_container MPII_Csel_container_s;
 #include "coll_impl.h"
 #include "coll_algos.h"
 
-typedef enum {
-    MPIR_CSEL_COLL_TYPE__ALLGATHER = 0,
-    MPIR_CSEL_COLL_TYPE__ALLGATHERV,
-    MPIR_CSEL_COLL_TYPE__ALLREDUCE,
-    MPIR_CSEL_COLL_TYPE__ALLTOALL,
-    MPIR_CSEL_COLL_TYPE__ALLTOALLV,
-    MPIR_CSEL_COLL_TYPE__ALLTOALLW,
-    MPIR_CSEL_COLL_TYPE__BARRIER,
-    MPIR_CSEL_COLL_TYPE__BCAST,
-    MPIR_CSEL_COLL_TYPE__EXSCAN,
-    MPIR_CSEL_COLL_TYPE__GATHER,
-    MPIR_CSEL_COLL_TYPE__GATHERV,
-    MPIR_CSEL_COLL_TYPE__IALLGATHER,
-    MPIR_CSEL_COLL_TYPE__IALLGATHERV,
-    MPIR_CSEL_COLL_TYPE__IALLREDUCE,
-    MPIR_CSEL_COLL_TYPE__IALLTOALL,
-    MPIR_CSEL_COLL_TYPE__IALLTOALLV,
-    MPIR_CSEL_COLL_TYPE__IALLTOALLW,
-    MPIR_CSEL_COLL_TYPE__IBARRIER,
-    MPIR_CSEL_COLL_TYPE__IBCAST,
-    MPIR_CSEL_COLL_TYPE__IEXSCAN,
-    MPIR_CSEL_COLL_TYPE__IGATHER,
-    MPIR_CSEL_COLL_TYPE__IGATHERV,
-    MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLGATHER,
-    MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLGATHERV,
-    MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALL,
-    MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALLV,
-    MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALLW,
-    MPIR_CSEL_COLL_TYPE__IREDUCE,
-    MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER,
-    MPIR_CSEL_COLL_TYPE__IREDUCE_SCATTER_BLOCK,
-    MPIR_CSEL_COLL_TYPE__ISCAN,
-    MPIR_CSEL_COLL_TYPE__ISCATTER,
-    MPIR_CSEL_COLL_TYPE__ISCATTERV,
-    MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLGATHER,
-    MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLGATHERV,
-    MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALL,
-    MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALLV,
-    MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALLW,
-    MPIR_CSEL_COLL_TYPE__REDUCE,
-    MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER,
-    MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
-    MPIR_CSEL_COLL_TYPE__SCAN,
-    MPIR_CSEL_COLL_TYPE__SCATTER,
-    MPIR_CSEL_COLL_TYPE__SCATTERV,
-    MPIR_CSEL_COLL_TYPE__END,
-} MPIR_Csel_coll_type_e;
+/* Define values for collective attribute.
+ * - The first 8 bits are passed down to basic collective algorithms.
+ * - The higher bits are used to assist algorithm selections
+ *   - The lower 32 bits are reserved by MPIR-layer
+ *   - The higher 32 bits are reserved for MPID-layer
+ */
+#define MPIR_COLL_ATTR_CORE_BITS  8
+#define MPIR_COLL_ATTR_MPIR_BITS 32
 
-typedef enum {
-    MPIR_COLL_ALGORITHM_IDS(),
-    /* composition algorithms */
-    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto,
-    /* end */
-    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
-} MPII_Csel_container_type_e;
+/* bit 0-7 */
+#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
+                                         * on synchronization rather than batch latency.
+                                         * In particular, advise netmod to avoid using
+                                         * injection send. */
+#define MPIR_ERR_PROC_FAILED 0x2
+#define MPIR_ERR_OTHER       0x4
+#define MPIR_COLL_ATTR_ERR_MASK 0x6
+
+#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
+
+/* bit 8-31, MPIR-layer */
+#define MPIR_COLL_ATTR__inplace          0x00000100
+#define MPIR_COLL_ATTR__pof2             0x00000200
+#define MPIR_COLL_ATTR__commutative      0x00000400
+#define MPIR_COLL_ATTR__builtin_op       0x00000800
 
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
@@ -74,6 +44,10 @@ struct MPIR_Csel_coll_sig {
     void *sched;
     enum MPIR_sched_type sched_type;
     bool is_persistent;
+
+    struct {
+        bool is_gpu;
+    } cache;
 
     union {
         struct {
@@ -212,208 +186,6 @@ struct MPIR_Csel_coll_sig {
             MPI_Datatype recvtype;
             int root;
         } scatterv, iscatterv;
-    } u;
-};
-
-struct MPII_Csel_container {
-    MPII_Csel_container_type_e id;
-
-    union {
-        struct {
-            struct {
-                int k;
-            } intra_tsp_brucks;
-            struct {
-                int k;
-            } intra_tsp_recexch_doubling;
-            struct {
-                int k;
-            } intra_tsp_recexch_halving;
-        } iallgather;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_brucks;
-            struct {
-                int k;
-            } intra_tsp_recexch_doubling;
-            struct {
-                int k;
-            } intra_tsp_recexch_halving;
-        } iallgatherv;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_recexch_single_buffer;
-            struct {
-                int k;
-            } intra_tsp_recexch;
-            struct {
-                int tree_type;
-                int k;
-                int chunk_size;
-                int buffer_per_child;
-            } intra_tsp_tree;
-            struct {
-                int k;
-            } intra_tsp_recexch_reduce_scatter_recexch_allgatherv;
-        } iallreduce;
-        struct {
-            struct {
-                int k;
-                int buffer_per_phase;
-            } intra_tsp_brucks;
-            struct {
-                int batch_size;
-                int bblock;
-            } intra_tsp_scattered;
-        } ialltoall;
-        struct {
-            struct {
-                int batch_size;
-                int bblock;
-            } intra_tsp_scattered;
-            struct {
-                int bblock;
-            } intra_tsp_blocked;
-        } ialltoallv;
-        struct {
-            struct {
-                int bblock;
-            } intra_tsp_blocked;
-        } ialltoallw;
-        struct {
-            struct {
-                int k;
-            } intra_k_dissemination;
-            struct {
-                int k;
-                bool single_phase_recv;
-            } intra_recexch;
-        } barrier;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_recexch;
-            struct {
-                int k;
-            } intra_tsp_k_dissemination;
-        } ibarrier;
-        struct {
-            struct {
-                int tree_type;
-                int k;
-                int chunk_size;
-            } intra_tsp_tree;
-            struct {
-                int chunk_size;
-            } intra_tsp_ring;
-            struct {
-                int scatterv_k;
-                int allgatherv_k;
-            } intra_tsp_scatterv_allgatherv;
-            struct {
-                int scatterv_k;
-            } intra_tsp_scatterv_ring_allgatherv;
-        } ibcast;
-        struct {
-            struct {
-                int tree_type;
-                int k;
-                int is_non_blocking;
-                int topo_overhead;
-                int topo_diff_groups;
-                int topo_diff_switches;
-                int topo_same_switches;
-            } intra_tree;
-            struct {
-                int tree_type;
-                int k;
-                int is_non_blocking;
-                int chunk_size;
-                int recv_pre_posted;
-            } intra_pipelined_tree;
-        } bcast;
-        struct {
-            struct {
-                int k;
-            } intra_k_brucks;
-            struct {
-                int k;
-                bool single_phase_recv;
-            } intra_recexch_doubling;
-            struct {
-                int k;
-                bool single_phase_recv;
-            } intra_recexch_halving;
-        } allgather;
-        struct {
-            struct {
-                int k;
-            } intra_k_brucks;
-        } alltoall;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_tree;
-        } igather;
-        struct {
-            struct {
-                int tree_type;
-                int k;
-                int chunk_size;
-                int buffer_per_child;
-                int topo_overhead;
-                int topo_diff_groups;
-                int topo_diff_switches;
-                int topo_same_switches;
-            } intra_tsp_tree;
-            struct {
-                int chunk_size;
-                int buffer_per_child;
-            } intra_tsp_ring;
-        } ireduce;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_recexch;
-        } ireduce_scatter;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_recexch;
-        } ireduce_scatter_block;
-        struct {
-            struct {
-                int k;
-            } intra_recursive_multiplying;
-            struct {
-                int tree_type;
-                int k;
-                int chunk_size;
-                int buffer_per_child;
-                int topo_overhead;
-                int topo_diff_groups;
-                int topo_diff_switches;
-                int topo_same_switches;
-            } intra_tree;
-            struct {
-                int k;
-                bool single_phase_recv;
-            } intra_recexch;
-            struct {
-                int k;
-                bool single_phase_recv;
-            } intra_k_reduce_scatter_allgather;
-            struct {
-                int ccl;
-            } intra_ccl;
-        } allreduce;
-        struct {
-            struct {
-                int k;
-            } intra_tsp_tree;
-        } iscatter;
     } u;
 };
 

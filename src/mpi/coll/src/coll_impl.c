@@ -123,6 +123,14 @@ void *MPIR_Csel_selection = NULL;
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 
+/* table of collective algorithm cvars */
+int *MPIR_Coll_cvar_table;
+
+/* string tables to facilitate parsing and debugging */
+const char **MPIR_Coll_type_names;
+const char **MPIR_Coll_algo_names;
+const char **MPIR_Csel_condition_names;
+
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
@@ -170,9 +178,9 @@ int get_ccl_from_string(const char *ccl_str)
 #define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
    do { \
         if (!strcmp(cvar_name, "")) { \
-            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, &csel_var); \
         } else { \
-            mpi_errno = MPIR_Csel_create_from_file(cvar_name, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_file(cvar_name, &csel_var); \
         } \
         MPIR_ERR_CHECK(mpi_errno); \
    } while (0)
@@ -212,15 +220,23 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* FIXME: this is hackish. Define the "num" constants in coll_algos.h */
+    MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
+    MPIR_Coll_type_names = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(char *), MPL_MEM_COLL);
+    MPIR_Coll_algo_table =
+        MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
+    MPIR_Coll_algo_names = MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(char *), MPL_MEM_COLL);
+    MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
+
+    MPII_Coll_type_init();
+    MPII_Coll_algo_init();
+    MPII_Csel_init_condition_names();
+
     /* initialize selection tree */
     LOAD_CSEL_JSON(MPIR_Csel_composition,
                    MPIR_CVAR_COLL_COMPOSITION_JSON_FILE, MPII_coll_composition_json);
     LOAD_CSEL_JSON(MPIR_Csel_selection,
                    MPIR_CVAR_COLL_SELECTION_JSON_FILE, MPII_coll_selection_json);
-
-    MPIR_Coll_algo_table = MPL_malloc(MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count *
-                                      sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
-    MPIR_Coll_algo_init();
 
   fn_exit:
     return mpi_errno;
@@ -249,6 +265,10 @@ int MPII_Coll_finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIR_Coll_algo_table);
+    MPL_free(MPIR_Coll_cvar_table);
+    MPL_free(MPIR_Coll_algo_names);
+    MPL_free(MPIR_Coll_type_names);
+    MPL_free(MPIR_Csel_condition_names);
 
   fn_exit:
     return mpi_errno;
@@ -396,12 +416,6 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
     }
 }
 
-void MPIR_Coll_algo_init(void)
-{
-    MPIR_COLL_SET_ALGO_TABLE();
-    MPIR_Coll_algo_table[MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto] = MPIR_Coll_auto;
-}
-
 int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -424,6 +438,25 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* First check whether user has set an algorithm CVAR */
+    int coll_type = coll_sig->coll_type;
+    int cvar_val = MPIR_Coll_cvar_table[coll_type];
+    if (cvar_val) {
+        int algo_id = MPIR_Coll_cvar_to_algo_id(coll_type, cvar_val);
+        bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
+
+        if (restriction_ok) {
+            MPII_Csel_container_s algo_cnt;
+            MPIR_Coll_init_algo_container(coll_sig, algo_id, &algo_cnt);
+            mpi_errno = MPIR_Coll_algo_table[algo_id] (coll_sig, &algo_cnt);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        } else {
+            /* Error or Fall-thru */
+        }
+    }
+
+    /* Search an algorithm by Csel */
     MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
     MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
 
