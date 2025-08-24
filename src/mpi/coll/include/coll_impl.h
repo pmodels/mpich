@@ -59,6 +59,7 @@ int MPIR_Coll_safe_to_block(void);
 int MPII_Coll_finalize(void);
 
 int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 void MPII_Coll_type_init(void);
