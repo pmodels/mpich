@@ -19,6 +19,7 @@ def main():
     G.out = []
     G.prototypes_hash = {}
     G.prototypes = []
+    G.algo_list = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
 
@@ -42,7 +43,7 @@ def main():
         add_sched_auto_prototypes(a)
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
-    dump_prototypes("src/mpi/coll/include/coll_algos.h", G.prototypes)
+    dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.algo_list, G.prototypes)
 
 def dump_algo_cnt_fns():
     def get_coll_args(func, func_name):
@@ -95,6 +96,8 @@ def dump_algo_cnt_fns():
             algo_args = get_algo_args(func, func_name, algo)
             decl = "int %s_cnt(%s)" % (algo_funcname, "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
             add_prototype(decl)
+            G.algo_list.append(algo_funcname)
+
             dump_split(0, decl)
             dump_open('{')
             G.out.append("int mpi_errno = MPI_SUCCESS;")
@@ -424,7 +427,15 @@ def dump_c_file(f, lines):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
-def dump_prototypes(f, prototypes):
+def dump_coll_algos_h(f, algolist, prototypes):
+    def algo_id(a):
+        prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
+        # TODO: fix the tsp function name
+        if RE.match(r'MPIR_TSP_(\w+)_sched_intra_(\w+)', a):
+            return "%s__MPIR_%s_intra_tsp_%s" % (prefix, RE.m.group(1), RE.m.group(2))
+        else:
+            return "%s__%s" % (prefix, a)
+
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
         for l in G.copyright_c:
@@ -432,6 +443,33 @@ def dump_prototypes(f, prototypes):
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
         print("", file=Out)
+
+        print("#define MPIR_COLL_ALGORITHM_IDS() \\", file=Out)
+        for a in algolist[:-1]:
+            print("    %s, \\" % algo_id(a), file=Out)
+        print("    %s" % algo_id(algolist[-1]), file=Out)
+        print("", file=Out)
+
+        print("#define MPIR_COLL_SET_ALGO_TABLE() \\", file=Out)
+        print("    do { \\", file=Out)
+        for a in algolist:
+            print("        MPIR_Coll_algo_table[%s] = %s_cnt; \\" % (algo_id(a), a), file=Out)
+        print("    } while (0)", file=Out)
+        print("", file=Out)
+
+        print("#define MPIR_COLL_SET_CONTAINER_ID() \\", file=Out)
+        print("    do { \\", file=Out)
+        print("        if (!strcmp(ckey, \"algorithm=%s\")) { \\" % algolist[0], file=Out)
+        print("            cnt->id = %s; \\" % algo_id(algolist[0]), file=Out)
+        for a in algolist[1:]:
+            print("        } else if (!strcmp(ckey, \"algorithm=%s\")) { \\" % a, file=Out)
+            print("            cnt->id = %s; \\" % algo_id(a), file=Out)
+        print("        } else { \\", file=Out)
+        print("            fprintf(stderr, \"unrecognized key \%s\\n\", key); \\", file=Out)
+        print("        } \\", file=Out)
+        print("    } while (0)", file=Out)
+        print("", file=Out)
+
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:

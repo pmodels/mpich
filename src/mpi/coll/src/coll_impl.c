@@ -408,7 +408,7 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
 
 void MPIR_Coll_algo_init(void)
 {
-    /* manual entries now, but we will replace it with autogen later */
+    MPIR_COLL_SET_ALGO_TABLE();
     MPIR_Coll_algo_table[MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto] = MPIR_Coll_auto;
 }
 
