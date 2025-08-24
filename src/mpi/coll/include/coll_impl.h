@@ -61,6 +61,12 @@ int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
 
+void MPIR_Coll_algo_init(void);
+/* NOTE: MPIR_Coll_auto is one of the composition container functions. However,
+ *       MPIR_Coll_composition_auto is a gate function, thus does not take "cnt" parameter. */
+int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
         *sched_type_p = MPIR_SCHED_GENTRAN; \
