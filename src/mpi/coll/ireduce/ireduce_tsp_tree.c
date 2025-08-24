@@ -265,3 +265,13 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_TSP_Ireduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                      MPI_Datatype datatype, MPI_Op op, int root,
+                                      MPIR_Comm * comm, int chunk_size,
+                                      int buffer_per_child, MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root, comm,
+                                             MPIR_TREE_TYPE_KARY, 1, chunk_size, buffer_per_child,
+                                             sched);
+}

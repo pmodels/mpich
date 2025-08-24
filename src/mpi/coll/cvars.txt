@@ -384,6 +384,7 @@ cvars:
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         sched_scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         tsp_tree                               - Force Generic Transport Tree algorithm
+        tsp_scatterv_allgatherv                - Force Generic Transport Scatterv followed by Allgatherv algorithm
         tsp_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
         tsp_scatterv_ring_allgatherv           - Force Generic Transport Scatterv followed by Ring Allgatherv algorithm
         tsp_ring                               - Force Generic Transport Ring algorithm
@@ -1638,6 +1639,7 @@ cvars:
         sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
         sched_reduce_scatter_allgather   - Force reduce scatter allgather algorithm
+        tsp_recexch                  - Force generic transport recursive exchange algorithm
         tsp_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         tsp_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         tsp_tree                     - Force generic transport tree algorithm
