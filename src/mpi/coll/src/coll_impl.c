@@ -123,6 +123,9 @@ void *MPIR_Csel_selection = NULL;
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 
+/* table of collective algorithm cvars */
+int *MPIR_Coll_cvar_table;
+
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
@@ -234,6 +237,9 @@ int MPII_Coll_init(void)
                                       sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
     MPIR_Coll_algo_init();
 
+    MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_COLL_TYPE__END * sizeof(int) * 2, MPL_MEM_COLL);
+    MPIR_Coll_cvar_init();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -254,6 +260,7 @@ int MPII_Coll_finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIR_Coll_algo_table);
+    MPL_free(MPIR_Coll_cvar_table);
 
   fn_exit:
     return mpi_errno;
@@ -411,6 +418,16 @@ void MPIR_Coll_algo_init(void)
 {
     MPIR_COLL_SET_ALGO_TABLE();
     MPIR_Coll_algo_table[MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto] = MPIR_Coll_auto;
+}
+
+void MPIR_Coll_cvar_init(void)
+{
+    /* e.g.
+     * MPIR_Coll_cvar_table[MPIR_CSEL_COLL_TYPE__BARRIER * 2] = MPIR_CVAR_BARRIER_INTRA_ALGORITHM;
+     * MPIR_Coll_cvar_table[MPIR_CSEL_COLL_TYPE__BARRIER * 2 + 1] = MPIR_CVAR_BARRIER_INTER_ALGORITHM;
+     * ...
+     */
+    MPIR_COLL_SET_CVAR_TABLE();
 }
 
 int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)

@@ -14,7 +14,7 @@ def main():
     func_list = load_C_func_list(binding_dir, silent=True)
     G.algos = load_coll_algos("src/mpi/coll/coll_algorithms.txt")
 
-    coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
+    G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
     G.out = []
     G.prototypes_hash = {}
@@ -24,7 +24,7 @@ def main():
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
 
     # dump impl functions
-    for a in coll_names:
+    for a in G.coll_names:
         dump_coll_impl(a, "blocking")
         dump_coll_impl(a, "nonblocking")
         dump_coll_impl(a, "persistent")
@@ -32,14 +32,14 @@ def main():
     # TEMP: dump mpir functions.
     #       Current code base call MPIR_ functions in copositinal algorithms. Create a wrapper that call _impl
     #       for now. We will refactor the compositional algorithms later.
-    for a in coll_names:
+    for a in G.coll_names:
         dump_coll_mpir(a, "blocking")
         dump_coll_mpir(a, "nonblocking")
 
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
     add_algo_prototypes()
-    for a in coll_names:
+    for a in G.coll_names:
         add_sched_auto_prototypes(a)
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
@@ -426,6 +426,19 @@ def dump_c_file(f, lines):
                 print(l, file=Out)
 
 def dump_coll_algos_h(f, algolist, prototypes):
+    def coll_type(a, is_blocking):
+        prefix = "MPIR_CSEL_COLL_TYPE"
+        if is_blocking:
+            return "%s__%s" % (prefix, a.upper())
+        else:
+            return "%s__I%s" % (prefix, a.upper())
+
+    def cvar_name(a, is_blocking, commkind):
+        if is_blocking:
+            return "MPIR_CVAR_%s_%s_ALGORITHM" % (a.upper(), commkind.upper())
+        else:
+            return "MPIR_CVAR_I%s_%s_ALGORITHM" % (a.upper(), commkind.upper())
+
     def algo_id(a):
         prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
         # TODO: fix the tsp function name
@@ -440,6 +453,25 @@ def dump_coll_algos_h(f, algolist, prototypes):
             print(l, file=Out)
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
+        print("", file=Out)
+
+        print("#define MPIR_COLL_COLL_TYPES() \\", file=Out)
+        for a in G.coll_names:
+            print("    %s, \\" % coll_type(a, True), file=Out)
+            print("    %s, \\" % coll_type(a, False), file=Out)
+        print("    %s" % coll_type("END", True), file=Out)
+        print("", file=Out)
+
+        print("#define MPIR_COLL_SET_CVAR_TABLE() \\", file=Out)
+        print("    do { \\", file=Out)
+        for a in G.coll_names:
+            for is_blocking in (True, False):
+                print("        MPIR_Coll_cvar_table[%s * 2] = %s; \\" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "intra")), file=Out)
+                if not re.match(r'(scan|exscan|neighbor_)', a):
+                    print("        MPIR_Coll_cvar_table[%s * 2 + 1] = %s; \\" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "inter")), file=Out)
+                else:
+                    print("        MPIR_Coll_cvar_table[%s * 2 + 1] = 0; \\" % (coll_type(a, is_blocking)), file=Out)
+        print("    } while (0)", file=Out)
         print("", file=Out)
 
         print("#define MPIR_COLL_ALGORITHM_IDS() \\", file=Out)
