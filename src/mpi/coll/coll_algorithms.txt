@@ -37,8 +37,6 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
-#   * func_name:
-#         Some algorithm use another algorithm or use a different function name.
 
 barrier-intra:
     k_dissemination
@@ -84,17 +82,18 @@ ibcast-intra:
     tsp_tree
         extra_params: tree_type, k, chunk_size
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE
-    tsp_scatterv_recexch_allgatherv
-        func_name: scatterv_allgatherv
-        extra_params: allgatherv_algo=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling, scatterv_k, allgatherv_k
+    tsp_scatterv_allgatherv
+        extra_params: use_ring=0, scatterv_k, allgatherv_k
         cvar_params: -, SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
+    tsp_scatterv_recexch_allgatherv
+        extra_params: scatterv_k, allgatherv_k
+        cvar_params: SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
     tsp_scatterv_ring_allgatherv
         extra_params: scatterv_k
         cvar_params:  SCATTERV_KVAL
     tsp_ring
-        func_name: tree
-        extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size
-        cvar_params: -, -, RING_CHUNK_SIZE
+        extra_params: chunk_size
+        cvar_params: RING_CHUNK_SIZE
 bcast-inter:
     remote_send_local_bcast
 ibcast-inter:
@@ -171,13 +170,11 @@ allgather-intra:
         restrictions: power-of-two
     ring
     recexch_doubling
-        func_name: recexch
-        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k, single_phase_recv
-        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     recexch_halving
-        func_name: recexch
-        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
-        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
@@ -190,13 +187,11 @@ iallgather-intra:
         extra_params: k
         cvar_params: BRUCKS_KVAL
     tsp_recexch_doubling
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_halving
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
 iallgather-inter:
     sched_local_gather_remote_bcast
 
@@ -214,14 +209,12 @@ iallgatherv-intra:
     sched_ring
     tsp_recexch_doubling
         restrictions: displs-ordered
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_halving
         restrictions: displs-ordered
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_ring
     tsp_brucks
         extra_params: k
@@ -328,9 +321,8 @@ ireduce-intra:
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
     tsp_ring
-        func_name: tree
-        extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size, buffer_per_child
-        cvar_params: -, -, RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+        extra_params: chunk_size, buffer_per_child
+        cvar_params: RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
 ireduce-inter:
     sched_local_reduce_remote_send
 
@@ -369,12 +361,13 @@ iallreduce-intra:
     sched_reduce_scatter_allgather
         restrictions: size-ge-pof2, builtin-op
     tsp_recexch_single_buffer
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_multiple_buffer
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER, k
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_recexch
+        extra_params: per_nbr_buffer=1, k
         cvar_params: -, RECEXCH_KVAL
     tsp_tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
@@ -407,7 +400,7 @@ ireduce_scatter-intra:
         restrictions: commutative
     tsp_recexch
         restrictions: commutative
-        extra_params: recexch_type=IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING, k
+        extra_params: is_dist_halving=0, k
         cvar_params: -, RECEXCH_KVAL
 ireduce_scatter-inter:
     sched_remote_reduce_local_scatterv
