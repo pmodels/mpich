@@ -9,8 +9,8 @@
 #include "iallreduce_tsp_recursive_exchange_common.h"
 
 /* Routine to schedule a recursive exchange based allreduce */
-int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                            MPI_Datatype datatype, MPI_Op op,
+int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf,
+                                            MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, int per_nbr_buffer, int k,
                                             MPIR_TSP_sched_t sched)
 {
@@ -274,4 +274,22 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_TSP_Iallreduce_sched_intra_recexch_single_buffer(const void *sendbuf, void *recvbuf,
+                                                          MPI_Aint count, MPI_Datatype datatype,
+                                                          MPI_Op op, MPIR_Comm * comm, int k,
+                                                          MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,
+                                                   0, k, sched);
+}
+
+int MPIR_TSP_Iallreduce_sched_intra_recexch_multiple_buffer(const void *sendbuf, void *recvbuf,
+                                                            MPI_Aint count, MPI_Datatype datatype,
+                                                            MPI_Op op, MPIR_Comm * comm, int k,
+                                                            MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,
+                                                   1, k, sched);
 }

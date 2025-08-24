@@ -232,11 +232,12 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
 }
 
 /* Routine to schedule a recursive exchange based allgather */
-int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
-                                             MPI_Datatype sendtype, void *recvbuf,
-                                             const MPI_Aint * recvcounts, const MPI_Aint * displs,
-                                             MPI_Datatype recvtype, MPIR_Comm * comm,
-                                             int is_dist_halving, int k, MPIR_TSP_sched_t sched)
+static int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                                    MPI_Datatype sendtype, void *recvbuf,
+                                                    const MPI_Aint * recvcounts,
+                                                    const MPI_Aint * displs, MPI_Datatype recvtype,
+                                                    MPIR_Comm * comm, int is_dist_halving, int k,
+                                                    MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -333,4 +334,30 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling(const void *sendbuf, MPI_Aint sendcount,
+                                                      MPI_Datatype sendtype, void *recvbuf,
+                                                      const MPI_Aint * recvcounts,
+                                                      const MPI_Aint * displs,
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                      int k, MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcounts, displs, recvtype, comm,
+                                                    0, k, sched);
+
+}
+
+int MPIR_TSP_Iallgatherv_sched_intra_recexch_halving(const void *sendbuf, MPI_Aint sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     const MPI_Aint * recvcounts,
+                                                     const MPI_Aint * displs, MPI_Datatype recvtype,
+                                                     MPIR_Comm * comm, int k,
+                                                     MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcounts, displs, recvtype, comm,
+                                                    1, k, sched);
+
 }
