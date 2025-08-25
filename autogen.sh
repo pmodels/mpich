@@ -508,7 +508,7 @@ fn_gen_binding_c() {
 
 fn_json_gen() {
     echo_n "generating json char arrays... "
-    ./maint/tuning/coll/json_gen.sh
+    ./maint/json_gen.sh
     echo "done"
 }
 
