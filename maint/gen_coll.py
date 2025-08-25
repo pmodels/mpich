@@ -50,6 +50,7 @@ def main():
     dump_macro_ALGO_TABLE()
     dump_macro_CONTAINER_IDS()
     dump_macro_CONTAINER_FIELDS()
+    dump_macro_CONTAINER_PARSE_PARAMS()
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
@@ -210,6 +211,38 @@ def dump_macro_CONTAINER_FIELDS():
                 else:
                     G.out2.append("        int %s; \\" % a)
             G.out2.append("    } %s; \\" % algo_struct_name(algo))
+    G.out2[-1] = re.sub(r'; \\$', '', G.out2[-1]) # so we can call the macro with ;
+    dump_macro_close()
+
+def dump_macro_CONTAINER_PARSE_PARAMS():
+    dump_macro_open("MPIR_COLL_CONTAINER_PARSE_PARAMS()")
+    for algo in G.algo_list:
+        if 'extra_params' in algo:
+            struct_name = algo_struct_name(algo)
+            extra_params = algo['extra_params'].replace(' ', '').split(',')
+            G.out2.append("    case %s: \\" % algo_id(get_algo_funcname(algo)))
+            G.out2.append("        { \\")
+            G.out2.append("          json_object_object_foreach(obj, key, val) { \\")
+            G.out2.append("            ckey = MPL_strdup_no_spaces(key); \\")
+            sp = ' ' * 12
+            ifstr = "if"
+            for a in extra_params:
+                if re.match(r'\w+=(.+)', a):
+                    # skip constant parameter
+                    continue
+                else:
+                    n = len(a) + 1
+                    atoi = "atoi"
+                    if a == "tree_type":
+                        atoi = "get_tree_type_from_string"
+                    G.out2.append(sp + "%s (!strncmp(ckey, \"%s=\", %d)) { \\" % (ifstr, a, n))
+                    G.out2.append(sp + "    cnt->u.%s.%s = %s(ckey + %d); \\" % (struct_name, a, atoi, n))
+                    ifstr = "} else if"
+            G.out2.append(sp + "} \\")
+            G.out2.append("            MPL_free(ckey); \\")
+            G.out2.append("          } \\")
+            G.out2.append("        } \\")
+            G.out2.append("        break; \\")
     G.out2[-1] = re.sub(r'; \\$', '', G.out2[-1]) # so we can call the macro with ;
     dump_macro_close()
 
@@ -402,7 +435,7 @@ def get_algo_extra_args(algo, kind):
             out_list.append(RE.m.group(1))
         else:
             if kind == "csel":
-                prefix = "cnt->u.%s" % (algo_struct_name(algo))
+                prefix = "cnt->u.%s." % (algo_struct_name(algo))
                 out_list.append(prefix + extra_params[i])
             elif kind == "cvar":
                 prefix = "MPIR_CVAR_%s_" % func_name.upper() 
