@@ -213,18 +213,6 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize selection tree */
-    if (!strcmp(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE, "")) {
-        mpi_errno = MPIR_Csel_create_from_buf(MPII_coll_generic_json,
-                                              MPII_Create_container, &MPIR_Csel_root);
-        MPIR_Csel_source = "MPII_coll_generic_json";
-    } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE,
-                                               MPII_Create_container, &MPIR_Csel_root);
-        MPIR_Csel_source = MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE;
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-    /* TODO: remove the old MPIR_Csel_root etc. */
-
     LOAD_CSEL_JSON(MPIR_Csel_composition,
                    MPIR_CVAR_COLL_COMPOSITION_JSON_FILE, MPII_coll_composition_json);
     LOAD_CSEL_JSON(MPIR_Csel_selection,
@@ -250,7 +238,10 @@ int MPII_Coll_finalize(void)
     mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_composition);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_selection);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIR_Coll_algo_table);
@@ -299,9 +290,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Csel_free(comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup all collective communicators */
     mpi_errno = MPII_Stubalgo_comm_cleanup(comm);

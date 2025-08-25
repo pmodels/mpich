@@ -33,7 +33,5 @@ cat > $cfile<<EOF
 EOF
 
 # create specific json buffers
-create_json_buf maint/tuning/coll/mpir/generic.json MPII_coll_generic_json
-
 create_json_buf src/mpi/coll/coll_composition.json MPII_coll_composition_json
 create_json_buf src/mpi/coll/coll_selection.json   MPII_coll_selection_json
