@@ -1,5 +1,23 @@
 # APIs
 ================
+MPI_Abi_get_fortran_booleans:
+    logical_size: TYPECLASS_SIZE, direction=in, [the size of Fortran LOGICAL in bytes]
+    logical_true: LOGICAL_VOID, direction=out, [the Fortran literal value .TRUE.]
+    logical_false: LOGICAL_VOID, direction=out, [the Fortran literal value .FALSE.]
+    is_set: LOGICAL, direction=out, [flag to indicate whether the logical boolean values were set previously]
+MPI_Abi_get_fortran_info:
+    info: INFO, direction=out, [Fortran ABI details info object]
+MPI_Abi_get_info:
+    info: INFO, direction=out, [ABI details info object (implementation-defined)]
+MPI_Abi_get_version:
+    abi_major: VERSION, direction=out, [ABI major version]
+    abi_minor: VERSION, direction=out, [ABI minor version]
+MPI_Abi_set_fortran_booleans:
+    logical_size: TYPECLASS_SIZE, direction=in, [the size of Fortran LOGICAL in bytes]
+    logical_true: LOGICAL_VOID, direction=in, [the Fortran literal value .TRUE.]
+    logical_false: LOGICAL_VOID, direction=in, [the Fortran literal value .FALSE.]
+MPI_Abi_set_fortran_info:
+    info: INFO, direction=in, [Fortran ABI details info object]
 MPI_Abort:
     comm: COMMUNICATOR, [communicator of tasks to abort]
     errorcode: ERROR_CODE, [error code to return to invoking environment]
@@ -1326,7 +1344,7 @@ MPI_Intercomm_create_from_groups:
     local_leader: RANK, [rank of local group leader in local_group]
     remote_group: GROUP, [remote group, significant only at local_leader]
     remote_leader: RANK, [rank of remote group leader in remote_group, significant only at local_leader]
-    stringtag: STRING, constant=True, [unique idenitifier for this operation]
+    stringtag: STRING, constant=True, [unique identifier for this operation]
     info: INFO, [info object]
     errhandler: ERRHANDLER, [error handler to be attached to new inter-communicator]
     newintercomm: COMMUNICATOR, direction=OUT, [new inter-communicator]

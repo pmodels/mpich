@@ -187,7 +187,7 @@ def is_pointer_type(param):
         return 1
     elif RE.match(r'(STATUS|F90_STATUS|F08_STATUS)$', param['kind']):
         return 1
-    elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', param['kind']):
+    elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*|LOGICAL_VOID)$', param['kind']):
         return 1
     elif param['param_direction'] != 'in':
         return 1
