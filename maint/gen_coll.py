@@ -49,6 +49,7 @@ def main():
     dump_macro_ALGORITHM_IDS()
     dump_macro_ALGO_TABLE()
     dump_macro_CONTAINER_IDS()
+    dump_macro_CONTAINER_FIELDS()
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
@@ -195,6 +196,22 @@ def dump_macro_CONTAINER_IDS():
     G.out2.append("            fprintf(stderr, \"unrecognized key \%s\\n\", key); \\")
     G.out2.append("        } \\")
     dump_macro_close(True)
+
+def dump_macro_CONTAINER_FIELDS():
+    dump_macro_open("MPIR_COLL_ALGORITHM_PARAMS()")
+    for algo in G.algo_list:
+        if 'extra_params' in algo:
+            extra_params = algo['extra_params'].replace(' ', '').split(',')
+            G.out2.append("    struct { \\")
+            for a in extra_params:
+                if re.match(r'\w+=(.+)', a):
+                    # skip constant parameter
+                    continue
+                else:
+                    G.out2.append("        int %s; \\" % a)
+            G.out2.append("    } %s; \\" % algo_struct_name(algo))
+    G.out2[-1] = re.sub(r'; \\$', '', G.out2[-1]) # so we can call the macro with ;
+    dump_macro_close()
 
 #---------------------------------------- 
 def add_prototype(l):
@@ -385,7 +402,7 @@ def get_algo_extra_args(algo, kind):
             out_list.append(RE.m.group(1))
         else:
             if kind == "csel":
-                prefix = "cnt->u.%s.%s_%s." % (func_name, commkind, algo['name'])
+                prefix = "cnt->u.%s" % (algo_struct_name(algo))
                 out_list.append(prefix + extra_params[i])
             elif kind == "cvar":
                 prefix = "MPIR_CVAR_%s_" % func_name.upper() 
@@ -466,6 +483,11 @@ def algo_id(algo_funcname):
         return "%s__MPIR_%s_intra_tsp_%s" % (prefix, RE.m.group(1), RE.m.group(2))
     else:
         return "%s__%s" % (prefix, algo_funcname)
+
+def algo_struct_name(algo):
+    algo_funcname = get_algo_funcname(algo)
+    struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
+    return struct_name
 
 # ----------------------
 def dump_c_file(f, lines):
