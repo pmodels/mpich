@@ -16,6 +16,9 @@
 #     [algorithm_name]
 #         [key]: [values]
 #
+# "func-commkind" may be "general", under which the "algorithm_name" is the full name of the
+# algorithm function. General algorithm functions takes (coll_sig, cnt) parameters.
+#
 # Notes:
 #   * indentations (use 4 spaces) and ':' behind keys are significant
 #   * auto and nb algorithms are assumed and not listed
@@ -37,6 +40,10 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
+
+general:
+    MPIR_Coll_auto
+    MPIR_Coll_nb
 
 barrier-intra:
     k_dissemination
