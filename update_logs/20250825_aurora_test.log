@@ -1,0 +1,36 @@
+UPDATE aurora_test 4d18e44811 059ea00dc7
+
+    current aurora_test HEAD 9e52025fc8
+
+f40723a40a 2025-08-11 mpl: Improve local host detection383e1a1d6a 2025-07-30 mpir_pmi: add auto-detection of PMI version 1,2,x at runtime.
+83c837bf2b 2025-07-22 test: add `testlist.bench` performance tests
+dc545fa46f 2025-07-29 test: add `hasgpu=?` library requirement flag to `runtests`
+529ff883a8 2025-08-13 test: document `hasgpu=?`
+de2abab67d 2025-08-18 pmi/v1: close stdin before exec mpiexec in singleton
+0783181d52 2025-08-19 pm/hydra: Pass proxy structs by reference to launch functions
+fb5ee25836 2025-08-19 pm/hydra: Use realloc to grow fd_list
+6f3bf4c3ab 2025-08-07 test/bench: adapt p2p tests to multi-pair tests
+005451f432 2025-08-07 test/bench: add p2p_self test
+2e75378bfe 2024-01-31 misc: add MPIR_async_test
+74630f4541 2025-08-04 ch4/ofi: create general pipeline chunk pools
+3f25663b63 2025-08-06 ch4/ofi: wrap initialization of per-vci struct
+9213ff5342 2025-08-09 ch4/ofi: make MPIDI_OFI_request_t a union
+0a30064a6a 2025-08-04 ch4/ofi: add MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL
+255ad49f47 2025-08-07 ch4/ofi: add MPIDI_OFI_RNDV_{send,recv}_hdr
+70e6d15a27 2025-08-04 ch4/ofi: avoid posting large buffer in recv
+7bdf40b683 2025-08-01 ch4/ofi: add rndv pipeline protocol
+d12c93b0db 2025-08-06 ch4/ofi: add rndv read protocol
+228e722516 2025-08-08 ch4/ofi: add rndv write protocol
+b7d35ce2b1 2025-08-06 ch4/ofi: remove the old gpu pipeline code
+a80ced9eb2 2025-08-06 ch4/ofi: remove the huge protocol
+b5fec2309a 2025-08-08 ch4/ofi: removing leftover constants
+6acf08b597 2025-08-06 ch4/ofi: remove MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
+d649898880 2025-08-06 ch4/ofi: fix warnings in MPIDI_NM_progress
+561710fc1e 2025-08-08 ch4/ofi: refactor and implement rndv auto selection
+9630d425d2 2025-08-09 ch4/ofi: synchronize remote_data_sz in rndv protocols
+551c238572 2025-08-09 ch4/ofi: avoid overwriting rndv fields
+f634d9079b 2025-08-11 ch4/ofi: fix thread critical sections in rndv algorithms
+e1a40a89b7 2025-08-10 test: add tests to cover ofi rndv protocols
+033552674a 2025-08-18 ch4/ofi: fix MPIDI_OFI_rndv_need_pack for reg_host
+f4b1e3e1ab 2025-08-20 ch4/ofi: fix noinline build
+5e8794dc10 2025-08-20 ch4: pass rreq to MPIDI_NM_am_can_do_tag
