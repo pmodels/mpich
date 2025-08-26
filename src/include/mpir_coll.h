@@ -12,14 +12,6 @@ typedef struct MPII_Csel_container MPII_Csel_container_s;
 #include "coll_impl.h"
 #include "coll_algos.h"
 
-typedef enum {
-    MPIR_COLL_COLL_TYPES()
-} MPIR_Csel_coll_type_e;
-
-typedef enum {
-    MPIR_COLL_ALGORITHM_IDS()
-} MPII_Csel_container_type_e;
-
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
@@ -164,13 +156,6 @@ struct MPIR_Csel_coll_sig {
             MPI_Datatype recvtype;
             int root;
         } scatterv, iscatterv;
-    } u;
-};
-
-struct MPII_Csel_container {
-    MPII_Csel_container_type_e id;
-    union {
-        MPIR_COLL_ALGORITHM_PARAMS();
     } u;
 };
 

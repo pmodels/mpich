@@ -414,22 +414,6 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
     }
 }
 
-void MPIR_Coll_algo_init(void)
-{
-    MPIR_COLL_SET_ALGO_TABLE();
-    MPIR_Coll_algo_table[MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Coll_auto] = MPIR_Coll_auto;
-}
-
-void MPIR_Coll_cvar_init(void)
-{
-    /* e.g.
-     * MPIR_Coll_cvar_table[MPIR_CSEL_COLL_TYPE__BARRIER * 2] = MPIR_CVAR_BARRIER_INTRA_ALGORITHM;
-     * MPIR_Coll_cvar_table[MPIR_CSEL_COLL_TYPE__BARRIER * 2 + 1] = MPIR_CVAR_BARRIER_INTER_ALGORITHM;
-     * ...
-     */
-    MPIR_COLL_SET_CVAR_TABLE();
-}
-
 int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;

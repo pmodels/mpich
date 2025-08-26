@@ -9,6 +9,8 @@ from local_python.mpi_api import *
 from local_python.binding_common import *
 
 def main():
+    G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
+
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir, silent=True)
@@ -16,8 +18,6 @@ def main():
     G.algos = load_coll_algos("src/mpi/coll/coll_algorithms.txt")
     # G.algo_list is a one level array [algo] 
     G.algo_list = collect_algo_list()
-
-    G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
     G.out = []  # output to C file
     G.out2 = [] # output to header
@@ -44,26 +44,33 @@ def main():
     for a in G.coll_names:
         add_sched_auto_prototypes(a)
 
-    dump_macro_COLL_TYPES()
-    dump_macro_CVAR_TABLE()
-    dump_macro_ALGORITHM_IDS()
-    dump_macro_ALGO_TABLE()
-    dump_macro_CONTAINER_IDS()
-    dump_macro_CONTAINER_FIELDS()
-    dump_macro_CONTAINER_PARSE_PARAMS()
+    # initialize MPIR_Coll_algo_table[algo_id] -> algo_fn
+    dump_MPII_Coll_algo_init()
+    # initialize MPIR_Coll_cvar_table
+    dump_MPII_Coll_cvar_init()
+    # create csel container from parsing json
+    dump_MPII_Create_container()
+
+    # enum for coll_type
+    dump_MPIR_Csel_coll_type_e()
+    # enum for algorithm id
+    dump_MPIR_Csel_container_type_e()
+    # algorithm container struct
+    dump_MPII_Csel_container()
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
 
 def collect_algo_list():
     algo_list = []
-    for func_commkind in sorted(G.algos):
-        if func_commkind == "general":
-            continue
-        for algo in G.algos[func_commkind]:
-            if "allcomm" in algo and func_commkind.endswith("inter"):
-                continue
-            algo_list.append(algo)
+    for coll in G.coll_names:
+        for commkind in ("intra", "inter"):
+            func_commkind = coll + '-' + commkind
+            if func_commkind in G.algos:
+                for algo in G.algos[func_commkind]:
+                    if "allcomm" in algo and func_commkind.endswith("inter"):
+                        continue
+                    algo_list.append(algo)
     for algo in G.algos['general']:
         algo_list.append(algo)
     return algo_list
@@ -148,103 +155,140 @@ def add_sched_auto_prototypes(coll_name):
     if not re.match(r'(scan|exscan|neighbor_)', coll_name):
         add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (coll_name, params))
 
-def dump_macro_COLL_TYPES():
-    dump_macro_open("MPIR_COLL_COLL_TYPES()")
+def dump_MPII_Coll_cvar_init():
+    G.out.append("")
+    decl = "void MPII_Coll_cvar_init(void)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
     for a in G.coll_names:
         for is_blocking in (True, False):
-            G.out2.append("    %s, \\" % coll_type(a, is_blocking))
-    G.out2.append("    %s" % coll_type("END", True))
-    dump_macro_close()
-
-def dump_macro_CVAR_TABLE():
-    dump_macro_open("MPIR_COLL_SET_CVAR_TABLE()", True)
-    for a in G.coll_names:
-        for is_blocking in (True, False):
-            G.out2.append("        MPIR_Coll_cvar_table[%s * 2] = %s; \\" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "intra")))
+            G.out.append("MPIR_Coll_cvar_table[%s * 2] = %s;" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "intra")))
             if not re.match(r'(scan|exscan|neighbor_)', a):
-                G.out2.append("        MPIR_Coll_cvar_table[%s * 2 + 1] = %s; \\" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "inter")))
+                G.out.append("MPIR_Coll_cvar_table[%s * 2 + 1] = %s;" % (coll_type(a, is_blocking), cvar_name(a, is_blocking, "inter")))
             else:
-                G.out2.append("        MPIR_Coll_cvar_table[%s * 2 + 1] = 0; \\" % (coll_type(a, is_blocking)))
-    dump_macro_close(True)
+                G.out.append("MPIR_Coll_cvar_table[%s * 2 + 1] = 0;" % (coll_type(a, is_blocking)))
+    dump_close('}')
 
-def dump_macro_ALGORITHM_IDS():
-    dump_macro_open("MPIR_COLL_ALGORITHM_IDS()")
-    for a in G.algo_list:
-        algo_funcname = get_algo_funcname(a)
-        G.out2.append("    %s, \\" % algo_id(algo_funcname))
-    G.out2.append("    %s" % algo_id("Algorithm_count"))
-    dump_macro_close()
-
-def dump_macro_ALGO_TABLE():
-    dump_macro_open("MPIR_COLL_SET_ALGO_TABLE()", True)
+def dump_MPII_Coll_algo_init():
+    G.out.append("")
+    decl = "void MPIR_Coll_algo_init(void)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
     for a in G.algo_list:
         algo_funcname = get_algo_funcname(a)
         idx = algo_id(algo_funcname)
         if a['func-commkind'] != 'general':
             algo_funcname += "_cnt"
-        G.out2.append("        MPIR_Coll_algo_table[%s] = %s; \\" % (idx, algo_funcname))
-    dump_macro_close(True)
+        G.out.append("MPIR_Coll_algo_table[%s] = %s;" % (idx, algo_funcname))
+    dump_close('}')
 
-def dump_macro_CONTAINER_IDS():
-    dump_macro_open("MPIR_COLL_SET_CONTAINER_ID()", True)
-    if_clause = "if"
+
+def dump_MPII_Create_container():
+    G.out.append("")
+    def dump_json_foreach_open():
+        dump_open("json_object_object_foreach(obj, key, val) {")
+        G.out.append("char *ckey = MPL_strdup_no_spaces(key);")
+
+    def dump_json_foreach_close():
+        G.out.append("MPL_free(ckey);")
+        dump_close("}")
+
+    def dump_parse_id():
+        dump_json_foreach_open()
+        if_clause = "if"
+        for a in G.algo_list:
+            algo_funcname = get_algo_funcname(a)
+            G.out.append("%s(!strcmp(ckey, \"algorithm=%s\")) {" % (if_clause, algo_funcname))
+            G.out.append("    cnt->id = %s;" % algo_id(algo_funcname))
+            if_clause = "} else if"
+        G.out.append("} else {")
+        G.out.append("    fprintf(stderr, \"unrecognized key \%s\\n\", key);")
+        G.out.append("}")
+        dump_json_foreach_close()
+
+    def dump_parse_params():
+        dump_open("switch (cnt->id) {")
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                struct_name = algo_struct_name(algo)
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+                dump_open('{') # protect json_object_object_foreach
+                dump_json_foreach_open()
+                ifstr = "if"
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        n = len(a) + 1
+                        atoi = "atoi"
+                        if a == "tree_type":
+                            atoi = "get_tree_type_from_string"
+                        G.out.append("%s (!strncmp(ckey, \"%s=\", %d)) {" % (ifstr, a, n))
+                        G.out.append("    cnt->u.%s.%s = %s(ckey + %d);" % (struct_name, a, atoi, n))
+                        ifstr = "} else if"
+                G.out.append("}")
+                dump_json_foreach_close();
+                dump_close('}')
+                G.out.append("    break;")
+        dump_close('}') # switch
+
+    decl = "void *MPII_Create_container(struct json_object *obj)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
+    G.out.append("MPII_Csel_container_s *cnt = MPL_malloc(sizeof(MPII_Csel_container_s), MPL_MEM_COLL);")
+    # FIXME: check cnt != NULL
+    dump_parse_id()
+    G.out.append("obj = json_object_object_get(obj, key);")
+    dump_parse_params()
+    G.out.append("")
+    G.out.append("return (void *) cnt;")
+    dump_close('}')
+
+# e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
+def dump_MPIR_Csel_coll_type_e():
+    G.out2.append("")
+    G.out2.append("typedef enum {")
+    for a in G.coll_names:
+        for is_blocking in (True, False):
+            G.out2.append("    %s," % coll_type(a, is_blocking))
+    G.out2.append("    %s" % coll_type("END", True))
+    G.out2.append("} MPIR_Csel_coll_type_e;")
+
+def dump_MPIR_Csel_container_type_e():
+    G.out2.append("")
+    G.out2.append("typedef enum {")
     for a in G.algo_list:
         algo_funcname = get_algo_funcname(a)
-        G.out2.append("        %s(!strcmp(ckey, \"algorithm=%s\")) { \\" % (if_clause, algo_funcname))
-        G.out2.append("            cnt->id = %s; \\" % algo_id(algo_funcname))
-        if_clause = "} else if"
-    G.out2.append("        } else { \\")
-    G.out2.append("            fprintf(stderr, \"unrecognized key \%s\\n\", key); \\")
-    G.out2.append("        } \\")
-    dump_macro_close(True)
+        G.out2.append("    %s," % algo_id(algo_funcname))
+    G.out2.append("    %s" % algo_id("Algorithm_count"))
+    G.out2.append("} MPIR_Csel_container_type_e;")
 
-def dump_macro_CONTAINER_FIELDS():
-    dump_macro_open("MPIR_COLL_ALGORITHM_PARAMS()")
-    for algo in G.algo_list:
-        if 'extra_params' in algo:
-            extra_params = algo['extra_params'].replace(' ', '').split(',')
-            G.out2.append("    struct { \\")
-            for a in extra_params:
-                if re.match(r'\w+=(.+)', a):
-                    # skip constant parameter
-                    continue
-                else:
-                    G.out2.append("        int %s; \\" % a)
-            G.out2.append("    } %s; \\" % algo_struct_name(algo))
-    G.out2[-1] = re.sub(r'; \\$', '', G.out2[-1]) # so we can call the macro with ;
-    dump_macro_close()
+def dump_MPII_Csel_container():
+    G.out2.append("")
+    def dump_algo_params():
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out2.append("        struct {")
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        G.out2.append("            int %s;" % a)
+                G.out2.append("        } %s;" % algo_struct_name(algo))
 
-def dump_macro_CONTAINER_PARSE_PARAMS():
-    dump_macro_open("MPIR_COLL_CONTAINER_PARSE_PARAMS()")
-    for algo in G.algo_list:
-        if 'extra_params' in algo:
-            struct_name = algo_struct_name(algo)
-            extra_params = algo['extra_params'].replace(' ', '').split(',')
-            G.out2.append("    case %s: \\" % algo_id(get_algo_funcname(algo)))
-            G.out2.append("        { \\")
-            G.out2.append("          json_object_object_foreach(obj, key, val) { \\")
-            G.out2.append("            ckey = MPL_strdup_no_spaces(key); \\")
-            sp = ' ' * 12
-            ifstr = "if"
-            for a in extra_params:
-                if re.match(r'\w+=(.+)', a):
-                    # skip constant parameter
-                    continue
-                else:
-                    n = len(a) + 1
-                    atoi = "atoi"
-                    if a == "tree_type":
-                        atoi = "get_tree_type_from_string"
-                    G.out2.append(sp + "%s (!strncmp(ckey, \"%s=\", %d)) { \\" % (ifstr, a, n))
-                    G.out2.append(sp + "    cnt->u.%s.%s = %s(ckey + %d); \\" % (struct_name, a, atoi, n))
-                    ifstr = "} else if"
-            G.out2.append(sp + "} \\")
-            G.out2.append("            MPL_free(ckey); \\")
-            G.out2.append("          } \\")
-            G.out2.append("        } \\")
-            G.out2.append("        break; \\")
-    G.out2[-1] = re.sub(r'; \\$', '', G.out2[-1]) # so we can call the macro with ;
-    dump_macro_close()
+    G.out2.append("struct MPII_Csel_container {")
+    G.out2.append("    MPIR_Csel_container_type_e id;")
+    G.out2.append("    union {")
+    dump_algo_params()
+    G.out2.append("    } u;")
+    G.out2.append("};")
 
 #---------------------------------------- 
 def add_prototype(l):
