@@ -421,6 +421,26 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int cvar_idx = coll_sig->coll_type * 2;
+    if (coll_sig->comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        cvar_idx += 1;
+    }
+
+    if (MPIR_Coll_cvar_table[cvar_idx]) {
+        int algo_id = MPIR_COLL_cvar_to_algo_id(coll_sig, MPIR_Coll_cvar_table[cvar_idx]);
+        bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
+
+        if (restriction_ok) {
+            MPII_Csel_container_s algo_cnt;
+            MPIR_Coll_init_algo_container(coll_sig, algo_id, &algo_cnt);
+            mpi_errno = MPIR_Coll_algo_table[algo_id] (coll_sig, &algo_cnt);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        } else {
+            /* Error or Fall-thru */
+        }
+    }
+
     MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
     MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
 
