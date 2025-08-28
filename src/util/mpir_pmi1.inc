@@ -133,6 +133,7 @@ static int pmi1_barrier_local(void)
 
 static int pmi1_barrier_group(int *group, int count, const char *stringtag)
 {
+#ifdef HAVE_PMI_BARRIER_GROUP
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
@@ -153,6 +154,9 @@ static int pmi1_barrier_group(int *group, int count, const char *stringtag)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#else
+    return MPI_ERR_INTERN;
+#endif
 }
 
 static int pmi1_optimized_put(const char *key, const char *val, int is_local)

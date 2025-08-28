@@ -1659,6 +1659,7 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
     PAC_PUSH_FLAG([LIBS])
     LIBS=$WRAPPER_LIBS
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
+    AC_CHECK_FUNCS([PMI_Barrier_group])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
     AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
     AC_CHECK_FUNC([PMIx_Info_load],[],[AC_DEFINE([NEED_PMIX_INFO_LOAD], 1, [Define if PMIX_INFO_LOAD macro is needed])])
