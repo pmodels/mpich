@@ -228,6 +228,10 @@ int MPII_Coll_init(void)
     goto fn_exit;
 }
 
+void MPIR_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
 int MPII_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
