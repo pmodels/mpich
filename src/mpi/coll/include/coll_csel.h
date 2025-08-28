@@ -17,4 +17,9 @@ void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
 
 void *MPII_Create_container(struct json_object *obj);
 
+MPL_STATIC_INLINE_PREFIX void MPIR_init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    /* place holder for now */
+}
+
 #endif /* COLL_CSEL_H_INCLUDED */

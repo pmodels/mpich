@@ -418,6 +418,7 @@ struct MPII_Csel_container {
 };
 
 typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+void MPIR_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig);
 
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
