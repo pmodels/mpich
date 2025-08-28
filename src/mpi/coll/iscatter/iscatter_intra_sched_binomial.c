@@ -13,6 +13,15 @@ struct shared_state {
     MPI_Aint nbytes;
     MPI_Status status;
 };
+
+static int init_curr_count(MPIR_Comm * comm, int tag, void *state, void *state2)
+{
+    struct shared_state *ss = state;
+    MPI_Aint total_count = (MPI_Aint) (intptr_t) state2;
+    ss->curr_count = total_count;
+    return MPI_SUCCESS;
+}
+
 static int get_count(MPIR_Comm * comm, int tag, void *state)
 {
     struct shared_state *ss = state;
@@ -117,6 +126,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
      * all the sends from the root are contiguous and in the right
      * order. */
     if (rank == root) {
+        MPI_Aint total_count;
         if (root != 0) {
             tmp_buf_size = ss->nbytes * comm_size;
             tmp_buf = MPIR_Sched_alloc_state(s, tmp_buf_size);
@@ -140,9 +150,11 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
-            ss->curr_count = ss->nbytes * comm_size;
-        } else
-            ss->curr_count = sendcount * comm_size;
+            total_count = ss->nbytes * comm_size;
+        } else {
+            total_count = sendcount * comm_size;
+        }
+        MPIR_Sched_cb2(&init_curr_count, ss, (void *) (intptr_t) total_count, s);
     }
 
     /* root has all the data; others have zero so far */
