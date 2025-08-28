@@ -19,6 +19,10 @@
 # "func-commkind" may be "general", under which the "algorithm_name" is the full name of the
 # algorithm function. General algorithm functions takes (coll_sig, cnt) parameters.
 #
+# In addition, "restrictions" list all restrictions and their corresponding checkers. If the
+# checkers are prefixed with MPIR_COLL_ATTR__, it checks the corresponding attr bit in
+# coll_sig; otherwise, the checker is a function with signature: bool (*checker)(coll_sig).
+#
 # Notes:
 #   * indentations (use 4 spaces) and ':' behind keys are significant
 #   * auto and nb algorithms are assumed and not listed
@@ -28,8 +32,8 @@
 #
 # Recognized attribute keys (by gen_coll.py):
 #   * restrictions:
-#         possible values include parent-comm, power-of-two, inplace, no-inplace,
-#         cummutative, builtin-op, node-consecutive, displs-ordered, size-ge-pof2
+#         A comma-separated list restrictions. All restrictions must be specificed in the top
+#         restriction list.
 #   * extra_params and cvar_params:
 #         Additional parameters specific to the algorithm functions. Most algorithm functions
 #         use the same arguments (e.g. as MPIR_Bcast), but some may require additional
@@ -41,10 +45,24 @@
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
 
+# ----
+restrictions:
+    inplace:          MPIR_COLL_ATTR__inplace
+    pof2:             MPIR_COLL_ATTR__pof2
+    commutative:      MPIR_COLL_ATTR__commutative
+    builtin-op:       MPIR_COLL_ATTR__builtin_op
+    hierarchical:     MPIR_Comm_is_parent_comm
+    node-consecutive: MPII_Comm_is_node_consecutive
+    node-regular:     MPII_Comm_is_node_canonical
+    size-ge-pof2:     MPIR_Csel_size_ge_pof2
+    displs-ordered:   MPIR_Csel_displs_ordered
+
+# ----
 general:
     MPIR_Coll_auto
     MPIR_Coll_nb
 
+# ----
 barrier-intra:
     k_dissemination
         extra_params: k
@@ -84,7 +102,7 @@ ibcast-intra:
     sched_smp
         restrictions: parent-comm
     sched_scatter_recursive_doubling_allgather
-        restrictions: power-of-two
+        restrictions: pof2
     sched_scatter_ring_allgather
     tsp_tree
         extra_params: tree_type, k, chunk_size
@@ -171,7 +189,7 @@ allgather-intra:
         extra_params: k
         cvar_params: BRUCKS_KVAL
     recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     ring
     recexch_doubling
         extra_params: k, single_phase_recv
@@ -185,7 +203,7 @@ iallgather-intra:
     sched_ring
     sched_brucks
     sched_recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     tsp_ring
     tsp_brucks
         extra_params: k
@@ -202,14 +220,14 @@ iallgather-inter:
 allgatherv-intra:
     brucks
     recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     ring
 allgatherv-inter:
     remote_gather_local_bcast
 iallgatherv-intra:
     sched_brucks
     sched_recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     sched_ring
     tsp_recexch_doubling
         restrictions: displs-ordered
@@ -228,28 +246,28 @@ iallgatherv-inter:
 
 alltoall-intra:
     brucks
-        restrictions: noinplace
+        restrictions: !inplace
     k_brucks
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: k
         cvar_params: BRUCKS_KVAL
     pairwise
-        restrictions: noinplace
+        restrictions: !inplace
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
     sched_brucks
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     sched_pairwise
-        restrictions: noinplace
+        restrictions: !inplace
     sched_permuted_sendrecv
-        restrictions: noinplace
+        restrictions: !inplace
     tsp_ring
     tsp_brucks
         extra_params: k, buffer_per_phase
@@ -264,20 +282,20 @@ alltoallv-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoallv-inter:
     pairwise_exchange
 ialltoallv-intra:
     sched_blocked
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     tsp_scattered
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
     tsp_blocked
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -289,16 +307,16 @@ alltoallw-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoallw-inter:
     pairwise_exchange
 ialltoallw-intra:
     sched_blocked
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     tsp_blocked
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -393,7 +411,7 @@ reduce_scatter-inter:
     remote_reduce_local_scatter
 ireduce_scatter-intra:
     sched_noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     sched_recursive_doubling
     sched_pairwise
         restrictions: commutative
@@ -408,7 +426,7 @@ ireduce_scatter-inter:
 
 reduce_scatter_block-intra:
     noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     recursive_doubling
     pairwise
         restrictions: commutative
@@ -418,7 +436,7 @@ reduce_scatter_block-inter:
     remote_reduce_local_scatter
 ireduce_scatter_block-intra:
     sched_noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     sched_recursive_doubling
     sched_pairwise
         restrictions: commutative

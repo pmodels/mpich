@@ -12,12 +12,41 @@ typedef struct MPII_Csel_container MPII_Csel_container_s;
 #include "coll_impl.h"
 #include "coll_algos.h"
 
+/* Define values for collective attribute.
+ * - The first 8 bits are passed down to basic collective algorithms.
+ * - The higer bits are used to assist algorithm selections
+ *   - The lower 32 bits are reserved by MPIR-layer
+ *   - The higher 32 bits are reserved for MPID-layer
+ */
+#define MPIR_COLL_ATTR_CORE_BITS  8
+#define MPIR_COLL_ATTR_MPIR_BITS 32
+
+/* bit 0-7 */
+#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
+                                         * on synchronization rather than batch latency.
+                                         * In particular, advise netmod to avoid using
+                                         * injection send. */
+#define MPIR_ERR_PROC_FAILED 0x2
+#define MPIR_ERR_OTHER       0x4
+#define MPIR_COLL_ATTR_ERR_MASK 0x6
+
+#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
+
+/* bit 8-31, MPIR-layer */
+#define MPIR_COLL_ATTR__inplace          0x00000100
+#define MPIR_COLL_ATTR__pof2             0x00000200
+#define MPIR_COLL_ATTR__commutative      0x00000400
+#define MPIR_COLL_ATTR__builtin_op       0x00000800
+
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
     void *sched;
     enum MPIR_sched_type sched_type;
     bool is_persistent;
+    /* derived info to assist algorithm selection */
+    MPI_Aint msg_size;
+    uint64_t attr;
 
     union {
         struct {
@@ -160,6 +189,7 @@ struct MPIR_Csel_coll_sig {
 };
 
 typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+void MPIR_init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig);
 
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that

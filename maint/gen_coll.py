@@ -14,16 +14,19 @@ def main():
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir, silent=True)
-    # G.algos is a two level array: [func-commkind][algo]
-    G.algos = load_coll_algos("src/mpi/coll/coll_algorithms.txt")
-    # G.algo_list is a one level array [algo] 
+
+    # Loading coll_algorithms.txt. It sets -
+    #   - G.restrictions: a list of boolean conditions that can be used as restrictions
+    #   - G.algos:        a two level array: [func-commkind][algo]
+    load_coll_algos("src/mpi/coll/coll_algorithms.txt")
+    # Prepare a one level algo array for conveninece -
+    #   - G.algo_list:    a one level array [algo]
     G.algo_list = collect_algo_list()
 
     G.out = []  # output to C file
     G.out2 = [] # output to header
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
-    G.out.append("#include \"iallgatherv/iallgatherv.h\"")
 
     # dump impl functions
     for a in G.coll_names:
@@ -326,30 +329,27 @@ def dump_MPIR_Coll_init_algo_container():
 
 def dump_MPIR_Coll_check_algo_restriction():
     G.out.append("")
-    def dump_check_restriction(coll_name, restriction):
+    def dump_check_restriction(restriction):
         u = "coll_sig->%s" % coll_name
-        if restriction == "inplace":
-            G.out.append("    if (!(%s.sendbuf == MPI_IN_PLACE)) return false;" % u)
-        elif restriction == "noinplace":
-            G.out.append("    if (!(%s.sendbuf != MPI_IN_PLACE)) return false;" % u)
-        elif restriction == "power-of-two":
-            G.out.append("    if (!MPL_is_pof2(coll_sig->comm_ptr->local_size)) return false;")
-        elif restriction == "size-ge-pof2":
-            G.out.append("    if (!(%s.count >= MPL_pof2(coll_sig->comm_ptr->local_size)) return false;" % u)
-        elif restriction == "commutative":
-            G.out.append("    if (!MPIR_Op_is_commutative(%s.op)) return false;" % u)
-        elif restriction== "builtin-op":
-            G.out.append("    if (!HANDLE_IS_BUILTIN(%s.op)) return false;" % u)
-        elif restriction == "parent-comm":
-            G.out.append("    if (!MPIR_Comm_is_parent_comm(coll_sig->comm_ptr)) return false;")
-        elif restriction == "node-consecutive":
-            G.out.append("    if (!MPII_Comm_is_node_consecutive(coll_sig->comm_ptr)) return false;")
-        elif restriction == "displs-ordered":
-            # assume it's allgatherv
-            G.out.append("    if (!MPII_Iallgatherv_is_displs_ordered(coll_sig->comm_ptr->local_size, %s.recvcounts, %s.displs)) return false;" % (u, u))
+        r = restriction
+        negate = False
+        if restriction.startswith('!'):
+            r = restriction[1:]
+            negate = True
+
+        cond = None
+        if r in G.restrictions:
+            if G.restrictions[r].startswith('MPIR_COLL_ATTR__'):
+                cond = "(coll_sig->attr & %s)" % G.restrictions[r]
+            else:
+                cond = "%s(coll_sig)" % G.restrictions[r]
         else:
-            raise Exception("Unsupported restrictions - %s" % restriction)
-        pass
+            raise Exception("Restriction %s not listed" % restriction)
+
+        if negate:
+            G.out.append("    if (%s) return false;" % cond)
+        else:
+            G.out.append("    if (!%s) return false;" % cond)
 
     decl = "bool MPIR_COLL_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, int algo_id)"
     add_prototype(decl)
@@ -358,11 +358,10 @@ def dump_MPIR_Coll_check_algo_restriction():
     dump_open("switch (algo_id):")
     for algo in G.algo_list:
         if "restrictions" in algo:
-            coll_name = algo['func-commkind'].split('-')[0]
             restrictions = algo['restrictions'].replace(' ', '').split(',')
             G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
             for r in restrictions:
-                dump_check_restriction(coll_name, r)
+                dump_check_restriction(r)
             G.out.append("    break;")
     dump_close("}")
     G.out.append("return true;")
@@ -414,21 +413,26 @@ def add_prototype(l):
     G.prototypes.append(l)
 
 def load_coll_algos(algo_txt):
-    All = {}
+    G.algos = {}
+    G.restrictions = {}
     with open(algo_txt) as In:
         (func_commkind, algo_list, algo) = (None, None, None)
         for line in In:
             if RE.match(r'(\w+-(intra|inter)|general):', line):
                 func_commkind = RE.m.group(1)
                 algo_list = []
-                All[func_commkind] = algo_list
-            elif RE.match(r'\s+(\w+)\s*$', line):
-                algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
-                algo_list.append(algo)
-            elif RE.match(r'\s+(\w+):\s*(.+)', line):
-                (key, value) = RE.m.group(1,2)
-                algo[key] = value
-    return All
+                G.algos[func_commkind] = algo_list
+            elif RE.match(r'restrictions:', line):
+                func_commkind = "restrictions"
+            elif func_commkind == "restrictions":
+                if RE.match(r'\s+([\w-]+):\s*(\w+)', line):
+                    G.restrictions[RE.m.group(1)] = RE.m.group(2)
+            elif func_commkind:
+                if RE.match(r'\s+(\w+)\s*$', line):
+                    algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
+                    algo_list.append(algo)
+                elif RE.match(r'\s+(\w+):\s*(.+)', line):
+                    algo[RE.m.group(1)] = RE.m.group(2)
 
 def dump_coll_impl(name, blocking_type):
     func = G.FUNCS["mpi_" + name]
@@ -458,11 +462,46 @@ def dump_coll_impl(name, blocking_type):
         G.out.append("coll_sig.is_persistent = false;")
     G.out.append("coll_sig.sched = NULL;")
 
+    phash = {}
     for p in func['parameters']:
         if p['name'] == 'comm':
             pass
         else:
+            phash[p['name']] = 1
             G.out.append("coll_sig.u.%s.%s = %s;" % (name, p['name'], p['name']))
+
+    # msg_size
+    def init_msg_size(count, datatype):
+        G.out.append("MPIR_Datatype_get_size_macro(%s, coll_sig.msg_size);" % datatype)
+        G.out.append("coll_sig.msg_size *= %s;" % count)
+
+    if 'count' in phash and 'datatype' in phash:
+        init_msg_size('count', 'datatype')
+    elif 'recvcount' in phash and 'recvtype' in phash:
+        init_msg_size('recvcount', 'recvtype')
+    elif 'recvcount' in phash and 'datatype' in phash:
+        init_msg_size('recvcount', 'datatype')
+    elif 'recvcounts' in phash and 'recvtype' in phash:
+        # allgatherv, alltoallv - should we use total/max message size, or just skip?
+        init_msg_size('recvcounts[0]', 'recvtype')
+    elif 'recvcounts' in phash and 'recvtypes' in phash:
+        # alltoallw - should we use total/max message size, or just skip?
+        init_msg_size('recvcounts[0]', 'recvtypes[0]')
+    else:
+        raise Exception("init coll_sig: unhandled coll type")
+
+
+    G.out.append("if (MPL_is_pof2(comm_ptr->local_size)) coll_sig.attr |= MPIR_COLL_ATTR__pof2;")
+
+    if 'sendbuf' in phash:
+        G.out.append("if (sendbuf == MPI_IN_PLACE) coll_sig.attr |= MPIR_COLL_ATTR__inplace;")
+
+    if 'op' in phash:
+        G.out.append("if (HANDLE_IS_BUILTIN(op)) {")
+        G.out.append("    coll_sig.attr |= MPIR_COLL_ATTR__builtin_op | MPIR_COLL_ATTR__commutative;")
+        G.out.append("} else if (MPIR_Op_is_commutative(op)) {")
+        G.out.append("    coll_sig.attr |= MPIR_COLL_ATTR__commutative;")
+        G.out.append("}")
 
     # Call csel
     G.out.append("")
