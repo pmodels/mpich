@@ -990,7 +990,7 @@ int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo)
     if (got_hwloc_topology != GOT_HWLOC_TOPOLOGY_NONE) {
         goto fn_got;
     }
-#ifdef HAS_PMIX_LOAD_TOPOLOGY
+#ifdef HAVE_PMIX_LOAD_TOPOLOGY
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
         pmix_topology_t ptopo;
         PMIX_TOPOLOGY_CONSTRUCT(&ptopo);
