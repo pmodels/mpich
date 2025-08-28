@@ -503,6 +503,9 @@ def dump_coll_impl(name, blocking_type):
         G.out.append("    coll_sig.attr |= MPIR_COLL_ATTR__commutative;")
         G.out.append("}")
 
+    G.out.append("MPIR_Init_coll_sig(&coll_sig);")
+    G.out.append("MPID_Init_coll_sig(&coll_sig);")
+
     # Call csel
     G.out.append("")
     G.out.append("mpi_errno = MPIR_Coll_composition_auto(&coll_sig);")

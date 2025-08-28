@@ -649,4 +649,8 @@ void MPIDI_sigusr1_handler(int sig);
 
 #include "mpidu_pre.h"
 
+MPL_STATIC_INLINE_PREFIX void MPIR_init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
 #endif /* MPIDPRE_H_INCLUDED */

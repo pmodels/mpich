@@ -768,4 +768,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_free_hook(MPIR_Stream * stream)
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIR_init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
 #endif /* MPIDPRE_H_INCLUDED */

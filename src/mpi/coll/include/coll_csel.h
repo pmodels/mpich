@@ -53,4 +53,9 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_displs_ordered(MPIR_Csel_coll_sig_s * co
     return true;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIR_init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    /* place holder for now */
+}
+
 #endif /* COLL_CSEL_H_INCLUDED */
