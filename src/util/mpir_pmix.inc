@@ -6,7 +6,7 @@
 #ifdef ENABLE_PMIX
 
 /* PMIx_Info_load is only in OpenPMIx >= 5.0. Previous versions provide a macro. */
-#ifdef NEED_PMIX_INFO_LOAD
+#ifndef HAVE_PMIX_INFO_LOAD
 #define PMIx_Info_load PMIX_INFO_LOAD
 #endif
 
