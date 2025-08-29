@@ -862,7 +862,12 @@ def dump_interface_function(func, name, c_name, is_large):
         decl_list.append("INTEGER(c_int) :: ierror")
     else:
         ret = "res"
-        decl_list.append("%s :: res" % f08_mapping[func['return']])
+        if func['return'] == 'LOGICAL':
+            # MPIX_Request_is_complete
+            decl_list.append("LOGICAL(c_bool) :: res")
+            uses['c_bool'] = 1
+        else:
+            decl_list.append("%s :: res" % f08_mapping[func['return']])
 
     # ----
     G.out.append("")
