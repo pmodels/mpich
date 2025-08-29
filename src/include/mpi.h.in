@@ -289,6 +289,13 @@ typedef struct ADIOI_FileD *MPI_File;
 #ifndef BUILD_MPI_ABI
 #define MPI_FILE_NULL ((MPI_File)0)
 #endif
+/* Defines for older MPI I/O programs. mpio.h also defines these but we
+   no longer include it in mpi.h since pmodels/mpich#7228 */
+#define MPIO_Request MPI_Request
+#define MPIO_Wait MPI_Wait
+#define MPIO_Test MPI_Test
+#define PMPIO_Wait PMPI_Wait
+#define PMPIO_Test PMPI_Test
 
 /* Collective operations */
 typedef int MPI_Op;
