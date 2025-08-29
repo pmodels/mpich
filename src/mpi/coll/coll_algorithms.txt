@@ -19,9 +19,17 @@
 # "func-commkind" may be "general", under which the "algorithm_name" is the full name of the
 # algorithm function. General algorithm functions takes (coll_sig, cnt) parameters.
 #
-# In addition, "restrictions" list all restrictions and their corresponding checkers. If the
-# checkers are prefixed with MPIR_COLL_ATTR__, it checks the corresponding attr bit in
-# coll_sig; otherwise, the checker is a function with signature: bool (*checker)(coll_sig).
+# In addition, "conditions" list all conditions and their corresponding checkers. There are
+# a few types of conditions distinguished by the format:
+#   - condition_name: MPIR_COLL_ATTR__name
+#         The condition checks a bit in coll_sig->attr.
+#   - conidtion_name: func
+#         The condition calls checker function with signature: bool (*func)(coll_sig).
+#   - condition_name(thresh): func
+#         This condition calls a query function that returns a value: int (*func)(coll_sig) 
+          The thresh marks the upper limit (inclusive) of the condition.
+# The conditions are used in specifying both algorithm restrictions and CSEL conditions.
+# Most of the checker functions should be inlined to minimize function call overhead.
 #
 # Notes:
 #   * indentations (use 4 spaces) and ':' behind keys are significant
@@ -33,7 +41,7 @@
 # Recognized attribute keys (by gen_coll.py):
 #   * restrictions:
 #         A comma-separated list restrictions. All restrictions must be specificed in the top
-#         restriction list.
+#         conditions list.
 #   * extra_params and cvar_params:
 #         Additional parameters specific to the algorithm functions. Most algorithm functions
 #         use the same arguments (e.g. as MPIR_Bcast), but some may require additional
@@ -46,7 +54,7 @@
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
 
 # ----
-restrictions:
+conditions:
     inplace:          MPIR_COLL_ATTR__inplace
     pof2:             MPIR_COLL_ATTR__pof2
     commutative:      MPIR_COLL_ATTR__commutative
@@ -56,6 +64,9 @@ restrictions:
     node-regular:     MPII_Comm_is_node_canonical
     size-ge-pof2:     MPIR_Csel_size_ge_pof2
     displs-ordered:   MPIR_Csel_displs_ordered
+    comm_size(thresh):      MPIR_Csel_comm_size
+    avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
+    total_msg_size(thresh): MPIR_Csel_total_msg_size
 
 # ----
 general:
