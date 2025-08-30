@@ -166,6 +166,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
 {
     int mpi_errno = MPI_SUCCESS;
 
+#if 1
+    /* FIXME: call MPIR_Coll_auto or MPIR_Barrier_impl on sub-comms */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     /* do the intranode barrier on all nodes */
     if (comm->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -201,19 +206,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm, int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_NM_mpi_barrier(comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, MPI_Aint count,
@@ -222,6 +215,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
                                                                  int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *host_buffer = NULL;
     void *saved_buffer = buffer;
     MPL_pointer_attr_t attr;
@@ -308,6 +307,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MPI_Aint count,
@@ -316,6 +316,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
                                                                 int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *host_buffer = NULL;
     void *saved_buffer = buffer;
     MPL_pointer_attr_t attr;
@@ -377,6 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, MPI_Aint count,
@@ -385,6 +392,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
                                                                  int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *host_buffer = NULL;
     void *saved_buffer = buffer;
     MPL_pointer_attr_t attr;
@@ -420,6 +433,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 /*
@@ -436,6 +450,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
                                                                  int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *host_buffer = NULL;
     void *saved_buffer = buffer;
     MPL_pointer_attr_t attr;
@@ -527,6 +547,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
@@ -537,6 +558,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                                                      int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *in_recvbuf = recvbuf;
     void *host_sendbuf = NULL;
     void *host_recvbuf = NULL;
@@ -623,6 +650,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
@@ -632,6 +660,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
                                                                     MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *in_recvbuf = recvbuf;
     void *host_sendbuf = NULL;
     void *host_recvbuf = NULL;
@@ -671,6 +705,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
@@ -681,6 +716,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
                                                                      int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     void *in_recvbuf = recvbuf;
     void *host_sendbuf = NULL;
     void *host_recvbuf = NULL;
@@ -723,6 +764,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 /* Multi-leaders based composition. Have num_leaders per node, which reduce the data within
@@ -741,6 +783,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
                                                                      int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     char *shm_addr;
     int my_leader_rank = -1, iter;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -934,6 +982,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
@@ -943,6 +992,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
                                                                   MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     MPI_Aint true_lb = 0;
     MPI_Aint true_extent = 0;
     MPI_Aint extent = 0;
@@ -1017,6 +1072,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sendbuf,
@@ -1026,6 +1082,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
                                                                  MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     MPI_Aint true_lb = 0;
     MPI_Aint true_extent = 0;
     MPI_Aint extent = 0;
@@ -1120,24 +1182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
   fn_fail:
     goto fn_exit;
 
-}
-
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *sendbuf,
-                                                                  void *recvbuf, MPI_Aint count,
-                                                                  MPI_Datatype datatype,
-                                                                  MPI_Op op, int root,
-                                                                  MPIR_Comm * comm, int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+#endif
 }
 
 /* Node-aware multi-leaders based inter-node and intra-node composition. Each rank on a node places
@@ -1153,6 +1198,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
                                                                     int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int num_nodes;
     int num_ranks = MPIR_Comm_size(comm_ptr);
     int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
@@ -1248,6 +1299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *sendbuf,
@@ -1260,6 +1312,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *s
                                                                    int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int node_comm_size = 0;
     if (comm_ptr->node_comm != NULL) {
         node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
@@ -1288,58 +1346,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *s
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void *sendbuf,
-                                                                     const MPI_Aint * sendcounts,
-                                                                     const MPI_Aint * sdispls,
-                                                                     MPI_Datatype sendtype,
-                                                                     void *recvbuf,
-                                                                     const MPI_Aint * recvcounts,
-                                                                     const MPI_Aint * rdispls,
-                                                                     MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls,
-                               sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr,
-                               coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void *sendbuf,
-                                                                     const MPI_Aint sendcounts[],
-                                                                     const MPI_Aint sdispls[],
-                                                                     const MPI_Datatype
-                                                                     sendtypes[],
-                                                                     void *recvbuf,
-                                                                     const MPI_Aint recvcounts[],
-                                                                     const MPI_Aint rdispls[],
-                                                                     const MPI_Datatype
-                                                                     recvtypes[],
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls,
-                               sendtypes, recvbuf, recvcounts,
-                               rdispls, recvtypes, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
@@ -1352,6 +1359,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
                                                                      int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
     int my_node_comm_rank = MPIR_Comm_rank(comm_ptr->node_comm);
     MPI_Aint type_size, extent, true_extent, lb;
@@ -1439,6 +1451,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *sendbuf,
@@ -1451,6 +1464,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *
                                                                     int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int node_comm_size = 0;
     if (comm_ptr->node_comm != NULL) {
         node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
@@ -1479,6 +1498,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void *sendbuf,
@@ -1492,6 +1512,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int node_comm_size = 0;
     if (comm_ptr->node_comm != NULL) {
         node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
@@ -1520,141 +1546,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *sendbuf,
-                                                                  MPI_Aint sendcount,
-                                                                  MPI_Datatype sendtype,
-                                                                  void *recvbuf, MPI_Aint recvcount,
-                                                                  MPI_Datatype recvtype,
-                                                                  int root, MPIR_Comm * comm,
-                                                                  int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                            recvtype, root, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *sendbuf,
-                                                                   MPI_Aint sendcount,
-                                                                   MPI_Datatype sendtype,
-                                                                   void *recvbuf,
-                                                                   const MPI_Aint * recvcounts,
-                                                                   const MPI_Aint * displs,
-                                                                   MPI_Datatype recvtype,
-                                                                   int root, MPIR_Comm * comm,
-                                                                   int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                             displs, recvtype, root, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *sendbuf,
-                                                                   MPI_Aint sendcount,
-                                                                   MPI_Datatype sendtype,
-                                                                   void *recvbuf,
-                                                                   MPI_Aint recvcount,
-                                                                   MPI_Datatype recvtype,
-                                                                   int root, MPIR_Comm * comm,
-                                                                   int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                             recvtype, root, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *sendbuf,
-                                                                    const MPI_Aint * sendcounts,
-                                                                    const MPI_Aint * displs,
-                                                                    MPI_Datatype sendtype,
-                                                                    void *recvbuf,
-                                                                    MPI_Aint recvcount,
-                                                                    MPI_Datatype recvtype,
-                                                                    int root, MPIR_Comm * comm,
-                                                                    int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                              recvcount, recvtype, root, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
-                                                                          void *recvbuf,
-                                                                          const MPI_Aint
-                                                                          recvcounts[],
-                                                                          MPI_Datatype
-                                                                          datatype, MPI_Op op,
-                                                                          MPIR_Comm * comm_ptr,
-                                                                          int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
-                                    coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(const void
-                                                                                *sendbuf,
-                                                                                void *recvbuf,
-                                                                                MPI_Aint recvcount,
-                                                                                MPI_Datatype
-                                                                                datatype,
-                                                                                MPI_Op op,
-                                                                                MPIR_Comm *
-                                                                                comm_ptr,
-                                                                                int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                                          op, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *sendbuf,
@@ -1665,6 +1557,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                                                 MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 1
+    /* FIXME */
+    MPIR_Assert(0);
+    return mpi_errno;
+#else
     int rank = comm_ptr->rank;
     MPI_Status status;
     void *tempbuf = NULL;
@@ -1797,43 +1694,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendbuf,
-                                                               void *recvbuf,
-                                                               MPI_Aint count,
-                                                               MPI_Datatype datatype,
-                                                               MPI_Op op,
-                                                               MPIR_Comm * comm_ptr, int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_NM_mpi_scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *sendbuf,
-                                                                  void *recvbuf,
-                                                                  MPI_Aint count,
-                                                                  MPI_Datatype datatype,
-                                                                  MPI_Op op,
-                                                                  MPIR_Comm * comm_ptr,
-                                                                  int coll_attr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_NM_mpi_exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+#endif
 }
 
 #endif /* CH4_COLL_IMPL_H_INCLUDED */

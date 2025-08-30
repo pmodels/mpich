@@ -690,8 +690,8 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
     /* synchronize mpi_errno */
     int tmp_err = mpi_errno;
-    mpi_errno = MPIR_Bcast_impl(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
-                                MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
+                                    MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = tmp_err;
     MPIR_ERR_CHECK(mpi_errno);

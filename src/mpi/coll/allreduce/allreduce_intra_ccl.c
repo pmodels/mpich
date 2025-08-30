@@ -28,5 +28,6 @@ int MPIR_Allreduce_intra_ccl(const void *sendbuf, void *recvbuf, MPI_Aint count,
     }
 
   fallback:
-    return MPIR_Allreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_attr);
+    /* FIXME: proper error */
+    return MPI_ERR_OTHER;
 }
