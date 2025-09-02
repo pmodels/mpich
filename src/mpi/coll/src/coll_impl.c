@@ -291,9 +291,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
