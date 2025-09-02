@@ -125,25 +125,6 @@ typedef struct csel_node {
     struct csel_node *failure;
 } csel_node_s;
 
-typedef enum {
-    CSEL_TYPE__ROOT,
-    CSEL_TYPE__PRUNED,
-} csel_type_e;
-
-typedef struct {
-    csel_type_e type;
-
-    union {
-        struct {
-            csel_node_s *tree;
-        } root;
-        struct {
-            /* one tree for each collective */
-            csel_node_s *coll_trees[MPIR_CSEL_COLL_TYPE__END];
-        } pruned;
-    } u;
-} csel_s;
-
 static int nesting = -1;
 #define nprintf(...)                            \
     do {                                        \
@@ -547,23 +528,22 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
 int MPIR_Csel_create_from_buf(const char *json,
                               void *(*create_container) (struct json_object *), void **csel_)
 {
-    csel_s *csel = NULL;
     struct json_object *tree;
-
-    csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
-    csel->type = CSEL_TYPE__ROOT;
     tree = json_tokener_parse(json);
     if (tree == NULL)
         goto fn_exit;
-    csel->u.root.tree = parse_json_tree(tree, create_container);
 
-    if (csel->u.root.tree)
-        validate_tree(csel->u.root.tree);
+    csel_node_s *csel_root = parse_json_tree(tree, create_container);
+    if (csel_root) {
+        validate_tree(csel_root);
+    } else {
+        MPIR_Assert(0);
+    }
 
     json_object_put(tree);
 
   fn_exit:
-    *csel_ = csel;
+    *csel_ = csel_root;
     return 0;
 }
 
@@ -678,46 +658,6 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
     return root;
 }
 
-/* The prune function allows us to simplify the tree for specific
- * communicators using comm-specific information (such as size and
- * intra/inter comm type. */
-int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
-{
-    int mpi_errno = MPI_SUCCESS;
-    csel_s *csel = (csel_s *) root_csel;
-    csel_s *comm_csel = NULL;
-
-    MPIR_Assert(root_csel);
-    MPIR_Assert(comm_ptr);
-
-    comm_csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
-    MPIR_Assert(comm_csel);
-
-    comm_csel->type = CSEL_TYPE__PRUNED;
-    for (int i = 0; i < MPIR_CSEL_COLL_TYPE__END; i++)
-        comm_csel->u.pruned.coll_trees[i] = NULL;
-
-    /* prune the tree as far as possible */
-    csel_node_s *node = prune_tree(csel->u.root.tree, comm_ptr);
-
-    /* if the tree is not NULL, we should be at a collective branch at
-     * this point */
-    if (node) {
-        MPIR_Assert(node->type == CSEL_NODE_TYPE__OPERATOR__COLLECTIVE);
-    }
-
-    while (node) {
-        /* see if any additional pruning is possible once the
-         * collective type is removed from the tree */
-        comm_csel->u.pruned.coll_trees[node->u.collective.coll_type] =
-            prune_tree(node->success, comm_ptr);
-        node = node->failure;
-    }
-
-    *comm_csel_ = comm_csel;
-    return mpi_errno;
-}
-
 static void free_tree(csel_node_s * node)
 {
     if (node->type == CSEL_NODE_TYPE__CONTAINER) {
@@ -732,15 +672,14 @@ static void free_tree(csel_node_s * node)
     }
 }
 
-int MPIR_Csel_free(void *csel_)
+int MPIR_Csel_free(void *csel_root)
 {
     int mpi_errno = MPI_SUCCESS;
-    csel_s *csel = (csel_s *) csel_;
 
-    if (csel->type == CSEL_TYPE__ROOT && csel->u.root.tree)
-        free_tree(csel->u.root.tree);
+    if (csel_root) {
+        free_tree(csel_root);
+    }
 
-    MPL_free(csel);
     return mpi_errno;
 }
 
@@ -1174,19 +1113,13 @@ static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s * coll_sig)
 
 void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s * coll_sig)
 {
-    csel_s *csel = (csel_s *) csel_;
-    csel_node_s *node = NULL;
     MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
 
     MPIR_Assert(csel_);
 
-    csel_node_s *root;
-    if (csel->type == CSEL_TYPE__ROOT)
-        root = csel->u.root.tree;
-    else
-        root = csel->u.pruned.coll_trees[coll_sig->coll_type];
+    csel_node_s *root = csel_;
 
-    for (node = root; node;) {
+    for (csel_node_s * node = root; node;) {
         switch (node->type) {
             case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
                 if (MPIR_IS_THREADED == node->u.is_multi_threaded.val)
