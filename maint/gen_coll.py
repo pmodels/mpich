@@ -101,7 +101,7 @@ def dump_allcomm_auto_blocking(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, &coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_root, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
@@ -176,7 +176,7 @@ def dump_allcomm_sched_auto(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, &coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_root, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
@@ -281,13 +281,6 @@ def dump_mpir_impl_blocking(name):
         dump_split(3, "    mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, func_args))
         G.out.append("     break;");
         G.out.append("case %s_auto:" % CVAR_PREFIX)
-        if commkind == "intra":
-            G.out.append("#ifdef MPIR_%s_fallback" % (Name))
-            G.out.append("    if (!comm_ptr->csel_comm) {")
-            G.out.append("        mpi_errno = MPIR_%s_fallback(%s);" % (Name, func_args))
-            G.out.append("        break;")
-            G.out.append("    }")
-            G.out.append("#endif");
         dump_split(3, "    mpi_errno = MPIR_%s_allcomm_auto(%s);" % (Name, func_args))
         G.out.append("    break;");
         G.out.append("default:")

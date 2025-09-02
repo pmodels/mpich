@@ -249,9 +249,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -262,9 +259,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Csel_free(comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup all collective communicators */
     mpi_errno = MPII_Stubalgo_comm_cleanup(comm);
