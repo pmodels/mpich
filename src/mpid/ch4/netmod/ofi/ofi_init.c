@@ -800,8 +800,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
     goto fn_exit;
 }
 
-/* flush send_queue to ensure injected messages are out. Needed by some providers e.g. socket */
-int MPIDI_OFI_flush_send_queue(void)
+static int flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -811,11 +810,7 @@ int MPIDI_OFI_flush_send_queue(void)
 
     /* Apparently by sending self messages can flush the send queue */
     int rank = MPIR_Process.rank;
-    int in_vci_cs = -1;
     for (int vci = 0; vci < num_vcis; vci++) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-        in_vci_cs = vci;
-
         MPIDI_OFI_dynamic_process_request_t reqs[2];
         mpi_errno = flush_send(rank, 0, vci, &reqs[0]);
         MPIR_ERR_CHECK(mpi_errno);
@@ -827,15 +822,11 @@ int MPIDI_OFI_flush_send_queue(void)
             mpi_errno = MPIDI_NM_progress(vci, &made_progress);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
     return mpi_errno;
   fn_fail:
-    if (in_vci_cs != -1) {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(in_vci_cs));
-    }
     goto fn_exit;
 }
 
@@ -857,7 +848,11 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+        /* sockets provider need flush any last lightweight send. */
+        mpi_errno = flush_send_queue();
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
         /* skip collective work arounds */
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
                || strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
