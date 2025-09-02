@@ -1,965 +1,1271 @@
 {
-    "collective=bcast":
-    {
-        "comm_type=intra":
-        {
-            "comm_size<8":
-            {
-                "comm_hierarchy=parent":
-                {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    }
-                },
-                "comm_hierarchy=any":
-                {
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    }
-                }
-            },
-            "comm_size=pow2":
-            {
-                "comm_hierarchy=parent":
-                {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
-                },
-                "comm_hierarchy=any":
-                {
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
-                }
-            },
-            "comm_size=any":
-            {
-                "comm_hierarchy=parent":
-                {
-                    "avg_msg_size<=0":
-                    {
-                        "algorithm=MPIR_Bcast_intra_smp":{}
-                    },
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
-                },
-                "comm_hierarchy=any":
-                {
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Bcast_inter_remote_send_local_bcast":{}
-        }
-    },
-    "collective=allreduce":
-    {
-        "comm_type=intra":
-        {
-            "avg_msg_size<=0":
-            {
-                "is_commutative=yes":
-                {
-                    "algorithm=MPIR_Allreduce_intra_smp":{}
-                },
-                "is_commutative=no":
-                {
-                    "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-                }
-            },
-            "avg_msg_size<=8":
-            {
-                "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-            },
-            "avg_msg_size=any":
-            {
-                "is_op_built_in=no":
-                {
-                    "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-                },
-                "is_op_built_in=yes":
-                {
-                    "count<pow2":
-                    {
-                        "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-                    },
-                    "count=any":
-                    {
-                        "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast":{}
-        }
-    },
-    "collective=allgather":
-    {
-        "comm_type=intra":
-        {
-            "comm_size=pow2":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Allgather_intra_recursive_doubling":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Allgather_intra_ring":{}
-                }
-            },
-            "comm_size=any":
-            {
-                "total_msg_size<81920":
-                {
-                    "algorithm=MPIR_Allgather_intra_brucks":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Allgather_intra_ring":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast":{}
-        }
-    },
-    "collective=allgatherv":
-    {
-        "comm_type=intra":
-        {
-            "comm_size=pow2":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Allgatherv_intra_recursive_doubling":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Allgatherv_intra_ring":{}
-                }
-            },
-            "comm_size=any":
-            {
-                "total_msg_size<81920":
-                {
-                    "algorithm=MPIR_Allgatherv_intra_brucks":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Allgatherv_intra_ring":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allgatherv_inter_remote_gather_local_bcast":{}
-        }
-    },
-    "collective=reduce":
-    {
-        "comm_type=intra":
-        {
-            "comm_hierarchy=parent":
-            {
-                "avg_msg_size<=0":
-                {
-                    "is_commutative=yes":
-                    {
-                        "algorithm=MPIR_Reduce_intra_smp":{}
-                    },
-                    "is_commutative=no":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
-                    }
-                },
-                "avg_msg_size<=2048":
-                {
-                    "algorithm=MPIR_Reduce_intra_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Reduce_intra_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
+    "version": "5.0",
+    "bcast": {
+        "intra-comm": {
+            "true": {
+                "comm_size": {
+                    "7": {
+                        "parent-comm": {
+                            "true": {
+                                "avg_msg_size": {
+                                    "0": {
+                                        "algorithm": {
+                                            "name": "MPIR_Bcast_intra_smp"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Bcast_intra_binomial"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "avg_msg_size": {
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Bcast_intra_binomial"
+                                        }
+                                    }
+                                }
+                            }
                         }
                     },
-                    "is_op_built_in=no":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
+                    "max": {
+                        "pof2": {
+                            "true": {
+                                "parent-comm": {
+                                    "true": {
+                                        "avg_msg_size": {
+                                            "0": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_smp"
+                                                }
+                                            },
+                                            "12288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_binomial"
+                                                }
+                                            },
+                                            "524288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_recursive_doubling_allgather"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "avg_msg_size": {
+                                            "12288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_binomial"
+                                                }
+                                            },
+                                            "524288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_recursive_doubling_allgather"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "parent-comm": {
+                                    "true": {
+                                        "avg_msg_size": {
+                                            "0": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_smp"
+                                                }
+                                            },
+                                            "12288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_binomial"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "avg_msg_size": {
+                                            "12288": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_binomial"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Bcast_intra_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
-            "comm_hierarchy=any":
-            {
-                "avg_msg_size<=2048":
-                {
-                    "algorithm=MPIR_Reduce_intra_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Reduce_intra_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Bcast_inter_remote_send_local_bcast"
+                }
+            }
+        }
+    },
+    "allreduce": {
+        "intra-comm": {
+            "true": {
+                "avg_msg_size": {
+                    "0": {
+                        "commutative": {
+                            "true": {
+                                "algorithm": {
+                                    "name": "MPIR_Allreduce_intra_smp"
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Allreduce_intra_recursive_doubling"
+                                }
+                            }
                         }
                     },
-                    "is_op_built_in=no":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_inter_local_reduce_remote_send":{}
-        }
-    },
-    "collective=reduce_scatter":
-    {
-        "comm_type=intra":
-        {
-            "is_commutative=yes":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Reduce_scatter_intra_recursive_halving":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Reduce_scatter_intra_pairwise":{}
-                }
-            },
-            "is_commutative=no":
-            {
-                "is_block_regular=yes":
-                {
-                    "comm_size=pow2":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_noncommutative":{}
-                    },
-                    "comm_size=any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_recursive_doubling":{}
-                    }
-                },
-                "is_block_regular=no":
-                {
-                    "algorithm=MPIR_Reduce_scatter_intra_recursive_doubling":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_scatter_inter_remote_reduce_local_scatter":{}
-        }
-    },
-    "collective=reduce_scatter_block":
-    {
-        "comm_type=intra":
-        {
-            "is_commutative=yes":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_pairwise":{}
-                }
-            },
-            "is_commutative=no":
-            {
-                "comm_size=pow2":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_noncommutative":{}
-                },
-                "comm_size=any":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_recursive_doubling":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter":{}
-        }
-    },
-    "collective=gather":
-    {
-        "comm_type=intra":
-        {
-            "algorithm=MPIR_Gather_intra_binomial":{}
-        },
-        "comm_type=inter":
-        {
-            "total_msg_size<2048":
-            {
-                "algorithm=MPIR_Gather_inter_local_gather_remote_send":{}
-            },
-            "total_msg_size=any":
-            {
-                "algorithm=MPIR_Gather_inter_linear":{}
-            }
-        }
-    },
-    "collective=scatter":
-    {
-        "comm_type=intra":
-        {
-            "algorithm=MPIR_Scatter_intra_binomial":{}
-        },
-        "comm_type=inter":
-        {
-            "total_msg_size<2048":
-            {
-                "algorithm=MPIR_Scatter_inter_remote_send_local_scatter":{}
-            },
-            "total_msg_size=any":
-            {
-                "algorithm=MPIR_Scatter_inter_linear":{}
-            }
-        }
-    },
-    "collective=gatherv":
-    {
-        "algorithm=MPIR_Gatherv_allcomm_linear":{}
-    },
-    "collective=scatterv":
-    {
-        "algorithm=MPIR_Scatterv_allcomm_linear":{}
-    },
-    "collective=scan":
-    {
-        "comm_type=intra":
-        {
-            "is_node_consecutive=yes":
-            {
-                "algorithm=MPIR_Scan_intra_smp":{}
-            },
-            "is_node_consecutive=no":
-            {
-                "algorithm=MPIR_Scan_intra_recursive_doubling":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Scan_intra_smp":{}
-        }
-    },
-    "collective=exscan":
-    {
-        "algorithm=MPIR_Exscan_intra_recursive_doubling":{}
-    },
-    "collective=barrier":
-    {
-        "comm_type=intra":
-        {
-            "comm_hierarchy=parent":
-            {
-                "algorithm=MPIR_Barrier_intra_smp":{}
-            },
-            "comm_hierarchy=any":
-            {
-                "algorithm=MPIR_Barrier_intra_k_dissemination":{
-                  "k=2": {}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Barrier_inter_bcast":{}
-        }
-    },
-    "collective=alltoall":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Alltoall_intra_pairwise_sendrecv_replace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "comm_size<8":
-                {
-                    "avg_msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_scattered":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_pairwise":{}
-                    }
-                },
-                "comm_size=any":
-                {
-                    "avg_msg_size<=256":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_brucks":{}
-                    },
-                    "avg_msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_scattered":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_pairwise":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoall_inter_pairwise_exchange":{}
-        }
-    },
-    "collective=alltoallv":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Alltoallv_intra_pairwise_sendrecv_replace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "algorithm=MPIR_Alltoallv_intra_scattered":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoallv_inter_pairwise_exchange":{}
-        }
-    },
-    "collective=alltoallw":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Alltoallw_intra_pairwise_sendrecv_replace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "algorithm=MPIR_Alltoallw_intra_scattered":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoallw_inter_pairwise_exchange":{}
-        }
-    },
-    "collective=neighbor_allgather":
-    {
-        "algorithm=MPIR_Neighbor_allgather_allcomm_nb":{}
-    },
-    "collective=neighbor_allgatherv":
-    {
-        "algorithm=MPIR_Neighbor_allgatherv_allcomm_nb":{}
-    },
-    "collective=neighbor_alltoall":
-    {
-        "algorithm=MPIR_Neighbor_alltoall_allcomm_nb":{}
-    },
-    "collective=neighbor_alltoallv":
-    {
-        "algorithm=MPIR_Neighbor_alltoallv_allcomm_nb":{}
-    },
-    "collective=neighbor_alltoallw":
-    {
-        "algorithm=MPIR_Neighbor_alltoallw_allcomm_nb":{}
-    },
-    "collective=ibarrier":
-    {
-        "comm_type=intra":
-        {
-            "algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling":{}
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ibarrier_inter_sched_bcast":{}
-        }
-    },
-    "collective=iallreduce":
-    {
-        "comm_type=intra":
-        {
-            "avg_msg_size<=2048":
-            {
-                "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-            },
-            "avg_msg_size=any":
-            {
-                "is_op_built_in=no":
-                {
-                    "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-                },
-                "is_op_built_in=yes":
-                {
-                    "count<pow2":
-                    {
-                        "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-                    },
-                    "count=any":
-                    {
-                        "algorithm=MPIR_Iallreduce_intra_sched_reduce_scatter_allgather":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast":{}
-        }
-    },
-    "collective=iallgather":
-    {
-        "comm_type=intra":
-        {
-            "comm_size=pow2":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Iallgather_intra_sched_recursive_doubling":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                }
-            },
-            "comm_size=any":
-            {
-                "total_msg_size<81920":
-                {
-                    "algorithm=MPIR_Iallgather_intra_sched_brucks":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallgather_inter_sched_local_gather_remote_bcast":{}
-        }
-    },
-    "collective=iallgatherv":
-    {
-        "comm_type=intra":
-        {
-            "comm_size=pow2":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Iallgatherv_intra_sched_recursive_doubling":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                }
-            },
-            "comm_size=any":
-            {
-                "total_msg_size<81920":
-                {
-                    "algorithm=MPIR_Iallgatherv_intra_sched_brucks":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast":{}
-        }
-    },
-    "collective=ibcast":
-    {
-        "comm_type=intra":
-        {
-            "comm_hierarchy=parent":
-            {
-                "algorithm=MPIR_Ibcast_intra_sched_smp":{}
-            },
-            "comm_hierarchy=any":
-            {
-                "comm_size<8":
-                {
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    }
-                },
-                "comm_size=pow2":
-                {
-                    "avg_msg_size<12288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    },
-                    "avg_msg_size<524288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                    }
-                },
-                "comm_size=any":
-                {
-                    "avg_msg_size<12288":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                    }
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ibcast_inter_sched_flat":{}
-        }
-    },
-    "collective=ireduce":
-    {
-        "comm_type=intra":
-        {
-            "comm_hierarchy=parent":
-            {
-                "is_commutative=yes":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_smp":{}
-                },
-                "is_commutative=no":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                }
-            },
-            "comm_hierarchy=any":
-            {
-                "avg_msg_size<=2048":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                },
-                "avg_msg_size=any":
-                {
-                    "is_op_built_in=yes":
-                    {
-                        "count<pow2":
-                        {
-                            "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                        },
-                        "count=any":
-                        {
-                            "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
+                    "8": {
+                        "algorithm": {
+                            "name": "MPIR_Allreduce_intra_recursive_doubling"
                         }
                     },
-                    "is_op_built_in=no":
-                    {
-                        "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
+                    "max": {
+                        "builtin-op": {
+                            "true": {
+                                "count-ge-pof2": {
+                                    "true": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allreduce_intra_recursive_doubling"
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allreduce_intra_reduce_scatter_allgather"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Allreduce_intra_recursive_doubling"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Allreduce_inter_reduce_exchange_bcast"
+                }
+            }
+        }
+    },
+    "allgather": {
+        "intra-comm": {
+            "true": {
+                "comm_size": {
+                    "max": {
+                        "pof2": {
+                            "true": {
+                                "total_msg_size": {
+                                    "524287": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgather_intra_recursive_doubling"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgather_intra_ring"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "total_msg_size": {
+                                    "81919": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgather_intra_brucks"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgather_intra_ring"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Allgather_inter_local_gather_remote_bcast"
+                }
+            }
+        }
+    },
+    "allgatherv": {
+        "intra-comm": {
+            "true": {
+                "comm_size": {
+                    "max": {
+                        "pof2": {
+                            "true": {
+                                "total_msg_size": {
+                                    "524287": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgatherv_intra_recursive_doubling"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgatherv_intra_ring"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "total_msg_size": {
+                                    "81919": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgatherv_intra_brucks"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Allgatherv_intra_ring"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Allgatherv_inter_remote_gather_local_bcast"
+                }
+            }
+        }
+    },
+    "reduce": {
+        "intra-comm": {
+            "true": {
+                "parent-comm": {
+                    "true": {
+                        "avg_msg_size": {
+                            "0": {
+                                "commutative": {
+                                    "true": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_intra_smp"
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_intra_binomial"
+                                        }
+                                    }
+                                }
+                            },
+                            "2048": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_intra_binomial"
+                                }
+                            },
+                            "max": {
+                                "builtin-op": {
+                                    "true": {
+                                        "count-ge-pof2": {
+                                            "true": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_intra_binomial"
+                                                }
+                                            },
+                                            "false": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_intra_reduce_scatter_gather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_intra_binomial"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "avg_msg_size": {
+                            "2048": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_intra_binomial"
+                                }
+                            },
+                            "max": {
+                                "builtin-op": {
+                                    "true": {
+                                        "count-ge-pof2": {
+                                            "true": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_intra_binomial"
+                                                }
+                                            },
+                                            "false": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_intra_reduce_scatter_gather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_intra_binomial"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Reduce_inter_local_reduce_remote_send"
+                }
+            }
+        }
+    },
+    "reduce_scatter": {
+        "intra-comm": {
+            "true": {
+                "commutative": {
+                    "true": {
+                        "total_msg_size": {
+                            "524287": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_scatter_intra_recursive_halving"
+                                }
+                            },
+                            "max": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_scatter_intra_pairwise"
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "regular-block": {
+                            "true": {
+                                "comm_size": {
+                                    "max": {
+                                        "pof2": {
+                                            "true": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_scatter_intra_noncommutative"
+                                                }
+                                            },
+                                            "false": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Reduce_scatter_intra_recursive_doubling"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_scatter_intra_recursive_doubling"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Reduce_scatter_inter_remote_reduce_local_scatter"
+                }
+            }
+        }
+    },
+    "reduce_scatter_block": {
+        "intra-comm": {
+            "true": {
+                "commutative": {
+                    "true": {
+                        "total_msg_size": {
+                            "524287": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_scatter_block_intra_recursive_halving"
+                                }
+                            },
+                            "max": {
+                                "algorithm": {
+                                    "name": "MPIR_Reduce_scatter_block_intra_pairwise"
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "comm_size": {
+                            "max": {
+                                "pof2": {
+                                    "true": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_scatter_block_intra_noncommutative"
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Reduce_scatter_block_intra_recursive_doubling"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter"
+                }
+            }
+        }
+    },
+    "gather": {
+        "intra-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Gather_intra_binomial"
+                }
+            },
+            "false": {
+                "total_msg_size": {
+                    "2047": {
+                        "algorithm": {
+                            "name": "MPIR_Gather_inter_local_gather_remote_send"
+                        }
+                    },
+                    "max": {
+                        "algorithm": {
+                            "name": "MPIR_Gather_inter_linear"
+                        }
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_inter_sched_local_reduce_remote_send":{}
         }
     },
-    "collective=ireduce_scatter":
-    {
-        "comm_type=intra":
-        {
-            "is_commutative=yes":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_intra_sched_pairwise":{}
+    "scatter": {
+        "intra-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Scatter_intra_binomial"
                 }
             },
-            "is_commutative=no":
-            {
-                "is_block_regular=yes":
-                {
-                    "comm_size=pow2":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative":{}
+            "false": {
+                "total_msg_size": {
+                    "2047": {
+                        "algorithm": {
+                            "name": "MPIR_Scatter_inter_remote_send_local_scatter"
+                        }
                     },
-                    "comm_size=any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling":{}
-                    }
-                },
-                "is_block_regular=no":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling":{}
-                }
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv":{}
-        }
-    },
-    "collective=igather":
-    {
-        "comm_type=intra":
-        {
-            "algorithm=MPIR_Igather_intra_sched_binomial":{}
-        },
-        "comm_type=inter":
-        {
-            "total_msg_size<2048":
-            {
-                "algorithm=MPIR_Igather_inter_sched_short":{}
-            },
-            "total_msg_size=any":
-            {
-                "algorithm=MPIR_Igather_inter_sched_long":{}
-            }
-        }
-    },
-    "collective=iscatter":
-    {
-        "comm_type=intra":
-        {
-            "algorithm=MPIR_Iscatter_intra_sched_binomial":{}
-        },
-        "comm_type=inter":
-        {
-            "total_msg_size<2048":
-            {
-                "algorithm=MPIR_Iscatter_inter_sched_remote_send_local_scatter":{}
-            },
-            "total_msg_size=any":
-            {
-                "algorithm=MPIR_Iscatter_inter_sched_linear":{}
-            }
-        }
-    },
-    "collective=igatherv":
-    {
-        "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
-    },
-    "collective=iscatterv":
-    {
-        "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
-    },
-    "collective=iexscan":
-    {
-        "algorithm=MPIR_Iexscan_intra_sched_recursive_doubling":{}
-    },
-    "collective=ialltoall":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Ialltoall_intra_sched_inplace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "comm_size<8":
-                {
-                    "avg_msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_pairwise":{}
-                    }
-                },
-                "comm_size=any":
-                {
-                    "avg_msg_size<=2048":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_brucks":{}
-                    },
-                    "avg_msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv":{}
-                    },
-                    "avg_msg_size=any":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_pairwise":{}
+                    "max": {
+                        "algorithm": {
+                            "name": "MPIR_Scatter_inter_linear"
+                        }
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoall_inter_sched_pairwise_exchange":{}
         }
     },
-    "collective=ialltoallv":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Ialltoallv_intra_sched_inplace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "algorithm=MPIR_Ialltoallv_intra_sched_blocked":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoallv_inter_sched_pairwise_exchange":{}
+    "gatherv": {
+        "algorithm": {
+            "name": "MPIR_Gatherv_allcomm_linear"
         }
     },
-    "collective=ialltoallw":
-    {
-        "comm_type=intra":
-        {
-            "is_sendbuf_inplace=yes":
-            {
-                "algorithm=MPIR_Ialltoallw_intra_sched_inplace":{}
-            },
-            "is_sendbuf_inplace=no":
-            {
-                "algorithm=MPIR_Ialltoallw_intra_sched_blocked":{}
-            }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoallw_inter_sched_pairwise_exchange":{}
+    "scatterv": {
+        "algorithm": {
+            "name": "MPIR_Scatterv_allcomm_linear"
         }
     },
-    "collective=ireduce_scatter_block":
-    {
-        "comm_type=intra":
-        {
-            "is_commutative=yes":
-            {
-                "total_msg_size<524288":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving":{}
-                },
-                "total_msg_size=any":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_pairwise":{}
+    "scan": {
+        "intra-comm": {
+            "true": {
+                "node-consecutive": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Scan_intra_smp"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Scan_intra_recursive_doubling"
+                        }
+                    }
                 }
             },
-            "is_commutative=no":
-            {
-                "comm_size=pow2":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative":{}
-                },
-                "comm_size=any":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling":{}
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Scan_intra_smp"
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv":{}
         }
     },
-    "collective=iscan":
-    {
-        "comm_hierarchy=parent":
-        {
-            "algorithm=MPIR_Iscan_intra_sched_smp":{}
-        },
-        "comm_hierarchy=any":
-        {
-            "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
+    "exscan": {
+        "algorithm": {
+            "name": "MPIR_Exscan_intra_recursive_doubling"
         }
     },
-    "collective=ineighbor_allgather":
-    {
-        "algorithm=MPIR_Ineighbor_allgather_allcomm_sched_linear":{}
+    "barrier": {
+        "intra-comm": {
+            "true": {
+                "parent-comm": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Barrier_intra_smp"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Barrier_intra_k_dissemination"
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Barrier_inter_bcast"
+                }
+            }
+        }
     },
-    "collective=ineighbor_allgatherv":
-    {
-        "algorithm=MPIR_Ineighbor_allgatherv_allcomm_sched_linear":{}
+    "alltoall": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Alltoall_intra_pairwise_sendrecv_replace"
+                        }
+                    },
+                    "false": {
+                        "comm_size": {
+                            "7": {
+                                "avg_msg_size": {
+                                    "32768": {
+                                        "algorithm": {
+                                            "name": "MPIR_Alltoall_intra_scattered"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Alltoall_intra_pairwise"
+                                        }
+                                    }
+                                }
+                            },
+                            "max": {
+                                "avg_msg_size": {
+                                    "256": {
+                                        "algorithm": {
+                                            "name": "MPIR_Alltoall_intra_brucks"
+                                        }
+                                    },
+                                    "32768": {
+                                        "algorithm": {
+                                            "name": "MPIR_Alltoall_intra_scattered"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Alltoall_intra_pairwise"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Alltoall_inter_pairwise_exchange"
+                }
+            }
+        }
     },
-    "collective=ineighbor_alltoall":
-    {
-        "algorithm=MPIR_Ineighbor_alltoall_allcomm_sched_linear":{}
+    "alltoallv": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Alltoallv_intra_pairwise_sendrecv_replace"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Alltoallv_intra_scattered"
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Alltoallv_inter_pairwise_exchange"
+                }
+            }
+        }
     },
-    "collective=ineighbor_alltoallv":
-    {
-        "algorithm=MPIR_Ineighbor_alltoallv_allcomm_sched_linear":{}
+    "alltoallw": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Alltoallw_intra_pairwise_sendrecv_replace"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Alltoallw_intra_scattered"
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Alltoallw_inter_pairwise_exchange"
+                }
+            }
+        }
     },
-    "collective=ineighbor_alltoallw":
-    {
-        "algorithm=MPIR_Ineighbor_alltoallw_allcomm_sched_linear":{}
+    "neighbor_allgather": {
+        "algorithm": {
+            "name": "MPIR_Neighbor_allgather_allcomm_nb"
+        }
+    },
+    "neighbor_allgatherv": {
+        "algorithm": {
+            "name": "MPIR_Neighbor_allgatherv_allcomm_nb"
+        }
+    },
+    "neighbor_alltoall": {
+        "algorithm": {
+            "name": "MPIR_Neighbor_alltoall_allcomm_nb"
+        }
+    },
+    "neighbor_alltoallv": {
+        "algorithm": {
+            "name": "MPIR_Neighbor_alltoallv_allcomm_nb"
+        }
+    },
+    "neighbor_alltoallw": {
+        "algorithm": {
+            "name": "MPIR_Neighbor_alltoallw_allcomm_nb"
+        }
+    },
+    "ibarrier": {
+        "intra-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Ibarrier_intra_sched_recursive_doubling"
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ibarrier_inter_sched_bcast"
+                }
+            }
+        }
+    },
+    "iallreduce": {
+        "intra-comm": {
+            "true": {
+                "avg_msg_size": {
+                    "2048": {
+                        "algorithm": {
+                            "name": "MPIR_Iallreduce_intra_sched_recursive_doubling"
+                        }
+                    },
+                    "max": {
+                        "builtin-op": {
+                            "true": {
+                                "count-ge-pof2": {
+                                    "true": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallreduce_intra_sched_recursive_doubling"
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallreduce_intra_sched_reduce_scatter_allgather"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Iallreduce_intra_sched_recursive_doubling"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast"
+                }
+            }
+        }
+    },
+    "iallgather": {
+        "intra-comm": {
+            "true": {
+                "comm_size": {
+                    "max": {
+                        "pof2": {
+                            "true": {
+                                "total_msg_size": {
+                                    "524287": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgather_intra_sched_recursive_doubling"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgather_intra_sched_ring"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "total_msg_size": {
+                                    "81919": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgather_intra_sched_brucks"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgather_intra_sched_ring"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Iallgather_inter_sched_local_gather_remote_bcast"
+                }
+            }
+        }
+    },
+    "iallgatherv": {
+        "intra-comm": {
+            "true": {
+                "comm_size": {
+                    "max": {
+                        "pof2": {
+                            "true": {
+                                "total_msg_size": {
+                                    "524287": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgatherv_intra_sched_recursive_doubling"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgatherv_intra_sched_ring"
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "total_msg_size": {
+                                    "81919": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgatherv_intra_sched_brucks"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Iallgatherv_intra_sched_ring"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast"
+                }
+            }
+        }
+    },
+    "ibcast": {
+        "intra-comm": {
+            "true": {
+                "parent-comm": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Ibcast_intra_sched_smp"
+                        }
+                    },
+                    "false": {
+                        "comm_size": {
+                            "7": {
+                                "avg_msg_size": {
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ibcast_intra_sched_binomial"
+                                        }
+                                    }
+                                }
+                            },
+                            "max": {
+                                "pof2": {
+                                    "true": {
+                                        "avg_msg_size": {
+                                            "12287": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ibcast_intra_sched_binomial"
+                                                }
+                                            },
+                                            "524287": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ibcast_intra_sched_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "avg_msg_size": {
+                                            "12287": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ibcast_intra_sched_binomial"
+                                                }
+                                            },
+                                            "max": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ibcast_intra_sched_scatter_ring_allgather"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ibcast_inter_sched_flat"
+                }
+            }
+        }
+    },
+    "ireduce": {
+        "intra-comm": {
+            "true": {
+                "parent-comm": {
+                    "true": {
+                        "commutative": {
+                            "true": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_intra_sched_smp"
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_intra_sched_binomial"
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "avg_msg_size": {
+                            "2048": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_intra_sched_binomial"
+                                }
+                            },
+                            "max": {
+                                "builtin-op": {
+                                    "true": {
+                                        "count-ge-pof2": {
+                                            "true": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ireduce_intra_sched_binomial"
+                                                }
+                                            },
+                                            "false": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ireduce_intra_sched_reduce_scatter_gather"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ireduce_intra_sched_binomial"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ireduce_inter_sched_local_reduce_remote_send"
+                }
+            }
+        }
+    },
+    "ireduce_scatter": {
+        "intra-comm": {
+            "true": {
+                "commutative": {
+                    "true": {
+                        "total_msg_size": {
+                            "524287": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_scatter_intra_sched_recursive_halving"
+                                }
+                            },
+                            "max": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_scatter_intra_sched_pairwise"
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "regular-block": {
+                            "true": {
+                                "comm_size": {
+                                    "max": {
+                                        "pof2": {
+                                            "true": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ireduce_scatter_intra_sched_noncommutative"
+                                                }
+                                            },
+                                            "false": {
+                                                "algorithm": {
+                                                    "name": "MPIR_Ireduce_scatter_intra_sched_recursive_doubling"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "false": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_scatter_intra_sched_recursive_doubling"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv"
+                }
+            }
+        }
+    },
+    "igather": {
+        "intra-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Igather_intra_sched_binomial"
+                }
+            },
+            "false": {
+                "total_msg_size": {
+                    "2047": {
+                        "algorithm": {
+                            "name": "MPIR_Igather_inter_sched_short"
+                        }
+                    },
+                    "max": {
+                        "algorithm": {
+                            "name": "MPIR_Igather_inter_sched_long"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "iscatter": {
+        "intra-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Iscatter_intra_sched_binomial"
+                }
+            },
+            "false": {
+                "total_msg_size": {
+                    "2047": {
+                        "algorithm": {
+                            "name": "MPIR_Iscatter_inter_sched_remote_send_local_scatter"
+                        }
+                    },
+                    "max": {
+                        "algorithm": {
+                            "name": "MPIR_Iscatter_inter_sched_linear"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "igatherv": {
+        "algorithm": {
+            "name": "MPIR_Igatherv_allcomm_sched_linear"
+        }
+    },
+    "iscatterv": {
+        "algorithm": {
+            "name": "MPIR_Iscatterv_allcomm_sched_linear"
+        }
+    },
+    "iexscan": {
+        "algorithm": {
+            "name": "MPIR_Iexscan_intra_sched_recursive_doubling"
+        }
+    },
+    "ialltoall": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Ialltoall_intra_sched_inplace"
+                        }
+                    },
+                    "false": {
+                        "comm_size": {
+                            "7": {
+                                "avg_msg_size": {
+                                    "32768": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ialltoall_intra_sched_permuted_sendrecv"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ialltoall_intra_sched_pairwise"
+                                        }
+                                    }
+                                }
+                            },
+                            "max": {
+                                "avg_msg_size": {
+                                    "2048": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ialltoall_intra_sched_brucks"
+                                        }
+                                    },
+                                    "32768": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ialltoall_intra_sched_permuted_sendrecv"
+                                        }
+                                    },
+                                    "max": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ialltoall_intra_sched_pairwise"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ialltoall_inter_sched_pairwise_exchange"
+                }
+            }
+        }
+    },
+    "ialltoallv": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Ialltoallv_intra_sched_inplace"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Ialltoallv_intra_sched_blocked"
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ialltoallv_inter_sched_pairwise_exchange"
+                }
+            }
+        }
+    },
+    "ialltoallw": {
+        "intra-comm": {
+            "true": {
+                "inplace": {
+                    "true": {
+                        "algorithm": {
+                            "name": "MPIR_Ialltoallw_intra_sched_inplace"
+                        }
+                    },
+                    "false": {
+                        "algorithm": {
+                            "name": "MPIR_Ialltoallw_intra_sched_blocked"
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ialltoallw_inter_sched_pairwise_exchange"
+                }
+            }
+        }
+    },
+    "ireduce_scatter_block": {
+        "intra-comm": {
+            "true": {
+                "commutative": {
+                    "true": {
+                        "total_msg_size": {
+                            "524287": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_scatter_block_intra_sched_recursive_halving"
+                                }
+                            },
+                            "max": {
+                                "algorithm": {
+                                    "name": "MPIR_Ireduce_scatter_block_intra_sched_pairwise"
+                                }
+                            }
+                        }
+                    },
+                    "false": {
+                        "comm_size": {
+                            "max": {
+                                "pof2": {
+                                    "true": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ireduce_scatter_block_intra_sched_noncommutative"
+                                        }
+                                    },
+                                    "false": {
+                                        "algorithm": {
+                                            "name": "MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv"
+                }
+            }
+        }
+    },
+    "iscan": {
+        "parent-comm": {
+            "true": {
+                "algorithm": {
+                    "name": "MPIR_Iscan_intra_sched_smp"
+                }
+            },
+            "false": {
+                "algorithm": {
+                    "name": "MPIR_Iscan_intra_sched_recursive_doubling"
+                }
+            }
+        }
+    },
+    "ineighbor_allgather": {
+        "algorithm": {
+            "name": "MPIR_Ineighbor_allgather_allcomm_sched_linear"
+        }
+    },
+    "ineighbor_allgatherv": {
+        "algorithm": {
+            "name": "MPIR_Ineighbor_allgatherv_allcomm_sched_linear"
+        }
+    },
+    "ineighbor_alltoall": {
+        "algorithm": {
+            "name": "MPIR_Ineighbor_alltoall_allcomm_sched_linear"
+        }
+    },
+    "ineighbor_alltoallv": {
+        "algorithm": {
+            "name": "MPIR_Ineighbor_alltoallv_allcomm_sched_linear"
+        }
+    },
+    "ineighbor_alltoallw": {
+        "algorithm": {
+            "name": "MPIR_Ineighbor_alltoallw_allcomm_sched_linear"
+        }
     }
 }
