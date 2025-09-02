@@ -13,7 +13,6 @@ int MPIR_Csel_create_from_file(const char *json_file,
 int MPIR_Csel_create_from_buf(const char *json,
                               void *(*create_container) (struct json_object *), void **csel);
 int MPIR_Csel_free(void *csel);
-int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel);
 void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
 
 void *MPII_Create_container(struct json_object *obj);
