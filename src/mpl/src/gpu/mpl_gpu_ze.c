@@ -60,7 +60,7 @@ static int known_subdev_count;
         known_ze_device_count = known_dev_count * (known_subdev_count + 1); \
     } while (0)
 
-/* GLOBAL_DEV_INDEX is the index to global_to_local_map[]. NOTE: each process may differ due visibility */
+/* GLOBAL_DEV_INDEX is the index to global_to_local_map[]. NOTE: each process may differ due to visibility */
 #define GET_GLOBAL_DEV_INDEX(dev_id, sub_id) \
     ((sub_id) * known_dev_count + (dev_id))
 
@@ -450,7 +450,8 @@ static int init_device_mappings(affinity_mask_t * mask)
             subdevice = mask->subdev_id[i];
             /* Temporarily mark the device as visible. It might only be a subdevice that is
              * visible. */
-            global_to_local_map[device] = 1;
+            int root_idx = GET_GLOBAL_DEV_INDEX(device, 0);
+            global_to_local_map[root_idx] = 1;
 
             /* Mark the subdevice(s) as visible. */
             if (subdevice != -1) {
@@ -478,12 +479,13 @@ static int init_device_mappings(affinity_mask_t * mask)
 
     /* The root devices first */
     for (int i = 0; i < known_dev_count; ++i) {
-        if (global_to_local_map[i] == 1) {
+        int root_idx = GET_GLOBAL_DEV_INDEX(i, 0);
+        if (global_to_local_map[root_idx] == 1) {
             /* Check if the device has subdevices before setting its index. If it does not, then
              * only the subdevice is visible. However, need to check for the special case that
              * there are no subdevices among any device. */
             if (subdevice_count[local_dev_id] || known_subdev_count == 0) {
-                global_to_local_map[i] = local_dev_id;
+                global_to_local_map[root_idx] = local_dev_id;
             } else {
                 /* Find which subdevice is visible and give it the local device id since it is the
                  * root device. */
@@ -494,7 +496,7 @@ static int init_device_mappings(affinity_mask_t * mask)
                     }
                 }
                 /* Unset the device as the root device, since its subdevice is the root. */
-                global_to_local_map[i] = -1;
+                global_to_local_map[root_idx] = -1;
             }
             ++local_dev_id;
         }
@@ -502,7 +504,8 @@ static int init_device_mappings(affinity_mask_t * mask)
 
     /* The subdevices next */
     for (int i = 0; i < known_dev_count; ++i) {
-        if (global_to_local_map[i] != -1) {
+        int root_idx = GET_GLOBAL_DEV_INDEX(i, 0);
+        if (global_to_local_map[root_idx] != -1) {
             for (int j = 0; j < known_subdev_count; ++j) {
                 int idx = GET_GLOBAL_DEV_INDEX(i, j + 1);
                 if (global_to_local_map[idx] == 1) {
