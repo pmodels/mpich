@@ -462,7 +462,7 @@ static int init_device_mappings(affinity_mask_t * mask)
             } else {
                 for (int j = 0; j < known_subdev_count; ++j) {
                     int idx = GET_GLOBAL_DEV_INDEX(device, j + 1);
-                    global_to_local_map[idx + j] = 1;
+                    global_to_local_map[idx] = 1;
                 }
             }
         }
