@@ -415,6 +415,24 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     return ret;
 }
 
+/* init_device_mappings - initialize global_to_local_map and local_to_global_map
+ *
+ * * Local id is the same idx  to ze_devices_handle, ref. gpu_ze_init_driver.
+ *   * Local ids are numbered first with root devices, followed with sub devices of each root device.
+ *   * when *only* a single subdevice is visible, then the root device local id refers to the tile
+ * * Global id calculated from a "global" (dev_id, subdev_id) - the ids as if ZE_AFFINITY_MASK is unset.
+ *   * Use GET_GLOBAL_DEV_INDEX(dev_id, sub_id) to obtain the global id, where sub_id is 0 for root
+ *     or subdev_id+1 for subdevice.
+ *   * Mark visible devices by parsing ZE_AFFINITY_MASK
+ *   * Assign the local ids to visible devices according to the same order as in gpu_ze_init_driver.
+ *
+ * Examples showing ZE_AFFINITY_MASK and corresponding local id array and global id array. Global id uses the
+ * notation dev_id.sub_id, where sub_id is 0 for root device and subdev_id+1 for subdevices.
+ *   * ZE_AFFINITY_MASK=1:       [0, 1, 2] - [1.0, 1.1, 1.2]
+ *   * ZE_AFFINITY_MASK=1.0,1.1: [0, 1, 2] - [1.0, 1.1, 1.2]
+ *   * ZE_AFFINITY_MASK=1.1:     [0]       - [1.2]
+ *   * ZE_AFFINITY_MASK=0,1.1    [0,1,2,3] - [0.0,1.2,0.1,0.2]
+ */
 static int init_device_mappings(affinity_mask_t * mask)
 {
     int mpl_err = MPL_SUCCESS;
