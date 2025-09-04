@@ -353,23 +353,23 @@
     },
     "collective=neighbor_allgather-intra":
     {
-        "algorithm=MPIR_Neighbor_allgather_allcomm_nb":{}
+        "algorithm=MPIR_Coll_nb":{}
     },
     "collective=neighbor_allgatherv-intra":
     {
-        "algorithm=MPIR_Neighbor_allgatherv_allcomm_nb":{}
+        "algorithm=MPIR_Coll_nb":{}
     },
     "collective=neighbor_alltoall-intra":
     {
-        "algorithm=MPIR_Neighbor_alltoall_allcomm_nb":{}
+        "algorithm=MPIR_Coll_nb":{}
     },
     "collective=neighbor_alltoallv-intra":
     {
-        "algorithm=MPIR_Neighbor_alltoallv_allcomm_nb":{}
+        "algorithm=MPIR_Coll_nb":{}
     },
     "collective=neighbor_alltoallw-intra":
     {
-        "algorithm=MPIR_Neighbor_alltoallw_allcomm_nb":{}
+        "algorithm=MPIR_Coll_nb":{}
     },
     "collective=ibarrier-intra":
     {
