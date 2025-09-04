@@ -66,4 +66,7 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
 int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
                                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
+int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                           MPI_Datatype datatype, MPI_Op op, int root,
+                                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
 #endif /* MPIR_COLL_H_INCLUDED */
