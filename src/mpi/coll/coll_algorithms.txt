@@ -71,6 +71,7 @@ conditions:
 # ----
 general:
     MPIR_Coll_auto
+    MPIR_Coll_nb
 
 # ----
 barrier-intra:
