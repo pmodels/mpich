@@ -12,9 +12,13 @@ def main():
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir, silent=True)
-    G.algos = load_coll_algos("src/mpi/coll/coll_algorithms.txt")
 
     coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
+
+    # Loading coll_algorithms.txt. It sets -
+    #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
+    #   - G.algos:      a two level array: [func-commkind][algo]
+    load_coll_algos("src/mpi/coll/coll_algorithms.txt")
 
     G.out = []  # output to mpir_coll.c
     G.out2 = [] # output to coll_algos.h
@@ -33,21 +37,25 @@ def add_prototype(l):
     G.prototypes.append(l)
 
 def load_coll_algos(algo_txt):
-    All = {}
+    G.algos = {}
+    G.conditions = {}
     with open(algo_txt) as In:
         (func_commkind, algo_list, algo) = (None, None, None)
         for line in In:
-            if RE.match(r'(\w+-(intra|inter)):', line):
+            if RE.match(r'(\w+-(intra|inter)|general|conditions):', line):
                 func_commkind = RE.m.group(1)
-                algo_list = []
-                All[func_commkind] = algo_list
-            elif RE.match(r'\s+(\w+)\s*$', line):
-                algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
-                algo_list.append(algo)
-            elif RE.match(r'\s+(\w+):\s*(.+)', line):
-                (key, value) = RE.m.group(1,2)
-                algo[key] = value
-    return All
+                if func_commkind != "conditions":
+                    algo_list = []
+                    G.algos[func_commkind] = algo_list
+            elif func_commkind == "conditions":
+                if RE.match(r'\s+([\w()-]+):\s*(\w+.*)', line):
+                    G.conditions[RE.m.group(1)] = RE.m.group(2)
+            elif func_commkind:
+                if RE.match(r'\s+(\w+)\s*$', line):
+                    algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
+                    algo_list.append(algo)
+                elif RE.match(r'\s+(\w+):\s*(.+)', line):
+                    algo[RE.m.group(1)] = RE.m.group(2)
 
 def dump_coll(name, blocking_type):
     if blocking_type == "blocking":
@@ -586,21 +594,21 @@ def dump_fallback(algo):
     for a in algo['restrictions'].replace(" ","").split(','):
         if a == "inplace":
             cond_list.append("sendbuf == MPI_IN_PLACE")
-        elif a == "noinplace":
+        elif a == "!inplace":
             cond_list.append("sendbuf != MPI_IN_PLACE")
-        elif a == "power-of-two":
+        elif a == "pof2":
             cond_list.append("MPL_is_pof2(comm_ptr->local_size)")
-        elif a == "size-ge-pof2":
+        elif a == "count_ge_pof2":
             cond_list.append("count >= MPL_pof2(comm_ptr->local_size)")
         elif a == "commutative":
             cond_list.append("MPIR_Op_is_commutative(op)")
-        elif a== "builtin-op":
+        elif a== "builtin_op":
             cond_list.append("HANDLE_IS_BUILTIN(op)")
-        elif a == "parent-comm":
+        elif a == "hierarchical":
             cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
-        elif a == "node-consecutive":
+        elif a == "node_consecutive":
             cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
-        elif a == "displs-ordered":
+        elif a == "displs_ordered":
             # assume it's allgatherv
             cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
         else:
