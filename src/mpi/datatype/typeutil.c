@@ -471,12 +471,12 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
  */
 #if !defined(F77_TRUE_VALUE_SET)
 bool MPIR_fortran_booleans_is_set = false;
-int MPIR_fortran_true = 1;
-int MPIR_fortran_false = 0;
+MPICH_API_PUBLIC int MPIR_fortran_true = 1;
+MPICH_API_PUBLIC int MPIR_fortran_false = 0;
 #else
 bool MPIR_fortran_booleans_is_set = true;
-int MPIR_fortran_true = F77_TRUE_VALUE;
-int MPIR_fortran_false = F77_FALSE_VALUE;
+MPICH_API_PUBLIC int MPIR_fortran_true = F77_TRUE_VALUE;
+MPICH_API_PUBLIC int MPIR_fortran_false = F77_FALSE_VALUE;
 #endif
 
 int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, void *logical_false)
