@@ -103,7 +103,7 @@ AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
         yes|all   - Enable all available Fortran implementations (F77, F90, F08)
         no|none   - No Fortran support
-],,[enable_fortran=all])
+],,[enable_fortran=auto])
 
 save_IFS="$IFS"
 IFS=","
@@ -112,7 +112,7 @@ enable_fc=no
 enable_f08=no
 for option in $enable_fortran ; do
     case "$option" in
-        yes|all)
+        auto|yes|all)
                 enable_f77=yes
                 enable_fc=yes
                 enable_f08=yes
@@ -1069,6 +1069,9 @@ if test "$enable_f77" = yes ; then
         buildingF77=yes
     ],[
         AC_MSG_RESULT(no)
+        if test $enable_fortran != "auto"; then
+            AC_MSG_ERROR([unable to build mpif.h program. consider using --disable-fortran or --enable-fortran=auto.])
+        fi
     ])
     AC_LANG_POP([Fortran 77])
 fi
@@ -1378,6 +1381,9 @@ if test "$enable_fc" = yes ; then
         f90dir=f90
     ],[
         AC_MSG_RESULT(no)
+        if test $enable_fortran != "auto"; then
+            AC_MSG_ERROR([unable to build "use mpi" program. consider using --disable-fortran or --enable-fortran=auto.])
+        fi
     ])
     AC_LANG_POP([Fortran])
 fi
@@ -1463,6 +1469,9 @@ if test "$enable_f08" = "yes" ; then
         f08dir=f08
     ],[
         AC_MSG_RESULT(no)
+        if test $enable_fortran != "auto"; then
+            AC_MSG_ERROR([unable to build "use mpi_f08" program. consider using --disable-fortran or --enable-fortran=auto.])
+        fi
     ])
     AC_LANG_POP([Fortran])
 fi
