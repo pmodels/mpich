@@ -1,0 +1,19 @@
+UPDATE aurora_test 059ea00dc7 14567b621f
+
+    current aurora_test HEAD a1e0fad8b0
+
+2ecf881dac 2025-08-18 test/pt2pt: Remove truncated message from rqfree test02c42b0106 2025-07-09 binding/abi: update upstram mpi_abi.h
+35ed6738aa 2025-06-11 binding/abi: add missing MPI Abi functions
+d6a6ffd2f4 2025-06-12 mpi: implement MPI_Abi_set_fortran_{info,booleans}
+f96d9daa8e 2025-08-28 mpir/pmi: Fix support for 3rd party PMI1 libraries
+19d0f4376f 2025-08-28 mpir/pmi: Simplify checking for optional PMIx functions
+d127e7b32e 2025-08-29 ch4/ofi: Initialize provider score to INT_MIN
+f06e7edbec 2025-08-31 ch4/ofi: move flush_send_queue back to finalize
+025f47f572 2025-09-01 test: fix spawn_rootargs.c
+e10dddf079 2025-09-02 mpl/ze: fix a potential buffer over-run
+6421815d11 2025-09-02 mpl/ze: prefer GET_GLOBAL_DEV_INDEX
+3d57105429 2025-09-03 mpl/ze: add comment to help understanding
+d21107c0f0 2025-08-28 binding/f08: MPIX_Request_is_complete returns bool
+d4a98b97f5 2025-08-28 coll: fix persistent bcast algorithm
+05147cfb9c 2025-08-28 test/coll: fix test p_scatter
+9b9a0fda9f 2025-09-03 datatype: Expose Fortran logical globals
