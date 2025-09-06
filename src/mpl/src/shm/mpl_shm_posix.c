@@ -16,7 +16,7 @@ void *MPL_initshm_open(const char *name, int size, bool * is_root_p)
     return NULL;
 }
 
-int MPL_initshm_free(const char *name, void *slab, int size, bool need_unlink);
+int MPL_initshm_free(const char *name, void *slab, int size, bool need_unlink)
 {
     return MPL_SUCCESS;
 }
