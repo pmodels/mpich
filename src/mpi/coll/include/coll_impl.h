@@ -14,8 +14,6 @@
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
 
-#include "csel_container.h"
-
 #define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check, mpi_errno, ...)     \
     do {                                                                \
         if ((check) == 0) {                                             \
@@ -41,9 +39,8 @@ extern MPIR_Tree_type_t MPIR_Allreduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern MPIR_Tree_type_t MPIR_Bcast_tree_type;
-extern void *MPIR_Csel_root;
-extern const char *MPIR_Csel_source;
-extern char MPII_coll_generic_json[];
+extern char MPII_coll_composition_json[];
+extern char MPII_coll_selection_json[];
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str);
 int get_ccl_from_string(const char *ccl_str);
@@ -60,6 +57,11 @@ int MPII_Coll_init(void);
 int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
+
+/* NOTE: MPIR_Coll_auto is one of the composition container functions. However,
+ *       MPIR_Coll_composition_auto is a gate function, thus does not take "cnt" parameter. */
+int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
@@ -82,6 +84,37 @@ int MPII_Coll_finalize(void);
         MPIR_Sched_set_tag(s, tag); \
         *sched_type_p = MPIR_SCHED_NORMAL; \
         *sched_p = s; \
+    } while (0)
+
+#define MPII_CSEL_CREATE_TSP_SCHED(coll_sig) \
+    do { \
+        if (coll_sig->sched == NULL) { \
+            coll_sig->sched_type = MPIR_SCHED_GENTRAN; \
+            MPIR_TSP_sched_create(&coll_sig->sched, coll_sig->is_persistent); \
+        } else { \
+            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_GENTRAN); \
+        } \
+    } while (0)
+
+#define MPII_CSEL_CREATE_SCHED(coll_sig) \
+    do { \
+        if (coll_sig->sched == NULL) { \
+            MPIR_Sched_t s = MPIR_SCHED_NULL; \
+            enum MPIR_Sched_kind sched_kind = MPIR_SCHED_KIND_REGULAR; \
+            if (coll_sig->is_persistent) { \
+                sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
+            } \
+            mpi_errno = MPIR_Sched_create(&s, sched_kind); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            int tag = -1; \
+            mpi_errno = MPIR_Sched_next_tag(coll_sig->comm_ptr, &tag); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            MPIR_Sched_set_tag(s, tag); \
+            coll_sig->sched_type = MPIR_SCHED_NORMAL; \
+            coll_sig->sched = s; \
+        } else { \
+            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_NORMAL); \
+        } \
     } while (0)
 
 #define MPII_SCHED_START(sched_type, sched, comm_ptr, request) \
