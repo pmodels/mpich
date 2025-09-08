@@ -11,7 +11,7 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                      int use_rmk, int *control_fd)
 {
     int idx, i, total_procs;

@@ -17,8 +17,9 @@
 #define MPITYPE MPI_INT
 #else
 #define CTYPE   char
-#define MPITYPE MPI_CHAR
+#define MPITYPE MPI_SIGNED_CHAR
 #endif
+#define STRIDE 2        /* stride for noncontig datatype */
 
 #define MAX_PROC 20
 
@@ -70,6 +71,9 @@ static void test_REDUCE_SCATTER_BLOCK(MPI_Count count, MPI_Datatype datatype, in
                                       bool is_nonblock);
 static void test_REDUCE_LOCAL(MPI_Count count, MPI_Datatype datatype, int stride, bool is_nonblock);
 
+static void uop(void *inbuf, void *inoutbuf, int *count, MPI_Datatype * dtype);
+static void uop_c(void *inbuf, void *inoutbuf, MPI_Count * count, MPI_Datatype * dtype);
+
 TEST_FN tests[ALLCOLL] = {
     0,
     test_ALLGATHER,
@@ -94,6 +98,8 @@ TEST_FN tests[ALLCOLL] = {
 int errs;
 MPI_Comm comm = MPI_COMM_WORLD;
 int rank, nprocs;
+
+MPI_Op use_op = MPI_SUM;
 
 int main(int argc, char **argv)
 {
@@ -150,10 +156,22 @@ int main(int argc, char **argv)
         case 2:
             /* large count, non-contig datatype */
             count = (MPI_Count) INT_MAX + 100;
-            MPI_Type_create_resized(MPITYPE, 0, sizeof(CTYPE) * 2, &datatype);
+            MPI_Type_create_resized(MPITYPE, 0, sizeof(CTYPE) * STRIDE, &datatype);
             MPI_Type_commit(&datatype);
-            stride = 2;
+            stride = STRIDE;
             datatype_need_free = true;
+
+            MPI_Op_create_c(uop_c, 1, &use_op);
+            break;
+        case 3:
+            /* small count, non-contig datatype */
+            count = 1024;
+            MPI_Type_create_resized(MPITYPE, 0, sizeof(CTYPE) * STRIDE, &datatype);
+            MPI_Type_commit(&datatype);
+            stride = STRIDE;
+            datatype_need_free = true;
+
+            MPI_Op_create(uop, 1, &use_op);
             break;
         default:
             if (rank == 0) {
@@ -170,6 +188,7 @@ int main(int argc, char **argv)
 
     if (datatype_need_free) {
         MPI_Type_free(&datatype);
+        MPI_Op_free(&use_op);
     }
 
     MTest_Finalize(errs);
@@ -244,6 +263,24 @@ static void check_buf(void *buf, MPI_Count count, int stride, CTYPE val)
     }
 }
 
+static void uop(void *inbuf, void *inoutbuf, int *count, MPI_Datatype * dtype)
+{
+    CTYPE *in = inbuf;
+    CTYPE *inout = inoutbuf;
+    for (int i = 0; i < (*count * STRIDE); i += STRIDE) {
+        inout[i] += in[i];
+    }
+}
+
+static void uop_c(void *inbuf, void *inoutbuf, MPI_Count * count, MPI_Datatype * dtype)
+{
+    CTYPE *in = inbuf;
+    CTYPE *inout = inoutbuf;
+    for (MPI_Count i = 0; i < (*count * STRIDE); i += STRIDE) {
+        inout[i] += in[i];
+    }
+}
+
 #define ANNOUNCE(testname) \
     do { \
         if (rank == 0) { \
@@ -283,7 +320,7 @@ static void test_ALLGATHERV(MPI_Count count, MPI_Datatype datatype, int stride, 
     MPI_Aint displs[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count;
     }
 
     void *sendbuf, *recvbuf;
@@ -312,13 +349,13 @@ static void test_ALLREDUCE(MPI_Count count, MPI_Datatype datatype, int stride, b
 
     void *sendbuf, *recvbuf;
     init_buf(&sendbuf, count, stride, rank);
-    init_buf(&recvbuf, count * nprocs, stride, -1);
+    init_buf(&recvbuf, count, stride, -1);
 
     if (!is_nonblock) {
-        MPI_Allreduce_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
+        MPI_Allreduce_c(sendbuf, recvbuf, count, datatype, use_op, comm);
     } else {
         MPI_Request req;
-        MPI_Iallreduce_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm, &req);
+        MPI_Iallreduce_c(sendbuf, recvbuf, count, datatype, use_op, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -362,7 +399,7 @@ static void test_ALLTOALLV(MPI_Count count, MPI_Datatype datatype, int stride, b
     MPI_Aint displs[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count;
     }
 
     void *sendbuf, *recvbuf;
@@ -395,7 +432,7 @@ static void test_ALLTOALLW(MPI_Count count, MPI_Datatype datatype, int stride, b
     MPI_Datatype types[MAX_PROC];
     for (int i = 0; i < nprocs; i++) {
         counts[i] = count;
-        displs[i] = i * (count * stride * sizeof(CTYPE));
+        displs[i] = i * count * stride * sizeof(CTYPE);
         types[i] = datatype;
     }
 
@@ -489,7 +526,7 @@ static void test_GATHERV(MPI_Count count, MPI_Datatype datatype, int stride, boo
     if (rank == root) {
         for (int i = 0; i < nprocs; i++) {
             counts[i] = count;
-            displs[i] = i * (count * stride * sizeof(CTYPE));
+            displs[i] = i * count;
         }
     }
 
@@ -531,10 +568,10 @@ static void test_REDUCE(MPI_Count count, MPI_Datatype datatype, int stride, bool
     }
 
     if (!is_nonblock) {
-        MPI_Reduce_c(sendbuf, recvbuf, count, datatype, MPI_SUM, root, comm);
+        MPI_Reduce_c(sendbuf, recvbuf, count, datatype, use_op, root, comm);
     } else {
         MPI_Request req;
-        MPI_Ireduce_c(sendbuf, recvbuf, count, datatype, MPI_SUM, root, comm, &req);
+        MPI_Ireduce_c(sendbuf, recvbuf, count, datatype, use_op, root, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -585,7 +622,7 @@ static void test_SCATTERV(MPI_Count count, MPI_Datatype datatype, int stride, bo
     if (rank == root) {
         for (int i = 0; i < nprocs; i++) {
             counts[i] = count;
-            displs[i] = i * (count * stride * sizeof(CTYPE));
+            displs[i] = i * count;
         }
     }
 
@@ -621,10 +658,10 @@ static void test_SCAN(MPI_Count count, MPI_Datatype datatype, int stride, bool i
     init_buf(&recvbuf, count * nprocs, stride, -1);
 
     if (!is_nonblock) {
-        MPI_Scan_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
+        MPI_Scan_c(sendbuf, recvbuf, count, datatype, use_op, comm);
     } else {
         MPI_Request req;
-        MPI_Iscan_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm, &req);
+        MPI_Iscan_c(sendbuf, recvbuf, count, datatype, use_op, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -644,10 +681,10 @@ static void test_EXSCAN(MPI_Count count, MPI_Datatype datatype, int stride, bool
     init_buf(&recvbuf, count * nprocs, stride, -1);
 
     if (!is_nonblock) {
-        MPI_Exscan_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
+        MPI_Exscan_c(sendbuf, recvbuf, count, datatype, use_op, comm);
     } else {
         MPI_Request req;
-        MPI_Iexscan_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm, &req);
+        MPI_Iexscan_c(sendbuf, recvbuf, count, datatype, use_op, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -675,10 +712,10 @@ static void test_REDUCE_SCATTER(MPI_Count count, MPI_Datatype datatype, int stri
     init_buf(&recvbuf, count, stride, -1);
 
     if (!is_nonblock) {
-        MPI_Reduce_scatter_c(sendbuf, recvbuf, counts, datatype, MPI_SUM, comm);
+        MPI_Reduce_scatter_c(sendbuf, recvbuf, counts, datatype, use_op, comm);
     } else {
         MPI_Request req;
-        MPI_Ireduce_scatter_c(sendbuf, recvbuf, counts, datatype, MPI_SUM, comm, &req);
+        MPI_Ireduce_scatter_c(sendbuf, recvbuf, counts, datatype, use_op, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -699,10 +736,10 @@ static void test_REDUCE_SCATTER_BLOCK(MPI_Count count, MPI_Datatype datatype, in
     init_buf(&recvbuf, count, stride, -1);
 
     if (!is_nonblock) {
-        MPI_Reduce_scatter_block_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
+        MPI_Reduce_scatter_block_c(sendbuf, recvbuf, count, datatype, use_op, comm);
     } else {
         MPI_Request req;
-        MPI_Ireduce_scatter_block_c(sendbuf, recvbuf, count, datatype, MPI_SUM, comm, &req);
+        MPI_Ireduce_scatter_block_c(sendbuf, recvbuf, count, datatype, use_op, comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
     }
 
@@ -721,7 +758,7 @@ static void test_REDUCE_LOCAL(MPI_Count count, MPI_Datatype datatype, int stride
     init_buf(&inbuf, count, stride, 1);
     init_buf(&inoutbuf, count, stride, 2);
 
-    MPI_Reduce_local_c(inbuf, inoutbuf, count, datatype, MPI_SUM);
+    MPI_Reduce_local_c(inbuf, inoutbuf, count, datatype, use_op);
 
     check_buf(inoutbuf, count, stride, 3);
 

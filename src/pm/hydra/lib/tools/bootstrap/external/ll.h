@@ -10,7 +10,7 @@
 
 HYD_status HYDTI_bscd_ll_query_node_count(int *count);
 
-HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                      int use_rmk, int *control_fd);
 HYD_status HYDT_bscd_ll_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscd_ll_query_native_int(int *ret);

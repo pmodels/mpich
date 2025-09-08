@@ -25,8 +25,13 @@ int main(int argc, char *argv[])
 
     if (parent == MPI_COMM_NULL) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Comm_spawn("./spawn_rootargs", args,        /*MPI_ARGV_NULL, */
-                       5, MPI_INFO_NULL, 0, MPI_COMM_SELF, &child, MPI_ERRCODES_IGNORE);
+        if (rank == 0) {
+            MPI_Comm_spawn("./spawn_rootargs", args,
+                           5, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &child, MPI_ERRCODES_IGNORE);
+        } else {
+            MPI_Comm_spawn(NULL, NULL,
+                           -1, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &child, MPI_ERRCODES_IGNORE);
+        }
         MPI_Barrier(child);
         MPI_Comm_disconnect(&child);
         if (!rank)

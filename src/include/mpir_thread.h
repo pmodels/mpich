@@ -84,6 +84,7 @@ extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_MUTEX;
 extern MPID_Thread_mutex_t MPIR_THREAD_VCI_CTX_MUTEX;
 extern MPID_Thread_mutex_t MPIR_THREAD_VCI_PMI_MUTEX;
 extern MPID_Thread_mutex_t MPIR_THREAD_VCI_BSEND_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_GPU_MUTEX;
 #endif /* MPICH_THREAD_GRANULARITY */
 #endif /* MPICH_IS_THREADED */
 

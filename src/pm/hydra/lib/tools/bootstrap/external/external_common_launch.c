@@ -94,7 +94,7 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                          int use_rmk, int *control_fd)
 {
     int idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
@@ -193,7 +193,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
     targs[idx] = NULL;
     for (i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
+        proxy = proxy_list[i];
 
         MPL_free(targs[host_idx]);
         if (proxy->node->user == NULL) {

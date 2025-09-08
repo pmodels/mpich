@@ -299,7 +299,7 @@ static struct fi_info *pick_provider_from_list(struct fi_info *list)
     MPIDI_OFI_init_settings(&optimal_settings, MPIDI_OFI_SET_NAME_DEFAULT);
     MPIDI_OFI_init_settings(&minimal_settings, MPIDI_OFI_SET_NAME_MINIMAL);
 
-    int best_score = 0;
+    int best_score = INT_MIN;
     struct fi_info *best_prov = NULL;
     for (struct fi_info * prov = list; prov; prov = prov->next) {
         /* Confirm the NIC backed by the provider is actually up. */
