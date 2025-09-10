@@ -35,6 +35,9 @@ int MPIDI_UCX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 #if defined HAVE_HCOLL
     hcoll_comm_create(comm, NULL);
 #endif
+#ifdef HAVE_UCC
+    MPIDI_common_ucc_comm_create_hook(comm);
+#endif
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -48,6 +51,10 @@ int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 #ifdef HAVE_HCOLL
     hcoll_comm_destroy(comm, NULL);
 #endif
+#ifdef HAVE_UCC
+    MPIDI_common_ucc_comm_destroy_hook(comm);
+#endif
+
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }

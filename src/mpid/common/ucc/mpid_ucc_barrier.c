@@ -7,8 +7,6 @@
 #include "mpid_ucc_collops.h"
 #include "mpid_ucc_dtypes.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 static inline ucc_status_t mpidi_ucc_barrier_init(MPIR_Comm * comm_ptr, ucc_coll_req_h * req,
                                                   MPIR_Request * coll_req)
 {
@@ -52,5 +50,3 @@ int MPIDI_common_ucc_barrier(MPIR_Comm * comm_ptr)
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(barrier);
     goto fallback;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */

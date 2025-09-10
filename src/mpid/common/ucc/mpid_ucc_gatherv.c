@@ -7,8 +7,6 @@
 #include "mpid_ucc_collops.h"
 #include "mpid_ucc_dtypes.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 static inline ucc_status_t mpidi_ucc_gatherv_init(const void *sbuf, MPI_Aint scount,
                                                   MPI_Datatype sdtype, void *rbuf,
                                                   const MPI_Aint rcounts[],
@@ -123,5 +121,3 @@ int MPIDI_common_ucc_gatherv(const void *sbuf, MPI_Aint scount, MPI_Datatype sdt
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(gatherv);
     goto fallback;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */

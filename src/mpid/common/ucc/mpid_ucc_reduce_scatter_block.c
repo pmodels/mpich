@@ -7,8 +7,6 @@
 #include "mpid_ucc_collops.h"
 #include "mpid_ucc_dtypes.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 static inline ucc_status_t mpidi_ucc_reduce_scatter_block_init(const void *sbuf, void *rbuf,
                                                                MPI_Aint rcount, MPI_Datatype dtype,
                                                                MPI_Op op, MPIR_Comm * comm_ptr,
@@ -95,5 +93,3 @@ int MPIDI_common_ucc_reduce_scatter_block(const void *sbuf, void *rbuf, MPI_Aint
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(reduce_scatter_block);
     goto fallback;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */

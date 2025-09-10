@@ -5,8 +5,6 @@
 
 #include "mpid_ucc.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 #ifndef NDEBUG
 /* include this file and set `verbose_debug` flag in `MPIDI_common_ucc_enable()` to get more output */
 #include "mpid_ucc_debug.h"
@@ -466,5 +464,3 @@ int MPIDI_common_ucc_comm_destroy_hook(MPIR_Comm * comm_ptr)
                              MPIDI_COMMON_UCC_VERBOSE_COMM_WORLD);
     goto fn_exit;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */
