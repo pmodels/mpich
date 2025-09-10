@@ -7,8 +7,6 @@
 #include "mpid_ucc_collops.h"
 #include "mpid_ucc_dtypes.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 static inline ucc_status_t mpidi_ucc_allreduce_init(const void *sbuf, void *rbuf, MPI_Aint count,
                                                     MPI_Datatype dtype, MPI_Op op,
                                                     MPIR_Comm * comm_ptr, ucc_coll_req_h * req,
@@ -100,5 +98,3 @@ int MPIDI_common_ucc_allreduce(const void *sbuf, void *rbuf, MPI_Aint count,
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(allreduce);
     goto fallback;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */

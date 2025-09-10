@@ -7,8 +7,6 @@
 #include "mpid_ucc_collops.h"
 #include "mpid_ucc_dtypes.h"
 
-#ifdef MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC
-
 static inline ucc_status_t mpidi_ucc_alltoallv_init(const void *sbuf, const MPI_Aint scounts[],
                                                     const MPI_Aint sdispls[], MPI_Datatype sdtype,
                                                     void *rbuf, const MPI_Aint rcounts[],
@@ -114,5 +112,3 @@ int MPIDI_common_ucc_alltoallv(const void *sbuf, const MPI_Aint scounts[], const
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(alltoallv);
     goto fallback;
 }
-
-#endif /* MPIDI_DEV_IMPLEMENTS_COMM_DECL_UCC */
