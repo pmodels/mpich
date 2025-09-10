@@ -282,7 +282,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
         if test "$with_libfabric" = "embedded" ; then
-            ofi_subdir_args="--enable-embedded"
+            ofi_subdir_args="--enable-embedded --disable-static"
         fi
 
         prov_config=""
@@ -322,7 +322,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             dnl Unset all of these env vars so they don't pollute the libfabric configuration
             PAC_PUSH_ALL_FLAGS()
             PAC_RESET_ALL_FLAGS()
-            CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
             PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
             PAC_POP_ALL_FLAGS()
             ofisrcdir="${main_top_builddir}/modules/libfabric"
