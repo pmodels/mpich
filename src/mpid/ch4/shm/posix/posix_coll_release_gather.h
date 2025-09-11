@@ -151,9 +151,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algo as release_gather based bcast cannot be used */
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -250,9 +249,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algo as release_gather algo cannot be used */
-    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -346,8 +344,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 
@@ -395,8 +393,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: proper error */
+    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 

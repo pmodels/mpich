@@ -758,9 +758,9 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
             } else {
                 /* rank level - build a tree on the ranks */
                 /* Do an allgather to know the current num_children on each rank */
-                mpi_errno = MPIR_Allgather_impl(&(ct->num_children), 1, MPIR_INT_INTERNAL,
-                                                num_childrens, 1, MPIR_INT_INTERNAL, comm,
-                                                MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Allgather_fallback(&(ct->num_children), 1, MPIR_INT_INTERNAL,
+                                                    num_childrens, 1, MPIR_INT_INTERNAL, comm,
+                                                    MPIR_COLL_ATTR_SYNC);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 int switch_leader = tree_ut_int_elt(&level->ranks, level->root_idx);
