@@ -464,7 +464,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         void *data = NULL;
         if (need_pack) {
-            void *pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
+            void *pack_buf = MPIDI_OFI_malloc_pack_buffer(sreq, data_sz);
             MPIR_ERR_CHKANDJUMP1(pack_buf == NULL, mpi_errno,
                                  MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
@@ -475,7 +475,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             MPIR_ERR_CHECK(mpi_errno);
 
             data = pack_buf;
-            MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = pack_buf;
         } else {
             data = MPIR_get_contig_ptr(buf, dt_true_lb);
             MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
