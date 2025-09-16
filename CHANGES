@@ -1,4 +1,51 @@
 ===============================================================================
+                               Changes in 4.3.2
+===============================================================================
+# Improve libfabric provider selection when available providers have
+  negative internal score
+
+# Improve error messages when Level Zero failures are detected
+
+# Improve localhost detection in Hydra
+
+# Update libfabric usage to silence deprecation warnings
+
+# Update embedded UCX to v1.19.0
+
+# Add compatibility with CUDA 13
+
+# Fix crash with GPU-aware build when running on systems with no GPUs
+
+# Fix singleton init with Hydra
+
+# Fix thread safety for Level Zero memcpy functions
+
+# Fix potential crash when release gather collective initialization fails
+
+# Fix ch3 connect/accept protocol handling when a discard event arrives
+  after a connection is already established
+
+# Fix inlining for posix eager modules in ch4/shm
+
+# Fix weak attribute usage in MPI ABI build
+
+# Fix potential use-after-free bug in Hydra during spawn operations
+
+# Fix bug in persistent bcast algorithm
+
+# Fix bug in fabric coordinate retrieval with PMIx
+
+# Fix integer overflow and signed/unsigned bugs in ROMIO
+
+# Fix Quobtye ROMIO driver build error
+
+# Fix broken string conversion in mpi_f08 module
+
+# Fix compilation issue with mpi_f08 and NAG compiler
+
+# Fixes for various test program bugs
+
+===============================================================================
                                Changes in 4.3.1
 ===============================================================================
 # Fix initialization in GPU-aware builds when no devices are present
