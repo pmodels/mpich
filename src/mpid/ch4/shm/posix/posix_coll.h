@@ -10,7 +10,6 @@
 #include "ch4_impl.h"
 #include "posix_coll_release_gather.h"
 #include "posix_coll_gpu_ipc.h"
-#include "posix_csel_container.h"
 
 
 /*
@@ -155,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, int coll_
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
         .comm_ptr = comm,
     };
-    MPIDI_POSIX_csel_container_s *cnt;
+    MPII_Csel_container_s *cnt;
 
     MPIR_FUNC_ENTER;
 
@@ -175,11 +174,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, int coll_
                 goto fallback;
 
             switch (cnt->id) {
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather:
-                    mpi_errno =
-                        MPIDI_POSIX_mpi_barrier_release_gather(comm, coll_attr);
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather:
+                    mpi_errno = MPIDI_POSIX_mpi_barrier_release_gather(comm, coll_attr);
                     break;
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl:
                     goto fallback;
                 default:
                     MPIR_Assert(0);
@@ -217,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
         .u.bcast.datatype = datatype,
         .u.bcast.root = root,
     };
-    MPIDI_POSIX_csel_container_s *cnt;
+    MPII_Csel_container_s *cnt;
 
     MPIR_FUNC_ENTER;
 
@@ -255,17 +253,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
                 goto fallback;
 
             switch (cnt->id) {
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather:
                     mpi_errno =
                         MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm,
                                                              coll_attr);
                     break;
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read:
                     mpi_errno =
                         MPIDI_POSIX_mpi_bcast_gpu_ipc_read(buffer, count, datatype, root, comm,
                                                            coll_attr);
                     break;
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
                     goto fallback;
                 default:
                     MPIR_Assert(0);
@@ -304,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void
         .u.allreduce.datatype = datatype,
         .u.allreduce.op = op,
     };
-    MPIDI_POSIX_csel_container_s *cnt;
+    MPII_Csel_container_s *cnt;
 
     MPIR_FUNC_ENTER;
 
@@ -327,13 +325,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void
                 goto fallback;
 
             switch (cnt->id) {
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather:
                     mpi_errno =
                         MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype,
                                                                  op, comm, coll_attr);
                     break;
 
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl:
                     goto fallback;
 
                 default:
@@ -637,7 +635,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *r
         .u.reduce.op = op,
         .u.reduce.root = root,
     };
-    MPIDI_POSIX_csel_container_s *cnt;
+    MPII_Csel_container_s *cnt;
 
     MPIR_FUNC_ENTER;
 
@@ -660,13 +658,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *r
                 goto fallback;
 
             switch (cnt->id) {
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather:
                     mpi_errno =
                         MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                               root, comm, coll_attr);
                     break;
 
-                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_impl:
+                case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_impl:
                     goto fallback;
 
                 default:
