@@ -783,6 +783,8 @@ PAC_PUSH_FLAG([LDFLAGS])
 PAC_PUSH_FLAG([LIBS])
 
 # Check CUDA availability
+ccl_type=
+AC_SUBST(ccl_type)
 PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
 cuda_CPPFLAGS=""
 cuda_LDFLAGS=""
@@ -826,6 +828,7 @@ if test "$pac_have_cuda" = "yes" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
     if test "$pac_have_nccl" = "yes" ; then
         have_ccl=yes
+        ccl_type=nccl
         AC_DEFINE([ENABLE_NCCL], 1, [define if have libnccl])
     fi
 fi
@@ -893,6 +896,15 @@ if test "$have_gpu" = "no" ; then
     AC_SUBST([hip_CPPFLAGS])
     AC_SUBST([hip_LDFLAGS])
     AC_SUBST([hip_LIBS])
+
+    if test "$pac_have_hip" = "yes" ; then
+        PAC_CHECK_HEADER_LIB_OPTIONAL([rccl], [rccl/rccl.h], [rccl], [ncclCommInitAll],, [-D__HIP_PLATFORM_AMD__])
+        if test "$pac_have_rccl" = "yes" ; then
+            have_ccl=yes
+            ccl_type=rccl
+            AC_DEFINE([ENABLE_RCCL], 1, [define if have librccl])
+        fi
+    fi
 fi
 AM_CONDITIONAL([HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
 
@@ -1759,6 +1771,7 @@ AC_OUTPUT(maint/testmerge \
           util/Makefile \
           coll/Makefile \
           coll/testlist \
+          coll/testlist.ccl \
           comm/Makefile \
           comm/testlist \
           datatype/Makefile \
