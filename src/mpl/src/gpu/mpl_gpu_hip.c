@@ -50,6 +50,7 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
         snprintf(device_list[i], str_len + 1, "%d", i);
     }
 
+    *dev_count = device_count;
     *dev_list = device_list;
     return ret;
 }
