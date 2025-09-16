@@ -18,7 +18,7 @@ typedef struct MPIR_NCCLcomm {
 #endif /*ENABLE_NCCL */
 
 #ifdef ENABLE_RCCL
-#include <rccl.h>
+#include <rccl/rccl.h>
 typedef struct MPIR_RCCLcomm {
     ncclUniqueId id;
     ncclComm_t rcclcomm;
