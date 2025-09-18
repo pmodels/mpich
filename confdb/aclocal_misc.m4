@@ -2,9 +2,9 @@ dnl PAC_CHECK_PYTHON check for python 3, sets PYTHON variable or abort
 dnl
 AC_DEFUN([PAC_CHECK_PYTHON],[
     AC_ARG_VAR([PYTHON], [set to Python 3])
+    python_one_liner="import sys; print(sys.version_info[[0]])"
     if test -z "$PYTHON" ; then
         PYTHON=
-        python_one_liner="import sys; print(sys.version_info[[0]])"
 
         dnl check command 'python'
         PYTHON_PATH=
@@ -30,6 +30,11 @@ AC_DEFUN([PAC_CHECK_PYTHON],[
             AC_MSG_WARN([Python version 3 not found! Bindings need to be generated before configure.])
         else
             AC_MSG_NOTICE([Python version 3 is $PYTHON])
+        fi
+    else
+        py_version=`$PYTHON -c "$python_one_liner"`
+        if test "x$py_version" != x3 ; then
+            AC_MSG_ERROR([PYTHON=$PYTHON is not a Python 3 interpreter])
         fi
     fi
 ])
