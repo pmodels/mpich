@@ -582,6 +582,7 @@ Makefile.am-stamp
 
 # /test/mpi/
 /test/mpi/libtool
+/test/mpi/coll/testlist.ccl
 /test/mpi/coll/testlist.collalgo
 /test/mpi/attr/testlist.dtp
 /test/mpi/pt2pt/testlist.dtp
@@ -611,6 +612,14 @@ Makefile.am-stamp
 /src/mpid/ch4/netmod/ucx/ucx_noinline.h
 /src/mpid/ch4/shm/include/shm.h
 /src/mpid/ch4/shm/posix/posix_noinline.h
+/src/mpid/ch4/shm/posix/eager/include/posix_eager.h
+/src/mpid/ch4/shm/posix/eager/iqueue/func_table.c
+/src/mpid/ch4/shm/posix/eager/iqueue/iqueue_noinline.h
+/src/mpid/ch4/shm/posix/eager/src/posix_eager_impl.c
+/src/mpid/ch4/shm/posix/eager/stub/func_table.c
+/src/mpid/ch4/shm/posix/eager/stub/stub_inline.h
+/src/mpid/ch4/shm/posix/eager/stub/stub_noinline.c
+/src/mpid/ch4/shm/posix/eager/stub/stub_noinline.h
 /src/mpid/ch4/shm/src/shm_noinline.h
 /src/mpid/ch4/shm/stubshm/shm_inline.h
 /src/mpid/ch4/shm/stubshm/shm_noinline.h
