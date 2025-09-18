@@ -6,13 +6,13 @@ has all MPI 4.1 functions and features required by the standard with
 the exception of support for user-defined data representations for I/O.
 
 This README file should contain enough information to get you started
-with MPICH. More extensive installation and user guides can be found
-in the doc/installguide/install.pdf and doc/userguide/user.pdf files
+with MPICH. More extensive installation and user guides can be found in
+the doc/installguide/install.pdf and doc/userguide/user.pdf files
 respectively. Additional information regarding the contents of the
-release can be found in the CHANGES file in the top-level directory,
-and in the RELEASE_NOTES file, where certain restrictions are
-detailed. Finally, the MPICH web site, http://www.mpich.org, contains
-information on bug fixes and new releases.
+release can be found in the CHANGES file in the top-level
+directory. Finally, see the official MPICH GitHub page,
+https://github.com/pmodels/mpich, for active development, bug tracking,
+and up-to-date release information.
 
 
 1.  Getting Started

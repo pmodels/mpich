@@ -11,7 +11,7 @@
 
 static int fd_stdout, fd_stderr;
 
-static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_hosts,
+static HYD_status proxy_list_to_node_str(struct HYD_proxy **proxy_list, int num_hosts,
                                          char **node_list_str)
 {
     int i;
@@ -23,7 +23,7 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_h
 
     i = 0;
     for (int j = 0; j < num_hosts; j++) {
-        proxy = proxy_list + j;
+        proxy = proxy_list[j];
         tmp[i++] = MPL_strdup(proxy->node->hostname);
 
         if (proxy->node->next)
@@ -59,7 +59,7 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_h
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy **proxy_list, int num_hosts,
                                         int use_rmk, int *control_fd)
 {
     int idx, i;
