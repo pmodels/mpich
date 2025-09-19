@@ -194,8 +194,6 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 
 int hcoll_do_progress(int vci, int *made_progress)
 {
-    *made_progress = 1;
-
     /* hcoll_progress_fn() has been deprecated since v4.0. */
 #if HCOLL_API < HCOLL_VERSION(4,0)
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
