@@ -132,7 +132,7 @@ static int recv_nb(struct dte_data_representation_t data,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
     size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
-    dtype = MPI_CHAR;
+    dtype = MPIR_BYTE_INTERNAL;
     request = NULL;
     mpi_errno = MPIC_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, &request);
     MPIR_Assert(request);
@@ -167,7 +167,7 @@ static int send_nb(dte_data_representation_t data,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
     size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
-    dtype = MPI_CHAR;
+    dtype = MPIR_BYTE_INTERNAL;
     request = NULL;
     mpi_errno = MPIC_Isend(buffer, size, dtype, ec_h.rank, tag, comm, &request, 0);
     MPIR_Assert(request);
