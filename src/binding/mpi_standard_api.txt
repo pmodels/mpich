@@ -1823,18 +1823,18 @@ MPI_Request_get_status:
     status: STATUS, direction=out, [status object if flag is true]
 MPI_Request_get_status_all:
     count: ARRAY_LENGTH_NNI, lists length
-    array_of_requests: REQUEST, direction=in, length=count, [array of requests]
+    array_of_requests: REQUEST, constant=True, direction=in, length=count, [array of requests]
     flag: LOGICAL, direction=out
     array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
 MPI_Request_get_status_any:
     count: ARRAY_LENGTH_NNI, list length
-    array_of_requests: REQUEST, direction=in, length=count, [array of requests]
+    array_of_requests: REQUEST, constant=True, direction=in, length=count, [array of requests]
     index: INDEX, direction=out, [index of operation that completed or MPI_UNDEFINED if none completed]
     flag: LOGICAL, direction=out, [true if one of the operations is complete]
     status: STATUS, direction=out
 MPI_Request_get_status_some:
     incount: ARRAY_LENGTH_NNI, [length of array_of_requests]
-    array_of_requests: REQUEST, direction=in, length=incount, [array of requests]
+    array_of_requests: REQUEST, constant=True, direction=in, length=incount, [array of requests]
     outcount: ARRAY_LENGTH, direction=out, [number of completed requests]
     array_of_indices: INDEX, direction=out, length=*, [array of indices of operations that completed]
     array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects for operations that completed]
@@ -2088,13 +2088,13 @@ MPI_Status_f2f08:
     f_status: F90_STATUS, pointer=True, constant=True, [status object declared as array]
     f08_status: F08_STATUS, direction=out, [status object declared as named type]
 MPI_Status_get_error:
-    status: STATUS, direction=in, [status from which to retrieve source rank]
+    status: STATUS, constant=True, direction=in, [status from which to retrieve source rank]
     error: ERROR_CODE, direction=out, [error set in the MPI_ERROR field]
 MPI_Status_get_source:
-    status: STATUS, direction=in, [status from which to retrieve source rank]
+    status: STATUS, constant=True, direction=in, [status from which to retrieve source rank]
     source: RANK, direction=out, [rank set in the MPI_SOURCE field]
 MPI_Status_get_tag:
-    status: STATUS, direction=in, [status from which to retrieve source rank]
+    status: STATUS, constant=True, direction=in, [status from which to retrieve source rank]
     tag: TAG, direction=out, [tag set in the MPI_TAG field]
 MPI_Status_set_error:
     status: STATUS, direction=inout, [status with which to associate error]
