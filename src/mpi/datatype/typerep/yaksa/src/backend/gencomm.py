@@ -11,20 +11,20 @@ import yutils
 ## loop through the derived and basic types to generate individual
 ## pack functions
 derived_types = [ "hvector", "blkhindx", "hindexed", "contig", "resized" ]
-type_ops = {'_Bool': {'REPLACE', 'LAND', 'LOR', 'LXOR'},
-            'bool': {'REPLACE', 'LAND', 'LOR', 'LXOR'},
-            'char': {'REPLACE'},
-            'wchar_t': {'REPLACE'},
-            'int8_t': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'},
-            'int16_t': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'},
-            'int32_t': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'},
-            'int64_t': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'},
-            'float': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX'},
-            'double': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX'},
-            'c_complex': {'REPLACE', 'SUM', 'PROD'},
-            'c_double_complex': {'REPLACE', 'SUM', 'PROD'},
-            'c_long_double_complex': {'REPLACE', 'SUM', 'PROD'},
-            'long double': {'REPLACE', 'SUM', 'PROD', 'MIN', 'MAX'}}
+type_ops = {'_Bool': ['REPLACE', 'LAND', 'LOR', 'LXOR'],
+            'bool': ['REPLACE', 'LAND', 'LOR', 'LXOR'],
+            'char': ['REPLACE'],
+            'wchar_t': ['REPLACE'],
+            'int8_t': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'],
+            'int16_t': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'],
+            'int32_t': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'],
+            'int64_t': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX', 'LAND', 'LOR', 'LXOR', 'BAND', 'BOR', 'BXOR'],
+            'float': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX'],
+            'double': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX'],
+            'c_complex': ['REPLACE', 'SUM', 'PROD'],
+            'c_double_complex': ['REPLACE', 'SUM', 'PROD'],
+            'c_long_double_complex': ['REPLACE', 'SUM', 'PROD'],
+            'long double': ['REPLACE', 'SUM', 'PROD', 'MIN', 'MAX']}
 ########################################################################################
 ##### Switch statement generation for pup function selection
 ########################################################################################
