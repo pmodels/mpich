@@ -259,7 +259,7 @@ print("done\n");
 print("===> Removing unnecessary files in the main codebase... ");
 chdir($expdir);
 run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt");
-run_cmd("find . -name autom4te.cache | xargs rm -rf");
+run_cmd("find . -name autom4te.cache -o -name __pycache__ | xargs rm -rf");
 print("done\n");
 
 # Get docs
