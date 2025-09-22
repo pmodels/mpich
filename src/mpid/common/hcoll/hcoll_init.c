@@ -132,25 +132,26 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
 
     comm_ptr->hcoll_priv.is_hcoll_init = 0;
 
+    if (0 == hcoll_enable) {
+        goto fn_exit;
+    }
+
+    num_ranks = comm_ptr->local_size;
+    if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
+        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS
+        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
+        goto fn_exit;
+    }
+
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
         MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (0 == hcoll_enable) {
-        goto fn_exit;
     }
 
     if (MPIR_Process.comm_world == comm_ptr) {
         hcoll_comm_world_initialized = 1;
     }
     if (!hcoll_comm_world_initialized) {
-        goto fn_exit;
-    }
-    num_ranks = comm_ptr->local_size;
-    if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
-        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS
-        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
         goto fn_exit;
     }
 
