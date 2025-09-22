@@ -63,12 +63,12 @@ check_copy() {
 }
 
 generate_benchmarks() {
-    MYDEF_BOOT=$PWD/../../modules/mydef_boot
-    if test -d $MYDEF_BOOT/bin ; then
+    MYDEF_BOOT="$PWD/../../modules/mydef_boot"
+    if test -d "$MYDEF_BOOT/bin" ; then
         echo "Generating benchmark tests"
-        export PATH=$MYDEF_BOOT/bin:$PATH
-        export PERL5LIB=$MYDEF_BOOT/lib/perl5
-        export MYDEFLIB=$MYDEF_BOOT/lib/MyDef
+        export PATH="$MYDEF_BOOT/bin:$PATH"
+        export PERL5LIB="$MYDEF_BOOT/lib/perl5"
+        export MYDEFLIB="$MYDEF_BOOT/lib/MyDef"
         (cd bench && ./autogen.sh)
     fi
 }
