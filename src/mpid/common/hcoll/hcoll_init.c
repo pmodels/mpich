@@ -130,13 +130,14 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     int context_destroyed;
     mpi_errno = MPI_SUCCESS;
 
+    comm_ptr->hcoll_priv.is_hcoll_init = 0;
+
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (0 == hcoll_enable) {
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
 
@@ -144,13 +145,11 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         hcoll_comm_world_initialized = 1;
     }
     if (!hcoll_comm_world_initialized) {
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
     num_ranks = comm_ptr->local_size;
     if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
         || (comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM)) {
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
 
