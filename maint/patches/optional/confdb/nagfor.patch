@@ -1,0 +1,15 @@
+--- confdb/ltmain.sh	2025-09-23 13:54:31.782898806 -0500
++++ confdb/ltmain.sh.new	2025-09-23 17:06:28.926502645 -0500
+@@ -7991,7 +7991,11 @@
+ 	      func_fatal_error "cannot find name of link library for '$lib'"
+ 	    fi
+ 	    # It is a libtool convenience library, so add in its objects.
+-	    func_append convenience " $ladir/$objdir/$old_library"
++            if test "$wl" = "-Wl,-Wl,," ; then
++                func_append convenience " -Wl,$ladir/$objdir/$old_library"
++            else
++                func_append convenience " $ladir/$objdir/$old_library"
++            fi
+ 	    func_append old_convenience " $ladir/$objdir/$old_library"
+ 	    tmp_libs=
+ 	    for deplib in $dependency_libs; do

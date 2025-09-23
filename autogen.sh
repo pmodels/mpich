@@ -570,6 +570,7 @@ autoreconf_amdir() {
         _patch_successful=no
 
         _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
+        _patch_libtool $_dir/confdb/ltmain.sh  nagfor.patch
         _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
         _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
         _patch_libtool $_dir/confdb/libtool.m4 hpc-sdk.patch
