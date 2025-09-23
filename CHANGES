@@ -10,9 +10,18 @@
 
 # Update libfabric usage to silence deprecation warnings
 
+# Update yaksa for improved reproducibility in code generation
+
 # Update embedded UCX to v1.19.0
 
+# Update embedded libfabric to fix build issue with GCC 15
+
 # Add compatibility with CUDA 13
+
+# Fix missing const in nondestructive request test and status query
+  functions
+
+# Fix HCOLL support
 
 # Fix crash with GPU-aware build when running on systems with no GPUs
 
