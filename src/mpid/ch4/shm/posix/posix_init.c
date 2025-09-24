@@ -276,9 +276,9 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
         unsigned world_id = MPIR_Process.world_id;
         int node_id = MPIR_Process.node_map[MPIR_Process.rank];
         snprintf(MPIDI_POSIX_global.shm_name, sizeof(MPIDI_POSIX_global.shm_name),
-                 "mpich_shm_%x_%d", world_id, node_id);
+                 "/mpich_shm_%x_%d", world_id, node_id);
         snprintf(MPIDI_POSIX_global.shm_vci_name, sizeof(MPIDI_POSIX_global.shm_vci_name),
-                 "mpich_vci_%x_%d", world_id, node_id);
+                 "/mpich_vci_%x_%d", world_id, node_id);
 
         bool is_root;
         slab = MPL_initshm_open(MPIDI_POSIX_global.shm_name, slab_size, &is_root);
