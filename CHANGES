@@ -25,6 +25,8 @@
 
 # Fix crash with GPU-aware build when running on systems with no GPUs
 
+# Fix HIP device query
+
 # Fix singleton init with Hydra
 
 # Fix thread safety for Level Zero memcpy functions
