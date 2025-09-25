@@ -103,6 +103,17 @@ cvars:
         If set to true, rank 0 will dump the network coordinates to a file named "coords" in the current folder.
         If set to false, the network coordinates will not be dumped.
 
+    - name        : MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Set MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS to a global rank number (including 0) for that rank to dump collective
+        algorithm counters.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -130,6 +141,9 @@ int *MPIR_Coll_cvar_table;
 const char **MPIR_Coll_type_names;
 const char **MPIR_Coll_algo_names;
 const char **MPIR_Csel_condition_names;
+
+/* algorithm counters */
+int *MPIR_Coll_algo_counters;
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
@@ -230,6 +244,8 @@ int MPII_Coll_init(void)
     MPIR_Coll_algo_names = MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(char *), MPL_MEM_COLL);
     MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
 
+    MPIR_Coll_algo_counters = MPL_calloc(MPIR_CSEL_NUM_ALGORITHMS, sizeof(int), MPL_MEM_COLL);
+
     MPII_Coll_type_init();
     MPII_Coll_algo_init();
     MPII_Csel_init_condition_names();
@@ -250,9 +266,25 @@ void MPIR_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
 {
 }
 
+static void dump_coll_algo_counters(void)
+{
+    printf("==== Dump collective algorithm counters ====\n");
+    for (int i = 0; i < MPIR_CSEL_NUM_ALGORITHMS; i++) {
+        if (MPIR_Coll_algo_counters[i] > 0) {
+            printf("%10d  %s\n", MPIR_Coll_algo_counters[i], MPIR_Coll_algo_names[i]);
+        }
+    }
+    printf("==== END collective algorithm counters ====\n");
+}
+
 int MPII_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS >= 0 &&
+        MPIR_Process.rank == MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS) {
+        dump_coll_algo_counters();
+    }
 
     /* deregister non blocking collectives progress hook */
     MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
@@ -271,6 +303,7 @@ int MPII_Coll_finalize(void)
     MPL_free(MPIR_Coll_algo_names);
     MPL_free(MPIR_Coll_type_names);
     MPL_free(MPIR_Csel_condition_names);
+    MPL_free(MPIR_Coll_algo_counters);
 
   fn_exit:
     return mpi_errno;
