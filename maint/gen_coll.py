@@ -144,6 +144,7 @@ def dump_algo_cnt_fns():
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
             dump_algo_prep(func_name, algo)
+            G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
             dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
             G.out.append("MPIR_ERR_CHECK(mpi_errno);")
             dump_fn_exit()
