@@ -1,6 +1,10 @@
 {
     "collective=bcast-intra":
     {
+            "MPIDI_CH4_release_gather":
+            {
+                "algorithm=MPIDI_POSIX_mpi_bcast_release_gather":{}
+            },
             "comm_size(8)":
             {
                 "algorithm=MPIR_Bcast_intra_binomial":{}
