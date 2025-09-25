@@ -29,6 +29,7 @@ extern int *MPIR_Coll_cvar_table;
 extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
+extern int *MPIR_Coll_algo_counters;
 
 int MPIR_Csel_create_from_file(const char *json_file, void **csel);
 int MPIR_Csel_create_from_buf(const char *json, void **csel);
