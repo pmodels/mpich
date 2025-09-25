@@ -29,6 +29,47 @@ cvars:
 #include "algo_common.h"
 #include "release_gather.h"
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_POSIX_check_release_gather(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    if (MPIR_IS_THREADED) {
+        return false;
+    }
+
+    /* Check whether comm is an intranode comm */
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    MPIR_Assert(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY);
+    if (comm_ptr->num_external > 1) {
+        return false;
+    }
+
+    /* check coll_type */
+    MPIDI_POSIX_release_gather_opcode_t opcode;
+    switch (coll_sig->coll_type) {
+        case MPIR_CSEL_COLL_TYPE__INTRA_BCAST:
+            opcode = MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST;
+            break;
+        default:
+            return false;
+    }
+
+    /* Check repeats if the algorithm CVAR is not set */
+    if (!(coll_sig->flags & MPIR_COLL_SIG_FLAG__CVAR)) {
+        MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+        if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+            MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+            return false;
+        }
+    }
+
+    /* Lazy initialization of release_gather specific struct */
+    int mpi_errno = MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr, opcode);
+    if (mpi_errno != MPI_SUCCESS) {
+        return false;
+    }
+
+    return true;
+}
+
 /* Intra-node bcast is implemented as a release step followed by gather step in release_gather
  * framework. The actual data movement happens in release step. Gather step makes sure that
  * the shared bcast buffer can be reused for next bcast call. Release gather framework has
@@ -58,20 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (count == 0 || (MPIR_Comm_size(comm_ptr) == 1)) {
         goto fn_exit;
     }
-
-    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
-    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
-        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
-        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
-         * less than the specified threshold */
-        goto fallback;
-    }
-
-    /* Lazy initialization of release_gather specific struct */
-    mpi_errno =
-        MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr, MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
-                                   "release_gather bcast cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     my_rank = MPIR_Comm_rank(comm_ptr);
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
@@ -149,10 +176,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    goto fn_exit;
-  fallback:
-    /* FIXME: proper error */
-    mpi_errno = MPI_ERR_OTHER;
     goto fn_exit;
 }
 

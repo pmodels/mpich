@@ -9,6 +9,10 @@
 #include <mpi.h>
 #include "release_gather_types.h"
 
+/* define a macro to sigify that we have CH4 POSIX. An example usage is
+ * to macro-guard posix collective algorithms */
+#define MPIDI_CH4_SHM_POSIX 1
+
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     800     /* constrained by MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE */
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
 #define MPIDI_POSIX_MAX_IOV_NUM         (3)     /* am_hdr, [padding], payload */
