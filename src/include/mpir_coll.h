@@ -41,7 +41,9 @@ struct MPIR_Csel_coll_sig {
     int tag;
     void *sched;
     enum MPIR_sched_type sched_type;
+    /* TODO: consider compress bool flags into "int attr" */
     bool is_persistent;
+    bool is_cvar;               /* if the algorithm is selected by a CVAR */
 
     union {
         struct {
