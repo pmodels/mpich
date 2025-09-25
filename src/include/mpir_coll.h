@@ -32,14 +32,16 @@ typedef struct MPII_Csel_container MPII_Csel_container_s;
 
 #define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
+/* Define bits for coll_sig->flags */
+#define MPIR_COLL_SIG_FLAG__PERSISTENT  0x1
+#define MPIR_COLL_SIG_FLAG__CVAR        0x2
+
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
     void *sched;
     enum MPIR_sched_type sched_type;
-    /* TODO: consider compress bool flags into "int attr" */
-    bool is_persistent;
-    bool is_cvar;               /* if the algorithm is selected by a CVAR */
+    uint32_t flags;
 
     struct {
         bool is_gpu;
