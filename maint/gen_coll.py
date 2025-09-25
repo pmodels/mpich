@@ -670,10 +670,9 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
     dump_close('}')
     G.out.append("coll_sig.comm_ptr = comm_ptr;")
+    G.out.append("coll_sig.flags = 0;")
     if blocking_type == "persistent":
-        G.out.append("coll_sig.is_persistent = true;")
-    else:
-        G.out.append("coll_sig.is_persistent = false;")
+        G.out.append("coll_sig.flags |= MPIR_COLL_SIG_FLAG__PERSISTENT;")
     if blocking_type == "nonblocking_tag":
         G.out.append("coll_sig.tag = tag;")
     else:
