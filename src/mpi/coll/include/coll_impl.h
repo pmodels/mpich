@@ -100,7 +100,8 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
     do { \
         if (coll_sig->sched == NULL) { \
             coll_sig->sched_type = MPIR_SCHED_GENTRAN; \
-            MPIR_TSP_sched_create(&coll_sig->sched, coll_sig->is_persistent); \
+            bool is_persistent = (coll_sig)->flags & MPIR_COLL_SIG_FLAG__PERSISTENT; \
+            MPIR_TSP_sched_create(&coll_sig->sched, is_persistent); \
         } else { \
             MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_GENTRAN); \
         } \
@@ -111,7 +112,8 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
         if (coll_sig->sched == NULL) { \
             MPIR_Sched_t s = MPIR_SCHED_NULL; \
             enum MPIR_Sched_kind sched_kind = MPIR_SCHED_KIND_REGULAR; \
-            if (coll_sig->is_persistent) { \
+            bool is_persistent = (coll_sig)->flags & MPIR_COLL_SIG_FLAG__PERSISTENT; \
+            if (is_persistent) { \
                 sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
             } \
             mpi_errno = MPIR_Sched_create(&s, sched_kind); \
