@@ -191,6 +191,7 @@ cvars:
         scatter_ring_allgather                  - Force Scatter Ring
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
+        release_gather                          - Force CH4 POSIX release_gather algorithm
 	
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
