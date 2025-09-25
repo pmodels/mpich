@@ -444,6 +444,7 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     int coll_type = coll_sig->coll_type;
     int cvar_val = MPIR_Coll_cvar_table[coll_type];
     if (cvar_val) {
+        coll_sig->is_cvar = true;
         int algo_id = MPIR_Coll_cvar_to_algo_id(coll_type, cvar_val);
         bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
 
