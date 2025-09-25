@@ -100,6 +100,7 @@ $g_opt{defaultTimeLimitMultiplier} = 1.0; # default multiplier for timeout limit
 $g_opt{verbose} = 0;            # Set to true to get more output
 $g_opt{debug} = 1;
 $g_opt{showprogress} = 0;       # Set to true to get a "." with each run program.
+$g_opt{ignore_output} = 0;      # Set to allow output to stdout/stderr without triggering error
 $g_opt{newline} = "\r\n";       # Set to \r\n for Windows-friendly, \n for Unix only
 $g_opt{run_mpitests} = 1;       # Set to true to functional tests using run_mpitests
                                 # (i.e., run tests inside a single MPI_Init/Finalize)
@@ -178,6 +179,10 @@ if (defined($ENV{"MPITEST_TIMEOUT"})) {
  
 if (defined($ENV{"MPITEST_TIMEOUT_MULTIPLIER"})) {
     $g_opt{defaultTimeLimitMultiplier} = $ENV{"MPITEST_TIMEOUT_MULTIPLIER"};
+}
+
+if (defined($ENV{"MPITEST_IGNORE_OUTPUT"})) {
+    $g_opt{ignore_output} = $ENV{"MPITEST_IGNORE_OUTPUT"};
 }
 
 for my $key ("memory_total", "memory_multiplier", "cleanup") {
@@ -1229,7 +1234,7 @@ sub check_result {
         elsif (/^srun: error: .*: signal: Communication connection failure/) {
             # skip
         }
-        else {
+        elsif (!$g_opt{ignore_output}) {
             $stray_output++;
         }
     }
