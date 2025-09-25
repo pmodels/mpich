@@ -32,12 +32,6 @@ typedef struct MPII_Csel_container MPII_Csel_container_s;
 
 #define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
-/* bit 8-31, MPIR-layer */
-#define MPIR_COLL_ATTR__inplace          0x00000100
-#define MPIR_COLL_ATTR__pof2             0x00000200
-#define MPIR_COLL_ATTR__commutative      0x00000400
-#define MPIR_COLL_ATTR__builtin_op       0x00000800
-
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
