@@ -88,6 +88,11 @@ barrier-intra:
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
         restrictions: hierarchical
+    release_gather
+        func_name: MPIDI_POSIX_mpi_barrier_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 barrier-inter:
     bcast
 ibarrier-intra:
@@ -354,6 +359,11 @@ reduce-intra:
         restrictions: commutative, hierarchical
     reduce_scatter_gather
         restrictions: count_ge_pof2, builtin_op
+    release_gather
+        func_name: MPIDI_POSIX_mpi_reduce_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 reduce-inter:
     local_reduce_remote_send
 ireduce-intra:
@@ -397,6 +407,11 @@ allreduce-intra:
     ccl
         extra_params: ccl
         cvar_params: CCL
+    release_gather
+        func_name: MPIDI_POSIX_mpi_allreduce_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:

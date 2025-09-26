@@ -21,6 +21,7 @@ cvars:
         smp           - Force smp algorithm
         k_dissemination - Force high radix dissemination algorithm
         recexch       - Force recursive exchange algorithm
+        release_gather - Force CH4 POSIX release_gather algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1183,6 +1184,7 @@ cvars:
         nb                    - Force nonblocking algorithm
         smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
+        release_gather        - Force CH4 POSIX release_gather algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1372,6 +1374,7 @@ cvars:
         ring                     - Force ring algorithm
         k_reduce_scatter_allgather - Force reduce scatter allgather algorithm
         ccl                      - Force CCL algorithm
+        release_gather           - Force CH4 POSIX release_gather algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE
