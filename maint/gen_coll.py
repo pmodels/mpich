@@ -126,6 +126,8 @@ def dump_algo_cnt_fns():
             add_prototype(decl)
             dump_split(0, decl)
             dump_open('{')
+            if 'macro_guard' in algo:
+                G.out.append("#if %s" % algo['macro_guard'])
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
             dump_algo_prep(algo)
@@ -136,6 +138,10 @@ def dump_algo_cnt_fns():
             G.out.append("return mpi_errno;")
             G.out.append("fn_fail:")
             G.out.append("goto fn_exit;")
+            if 'macro_guard' in algo:
+                G.out.append("#else")
+                G.out.append("return MPI_ERR_OTHER;")
+                G.out.append("#endif")
             dump_close('}')
             G.out.append("")
 
@@ -159,6 +165,9 @@ def add_algo_prototypes():
         return params
 
     for algo in G.algo_list:
+        if 'inline' in algo:
+            # inline functions are already defined in headers, do not need prototypes
+            continue
         if algo['func-commkind'] == 'general':
             decl = "int %s(%s)" % (algo['name'], "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
             add_prototype(decl)
@@ -798,6 +807,8 @@ def get_algo_coll_name(algo):
         return func_name
 
 def get_algo_funcname(algo):
+    if "func_name" in algo:
+        return algo['func_name']
     if algo["func-commkind"] == "general":
         return algo['name']
 
@@ -983,7 +994,7 @@ def dump_c_file(f, lines):
                 print("  %s:" % RE.m.group(1), file=Out)
             else:
                 # print the line with correct indentations
-                if indent > 0 and not RE.match(r'#(if|endif)', l):
+                if indent > 0 and not RE.match(r'#(if|else|endif)', l):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
