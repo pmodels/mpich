@@ -294,10 +294,8 @@ static int async_recv_copy(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk_
 
     MPIR_gpu_req async_req;
     int engine_type = MPIDI_OFI_gpu_get_recv_engine_type();
-    int copy_dir = MPL_GPU_COPY_DIRECTION_NONE;
     mpi_errno = MPIR_Ilocalcopy_gpu(chunk_buf, chunk_sz, MPIR_BYTE_INTERNAL, 0, NULL,
-                                    buf, count, datatype, offset, attr,
-                                    copy_dir, engine_type, 1, &async_req);
+                                    buf, count, datatype, offset, attr, engine_type, 1, &async_req);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct recv_copy *p = MPL_malloc(sizeof(struct recv_copy), MPL_MEM_OTHER);

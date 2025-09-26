@@ -32,13 +32,25 @@ cvars:
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H
       category    : CH4
       type        : int
-      default     : 32768
+      default     : 1024
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H (in
         bytes), then enable GPU-based fast memcpy.
+
+    - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D
+      category    : CH4
+      type        : int
+      default     : 128
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D (in
+        bytes), then enable GPU-based fast memcpy.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -226,7 +238,7 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                             MPI_Aint sendoffset, MPL_pointer_attr_t * send_attr, void *recvbuf,
                             MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
-                            MPL_pointer_attr_t * recv_attr, MPL_gpu_copy_direction_t dir,
+                            MPL_pointer_attr_t * recv_attr,
                             MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * gpu_req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -291,13 +303,31 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             goto fn_exit;
         }
 
-        int fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
+        MPL_gpu_copy_direction_t dir;
+        if (send_attr->type == MPL_GPU_POINTER_DEV) {
+            if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+                dir = MPL_GPU_COPY_D2D_OUTGOING;
+            } else {
+                dir = MPL_GPU_COPY_D2H;
+            }
+        } else if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+            dir = MPL_GPU_COPY_H2D;
+        } else {
+            dir = MPL_GPU_COPY_DIRECTION_NONE;
+        }
+
+        int fast_copy_threshold;
         if (dir == MPL_GPU_COPY_H2D) {
             /* Used in ofi_events.h when unpacking from received pack_buffer to original device buffer */
             fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D;
         } else if (dir == MPL_GPU_COPY_D2H) {
             fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H;
+        } else if (dir == MPL_GPU_COPY_D2D_OUTGOING || dir == MPL_GPU_COPY_D2D_INCOMING) {
+            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D;
+        } else {
+            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
         }
+
         if (copy_sz <= fast_copy_threshold) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -448,8 +478,7 @@ int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype 
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                        MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
-                       MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
-                       MPL_gpu_engine_type_t enginetype, bool commit)
+                       MPL_pointer_attr_t * recvattr, MPL_gpu_engine_type_t enginetype, bool commit)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -461,7 +490,7 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
 #ifdef MPL_HAVE_GPU
     mpi_errno =
         do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
-                         recvtype, recvoffset, recvattr, dir, enginetype, commit, NULL);
+                         recvtype, recvoffset, recvattr, enginetype, commit, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     mpi_errno =
@@ -480,7 +509,7 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
 int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                         MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
-                        MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
+                        MPL_pointer_attr_t * recvattr,
                         MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -493,7 +522,7 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 #ifdef MPL_HAVE_GPU
     mpi_errno =
         do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
-                         recvtype, recvoffset, recvattr, dir, enginetype, commit, req);
+                         recvtype, recvoffset, recvattr, enginetype, commit, req);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     mpi_errno =
