@@ -42,6 +42,10 @@
     },
     "collective=allreduce-intra":
     {
+            "MPIDI_CH4_release_gather":
+            {
+                "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather":{}
+            },
             "avg_msg_size(8)":
             {
                 "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
@@ -129,6 +133,10 @@
     },
     "collective=reduce-intra":
     {
+            "MPIDI_CH4_release_gather":
+            {
+                "algorithm=MPIDI_POSIX_mpi_reduce_release_gather":{}
+            },
             "avg_msg_size(2048)":
             {
                 "algorithm=MPIR_Reduce_intra_binomial":{}
@@ -277,8 +285,15 @@
     },
     "collective=barrier-intra":
     {
-            "algorithm=MPIR_Barrier_intra_k_dissemination":{
-                  "k=2": {}
+            "MPIDI_CH4_release_gather":
+            {
+                "algorithm=MPIDI_POSIX_mpi_barrier_release_gather":{}
+            },
+            "any":
+            {
+                "algorithm=MPIR_Barrier_intra_k_dissemination":{
+                    "k=2": {}
+                }
             }
     },
     "collective=barrier-inter":
