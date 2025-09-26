@@ -26,6 +26,8 @@
 #   - condition_name(thresh): func
 #         This condition calls a query function that returns a value: int (*func)(coll_sig)
 #         The thresh marks the upper limit (inclusive) of the condition.
+#   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
+#         A wrapper checker function will be generated that wraps the "func" within macro-guard.
 # The conditions are used in specifying both algorithm restrictions and CSEL conditions.
 # Example usage in restriction list or JSON file: inplace, !inplace, avg_msg_size(1024), etc.
 # Most of the checker functions should be inlined to minimize function call overhead.
