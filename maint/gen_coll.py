@@ -24,7 +24,8 @@ def main():
     G.algo_list = collect_algo_list()
 
     G.out = []  # output to C file
-    G.out2 = [] # output to header
+    G.out2 = [] # output to a header that is included in mpir_coll.h, between mpidpre.h and mpidpost.h
+    G.out3 = [] # output to a header that is included in coll_csel.h, after mpidpost.h
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"coll_csel.h\"")
@@ -72,10 +73,12 @@ def main():
     dump_MPIR_Csel_node_type_e()
     # algorithm container struct
     dump_MPII_Csel_container()
-    G.out2.append("")
+    # conditional conditions (conditions with #if-guard)
+    dump_conditional_conditions(G.out3)
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
+    dump_coll_autogen_h("src/mpi/coll/include/coll_autogen.h", G.out3)
 
 def collect_algo_list():
     algo_list = []
@@ -216,11 +219,7 @@ def dump_MPII_Csel_init_condition_names():
     G.out.append(decl)
     dump_open('{')
     for a in G.conditions:
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-        else:
-            cond = a
-        G.out.append("MPIR_Csel_condition_names[%s] = \"%s\";" % (condition_id(cond), cond))
+        G.out.append("MPIR_Csel_condition_names[%s] = \"%s\";" % (condition_id(a), get_condition_name(a)))
     dump_close('}')
 
 def dump_MPII_Coll_algo_init():
@@ -317,20 +316,17 @@ def dump_MPII_Csel_parse_operator():
 
     if_clase = "if"
     for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        n = len(cond)
+        name = get_condition_name(a)
+        has_thresh = condition_has_thresh(a)
+        n = len(name)
         if has_thresh:
-            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, cond, n))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
+            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, name, n))
+            G.out.append("    csel_node->type = %s;" % condition_id(a))
             G.out.append("    MPIR_Assert(ckey[%d] == '(');" % n)
             G.out.append("    csel_node->u.condition.thresh = atoi(ckey + %d);" % (n + 1))
         else:
-            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, cond))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
+            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, name))
+            G.out.append("    csel_node->type = %s;" % condition_id(a))
         if_clase = "} else if"
     G.out.append("} else {")
     G.out.append("    return MPI_ERR_OTHER;")
@@ -349,16 +345,13 @@ def dump_MPII_Csel_run_condition():
     G.out.append("bool cond;")
     dump_open("switch(node->type) {")
     for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        dump_open("case %s:" % condition_id(cond))
+        has_thresh = condition_has_thresh(a)
+        cond_func = get_condition_function(a)
+        dump_open("case %s:" % condition_id(a))
         if has_thresh:
-            G.out.append("cond = (node->u.condition.thresh <= %s(coll_sig));" % G.conditions[a])
+            G.out.append("cond = (node->u.condition.thresh <= %s(coll_sig));" % cond_func)
         else:
-            G.out.append("cond = %s(coll_sig);" % G.conditions[a])
+            G.out.append("cond = %s(coll_sig);" % cond_func)
         G.out.append("if (node->u.condition.negate) cond = !cond;")
         G.out.append("return cond ? node->success : node->failure;")
         dump_close("")
@@ -383,20 +376,17 @@ def dump_MPII_Csel_parse_operator():
 
     if_clase = "if"
     for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        n = len(cond)
+        name = get_condition_name(a)
+        has_thresh = condition_has_thresh(a)
+        n = len(name)
         if has_thresh:
-            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, cond, n))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
+            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, name, n))
+            G.out.append("    csel_node->type = %s;" % condition_id(a))
             G.out.append("    MPIR_Assert(ckey[%d] == '(');" % n)
             G.out.append("    csel_node->u.condition.thresh = atoi(ckey + %d);" % (n + 1))
         else:
-            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, cond))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
+            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, name))
+            G.out.append("    csel_node->type = %s;" % condition_id(a))
         if_clase = "} else if"
     G.out.append("} else {")
     G.out.append("    MPIR_Assert(0);")
@@ -416,16 +406,13 @@ def dump_MPII_Csel_run_condition():
     G.out.append("bool cond;")
     dump_open("switch(node->type) {")
     for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        dump_open("case %s:" % condition_id(cond))
+        has_thresh = condition_has_thresh(a)
+        cond_func = get_condition_function(a)
+        dump_open("case %s:" % condition_id(a))
         if has_thresh:
-            G.out.append("cond = (node->u.condition.thresh <= %s(coll_sig));" % G.conditions[a])
+            G.out.append("cond = (node->u.condition.thresh <= %s(coll_sig));" % cond_func)
         else:
-            G.out.append("cond = %s(coll_sig);" % G.conditions[a])
+            G.out.append("cond = %s(coll_sig);" % cond_func)
         G.out.append("if (node->u.condition.negate) cond = !cond;")
         G.out.append("return cond ? node->success : node->failure;")
         dump_close("")
@@ -519,16 +506,16 @@ def dump_MPIR_Coll_check_algo_restriction():
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
-        cond = None
         if r in G.conditions:
-            cond = "%s(coll_sig)" % G.conditions[r]
+            # We assume we can directly call conditional condition since we are inside the algorithm macro_guard
+            cond = "%s(coll_sig)" % get_condition_function(r)
+            if negate:
+                G.out.append("    if (%s) return false;" % cond)
+            else:
+                G.out.append("    if (!%s) return false;" % cond)
         else:
             raise Exception("Restriction %s not listed" % restriction)
 
-        if negate:
-            G.out.append("    if (%s) return false;" % cond)
-        else:
-            G.out.append("    if (!%s) return false;" % cond)
 
     decl = "bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, int algo_id)"
     add_prototype(decl)
@@ -658,6 +645,13 @@ def dump_MPII_Csel_container():
     G.out2.append("    } u;")
     G.out2.append("} MPII_Csel_container_s;")
 
+def dump_conditional_conditions(out):
+    out.append("")
+    out.append("/* conditional CSEL conditions */")
+    for a in G.conditions:
+        if condition_need_wrapper(a):
+            dump_condition_wrapper(a, out)
+
 #---------------------------------------- 
 def add_prototype(l):
     G.prototypes.append(l)
@@ -674,7 +668,7 @@ def load_coll_algos(algo_txt):
                     algo_list = []
                     G.algos[func_commkind] = algo_list
             elif func_commkind == "conditions":
-                if RE.match(r'\s+([\w()-]+):\s*(\w+)', line):
+                if RE.match(r'\s+([\w()-]+):\s*(\w+.*)', line):
                     G.conditions[RE.m.group(1)] = RE.m.group(2)
             elif func_commkind:
                 if RE.match(r'\s+(\w+)\s*$', line):
@@ -949,12 +943,6 @@ def algo_id(algo_funcname):
 def algo_id_END():
     return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
 
-def condition_id(name):
-    prefix = "CSEL_NODE_TYPE__OPERATOR__"
-    a = re.sub(r'-', '_', name)
-    a = re.sub(r'\(thresh\)$', '', a)
-    return prefix + a
-
 def algo_struct_name(algo):
     algo_funcname = get_algo_funcname(algo)
     struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
@@ -963,16 +951,47 @@ def algo_struct_name(algo):
 def algo_id_END():
     return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
 
-def condition_id(name):
-    prefix = "CSEL_NODE_TYPE__OPERATOR__"
-    a = re.sub(r'-', '_', name)
-    a = re.sub(r'\(thresh\)$', '', a)
-    return prefix + a
-
 def algo_struct_name(algo):
     algo_funcname = get_algo_funcname(algo)
     struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
     return struct_name
+
+def get_condition_name(a):
+    name = re.sub(r'\(thresh\)$', '', a)
+    return name
+
+def get_condition_function(a):
+    if RE.match(r'(\w+)\s*$', G.conditions[a]):
+        return RE.m.group(1)
+    else:
+        return "MPIR_CSEL_check_" + get_condition_name(a)
+
+def condition_has_thresh(a):
+    return a.endswith('(thresh)')
+
+def condition_need_wrapper(a):
+    return re.match(r'(\w+) #if (.+)', G.conditions[a])
+
+def dump_condition_wrapper(a, out):
+    if RE.match(r'(\w+) #if (.+)', G.conditions[a]):
+        (actual_func, macro_guard) = RE.m.group(1, 2)
+        cond_func = get_condition_function(a)
+        out.append("")
+        out.append("MPL_STATIC_INLINE_PREFIX bool %s(MPIR_Csel_coll_sig_s * coll_sig)" % cond_func)
+        out.append("{")
+        out.append("#if " + macro_guard)
+        out.append("    return %s(coll_sig);" % actual_func)
+        out.append("#else")
+        # always false, i.e. never select this algorithm/subtree
+        out.append("    return false;")
+        out.append("#endif")
+        out.append("}")
+    else:
+        raise Exception("Does not need condition wrapper")
+
+def condition_id(a):
+    prefix = "CSEL_NODE_TYPE__OPERATOR__"
+    return prefix + get_condition_name(a)
 
 # ----------------------
 def dump_c_file(f, lines):
@@ -1011,11 +1030,24 @@ def dump_coll_algos_h(f, prototypes, lines):
         for l in lines:
             print(l, file=Out)
 
+        print("\n/* function prototypes */\n", file=Out)
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:
                 print(l2, file=Out)
         print("#endif /* COLL_ALGOS_H_INCLUDED */", file=Out)
+
+def dump_coll_autogen_h(f, lines):
+    print("  --> [%s]" % f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef COLL_AUTOGEN_H_INCLUDED", file=Out)
+        print("#define COLL_AUTOGEN_H_INCLUDED", file=Out)
+        print("", file=Out)
+        for l in lines:
+            print(l, file=Out)
+        print("#endif /* COLL_AUTOGEN_H_INCLUDED */", file=Out)
 
 def dump_open(line):
     G.out.append(line)
