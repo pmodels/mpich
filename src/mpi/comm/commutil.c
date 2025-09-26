@@ -317,7 +317,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
-    comm_p->csel_comm = NULL;
 
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
@@ -781,8 +780,7 @@ static int init_comm_seq(MPIR_Comm * comm)
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
-        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPIR_INT_INTERNAL, 0, comm,
-                                            MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_fallback(&tmp, 1, MPIR_INT_INTERNAL, 0, comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         comm->seq = tmp;

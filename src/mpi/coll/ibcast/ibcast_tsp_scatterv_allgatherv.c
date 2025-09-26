@@ -10,7 +10,7 @@
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
-                                                    MPIR_Comm * comm, int allgatherv_algo,
+                                                    MPIR_Comm * comm, int use_ring,
                                                     int scatterv_k, int allgatherv_k,
                                                     MPIR_TSP_sched_t sched)
 {
@@ -181,7 +181,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     mpi_errno = MPIR_TSP_sched_fence(sched);    /* wait for scatter to complete */
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (allgatherv_algo == MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring)
+    if (use_ring)
         /* Schedule Allgatherv ring */
         mpi_errno =
             MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, cnts[rank], MPIR_BYTE_INTERNAL,
@@ -190,9 +190,10 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     else
         /* Schedule Allgatherv recexch */
         mpi_errno =
-            MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPIR_BYTE_INTERNAL,
-                                                     tmp_buf, cnts, displs, MPIR_BYTE_INTERNAL,
-                                                     comm, 0, allgatherv_k, sched);
+            MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling(MPI_IN_PLACE, cnts[rank],
+                                                              MPIR_BYTE_INTERNAL, tmp_buf, cnts,
+                                                              displs, MPIR_BYTE_INTERNAL, comm,
+                                                              allgatherv_k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!is_contig) {
@@ -213,4 +214,23 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(void *buffer, MPI_Aint count,
+                                                         MPI_Datatype datatype, int root,
+                                                         MPIR_Comm * comm, int scatterv_k,
+                                                         MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root, comm,
+                                                           1, scatterv_k, 0, sched);
+}
+
+int MPIR_TSP_Ibcast_sched_intra_scatterv_recexch_allgatherv(void *buffer, MPI_Aint count,
+                                                            MPI_Datatype datatype, int root,
+                                                            MPIR_Comm * comm, int scatterv_k,
+                                                            int allgatherv_k,
+                                                            MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root, comm,
+                                                           0, scatterv_k, allgatherv_k, sched);
 }
