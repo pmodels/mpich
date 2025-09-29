@@ -292,7 +292,9 @@ static MPI_Datatype type_match_size(MPI_Datatype type_list[], int nTypes, int si
 {
     for (int i = 0; i < nTypes; i++) {
         MPI_Aint tsize;
-        MPIR_Datatype_get_size_macro(type_list[i], tsize);
+        MPI_Datatype type = type_list[i];
+        MPIR_DATATYPE_REPLACE_BUILTIN(type);
+        MPIR_Datatype_get_size_macro(type, tsize);
         if (tsize == size) {
             return type_list[i];
         }
