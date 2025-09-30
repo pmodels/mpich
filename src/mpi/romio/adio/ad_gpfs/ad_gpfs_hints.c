@@ -72,7 +72,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
         ad_get_env_vars();
         ad_gpfs_get_env_vars();
-        did_anything = 1;
 
         /* buffer size for collective I/O */
         ADIOI_Info_set(info, "cb_buffer_size", ADIOI_GPFS_CB_BUFFER_SIZE_DFLT);
