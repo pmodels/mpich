@@ -91,7 +91,7 @@ int MPIDI_OFI_mr_cache_finalize(void);
                               "**ofid_"#STR,                \
                               "**ofid_"#STR" %s %s",        \
                               MPIDI_OFI_DEFAULT_NIC_NAME,   \
-                              fi_strerror(-_ret));          \
+                              fi_strerror(-(int)_ret));          \
     } while (0)
 
 #define MPIDI_OFI_CALL_RETRY(FUNC,vci_,STR)                 \
@@ -107,7 +107,7 @@ int MPIDI_OFI_mr_cache_finalize(void);
                               "**ofid_"#STR,                \
                               "**ofid_"#STR" %s %s",        \
                               MPIDI_OFI_DEFAULT_NIC_NAME,   \
-                              fi_strerror(-_ret));          \
+                              fi_strerror(-(int)_ret));          \
         if (_retry > 0) { \
             _retry--; \
             MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
@@ -149,7 +149,7 @@ int MPIDI_OFI_mr_cache_finalize(void);
                                    "**ofid_"#STR,                        \
                                    "**ofid_"#STR" %s %s",               \
                                    MPIDI_OFI_DEFAULT_NIC_NAME,          \
-                                   fi_strerror(-_ret));                 \
+                                   fi_strerror(-(int)_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_CHECK(mpi_errno);                               \
@@ -693,7 +693,8 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vci)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci)
 {
-    int mpi_errno = MPI_SUCCESS, ret = 0;
+    int mpi_errno = MPI_SUCCESS;
+    ssize_t ret = 0;
     struct fi_cq_tagged_entry cq_entry;
     MPIR_FUNC_ENTER;
 

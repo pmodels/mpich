@@ -8,7 +8,8 @@
 
 int MPL_args_serialize(int argc, char **argv, int *len, void **serialized_buf)
 {
-    int buf_size, offset, tmp;
+    int buf_size, offset;
+    size_t tmp;
     char *buf;
     int i;
 
