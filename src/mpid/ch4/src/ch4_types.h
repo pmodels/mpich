@@ -165,9 +165,9 @@ typedef struct MPIDIG_acc_req_msg_t {
     int src_rank;
     uint64_t win_id;
     MPIR_Request *req_ptr;
-    int origin_count;
+    MPI_Aint origin_count;
     MPI_Datatype origin_datatype;
-    int target_count;
+    MPI_Aint target_count;
     MPI_Datatype target_datatype;
     MPI_Op op;
     MPI_Aint target_disp;

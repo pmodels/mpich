@@ -184,7 +184,8 @@ struct MPIR_Comm {
         } single;
         struct {
             struct MPIR_Stream **local_streams;
-            MPI_Aint *vci_displs;       /* comm size + 1 */
+            MPI_Aint *vci_displs;       /* comm size + 1: an index to vci_table and can only go up to comm_size
+                                         * but often passed to MPI_Aint-expecting routines */
             int *vci_table;     /* comm size */
         } multiplex;
     } stream_comm;
