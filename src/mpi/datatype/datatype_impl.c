@@ -311,13 +311,16 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
      * not available. We test for that case separately.  We also
      * prefer the Fortran types to the C type, if they are available */
     static MPI_Datatype real_types[] = {
-        MPI_REAL2, MPI_REAL4, MPI_REAL8, MPI_REAL16, MPI_LONG_DOUBLE,
+        MPI_REAL2, MPI_REAL4, MPI_REAL8, MPI_REAL16,
+        MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE,
     };
     static MPI_Datatype int_types[] = {
         MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8, MPI_INTEGER16,
+        MPI_CHAR, MPI_SHORT, MPI_INT, MPI_LONG, MPI_LONG_LONG,
     };
     static MPI_Datatype complex_types[] = {
         MPI_COMPLEX4, MPI_COMPLEX8, MPI_COMPLEX16, MPI_COMPLEX32,
+        MPI_C_FLOAT_COMPLEX, MPI_C_DOUBLE_COMPLEX, MPI_C_LONG_DOUBLE_COMPLEX,
     };
 
     /* The following implementation follows the suggestion in the
