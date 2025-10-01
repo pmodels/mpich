@@ -27,8 +27,8 @@
                 vci_src = MPIR_PT2PT_ATTR_SRC_VCI(attr); \
                 vci_dst = MPIR_PT2PT_ATTR_DST_VCI(attr); \
             } else { \
-                int src_displ = (comm)->stream_comm.multiplex.vci_displs[src_rank]; \
-                int dst_displ = (comm)->stream_comm.multiplex.vci_displs[dst_rank]; \
+                MPI_Aint src_displ = (comm)->stream_comm.multiplex.vci_displs[src_rank]; \
+                MPI_Aint dst_displ = (comm)->stream_comm.multiplex.vci_displs[dst_rank]; \
                 vci_src = (comm)->stream_comm.multiplex.vci_table[src_displ]; \
                 vci_dst = (comm)->stream_comm.multiplex.vci_table[dst_displ]; \
             } \

@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_buffer(void **p_data, MPI_Aint * p
 }
 
 /* Sometime the transport just need info to make algorithm choice */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
@@ -253,12 +253,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
     } else {
         /* noncontig case */
         struct iovec *iov = p->iov_ptr;
-        int iov_len = p->iov_num;
+        MPI_Aint iov_len = p->iov_num;
 
         int done = 0;
-        int rem = in_data_sz;
+        MPI_Aint rem = in_data_sz;
         for (int i = 0; i < iov_len && rem > 0; i++) {
-            int curr_len = MPL_MIN(rem, iov[i].iov_len);
+            MPI_Aint curr_len = MPL_MIN(rem, iov[i].iov_len);
             MPIR_Typerep_copy(iov[i].iov_base, (char *) in_data + done, curr_len,
                               MPIR_TYPEREP_FLAG_NONE);
             rem -= curr_len;

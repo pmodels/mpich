@@ -40,7 +40,7 @@ static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool,
         MPIR_ERR_CHECK(rc);
     }
 
-    int idx = block_idx * pool_obj->num_free_queue + free_queue_idx;
+    unsigned long idx = block_idx * pool_obj->num_free_queue + free_queue_idx;
 
     rc = MPIDU_genq_shmem_queue_dequeue(pool, &pool_obj->free_queues[idx], cell);
     MPIR_ERR_CHECK(rc);
