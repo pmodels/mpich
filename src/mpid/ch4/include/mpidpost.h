@@ -62,4 +62,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
     return MPIR_Stop_progress_thread_impl(NULL);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPID_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
 #endif /* MPIDPOST_H_INCLUDED */
