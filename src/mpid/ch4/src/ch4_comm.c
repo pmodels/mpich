@@ -705,7 +705,7 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
     /* balanced and node-consecutive */
     MPIR_Assert(comm->local_size == num_local * num_external);
     MPIR_Assert(local_rank == comm->rank % num_local);
-    MPIR_Assert(external_rank = comm->rank / num_local);
+    MPIR_Assert(external_rank == comm->rank / num_local);
 
     int *external_procs;
     MPIR_CHKLMEM_MALLOC(external_procs, num_external * sizeof(int));
