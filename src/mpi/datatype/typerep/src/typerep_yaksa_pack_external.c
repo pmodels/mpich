@@ -320,7 +320,7 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
     MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(type)) {
-        basic_type = type;
+        basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(type);
     } else {
         basic_type = typeptr->basic_type;
     }
