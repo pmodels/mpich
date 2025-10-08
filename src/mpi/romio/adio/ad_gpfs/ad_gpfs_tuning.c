@@ -16,7 +16,6 @@
  *---------------------------------------------------------------------*/
 
 #include "ad_gpfs_tuning.h"
-#include "mpi.h"
 
 #if !defined(PVFS2_SUPER_MAGIC)
 #define PVFS2_SUPER_MAGIC (0x20030528)
