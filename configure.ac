@@ -445,7 +445,7 @@ AC_ARG_ENABLE(fast,
         alwaysinline - Force compiler to always inline performance critical routines
         avx      - Force enable compiler optimizations with AVX instruction set
         avx512f  - Force enable compiler optimizations with AVX512F instruction set
-        all|yes  - "O2", "ndebug", and "alwaysinline" are enabled
+        all|yes  - "O2", "ndebug" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=[O2])
 
@@ -627,6 +627,32 @@ AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode 
 AC_ARG_WITH([cuda], [AS_HELP_STRING([--with-cuda=[[PATH]]],PAC_WITH_LIB_HELP_STRING(cuda))])
 AC_ARG_WITH([hip], [AS_HELP_STRING([--with-hip=[[PATH]]],PAC_WITH_LIB_HELP_STRING(hip))])
 AC_ARG_WITH([ze], [AS_HELP_STRING([--with-ze=[[PATH]]],PAC_WITH_LIB_HELP_STRING(ze))])
+AC_ARG_WITH([valgrind], [AS_HELP_STRING([--with-valgrind=[[PATH]]], [disable valgrind support])])
+AC_ARG_ENABLE(timer-type, [AS_HELP_STRING([--enable-timer-type=name], [Select the timer to use for MPI_Wtime (expert-only)])])
+AC_ARG_ENABLE(yield, [AS_HELP_STRING([--enable-yield=name], [Select the thread yield method (expert-only)])])
+
+# options passed to ROMIO
+AC_ARG_WITH([file-system], [AS_HELP_STRING([--with-file-system=name], [build MPI-IO with support for the named file system])])
+AC_ARG_WITH([pvfs2], [AS_HELP_STRING([--with-pvfs2=path], [Specify path to the pvfs2 library])])
+AC_ARG_WITH([daos], [AS_HELP_STRING([--with-daos=path], [Specify path to the daos library])])
+AC_ARG_WITH([aio-lite], [AS_HELP_STRING([--with-aio-lite=path], [Specify path to the aio-lite library])])
+
+# options passed to libfabric configure
+AC_ARG_ENABLE([psm2], [AS_HELP_STRING([--disable-verbs], [disable libfabric psm2 provider])])
+AC_ARG_ENABLE([psm3], [AS_HELP_STRING([--disable-verbs], [disable libfabric psm3 provider])])
+AC_ARG_ENABLE([sockets], [AS_HELP_STRING([--disable-verbs], [disable libfabric sockets provider])])
+AC_ARG_ENABLE([verbs], [AS_HELP_STRING([--disable-verbs], [disable libfabric verbs provider])])
+AC_ARG_ENABLE([efa], [AS_HELP_STRING([--disable-verbs], [disable libfabric efa provider])])
+AC_ARG_ENABLE([cxi], [AS_HELP_STRING([--disable-verbs], [disable libfabric cxi provider])])
+AC_ARG_ENABLE([opx], [AS_HELP_STRING([--disable-verbs], [disable libfabric opx provider])])
+
+# options passed to hwloc configure
+AC_ARG_ENABLE([libxml2], [AS_HELP_STRING([--disable-libxml2], [force hwloc to use embedded xml parser])])
+AC_ARG_ENABLE([cuda], [AS_HELP_STRING([--disable-cuda], [passed to hwloc])])
+AC_ARG_ENABLE([nvml], [AS_HELP_STRING([--disable-nvml], [passed to hwloc])])
+AC_ARG_ENABLE([opencl], [AS_HELP_STRING([--disable-opencl], [passed to hwloc])])
+AC_ARG_ENABLE([rsmi], [AS_HELP_STRING([--disable-rsmi], [passed to hwloc])])
+
 
 AC_CANONICAL_TARGET
 
