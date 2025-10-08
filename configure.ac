@@ -445,7 +445,7 @@ AC_ARG_ENABLE(fast,
         alwaysinline - Force compiler to always inline performance critical routines
         avx      - Force enable compiler optimizations with AVX instruction set
         avx512f  - Force enable compiler optimizations with AVX512F instruction set
-        all|yes  - "O2", "ndebug", and "alwaysinline" are enabled
+        all|yes  - "O2", "ndebug" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=[O2])
 

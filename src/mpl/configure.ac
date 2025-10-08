@@ -160,8 +160,9 @@ AM_CONDITIONAL([MPL_BUILD_FOR_X86], [test "x$build_for_x86" = "xyes"])
 AC_ARG_ENABLE(fast,
 [  --enable-fast=option - Control the level of fast execution supported by MPL.
         alwaysinline   - Force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX
-        all|yes  - Same as "alwaysinline"
-        none     - Disable alwaysinline (default)
+        avx      - Add -mavx2 in CFLAGS
+        avx512f  - Add -mavx512f in CFLAGS
+        none     - Disable additional fast options (default)
 ],,enable_fast=none)
 
 # enable-fast can have multiple options, need break down options
@@ -189,9 +190,6 @@ for option in $enable_fast ; do
         avx512f)
         force_enable_avx512f=yes
         SUMMARY_MESSAGE="--enable-fast=avx512f enables AVX512F for the entire libmpi.so"
-        ;;
-        all|yes)
-        enable_fast_alwaysinline=yes
         ;;
         *) # do not change default value (no) for other fast options
         ;;
