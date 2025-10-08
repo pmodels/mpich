@@ -219,6 +219,8 @@ typedef struct {
             MPI_Aint copy_offset;
             int copy_infly;
             int send_infly;
+            void *chunk_head;
+            void *chunk_tail;
         } send;
         struct {
             MPI_Aint recv_offset;
