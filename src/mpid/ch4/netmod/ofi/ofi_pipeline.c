@@ -169,7 +169,7 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
     MPIR_Request *sreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    /* CS required for genq pool and gpu imemcpy */
+    /* CS required for genq pool and gpu imemcpy, and chunk send */
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     /* check whether any chunk copy is done */
@@ -327,10 +327,8 @@ static bool send_copy_complete(MPIR_Request * sreq, int chunk_index,
 
     uint64_t flags = FI_COMPLETION | FI_MATCH_COMPLETE | FI_DELIVERY_COMPLETE;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, flags),
                          p->vci_local, tsendv);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     p->u.send.send_infly++;
     /* both send buffer and chunk_req will be freed in pipeline_send_event */
