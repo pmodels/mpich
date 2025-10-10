@@ -24,7 +24,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE
       category    : CH4
       type        : int
-      default     : 16384
+      default     : 8192
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
