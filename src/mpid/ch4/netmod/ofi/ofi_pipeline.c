@@ -176,11 +176,7 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         struct send_chunk *chunk = p->u.send.chunk_head;
         bool is_done = send_copy_poll(sreq, chunk);
         if (is_done) {
-            if (chunk->next) {
-                p->u.send.chunk_head = chunk->next;
-            } else {
-                p->u.send.chunk_head = p->u.send.chunk_tail = NULL;
-            }
+            LL_DELETE(p->u.send.chunk_head, p->u.send.chunk_tail, chunk);
             MPL_free(chunk);
         } else {
             /* skip later chunks if head_chunk is incomplete to prevent out of order sends */
@@ -223,13 +219,7 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         p->u.send.copy_offset += chunk_sz;
         p->u.send.copy_infly++;
         /* append the chunk to the list */
-        if (p->u.send.chunk_tail == NULL) {
-            p->u.send.chunk_head = p->u.send.chunk_tail = chunk;
-        } else {
-            struct send_chunk *tmp = p->u.send.chunk_tail;
-            tmp->next = chunk;
-            p->u.send.chunk_tail = chunk;
-        }
+        LL_APPEND(p->u.send.chunk_head, p->u.send.chunk_tail, chunk);
     }
 
     /* all async copy chunks have been issued; the task is DONE if the chunk list
