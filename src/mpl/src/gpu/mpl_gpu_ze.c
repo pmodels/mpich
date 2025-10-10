@@ -2201,8 +2201,8 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
     MPL_ze_device_entry_t *device_state1, *device_state2;
     int local_dev1, local_dev2;
 
-    assert(global_dev1 >= 0 && global_dev1 < known_ze_device_count);
-    assert(global_dev2 >= 0 && global_dev2 < known_ze_device_count);
+    assert(global_dev1 >= 0);
+    assert(global_dev2 >= 0);
 
     if (IS_SAME_DEV(global_dev1, global_dev2))
         return 1;
