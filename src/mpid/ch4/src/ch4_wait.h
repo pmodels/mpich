@@ -11,18 +11,27 @@
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
                                                      MPID_Progress_state * state)
 {
-    state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
+    state->flag = MPIDI_PROGRESS_ALL;
 
     int vci = MPIDI_Request_get_vci(req);
 
     state->vci_count = 1;
     state->vci[0] = vci;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (!req->dev.anysrc_partner && MPIDI_REQUEST(req, is_local)) {
+        state->flag &= ~MPIDI_PROGRESS_NM;
+    }
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
                                                        MPID_Progress_state * state)
 {
-    state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
+    state->flag = MPIDI_PROGRESS_ALL;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    state->flag &= ~MPIDI_PROGRESS_NM;
+#endif
 
     int idx = 0;
     for (int i = 0; i < n; i++) {
@@ -45,6 +54,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
         if (!found) {
             state->vci[idx++] = vci;
         }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (!MPIDI_REQUEST(reqs[i], is_local) || reqs[i]->dev.anysrc_partner) {
+            state->flag |= MPIDI_PROGRESS_NM;
+        }
+#endif
     }
     state->vci_count = idx;
 }
