@@ -212,6 +212,7 @@ typedef struct {
     MPIDI_OFI_RNDV_COMMON_FIELDS;
 } MPIDI_OFI_rndv_common_t;
 
+struct send_chunk;
 typedef struct {
     MPIDI_OFI_RNDV_COMMON_FIELDS;
     union {
@@ -219,6 +220,8 @@ typedef struct {
             MPI_Aint copy_offset;
             int copy_infly;
             int send_infly;
+            struct send_chunk *chunk_head;
+            struct send_chunk *chunk_tail;
         } send;
         struct {
             MPI_Aint recv_offset;

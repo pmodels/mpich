@@ -29,10 +29,12 @@ struct recv_chunk_req {
     MPI_Aint recv_offset;       /* need remember where to copy chunk */
 };
 
+struct send_chunk;
 static int pipeline_send_poll(MPIX_Async_thing thing);
-static void spawn_send_copy(MPIX_Async_thing thing, MPIR_Request * sreq, MPIR_gpu_req * areq,
-                            int chunk_index, void *chunk_buf, MPI_Aint chunk_sz);
-static int send_copy_poll(MPIX_Async_thing thing);
+static struct send_chunk *spawn_send_copy(MPIX_Async_thing thing,
+                                          MPIR_Request * sreq, MPIR_gpu_req * areq,
+                                          int chunk_index, void *chunk_buf, MPI_Aint chunk_sz);
+static bool send_copy_poll(MPIR_Request * sreq, struct send_chunk *chunk);
 static bool send_copy_complete(MPIR_Request * sreq, int chunk_index,
                                void *chunk_buf, MPI_Aint chunk_sz);
 static void send_chunk_complete(MPIR_Request * sreq, void *chunk_buf, MPI_Aint chunk_sz);
@@ -59,6 +61,8 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag)
     p->u.send.copy_offset = 0;
     p->u.send.copy_infly = 0;   /* control to avoid overwhelming async progress */
     p->u.send.send_infly = 0;   /* control to avoid overwhelming unexpected recv */
+    p->u.send.chunk_head = NULL;
+    p->u.send.chunk_tail = NULL;
 
     if (!MPIDI_OFI_CAN_SEND_CQ_DATASIZE(p->data_sz)) {
         mpi_errno = MPIDI_OFI_RNDV_send_hdr(&p->data_sz, sizeof(MPI_Aint),
@@ -145,6 +149,17 @@ int MPIDI_OFI_pipeline_recv_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Requ
 }
 
 /* ---- static routines for send side ---- */
+struct send_chunk {
+    bool copy_done;
+    /* async handle */
+    MPIR_gpu_req async_req;
+    /* for sending data */
+    int chunk_index;
+    void *chunk_buf;
+    MPI_Aint chunk_sz;
+    /* linked list */
+    struct send_chunk *next;
+};
 
 /* async send chunks until done */
 static int pipeline_send_poll(MPIX_Async_thing thing)
@@ -153,8 +168,21 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
     MPIR_Request *sreq = MPIR_Async_thing_get_state(thing);
     MPIDI_OFI_pipeline_t *p = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
 
-    /* CS required for genq pool and gpu imemcpy */
+    /* CS required for genq pool and gpu imemcpy, and chunk send */
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
+
+    /* check whether any chunk copy is done */
+    while (p->u.send.chunk_head) {
+        struct send_chunk *chunk = p->u.send.chunk_head;
+        bool is_done = send_copy_poll(sreq, chunk);
+        if (is_done) {
+            LL_DELETE(p->u.send.chunk_head, p->u.send.chunk_tail, chunk);
+            MPL_free(chunk);
+        } else {
+            /* skip later chunks if head_chunk is incomplete to prevent out of order sends */
+            break;
+        }
+    }
 
     while (p->u.send.copy_offset < p->remote_data_sz) {
         /* limit copy_infly so it doesn't overwhelm async progress */
@@ -185,71 +213,68 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
                                         MPIR_BYTE_INTERNAL, 0, NULL, copy_dir, engine_type,
                                         1, &async_req);
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-        spawn_send_copy(thing, sreq, &async_req, p->chunk_index, chunk_buf, chunk_sz);
+        struct send_chunk *chunk = spawn_send_copy(thing, sreq, &async_req,
+                                                   p->chunk_index, chunk_buf, chunk_sz);
         p->chunk_index++;
         p->u.send.copy_offset += chunk_sz;
         p->u.send.copy_infly++;
+        /* append the chunk to the list */
+        LL_APPEND(p->u.send.chunk_head, p->u.send.chunk_tail, chunk);
     }
 
-    ret = MPIX_ASYNC_DONE;
+    /* all async copy chunks have been issued; the task is DONE if the chunk list
+     * is empty (all copy-completed) */
+    if (p->u.send.chunk_head == NULL) {
+        ret = MPIX_ASYNC_DONE;
+    }
+
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
     return ret;
 }
 
 /* ---- send_copy ---- */
-struct send_copy {
-    MPIR_Request *sreq;
-    /* async handle */
-    bool copy_done;
-    MPIR_gpu_req async_req;
-    /* for sending data */
-    int chunk_index;
-    void *chunk_buf;
-    MPI_Aint chunk_sz;
-};
-
-static void spawn_send_copy(MPIX_Async_thing thing, MPIR_Request * sreq, MPIR_gpu_req * areq,
-                            int chunk_index, void *chunk_buf, MPI_Aint chunk_sz)
+static struct send_chunk *spawn_send_copy(MPIX_Async_thing thing,
+                                          MPIR_Request * sreq, MPIR_gpu_req * areq,
+                                          int chunk_index, void *chunk_buf, MPI_Aint chunk_sz)
 {
-    struct send_copy *p;
+    struct send_chunk *p;
     p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
     MPIR_Assert(p);
 
-    p->sreq = sreq;
     p->copy_done = false;
     p->async_req = *areq;
     p->chunk_index = chunk_index;
     p->chunk_buf = chunk_buf;
     p->chunk_sz = chunk_sz;
+    p->next = NULL;
 
-    MPIR_Async_thing_spawn(thing, send_copy_poll, p, NULL);
+    return p;
 }
 
-static int send_copy_poll(MPIX_Async_thing thing)
+static bool send_copy_poll(MPIR_Request * sreq, struct send_chunk *chunk)
 {
-    struct send_copy *p = MPIR_Async_thing_get_state(thing);
+    struct send_chunk *p = chunk;
 
     /* this async task contains two parts: copy and send. Use the copy_done field to allow each part to be pending */
     int is_done = p->copy_done;
     if (!is_done) {
         MPIR_async_test(&(p->async_req), &is_done);
         if (is_done) {
-            MPIDI_OFI_pipeline_t *p_req = &MPIDI_OFI_AMREQ_PIPELINE(p->sreq);
+            MPIDI_OFI_pipeline_t *p_req = &MPIDI_OFI_AMREQ_PIPELINE(sreq);
             p_req->u.send.copy_infly--;
             p->copy_done = true;
         }
     }
 
     if (!is_done) {
-        return MPIX_ASYNC_NOPROGRESS;
+        return false;
     } else {
-        if (send_copy_complete(p->sreq, p->chunk_index, p->chunk_buf, p->chunk_sz)) {
-            MPL_free(p);
-            return MPIX_ASYNC_DONE;
+        if (send_copy_complete(sreq, p->chunk_index, p->chunk_buf, p->chunk_sz)) {
+            return true;
         } else {
             /* We can't send the chunk for some reason. We'll try again */
-            return MPIX_ASYNC_NOPROGRESS;
+            return false;
         }
     }
 }
@@ -290,10 +315,8 @@ static bool send_copy_complete(MPIR_Request * sreq, int chunk_index,
 
     uint64_t flags = FI_COMPLETION | FI_MATCH_COMPLETE | FI_DELIVERY_COMPLETE;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(p->vci_local));
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, flags),
                          p->vci_local, tsendv);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(p->vci_local));
 
     p->u.send.send_infly++;
     /* both send buffer and chunk_req will be freed in pipeline_send_event */
