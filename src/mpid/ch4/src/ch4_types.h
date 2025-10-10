@@ -117,6 +117,7 @@ typedef struct MPIDIG_put_msg_t {
 
 typedef struct MPIDIG_put_dt_ack_msg_t {
     int src_rank;
+    int am_tag;
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
 } MPIDIG_put_dt_ack_msg_t;
@@ -142,6 +143,7 @@ typedef struct MPIDIG_get_msg_t {
     MPI_Aint target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
+    int am_tag;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {

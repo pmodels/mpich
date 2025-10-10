@@ -117,6 +117,7 @@ typedef struct MPIDIG_put_req_t {
 typedef struct MPIDIG_get_req_t {
     MPIR_Request *greq_ptr;
     void *flattened_dt;
+    int am_tag;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
