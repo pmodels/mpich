@@ -196,9 +196,19 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
             (_ret) = FUNC;                                              \
         } while (0)
 
-#define MPIDI_OFI_REQUEST_CREATE(req, kind, vci) \
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+#define MPIDI_OFI_REQ_SET_LOCAL(req)            \
+    do { \
+        MPIDI_REQUEST(req, is_local) = 0; \
+    } while (0)
+#else
+#define MPIDI_OFI_REQ_SET_LOCAL(req) do {} while (0)
+#endif
+
+#define MPIDI_OFI_REQUEST_CREATE(req, kind, vci)              \
     do {                                                      \
         MPIDI_CH4_REQUEST_CREATE(req, kind, vci, 2);                    \
+        MPIDI_OFI_REQ_SET_LOCAL(req); \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
     } while (0)
 
