@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=										\
-    src/mpi/coll/reduce/reduce_allcomm_nb.c				\
     src/mpi/coll/reduce/reduce_intra_binomial.c				\
     src/mpi/coll/reduce/reduce_intra_reduce_scatter_gather.c			\
     src/mpi/coll/reduce/reduce_intra_smp.c			\

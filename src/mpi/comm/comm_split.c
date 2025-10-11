@@ -111,8 +111,9 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         local_comm_ptr = comm_ptr;
     }
     /* Gather information on the local group of processes */
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 2, MPIR_INT_INTERNAL, table, 2, MPIR_INT_INTERNAL,
-                               local_comm_ptr, MPIR_COLL_ATTR_SYNC);
+    mpi_errno =
+        MPIR_Allgather_fallback(MPI_IN_PLACE, 2, MPIR_INT_INTERNAL, table, 2, MPIR_INT_INTERNAL,
+                                local_comm_ptr, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Step 2: How many processes have our same color? */

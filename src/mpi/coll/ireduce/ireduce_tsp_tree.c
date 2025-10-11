@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 #include "algo_common.h"
 #include "treealgo.h"
+#include "coll_csel.h"
 
 /* Routine to schedule a pipelined tree based reduce */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
@@ -71,31 +72,10 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             MPIR_Treealgo_tree_create_topo_aware(comm, tree_type, k, tree_root,
                                                  MPIR_CVAR_IREDUCE_TOPO_REORDER_ENABLE, &my_tree);
     } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
-        MPIR_Csel_coll_sig_s coll_sig = {
-            .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
-            .comm_ptr = comm,
-            .u.ireduce.sendbuf = sendbuf,
-            .u.ireduce.recvbuf = recvbuf,
-            .u.ireduce.count = count,
-            .u.ireduce.datatype = datatype,
-            .u.ireduce.op = op,
-            .u.ireduce.root = tree_root,
-        };
-
         int overhead = MPIR_CVAR_IREDUCE_TOPO_OVERHEAD;
         int lat_diff_groups = MPIR_CVAR_IREDUCE_TOPO_DIFF_GROUPS;
         int lat_diff_switches = MPIR_CVAR_IREDUCE_TOPO_DIFF_SWITCHES;
         int lat_same_switches = MPIR_CVAR_IREDUCE_TOPO_SAME_SWITCHES;
-
-        MPII_Csel_container_s *cnt = MPIR_Csel_search(comm->csel_comm, coll_sig);
-        MPIR_Assert(cnt);
-
-        if (cnt->id == MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_tree) {
-            overhead = cnt->u.ireduce.intra_tsp_tree.topo_overhead;
-            lat_diff_groups = cnt->u.ireduce.intra_tsp_tree.topo_diff_groups;
-            lat_diff_switches = cnt->u.ireduce.intra_tsp_tree.topo_diff_switches;
-            lat_same_switches = cnt->u.ireduce.intra_tsp_tree.topo_same_switches;
-        }
 
         mpi_errno =
             MPIR_Treealgo_tree_create_topo_wave(comm, k, tree_root,
@@ -284,4 +264,14 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_TSP_Ireduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                      MPI_Datatype datatype, MPI_Op op, int root,
+                                      MPIR_Comm * comm, int chunk_size,
+                                      int buffer_per_child, MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root, comm,
+                                             MPIR_TREE_TYPE_KARY, 1, chunk_size, buffer_per_child,
+                                             sched);
 }

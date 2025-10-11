@@ -12,14 +12,15 @@
  * on the recursive doubling algorithm described by Thakur et al, "Optimization of
  * Collective Communication Operations in MPICH", 2005. The recursive doubling
  * algorithm has been extended for any radix k. A variant of the algorithm called
- * as distance halving (selected by setting recexch_type=1) is based on the
+ * as distance halving (selected by setting is_halving=true) is based on the
  * paper, Sack et al, "Faster topology-aware collective algorithms through
  * non-minimal communication", 2012.
  * */
-int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
-                                 MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                 MPI_Datatype recvtype, MPIR_Comm * comm,
-                                 int recexch_type, int k, int single_phase_recv, int coll_attr)
+static int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm,
+                                        bool is_halving, int k, int single_phase_recv,
+                                        int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -106,7 +107,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
+    if (step1_sendto != -1) {   /* non-participating rank sends the data to a participating rank */
         void *buf_to_send;
         send_offset = rank * recv_extent * recvcount;
         if (is_inplace)
@@ -134,7 +135,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
 
     /* For distance halving algorithm, exchange the data with digit reversed partner
      * so that finally the data is in the correct order. */
-    if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING) {
+    if (is_halving) {
         if (step1_sendto == -1) {
             /* get the partner with whom I should exchange data */
             partner = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
@@ -163,7 +164,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         }
     }
 
-    if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING) {
+    if (is_halving) {
         phase = step2_nphases - 1;
         recv_phase = step2_nphases - 1;
     } else {
@@ -179,7 +180,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         for (iter = 0; iter < total_phases && (j + iter) < step2_nphases; iter++) {
             for (i = 0; i < k - 1; i++) {
                 nbr = step2_nbrs[recv_phase][i];
-                if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+                if (is_halving)
                     rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(nbr, nranks, k);
                 else
                     rank_for_offset = nbr;
@@ -191,7 +192,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                MPIR_ALLGATHER_TAG, comm, &recv_reqs[num_rreq++]);
                 MPIR_ERR_CHECK(mpi_errno);
             }
-            if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+            if (is_halving)
                 recv_phase--;
             else
                 recv_phase++;
@@ -200,7 +201,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         /* send data to all the neighbors */
         for (i = 0; i < k - 1; i++) {
             nbr = step2_nbrs[phase][i];
-            if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+            if (is_halving)
                 rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
             else
                 rank_for_offset = rank;
@@ -214,7 +215,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         /* wait on prev recvs */
         MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
 
-        if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+        if (is_halving)
             phase--;
         else
             phase++;
@@ -225,7 +226,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 /* send data to all the neighbors once more */
                 for (i = 0; i < k - 1; i++) {
                     nbr = step2_nbrs[phase][i];
-                    if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+                    if (is_halving)
                         rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
                     else
                         rank_for_offset = rank;
@@ -242,7 +243,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
                 MPIR_ERR_CHECK(mpi_errno);
 
-                if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
+                if (is_halving)
                     phase--;
                 else
                     phase++;
@@ -285,4 +286,22 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Allgather_intra_recexch_doubling(const void *sendbuf, MPI_Aint sendcount,
+                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                          int k, int single_phase_recv, int coll_attr)
+{
+    return MPIR_Allgather_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm, false, k, single_phase_recv, coll_attr);
+}
+
+int MPIR_Allgather_intra_recexch_halving(const void *sendbuf, MPI_Aint sendcount,
+                                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                         MPI_Datatype recvtype, MPIR_Comm * comm,
+                                         int k, int single_phase_recv, int coll_attr)
+{
+    return MPIR_Allgather_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm, true, k, single_phase_recv, coll_attr);
 }
