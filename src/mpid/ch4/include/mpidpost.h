@@ -28,6 +28,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
     req->dev.type = MPIDI_REQ_TYPE_NONE;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     req->dev.anysrc_partner = NULL;
+    req->dev.is_local = 0;
 #endif
 
     MPIR_FUNC_EXIT;
