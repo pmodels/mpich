@@ -12,7 +12,7 @@
 
 categories :
     - name : CH4_UCX
-      description : A category for CH4 OFI netmod variables
+      description : A category for CH4 UCX netmod variables
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
