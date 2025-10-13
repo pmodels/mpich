@@ -61,8 +61,10 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_implicit, int num_reserved
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     mpi_errno = addr_exchange_all_ctx(comm, all_num_vcis);
     MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
         MPIDI_OFI_init_per_vci(vci);
