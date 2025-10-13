@@ -314,21 +314,21 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
 
     assert(type != MPI_DATATYPE_NULL);
 
-    MPIR_Datatype *typeptr;
-    MPIR_Datatype_get_ptr(type, typeptr);
-
     MPI_Datatype basic_type;
     /* FIXME: assumes a single basic_type, won't work with struct */
     if (HANDLE_IS_BUILTIN(type)) {
         basic_type = type;
+        size = 1;
     } else {
+        MPIR_Datatype *typeptr;
+        MPIR_Datatype_get_ptr(type, typeptr);
         basic_type = typeptr->basic_type;
+
+        MPI_Aint basic_type_size;
+        MPIR_Datatype_get_size_macro(basic_type, basic_type_size);
+        size = typeptr->size / basic_type_size;
     }
 
-    MPI_Aint basic_type_size;
-    MPIR_Datatype_get_size_macro(basic_type, basic_type_size);
-
-    size = typeptr->size / basic_type_size;
     size *= MPII_Typerep_get_basic_size_external32(basic_type);
 
     MPIR_FUNC_EXIT;
