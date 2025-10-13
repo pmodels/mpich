@@ -306,7 +306,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     goto fn_exit;
 }
 
-int MPIR_Typerep_size_external32(MPI_Datatype type)
+MPI_Aint MPIR_Typerep_size_external32(MPI_Datatype type)
 {
     MPIR_FUNC_ENTER;
 

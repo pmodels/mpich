@@ -79,7 +79,7 @@ int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_A
                          MPI_Datatype datatype, MPI_Aint outoffset, MPI_Aint * actual_unpack_bytes,
                          MPIR_Typerep_req * typerep_req, uint32_t flags);
 
-int MPIR_Typerep_size_external32(MPI_Datatype type);
+MPI_Aint MPIR_Typerep_size_external32(MPI_Datatype type);
 int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                                void *outbuf, MPI_Aint * actual_pack_bytes);
 int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outcount,

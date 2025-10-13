@@ -7,7 +7,7 @@
 #include "mpir_typerep.h"
 #include "dataloop.h"
 
-int MPIR_Typerep_size_external32(MPI_Datatype type)
+MPI_Aint MPIR_Typerep_size_external32(MPI_Datatype type)
 {
     return MPIR_Dataloop_size_external32(type);
 }
