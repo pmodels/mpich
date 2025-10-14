@@ -40,6 +40,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.target_lock_queue_entry = NULL;
     req->dev.flattened_type = NULL;
     req->dev.iov_offset        = 0;
+    req->dev.iov = req->dev.iov_static;
     req->dev.pkt_flags             = MPIDI_CH3_PKT_FLAG_NONE;
     req->dev.resp_request_handle = MPI_REQUEST_NULL;
     req->dev.user_buf          = NULL;
@@ -565,6 +566,10 @@ void MPID_Request_free_hook(MPIR_Request *req)
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
         req->dev.request_completed_cb = NULL;
+    }
+
+    if (req->dev.iov != req->dev.iov_static) {
+        MPL_free(req->dev.iov);
     }
 
     MPIDI_CH3_Progress_signal_completion();

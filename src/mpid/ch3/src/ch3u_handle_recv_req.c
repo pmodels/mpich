@@ -615,9 +615,18 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rreq->dev.msg_offset = 0;
     rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
+    MPI_Aint iov_len;
+    MPI_Aint basic_dtp_count = rreq->dev.recv_data_sz / basic_type_size;
+    mpi_errno = MPIR_Typerep_iov_len(basic_dtp_count, basic_dtp, rreq->dev.recv_data_sz, &iov_len, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (iov_len > MPL_IOV_LIMIT) {
+        rreq->dev.iov = MPL_malloc(iov_len * sizeof(struct iovec), MPL_MEM_OTHER);
+    }
+
     MPI_Aint actual_iov_bytes, actual_iov_len;
-    MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
-                     0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
+    MPIR_Typerep_to_iov(rreq->dev.tmpbuf, basic_dtp_count, basic_dtp,
+                     0, rreq->dev.iov, iov_len, rreq->dev.recv_data_sz,
                      &actual_iov_len, &actual_iov_bytes);
     rreq->dev.iov_count = (int) actual_iov_len;
     rreq->dev.iov_offset = 0;
