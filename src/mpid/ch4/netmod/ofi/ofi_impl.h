@@ -440,6 +440,9 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
                                                         int vci, int nic)
 {
     fi_addr_t dest;
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    dest = MPIDI_OFI_AV_ADDR_ROOT(av);
+#else
     if (local_vci == 0 && local_nic == 0) {
         if (vci == 0 && nic == 0) {
             /* root_dest */
@@ -452,6 +455,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
         /* all_dest[*] */
         dest = MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic);
     }
+#endif
 
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
