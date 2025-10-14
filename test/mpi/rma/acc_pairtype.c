@@ -10,7 +10,8 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-#define DATA_SIZE 25
+#define COUNT 10
+#define DATA_SIZE COUNT * 5
 
 typedef struct long_double_int {
     long double a;
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
         orig_buf[i].b = 1;
     }
 
-    MPI_Type_vector(5 /* count */ , 3 /* blocklength */ , 5 /* stride */ , MPI_LONG_DOUBLE_INT,
+    MPI_Type_vector(COUNT /* count */ , 3 /* blocklength */ , 5 /* stride */ , MPI_LONG_DOUBLE_INT,
                     &vector_dtp);
     MPI_Type_commit(&vector_dtp);
 
