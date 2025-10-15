@@ -394,7 +394,8 @@ typedef struct MPIDI_Request {
 
     /* iov and iov_count define the data to be transferred/received.  
        iov_offset points to the current head element in the IOV */
-    struct iovec iov[MPL_IOV_LIMIT];
+    struct iovec iov_static[MPL_IOV_LIMIT];
+    struct iovec *iov;
     int iov_count;
     size_t iov_offset;
 
