@@ -292,6 +292,7 @@ static int MPIR_Type_create_darray(int size, int rank, int ndims,
     /* calculate position in Cartesian grid as MPI would (row-major ordering) */
     MPIR_CHKLMEM_MALLOC(coords, ndims * sizeof(int));
 
+    MPIR_DATATYPE_REPLACE_BUILTIN(oldtype);
     MPIR_Datatype_get_extent_macro(oldtype, orig_extent);
     procs = size;
     tmp_rank = rank;
