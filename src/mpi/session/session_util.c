@@ -36,6 +36,7 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr)
     (*p_session_ptr)->memory_alloc_kinds = NULL;
     (*p_session_ptr)->num_psets = 0;
     (*p_session_ptr)->psets = NULL;
+    (*p_session_ptr)->global_pset_idx = 0;
 
     {
         int thr_err;
