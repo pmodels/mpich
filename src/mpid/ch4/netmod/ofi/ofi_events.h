@@ -92,7 +92,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
                                        MPIDI_OFI_REQUEST(rreq, buf),
                                        MPIDI_OFI_REQUEST(rreq, count),
                                        MPIDI_OFI_REQUEST(rreq, datatype), 0, NULL,
-                                       MPL_GPU_COPY_H2D,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");

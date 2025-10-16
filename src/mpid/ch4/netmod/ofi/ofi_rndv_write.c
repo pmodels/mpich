@@ -177,10 +177,9 @@ static int async_send_copy(MPIX_Async_thing thing, MPIR_Request * sreq, int nic,
 
     MPIR_gpu_req async_req;
     int engine_type = MPIDI_OFI_gpu_get_send_engine_type();
-    int copy_dir = MPL_GPU_COPY_DIRECTION_NONE;
     mpi_errno = MPIR_Ilocalcopy_gpu((void *) buf, count, datatype, offset, attr,
                                     chunk_buf, chunk_sz, MPIR_BYTE_INTERNAL, 0, NULL,
-                                    copy_dir, engine_type, 1, &async_req);
+                                    engine_type, 1, &async_req);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct send_copy *p = MPL_malloc(sizeof(struct send_copy), MPL_MEM_OTHER);
