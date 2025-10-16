@@ -1,0 +1,58 @@
+UPDATE aurora_test 14567b621f e328c50847
+
+    current aurora_test HEAD 9a18c6a041
+
+f40bbc28fc 2025-09-05 test/config: Error out if Fortran requested but cannot be compileda7d796cdcd 2025-09-05 mpl: remove a stray semicolon
+a6f1428499 2025-07-17 Integrate RCCL-backed Allreduce implementation into MPICH
+1fa5522bb2 2025-09-15 coll: fix RCCL header inclusion
+0760c2bb99 2025-09-15 test: enable CCL coll tests when configured
+9010a10cac 2025-09-16 mpl: fix HIP device list query
+533a40b7a3 2025-09-16 maint: update gitignore for generate files
+c435714acc 2025-09-18 config: Check for Python 3 if user sets PYTHON
+b6ba58906f 2025-09-20 yaksa: Fix code generation and build reproducibility
+7c6a93d286 2025-09-20 maint/release.pl: Remove leftover __pycache__ directories
+6a2c4d69ea 2024-06-30 ch4/hcoll: fix call hcoll_do_progress
+90e2b4896d 2025-09-19 hcoll: Use internal datatypes
+7020d78889 2025-09-19 hcoll: Fix progress hook
+a6c6d31aa5 2025-09-19 ch4/ucx: Move hcoll comm creation to post commit hook
+15e74b4c7e 2025-09-22 hcoll: Fix initialization
+e440132bfd 2025-09-22 hcoll: Reorder checks for early return in initialization
+0b4a7a8403 2025-09-17 binding/c: Fix missing const in some APIs
+b1efa8be1b 2025-09-22 coll/nccl: replace `MPIR_ERR_NONE` with `0`
+5be70540f7 2025-09-22 autogen: Quote path variables that may contain contains spaces
+c121b6ada0 2025-09-23 modules: Update libfabric
+ca34ad3050 2025-09-23 ch4/shm: add leading slash in posix shm name
+ace6846c79 2025-09-23 autogen: patch libtool for nagfor
+4659f5ee45 2025-09-24 binding/abi: update upstream mpi_abi.h
+f5127bd2c4 2025-09-22 maint: Creating README.md for Github
+03563492cb 2025-08-20 romio: Remove MPIO_ functions and objects from tests
+20409e8bd1 2025-09-08 doc: Remove Managing_Commits_In_Trunk_and_Release_Branches.md
+e613ca2f2f 2025-09-30 romio: gpfs build fix
+a0e5d99c73 2025-10-02 binding/abi: update upstream mpi_abi.h
+35c8100560 2025-10-02 ch4/coll: Fix typo in multi-leader comm construction
+5bc3332686 2025-09-25 datatype: add `MPI_LONG_DOUBLE` as a valid match
+e675d6d870 2025-09-29 datatype: calculate built-in size via its internal datatype
+353239dcc1 2025-09-30 datatype: re-add C types to `MPIR_Type_match_size_impl`
+e69f06ce8d 2025-10-08 configure: remove alwaysinline from --enable-fast=all
+5dfb5d2ba9 2025-10-08 configure: add options for subconfigures to mpich configure
+e31b6a2849 2025-10-10 mpl/ze: remove assertion global_dev < known_ze_device_count
+bbc1cccfd8 2025-10-07 ch4/ofi: ensure send chunks in order in ofi_pipeline
+95b725bca2 2025-10-08 ch4/ofi: remove extra vci critical section in pipeline
+390c054f04 2025-10-07 ch4/ofi: minor cleanup in ofi_pipeline
+ca31660b56 2025-10-10 ch4/ofi: use utlist macros for pipeline chunk list
+e0bb61ca34 2025-10-13 doc: fix description for CVAR category CH4_UCX
+90988c4d8f 2025-10-13 ch4/ofi: fix vci with scalable endpoints
+d58d6bad23 2025-10-14 test/rma: enhance acc_pairtype test
+806bfbfcfe 2025-10-14 ch3: allocate entire iov array in accumulate
+7913ddd789 2025-10-13 typerep: only calculate size with `typeptr` when not a built-in
+0fa4f163f8 2025-10-13 typerep: add context to `size` in `MPIR_Typerep_size_external32`
+580db04d39 2025-10-13 typerep: change return type to `MPI_Aint`
+f9f2230208 2025-10-15 datatype: add missing MPIR_DATATYPE_REPLACE_BUILTIN
+cfbcedb1ce 2025-10-15 datatype/dataloop: replace builtin types in commit
+e2dc0b69a4 2025-04-04 ch4: add MPIR_CVAR_CH4_PROGRESS_THROTTLE
+4843d03d63 2025-04-11 ch4: add MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT
+f44f3a2716 2025-04-04 coll: update alltoallv_intra_pairwise_sendrecv_replace
+5f80ce3b1a 2025-04-05 coll: perfect pairing by flipping bits in alltoallv
+556f50ffc2 2025-10-15 coll: consolidate alltoall[vw]_intra_pairwise_sendrecv_replace
+5ec6add8b2 2025-08-18 misc: localcopy_gpu determing best fast copy threshold
+a27c05512d 2025-08-18 misc: remove dir param from MPIR_{Il,L}ocalcopy_gpu
