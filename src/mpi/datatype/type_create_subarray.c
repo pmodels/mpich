@@ -17,9 +17,7 @@ static int MPIR_Type_create_subarray(int ndims, const MPI_Aint array_of_sizes[],
     /* these variables are from the original version in ROMIO */
     MPI_Aint size, extent, disps[3];
 
-    /* TODO: CHECK THE ERROR RETURNS FROM ALL THESE!!! */
-
-    /* TODO: GRAB EXTENT WITH A MACRO OR SOMETHING FASTER */
+    MPIR_DATATYPE_REPLACE_BUILTIN(oldtype);
     MPIR_Datatype_get_extent_macro(oldtype, extent);
 
     if (order == MPI_ORDER_FORTRAN) {
