@@ -1228,6 +1228,8 @@ sub check_result {
         }
         elsif (/^srun: error: .*: signal: Communication connection failure/) {
             # skip
+        elsif (/psm3_sockets_tcp_recvhdrq_progress: First PKT received is not PSM pkt./) {
+            # skip
         }
         else {
             $stray_output++;
