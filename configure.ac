@@ -3500,7 +3500,7 @@ len=`expr $ac_cv_sizeof_int \* 8`
 AC_DEFINE_UNQUOTED([MPIR_2INT_INTERNAL],          [MPIR_2INT$len], [Internal type for MPI_2INT])
 AC_DEFINE_UNQUOTED([MPIR_SIGNED_CHAR_INTERNAL],   [MPIR_INT8], [Internal type for MPI_SIGNED_CHAR])
 len=`expr $ac_cv_sizeof_long_long \* 8`
-AC_DEFINE_UNQUOTED([MPIR_UNSIGNED_LONG_LONG_INTERNAL],[MPIR_INT$len], [Internal type for MPI_UNSIGNED_LONG_LONG])
+AC_DEFINE_UNQUOTED([MPIR_UNSIGNED_LONG_LONG_INTERNAL],[MPIR_UINT$len], [Internal type for MPI_UNSIGNED_LONG_LONG])
 if test "$enable_f77" = "yes" ; then
     len=`expr $pac_cv_f77_sizeof_character \* 8`
     AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPIR_INT$len], [Internal type for MPI_CHARACTER])
