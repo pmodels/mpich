@@ -260,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
     MPI_Aint rem, curr_len;
-    int num_reads;
+    MPI_Aint num_reads;
 
     /* set lmt counter */
     MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_u.lmt_cntr) = 0;
@@ -363,7 +363,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request *
                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     int mpi_errno = MPI_SUCCESS;
-    int num_iov = MPIDIG_get_recv_iov_count(rreq);
+    MPI_Aint num_iov = MPIDIG_get_recv_iov_count(rreq);
     if (num_iov > 1 && in_data_sz / num_iov < MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         /* noncontig data with mostly tiny segments */
         mpi_errno = do_long_am_recv_unpack(in_data_sz, rreq, lmt_msg);
