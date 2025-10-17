@@ -181,12 +181,14 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
 void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
-    int i, p;
+    int i, p, rlen;
     if (!mynod) {
         ptr = dest;
+        rlen = len;
         for (i = 0; i < array->namect; i++) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         /* chop off that last comma */
         dest[strlen(dest) - 1] = '\0';
@@ -197,12 +199,14 @@ void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
-    int i, p;
+    int i, p, rlen;
     if (!mynod) {
         ptr = dest;
+        rlen = len;
         for (i = (array->namect - 1); i >= 0; i--) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         dest[strlen(dest) - 1] = '\0';
     }
@@ -212,18 +216,21 @@ void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
-    int i, p;
+    int i, p, rlen;
     if (!mynod) {
         ptr = dest;
+        rlen = len;
         /* evens */
         for (i = (array->namect - 1); i >= 0; i -= 2) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         /* odds */
         for (i = (array->namect - 2); i > 0; i -= 2) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         dest[strlen(dest) - 1] = '\0';
     }
@@ -233,16 +240,19 @@ void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char 
 void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
-    int i, p;
+    int i, p, rlen;
     if (!mynod) {
         ptr = dest;
+        rlen = len;
         for (i = (array->namect / 2); i < array->namect; i++) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         for (i = 0; i < (array->namect / 2); i++) {
-            p = snprintf(ptr, len, "%s,", array->names[i]);
+            p = snprintf(ptr, rlen, "%s,", array->names[i]);
             ptr += p;
+            rlen = rlen - p;
         }
         dest[strlen(dest) - 1] = '\0';
     }
