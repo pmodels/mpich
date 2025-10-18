@@ -203,6 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDIG_REQUEST(sreq, u.ipc.peer_rank) = rank;
     MPIDIG_REQUEST(sreq, u.ipc.peer_req) = NULL;
     MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = NULL;
+    MPIDI_REQUEST_SET_LOCAL(sreq, 1, NULL);
     MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr->ipc_type;
 
     /* Allocate am_hdr and fill ipc_hdr */
