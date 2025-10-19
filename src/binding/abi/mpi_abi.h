@@ -90,8 +90,8 @@ typedef struct MPI_ABI_Info* MPI_Info;
 typedef struct MPI_ABI_Errhandler* MPI_Errhandler;
 #define MPI_ERRHANDLER_NULL            ((MPI_Errhandler)0x00000140)
 #define MPI_ERRORS_ARE_FATAL           ((MPI_Errhandler)0x00000141)
-#define MPI_ERRORS_RETURN              ((MPI_Errhandler)0x00000142)
-#define MPI_ERRORS_ABORT               ((MPI_Errhandler)0x00000143)
+#define MPI_ERRORS_ABORT               ((MPI_Errhandler)0x00000142)
+#define MPI_ERRORS_RETURN              ((MPI_Errhandler)0x00000143)
 
 typedef struct MPI_ABI_Request* MPI_Request;
 #define MPI_REQUEST_NULL               ((MPI_Request)0x00000180)
@@ -360,9 +360,9 @@ enum {
     MPI_COMBINER_STRUCT                = 110,
     MPI_COMBINER_SUBARRAY              = 111,
     MPI_COMBINER_DARRAY                = 112,
-    MPI_COMBINER_F90_INTEGER           = 113,
-    MPI_COMBINER_F90_REAL              = 114,
-    MPI_COMBINER_F90_COMPLEX           = 115,
+    MPI_COMBINER_F90_REAL              = 113,
+    MPI_COMBINER_F90_COMPLEX           = 114,
+    MPI_COMBINER_F90_INTEGER           = 115,
     MPI_COMBINER_RESIZED               = 116,
     MPI_COMBINER_VALUE_INDEX           = 117,
 
@@ -404,9 +404,9 @@ enum {
     MPI_WIN_SEPARATE                   = 322,
 
     /* File Positioning */
-    MPI_SEEK_SET                       = 401,
-    MPI_SEEK_CUR                       = 402,
-    MPI_SEEK_END                       = 403
+    MPI_SEEK_CUR                       = 401,
+    MPI_SEEK_END                       = 402,
+    MPI_SEEK_SET                       = 403
 };
 
 /* File Operation Constants */
@@ -422,9 +422,9 @@ enum {
     MPI_IO                             = 502,
     MPI_HOST                           = 503, /* deprecated: MPI-4.1 */
     MPI_WTIME_IS_GLOBAL                = 504,
-    MPI_UNIVERSE_SIZE                  = 505,
-    MPI_APPNUM                         = 506,
-    MPI_LASTUSEDCODE                   = 507,
+    MPI_APPNUM                         = 505,
+    MPI_LASTUSEDCODE                   = 506,
+    MPI_UNIVERSE_SIZE                  = 507,
 
     /* Window */
     MPI_WIN_BASE                       = 601,
