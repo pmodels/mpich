@@ -197,8 +197,8 @@ static int pipeline_send_poll(MPIX_Async_thing thing)
         }
 
         /* alloc a chunk */
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
-                                           &chunk_buf);
+        MPIDU_genq_private_pool_force_alloc_cell(MPIDI_OFI_global.
+                                                 per_vci[p->vci_local].pipeline_pool, &chunk_buf);
         if (!chunk_buf) {
             goto fn_exit;
         }
@@ -371,8 +371,8 @@ static int pipeline_recv_poll(MPIX_Async_thing thing)
         }
 
         /* alloc a chunk */
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[p->vci_local].pipeline_pool,
-                                           &chunk_buf);
+        MPIDU_genq_private_pool_force_alloc_cell(MPIDI_OFI_global.
+                                                 per_vci[p->vci_local].pipeline_pool, &chunk_buf);
         if (!chunk_buf) {
             goto fn_exit;
         }
