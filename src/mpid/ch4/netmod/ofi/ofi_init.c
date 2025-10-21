@@ -475,6 +475,16 @@ cvars:
       description : >-
         Specifies the number of chunk buffers for pipeline data transfer.
 
+    - name        : MPIR_CVAR_CH4_OFI_PIPELINE_MAX_CHUNKS
+      category    : CH4_OFI
+      type        : int
+      default     : 1024
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the max number of chunk buffers to be reserved for pipeline data transfer.
+
     - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
       category    : CH4_OFI
       type        : enum
@@ -1509,7 +1519,7 @@ int MPIDI_OFI_init_per_vci(int vci)
     /* Create chunk buffer pool (for pipeline etc.) */
     mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ,
                                                MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
-                                               MPIR_CVAR_CH4_OFI_PIPELINE_NUM_CHUNKS,
+                                               MPIR_CVAR_CH4_OFI_PIPELINE_MAX_CHUNKS,
                                                host_alloc_registered,
                                                host_free_registered,
                                                &MPIDI_OFI_global.per_vci[vci].pipeline_pool);
