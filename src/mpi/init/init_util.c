@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#include "mpichinfo.h"
 
 /* The following routines provide a callback facility for modules that need
    some code called on exit.  This method allows us to avoid forcing
@@ -98,6 +99,7 @@ static void print_setting(const char *label, const char *value)
 
 void MPII_dump_debug_summary(void)
 {
+    printf("MPICH %s - %s - %s\n", MPICH_VERSION, MPICH_COMMIT_HASH, MPICH_VERSION_DATE);
 #ifdef HAVE_ERROR_CHECKING
     print_setting("error checking", "enabled");
 #else
