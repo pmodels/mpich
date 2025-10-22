@@ -183,7 +183,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
         if (made_progress) {
             no_progress_counter = 0;
         } else if (no_progress_counter > MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT) {
-            no_progress_counter = 0;
             usleep(1);
         } else {
             no_progress_counter++;
