@@ -19,6 +19,17 @@ categories :
       description : A category for CH4 OFI netmod variables
 
 cvars:
+    - name        : MPIR_CVAR_OFI_CQ_WAIT_YIELD
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Set FI_WAIT_YIELD attribute when creating CQs (requires
+        provider support).
+
     - name        : MPIR_CVAR_OFI_SKIP_IPV6
       category    : DEVELOPER
       type        : boolean
@@ -1252,6 +1263,9 @@ static int create_cq(struct fid_domain *domain, struct fid_cq **p_cq)
     struct fi_cq_attr cq_attr;
     memset(&cq_attr, 0, sizeof(cq_attr));
     cq_attr.format = FI_CQ_FORMAT_TAGGED;
+    if (MPIR_CVAR_OFI_CQ_WAIT_YIELD) {
+        cq_attr.wait_obj = FI_WAIT_YIELD;
+    }
     MPIDI_OFI_CALL(fi_cq_open(domain, &cq_attr, p_cq, NULL), opencq);
 
   fn_exit:
