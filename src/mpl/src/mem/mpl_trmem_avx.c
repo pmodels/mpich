@@ -16,9 +16,6 @@
 #include <string.h>
 #include <immintrin.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-
 void MPL_Memcpy_stream_avx(void *dest, const void *src, size_t n)
 {
     /* Anything less than 256 bytes is not worth optimizing */
@@ -144,8 +141,6 @@ void MPL_Memcpy_stream_dev_avx(void *dest, const void *src, size_t n)
     }
     _mm_sfence();
 }
-
-#pragma GCC diagnostic pop
 
 #else
 
