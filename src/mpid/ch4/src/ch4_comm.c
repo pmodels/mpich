@@ -450,6 +450,7 @@ static int prepare_local_lpids(MPIR_Comm * local_comm, MPIR_Lpid ** lpids_out,
     int mpi_errno = MPI_SUCCESS;
 
     int local_size = local_comm->local_size;
+    int num_worlds = 0;
 
     MPIR_Lpid *lpids;
     lpids = MPL_malloc(local_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
@@ -461,7 +462,6 @@ static int prepare_local_lpids(MPIR_Comm * local_comm, MPIR_Lpid ** lpids_out,
      */
 #define MAX_WORLDS 100
     static int world_hash[MAX_WORLDS] = { 0 };
-    int num_worlds = 0;
 
     for (int i = 0; i < local_size; i++) {
         lpids[i] = MPIR_Group_rank_to_lpid(local_comm->local_group, i);
