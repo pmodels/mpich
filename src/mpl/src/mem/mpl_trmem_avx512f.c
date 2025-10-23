@@ -16,9 +16,6 @@
 #include <string.h>
 #include <immintrin.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-
 void MPL_Memcpy_stream_avx512f(void *dest, const void *src, size_t n)
 {
     /* Anything less than 256 bytes is not worth optimizing */
@@ -118,7 +115,7 @@ void MPL_Memcpy_stream_dev_avx512f(void *dest, const void *src, size_t n)
     }
 
     while (n >= 64) {
-        _mm512_stream_si512((void *) d, _mm512_stream_load_si512((void const *) s));
+        _mm512_stream_si512((void *) d, _mm512_stream_load_si512((void *) s));
         d += 64;
         s += 64;
         n -= 64;
@@ -158,8 +155,6 @@ void MPL_Memcpy_stream_dev_avx512f(void *dest, const void *src, size_t n)
     }
     _mm_sfence();
 }
-
-#pragma GCC diagnostic pop
 
 #else
 
