@@ -59,7 +59,7 @@ static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
 static inline int MPII_yaksa_free_info(yaksa_info_t info)
 {
     int rc = 0;
-    if (info != MPII_yaksa_info_nogpu) {
+    if (info && info != MPII_yaksa_info_nogpu) {
         rc = yaksa_info_free(info);
     }
     return rc;
