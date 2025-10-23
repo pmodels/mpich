@@ -29,6 +29,31 @@ int run(const char *arg)
         MPI_Comm_size(comm, &size);
 
         for (root = 0; root < size; root++) {
+            /* contig test */
+            for (count = 1; count < 65000; count = count * 2) {
+                vecin = (double *) malloc(count * sizeof(double));
+                vecout = (double *) malloc(count * size * sizeof(double));
+                for (i = 0; i < count; i++) {
+                    vecin[i] = i;
+                }
+
+                MPI_Gather(vecin, count, MPI_DOUBLE, vecout, count, MPI_DOUBLE, root, comm);
+
+                if (rank == root) {
+                    for (i = 0; i < count; i++) {
+                        if (vecout[i] != i) {
+                            errs++;
+                            if (errs < 10) {
+                                fprintf(stderr, "contig test: vecout[%d]=%d\n", i, (int) vecout[i]);
+                            }
+                        }
+                    }
+                }
+                free(vecin);
+                free(vecout);
+            }
+
+            /* noncontig test */
             for (count = 1; count < 65000; count = count * 2) {
                 n = 12;
                 stride = 10;
@@ -50,7 +75,8 @@ int run(const char *arg)
                         if (vecout[i] != i) {
                             errs++;
                             if (errs < 10) {
-                                fprintf(stderr, "vecout[%d]=%d\n", i, (int) vecout[i]);
+                                fprintf(stderr, "noncontig test: vecout[%d]=%d\n", i,
+                                        (int) vecout[i]);
                             }
                         }
                     }
