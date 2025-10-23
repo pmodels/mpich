@@ -137,7 +137,7 @@ int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(remote_lpid);
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(av, vci, vci);
 
-    ucs_status_ptr_t status = UCS_OK;
+    ucs_status_ptr_t status = (ucs_status_ptr_t) UCS_OK;
 
     /* send */
     bool send_done = false;
