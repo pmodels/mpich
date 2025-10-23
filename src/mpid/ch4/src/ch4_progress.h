@@ -8,6 +8,8 @@
 
 #include "ch4_impl.h"
 #include "stream_workq.h"
+/* FIXME: configure check sched_yield */
+#include <sched.h>
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -47,6 +49,29 @@ cvars:
         When MPIR_CVAR_CH4_PROGRESS_THROTTLE=true, MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT is the number
         of consecutive polls that must fail to make progress before calling usleep(1) in the progress. A higher value
         makes the usleep less frequent, and a lower value makes the usleep more frequent.
+
+    - name        : MPIR_CVAR_CH4_PROGRESS_THROTTLE_MIN_PROCS
+      category    : CH4
+      type        : int
+      default     : 4
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        When MPIR_CVAR_CH4_PROGRESS_THROTTLE=true, do throttle when minimum of MPIR_CVAR_CH4_PROGRESS_THROTTLE_MIN_PROCS
+        processes enter the throttle state (no_progress_counter reach MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT).
+
+    - name        : MPIR_CVAR_CH4_PROGRESS_THROTTLE_NUM_PAUSES
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Set the number of PAUSE (or thread_yield) for each progress throttle. If set to 0 (default), it uses
+        usleep(1) for throttle.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -163,9 +188,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
         for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
             MPIDI_PROGRESS(vci, true);
         }
-        if (!made_progress && MPIR_CVAR_CH4_PROGRESS_THROTTLE) {
-            usleep(1);
-        }
     } else {
         for (int i = 0; i < state->vci_count; i++) {
             int vci = state->vci[i];
@@ -177,14 +199,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     }
 #endif
 
+#ifndef MPIDI_progress_throttle_start
+#define MPIDI_progress_throttle_start() 1
+#define MPIDI_progress_throttle_stop() do { } while (0)
+#endif
   fn_exit:
     MPIR_FUNC_EXIT;
     if (MPIR_CVAR_CH4_PROGRESS_THROTTLE) {
         if (made_progress) {
             no_progress_counter = 0;
+            MPIDI_progress_throttle_stop();
         } else if (no_progress_counter > MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT) {
-            no_progress_counter = 0;
-            usleep(1);
+            int throttle_id = MPIDI_progress_throttle_start();
+            if (throttle_id > MPIR_CVAR_CH4_PROGRESS_THROTTLE_MIN_PROCS) {
+                if (MPIR_CVAR_CH4_PROGRESS_THROTTLE_NUM_PAUSES == 0) {
+                    usleep(1);
+                } else {
+                    for (int i = 0; i < MPIR_CVAR_CH4_PROGRESS_THROTTLE_NUM_PAUSES; i++) {
+                        sched_yield();
+                    }
+                }
+            }
         } else {
             no_progress_counter++;
         }
