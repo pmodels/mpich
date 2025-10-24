@@ -277,22 +277,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    bool need_init_builtin_comms = true;
-#ifdef ENABLE_LOCAL_SESSION_INIT
-    need_init_builtin_comms = is_world_model;
-#endif
-    if (need_init_builtin_comms) {
-        if (!MPIR_Process.comm_world) {
-            mpi_errno = MPIR_init_comm_world();
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        if (!MPIR_Process.comm_self) {
-            mpi_errno = MPIR_init_comm_self();
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
-
     /**********************************************************************/
     /* Section 5: contains post device initialization code.  Anything
      * that we could not do before the device was initialized can be
@@ -310,6 +294,22 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * this after the device initialization.  */
     mpi_errno = MPIR_Datatype_init_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
+
+    bool need_init_builtin_comms = true;
+#ifdef ENABLE_LOCAL_SESSION_INIT
+    need_init_builtin_comms = is_world_model;
+#endif
+    if (need_init_builtin_comms) {
+        if (!MPIR_Process.comm_world) {
+            mpi_errno = MPIR_init_comm_world();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        if (!MPIR_Process.comm_self) {
+            mpi_errno = MPIR_init_comm_self();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
 
     MPII_post_init_memory_tracing();
     MPII_init_dbg_logging();
