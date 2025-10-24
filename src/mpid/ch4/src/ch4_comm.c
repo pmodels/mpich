@@ -118,6 +118,17 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     /* --END ERROR HANDLING-- */
 }
 
+/* number of bits to represent 0..number inclusive */
+static int get_num_bits(int number)
+{
+    int p = 0;
+    while (number > 0) {
+        number >>= 1;
+        p++;
+    }
+    return p;
+}
+
 int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
@@ -136,6 +147,14 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* initialize next_am_tag for internal messaging */
+    int total_tag_bits = get_num_bits(MPIR_Process.attrs.tag_ub);
+    int rank_tag_bits = get_num_bits(comm->local_size - 1);
+    MPIDI_COMM(comm, next_am_tag) = 0;
+    MPIDI_COMM(comm, next_am_tag_bits) = total_tag_bits - rank_tag_bits;
+    /* make sure we have sufficient number of am_tag bits (8 is arbitrary) */
+    MPIR_Assert(MPIDI_COMM(comm, next_am_tag_bits) > 8);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_comm_commit_pre_hook(comm);
