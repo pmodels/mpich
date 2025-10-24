@@ -474,8 +474,10 @@ int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     if (*completed) {
-        rc = MPII_yaksa_free_info(typerep_req.info);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        if (typerep_req.info) {
+            rc = MPII_yaksa_free_info(typerep_req.info);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        }
     }
   fn_exit:
     MPIR_FUNC_EXIT;
