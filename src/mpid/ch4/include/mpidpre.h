@@ -569,6 +569,9 @@ typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the AM(MPIDIG) apis */
         MPIDIG_comm_t am;
+        /* for netmod internal send/recv (e.g. am_tag_{send,recv}, pipeline, rndv_{read,write} */
+        int next_am_tag;
+        int next_am_tag_bits;
 
         /* Used by the netmod direct apis */
         union {
