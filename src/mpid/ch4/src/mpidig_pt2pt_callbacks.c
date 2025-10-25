@@ -80,7 +80,7 @@ int MPIDIG_tag_recv_complete(MPIR_Request * rreq, MPI_Status * status)
 
 static int handle_unexp_cmpl(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, in_use;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *match_req = NULL;
 
     MPIR_FUNC_ENTER;
@@ -114,8 +114,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
-            MPIR_Object_release_ref(rreq, &in_use);
-            /* MPID_Request_complete(rreq); */
+            MPIDI_CH4_REQUEST_FREE(rreq);
             MPID_Request_complete(match_req);
         } else {
             /* no match_req, just complete rreq */

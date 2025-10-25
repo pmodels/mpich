@@ -1096,18 +1096,7 @@ static inline int wait_progress_engine(void)
 
 static inline int poke_progress_engine(void)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Progress_state progress_state;
-
-    MPID_Progress_start(&progress_state);
-    mpi_errno = MPID_Progress_poke();
-    MPIR_ERR_CHECK(mpi_errno);
-    MPID_Progress_end(&progress_state);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPID_Progress_poke();
 }
 
 static inline void MPIDI_CH3_ExtPkt_Accum_get_stream(int pkt_flags,
