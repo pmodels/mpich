@@ -50,6 +50,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__probe;
     }
     MPIDI_OFI_REQUEST(rreq, context_id) = comm->recvcontext_id + context_offset;
+    MPIDI_OFI_REQUEST(rreq, vci_local) = vci_dst;
+    MPIDI_OFI_REQUEST(rreq, vci_remote) = vci_src;
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 

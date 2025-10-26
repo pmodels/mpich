@@ -80,9 +80,6 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    /* save context_offset for MPIDI_OFI_send_ack */
-    int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
-
     /* save and free up the OFI request */
     void *buf = MPIDI_OFI_REQUEST(rreq, buf);
     MPI_Aint count = MPIDI_OFI_REQUEST(rreq, count);
@@ -110,9 +107,10 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
     MPIR_Comm *comm = rreq->comm;
     int src_rank = rreq->status.MPI_SOURCE;
-    int tag = rreq->status.MPI_TAG;
-    int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, src_rank, comm->rank, tag);
-    int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, src_rank, comm->rank, tag);
+    /* load these field before we overwrite them */
+    int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+    int vci_remote = MPIDI_OFI_REQUEST(rreq, vci_remote);
+    int vci_local = MPIDI_OFI_REQUEST(rreq, vci_local);
 
     MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(rreq);
     p->buf = buf;
@@ -121,8 +119,8 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     p->need_pack = MPIDI_OFI_rndv_need_pack(dt_contig, &attr);
     p->attr = attr;
     p->data_sz = data_sz;
-    p->vci_local = vci_dst;
-    p->vci_remote = vci_src;
+    p->vci_local = vci_local;
+    p->vci_remote = vci_remote;
     p->av = MPIDIU_comm_rank_to_av(comm, src_rank);
 
     MPI_Aint remote_data_sz = MPIDI_OFI_idata_get_size(wc->data);
@@ -152,13 +150,13 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
     switch (get_rndv_protocol(send_need_pack, recv_need_pack, p->data_sz)) {
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline:
-            mpi_errno = MPIDI_OFI_pipeline_recv(rreq, hdr.am_tag, vci_src, vci_dst);
+            mpi_errno = MPIDI_OFI_pipeline_recv(rreq, hdr.am_tag, vci_remote, vci_local);
             break;
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read:
-            mpi_errno = MPIDI_OFI_rndvread_recv(rreq, hdr.am_tag, vci_src, vci_dst);
+            mpi_errno = MPIDI_OFI_rndvread_recv(rreq, hdr.am_tag, vci_remote, vci_local);
             break;
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write:
-            mpi_errno = MPIDI_OFI_rndvwrite_recv(rreq, hdr.am_tag, vci_src, vci_dst);
+            mpi_errno = MPIDI_OFI_rndvwrite_recv(rreq, hdr.am_tag, vci_remote, vci_local);
             break;
         case MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct:
             /* fall through */
@@ -166,12 +164,12 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
             mpi_errno = MPIDI_NM_am_tag_recv(rreq->status.MPI_SOURCE, rreq->comm,
                                              -1, hdr.am_tag,
                                              (void *) p->buf, p->count, p->datatype,
-                                             vci_src, vci_dst, rreq);
+                                             vci_remote, vci_local, rreq);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
     /* send cts */
-    mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
+    mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr), vci_local, vci_remote);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -186,9 +184,6 @@ int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    /* save context_offset for MPIDI_OFI_send_ack */
-    int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
 
     MPI_Aint data_sz;
     data_sz = MPIDI_OFI_idata_get_size(wc->data);
@@ -205,7 +200,11 @@ int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         hdr.flag = MPIDI_OFI_CTS_FLAG__PROBE;
         hdr.data_sz = 0;
 
-        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
+        int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+        int vci_remote = MPIDI_OFI_REQUEST(rreq, vci_remote);
+        int vci_local = MPIDI_OFI_REQUEST(rreq, vci_local);
+
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr), vci_local, vci_remote);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
