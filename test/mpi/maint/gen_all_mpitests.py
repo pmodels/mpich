@@ -102,7 +102,7 @@ def main():
             testdir, name = m.group(1,2)
             if not testdir in ldadd_incs:
                 ldadd_incs[testdir] = []
-            ldadd = "$(LDADD) $(run_mpitests_obj)"
+            ldadd = "$(run_mpitests_obj) $(LDADD)"
             if a + '-LDADD' in alltests_attrs:
                 ldadd += ' ' + alltests_attrs[a + '-LDADD']
             ldadd_incs[testdir].append("%s_LDADD = %s" % (name, ldadd))
