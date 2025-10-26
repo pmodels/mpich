@@ -190,6 +190,7 @@ static int async_send_copy(MPIX_Async_thing thing, MPIR_Request * sreq, int nic,
     p->offset = offset;
     p->nic = nic;
     p->disp = disp;
+    p->is_done = false;
 
     MPIR_Async_thing_spawn(thing, send_copy_poll, p, NULL);
 
