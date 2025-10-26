@@ -377,7 +377,8 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
                        MPI_Aint target_count, MPI_Datatype target_datatype,
                        MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
-int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_sz);
+int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_sz,
+                       int vci_local, int vci_remote);
 
 /* Common Utility functions used by the
  * C and C++ components
