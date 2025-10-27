@@ -1178,17 +1178,6 @@ cvars:
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
 
-    - name        : MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Maximum message size for which SMP-aware reduce is used.  A
-        value of '0' uses SMP-aware reduce for all message sizes.
-
     - name        : MPIR_CVAR_REDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1658,7 +1647,7 @@ cvars:
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
-    - name        : MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
+    - name        : MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
       category    : COLLECTIVE
       type        : int
       default     : 524288
