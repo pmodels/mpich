@@ -622,6 +622,12 @@ int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_s
     uint64_t match_bits = MPIDI_OFI_init_sendtag(context_id, 0, tag);
     match_bits |= MPIDI_OFI_ACK_SEND;
 
+    if (vci_remote == -1) {
+        /* MPI_ANY_SOURCE */
+        vci_remote = MPIDI_get_vci(SRC_VCI_FROM_RECVER, rreq->comm, rreq->status.MPI_SOURCE,
+                                   rreq->comm->rank, rreq->status.MPI_TAG);
+    }
+
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, src_rank);

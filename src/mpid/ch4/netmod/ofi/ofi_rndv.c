@@ -111,6 +111,11 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
     int vci_remote = MPIDI_OFI_REQUEST(rreq, vci_remote);
     int vci_local = MPIDI_OFI_REQUEST(rreq, vci_local);
+    if (vci_remote == -1) {
+        /* MPI_ANY_SOURCE */
+        vci_remote = MPIDI_get_vci(SRC_VCI_FROM_RECVER, rreq->comm, rreq->status.MPI_SOURCE,
+                                   rreq->comm->rank, rreq->status.MPI_TAG);
+    }
 
     MPIDI_OFI_rndv_common_t *p = &MPIDI_OFI_AMREQ_COMMON(rreq);
     p->buf = buf;
