@@ -291,11 +291,22 @@ struct gcn_state {
     uint64_t tag;
     MPIR_Comm *comm_ptr;
     MPIR_Comm *comm_ptr_inter;
-    MPIR_Sched_t s;
+    MPIR_Request *req_ptr;
     MPIR_Comm *new_comm;
-    MPIR_Comm_kind_t gcn_cid_kind;
+    bool is_inter_comm;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
     struct gcn_state *next;
+    enum {
+        MPIR_GCN__COPYMASK,
+        MPIR_GCN__ALLREDUCE,
+        MPIR_GCN__INTERCOMM_SENDRECV,
+        MPIR_GCN__INTERCOMM_BCAST,
+    } stage;
+    union {
+        MPIR_Request *allreduce_request;
+        MPIR_Request *sendrecv_reqs[2];
+        MPIR_Request *bcast_request;
+    } u;
 };
 struct gcn_state *next_gcn = NULL;
 
@@ -613,55 +624,12 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
 
 
-static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
-
-    mpi_errno = MPIR_Comm_commit(st->new_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_fail:
-    return mpi_errno;
-
-}
-
-static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
-
-    if (st->gcn_cid_kind == MPIR_COMM_KIND__INTERCOMM) {
-        if (st->comm_ptr_inter->rank == 0) {
-            mpi_errno =
-                MPIR_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno =
-                MPIR_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(st->s);
-        }
-
-        mpi_errno = MPIR_Ibcast_intra_sched_auto(st->ctx1, 1,
-                                                 MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
-                                                 st->s);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(st->s);
-    }
-
-    mpi_errno = MPIR_Sched_cb(&sched_cb_commit_comm, st, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_fail:
-    return mpi_errno;
-}
+static int async_gcn_poll(MPIX_Async_thing thing);
+static int gcn_copy_mask(struct gcn_state *st);
+static int gcn_allocate_cid(struct gcn_state *st);
+static int gcn_allreduce(struct gcn_state *st);
+static int gcn_intercomm_sendrecv(struct gcn_state *st);
+static int gcn_intercomm_bcast(struct gcn_state *st);
 
 /* Try to find a valid context id.
  *
@@ -676,16 +644,14 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
  * execute and insert wrong order of entries to the nonblocking schedule and
  * cause errors.
  */
-static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
+static int gcn_allocate_cid(struct gcn_state *st)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state, *tmp;
-    int newctxid;
 
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
     if (st->own_eager_mask) {
-        newctxid = find_and_allocate_context_id(st->local_mask);
+        int newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
             *st->ctx0 = newctxid;
         if (st->ctx1)
@@ -694,7 +660,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
         st->own_eager_mask = 0;
         eager_in_use = 0;
     } else if (st->own_mask) {
-        newctxid = find_and_allocate_context_id(st->local_mask);
+        int newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
             *st->ctx0 = newctxid;
         if (st->ctx1)
@@ -707,6 +673,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             if (next_gcn == st) {
                 next_gcn = st->next;
             } else {
+                struct gcn_state *tmp;
                 for (tmp = next_gcn; tmp->next != st; tmp = tmp->next);
                 tmp->next = st->next;
             }
@@ -749,31 +716,9 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             /* do not own mask, try again */
             if (st->first_iter == 1) {
                 st->first_iter = 0;
-                /* Set the Tag for the idup-operations. We have two problems here:
-                 *  1.) The tag should not be used by another (blocking) context_id allocation.
-                 *      Therefore, we set tag_up as lower bound for the operation. tag_ub is used by
-                 *      most of the other blocking operations, but tag is always >0, so this
-                 *      should be fine.
-                 *  2.) We need ordering between multiple idup operations on the same communicator.
-                 *       The problem here is that the iallreduce operations of the first iteration
-                 *       are not necessarily completed in the same order as they are issued, also on the
-                 *       same communicator. To avoid deadlocks, we cannot add the elements to the
-                 *       list bevfore the first iallreduce is completed. The "tag" is created for the
-                 *       scheduling - by calling  MPIR_Sched_next_tag(comm_ptr, &tag) - and the same
-                 *       for a idup operation on all processes. So we use it here. */
-                /* FIXME I'm not sure if there can be an overflows for this tag */
-                st->tag = (uint64_t) tag + MPIR_Process.attrs.tag_ub;
                 add_gcn_to_list(st);
             }
-            mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(st->s);
         }
-    } else {
-        /* Successfully allocated a context id */
-        mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(st->s);
     }
 
   fn_exit:
@@ -784,6 +729,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
         if (next_gcn == st) {
             next_gcn = st->next;
         } else {
+            struct gcn_state *tmp;
             for (tmp = next_gcn; tmp && tmp->next != st; tmp = tmp->next);
             tmp->next = st->next;
         }
@@ -796,10 +742,9 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     goto fn_exit;
 }
 
-static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
+static int gcn_copy_mask(struct gcn_state *st)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
 
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
@@ -834,24 +779,146 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
             st->local_mask[ALL_OWN_MASK_FLAG] = 1;
         }
     }
+    return mpi_errno;
+}
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+static int gcn_allreduce(struct gcn_state *st)
+{
+    return MPIR_Iallreduce_impl(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK + 1,
+                                MPIR_UINT32_T_INTERNAL, MPI_BAND, st->comm_ptr,
+                                &st->u.allreduce_request);
+}
 
-    mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
-                                                 MPIR_MAX_CONTEXT_MASK + 1,
-                                                 MPIR_UINT32_T_INTERNAL, MPI_BAND,
-                                                 st->comm_ptr, st->s);
+static int gcn_intercomm_sendrecv(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIC_Irecv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                           0, st->tag, st->comm_ptr_inter, &st->u.sendrecv_reqs[0]);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(st->s);
-
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_allocate_cid, st, st->s);
+    mpi_errno = MPIC_Isend(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                           0, st->tag, st->comm_ptr_inter, &st->u.sendrecv_reqs[1], 0);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(st->s);
 
   fn_fail:
     return mpi_errno;
 }
 
+static int gcn_intercomm_bcast(struct gcn_state *st)
+{
+    return MPIR_Ibcast_impl(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
+                            &st->u.bcast_request);
+}
+
+static int gcn_complete(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Comm_commit(st->new_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Grequest_complete_impl(st->req_ptr);
+
+    MPL_free(st);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+static int async_gcn_poll(MPIX_Async_thing thing)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = MPIR_Async_thing_get_state(thing);
+
+    switch (st->stage) {
+        case MPIR_GCN__COPYMASK:
+            st->error = gcn_copy_mask(st);
+            MPIR_Assert(st->error == MPI_SUCCESS);
+
+            st->error = gcn_allreduce(st);
+            MPIR_Assert(st->error == MPI_SUCCESS);
+
+            st->stage = MPIR_GCN__ALLREDUCE;
+            return MPIX_ASYNC_NOPROGRESS;
+
+        case MPIR_GCN__ALLREDUCE:
+            if (!MPIR_Request_is_complete(st->u.allreduce_request)) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.allreduce_request);
+
+                mpi_errno = gcn_allocate_cid(st);
+                MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
+                if (*st->ctx0 == 0) {
+                    /* TODO: error check */
+                    /* retry */
+                    st->stage = MPIR_GCN__COPYMASK;
+                    return MPIX_ASYNC_NOPROGRESS;
+                } else if (!st->is_inter_comm) {
+                    /* done */
+                    gcn_complete(st);
+                    return MPIX_ASYNC_DONE;
+                } else if (st->comm_ptr_inter->rank == 0) {
+                    st->error = gcn_intercomm_sendrecv(st);
+                    MPIR_Assert(st->error == MPI_SUCCESS);
+
+                    st->stage = MPIR_GCN__INTERCOMM_SENDRECV;
+                    return MPIX_ASYNC_NOPROGRESS;
+                } else {
+                    st->error = gcn_intercomm_bcast(st);
+                    MPIR_Assert(st->error == MPI_SUCCESS);
+
+                    st->stage = MPIR_GCN__INTERCOMM_BCAST;
+                    return MPIX_ASYNC_NOPROGRESS;
+                }
+            }
+
+        case MPIR_GCN__INTERCOMM_SENDRECV:
+            if (!MPIR_Request_is_complete(st->u.sendrecv_reqs[0]) ||
+                !MPIR_Request_is_complete(st->u.sendrecv_reqs[1])) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.sendrecv_reqs[0]);
+                MPIR_Request_free(st->u.sendrecv_reqs[1]);
+
+                st->error = gcn_intercomm_bcast(st);
+                MPIR_Assert(st->error == MPI_SUCCESS);
+
+                st->stage = MPIR_GCN__INTERCOMM_BCAST;
+                return MPIX_ASYNC_NOPROGRESS;
+            }
+
+        case MPIR_GCN__INTERCOMM_BCAST:
+            if (!MPIR_Request_is_complete(st->u.bcast_request)) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.bcast_request);
+
+                gcn_complete(st);
+                return MPIX_ASYNC_DONE;
+            }
+    }
+
+    MPIR_Assert(0);
+    return MPIX_ASYNC_NOPROGRESS;
+}
+
+static int query_fn(void *extra_state, MPI_Status * status)
+{
+    /* status points to request->status */
+    return status->MPI_ERROR;
+}
+
+static int free_fn(void *extra_state)
+{
+    return MPI_SUCCESS;
+}
+
+static int cancel_fn(void *extra_state, int complete)
+{
+    return MPI_SUCCESS;
+}
 
 /** Allocating a new context ID collectively over the given communicator in a
  * nonblocking way.
@@ -889,31 +956,40 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
  * To avoid deadlock or livelock, it uses the same eager protocol as
  * multi-threaded MPIR_Get_contextid_sparse_group.
  */
-static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
-                                  int *ctx0, int *ctx1,
-                                  MPIR_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
+static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
+                         int *ctx0, int *ctx1, bool is_inter_comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = NULL;
     MPIR_CHKPMEM_DECL();
 
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, NULL, req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct gcn_state *st = NULL;
     MPIR_CHKPMEM_MALLOC(st, sizeof(struct gcn_state), MPL_MEM_COMM);
+
+    int tag;
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    MPIR_ERR_CHECK(mpi_errno);
+    st->tag = tag;
+
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
-    if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if (!is_inter_comm) {
         st->comm_ptr = comm_ptr;
         st->comm_ptr_inter = NULL;
     } else {
         st->comm_ptr = comm_ptr->local_comm;
         st->comm_ptr_inter = comm_ptr;
     }
-    st->s = s;
-    st->gcn_cid_kind = gcn_cid_kind;
+    st->req_ptr = *req;
+    st->is_inter_comm = is_inter_comm;
     *(st->ctx0) = 0;
     st->own_eager_mask = 0;
     st->first_iter = 1;
     st->new_comm = newcomm;
     st->own_mask = 0;
+    st->stage = MPIR_GCN__COPYMASK;
     if (eager_nelem < 0) {
         /* Ensure that at least one word of deadlock-free context IDs is
          * always set aside for the base protocol */
@@ -921,61 +997,37 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                     MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
         eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
     }
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
+
+    mpi_errno = MPIR_Async_things_add(async_gcn_poll, st, NULL);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(s);
 
   fn_exit:
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
-    MPIR_Sched_t s;
-
-
     MPIR_FUNC_ENTER;
 
-    /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Sched_set_tag(s, tag);
-
-    /* add some entries to it */
-    mpi_errno =
-        sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
-                               s, MPIR_COMM_KIND__INTRACOMM);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
+    mpi_errno = async_get_cid(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
+                              false, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
-    MPIR_Sched_t s;
-
     MPIR_FUNC_ENTER;
 
     /* do as much local setup as possible */
@@ -984,23 +1036,8 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Sched_set_tag(s, tag);
-
-    /* add some entries to it */
-
-    /* first get a context ID over the local comm */
-    mpi_errno =
-        sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
-                               s, MPIR_COMM_KIND__INTERCOMM);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
+    mpi_errno = async_get_cid(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
+                              true, req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
