@@ -158,6 +158,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, buf) = buf;
     MPIDI_OFI_REQUEST(rreq, count) = count;
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
+    MPIDI_OFI_REQUEST(rreq, vci_local) = vci_local;
+    MPIDI_OFI_REQUEST(rreq, vci_remote) = vci_remote;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     if (rreq->comm == NULL) {
@@ -314,10 +316,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
     } else {
         rreq = message;
+        int vci_remote = MPIDI_OFI_REQUEST(rreq, vci_remote);
+        int vci_local = MPIDI_OFI_REQUEST(rreq, vci_local);
+        MPIR_Assert(vci_local == vci);
         av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
         /* FIXME: need get vci_src in the request */
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
-                                       message->status.MPI_TAG, rreq->comm, 0, av, 0, vci,
+                                       message->status.MPI_TAG, rreq->comm,
+                                       0, av, vci_remote, vci_local,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
         MPIDI_OFI_REQUEST(rreq, am_req) = NULL;
     }

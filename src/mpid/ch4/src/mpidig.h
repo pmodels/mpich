@@ -138,10 +138,11 @@ extern MPIDIG_global_t MPIDIG_global;
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm)
 {
-    int tag = comm->next_am_tag++;
-    if (comm->next_am_tag >= MPIR_Process.attrs.tag_ub) {
-        comm->next_am_tag = 0;
-    }
+    /* NOTE: am_tag need embed its rank to ensure unique matching */
+
+    int next_am_tag = MPIDI_COMM(comm, next_am_tag)++;
+    int next_am_tag_bits = MPIDI_COMM(comm, next_am_tag_bits);
+    int tag = (comm->rank << next_am_tag_bits) | (next_am_tag & ((1 << next_am_tag_bits) - 1));
     return tag;
 }
 

@@ -301,6 +301,8 @@ typedef struct {
     /* for recv request */
     MPL_atomic_int_t peek_status;
     int context_id;
+    int vci_local;
+    int vci_remote;
 
     enum MPIDI_OFI_req_kind kind;
     union {

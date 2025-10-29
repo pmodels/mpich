@@ -174,7 +174,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     /* If synchronous, send ack */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
         int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
-        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0);
+        int vci_remote = MPIDI_OFI_REQUEST(rreq, vci_remote);
+        int vci_local = MPIDI_OFI_REQUEST(rreq, vci_local);
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0, vci_local, vci_remote);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
