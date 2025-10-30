@@ -14,8 +14,8 @@
 cvars:
     - name        : MPIR_CVAR_CH4_CMA_ENABLE
       category    : CH4
-      type        : int
-      default     : 0
+      type        : boolean
+      default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -26,7 +26,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_IPC_CMA_P2P_THRESHOLD
       category    : CH4
       type        : int
-      default     : 16384
+      default     : 8192
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
