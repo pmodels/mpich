@@ -12,7 +12,9 @@
 #define MPIR_LSUM(a,b) ((a)+(b))
 
 static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len);
+#ifndef MPIR_FLOAT16_CTYPE
 static void f16_sum(void *invec, void *inoutvec, MPI_Aint len);
+#endif
 
 void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
@@ -492,6 +494,7 @@ static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len)
 
 /* IEEE half-precision 16-bit float - software arithemetics
  */
+#ifndef MPIR_FLOAT16_CTYPE
 static float f16_load(void *p)
 {
     uint16_t a = *(uint16_t *) p;
@@ -525,3 +528,4 @@ static void f16_sum(void *invec, void *inoutvec, MPI_Aint len)
         f16_store((char *) inoutvec + i, a + b);
     }
 }
+#endif

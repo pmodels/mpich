@@ -16,8 +16,10 @@
 #include <string.h>
 #include <immintrin.h>
 
+#ifndef __clang__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+#endif
 
 void MPL_Memcpy_stream_avx(void *dest, const void *src, size_t n)
 {
@@ -145,7 +147,9 @@ void MPL_Memcpy_stream_dev_avx(void *dest, const void *src, size_t n)
     _mm_sfence();
 }
 
+#ifndef __clang__
 #pragma GCC diagnostic pop
+#endif
 
 #else
 
