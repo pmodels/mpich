@@ -18,7 +18,7 @@
 
 /* init header proxy send to server upon connection */
 struct HYD_pmcd_init_hdr {
-    char signature[4]; /* HYD\0 */ ;
+    char signature[4];          /* HYD\0 */
     int pgid;
     int proxy_id;
 };
