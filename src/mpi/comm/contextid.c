@@ -287,7 +287,7 @@ struct gcn_state {
     int *ctx1;
     int own_mask;
     int own_eager_mask;
-    int first_iter;
+    int iter;
     uint64_t tag;
     MPIR_Comm *comm_ptr;
     MPIR_Comm *comm_ptr_inter;
@@ -362,7 +362,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
     MPIR_FUNC_ENTER;
 
-    st.first_iter = 1;
+    st.iter = 0;
     st.comm_ptr = comm_ptr;
     st.tag = tag;
     st.own_mask = 0;
@@ -402,7 +402,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
          * processes have called this routine.  On the first iteration, use the
          * "eager" allocation protocol.
          */
-        else if (st.first_iter) {
+        else if (st.iter == 0) {
             memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st.own_eager_mask = 0;
             /* Attempt to reserve the eager mask segment */
@@ -581,8 +581,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             }
             /* --END ERROR HANDLING-- */
         }
-        if (st.first_iter == 1) {
-            st.first_iter = 0;
+        if (st.iter == 0) {
             /* to avoid deadlocks, the element is not added to the list before the first iteration */
             if (!ignore_id && *context_id == 0) {
                 MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
@@ -590,6 +589,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                 MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
             }
         }
+        st.iter++;
     }
 
   fn_exit:
@@ -607,7 +607,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         mask_in_use = 0;
     }
     /*If in list, remove it */
-    if (!st.first_iter && !ignore_id) {
+    if (st.iter > 0 && !ignore_id) {
         if (next_gcn == &st) {
             next_gcn = st.next;
         } else {
@@ -714,18 +714,18 @@ static int gcn_allocate_cid(struct gcn_state *st)
             /* --END ERROR HANDLING-- */
         } else {
             /* do not own mask, try again */
-            if (st->first_iter == 1) {
-                st->first_iter = 0;
+            if (st->iter == 0) {
                 add_gcn_to_list(st);
             }
         }
     }
+    st->iter++;
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     /* make sure that the pending allocations are scheduled */
-    if (!st->first_iter) {
+    if (st->iter > 0) {
         if (next_gcn == st) {
             next_gcn = st->next;
         } else {
@@ -746,9 +746,7 @@ static int gcn_copy_mask(struct gcn_state *st)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-    if (st->first_iter) {
+    if (st->iter == 0) {
         memset(st->local_mask, 0, (MPIR_MAX_CONTEXT_MASK + 1) * sizeof(int));
         st->own_eager_mask = 0;
 
@@ -900,8 +898,8 @@ static int async_gcn_poll(MPIX_Async_thing thing)
             }
     }
 
-    MPIR_Assert(0);
-    return MPIX_ASYNC_NOPROGRESS;
+  fn_fail:
+    return mpi_errno;
 }
 
 static int query_fn(void *extra_state, MPI_Status * status)
@@ -986,7 +984,7 @@ static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     st->is_inter_comm = is_inter_comm;
     *(st->ctx0) = 0;
     st->own_eager_mask = 0;
-    st->first_iter = 1;
+    st->iter = 0;
     st->new_comm = newcomm;
     st->own_mask = 0;
     st->stage = MPIR_GCN__COPYMASK;
