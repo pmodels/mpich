@@ -45,12 +45,14 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
             continue;
 
         /* 2 references, 1 for MPID-layer and 1 for MPIR-layer */
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[0]);
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, 0, 0);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
         /* FIXME: only NM? */
         mpi_errno = MPIDI_NM_am_isend(dest, comm, MPIDIG_COMM_ABORT, &am_hdr,
                                       sizeof(am_hdr), NULL, 0, MPI_INT, 0, 0, sreq);
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[0]);
         if (mpi_errno)
             continue;
         else
