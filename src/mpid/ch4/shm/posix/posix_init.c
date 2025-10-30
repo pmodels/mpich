@@ -246,10 +246,13 @@ void MPIDI_POSIX_delay_shm_mutex_destroy(int rank, MPL_proc_mutex_t * shm_mutex_
 
 static int calc_head_shm_size(int local_size)
 {
+    /* All the fields in the shm headers are atomic variables and only unused
+     * to coordinate the shm allocation at init-time. We ignore the false sharing
+     * issue and do not separate them into individual cache lines deliberatedly.
+     * We do want the entire structure to round up to page size, so the shm slab
+     * after it is page-aligned. */
     int head_shm_size = sizeof(MPIDI_POSIX_shm_t) + local_size * sizeof(int);
-    if (head_shm_size % MPL_CACHELINE_SIZE) {
-        head_shm_size += MPL_CACHELINE_SIZE - head_shm_size % MPL_CACHELINE_SIZE;
-    }
+    head_shm_size = MPL_ROUND_UP_ALIGN(head_shm_size, sysconf(_SC_PAGESIZE));
     return head_shm_size;
 }
 
@@ -268,7 +271,6 @@ int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
 
         int eager_shm_size = MPIDI_POSIX_eager_shm_size(MPIR_Process.local_size);
         int head_shm_size = calc_head_shm_size(MPIR_Process.local_size);
-        head_shm_size = MPL_ROUND_UP_ALIGN(head_shm_size, sysconf(_SC_PAGESIZE));
         int slab_size = head_shm_size + eager_shm_size;
         MPIDI_POSIX_global.shm_slab_size = slab_size;
 
