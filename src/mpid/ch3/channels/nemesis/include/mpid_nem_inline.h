@@ -84,12 +84,15 @@ cvars:
 
 /* evaluates to TRUE if it is safe to block on recv operations in the progress
  * loop, FALSE otherwise */
+extern int MPII_async_things_pending;
+
 #define MPID_nem_safe_to_block_recv()           \
     (!MPID_nem_local_lmt_pending &&             \
      !MPIDI_CH3I_shm_active_send &&             \
      !MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq) &&       \
      !MPIDU_Sched_are_pending() &&              \
      MPIR_Coll_safe_to_block() &&  \
+     !MPII_async_things_pending && \
      !MPIDI_RMA_Win_active_list_head)
 
 static inline int
