@@ -1,0 +1,31 @@
+UPDATE aurora_test e328c50847 bc1c14cc31
+
+    current aurora_test HEAD 2ebcd50d44
+
+7c342c566b 2025-10-10 ch4/shm: Set default iqueue cell size to 8KB0c252e3dd8 2025-10-08 romio/gpfs: fix build with MPI ABI enabled.
+55afac7b29 2025-07-23 group: set default value of session ptr to NULL
+2c8da2fd96 2025-07-23 session/pset: manage psets per session
+c9f161f9a8 2025-07-23 session/pset: allow providing more than default psets per session
+f5452ce597 2025-07-21 mpir_pmix: enable pmix psets using pmix event notifications
+328cf59682 2025-07-15 config: fix MPI_UNSIGNED_LONG_LONG
+8316a0c966 2025-07-16 datatype: fix MPIR_Typerep_reduce_is_supported
+ed1428a3ab 2025-10-17 test/runtests: suppress a psm3 warning
+934a5ec679 2025-10-20 test: fix runtests typo
+3aa62f2dd2 2025-10-17 ch3/tcp: remove an outdated assertion
+223d7765fb 2025-10-21 genq/private_pool: add min_num_blocks
+981474a566 2025-10-21 ch4/ofi: use force in allocating pipeline cells
+78adeb8d44 2025-10-21 ch4/ofi: set MPIR_CVAR_CH4_OFI_PIPELINE_MAX_CHUNKS
+52f476d3d5 2025-10-17 romio: test: fix bad snprintf arguments
+a4e155b2eb 2025-10-19 binding/abi: update upstream mpi_abi.h
+11a888e4b6 2025-10-22 ch4/shm: fix SHM page alignment
+2b1de013f2 2025-10-25 test: use MTest_Init in run_mpitests.c
+92024c67a2 2025-10-24 coll: cleanup a couple outdated CVARs
+fec6d12012 2025-10-23 test/coll: add contig tests to gather.c
+5910f5ab12 2025-10-23 typerep/yaksa: do not free NULL info
+f641b95630 2025-10-24 init: init builtin comms after tag_ub etc.
+08a13e3ae7 2025-10-24 ch4/comm: embed rank into am_tag
+b9a6a156ac 2025-10-25 ch4/ofi: fix rndv write that not initializing is_done
+de4581703a 2025-10-26 ch4/ofi: add vci parameters to MPIDI_OFI_send_ack
+93bc8d6a74 2025-10-27 ch4/ofi: consider MPI_ANY_SOURCE in MPIDI_OFI_send_ack
+b9a7f22f2f 2025-10-28 ch4/ofi: use the vcis stored in rreq for imrecv
+f945aa73d5 2025-10-22 ch4/shm: enable CMA by default
