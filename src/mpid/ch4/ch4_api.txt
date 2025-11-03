@@ -91,7 +91,7 @@ Non Native API:
   dynamic_recv : int
       NM : tag, buf-2, size, timeout
   dynamic_sendrecv : int
-      NM : remote_lpid, tag, send_buf, send_size, recv_buf, recv_size, timeout
+      NM : remote_lpid, peer_comm, tag, send_buf, send_size, recv_buf, recv_size, timeout
   mpi_comm_commit_pre_hook : int
       NM : comm
      SHM : comm
@@ -490,6 +490,7 @@ PARAM:
     origin_count: MPI_Aint
     origin_datatype: MPI_Datatype
     partner: MPIR_Request *
+    peer_comm: MPIR_Comm *
     port_name: const char *
     port_name-2: char *
     ptr: void *

@@ -120,7 +120,12 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     return mpi_errno;
 }
 
-int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
+static uint64_t get_dynamic_match_bits(int context_id, int tag)
+{
+    return MPIDI_UCX_DYNPROC_MASK | ((uint64_t) context_id << MPIDI_UCX_TAG_BITS) | tag;
+}
+
+int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, MPIR_Comm * peer_comm, int tag,
                                const void *send_buf, int send_size, void *recv_buf, int recv_size,
                                int timeout)
 {
@@ -132,7 +137,6 @@ int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
 #endif
 
-    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     uint64_t tag_mask = 0xffffffffffffffff;     /* for recv */
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(remote_lpid);
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(av, vci, vci);
@@ -142,6 +146,8 @@ int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     /* send */
     bool send_done = false;
     if (send_size > 0) {
+        uint64_t ucx_tag = get_dynamic_match_bits(peer_comm->context_id, tag);
+
         ucp_request_param_t send_param = {
             .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
             .cb.send = dynamic_send_cb,
@@ -163,6 +169,8 @@ int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     /* recv */
     bool recv_done = false;
     if (recv_size > 0) {
+        uint64_t ucx_tag = get_dynamic_match_bits(peer_comm->recvcontext_id, tag);
+
         ucp_request_param_t recv_param = {
             .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
             .cb.recv = dynamic_recv_cb,
@@ -198,6 +206,8 @@ int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
                 break;
             }
         }
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
