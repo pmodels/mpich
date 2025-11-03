@@ -17,7 +17,7 @@
 
 static int cancel_dynamic_request(MPIDI_OFI_dynamic_process_request_t * dynamic_req, bool is_send);
 static uint64_t get_dynamic_connection_match_bits(int tag);
-static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag);
+static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int context_id, int tag);
 
 int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
@@ -111,7 +111,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     goto fn_exit;
 }
 
-int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
+int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, MPIR_Comm * peer_comm, int tag,
                                const void *send_buf, int send_size, void *recv_buf, int recv_size,
                                int timeout)
 {
@@ -132,7 +132,7 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
     send_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
     if (send_size > 0) {
-        uint64_t match_bits = get_dynamic_match_bits(MPIR_Process.rank, tag);
+        uint64_t match_bits = get_dynamic_match_bits(MPIR_Process.rank, peer_comm->context_id, tag);
         MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                       send_buf, send_size, NULL,
                                       remote_addr, match_bits, (void *) &send_req.context),
@@ -147,7 +147,7 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
 
     if (recv_size > 0) {
         uint64_t mask_bits = 0;
-        uint64_t match_bits = get_dynamic_match_bits(remote_lpid, tag);
+        uint64_t match_bits = get_dynamic_match_bits(remote_lpid, peer_comm->recvcontext_id, tag);
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf, recv_size, NULL,
                                       remote_addr, match_bits, mask_bits, &recv_req.context),
@@ -182,6 +182,8 @@ int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
                 break;
             }
         }
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
@@ -295,12 +297,13 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
 /* -- internal static routines */
 
 /* NOTE: used by MPIDI_OFI_dynamic_sendrecv, exact source match */
-static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag)
+static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int context_id, int tag)
 {
     /* normalize tag within (MPIDI_OFI_TAG_BITS - 1) bits, reserve 1 bit for dynamic connect/accept */
     tag &= (1 << (MPIDI_OFI_TAG_BITS - 1)) - 1;
 
-    uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+    uint64_t match_bits;
+    match_bits = context_id;
 
     if (!MPIDI_OFI_ENABLE_DATA) {
         /* FI_DIRECTED_RECV is not enabled, we have to embed source in the match_bits */
@@ -314,8 +317,14 @@ static uint64_t get_dynamic_match_bits(MPIR_Lpid lpid, int tag)
         HASH_VALUE(upid, sz, upid_hash);
         upid_hash &= (1 << MPIDI_OFI_SOURCE_BITS) - 1;
 
-        match_bits |= (upid_hash << MPIDI_OFI_TAG_BITS);
+        match_bits <<= MPIDI_OFI_SOURCE_BITS;
+        match_bits |= upid_hash;
     }
+
+    match_bits <<= MPIDI_OFI_TAG_BITS;
+    match_bits |= tag;
+
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     return match_bits;
 }

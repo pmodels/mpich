@@ -374,6 +374,11 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
         peer_comm->local_size = 1;
         peer_comm->rank = 0;
         peer_comm->local_group = NULL;
+        /* We have not exchanged context_id yet, set them to 0. This is okay since
+         * the dynamic exchange is established between a pair of addresses (lpids) that
+         * no other communications can happen yet. */
+        peer_comm->context_id = 0;
+        peer_comm->recvcontext_id = 0;
 
         MPIR_Group_create_stride(1, 0, NULL, remote_lpid, 1, &peer_comm->remote_group);
 
