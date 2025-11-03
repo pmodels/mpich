@@ -32,7 +32,7 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
     am_hdr.rreq_ptr = rreq;
     if (can_do_tag(rreq)) {
-        am_hdr.tag = MPIDIG_get_next_am_tag(rreq->comm);
+        am_hdr.tag = MPIDIG_get_next_am_tag(rreq->comm, source_rank);
         CH4_CALL(am_tag_recv(source_rank, rreq->comm,
                              MPIDIG_TAG_RECV_COMPLETE, am_hdr.tag,
                              MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),

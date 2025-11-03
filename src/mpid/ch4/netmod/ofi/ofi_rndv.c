@@ -137,7 +137,7 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         p->remote_data_sz = -1;
     }
 
-    int am_tag = MPIDIG_get_next_am_tag(comm);
+    int am_tag = MPIDIG_get_next_am_tag(comm, src_rank);
     p->match_bits = MPIDI_OFI_init_sendtag(comm->recvcontext_id, 0, am_tag) | MPIDI_OFI_AM_SEND;
 
     bool send_need_pack = MPIDI_OFI_is_tag_rndv_pack(wc->tag);

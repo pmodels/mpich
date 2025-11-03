@@ -136,13 +136,17 @@ typedef struct MPIDIG_global_t {
 } MPIDIG_global_t;
 extern MPIDIG_global_t MPIDIG_global;
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm, int src_rank)
 {
-    /* NOTE: am_tag need embed its rank to ensure unique matching */
-
     int next_am_tag = MPIDI_COMM(comm, next_am_tag)++;
     int next_am_tag_bits = MPIDI_COMM(comm, next_am_tag_bits);
-    int tag = (comm->rank << next_am_tag_bits) | (next_am_tag & ((1 << next_am_tag_bits) - 1));
+    int tag = (next_am_tag & ((1 << next_am_tag_bits) - 1));
+
+    /* the tag need be unique between a pair of ranks per message. Use the high bit to
+     * mark the the message direction to avoid the mismatch in the case of sendrecv */
+    if (src_rank < comm->rank) {
+        tag |= (1 << next_am_tag_bits);
+    }
     return tag;
 }
 
