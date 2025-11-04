@@ -21,6 +21,17 @@ typedef struct {
 } ld_complex;
 #endif
 
+static bool check_type_is_available(MPI_Datatype datatype)
+{
+    int size;
+    int err = MPI_Type_size(datatype, &size);
+    if (err || size == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 /*
  * This test looks at the handling of logical and for types that are not
  * integers or are not required integers (e.g., long long).  MPICH allows
@@ -37,6 +48,9 @@ int main(int argc, char *argv[])
     d_complex dinbuf[3], doutbuf[3];
 
     MTest_Init(&argc, &argv);
+
+    /* set error return for checking optional types */
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     comm = MPI_COMM_WORLD;
 
@@ -121,7 +135,7 @@ int main(int argc, char *argv[])
     }
 #ifndef USE_STRICT_MPI
     /* For some reason, complex is not allowed for sum and prod */
-    if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
+    if (!check_type_is_available(MPI_DOUBLE_COMPLEX)) {
         int dc;
 #ifdef HAVE_LONG_DOUBLE
         ld_complex ldinbuf[3], ldoutbuf[3];
