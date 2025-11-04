@@ -131,6 +131,17 @@ static mpi_names_t mpi_names[] = {
     {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
 
+static bool check_type_is_available(MPI_Datatype datatype)
+{
+    int size;
+    int err = MPI_Type_size(datatype, &size);
+    if (err || size == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 int main(int argc, char **argv)
 {
     char name[MPI_MAX_OBJECT_NAME];
@@ -138,6 +149,9 @@ int main(int argc, char **argv)
     int errs = 0;
 
     MTest_Init(&argc, &argv);
+
+    /* set error return for checking optional types */
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /* Sample some datatypes */
     /* See 8.4, "Naming Objects" in MPI-2.  The default name is the same
@@ -168,7 +182,7 @@ int main(int argc, char **argv)
 #endif
         }
         /* If this optional type is not supported, skip it */
-        if (inOptional && mpi_names[i].dtype == MPI_DATATYPE_NULL)
+        if (inOptional && !check_type_is_available(mpi_names[i].dtype))
             continue;
         if (mpi_names[i].dtype == MPI_DATATYPE_NULL) {
             /* Report an error because all of the standard types
