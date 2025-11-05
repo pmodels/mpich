@@ -3075,7 +3075,7 @@ if test "$enable_f77" = yes ; then
     fi
 
     # Include a defined value for Fint is int
-    if test "$pac_cv_f77_sizeof_integer" == "$ac_cv_sizeof_int" ; then
+    if test "$pac_cv_f77_sizeof_integer" = "$ac_cv_sizeof_int" ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
     else
         AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
