@@ -14,13 +14,13 @@ int MPIDI_CMA_init_local(void)
 
     bool cma_happy = false;
 
-    /* check ptrace permission */
+    /* check ptrace permission. ref: https://www.kernel.org/doc/Documentation/security/Yama.txt */
     int fd = open("/proc/sys/kernel/yama/ptrace_scope", O_RDONLY);
     char buffer = '0';
     if (fd >= 0) {
         int ret = read(fd, &buffer, 1);
         if (ret >= 0) {
-            if (buffer != '0') {
+            if (buffer == '0') {
                 cma_happy = true;
             }
             close(fd);
