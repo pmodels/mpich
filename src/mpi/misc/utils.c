@@ -21,7 +21,7 @@ cvars:
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D
       category    : CH4
       type        : int
-      default     : 1048576
+      default     : 4096
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -32,7 +32,7 @@ cvars:
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H
       category    : CH4
       type        : int
-      default     : 1024
+      default     : 256
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
