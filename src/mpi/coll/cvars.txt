@@ -174,17 +174,6 @@ cvars:
         broadcast based on a scatter followed by a ring allgather algorithm.
         (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_SHORT_MSG_SIZE)
 
-    - name        : MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Maximum message size for which SMP-aware broadcast is used.  A
-        value of '0' uses SMP-aware broadcast for all message sizes.
-
     - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1360,17 +1349,6 @@ cvars:
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
-
-    - name        : MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Maximum message size for which SMP-aware allreduce is used.  A
-        value of '0' uses SMP-aware allreduce for all message sizes.
 
     - name        : MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
