@@ -1,0 +1,4 @@
+#
+# UCC errors
+#
+**ucc_collop_failed:Error in UCC collective operation: Fallback not possible.
