@@ -6,7 +6,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     if test "${with_ucc}" = "no" ; then
         pac_have_ucc=no;
     else
-        PAC_CHECK_HEADER_LIB_OPTIONAL(ucc,[ucc/api/ucc.h],[ucc],[ucc_init_version])
+        PAC_CHECK_HEADER_LIB_EXPLICIT(ucc,[ucc/api/ucc.h],[ucc],[ucc_init_version])
         if test "$pac_have_ucc" = "yes" ; then
             AC_DEFINE([HAVE_UCC],1,[Define if building ucc])
         fi
@@ -16,6 +16,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
+AM_COND_IF([BUILD_UCC], [
 # Check if selected device supports the UCC wrappers
 AS_IF([test -n "${DEVICE}"],
 [
@@ -63,6 +64,7 @@ AS_IF([test -n "${GPU_SUPPORT}" -a "x${GPU_SUPPORT}" = "xCUDA" && test -n "${wit
         AC_MSG_WARN([ucc_info not found. Cannot check for CUDA awareness of UCC.])
     ])
 ])
+])dnl end AM_COND_IF(BUILD_UCC)
 
 ])dnl end _BODY
 
