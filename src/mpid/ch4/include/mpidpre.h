@@ -14,6 +14,13 @@
 #include "hcoll/api/hcoll_dte.h"
 #endif
 
+#ifdef HAVE_UCC
+#include "../../common/ucc/mpid_ucc_pre.h"
+#else
+/* Define `MPIDI_DEV_COMM_DECL_UCC` as "nothing" */
+#define MPIDI_DEV_COMM_DECL_UCC
+#endif
+
 #include "mpid_thread.h"
 #include "mpid_sched.h"
 #include "netmodpre.h"
@@ -618,7 +625,8 @@ typedef struct {
 
 #define MPID_DEV_REQUEST_DECL    MPIDI_Devreq_t  dev;
 #define MPID_DEV_WIN_DECL        MPIDI_Devwin_t  dev;
-#define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;
+#define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;	\
+    MPIDI_DEV_COMM_DECL_UCC;
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
 #define MPID_DEV_STREAM_DECL     MPIDI_Devstream_t dev;
 
