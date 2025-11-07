@@ -703,21 +703,10 @@ AC_ARG_ENABLE([yield],
      AS_IF([test "x$enable_yield" = "xunavail"],
               [AC_MSG_ERROR([Yield method $enableval is not available on this platform.])])
     ],
-    [# none specified by user; make a guess based on os
-     AS_CASE([$host],
-        [*-*-darwin*],
-            [# In Lion, sched_yield worked but none of the other options had any effect
-             # In Mojave x86_64, sched_yield may yield to threads in thread_wait_barrier which is slow to yield back,
-             #    usleep(0) seems work well.
-             AS_IF([test "x$ac_cv_func_usleep" = "xyes"], [enable_yield=usleep],
-                   [enable_yield=nothing])],
-        [*-*-linux*],
-            [# sched_yield() has been broken in linux since 2.6.23, and no good alternative exists.
-             enable_yield=nothing],
-        [# default: just use sched_yield() or yield()
+    [# none specified by user; use sched_yield if available.
          AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
                [test "x$ac_cv_func_yield" = "xyes"], [enable_yield=yield],
-               [enable_yield=nothing])])
+               [enable_yield=nothing])
     ]
 )
 
