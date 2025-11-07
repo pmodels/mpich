@@ -1,7 +1,8 @@
 ===============================================================================
                                Changes in 5.0
 ===============================================================================
-# MPI_VERSION/MPI_SUBVERSION updated to 5 and 0.
+# MPI_VERSION/MPI_SUBVERSION updated to 5 and 0. MPICH now supports the MPI 5.0
+  standard.
 
 # MPIR_CHKLMEM_ and MPIR_CHKPMEM_ macros are simplified, removing non-essential
   argument such as type case and custom error messages.
@@ -68,6 +69,10 @@
 # Internal collective interface replaces the last parameter "MPIR_Errflag_t errflag"
   with "int coll_attr". Use MPIR_COLL_ATTR_SYNC for internal collective usages
   where completing the synchronization is more critical than batch latency.
+
+# CH4:OFI added native RNDV feature. Set MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD to
+  enable the RNDV path. The RNDV path supports the following protocols:
+  pipeline, read, write, and direct.
 
 
 ===============================================================================
