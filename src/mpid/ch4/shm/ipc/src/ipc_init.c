@@ -25,6 +25,11 @@ int MPIDI_IPC_init_local(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+    mpi_errno = MPIDI_CMA_init_local();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     mpi_errno = MPIDI_GPU_init_local();
     MPIR_ERR_CHECK(mpi_errno);
