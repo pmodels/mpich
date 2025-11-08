@@ -70,6 +70,8 @@ conditions:
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     total_msg_size(thresh): MPIR_Csel_total_msg_size
 
+    need_buffer_swap: MPIR_Csel_need_buffer_swap
+
     # conditional conditions - only call the condition function under macro_guard
     MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
 
@@ -77,6 +79,7 @@ conditions:
 general:
     MPIR_Coll_auto
     MPIR_Coll_nb
+    MPIR_Coll_buffer_swap
 
 # ----
 barrier-intra:

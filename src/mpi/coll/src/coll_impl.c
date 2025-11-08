@@ -541,3 +541,111 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
   fn_fail:
     goto fn_exit;
 }
+
+/* swap buffers and continue. This works around when collective algorithms can't work
+ * with hybrid memory or inefficient in working with hybrid memory.
+ */
+static void *host_alloc(MPI_Aint count, MPI_Datatype datatype)
+{
+    return MPIR_alloc_buffer(count, datatype);
+}
+
+static void *host_swap(const void *buf, MPI_Aint count, MPI_Datatype datatype)
+{
+    void *host_buf = host_alloc(count, datatype);
+    MPIR_Localcopy(buf, count, datatype, host_buf, count, datatype);
+    return host_buf;
+}
+
+#define DO_BUFFER_SWAP(sendbuf, recvbuf) \
+    do { \
+        orig_recvbuf = (recvbuf); \
+        if ((sendbuf) == MPI_IN_PLACE) { \
+            (recvbuf) = host_swap((recvbuf), recvcount, recvtype); \
+        } else { \
+            (sendbuf) = host_swap((sendbuf), sendcount, sendtype); \
+            (recvbuf) = host_alloc(recvcount, recvtype); \
+        } \
+        host_recvbuf = (recvbuf); \
+    } while (0)
+
+int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *orig_recvbuf = NULL;
+    void *host_recvbuf;
+    MPI_Aint sendcount = 0, recvcount = 0;
+    MPI_Datatype sendtype = MPI_DATATYPE_NULL, recvtype = MPI_DATATYPE_NULL;
+    switch (coll_sig->coll_type) {
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+            sendcount = recvcount = coll_sig->u.allreduce.count;
+            sendtype = recvtype = coll_sig->u.allreduce.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.allreduce.sendbuf, coll_sig->u.allreduce.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE):
+            sendcount = recvcount = coll_sig->u.reduce.count;
+            sendtype = recvtype = coll_sig->u.reduce.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce.sendbuf, coll_sig->u.reduce.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(SCAN):
+            sendcount = recvcount = coll_sig->u.scan.count;
+            sendtype = recvtype = coll_sig->u.scan.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.scan.sendbuf, coll_sig->u.scan.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            sendcount = recvcount = coll_sig->u.exscan.count;
+            sendtype = recvtype = coll_sig->u.exscan.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.exscan.sendbuf, coll_sig->u.exscan.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+            {
+                MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+                recvcount = coll_sig->u.reduce_scatter_block.recvcount;
+                sendcount = comm_ptr->local_size * recvcount;
+            }
+            sendtype = recvtype = coll_sig->u.reduce_scatter_block.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce_scatter_block.sendbuf,
+                           coll_sig->u.reduce_scatter_block.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+            {
+                MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+                const MPI_Aint *counts = coll_sig->u.reduce_scatter.recvcounts;
+                recvcount = counts[comm_ptr->rank];
+                sendcount = 0;
+                for (int i = 0; i < comm_ptr->local_size; i++) {
+                    sendcount += counts[i];
+                }
+            }
+            sendtype = recvtype = coll_sig->u.reduce_scatter.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce_scatter.sendbuf, coll_sig->u.reduce_scatter.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(BCAST):
+            sendcount = coll_sig->u.bcast.count;
+            sendtype = coll_sig->u.bcast.datatype;
+            if (coll_sig->comm_ptr->rank == coll_sig->u.bcast.root) {
+                coll_sig->u.bcast.buffer = host_swap(coll_sig->u.bcast.buffer, sendcount, sendtype);
+            } else {
+                orig_recvbuf = coll_sig->u.bcast.buffer;
+                recvcount = sendcount;
+                recvtype = recvtype;
+                coll_sig->u.bcast.buffer = host_alloc(sendcount, sendtype);
+                host_recvbuf = coll_sig->u.bcast.buffer;
+            }
+        default:
+            break;
+    }
+
+    mpi_errno = MPIR_Coll_auto(coll_sig, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (orig_recvbuf) {
+        MPIR_Localcopy(host_recvbuf, recvcount, recvtype, orig_recvbuf, recvcount, recvtype);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
