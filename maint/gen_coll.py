@@ -366,7 +366,8 @@ def dump_MPIR_Coll_cvar_to_algo_id():
 
         dump_open("switch (cvar_val) {")
         G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_auto:" % (name.upper(), commkind.upper()))
-        G.out.append("    return %s__MPIR_Coll_auto;" % (algo_id_prefix))
+        G.out.append("    MPIR_Assert(0); /* auto cvar_val should be 0 and shouldn't be called here */")
+        G.out.append("    return %s;" % algo_id_END())
         if not name.startswith("i"): # blocking
             G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_nb:" % (name.upper(), commkind.upper()))
             G.out.append("    return %s__MPIR_Coll_nb;" % (algo_id_prefix))
@@ -381,6 +382,7 @@ def dump_MPIR_Coll_cvar_to_algo_id():
     add_prototype(decl)
     G.out.append(decl)
     dump_open("{")
+    G.out.append("MPIR_Assert(cvar_val > 0);")
     dump_open("switch (coll_type) {")
     for coll in G.coll_names:
         for commkind in ("intra", "inter"):
@@ -612,7 +614,7 @@ def dump_coll_impl(name, blocking_type):
 
     # Call csel
     G.out.append("")
-    G.out.append("mpi_errno = MPIR_Coll_composition_auto(&coll_sig);")
+    G.out.append("mpi_errno = MPIR_Coll_json(&coll_sig);")
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
 

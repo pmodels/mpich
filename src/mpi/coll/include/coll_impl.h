@@ -39,7 +39,6 @@ extern MPIR_Tree_type_t MPIR_Allreduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern MPIR_Tree_type_t MPIR_Bcast_tree_type;
-extern char MPII_coll_composition_json[];
 extern char MPII_coll_selection_json[];
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str);
@@ -58,10 +57,7 @@ int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
 
-/* NOTE: MPIR_Coll_auto is one of the composition container functions. However,
- *       MPIR_Coll_composition_auto is a gate function, thus does not take "cnt" parameter. */
-int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig);
-int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \

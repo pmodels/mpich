@@ -33,11 +33,13 @@ extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
 
-int MPIR_Csel_create_from_file(const char *json_file, void **csel);
-int MPIR_Csel_create_from_buf(const char *json, void **csel);
-int MPIR_Csel_free(void *csel);
+int MPIR_Csel_load_file(const char *json_file);
+int MPIR_Csel_load_buf(const char *json_str);
+int MPIR_Csel_free(void);
+MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name);
 MPII_Csel_container_s *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
+int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig)
 {

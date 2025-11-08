@@ -40,16 +40,6 @@ cvars:
       description : >-
         Defines the location of tuning file that selects basic collective algorithms.
 
-    - name        : MPIR_CVAR_COLL_COMPOSITION_JSON_FILE
-      category    : COLLECTIVE
-      type        : string
-      default     : ""
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Defines the location of tuning file that selects composition collective algorithms.
-
     - name        : MPIR_CVAR_HIERARCHY_DUMP
       category    : COLLECTIVE
       type        : boolean
@@ -106,9 +96,8 @@ MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 const char *MPIR_Csel_source;
 
-/* TODO: remove the old MPIR_Csel_root etc. */
-void *MPIR_Csel_composition = NULL;
-void *MPIR_Csel_selection = NULL;
+MPIR_Csel_node_s *csel_tree_main;
+MPIR_Csel_node_s *csel_tree_auto;
 
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
@@ -167,16 +156,6 @@ int get_ccl_from_string(const char *ccl_str)
     return ccl;
 }
 
-#define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
-   do { \
-        if (!strcmp(cvar_name, "")) { \
-            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, &csel_var); \
-        } else { \
-            mpi_errno = MPIR_Csel_create_from_file(cvar_name, &csel_var); \
-        } \
-        MPIR_ERR_CHECK(mpi_errno); \
-   } while (0)
-
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -225,10 +204,21 @@ int MPII_Coll_init(void)
     MPII_Csel_init_condition_names();
 
     /* initialize selection tree */
-    LOAD_CSEL_JSON(MPIR_Csel_composition,
-                   MPIR_CVAR_COLL_COMPOSITION_JSON_FILE, MPII_coll_composition_json);
-    LOAD_CSEL_JSON(MPIR_Csel_selection,
-                   MPIR_CVAR_COLL_SELECTION_JSON_FILE, MPII_coll_selection_json);
+    mpi_errno = MPIR_Csel_load_buf(MPII_coll_selection_json);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (strcmp(MPIR_CVAR_COLL_SELECTION_JSON_FILE, "") != 0) {
+        mpi_errno = MPIR_Csel_load_file(MPIR_CVAR_COLL_SELECTION_JSON_FILE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    csel_tree_main = MPIR_Csel_get_tree("main");
+    MPIR_Assert(csel_tree_main);
+
+    csel_tree_auto = MPIR_Csel_get_tree("auto");
+    if (!csel_tree_auto) {
+        csel_tree_auto = csel_tree_main;
+    }
 
   fn_exit:
     return mpi_errno;
@@ -250,10 +240,7 @@ int MPII_Coll_finalize(void)
     mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Csel_free(MPIR_Csel_composition);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Csel_free(MPIR_Csel_selection);
+    mpi_errno = MPIR_Csel_free();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIR_Coll_algo_table);
@@ -261,6 +248,9 @@ int MPII_Coll_finalize(void)
     MPL_free(MPIR_Coll_algo_names);
     MPL_free(MPIR_Coll_type_names);
     MPL_free(MPIR_Csel_condition_names);
+
+    csel_tree_main = NULL;
+    csel_tree_auto = NULL;
 
   fn_exit:
     return mpi_errno;
@@ -408,13 +398,11 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
     }
 }
 
-int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
+int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO: need a mechanism in coll_sig so we can assert and prevent a dead recursion loop */
-
-    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_composition, coll_sig);
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(tree, coll_sig);
     MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
 
     mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
@@ -426,7 +414,7 @@ int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
     goto fn_exit;
 }
 
-int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -448,13 +436,7 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
         }
     }
 
-    /* Search an algorithm by Csel */
-    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
-    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
-
-    /* TODO: assert the selected algorithm is not a composition algorithm */
-
-    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    mpi_errno = MPIR_Coll_run_tree(csel_tree_main, coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -472,7 +454,7 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     MPIR_Assert(coll_sig->coll_type % 2 == 0);
     coll_sig->coll_type += 1;
 
-    mpi_errno = MPIR_Coll_auto(coll_sig, NULL);
+    mpi_errno = MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Request *req;
