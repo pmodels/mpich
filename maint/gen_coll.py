@@ -359,73 +359,6 @@ def dump_MPII_Csel_run_condition():
     G.out.append("return NULL;")
     dump_close('}')
 
-def dump_MPII_Csel_parse_operator():
-    decl = "int MPII_Csel_parse_operator(const char *ckey, void *operator_node)"
-    add_prototype(decl)
-    G.out.append(decl)
-    dump_open('{')
-    G.out.append("MPIR_Csel_node_s *csel_node = operator_node;")
-    dump_open("if (ckey[0] == '!') {")
-    G.out.append("csel_node->u.condition.negate = true;")
-    G.out.append("ckey++;")
-    dump_else()
-    G.out.append("csel_node->u.condition.negate = false;")
-    dump_close('}')
-
-    if_clase = "if"
-    for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        n = len(cond)
-        if has_thresh:
-            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, cond, n))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
-            G.out.append("    MPIR_Assert(ckey[%d] == '(');" % n)
-            G.out.append("    csel_node->u.condition.thresh = atoi(ckey + %d);" % (n + 1))
-        else:
-            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, cond))
-            G.out.append("    csel_node->type = %s;" % condition_id(cond))
-        if_clase = "} else if"
-    G.out.append("} else {")
-    G.out.append("    MPIR_Assert(0);")
-    G.out.append("    return MPI_ERR_OTHER;")
-    G.out.append("}")
-
-    G.out.append("")
-    G.out.append("return MPI_SUCCESS;")
-    dump_close('}')
-
-def dump_MPII_Csel_run_condition():
-    decl = "void *MPII_Csel_run_condition(void *operator_node, MPIR_Csel_coll_sig_s *coll_sig)"
-    add_prototype(decl)
-    G.out.append(decl)
-    dump_open('{')
-    G.out.append("MPIR_Csel_node_s *node = operator_node;")
-    G.out.append("bool cond;")
-    dump_open("switch(node->type) {")
-    for a in G.conditions:
-        cond = a
-        has_thresh = False
-        if RE.match(r'(.+)\(thresh\)', a):
-            cond = RE.m.group(1)
-            has_thresh = True
-        dump_open("case %s:" % condition_id(cond))
-        if has_thresh:
-            G.out.append("cond = (node->u.condition.thresh <= %s(coll_sig));" % G.conditions[a])
-        else:
-            G.out.append("cond = %s(coll_sig);" % G.conditions[a])
-        G.out.append("if (node->u.condition.negate) cond = !cond;")
-        G.out.append("return cond ? node->success : node->failure;")
-        dump_close("")
-    G.out.append("default:")
-    G.out.append("    break;")
-    dump_close('}') # switch
-    G.out.append("return NULL;")
-    dump_close('}')
-
 def dump_MPIR_Coll_cvar_to_algo_id():
     G.out.append("")
     def dump_cvar_cases(name, commkind):
@@ -562,49 +495,6 @@ def dump_MPIR_Csel_container_type_e():
     G.out2.append("} MPIR_Csel_container_type_e;")
     G.out2.append("")
     G.out2.append("#define MPIR_CSEL_NUM_ALGORITHMS %s\n" % algo_id_END())
-
-def dump_MPIR_Csel_node_type_e():
-    G.out2.append("")
-    G.out2.append("typedef enum {")
-    for a in G.conditions:
-        G.out2.append("    %s," % condition_id(a))
-    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,")
-    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__ANY,")
-    G.out2.append("    CSEL_NODE_TYPE__CONTAINER,")
-    G.out2.append("} MPIR_Csel_node_type_e;")
-    G.out2.append("")
-    G.out2.append("#define MPIR_CSEL_NUM_CONDITIONS %s\n" % "CSEL_NODE_TYPE__OPERATOR__COLLECTIVE")
-
-def dump_MPIR_Csel_node_s():
-    G.out2.append("")
-    G.out2.append("typedef struct MPIR_Csel_node {")
-    G.out2.append("    MPIR_Csel_node_type_e type;")
-    G.out2.append("    MPI_Aint thresh;")
-    G.out2.append("    struct MPIR_Csel_node *success;")
-    G.out2.append("    struct MPIR_Csel_node *failure;")
-    G.out2.append("} MPIR_Csel_node_s;")
-
-def dump_MPII_Csel_container():
-    G.out2.append("")
-    def dump_algo_params():
-        for algo in G.algo_list:
-            if 'extra_params' in algo:
-                extra_params = algo['extra_params'].replace(' ', '').split(',')
-                G.out2.append("        struct {")
-                for a in extra_params:
-                    if re.match(r'\w+=(.+)', a):
-                        # skip constant parameter
-                        continue
-                    else:
-                        G.out2.append("            int %s;" % a)
-                G.out2.append("        } %s;" % algo_struct_name(algo))
-
-    G.out2.append("typedef struct MPII_Csel_container {")
-    G.out2.append("    MPIR_Csel_container_type_e id;")
-    G.out2.append("    union {")
-    dump_algo_params()
-    G.out2.append("    } u;")
-    G.out2.append("} MPII_Csel_container_s;")
 
 def dump_MPIR_Csel_node_type_e():
     G.out2.append("")
@@ -931,20 +821,6 @@ def cvar_name(coll_name, is_blocking, commkind):
 def algo_id(algo_funcname):
     prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
     return "%s__%s" % (prefix, algo_funcname)
-
-def algo_id_END():
-    return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
-
-def condition_id(name):
-    prefix = "CSEL_NODE_TYPE__OPERATOR__"
-    a = re.sub(r'-', '_', name)
-    a = re.sub(r'\(thresh\)$', '', a)
-    return prefix + a
-
-def algo_struct_name(algo):
-    algo_funcname = get_algo_funcname(algo)
-    struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
-    return struct_name
 
 def algo_id_END():
     return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
