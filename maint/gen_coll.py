@@ -691,7 +691,7 @@ def dump_coll_impl(name, blocking_type):
 
     # Call csel
     G.out.append("")
-    G.out.append("mpi_errno = MPIR_Coll_auto(&coll_sig, NULL);")
+    G.out.append("mpi_errno = MPIR_Coll_json(&coll_sig);")
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
 

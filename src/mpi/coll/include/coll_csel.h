@@ -34,11 +34,13 @@ extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
 extern int *MPIR_Coll_algo_counters;
 
-int MPIR_Csel_create_from_file(const char *json_file, MPIR_Csel_node_s ** csel);
-int MPIR_Csel_create_from_buf(const char *json, MPIR_Csel_node_s ** csel);
-int MPIR_Csel_free(MPIR_Csel_node_s * csel);
+int MPIR_Csel_load_file(const char *json_file);
+int MPIR_Csel_load_buf(const char *json_str);
+int MPIR_Csel_free(void);
+MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name);
 MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
+int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt);
