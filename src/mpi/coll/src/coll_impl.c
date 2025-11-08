@@ -30,16 +30,6 @@ cvars:
         print   - print an error message and fallback to the internally selected algorithm
         silent  - silently fallback to the internally selected algorithm
 
-    - name        : MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE
-      category    : COLLECTIVE
-      type        : string
-      default     : ""
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Defines the location of tuning file.
-
     - name        : MPIR_CVAR_COLL_SELECTION_JSON_FILE
       category    : COLLECTIVE
       type        : string
