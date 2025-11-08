@@ -503,6 +503,7 @@ def dump_MPIR_Csel_node_type_e():
         G.out2.append("    %s," % condition_id(a))
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,")
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__ANY,")
+    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__CALL,")
     G.out2.append("    CSEL_NODE_TYPE__CONTAINER,")
     G.out2.append("} MPIR_Csel_node_type_e;")
     G.out2.append("")

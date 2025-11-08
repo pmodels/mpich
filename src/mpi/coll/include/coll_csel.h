@@ -12,6 +12,9 @@ typedef struct csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
+            int idx;
+        } call;
+        struct {
             MPIR_Csel_coll_type_e coll_type;
         } collective;
         struct {
