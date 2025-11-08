@@ -124,7 +124,7 @@ node and on different nodes. This JSON file is used by setting
 `MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE=/path/to/ch4_selection_tuning.json`.
 2. Coll: This file determines which algorithm used for inter or intra
 algorithms, depending on the composition. This JSON file can be used by
-setting `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE=/path/to/coll_selection_tuning.json`.
+setting `MPIR_CVAR_COLL_SELECTION_JSON_FILE=/path/to/coll_selection_tuning.json`.
 This file contains algorithm covered in the blocking collectives section
 (Section 2.3).
 3. Posix: This file determines algorithms to be used for intra node cases.
