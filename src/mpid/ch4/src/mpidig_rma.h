@@ -497,7 +497,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
-    int am_hdr_max_size;
+    MPI_Aint am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
     am_hdr_max_size = is_local ? MPIDI_SHM_am_hdr_max_sz() : MPIDI_NM_am_hdr_max_sz();
