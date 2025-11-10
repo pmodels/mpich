@@ -43,9 +43,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#define RESIZE_TO_MAX_ALIGN(x) \
-    ((((x) / MAX_ALIGNMENT) + !!((x) % MAX_ALIGNMENT)) * MAX_ALIGNMENT)
-
 static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank);
 static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank)
 {
@@ -65,15 +62,14 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank)
     int hdr_idx = 0;
     for (int queue_id = 0; queue_id < pool->num_free_queue; queue_id++) {
         int fq_idx = rank * pool->num_free_queue + queue_id;
-        int cell_idx_base = fq_idx * cells_per_fq;
+        char *fq_cell_base =
+            (char *) pool->cell_header_base + fq_idx * pool->queue_cells_alloc_size;
 
         for (int i = 0; i < cells_per_fq; i++) {
+            MPIDU_genqi_shmem_cell_header_s *cell_h = (MPIDU_genqi_shmem_cell_header_s *)
+                (fq_cell_base + i * pool->cell_alloc_size);
             /* Have the "host" process for each cell zero-out the cell contents to force the first-touch
              * policy to make the pages resident to that process. */
-            int cell_idx = cell_idx_base + i;
-            MPIDU_genqi_shmem_cell_header_s *cell_h =
-                (MPIDU_genqi_shmem_cell_header_s *) ((char *) pool->cell_header_base
-                                                     + cell_idx * pool->cell_alloc_size);
             memset(cell_h, 0, pool->cell_alloc_size);
             /* The handle value is the one being stored in the next, prev, head, tail pointers.
              * All valid handle must to be non-zero, a zero handle is equivalent to a NULL pointer. */
@@ -95,14 +91,36 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank)
     goto fn_exit;
 }
 
+typedef struct {
+    int cell_alloc_size;
+    int queue_cells_alloc_size;
+    int total_cells_size;
+    int free_queue_size;
+} alloc_size_t;
+
+static alloc_size_t calculate_alloc_size(int cell_size, int cells_per_free_queue, int num_proc,
+                                         int num_free_queue)
+{
+    alloc_size_t sizes = { 0 };
+    /* Round up header+cell size to cache line boundary to prevent false sharing. A header
+     * maybe share the same cache line with the cell preceding it. */
+    sizes.cell_alloc_size = MPL_ROUND_UP_ALIGN(sizeof(MPIDU_genqi_shmem_cell_header_s) + cell_size,
+                                               MPL_CACHELINE_SIZE);
+    /* total size of cells in a free queue need to round up to page size to make
+     * sure queue's NUMA affinity set correctly with first-touch policy */
+    sizes.queue_cells_alloc_size = MPL_ROUND_UP_ALIGN(sizes.cell_alloc_size * cells_per_free_queue,
+                                                      sysconf(_SC_PAGESIZE));
+    sizes.total_cells_size = num_proc * num_free_queue * sizes.queue_cells_alloc_size;
+    sizes.free_queue_size = num_proc * num_free_queue * sizeof(MPIDU_genq_shmem_queue_u);
+    return sizes;
+}
+
 int MPIDU_genq_shmem_pool_size(int cell_size, int cells_per_free_queue,
                                int num_proc, int num_free_queue)
 {
-    int aligned_cell_size = RESIZE_TO_MAX_ALIGN(cell_size);
-    int cell_alloc_size = sizeof(MPIDU_genqi_shmem_cell_header_s) + aligned_cell_size;
-    int total_cells_size = num_proc * num_free_queue * cells_per_free_queue * cell_alloc_size;
-    int free_queue_size = num_proc * num_free_queue * sizeof(MPIDU_genq_shmem_queue_u);
-    return total_cells_size + free_queue_size;
+    alloc_size_t sizes = calculate_alloc_size(cell_size, cells_per_free_queue, num_proc,
+                                              num_free_queue);
+    return sizes.total_cells_size + sizes.free_queue_size;
 }
 
 int MPIDU_genq_shmem_pool_create(void *slab, int slab_size,
@@ -112,33 +130,33 @@ int MPIDU_genq_shmem_pool_create(void *slab, int slab_size,
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj;
-    uintptr_t aligned_cell_size = 0;
 
     MPIR_FUNC_ENTER;
 
     pool_obj = MPL_malloc(sizeof(MPIDU_genqi_shmem_pool_s), MPL_MEM_OTHER);
 
     pool_obj->cell_size = cell_size;
-    aligned_cell_size = RESIZE_TO_MAX_ALIGN(cell_size);
-    pool_obj->cell_alloc_size = sizeof(MPIDU_genqi_shmem_cell_header_s) + aligned_cell_size;
     /* cells_per_proc */
     pool_obj->cells_per_free_queue = cells_per_free_queue;
     pool_obj->num_proc = num_proc;
     pool_obj->num_free_queue = num_free_queue;
+
+    alloc_size_t sizes = calculate_alloc_size(cell_size, cells_per_free_queue, num_proc,
+                                              num_free_queue);
+    pool_obj->cell_alloc_size = sizes.cell_alloc_size;
+    pool_obj->queue_cells_alloc_size = sizes.queue_cells_alloc_size;
+
     pool_obj->rank = rank;
     pool_obj->gpu_registered = false;
     pool_obj->slab = slab;
     pool_obj->slab_size = slab_size;
 
-    /* the global_block_index is at the end of the slab to avoid extra need of alignment */
-    int total_cells_size = num_proc * num_free_queue * cells_per_free_queue
-        * pool_obj->cell_alloc_size;
-    int free_queue_size = num_proc * num_free_queue * sizeof(MPIDU_genq_shmem_queue_u);
-    MPIR_Assertp(slab_size >= total_cells_size + free_queue_size);
+    MPIR_Assertp(slab_size >= sizes.total_cells_size + sizes.free_queue_size);
 
     pool_obj->cell_header_base = (MPIDU_genqi_shmem_cell_header_s *) pool_obj->slab;
+    /* the global_block_index is at the end of the slab to avoid extra need of alignment */
     pool_obj->free_queues =
-        (MPIDU_genq_shmem_queue_u *) ((char *) pool_obj->slab + total_cells_size);
+        (MPIDU_genq_shmem_queue_u *) ((char *) pool_obj->slab + sizes.total_cells_size);
 
     for (int i = 0; i < num_free_queue; i++) {
         int idx = rank * num_free_queue + i;
