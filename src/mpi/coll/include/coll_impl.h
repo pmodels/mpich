@@ -14,6 +14,11 @@
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
 
+enum MPIR_CSEL_ENTRY_e {
+    MPIR_CSEL_ENTRY__MAIN,
+    MPIR_CSEL_ENTRY__AUTO,
+};
+
 #define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check, mpi_errno, ...)     \
     do {                                                                \
         if ((check) == 0) {                                             \

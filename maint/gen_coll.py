@@ -32,16 +32,13 @@ def main():
 
     # dump impl functions
     for a in G.coll_names:
+        dump_coll_auto(a, "blocking")
+        dump_coll_auto(a, "nonblocking")
+        dump_coll_auto(a, "persistent")
+    for a in G.coll_names:
         dump_coll_impl(a, "blocking")
         dump_coll_impl(a, "nonblocking")
         dump_coll_impl(a, "persistent")
-
-    # TEMP: dump mpir functions.
-    #       Current code base call MPIR_ functions in copositinal algorithms. Create a wrapper that call _impl
-    #       for now. We will refactor the compositional algorithms later.
-    for a in G.coll_names:
-        dump_coll_mpir(a, "blocking")
-        dump_coll_mpir(a, "nonblocking")
 
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
@@ -679,7 +676,7 @@ def load_coll_algos(algo_txt):
                 elif RE.match(r'\s+(\w+):\s*(.+)', line):
                     algo[RE.m.group(1)] = RE.m.group(2)
 
-def dump_coll_impl(name, blocking_type):
+def dump_coll_auto(name, blocking_type):
     func = G.FUNCS["mpi_" + name]
     func_params = get_func_params(func, name, blocking_type)
 
@@ -687,8 +684,8 @@ def dump_coll_impl(name, blocking_type):
     Name = func_name.capitalize()
 
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
-    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
+    add_prototype("int MPIR_%s_auto(%s, int entry_type)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_auto(%s, int entry_type)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     G.out.append("")
@@ -725,7 +722,11 @@ def dump_coll_impl(name, blocking_type):
 
     # Call csel
     G.out.append("")
+    dump_open("if (entry_type == MPIR_CSEL_ENTRY__MAIN) {")
     G.out.append("mpi_errno = MPIR_Coll_composition_auto(&coll_sig);")
+    dump_else()
+    G.out.append("mpi_errno = MPIR_Coll_auto(&coll_sig, NULL);")
+    dump_close("}")
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
 
@@ -754,32 +755,33 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("goto fn_exit;")
     dump_close('}')
 
-def dump_coll_mpir(name, blocking_type):
-    def get_func_args(func):
+def dump_coll_impl(name, blocking_type):
+    def get_func_args(func, blocking_type):
         args = []
         for p in func['parameters']:
-            if p['name'] == 'comm':
+            if (p['name'] == 'comm'):
                 args.append('comm_ptr')
             else:
                 args.append(p['name'])
+        if blocking_type == "nonblocking":
+            args.append("request")
+        elif blocking_type == "persistent":
+            args.append("info_ptr")
+            args.append("request")
         return ', '.join(args)
 
     func = G.FUNCS["mpi_" + name]
     func_params = get_func_params(func, name, blocking_type)
-    func_args = get_func_args(func)
-    if blocking_type == "blocking":
-        func_params += ", int coll_attr"
-    else:
-        func_args += ", request"
+    func_args = get_func_args(func, blocking_type)
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
 
     G.out.append("")
-    add_prototype("int MPIR_%s(%s)" % (Name, func_params))
-    dump_split(0, "int MPIR_%s(%s)" % (Name, func_params))
+    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
+    dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
-    G.out.append("return MPIR_%s_impl(%s);" % (Name, func_args))
+    G.out.append("return MPIR_%s_auto(%s, MPIR_CSEL_ENTRY__MAIN);" % (Name, func_args))
     dump_close('}')
 
 # ----
