@@ -50,6 +50,7 @@ typedef struct MPIDU_genqi_shmem_pool {
     uintptr_t cell_size;
     uintptr_t cell_alloc_size;
     uintptr_t cells_per_free_queue;
+    uintptr_t queue_cells_alloc_size;
     uintptr_t num_proc;
     uintptr_t num_free_queue;
     uintptr_t slab_size;
