@@ -69,7 +69,8 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         bcast_ints[0] = total_num_processes;
         bcast_ints[1] = mpi_errno;
     }
-    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr,
+                                    MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     if (comm_ptr->rank != root) {
         total_num_processes = bcast_ints[0];
@@ -88,8 +89,8 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
     int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
-        mpi_errno = MPIR_Bcast(pmi_errcodes, total_num_processes, MPIR_INT_INTERNAL,
-                               root, comm_ptr, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_fallback(pmi_errcodes, total_num_processes, MPIR_INT_INTERNAL,
+                                        root, comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < total_num_processes; i++) {

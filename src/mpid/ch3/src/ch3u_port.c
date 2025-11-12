@@ -990,7 +990,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    mpi_errno = MPIR_Bcast( &n_local_pgs, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
+    mpi_errno = MPIR_Bcast_fallback(&n_local_pgs, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     pg_list = pg_head;
@@ -1010,7 +1010,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
-	mpi_errno = MPIR_Bcast( &len, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
+	mpi_errno = MPIR_Bcast_fallback(&len, 1, MPIR_INT_INTERNAL, root, comm_p, 0);
         MPIR_ERR_CHECK(mpi_errno);
 	if (rank != root) {
 	    pg_str = (char *)MPL_malloc(len, MPL_MEM_DYNAMIC);
@@ -1019,7 +1019,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast( pg_str, len, MPIR_CHAR_INTERNAL, root, comm_p, 0);
+	mpi_errno = MPIR_Bcast_fallback(pg_str, len, MPIR_CHAR_INTERNAL, root, comm_p, 0);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );

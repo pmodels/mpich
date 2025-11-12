@@ -390,8 +390,8 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                 parent_idx[subcomm_rank] = obj_containing_cpuset;
 
                 /* get parent_idx to all processes */
-                MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPIR_INT_INTERNAL,
-                               node_comm, MPIR_COLL_ATTR_SYNC);
+                MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1,
+                                        MPIR_INT_INTERNAL, node_comm, MPIR_COLL_ATTR_SYNC);
 
                 /* reorder parent indices */
                 for (i = 0; i < num_procs - 1; i++) {

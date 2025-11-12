@@ -291,23 +291,23 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
 
               root_sync:
                 /* broadcast the mapping result on rank 0 */
-                mpi_errno = MPIR_Bcast(map_result_ptr, 1, MPIR_INT_INTERNAL, 0, shm_comm_ptr,
-                                       MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Bcast_fallback(map_result_ptr, 1, MPIR_INT_INTERNAL, 0,
+                                                shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 if (*map_result_ptr != SYMSHM_SUCCESS)
                     goto map_fail;
 
-                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL, 0,
-                                       shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Bcast_fallback(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL,
+                                                0, shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
                 MPIR_ERR_CHECK(mpi_errno);
 
             } else {
                 char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
 
                 /* receive the mapping result of rank 0 */
-                mpi_errno = MPIR_Bcast(map_result_ptr, 1, MPIR_INT_INTERNAL, 0, shm_comm_ptr,
-                                       MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Bcast_fallback(map_result_ptr, 1, MPIR_INT_INTERNAL, 0,
+                                                shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 if (*map_result_ptr != SYMSHM_SUCCESS)
@@ -316,8 +316,8 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
                 /* if rank 0 mapped successfully, others on the node attach shared memory region */
 
                 /* get serialized handle from rank 0 and deserialize it */
-                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL, 0,
-                                       shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Bcast_fallback(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL,
+                                                0, shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 mpl_err =
@@ -435,8 +435,8 @@ static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg
             map_pointer = generate_random_addr(shm_seg->segment_len);
 
         /* broadcast fixed address to the other processes in comm */
-        mpi_errno = MPIR_Bcast(&map_pointer, sizeof(char *), MPIR_CHAR_INTERNAL,
-                               maxsz_loc, comm_ptr, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_fallback(&map_pointer, sizeof(char *), MPIR_CHAR_INTERNAL,
+                                        maxsz_loc, comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* optimization: make sure every process memory in the shared segment is mapped

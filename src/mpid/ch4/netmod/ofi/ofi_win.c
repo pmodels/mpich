@@ -240,10 +240,9 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         winfo[comm_ptr->rank].base = (uintptr_t) base;
     }
 
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
-                               MPI_DATATYPE_NULL,
-                               winfo, sizeof(*winfo), MPIR_BYTE_INTERNAL, comm_ptr,
-                               MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                        winfo, sizeof(*winfo), MPIR_BYTE_INTERNAL, comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
@@ -986,10 +985,9 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     target_mrs[comm_ptr->rank].mr_key = fi_mr_key(mr);
     target_mrs[comm_ptr->rank].base = (const void *) base;
     target_mrs[comm_ptr->rank].size = (uintptr_t) size;
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
-                               MPI_DATATYPE_NULL,
-                               target_mrs, sizeof(dwin_target_mr_t), MPIR_BYTE_INTERNAL, comm_ptr,
-                               MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, target_mrs,
+                                        sizeof(dwin_target_mr_t), MPIR_BYTE_INTERNAL, comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Insert each remote MR which will be searched when issuing an RMA operation
@@ -1042,9 +1040,9 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
     /* Exchange remote MR across all processes because "coll_attach" info ensures
      * that all processes collectively call detach. */
     target_bases[comm_ptr->rank] = base;
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               target_bases, sizeof(const void *), MPIR_BYTE_INTERNAL, comm_ptr,
-                               MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, target_bases,
+                                        sizeof(const void *), MPIR_BYTE_INTERNAL, comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Search and delete each remote MR */

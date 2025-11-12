@@ -200,6 +200,7 @@ void MPIR_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig);
 #define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling
 #define MPIR_Bcast_fallback      MPIR_Bcast_intra_binomial
 #define MPIR_Gather_fallback     MPIR_Gather_intra_binomial
+#define MPIR_Reduce_scatter_block_fallback MPIR_Reduce_scatter_block_intra_recursive_doubling
 
 
 /* Internal point-to-point communication for collectives */

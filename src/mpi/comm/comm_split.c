@@ -157,8 +157,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
          * same color */
         mypair.color = color;
         mypair.key = key;
-        mpi_errno = MPIR_Allgather(&mypair, 2, MPIR_INT_INTERNAL, remotetable, 2, MPIR_INT_INTERNAL,
-                                   comm_ptr, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Allgather_fallback(&mypair, 2, MPIR_INT_INTERNAL, remotetable, 2,
+                                            MPIR_INT_INTERNAL, comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Each process can now match its color with the entries in the table */
@@ -215,9 +215,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
                                       0, 0, comm_ptr, MPI_STATUS_IGNORE, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno =
-                MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           MPIR_COLL_ATTR_SYNC);
+            mpi_errno = MPIR_Bcast_fallback(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0,
+                                            local_comm_ptr, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (!in_newcomm) {
@@ -225,9 +224,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
             }
         } else {
             /* Broadcast to the other members of the local group */
-            mpi_errno =
-                MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           MPIR_COLL_ATTR_SYNC);
+            mpi_errno = MPIR_Bcast_fallback(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0,
+                                            local_comm_ptr, MPIR_COLL_ATTR_SYNC);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

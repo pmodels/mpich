@@ -29,7 +29,8 @@ static int MPIR_NCCLcomm_init(MPIR_Comm * comm_ptr, int rank)
         ncclGetUniqueId(&(ncclcomm->id));
     }
 
-    mpi_errno = MPIR_Bcast(&(ncclcomm->id), sizeof(ncclcomm->id), MPIR_UINT8, 0, comm_ptr, 0);
+    mpi_errno = MPIR_Bcast_fallback(&(ncclcomm->id), sizeof(ncclcomm->id), MPIR_UINT8, 0,
+                                    comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     ret = cudaStreamCreate(&(ncclcomm->stream));
