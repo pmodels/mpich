@@ -186,12 +186,33 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         binomial                                - Force Binomial Tree
         nb                                      - Force nonblocking algorithm
+        circ_qvring                             - Force queued circulant graph algorithm
         smp                                     - Force smp algorithm
         scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
         scatter_ring_allgather                  - Force Scatter Ring
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
-	
+
+    - name        : MPIR_CVAR_BCAST_CIRC_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines message chunk size for circ_qvring (0 forces single message send)
+
+    - name        : MPIR_CVAR_BCAST_CIRC_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many bcast rounds can be in flight at once for circ_qvring
+
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
       type        : int
