@@ -488,15 +488,21 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
-            /* Error or Fall-thru */
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**collalgo");
+            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) {
+                if (coll_sig->comm_ptr->rank == 0) {
+                    printf("CVAR selected algorithm %s cannot run!\n",
+                           MPIR_Coll_algo_names[algo_id]);
+                }
+            }
+            /* Fall-thru */
         }
     }
 
     /* Search an algorithm by Csel */
     MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
     MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
-
-    /* TODO: assert the selected algorithm is not a composition algorithm */
 
     mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
     MPIR_ERR_CHECK(mpi_errno);
