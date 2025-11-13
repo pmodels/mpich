@@ -1195,6 +1195,24 @@ def dump_abi_wrappers(func, is_large):
     for T in assertion_types:
         G.out.append("MPIR_Assert(sizeof(ABI_%s) == sizeof(MPI_%s));" % (T, T))
 
+    # The MPI standard require builtin type to be a NULL conversion, add a shortcut hack. We assuming -
+    #   1. the regular conversion will reserve the [0, 4096) range
+    #   2. ABI handle type can be safely cast into (uintptr_t)
+    #
+    if RE.match(r'..._(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)_(toint|c2f)\b', func_name):
+        handle_in = "(uintptr_t) " + func['c_parameters'][0]['name'] + "_abi"
+        dump_if_open("%s > 0 && %s < 4096" % (handle_in, handle_in))
+        G.out.append("return (int) %s;" % handle_in)
+        dump_if_close()
+    elif RE.match(r'..._(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)_(fromint|f2c)\b', func_name):
+        handle_in = func['c_parameters'][0]['name']
+        dump_if_open("%s > 0 && %s < 4096" % (handle_in, handle_in))
+        ABI_type = "ABI_" + RE.m.group(1)
+        if RE.m.group(1) == 'Type':
+            ABI_type = "ABI_Datatype"
+        G.out.append("return (%s) (uintptr_t) %s;" % (ABI_type, handle_in))
+        dump_if_close()
+
     for l in pre_filters:
         G.out.append(l)
 
