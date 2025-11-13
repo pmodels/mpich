@@ -174,6 +174,10 @@ if test "$V5" -le 9 ; then V5=0$V5 ; fi
 MPICH_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(MPICH_NUMVERSION)
 
+# define MPICH_COMMIT_HASH
+. $srcdir/MPICH_COMMIT_HASH
+AC_DEFINE_UNQUOTED([MPICH_COMMIT_HASH], ["$MPICH_COMMIT_HASH"], [Git HEAD commit hash])
+
 AC_ARG_WITH(custom-version-string,
             AS_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
 MPICH_CUSTOM_STRING=$with_custom_version_string
