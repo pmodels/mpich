@@ -35,5 +35,8 @@ Return Value:
 @*/
 MPI_Fint MPI_File_c2f(MPI_File fh)
 {
-    return MPIO_File_c2f(fh);
+    MPI_Fint val = MPIO_File_c2f(fh);
+    if (val > 0)
+        val += ROMIO_HANDLE_OFFSET;
+    return val;
 }

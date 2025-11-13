@@ -12,6 +12,9 @@
 
 #include "adio.h"
 
+/* The handle conversion (MPI_File_c2f/f2c) need reserve the range [0, 4096) for ABI constants */
+#define ROMIO_HANDLE_OFFSET 0x1000
+
 #ifdef ROMIO_INSIDE_MPICH
 #include "mpir_ext.h"
 
