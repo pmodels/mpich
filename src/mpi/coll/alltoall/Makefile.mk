@@ -8,7 +8,6 @@
 # mpi_sources
 
 mpi_core_sources +=												\
-    src/mpi/coll/alltoall/alltoall_allcomm_nb.c	\
     src/mpi/coll/alltoall/alltoall_intra_brucks.c						\
     src/mpi/coll/alltoall/alltoall_intra_k_brucks.c						\
     src/mpi/coll/alltoall/alltoall_intra_scattered.c					\

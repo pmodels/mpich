@@ -224,8 +224,6 @@ struct MPIR_Comm {
         MPIR_Treealgo_tree_t *topo_wave_tree;
     } coll;
 
-    void *csel_comm;            /* collective selector handle */
-
 #if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_HCOLL */
