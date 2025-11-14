@@ -106,12 +106,9 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 #undef IPC_HANDLE
     }
 
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
-                               0,
-                               MPI_DATATYPE_NULL,
-                               ipc_shared_table,
-                               sizeof(win_shared_info_t), MPIR_BYTE_INTERNAL, shm_comm_ptr,
-                               MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ipc_shared_table,
+                                        sizeof(win_shared_info_t), MPIR_BYTE_INTERNAL, shm_comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 
