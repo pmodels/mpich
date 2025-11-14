@@ -163,9 +163,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
         for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
             MPIDI_PROGRESS(vci, true);
         }
-        if (!made_progress && MPIR_CVAR_CH4_PROGRESS_THROTTLE) {
-            usleep(1);
-        }
     } else {
         for (int i = 0; i < state->vci_count; i++) {
             int vci = state->vci[i];
@@ -183,8 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
         if (made_progress) {
             no_progress_counter = 0;
         } else if (no_progress_counter > MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT) {
-            no_progress_counter = 0;
-            usleep(1);
+            MPID_Thread_yield();
         } else {
             no_progress_counter++;
         }
