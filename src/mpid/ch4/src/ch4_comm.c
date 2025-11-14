@@ -197,23 +197,6 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* prune selection tree */
-    if (MPIDI_global.csel_root) {
-        mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root, comm, &MPIDI_COMM(comm, csel_comm));
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIDI_COMM(comm, csel_comm) = NULL;
-    }
-
-    /* prune selection tree for gpu */
-    if (MPIDI_global.csel_root_gpu) {
-        mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root_gpu, comm,
-                                    &MPIDI_COMM(comm, csel_comm_gpu));
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIDI_COMM(comm, csel_comm_gpu) = NULL;
-    }
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -280,16 +263,6 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
-
-    if (MPIDI_COMM(comm, csel_comm)) {
-        mpi_errno = MPIR_Csel_free(MPIDI_COMM(comm, csel_comm));
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (MPIDI_COMM(comm, csel_comm_gpu)) {
-        mpi_errno = MPIR_Csel_free(MPIDI_COMM(comm, csel_comm_gpu));
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
     mpi_errno = MPIDIG_destroy_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -365,8 +338,8 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
         bcast_data.mpi_errno = mpi_errno;
         bcast_data.remote_data_size = remote_data_size;
     }
-    mpi_errno = MPIR_Bcast_impl(&bcast_data, 2, MPIR_INT_INTERNAL,
-                                local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(&bcast_data, 2, MPIR_INT_INTERNAL,
+                                    local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* error checking of previous leader exchange */
@@ -384,8 +357,8 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
         MPIR_ERR_CHKANDJUMP(!remote_data, mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    mpi_errno = MPIR_Bcast_impl(remote_data, remote_data_size, MPIR_BYTE_INTERNAL,
-                                local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(remote_data, remote_data_size, MPIR_BYTE_INTERNAL,
+                                    local_leader, local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Stage 3: Each process extract data (if necessary: add worlds, convert lpids) */

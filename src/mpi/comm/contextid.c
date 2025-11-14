@@ -455,9 +455,9 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                              MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, group_ptr,
                                              coll_tag, MPIR_COLL_ATTR_SYNC);
         } else {
-            mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                            MPIR_INT_INTERNAL, MPI_BAND, comm_ptr,
-                                            MPIR_COLL_ATTR_SYNC);
+            mpi_errno =
+                MPIR_Allreduce_fallback(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
+                                        MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, MPIR_COLL_ATTR_SYNC);
         }
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -555,8 +555,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                                  MPI_MIN, comm_ptr, group_ptr, coll_tag,
                                                  MPIR_COLL_ATTR_SYNC);
             } else {
-                mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
-                                                MPI_MIN, comm_ptr, MPIR_COLL_ATTR_SYNC);
+                mpi_errno = MPIR_Allreduce_fallback(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
+                                                    MPI_MIN, comm_ptr, MPIR_COLL_ATTR_SYNC);
             }
 
             if (minfree > 0) {
@@ -1053,8 +1053,8 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, int *context_id, int *rec
 
     /* Make sure that all of the local processes now have this
      * id */
-    mpi_errno = MPIR_Bcast_impl(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                                0, comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                                    0, comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     /* The recvcontext_id must be the one that was allocated out of the local
      * group, not the remote group.  Otherwise we could end up posting two
