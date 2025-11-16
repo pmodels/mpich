@@ -157,9 +157,9 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
          * same color */
         mypair.color = color;
         mypair.key = key;
-        mpi_errno = MPIR_Allgather_inter_fallback(&mypair, 2, MPIR_INT_INTERNAL,
-                                                  remotetable, 2, MPIR_INT_INTERNAL,
-                                                  comm_ptr, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Allgather_fallback(&mypair, 2, MPIR_INT_INTERNAL,
+                                            remotetable, 2, MPIR_INT_INTERNAL,
+                                            comm_ptr, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Each process can now match its color with the entries in the table */
