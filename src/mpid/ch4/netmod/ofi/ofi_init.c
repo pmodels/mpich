@@ -644,9 +644,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
 
-    MPIDI_OFI_global.num_comms_enabled_striping = 0;
-    MPIDI_OFI_global.num_comms_enabled_hashing = 0;
-
     mpi_errno = ofi_pvar_init();
     MPIR_ERR_CHECK(mpi_errno);
 
