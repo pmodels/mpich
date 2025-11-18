@@ -770,10 +770,10 @@ static int init_comm_seq(MPIR_Comm * comm)
      * used, for example, to hash vci.
      * Builtin-comm, e.g. MPI_COMM_WORLD, always have seq at 0 */
     if (!HANDLE_IS_BUILTIN(comm->handle)) {
-        static int vci_seq = 0;
-        vci_seq++;
+        static MPL_atomic_int_t vci_seq = MPL_ATOMIC_INT_T_INITIALIZER(0);
+        MPL_atomic_fetch_add_int(&vci_seq, 1);
 
-        int tmp = vci_seq;
+        int tmp = MPL_atomic_load_int(&vci_seq);
         /* Bcast seq over vci 0 */
         MPIR_Assert(comm->seq == 0);
 
