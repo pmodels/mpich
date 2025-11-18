@@ -1185,7 +1185,7 @@ int MPIDU_Sched_progress(int vci, int *made_progress)
      * For example, with MPI_Comm_idup, sched_cb_gcn_allocate_cid will call MPIR_Allreduce.
      * This inner progress should skip Sched progress to avoid recursive situation.
      */
-    static int in_sched_progress = 0;
+    static MPL_TLS int in_sched_progress = 0;
 
     if (in_sched_progress) {
         return MPI_SUCCESS;
