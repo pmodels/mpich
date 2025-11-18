@@ -17,8 +17,6 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
     if (comm) {
         /* If the user set a multi-nic hint, but num_nics = 1, disable multi-nic optimizations. */
         if (MPIDI_OFI_global.num_nics > 1) {
-            int was_enabled_striping = MPIDI_OFI_COMM(comm).enable_striping;
-
             /* Check if we should use striping */
             if (HAS_PREF_NIC(comm)) {
                 /* If the user specified a particular NIC, don't use striping. */
@@ -29,18 +27,9 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
             else
                 MPIDI_OFI_COMM(comm).enable_striping = MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING;
 
-            /* If striping was on and we disabled it here, decrement the global counter. */
-            if (was_enabled_striping > 0 && MPIDI_OFI_COMM(comm).enable_striping == 0)
-                MPIDI_OFI_global.num_comms_enabled_striping--;
-            /* If striping was off and we enabled it here, increment the global counter. */
-            else if (was_enabled_striping <= 0 && MPIDI_OFI_COMM(comm).enable_striping != 0)
-                MPIDI_OFI_global.num_comms_enabled_striping++;
-
             if (MPIDI_OFI_COMM(comm).enable_striping) {
                 MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
             }
-
-            int was_enabled_hashing = MPIDI_OFI_COMM(comm).enable_hashing;
 
             /* Check if we should use hashing */
             if (HAS_PREF_NIC(comm)) {
@@ -60,13 +49,6 @@ static int update_multi_nic_hints(MPIR_Comm * comm)
                  !comm->hints[MPIR_COMM_HINT_NO_ANY_SOURCE])) {
                 MPIDI_OFI_COMM(comm).enable_hashing = 0;
             }
-
-            /* If hashing was on and we disabled it here, decrement the global counter. */
-            if (was_enabled_hashing > 0 && MPIDI_OFI_COMM(comm).enable_hashing == 0)
-                MPIDI_OFI_global.num_comms_enabled_hashing--;
-            /* If hashing was off and we enabled it here, increment the global counter. */
-            else if (was_enabled_hashing <= 0 && MPIDI_OFI_COMM(comm).enable_hashing != 0)
-                MPIDI_OFI_global.num_comms_enabled_hashing++;
         }
     }
 
@@ -145,8 +127,6 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
     /* Initialize the multi-nic optimization values */
-    MPIDI_OFI_global.num_comms_enabled_striping = 0;
-    MPIDI_OFI_global.num_comms_enabled_hashing = 0;
     MPIDI_OFI_COMM(comm).enable_striping = 0;
     MPIDI_OFI_COMM(comm).enable_hashing = 0;
     MPIDI_OFI_COMM(comm).pref_nic = NULL;
@@ -191,12 +171,6 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    /* If we enabled striping or hashing, decrement the counter. */
-    MPIDI_OFI_global.num_comms_enabled_striping -=
-        (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);
-    MPIDI_OFI_global.num_comms_enabled_hashing -=
-        (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
