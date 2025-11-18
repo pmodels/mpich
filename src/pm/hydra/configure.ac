@@ -115,6 +115,11 @@ AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Confi
 if test -z "$FROM_MPICH" ; then
     FROM_HYDRA=yes
     export FROM_HYDRA
+    if test -z "$builddir" ; then
+       builddir="`pwd`"
+    fi
+    AC_SUBST(builddir)
+    export builddir
 fi
 
 # MPL
