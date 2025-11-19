@@ -28,19 +28,12 @@ typedef enum {
 struct MPIR_Request;
 
 typedef struct {
-    void *csel_root;
-    const char *csel_source;
-    void *csel_root_gpu;
-    const char *csel_source_gpu;
+    /* empty */
 } MPIDI_POSIX_Global_t;
-
-extern char MPIDI_POSIX_coll_generic_json[];
 
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    void *csel_comm;
-    void *csel_comm_gpu;
     MPIDI_POSIX_release_gather_comm_t release_gather, nb_release_gather;
     int nb_bcast_seq_no;        /* Seq number of the release-gather based nonblocking bcast call */
     int nb_reduce_seq_no;       /* Seq number of the release-gather based nonblocking reduce call */

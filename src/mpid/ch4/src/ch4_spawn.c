@@ -378,10 +378,10 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
 
       fn_fail:
         /* In case root fails, we bcast mpi_errno so other ranks will abort too */
-        MPIR_Bcast_impl(&mpi_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
+        MPIR_Bcast_fallback(&mpi_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
     } else {
         int root_errno;
-        MPIR_Bcast_impl(&root_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
+        MPIR_Bcast_fallback(&root_errno, 1, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_COLL_ATTR_SYNC);
         if (root_errno) {
             MPIR_ERR_SET(mpi_errno, MPI_ERR_PORT, "**comm_connect_fail");
         }
