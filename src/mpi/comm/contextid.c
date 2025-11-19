@@ -681,6 +681,9 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state, *tmp;
     int newctxid;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
     if (st->own_eager_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -709,6 +712,8 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             }
         }
     }
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
     if (*st->ctx0 == 0) {
         if (st->local_mask[ALL_OWN_MASK_FLAG] == 1) {
@@ -796,6 +801,8 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
     if (st->first_iter) {
         memset(st->local_mask, 0, (MPIR_MAX_CONTEXT_MASK + 1) * sizeof(int));
         st->own_eager_mask = 0;
@@ -827,6 +834,8 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
             st->local_mask[ALL_OWN_MASK_FLAG] = 1;
         }
     }
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
     mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
                                                  MPIR_MAX_CONTEXT_MASK + 1,
@@ -1110,6 +1119,8 @@ void MPIR_Free_contextid(int context_id)
         }
     }
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
     /* --BEGIN ERROR HANDLING-- */
     /* Check that this context id has been allocated */
     if ((context_mask[idx] & (0x1U << bitpos)) != 0) {
@@ -1123,7 +1134,6 @@ void MPIR_Free_contextid(int context_id)
     }
     /* --END ERROR HANDLING-- */
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     /* MT: Note that this update must be done atomically in the multithreaedd
      * case.  In the "one, single lock" implementation, that lock is indeed
      * held when this operation is called. */
