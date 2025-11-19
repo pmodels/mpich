@@ -91,6 +91,8 @@ int MPIDIU_new_avt(int size, int *avtid)
     MPIR_FUNC_ENTER;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " new_avt: size=%d", size));
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
+
     *avtid = get_next_avtid();
 
     /* note: zeroed so is_local default to 0, which is true for *avtid > 0 */
@@ -101,6 +103,8 @@ int MPIDIU_new_avt(int size, int *avtid)
         new_av_table->table[i].node_id = -1;
     }
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
