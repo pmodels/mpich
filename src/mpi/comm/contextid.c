@@ -260,8 +260,8 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
  * They are used to avoid deadlock in multi-threaded case. In single-threaded
  * case, they are not used.
  */
-static volatile int eager_nelem = -1;
-static volatile int eager_in_use = 0;
+static int eager_nelem = -1;
+static int eager_in_use = 0;
 
 /* In multi-threaded case, mask_in_use is used to maintain thread safety. In
  * single-threaded case, it is always 0. */
