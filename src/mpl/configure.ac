@@ -760,6 +760,7 @@ PAC_ARG_POSIX_MUTEX
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
     yes|posix|pthreads)
+        with_thread_package=posix
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
@@ -930,7 +931,7 @@ AC_DEFINE_UNQUOTED([PROC_MUTEX_PACKAGE_NAME],[$PROC_MUTEX_PACKAGE_NAME],[set to 
 #######################################################################
 ## START OF PTHREAD MUTEX COMMON CHECK
 #######################################################################
-if test "${with_thread_package}" = "pthreads" -o "${with_proc_mutex_package}" = "pthreads"; then
+if test "${with_thread_package}" = "posix" -o "${with_proc_mutex_package}" = "posix"; then
   # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
   AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
   pac_cv_has_pthread_mutex_errorcheck_np,[
