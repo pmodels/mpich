@@ -98,3 +98,10 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
   fn_fail:
     goto fn_exit;
 }
+
+int MPIR_TSP_Ibcast_sched_intra_ring(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                                     MPIR_Comm * comm, int chunk_size, MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
+                                            MPIR_TREE_TYPE_KARY, 1, chunk_size, sched);
+}

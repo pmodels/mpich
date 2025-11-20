@@ -38,7 +38,8 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, coll_attr);
+    mpi_errno = MPIR_Reduce_auto(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr,
+                                 MPIR_CSEL_ENTRY__AUTO);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Do a exchange between local and remote rank 0 on this intercommunicator */
@@ -50,7 +51,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
     }
 
     /* Do a local broadcast on this intracommunicator */
-    mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, newcomm_ptr, coll_attr);
+    mpi_errno = MPIR_Bcast_auto(recvbuf, count, datatype, 0, newcomm_ptr, MPIR_CSEL_ENTRY__AUTO);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

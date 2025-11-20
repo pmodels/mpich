@@ -50,7 +50,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
 
         /* now do the usual broadcast on this intracommunicator
          * with rank 0 as root. */
-        mpi_errno = MPIR_Bcast_allcomm_auto(buffer, count, datatype, 0, newcomm_ptr, coll_attr);
+        mpi_errno = MPIR_Bcast_auto(buffer, count, datatype, 0, newcomm_ptr, MPIR_CSEL_ENTRY__AUTO);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

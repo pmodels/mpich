@@ -944,6 +944,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr:MPII_Win_get_attr failed
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
+## Collective selection
+**csel_noresult: Collective selection failed to find an algorithm
+
 ## Gentran related error messages
 **nofence: invalid Gentran fence
 **nullvertex:  Gentran vertex is NULL

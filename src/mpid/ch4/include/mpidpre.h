@@ -28,7 +28,6 @@
 #include "shmpre.h"
 #endif
 #include "uthash.h"
-#include "ch4_csel_container.h"
 
 #define MPID_TAG_DEV_BITS 0
 #define MPID_MAX_BC_SIZE 4096
@@ -596,9 +595,6 @@ typedef struct MPIDI_Devcomm_t {
         struct MPIDI_Multileads_comp_info_t *alltoall_comp_info, *allgather_comp_info,
             *allreduce_comp_info;
         int shm_size_per_lead;
-
-        void *csel_comm;        /* collective selection handle */
-        void *csel_comm_gpu;    /* collective selection handle for gpu */
     } ch4;
 } MPIDI_Devcomm_t;
 

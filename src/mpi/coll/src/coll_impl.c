@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "coll_impl.h"
+#include "coll_csel.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -14,20 +15,6 @@ categories :
      description : A category for collective communication variables.
 
 cvars:
-    - name        : MPIR_CVAR_DEVICE_COLLECTIVES
-      category    : COLLECTIVE
-      type        : enum
-      default     : percoll
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select whether the device can override the
-        MPIR-level collective algorithms.
-        all     - Always prefer the device collectives
-        none    - Never pick the device collectives
-        percoll - Use the per-collective CVARs to decide
-
     - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
       category    : COLLECTIVE
       type        : enum
@@ -52,6 +39,26 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Defines the location of tuning file.
+
+    - name        : MPIR_CVAR_COLL_SELECTION_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file that selects basic collective algorithms.
+
+    - name        : MPIR_CVAR_COLL_COMPOSITION_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file that selects composition collective algorithms.
 
     - name        : MPIR_CVAR_HIERARCHY_DUMP
       category    : COLLECTIVE
@@ -96,6 +103,17 @@ cvars:
         If set to true, rank 0 will dump the network coordinates to a file named "coords" in the current folder.
         If set to false, the network coordinates will not be dumped.
 
+    - name        : MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Set MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS to a global rank number (including 0) for that rank to dump collective
+        algorithm counters.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -108,6 +126,24 @@ MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 const char *MPIR_Csel_source;
+
+/* TODO: remove the old MPIR_Csel_root etc. */
+void *MPIR_Csel_composition = NULL;
+void *MPIR_Csel_selection = NULL;
+
+/* table of all collective algorithms */
+MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
+
+/* table of collective algorithm cvars */
+int *MPIR_Coll_cvar_table;
+
+/* string tables to facilitate parsing and debugging */
+const char **MPIR_Coll_type_names;
+const char **MPIR_Coll_algo_names;
+const char **MPIR_Csel_condition_names;
+
+/* algorithm counters */
+int *MPIR_Coll_algo_counters;
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
@@ -155,6 +191,16 @@ int get_ccl_from_string(const char *ccl_str)
     return ccl;
 }
 
+#define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
+   do { \
+        if (!strcmp(cvar_name, "")) { \
+            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, &csel_var); \
+        } else { \
+            mpi_errno = MPIR_Csel_create_from_file(cvar_name, &csel_var); \
+        } \
+        MPIR_ERR_CHECK(mpi_errno); \
+   } while (0)
+
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -190,17 +236,25 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* FIXME: this is hackish. Define the "num" constants in coll_algos.h */
+    MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
+    MPIR_Coll_type_names = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(char *), MPL_MEM_COLL);
+    MPIR_Coll_algo_table =
+        MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
+    MPIR_Coll_algo_names = MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(char *), MPL_MEM_COLL);
+    MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
+
+    MPIR_Coll_algo_counters = MPL_calloc(MPIR_CSEL_NUM_ALGORITHMS, sizeof(int), MPL_MEM_COLL);
+
+    MPII_Coll_type_init();
+    MPII_Coll_algo_init();
+    MPII_Csel_init_condition_names();
+
     /* initialize selection tree */
-    if (!strcmp(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE, "")) {
-        mpi_errno = MPIR_Csel_create_from_buf(MPII_coll_generic_json,
-                                              MPII_Create_container, &MPIR_Csel_root);
-        MPIR_Csel_source = "MPII_coll_generic_json";
-    } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE,
-                                               MPII_Create_container, &MPIR_Csel_root);
-        MPIR_Csel_source = MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE;
-    }
-    MPIR_ERR_CHECK(mpi_errno);
+    LOAD_CSEL_JSON(MPIR_Csel_composition,
+                   MPIR_CVAR_COLL_COMPOSITION_JSON_FILE, MPII_coll_composition_json);
+    LOAD_CSEL_JSON(MPIR_Csel_selection,
+                   MPIR_CVAR_COLL_SELECTION_JSON_FILE, MPII_coll_selection_json);
 
   fn_exit:
     return mpi_errno;
@@ -208,9 +262,29 @@ int MPII_Coll_init(void)
     goto fn_exit;
 }
 
+void MPIR_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
+static void dump_coll_algo_counters(void)
+{
+    printf("==== Dump collective algorithm counters ====\n");
+    for (int i = 0; i < MPIR_CSEL_NUM_ALGORITHMS; i++) {
+        if (MPIR_Coll_algo_counters[i] > 0) {
+            printf("%10d  %s\n", MPIR_Coll_algo_counters[i], MPIR_Coll_algo_names[i]);
+        }
+    }
+    printf("==== END collective algorithm counters ====\n");
+}
+
 int MPII_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS >= 0 &&
+        MPIR_Process.rank == MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS) {
+        dump_coll_algo_counters();
+    }
 
     /* deregister non blocking collectives progress hook */
     MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
@@ -218,8 +292,18 @@ int MPII_Coll_finalize(void)
     mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_composition);
     MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_selection);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(MPIR_Coll_algo_table);
+    MPL_free(MPIR_Coll_cvar_table);
+    MPL_free(MPIR_Coll_algo_names);
+    MPL_free(MPIR_Coll_type_names);
+    MPL_free(MPIR_Csel_condition_names);
+    MPL_free(MPIR_Coll_algo_counters);
 
   fn_exit:
     return mpi_errno;
@@ -255,9 +339,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -268,9 +349,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Csel_free(comm->csel_comm);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup all collective communicators */
     mpi_errno = MPII_Stubalgo_comm_cleanup(comm);
@@ -371,4 +449,203 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
         request->u.persist_coll.coll.datatype = datatype;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
+}
+
+int MPIR_Coll_composition_auto(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* TODO: need a mechanism in coll_sig so we can assert and prevent a dead recursion loop */
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_composition, coll_sig);
+    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
+
+    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* First check whether user has set an algorithm CVAR */
+    int coll_type = coll_sig->coll_type;
+    int cvar_val = MPIR_Coll_cvar_table[coll_type];
+    if (cvar_val) {
+        coll_sig->flags |= MPIR_COLL_SIG_FLAG__CVAR;
+        int algo_id = MPIR_Coll_cvar_to_algo_id(coll_type, cvar_val);
+        bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
+
+        if (restriction_ok) {
+            MPII_Csel_container_s algo_cnt;
+            MPIR_Coll_init_algo_container(coll_sig, algo_id, &algo_cnt);
+            mpi_errno = MPIR_Coll_algo_table[algo_id] (coll_sig, &algo_cnt);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        } else {
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**collalgo");
+            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) {
+                if (coll_sig->comm_ptr->rank == 0) {
+                    printf("CVAR selected algorithm %s cannot run!\n",
+                           MPIR_Coll_algo_names[algo_id]);
+                }
+            }
+            /* Fall-thru */
+        }
+    }
+
+    /* Search an algorithm by Csel */
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
+    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
+
+    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* blocking collectives by calling its nonblocking forms */
+int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Trick: blocking coll_type is even. Its nonblocking type is +1 */
+    MPIR_Assert(coll_sig->coll_type % 2 == 0);
+    coll_sig->coll_type += 1;
+
+    mpi_errno = MPIR_Coll_auto(coll_sig, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Request *req;
+    MPII_SCHED_START(coll_sig->sched_type, coll_sig->sched, coll_sig->comm_ptr, &req);
+
+    mpi_errno = MPIC_Wait(req);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Request_free(req);
+
+    /* clean up coll_sig just in case */
+    coll_sig->coll_type -= 1;
+    coll_sig->sched = NULL;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* swap buffers and continue. This works around when collective algorithms can't work
+ * with hybrid memory or inefficient in working with hybrid memory.
+ */
+static void *host_alloc(MPI_Aint count, MPI_Datatype datatype)
+{
+    return MPIR_alloc_buffer(count, datatype);
+}
+
+static void *host_swap(const void *buf, MPI_Aint count, MPI_Datatype datatype)
+{
+    void *host_buf = host_alloc(count, datatype);
+    MPIR_Localcopy(buf, count, datatype, host_buf, count, datatype);
+    return host_buf;
+}
+
+#define DO_BUFFER_SWAP(sendbuf, recvbuf) \
+    do { \
+        orig_recvbuf = (recvbuf); \
+        if ((sendbuf) == MPI_IN_PLACE) { \
+            (recvbuf) = host_swap((recvbuf), recvcount, recvtype); \
+        } else { \
+            (sendbuf) = host_swap((sendbuf), sendcount, sendtype); \
+            (recvbuf) = host_alloc(recvcount, recvtype); \
+        } \
+        host_recvbuf = (recvbuf); \
+    } while (0)
+
+int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *orig_recvbuf = NULL;
+    void *host_recvbuf;
+    MPI_Aint sendcount = 0, recvcount = 0;
+    MPI_Datatype sendtype = MPI_DATATYPE_NULL, recvtype = MPI_DATATYPE_NULL;
+    switch (coll_sig->coll_type) {
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+            sendcount = recvcount = coll_sig->u.allreduce.count;
+            sendtype = recvtype = coll_sig->u.allreduce.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.allreduce.sendbuf, coll_sig->u.allreduce.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE):
+            sendcount = recvcount = coll_sig->u.reduce.count;
+            sendtype = recvtype = coll_sig->u.reduce.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce.sendbuf, coll_sig->u.reduce.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(SCAN):
+            sendcount = recvcount = coll_sig->u.scan.count;
+            sendtype = recvtype = coll_sig->u.scan.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.scan.sendbuf, coll_sig->u.scan.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            sendcount = recvcount = coll_sig->u.exscan.count;
+            sendtype = recvtype = coll_sig->u.exscan.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.exscan.sendbuf, coll_sig->u.exscan.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+            {
+                MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+                recvcount = coll_sig->u.reduce_scatter_block.recvcount;
+                sendcount = comm_ptr->local_size * recvcount;
+            }
+            sendtype = recvtype = coll_sig->u.reduce_scatter_block.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce_scatter_block.sendbuf,
+                           coll_sig->u.reduce_scatter_block.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+            {
+                MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+                const MPI_Aint *counts = coll_sig->u.reduce_scatter.recvcounts;
+                recvcount = counts[comm_ptr->rank];
+                sendcount = 0;
+                for (int i = 0; i < comm_ptr->local_size; i++) {
+                    sendcount += counts[i];
+                }
+            }
+            sendtype = recvtype = coll_sig->u.reduce_scatter.datatype;
+            DO_BUFFER_SWAP(coll_sig->u.reduce_scatter.sendbuf, coll_sig->u.reduce_scatter.recvbuf);
+            break;
+          COLL_TYPE_ALL_CASE(BCAST):
+            sendcount = coll_sig->u.bcast.count;
+            sendtype = coll_sig->u.bcast.datatype;
+            if (coll_sig->comm_ptr->rank == coll_sig->u.bcast.root) {
+                coll_sig->u.bcast.buffer = host_swap(coll_sig->u.bcast.buffer, sendcount, sendtype);
+            } else {
+                orig_recvbuf = coll_sig->u.bcast.buffer;
+                recvcount = sendcount;
+                recvtype = recvtype;
+                coll_sig->u.bcast.buffer = host_alloc(sendcount, sendtype);
+                host_recvbuf = coll_sig->u.bcast.buffer;
+            }
+        default:
+            break;
+    }
+
+    mpi_errno = MPIR_Coll_auto(coll_sig, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (orig_recvbuf) {
+        MPIR_Localcopy(host_recvbuf, recvcount, recvtype, orig_recvbuf, recvcount, recvtype);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

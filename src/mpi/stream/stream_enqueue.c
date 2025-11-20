@@ -615,7 +615,12 @@ static void allreduce_enqueue_cb(void *data)
         }
     }
 
-    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, p->count, p->datatype, p->op, p->comm_ptr, 0);
+    /* FIXME: it's not safe to issue collective inside a callback.
+     * IDEA:  dup a lightweith communicator that shares the context_id but designate a unique
+     *        nonblocking tag for collectives to use.
+     */
+    mpi_errno = MPIR_Allreduce_auto(sendbuf, recvbuf, p->count, p->datatype, p->op, p->comm_ptr,
+                                    MPIR_CSEL_ENTRY__AUTO);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_recvbuf) {
