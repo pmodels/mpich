@@ -489,11 +489,11 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
 
-                mpi_errno = MPIR_Barrier(node_comm_ptr, 0);
+                mpi_errno = MPIR_Barrier_fallback(node_comm_ptr, 0);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
-            mpi_errno = MPIR_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
+            mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (fence_sync_req_ptr == NULL) {
@@ -537,8 +537,9 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
         win_ptr->at_completion_counter += comm_size;
 
-        mpi_errno = MPIR_Reduce_scatter_block(MPI_IN_PLACE, rma_target_marks, 1, MPIR_INT_INTERNAL,
-                                              MPI_SUM, win_ptr->comm_ptr, 0);
+        mpi_errno = MPIR_Reduce_scatter_block_fallback(MPI_IN_PLACE, rma_target_marks,
+                                                       1, MPIR_INT_INTERNAL,
+                                                       MPI_SUM, win_ptr->comm_ptr, 0);
         MPIR_ERR_CHECK(mpi_errno);
 
         win_ptr->at_completion_counter -= comm_size;
@@ -578,7 +579,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (scalable_fence_enabled) {
-        mpi_errno = MPIR_Barrier(win_ptr->comm_ptr, 0);
+        mpi_errno = MPIR_Barrier_fallback(win_ptr->comm_ptr, 0);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Set window access state properly. */
@@ -603,7 +604,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             MPIR_Request* fence_sync_req_ptr;
 
             /* Prepare for the next possible epoch */
-            mpi_errno = MPIR_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
+            mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (fence_sync_req_ptr == NULL) {
@@ -628,7 +629,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
-                mpi_errno = MPIR_Barrier(node_comm_ptr, 0);
+                mpi_errno = MPIR_Barrier_fallback(node_comm_ptr, 0);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
