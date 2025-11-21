@@ -88,7 +88,7 @@ def dump_mpi_c(func, is_large=False):
     dump_profiling(func)
 
     skip_wrappers = False
-    if func['dir'] == 'io' and '_is_abi' in func:
+    if func['dir'] == 'io' and '_is_abi' in func and not re.match(r'MPI_File_(c2f|f2c|toint|fromint)', func['name']):
         # The mpi-abi version of io bindings does not have access to MPICH internals (i.e. mpiimpl.h)
         dump_function_io(func)
         skip_wrappers = True
@@ -247,8 +247,14 @@ def dump_mpir_io_impl_h(f):
         print("MPI_File MPIR_File_f2c_impl(MPI_Fint fh);", file=Out)
         print("int MPIO_Err_return_file(MPI_File fh, int errorcode);", file=Out)
         print("#endif", file=Out)
-
         print("", file=Out)
+
+        # ABI_File and MPI_File are both opaque pointers
+        print("typedef MPI_File ABI_File;", file=Out)
+        print("#define ABI_File_to_mpi(fh) fh", file=Out)
+        print("#define ABI_File_from_mpi(fh) fh", file=Out)
+        print("", file=Out)
+
         for l in G.io_impl_declares:
             print(l, file=Out)
         print("", file=Out)
