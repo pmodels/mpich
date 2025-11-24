@@ -1240,11 +1240,16 @@ int MPIR_Register_datarep_large_impl(ROMIO_CONST char *datarep,
 
 MPI_Fint MPIR_File_c2f_impl(MPI_File fh)
 {
-    return MPIO_File_c2f(fh);
+    MPI_Fint val = MPIO_File_c2f(fh);
+    if (val > 0)
+        val += ROMIO_HANDLE_OFFSET;
+    return val;
 }
 
 MPI_File MPIR_File_f2c_impl(MPI_Fint fh)
 {
+    if (fh > 0)
+        fh -= ROMIO_HANDLE_OFFSET;
     return MPIO_File_f2c(fh);
 }
 
