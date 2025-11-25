@@ -24,7 +24,10 @@ int MPIDI_CMA_init_local(void)
                 cma_happy = true;
             }
         }
-        close(fd);
+    } else {
+        /* if we cannot open the yama files, it means Yama security module is not loaded. There
+         * is not ptrace scope control and CMA should always work. */
+        cma_happy = true;
     }
 
     if (!cma_happy) {
