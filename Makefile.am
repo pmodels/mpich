@@ -338,7 +338,7 @@ uninstall-local:
 	done ; \
 	for x in @MPICC_ABI_NAME@ @MPICXX_ABI_NAME@ ; do \
 		rm -f ${DESTDIR}${bindir}/$$x ; \
-	done \
+	done ; \
 	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
 	done
