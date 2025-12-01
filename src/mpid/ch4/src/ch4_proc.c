@@ -26,18 +26,6 @@ int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     return mpi_errno;
 }
 
-int MPIDIU_get_n_avts(void)
-{
-    int ret;
-
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDI_global.avt_mgr.n_avts;
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
 int MPIDIU_get_avt_size(int avtid)
 {
     int ret;
