@@ -498,7 +498,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     MPIDIG_win_shared_info_t *shared_table = NULL;
     MPI_Aint *shm_offsets = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
-    size_t page_sz = 0, mapsize;
+    size_t mapsize;
     bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
     bool symheap_flag = true, global_symheap_flag = false;
 
@@ -536,7 +536,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
+                total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, NULL);
             else
                 total_shm_size += shared_table[i].size;
         }
@@ -546,7 +546,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
             goto fn_no_shm;
 
         /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
-        if (size != MPIDU_shm_get_mapsize(size, &page_sz) &&
+        if (size != MPIDU_shm_get_mapsize(size, NULL) &&
             !MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
             symheap_flag = false;
     } else
@@ -570,7 +570,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     /* because MPI_shm follows a create & attach mode, we need to set the
      * size of entire shared memory segment on each node as the size of
      * each process. */
-    mapsize = MPIDU_shm_get_mapsize(total_shm_size, &page_sz);
+    mapsize = MPIDU_shm_get_mapsize(total_shm_size, NULL);
 
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
@@ -620,7 +620,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                 shared_table[i].shm_base_addr = NULL;
 
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
+                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, NULL);
             else
                 cur_base += shared_table[i].size;
         }
