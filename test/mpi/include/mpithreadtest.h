@@ -87,4 +87,12 @@ int MTest_thread_barrier_free(void);
 void MTest_init_thread_pkg(void);
 void MTest_finalize_thread_pkg(void);
 
+#ifdef HAVE_ATOMIC
+#define MTEST_ATOMIC _Atomic
+#else
+/* FIXME: volatile is not thread-safe. we could add alternatives to _Atomic
+ * like in MPL */
+#define MTEST_ATOMIC volatile
+#endif
+
 #endif /* MPITHREADTEST_H_INCLUDED */

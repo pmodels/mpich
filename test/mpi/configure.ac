@@ -733,6 +733,15 @@ if test "$pac_cv_have_float16" = "yes" ; then
 fi
 
 #
+# Check for _Atomic
+AC_MSG_CHECKING([whether _Atomic is supported])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[_Atomic int a;])],[pac_cv_have_atomic=yes],[pac_cv_have_atomic=no])
+AC_MSG_RESULT($pac_cv_have_atomic)
+if test "$pac_cv_have_atomic" = "yes" ; then
+    AC_DEFINE(HAVE_ATOMIC,1,[Define if _Atomic is supported])
+fi
+
+#
 # Check for const and restrict (used in some of the performance tests)
 AC_C_CONST
 AC_C_RESTRICT

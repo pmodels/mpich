@@ -24,7 +24,7 @@ static char MTEST_Descrip[] = "Threaded Send-Recv";
    avoid a possible race caused by reading the value before the send
    thread sets it.
 */
-static volatile int sendok = -1;
+static MTEST_ATOMIC int sendok = -1;
 MTEST_THREAD_RETURN_TYPE send_thread(void *p);
 MTEST_THREAD_RETURN_TYPE send_thread(void *p)
 {
