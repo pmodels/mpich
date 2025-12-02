@@ -10,6 +10,8 @@ external_ldflags = @RPATHS@
 # NOTE: the order matters, libpmi depends on libmpl.
 external_libs = @pmi_lib@ @mpl_lib@ @hwloc_lib@ @WRAPPER_LIBS@
 
+internal_libs = libhydra.la
+
 bin_PROGRAMS =
 noinst_HEADERS =
 DISTCLEANFILES =
