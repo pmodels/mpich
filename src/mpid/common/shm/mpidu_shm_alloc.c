@@ -82,13 +82,15 @@ size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz)
 {
     size_t page_sz, mapsize;
 
-    if (*psz == 0)
+    if (!psz || *psz == 0)
         page_sz = (size_t) sysconf(_SC_PAGESIZE);
     else
         page_sz = *psz;
 
     mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
-    *psz = page_sz;
+    if (psz) {
+        *psz = page_sz;
+    }
 
     return mapsize;
 }
@@ -129,8 +131,8 @@ static void *generate_random_addr(size_t size)
 #define MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
     char random_state[256];
-    size_t page_sz = 0;
     uint64_t random_unsigned;
+    size_t page_sz = 0;
     size_t mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
     MPL_time_t ts;
     unsigned int ts_32 = 0;
