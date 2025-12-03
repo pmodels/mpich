@@ -314,6 +314,19 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             win->info_args.alloc_shm = FALSE;
 
         /********************************************************/
+        /******* check for info symheap_required       **********/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "symheap_required", MPI_MAX_INFO_VAL,
+                           info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", strlen("true")))
+                win->info_args.symheap_required = 1;
+            if (!strncmp(info_value, "false", strlen("false")))
+                win->info_args.symheap_required = 0;
+        }
+
+        /********************************************************/
         /******* check for info alloc_shared_noncontig **********/
         /********************************************************/
         info_flag = 0;
