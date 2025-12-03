@@ -170,6 +170,15 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
+    /* Test #10: setting/getting "symheap_required" */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "symheap_required", "true");
+    MPI_Win_allocate_shared(sizeof(int), sizeof(int), info_in, shm_comm, &base, &win);
+    errors += check_win_info_get(win, "symheap_required", "true");
+    MPI_Info_free(&info_in);
+
+    MPI_Win_free(&win);
+
     MTest_Finalize(errors);
 
     return MTestReturnValue(all_errors);
