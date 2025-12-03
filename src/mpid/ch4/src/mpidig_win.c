@@ -208,6 +208,11 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 
     INFO_GET_BOOL(info, "same_disp_unit", MPIDIG_WIN(win, info_args).same_disp_unit);
     INFO_GET_BOOL(info, "same_size", MPIDIG_WIN(win, info_args).same_size);
+    INFO_GET_BOOL(info, "symheap_required", MPIDIG_WIN(win, info_args).symheap_required);
+    if (MPIDIG_WIN(win, info_args).symheap_required) {
+        /* symheap requires alloc_shared_noncontig */
+        MPIDIG_WIN(win, info_args).alloc_shared_noncontig = 1;
+    }
     INFO_GET_BOOL(info, "alloc_shared_noncontig",
                   MPIDIG_WIN(win, info_args).alloc_shared_noncontig);
     INFO_GET_BOOL(info, "alloc_shm", MPIDIG_WIN(win, info_args).alloc_shm);
@@ -333,6 +338,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).coll_attach = false;
     MPIDIG_WIN(win, info_args).optimized_mr = false;
     MPIDIG_WIN(win, info_args).accumulate_granularity = 0;
+    MPIDIG_WIN(win, info_args).symheap_required = 0;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -545,6 +551,10 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                                           &MPIDIG_WIN(win, mmap_addr));
         if (rc == MPI_SUCCESS) {
             shm_mapped = true;
+        } else {
+            /* if symheap_required, then we need fail here */
+            mpi_errno = rc;
+            goto fn_fail;
         }
     }
 
@@ -613,10 +623,15 @@ static int need_symmheap(MPIR_Win * win, MPIR_Comm * comm_ptr, MPI_Aint size, bo
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* single process does not need symmheap */
-    if (comm_ptr->local_size == 1) {
+    if (!MPIDIG_WIN(win, info_args).symheap_required) {
         *flag_out = false;
         goto fn_exit;
+    }
+
+    /* single process can't tell symmheap anyway */
+    if (comm_ptr->local_size == 1) {
+        *flag_out = false;
+        goto fn_fail;
     }
 
     bool symheap_flag;
@@ -630,6 +645,10 @@ static int need_symmheap(MPIR_Win * win, MPIR_Comm * comm_ptr, MPI_Aint size, bo
     mpi_errno = MPIR_Allreduce(&symheap_flag, flag_out, 1, MPIR_C_BOOL_INTERNAL,
                                MPI_LAND, comm_ptr, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (!(*flag_out)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winsymheap");
+    }
 
   fn_exit:
     return mpi_errno;
@@ -878,6 +897,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     } else {
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "optimized_mr", "false");
     }
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDIG_WIN(win, info_args).symheap_required)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "symheap_required", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "symheap_required", "false");
+
     MPIR_ERR_CHECK(mpi_errno);
 
     if (win->comm_ptr) {
