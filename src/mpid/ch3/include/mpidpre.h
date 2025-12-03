@@ -300,6 +300,7 @@ struct MPIDI_Win_info_args {
     int alloc_shared_noncontig;
     int alloc_shm;
     int accumulate_granularity;
+    int symheap_required;
 };
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */

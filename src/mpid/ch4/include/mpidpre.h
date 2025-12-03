@@ -404,6 +404,7 @@ typedef struct MPIDIG_win_info_args_t {
     int same_disp_unit;
     int accumulate_ordering;
     int alloc_shared_noncontig;
+    int symheap_required;
     MPIDIG_win_info_accumulate_ops accumulate_ops;
     int accumulate_granularity;
 
