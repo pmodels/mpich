@@ -49,7 +49,7 @@ pkgconfigdir = @pkgconfigdir@
 errnames_txt_files = 
 
 external_subdirs = @mplsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@
-external_ldflags = @mpllibdir@ @yaksalibdir@
+external_ldflags = @RPATHS@ @mpllibdir@ @yaksalibdir@
 external_libs = @WRAPPER_LIBS@
 
 # convenience libs that do not depend on MPI
