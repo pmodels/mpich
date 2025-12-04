@@ -322,6 +322,10 @@ AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 LDFLAGS="$LDFLAGS $MPICHLIB_LDFLAGS"
 LIBS="$LIBS $MPICHLIB_LIBS"
 
+# we also need add rpaths of dependency libraries
+RPATHS=
+AC_SUBST([RPATHS])
+
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
 PAC_PREFIX_ALL_FLAGS(USER)

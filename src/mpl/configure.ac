@@ -61,6 +61,10 @@ PAC_C_BUILTIN_CLZ
 PAC_C_BUILTIN_POPCOUNT
 PAC_C_STATIC_ASSERT
 
+# we need add rpaths of dependency libraries
+RPATHS=
+AC_SUBST([RPATHS])
+
 AC_ARG_ENABLE(embedded,
     AS_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
     [embedded=yes],
