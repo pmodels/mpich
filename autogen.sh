@@ -42,6 +42,7 @@ echo "done"
 echo_n "Getting the HEAD commit hash... "
 commit=`git rev-parse --short HEAD`
 echo "MPICH_COMMIT_HASH=$commit" > MPICH_COMMIT_HASH
+echo $commit
 
 ########################################################################
 ## Initialize variables to default values (possibly from the environment)
