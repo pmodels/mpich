@@ -6,7 +6,7 @@
 external_subdirs = @pmi_srcdir@ @mpl_srcdir@ @hwloc_srcdir@
 external_dist_subdirs = @pmi_srcdir@ @mpl_dist_srcdir@ @hwloc_srcdir@
 external_includes = @pmi_includedir@ @mpl_includedir@ @hwloc_includedir@
-external_ldflags =
+external_ldflags = @RPATHS@
 # NOTE: the order matters, libpmi depends on libmpl.
 external_libs = @pmi_lib@ @mpl_lib@ @hwloc_lib@ @WRAPPER_LIBS@
 
