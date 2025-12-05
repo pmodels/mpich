@@ -405,6 +405,8 @@ AC_ARG_ENABLE(g,
                    stacktrace such as -g -O1 -fno-omit-frame-pointer.
         ubsan    - Add compiler flag, -fsanitize=undefined, to all internal
                    compiler flags.
+        tsan     - Add compiler flag, -fsanitize=thread, to all internal
+                   compiler flags.
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
                    eliminate access warnings from programs like valgrind
@@ -1284,6 +1286,9 @@ for option in $enable_g ; do
         ubsan)
         enable_ubsan=yes
         ;;
+        tsan)
+        enable_tsan=yes
+        ;;
         no|none)
 	;;
 	handlealloc)
@@ -1367,6 +1372,13 @@ if test "$enable_ubsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
+fi
+if test "$enable_tsan" = "yes" ; then
+    PAC_APPEND_FLAG([-fsanitize=thread],[CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[LDFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
