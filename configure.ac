@@ -322,6 +322,10 @@ AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 LDFLAGS="$LDFLAGS $MPICHLIB_LDFLAGS"
 LIBS="$LIBS $MPICHLIB_LIBS"
 
+# we also need add rpaths of dependency libraries
+RPATHS=
+AC_SUBST([RPATHS])
+
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
 PAC_PREFIX_ALL_FLAGS(USER)
@@ -2872,28 +2876,28 @@ done
 
 # Generate _CTYPE and _ALIGN for internal types
 
-if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
+if test "${ac_cv_sizeof_int8_t:-0}" -eq 1 ; then
     AC_DEFINE_UNQUOTED([MPIR_INT8_CTYPE],[int8_t], [The C type for MPIR_INT8])
     AC_DEFINE_UNQUOTED([MPIR_UINT8_CTYPE],[uint8_t], [The C type for MPIR_UINT8])
     AC_CHECK_ALIGNOF(int8_t)
     AC_DEFINE_UNQUOTED([MPIR_INT8_ALIGN],[$ac_cv_alignof_int8_t], [The alignment for MPIR_INT8])
 fi
 
-if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
+if test "${ac_cv_sizeof_int16_t:-0}" -eq 2 ; then
     AC_DEFINE_UNQUOTED([MPIR_INT16_CTYPE],[int16_t], [The C type for MPIR_INT16])
     AC_DEFINE_UNQUOTED([MPIR_UINT16_CTYPE],[uint16_t], [The C type for MPIR_UINT16])
     AC_CHECK_ALIGNOF(int16_t)
     AC_DEFINE_UNQUOTED([MPIR_INT16_ALIGN],[$ac_cv_alignof_int16_t], [The alignment for MPIR_INT16])
 fi
 
-if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
+if test "${ac_cv_sizeof_int32_t:-0}" -eq 4 ; then
     AC_DEFINE_UNQUOTED([MPIR_INT32_CTYPE],[int32_t], [The C type for MPIR_INT32])
     AC_DEFINE_UNQUOTED([MPIR_UINT32_CTYPE],[uint32_t], [The C type for MPIR_UINT32])
     AC_CHECK_ALIGNOF(int32_t)
     AC_DEFINE_UNQUOTED([MPIR_INT32_ALIGN],[$ac_cv_alignof_int32_t], [The alignment for MPIR_INT32])
 fi
 
-if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
+if test "${ac_cv_sizeof_int64_t:-0}" -eq 8 ; then
     AC_DEFINE_UNQUOTED([MPIR_INT64_CTYPE],[int64_t], [The C type for MPIR_INT64])
     AC_DEFINE_UNQUOTED([MPIR_UINT64_CTYPE],[uint64_t], [The C type for MPIR_UINT64])
     AC_CHECK_ALIGNOF(int64_t)
@@ -2902,7 +2906,7 @@ fi
 
 if test "$MPID_NO_INT128" != "yes" ; then
     AC_CHECK_SIZEOF(__int128)
-    if test "$ac_cv_sizeof___int128" -eq 16 ; then
+    if test "${ac_cv_sizeof___int128:-0}" -eq 16 ; then
         AC_DEFINE_UNQUOTED([MPIR_INT128_CTYPE],[__int128], [The C type for MPIR_INT128])
         AC_DEFINE_UNQUOTED([MPIR_UINT128_CTYPE],[unsigned __int128], [The C type for MPIR_UINT128])
         AC_CHECK_ALIGNOF(__int128)
@@ -2917,11 +2921,11 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[__fp16 a = 0.1;]], [[return (int) a;]])],
         [AC_CHECK_SIZEOF(__fp16)])
 
-    if test "$ac_cv_sizeof__Float16" -eq 2 ; then
+    if test "${ac_cv_sizeof__Float16:-0}" -eq 2 ; then
         AC_DEFINE_UNQUOTED([MPIR_FLOAT16_CTYPE],[_Float16], [The C type for MPIR_FLOAT16])
         AC_CHECK_ALIGNOF(_Float16)
         AC_DEFINE_UNQUOTED([MPIR_FLOAT16_ALIGN],[$ac_cv_alignof__Float16], [The alignment for MPIR_FLOAT16])
-    elif test "$ac_cv_sizeof___fp16" -eq 2 ; then
+    elif test "${ac_cv_sizeof___fp16:-0}" -eq 2 ; then
         # enable it on ARM with -mfp16-format
         AC_DEFINE_UNQUOTED([MPIR_FLOAT16_CTYPE],[__fp16], [The C type for MPIR_FLOAT16])
         AC_CHECK_ALIGNOF(__fp16)
@@ -2929,13 +2933,13 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
     fi
 fi
 
-if test "$ac_cv_sizeof_float" -eq 4 ; then
+if test "${ac_cv_sizeof_float:-0}" -eq 4 ; then
     AC_DEFINE_UNQUOTED([MPIR_FLOAT32_CTYPE],[float], [The C type for MPIR_FLOAT32])
     AC_CHECK_ALIGNOF(float)
     AC_DEFINE_UNQUOTED([MPIR_FLOAT32_ALIGN],[$ac_cv_alignof_float], [The alignment for MPIR_FLOAT32])
 fi
 
-if test "$ac_cv_sizeof_double" -eq 8 ; then
+if test "${ac_cv_sizeof_double:-0}" -eq 8 ; then
     AC_DEFINE_UNQUOTED([MPIR_FLOAT64_CTYPE],[double], [The C type for MPIR_FLOAT64])
     AC_CHECK_ALIGNOF(double)
     AC_DEFINE_UNQUOTED([MPIR_FLOAT64_ALIGN],[$ac_cv_alignof_double], [The alignment for MPIR_FLOAT64])
@@ -2943,28 +2947,28 @@ fi
 
 if test "$MPID_NO_FLOAT128" != "yes" ; then
     AC_CHECK_SIZEOF(__float128)
-    if test "$ac_cv_sizeof___float128" -eq 16 ; then
+    if test "${ac_cv_sizeof___float128:-0}" -eq 16 ; then
         AC_DEFINE_UNQUOTED([MPIR_FLOAT128_CTYPE],[__float128], [The C type for MPIR_FLOAT128])
         AC_CHECK_ALIGNOF(__float128)
         AC_DEFINE_UNQUOTED([MPIR_FLOAT128_ALIGN],[$ac_cv_alignof___float128], [The alignment for MPIR_FLOAT64])
     fi
 fi
 
-if test "$ac_cv_sizeof_long_double" -gt 0 ; then
-    len=`expr $ac_cv_sizeof_long_double \* 8`
+if test "${ac_cv_sizeof_long_double:-0}" -gt 0 ; then
+    len=`expr ${ac_cv_sizeof_long_double:-0} \* 8`
     AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_CTYPE],[long double], [The C type for MPIR_ALT_FLOAT${len}])
     AC_CHECK_ALIGNOF(long double)
     AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_ALIGN],[$ac_cv_alignof_long_double], [The alignment for MPIR_ALT_FLOAT${len}])
 fi
 
-if test "$ac_cv_sizeof_float__Complex" -eq 8 ; then
+if test "${ac_cv_sizeof_float__Complex:-0}" -eq 8 ; then
     AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_CTYPE], [float _Complex], [The C type for MPIR_COMPLEX32])
 fi
-if test "$ac_cv_sizeof_double__Complex" -eq 16 ; then
+if test "${ac_cv_sizeof_double__Complex:-0}" -eq 16 ; then
     AC_DEFINE_UNQUOTED([MPIR_COMPLEX64_CTYPE], [double _Complex], [The C type for MPIR_COMPLEX64])
 fi
-if test "$ac_cv_sizeof_long_double__Complex" -gt 0 ; then
-    len=`expr $ac_cv_sizeof_long_double \* 8`
+if test "${ac_cv_sizeof_long_double__Complex:-0}" -gt 0 ; then
+    len=`expr ${ac_cv_sizeof_long_double:-0} \* 8`
     AC_DEFINE_UNQUOTED([MPIR_ALT_COMPLEX${len}_CTYPE], [long double _Complex], [The C type for MPIR_ALT_COMPLEX${len}])
 fi
 

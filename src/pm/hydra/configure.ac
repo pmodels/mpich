@@ -16,6 +16,10 @@ if test "$FROM_MPICH" != "yes" ; then
     PAC_PREFIX_ALL_FLAGS(USER)
 fi
 
+# we also need add rpaths of dependency libraries
+RPATHS=
+AC_SUBST([RPATHS])
+
 AC_ARG_PROGRAM
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
