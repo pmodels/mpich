@@ -33,8 +33,8 @@ static int MPIR_RCCLcomm_init(MPIR_Comm * comm_ptr, int rank)
         ncclGetUniqueId(&(rcclcomm->id));
     }
 
-    mpi_errno =
-        MPIR_Bcast(&(rcclcomm->id), sizeof(rcclcomm->id), MPIR_UINT8, 0, comm_ptr, MPI_SUCCESS);
+    mpi_errno = MPIR_Bcast_fallback(&(rcclcomm->id), sizeof(rcclcomm->id), MPIR_UINT8, 0,
+                                    comm_ptr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     ret = hipStreamCreate(&(rcclcomm->stream));

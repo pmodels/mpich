@@ -62,7 +62,8 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do a local reduce on this intracommunicator */
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, coll_attr);
+        mpi_errno = MPIR_Reduce_auto(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr,
+                                     MPIR_CSEL_ENTRY__AUTO);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {

@@ -310,24 +310,24 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
-                               MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_auto(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
+                                    MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
-                               comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_auto(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
+                                    comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
-                               MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_auto(rinfo, 2, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
+                                    MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         context_id = rinfo[0];
         remote_size = rinfo[1];
         MPIR_CHKLMEM_MALLOC(remote_mapping, remote_size * sizeof(int));
-        mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
-                               comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Bcast_auto(remote_mapping, remote_size, MPIR_INT_INTERNAL, 0,
+                                    comm_ptr->local_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -690,8 +690,8 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
     /* synchronize mpi_errno */
     int tmp_err = mpi_errno;
-    mpi_errno = MPIR_Bcast_impl(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
-                                MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(&tmp_err, 1, MPIR_INT_INTERNAL, local_leader, local_comm,
+                                    MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = tmp_err;
     MPIR_ERR_CHECK(mpi_errno);
@@ -1050,8 +1050,8 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
      * value of local_high, which may have changed if both groups
      * of processes had the same value for high
      */
-    mpi_errno = MPIR_Bcast(&local_high, 1, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
-                           MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Bcast_fallback(&local_high, 1, MPIR_INT_INTERNAL, 0, comm_ptr->local_comm,
+                                    MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /*

@@ -20,13 +20,12 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
             /* IN_PLACE and not root of reduce. Data supplied to this
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
-            mpi_errno =
-                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, coll_attr);
+            mpi_errno = MPIR_Reduce_auto(recvbuf, NULL, count, datatype, op, 0,
+                                         comm_ptr->node_comm, MPIR_CSEL_ENTRY__AUTO);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno =
-                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm,
-                            coll_attr);
+            mpi_errno = MPIR_Reduce_auto(sendbuf, recvbuf, count, datatype, op, 0,
+                                         comm_ptr->node_comm, MPIR_CSEL_ENTRY__AUTO);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
@@ -39,15 +38,15 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno =
-            MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                           coll_attr);
+        mpi_errno = MPIR_Allreduce_auto(MPI_IN_PLACE, recvbuf, count, datatype, op,
+                                        comm_ptr->node_roots_comm, MPIR_CSEL_ENTRY__AUTO);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, coll_attr);
+        mpi_errno = MPIR_Bcast_auto(recvbuf, count, datatype, 0, comm_ptr->node_comm,
+                                    MPIR_CSEL_ENTRY__AUTO);
         MPIR_ERR_CHECK(mpi_errno);
     }
     goto fn_exit;

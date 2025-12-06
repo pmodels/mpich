@@ -1,0 +1,10 @@
+{
+    "need_buffer_swap":
+    {
+        "algorithm=MPIR_Coll_buffer_swap":{}
+    },
+    "any":
+    {
+        "algorithm=MPIR_Coll_auto":{}
+    }
+}
