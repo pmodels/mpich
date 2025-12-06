@@ -70,7 +70,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
     int vtx_id;
     MPIR_FUNC_ENTER;
 
-    if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
+    if (step1_sendto != -1) {   /* non-participating rank sends the data to a participating rank */
         void *buf_to_send;
         MPI_Aint send_offset = rank * recv_extent * recvcount;
         if (is_inplace)
@@ -219,11 +219,11 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
  * paper, Sack et al, "Faster topology-aware collective algorithms through
  * non-minimal communication", 2012.
  * */
-int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
-                                            MPI_Datatype sendtype, void *recvbuf,
-                                            MPI_Aint recvcount, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, int is_dist_halving, int k,
-                                            MPIR_TSP_sched_t sched)
+static int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
+                                                   MPI_Datatype sendtype, void *recvbuf,
+                                                   MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm, int is_dist_halving, int k,
+                                                   MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -320,4 +320,23 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_TSP_Iallgather_sched_intra_recexch_doubling(const void *sendbuf, MPI_Aint sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                     MPIR_Comm * comm, int k,
+                                                     MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallgather_sched_intra_recexch(sendbuf, sendcount, sendtype,
+                                                   recvbuf, recvcount, recvtype, comm, 0, k, sched);
+}
+
+int MPIR_TSP_Iallgather_sched_intra_recexch_halving(const void *sendbuf, MPI_Aint sendcount,
+                                                    MPI_Datatype sendtype, void *recvbuf,
+                                                    MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                    MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+{
+    return MPIR_TSP_Iallgather_sched_intra_recexch(sendbuf, sendcount, sendtype,
+                                                   recvbuf, recvcount, recvtype, comm, 1, k, sched);
 }

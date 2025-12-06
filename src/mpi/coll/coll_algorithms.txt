@@ -16,6 +16,20 @@
 #     [algorithm_name]
 #         [key]: [values]
 #
+# "func-commkind" may be "general", under which the "algorithm_name" is the full name of the
+# algorithm function. General algorithm functions takes (coll_sig, cnt) parameters.
+#
+# In addition, "conditions" list all conditions and their corresponding checkers. There are
+# a few types of conditions distinguished by the format:
+#   - conidtion_name: func
+#         The condition calls checker function with signature: bool (*func)(coll_sig).
+#   - condition_name(thresh): func
+#         This condition calls a query function that returns a value: int (*func)(coll_sig)
+#         The thresh marks the upper limit (inclusive) of the condition.
+# The conditions are used in specifying both algorithm restrictions and CSEL conditions.
+# Example usage in restriction list or JSON file: inplace, !inplace, avg_msg_size(1024), etc.
+# Most of the checker functions should be inlined to minimize function call overhead.
+#
 # Notes:
 #   * indentations (use 4 spaces) and ':' behind keys are significant
 #   * auto and nb algorithms are assumed and not listed
@@ -25,8 +39,8 @@
 #
 # Recognized attribute keys (by gen_coll.py):
 #   * restrictions:
-#         possible values include parent-comm, power-of-two, inplace, no-inplace,
-#         cummutative, builtin-op, node-consecutive, displs-ordered, size-ge-pof2
+#         A comma-separated list restrictions. All restrictions must be specified in the top
+#         conditions list.
 #   * extra_params and cvar_params:
 #         Additional parameters specific to the algorithm functions. Most algorithm functions
 #         use the same arguments (e.g. as MPIR_Bcast), but some may require additional
@@ -37,9 +51,28 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
-#   * func_name:
-#         Some algorithm use another algorithm or use a different function name.
 
+# ----
+conditions:
+    inplace:          MPIR_Csel_sendbuf_inplace
+    pof2:             MPIR_Csel_comm_size_is_pof2
+    commutative:      MPIR_Csel_op_is_commutative
+    builtin_op:       MPIR_Csel_op_is_builtin
+    hierarchical:     MPIR_Csel_is_hierarchical
+    node_consecutive: MPIR_Csel_is_node_consecutive
+    node_regular:     MPIR_Csel_is_node_canonical
+    count_ge_pof2:    MPIR_Csel_count_ge_pof2
+    displs_ordered:   MPIR_Csel_displs_ordered
+    block_regular:    MPIR_Csel_block_regular
+    comm_size(thresh):      MPIR_Csel_comm_size
+    avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
+    total_msg_size(thresh): MPIR_Csel_total_msg_size
+
+# ----
+general:
+    MPIR_Coll_nb
+
+# ----
 barrier-intra:
     k_dissemination
         extra_params: k
@@ -48,7 +81,7 @@ barrier-intra:
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
-        restrictions: parent-comm
+        restrictions: hierarchical
 barrier-inter:
     bcast
 ibarrier-intra:
@@ -67,7 +100,7 @@ bcast-intra:
     scatter_recursive_doubling_allgather
     scatter_ring_allgather
     smp
-        restrictions: parent-comm
+        restrictions: hierarchical
     tree
         extra_params: tree_type, k, is_non_blocking
         cvar_params: TREE_TYPE, TREE_KVAL, IS_NON_BLOCKING
@@ -77,24 +110,25 @@ bcast-intra:
 ibcast-intra:
     sched_binomial
     sched_smp
-        restrictions: parent-comm
+        restrictions: hierarchical
     sched_scatter_recursive_doubling_allgather
-        restrictions: power-of-two
+        restrictions: pof2
     sched_scatter_ring_allgather
     tsp_tree
         extra_params: tree_type, k, chunk_size
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE
-    tsp_scatterv_recexch_allgatherv
-        func_name: scatterv_allgatherv
-        extra_params: allgatherv_algo=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling, scatterv_k, allgatherv_k
+    tsp_scatterv_allgatherv
+        extra_params: use_ring=0, scatterv_k, allgatherv_k
         cvar_params: -, SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
+    tsp_scatterv_recexch_allgatherv
+        extra_params: scatterv_k, allgatherv_k
+        cvar_params: SCATTERV_KVAL, ALLGATHERV_RECEXCH_KVAL
     tsp_scatterv_ring_allgatherv
         extra_params: scatterv_k
         cvar_params:  SCATTERV_KVAL
     tsp_ring
-        func_name: tree
-        extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size
-        cvar_params: -, -, RING_CHUNK_SIZE
+        extra_params: chunk_size
+        cvar_params: RING_CHUNK_SIZE
 bcast-inter:
     remote_send_local_bcast
 ibcast-inter:
@@ -168,60 +202,54 @@ allgather-intra:
         extra_params: k
         cvar_params: BRUCKS_KVAL
     recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     ring
     recexch_doubling
-        func_name: recexch
-        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k, single_phase_recv
-        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     recexch_halving
-        func_name: recexch
-        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
-        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        extra_params: k, single_phase_recv
+        cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
     sched_ring
     sched_brucks
     sched_recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     tsp_ring
     tsp_brucks
         extra_params: k
         cvar_params: BRUCKS_KVAL
     tsp_recexch_doubling
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_halving
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
 iallgather-inter:
     sched_local_gather_remote_bcast
 
 allgatherv-intra:
     brucks
     recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     ring
 allgatherv-inter:
     remote_gather_local_bcast
 iallgatherv-intra:
     sched_brucks
     sched_recursive_doubling
-        restrictions: power-of-two
+        restrictions: pof2
     sched_ring
     tsp_recexch_doubling
-        restrictions: displs-ordered
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING, k
-        cvar_params: -, RECEXCH_KVAL
+        restrictions: displs_ordered
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_halving
-        restrictions: displs-ordered
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING, k
-        cvar_params: -, RECEXCH_KVAL
+        restrictions: displs_ordered
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_ring
     tsp_brucks
         extra_params: k
@@ -231,28 +259,28 @@ iallgatherv-inter:
 
 alltoall-intra:
     brucks
-        restrictions: noinplace
+        restrictions: !inplace
     k_brucks
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: k
         cvar_params: BRUCKS_KVAL
     pairwise
-        restrictions: noinplace
+        restrictions: !inplace
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
     sched_brucks
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     sched_pairwise
-        restrictions: noinplace
+        restrictions: !inplace
     sched_permuted_sendrecv
-        restrictions: noinplace
+        restrictions: !inplace
     tsp_ring
     tsp_brucks
         extra_params: k, buffer_per_phase
@@ -267,20 +295,20 @@ alltoallv-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoallv-inter:
     pairwise_exchange
 ialltoallv-intra:
     sched_blocked
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     tsp_scattered
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
     tsp_blocked
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -292,16 +320,16 @@ alltoallw-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: noinplace
+        restrictions: !inplace
 alltoallw-inter:
     pairwise_exchange
 ialltoallw-intra:
     sched_blocked
-        restrictions: noinplace
+        restrictions: !inplace
     sched_inplace
         restrictions: inplace
     tsp_blocked
-        restrictions: noinplace
+        restrictions: !inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -312,38 +340,37 @@ ialltoallw-inter:
 reduce-intra:
     binomial
     smp
-        restrictions: commutative, parent-comm
+        restrictions: commutative, hierarchical
     reduce_scatter_gather
-        restrictions: size-ge-pof2, builtin-op
+        restrictions: count_ge_pof2, builtin_op
 reduce-inter:
     local_reduce_remote_send
 ireduce-intra:
     sched_smp
-        restrictions: commutative, parent-comm
+        restrictions: commutative, hierarchical
     sched_binomial
     sched_reduce_scatter_gather
-        restrictions: size-ge-pof2, builtin-op
+        restrictions: count_ge_pof2, builtin_op
     tsp_tree
         restrictions: commutative
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
     tsp_ring
-        func_name: tree
-        extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size, buffer_per_child
-        cvar_params: -, -, RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
+        extra_params: chunk_size, buffer_per_child
+        cvar_params: RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
 ireduce-inter:
     sched_local_reduce_remote_send
 
 allreduce-intra:
     smp
-        restrictions: commutative, parent-comm
+        restrictions: commutative, hierarchical
     recursive_doubling
     recursive_multiplying
         extra_params: k
         cvar_params: RECURSIVE_MULTIPLYING_KVAL
         restrictions: commutative
     reduce_scatter_allgather
-        restrictions: size-ge-pof2, builtin-op
+        restrictions: count_ge_pof2, builtin_op
     tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
@@ -364,17 +391,18 @@ allreduce-inter:
 iallreduce-intra:
     sched_naive
     sched_smp
-        restrictions: commutative, parent-comm
+        restrictions: commutative, hierarchical
     sched_recursive_doubling
     sched_reduce_scatter_allgather
-        restrictions: size-ge-pof2, builtin-op
+        restrictions: count_ge_pof2, builtin_op
     tsp_recexch_single_buffer
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER, k
-        cvar_params: -, RECEXCH_KVAL
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
     tsp_recexch_multiple_buffer
-        func_name: recexch
-        extra_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER, k
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+    tsp_recexch
+        extra_params: per_nbr_buffer=1, k
         cvar_params: -, RECEXCH_KVAL
     tsp_tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
@@ -399,7 +427,7 @@ reduce_scatter-inter:
     remote_reduce_local_scatter
 ireduce_scatter-intra:
     sched_noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     sched_recursive_doubling
     sched_pairwise
         restrictions: commutative
@@ -407,14 +435,14 @@ ireduce_scatter-intra:
         restrictions: commutative
     tsp_recexch
         restrictions: commutative
-        extra_params: recexch_type=IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING, k
+        extra_params: is_dist_halving=0, k
         cvar_params: -, RECEXCH_KVAL
 ireduce_scatter-inter:
     sched_remote_reduce_local_scatterv
 
 reduce_scatter_block-intra:
     noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     recursive_doubling
     pairwise
         restrictions: commutative
@@ -424,7 +452,7 @@ reduce_scatter_block-inter:
     remote_reduce_local_scatter
 ireduce_scatter_block-intra:
     sched_noncommutative
-        restrictions: power-of-two
+        restrictions: pof2
     sched_recursive_doubling
     sched_pairwise
         restrictions: commutative
@@ -439,11 +467,11 @@ ireduce_scatter_block-inter:
 
 scan-intra:
     smp
-        restrictions: commutative, node-consecutive
+        restrictions: commutative, node_consecutive
     recursive_doubling
 iscan-intra:
     sched_smp
-        restrictions: commutative, node-consecutive
+        restrictions: commutative, node_consecutive
     sched_recursive_doubling
     tsp_recursive_doubling
 

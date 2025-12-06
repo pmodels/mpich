@@ -9,7 +9,6 @@
 
 mpi_core_sources +=											\
     src/mpi/coll/bcast/bcast_utils.c						\
-    src/mpi/coll/bcast/bcast_allcomm_nb.c						\
     src/mpi/coll/bcast/bcast_intra_binomial.c						\
     src/mpi/coll/bcast/bcast_intra_scatter_recursive_doubling_allgather.c	\
     src/mpi/coll/bcast/bcast_intra_scatter_ring_allgather.c		\

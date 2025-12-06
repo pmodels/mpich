@@ -7,5 +7,4 @@
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
 
-mpi_core_sources += \
-    src/mpi/coll/neighbor_allgatherv/neighbor_allgatherv_allcomm_nb.c
+# Currently the only algorithm for neighbor_allgatherv is MPIR_Coll_nb.

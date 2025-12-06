@@ -16,7 +16,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb            - Force nonblocking algorithm
         smp           - Force smp algorithm
         k_dissemination - Force high radix dissemination algorithm
@@ -31,7 +31,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         bcast - Force bcast algorithm
         nb    - Force nonblocking algorithm
 
@@ -95,7 +95,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_recursive_doubling - Force recursive doubling algorithm
         tsp_recexch - Force generic transport based recursive exchange algorithm
@@ -110,7 +110,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_bcast - Force bcast algorithm
 
@@ -183,7 +183,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial                                - Force Binomial Tree
         nb                                      - Force nonblocking algorithm
         smp                                     - Force smp algorithm
@@ -308,7 +308,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                      - Force nonblocking algorithm
         remote_send_local_bcast - Force remote-send-local-bcast algorithm
 
@@ -366,13 +366,14 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial                             - Force Binomial algorithm
         sched_smp                                  - Force smp algorithm
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         sched_scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         tsp_tree                               - Force Generic Transport Tree algorithm
+        tsp_scatterv_allgatherv                - Force Generic Transport Scatterv followed by Allgatherv algorithm
         tsp_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
         tsp_scatterv_ring_allgatherv           - Force Generic Transport Scatterv followed by Ring Allgatherv algorithm
         tsp_ring                               - Force Generic Transport Ring algorithm
@@ -406,7 +407,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_flat - Force flat algorithm
 
@@ -444,7 +445,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial - Force binomial algorithm
         nb       - Force nonblocking algorithm
 
@@ -457,7 +458,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear                   - Force linear algorithm
         local_gather_remote_send - Force local-gather-remote-send algorithm
         nb                       - Force nonblocking algorithm
@@ -471,7 +472,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
         tsp_tree       - Force genetric transport based tree algorithm
@@ -495,7 +496,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_long  - Force long inter algorithm
         sched_short - Force short inter algorithm
@@ -509,7 +510,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -522,7 +523,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -535,7 +536,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear         - Force linear algorithm
         tsp_linear       - Force generic transport based linear algorithm
@@ -549,7 +550,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
@@ -574,7 +575,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial - Force binomial algorithm
         nb       - Force nonblocking algorithm
 
@@ -587,7 +588,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear                    - Force linear algorithm
         nb                        - Force nonblocking algorithm
         remote_send_local_scatter - Force remote-send-local-scatter algorithm
@@ -601,7 +602,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
         tsp_tree       - Force genetric transport based tree algorithm
@@ -625,7 +626,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear                    - Force linear algorithm
         sched_remote_send_local_scatter - Force remote-send-local-scatter algorithm
@@ -639,7 +640,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatterv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -652,7 +653,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatterv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -665,7 +666,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
@@ -679,7 +680,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
@@ -717,7 +718,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         brucks             - Force brucks algorithm
         k_brucks           - Force brucks algorithm
         nb                 - Force nonblocking algorithm
@@ -766,7 +767,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
         nb                        - Force nonblocking algorithm
 
@@ -799,7 +800,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_ring               - Force ring algorithm
         sched_brucks             - Force brucks algorithm
@@ -818,7 +819,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
 
@@ -842,7 +843,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         brucks             - Force brucks algorithm
         nb                 - Force nonblocking algorithm
         recursive_doubling - Force recursive doubling algorithm
@@ -857,7 +858,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                        - Force nonblocking algorithm
         remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
 
@@ -890,7 +891,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_brucks             - Force brucks algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
@@ -909,7 +910,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
 
@@ -959,7 +960,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         brucks                    - Force brucks algorithm
         k_brucks                  - Force Force radix k brucks algorithm
         nb                        - Force nonblocking algorithm
@@ -986,7 +987,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                - Force nonblocking algorithm
         pairwise_exchange - Force pairwise exchange algorithm
 
@@ -999,7 +1000,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_brucks            - Force brucks algorithm
         sched_inplace           - Force inplace algorithm
@@ -1018,7 +1019,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
@@ -1031,7 +1032,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                        - Force nonblocking algorithm
         pairwise_sendrecv_replace - Force pairwise_sendrecv_replace algorithm
         scattered                 - Force scattered algorithm
@@ -1045,7 +1046,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         pairwise_exchange - Force pairwise exchange algorithm
         nb                - Force nonblocking algorithm
 
@@ -1058,7 +1059,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
@@ -1075,7 +1076,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
@@ -1109,7 +1110,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                        - Force nonblocking algorithm
         pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
         scattered                 - Force scattered algorithm
@@ -1123,7 +1124,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                - Force nonblocking algorithm
         pairwise_exchange - Force pairwise exchange algorithm
 
@@ -1136,7 +1137,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
@@ -1152,7 +1153,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
@@ -1176,7 +1177,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial              - Force binomial algorithm
         nb                    - Force nonblocking algorithm
         smp                   - Force smp algorithm
@@ -1191,7 +1192,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         local_reduce_remote_send - Force local-reduce-remote-send algorithm
         nb                       - Force nonblocking algorithm
 
@@ -1318,7 +1319,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_smp                   - Force smp algorithm
         sched_binomial              - Force binomial algorithm
@@ -1335,7 +1336,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
@@ -1359,7 +1360,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                       - Force nonblocking algorithm
         smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
@@ -1528,7 +1529,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                    - Force nonblocking algorithm
         reduce_exchange_bcast - Force reduce-exchange-bcast algorithm
 
@@ -1600,12 +1601,13 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_naive                      - Force naive algorithm
         sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
         sched_reduce_scatter_allgather   - Force reduce scatter allgather algorithm
+        tsp_recexch                  - Force generic transport recursive exchange algorithm
         tsp_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         tsp_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         tsp_tree                     - Force generic transport tree algorithm
@@ -1621,7 +1623,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
@@ -1645,7 +1647,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                 - Force nonblocking algorithm
         noncommutative     - Force noncommutative algorithm
         pairwise           - Force pairwise algorithm
@@ -1661,7 +1663,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                          - Force nonblocking algorithm
         remote_reduce_local_scatter - Force remote-reduce-local-scatter algorithm
 
@@ -1684,7 +1686,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_noncommutative     - Force noncommutative algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
@@ -1701,7 +1703,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
@@ -1714,7 +1716,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         noncommutative     - Force noncommutative algorithm
         recursive_doubling - Force recursive doubling algorithm
         pairwise           - Force pairwise algorithm
@@ -1730,7 +1732,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                          - Force nonblocking algorithm
         remote_reduce_local_scatter - Force remote-reduce-local-scatter algorithm
 
@@ -1753,7 +1755,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter_block algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_noncommutative     - Force noncommutative algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
@@ -1770,7 +1772,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter_block algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
@@ -1783,7 +1785,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                 - Force nonblocking algorithm
         smp                - Force smp algorithm
         recursive_doubling - Force recursive doubling algorithm
@@ -1797,7 +1799,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_smp                  - Force smp algorithm
         sched_recursive_doubling   - Force recursive doubling algorithm
@@ -1812,7 +1814,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb                 - Force nonblocking algorithm
         recursive_doubling - Force recursive doubling algorithm
 
@@ -1825,7 +1827,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iexscan algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_recursive_doubling - Force recursive doubling algorithm
 
@@ -1838,7 +1840,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_INTER_ALGORITHM
@@ -1850,7 +1852,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM
@@ -1862,7 +1864,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
@@ -1876,7 +1878,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
@@ -1890,7 +1892,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTER_ALGORITHM
@@ -1902,7 +1904,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM
@@ -1914,7 +1916,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
@@ -1928,7 +1930,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_allgatherv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
@@ -1942,7 +1944,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM
@@ -1954,7 +1956,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM
@@ -1966,7 +1968,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
@@ -1981,7 +1983,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoall algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
@@ -1995,7 +1997,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTER_ALGORITHM
@@ -2007,7 +2009,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
@@ -2019,7 +2021,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
@@ -2033,7 +2035,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallv algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
@@ -2047,7 +2049,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
@@ -2059,7 +2061,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
@@ -2071,7 +2073,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
@@ -2085,1000 +2087,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallw algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
-
-    - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Barrier will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ibarrier will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_BARRIER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Barrier will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_BCAST_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Bcast will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ibcast will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_BCAST_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Bcast_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_GATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Gather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Igather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_GATHER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Gather_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Gatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IGATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Igatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_GATHERV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Gatherv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iscatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCATTER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scatter_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCATTERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scatterv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ISCATTERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iscatterv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCATTERV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scatterv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allgather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iallgather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLGATHER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allgather_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allgatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iallgatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLGATHERV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allgatherv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoall will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ialltoall will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALL_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoall_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoallv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ialltoallv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALLV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoallv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoallw will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ialltoallw will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLTOALLW_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Alltoallw_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ireduce will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allreduce will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iallreduce will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ALLREDUCE_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Allreduce_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_scatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ireduce_scatter will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_scatter_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_scatter_block will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ireduce_scatter_block will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Reduce_scatter_block_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scan will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iscan will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_SCAN_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Scan_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_EXSCAN_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Exscan will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Iexscan will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_EXSCAN_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Exscan_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_allgather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ineighbor_allgather will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_allgather_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_allgatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ineighbor_allgatherv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_allgatherv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoall will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ineighbor_alltoall will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoall_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoallv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ineighbor_alltoallv will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLV_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoallv_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoallw will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Ineighbor_alltoallw will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
-
-    - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_INIT_DEVICE_COLLECTIVE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
-        is set to "percoll".  If set to true, MPI_Neighbor_alltoallw_init will
-        allow the device to override the MPIR-level collective
-        algorithms.  The device might still call the MPIR-level
-        algorithms manually.  If set to false, the device-override
-        will be disabled.
 
     - name        : MPIR_CVAR_COLL_HYBRID_MEMORY
       category    : COLLECTIVE

@@ -268,8 +268,9 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
     vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = MPIR_Allgather_impl(&vci, 1, MPIR_INT_INTERNAL,
-                                    vci_table, 1, MPIR_INT_INTERNAL, comm_ptr, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(&vci, 1, MPIR_INT_INTERNAL,
+                                        vci_table, 1, MPIR_INT_INTERNAL, comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_SINGLE;
@@ -312,9 +313,9 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
     MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     MPI_Aint num_tmp = num_streams;
-    mpi_errno = MPIR_Allgather_impl(&num_tmp, 1, MPIR_AINT_INTERNAL,
-                                    num_table, 1, MPIR_AINT_INTERNAL, comm_ptr,
-                                    MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(&num_tmp, 1, MPIR_AINT_INTERNAL,
+                                        num_table, 1, MPIR_AINT_INTERNAL, comm_ptr,
+                                        MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint num_total = 0;
@@ -346,9 +347,9 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
         local_vcis[i] = stream_ptr ? stream_ptr->vci : 0;
     }
 
-    mpi_errno = MPIR_Allgatherv_impl(local_vcis, num_streams, MPI_INT,
-                                     vci_table, num_table, displs, MPI_INT, comm_ptr,
-                                     MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgatherv_fallback(local_vcis, num_streams, MPI_INT,
+                                         vci_table, num_table, displs, MPI_INT, comm_ptr,
+                                         MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_MULTIPLEX;

@@ -8,5 +8,4 @@
 # mpi_sources
 
 mpi_core_sources +=									\
-    src/mpi/coll/exscan/exscan_allcomm_nb.c \
     src/mpi/coll/exscan/exscan_intra_recursive_doubling.c

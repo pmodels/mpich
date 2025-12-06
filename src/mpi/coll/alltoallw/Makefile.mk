@@ -8,6 +8,5 @@
 # mpi_sources
 
 mpi_core_sources +=												\
-    src/mpi/coll/alltoallw/alltoallw_allcomm_nb.c	\
     src/mpi/coll/alltoallw/alltoallw_intra_scattered.c					\
     src/mpi/coll/alltoallw/alltoallw_inter_pairwise_exchange.c
