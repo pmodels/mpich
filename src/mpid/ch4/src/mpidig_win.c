@@ -208,6 +208,11 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 
     INFO_GET_BOOL(info, "same_disp_unit", MPIDIG_WIN(win, info_args).same_disp_unit);
     INFO_GET_BOOL(info, "same_size", MPIDIG_WIN(win, info_args).same_size);
+    INFO_GET_BOOL(info, "symheap_required", MPIDIG_WIN(win, info_args).symheap_required);
+    if (MPIDIG_WIN(win, info_args).symheap_required) {
+        /* symheap requires alloc_shared_noncontig */
+        MPIDIG_WIN(win, info_args).alloc_shared_noncontig = 1;
+    }
     INFO_GET_BOOL(info, "alloc_shared_noncontig",
                   MPIDIG_WIN(win, info_args).alloc_shared_noncontig);
     INFO_GET_BOOL(info, "alloc_shm", MPIDIG_WIN(win, info_args).alloc_shm);
@@ -333,6 +338,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).coll_attach = false;
     MPIDIG_WIN(win, info_args).optimized_mr = false;
     MPIDIG_WIN(win, info_args).accumulate_granularity = 0;
+    MPIDIG_WIN(win, info_args).symheap_required = 0;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -489,163 +495,226 @@ static int win_finalize(MPIR_Win ** win_ptr)
  * memory, and initializes the shared_table structure that stores each
  * node process's size, disp_unit, and start address for shm RMA operations
  * and query routine.*/
+
+static int need_symmheap(MPIR_Win * win, MPIR_Comm * comm_ptr, MPI_Aint size, bool has_local,
+                         bool * flag_out);
+static int init_shared_table(MPIR_Win * win, MPIR_Comm * shm_comm_ptr,
+                             MPI_Aint size, int disp_unit);
+static void update_shared_table(MPIR_Win * win, int local_size, int local_rank, void **base_ptr);
+
 static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option)
 {
-    int i, mpi_errno = MPI_SUCCESS;
-    MPIR_Win *win = NULL;
-    size_t total_shm_size = 0LL;
-    MPIDIG_win_shared_info_t *shared_table = NULL;
-    MPI_Aint *shm_offsets = NULL;
-    MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
-    size_t page_sz = 0, mapsize;
-    bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
-    bool symheap_flag = true, global_symheap_flag = false;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Win *win = *win_ptr;
 
     MPIR_CHKPMEM_DECL();
-    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
-    win = *win_ptr;
-    *base_ptr = NULL;
+    bool shm_mapped = false;
 
-    /* Check whether multiple processes exist on the local node. If so,
-     * we need to count the total size on a node for shared memory allocation. */
-    if (shm_comm_ptr != NULL) {
-        MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
-        MPIR_CHKPMEM_MALLOC(MPIDIG_WIN(win, shared_table),
-                            sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size,
-                            MPL_MEM_SHM);
-        shared_table = MPIDIG_WIN(win, shared_table);
-        shared_table[shm_comm_ptr->rank].size = size;
-        shared_table[shm_comm_ptr->rank].disp_unit = disp_unit;
-        shared_table[shm_comm_ptr->rank].shm_base_addr = NULL;
+    MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
+    bool has_local = (shm_comm_ptr && shm_comm_ptr->local_size > 1);
 
-        mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
-                                   0,
-                                   MPI_DATATYPE_NULL,
-                                   shared_table,
-                                   sizeof(MPIDIG_win_shared_info_t), MPIR_BYTE_INTERNAL,
-                                   shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
+    /* Should we try symmetric heap? */
+    bool global_symheap_flag;
+    mpi_errno = need_symmheap(win, comm_ptr, size, has_local, &global_symheap_flag);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        MPIR_CHKLMEM_MALLOC(shm_offsets, shm_comm_ptr->local_size * sizeof(MPI_Aint));
-
-        for (i = 0; i < shm_comm_ptr->local_size; i++) {
-            shm_offsets[i] = (MPI_Aint) total_shm_size;
-            if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
-            else
-                total_shm_size += shared_table[i].size;
-        }
+    /* initialize shared_table and get total size on a node for shared memory allocation. */
+    if (has_local) {
+        mpi_errno = init_shared_table(win, shm_comm_ptr, size, disp_unit);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* if all processes give zero size on a single node window, simply return. */
-        if (total_shm_size == 0 && shm_comm_ptr->local_size == comm_ptr->local_size)
-            goto fn_no_shm;
-
-        /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
-        if (size != MPIDU_shm_get_mapsize(size, &page_sz) &&
-            !MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-            symheap_flag = false;
-    } else
-        total_shm_size = size;
-
-    /* try global symm heap only when multiple processes exist */
-    if (comm_ptr->local_size > 1) {
-        /* global symm heap can be successful only when any of the following conditions meet.
-         * Thus, we can skip unnecessary global symm heap retry based on condition check.
-         * - no shared memory node (i.e., single process per node)
-         * - size of each process on the shared memory node is page aligned,
-         *   thus all process can be assigned to a page aligned start address.
-         * - user sets alloc_shared_noncontig=true, thus we can internally make
-         *   the size aligned on each process. */
-        mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPIR_C_BOOL_INTERNAL,
-                                   MPI_LAND, comm_ptr, MPIR_COLL_ATTR_SYNC);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else
-        global_symheap_flag = false;
-
-    /* because MPI_shm follows a create & attach mode, we need to set the
-     * size of entire shared memory segment on each node as the size of
-     * each process. */
-    mapsize = MPIDU_shm_get_mapsize(total_shm_size, &page_sz);
+        if (MPIDIG_WIN(win, mmap_sz) == 0 && shm_comm_ptr->local_size == comm_ptr->local_size) {
+            *base_ptr = NULL;
+            goto fn_exit;
+        }
+    } else {
+        MPIDIG_WIN(win, mmap_sz) = size;
+    }
 
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
-        size_t my_offset = (shm_comm_ptr) ? shm_offsets[shm_comm_ptr->rank] : 0;
-        MPIDIG_WIN(win, mmap_sz) = mapsize;
-        int rc = MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset,
+        MPI_Aint my_offset = 0;
+        MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
+        for (int i = 0; i < shm_comm_ptr->rank; i++) {
+            if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig) {
+                my_offset += MPIDU_shm_get_mapsize(shared_table[i].size, NULL);
+            } else {
+                my_offset += shared_table[i].size;
+            }
+        }
+
+        int rc = MPIDU_shm_alloc_symm_all(comm_ptr, MPIDIG_WIN(win, mmap_sz), my_offset,
                                           &MPIDIG_WIN(win, mmap_addr));
-        if (rc != MPI_SUCCESS) {
-            symheap_mapfail_flag = true;
-            MPIDIG_WIN(win, mmap_sz) = 0;
-            MPIDIG_WIN(win, mmap_addr) = NULL;
+        if (rc == MPI_SUCCESS) {
+            shm_mapped = true;
+        } else {
+            /* if symheap_required, then we need fail here */
+            mpi_errno = rc;
+            goto fn_fail;
         }
     }
 
-    /* if symmetric heap is disabled or fails, try normal shm segment allocation */
-    if (!global_symheap_flag || symheap_mapfail_flag) {
-        if (shm_comm_ptr != NULL && mapsize) {
-            MPIDIG_WIN(win, mmap_sz) = mapsize;
-            int rc = MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr));
-            if (rc == MPI_SUCCESS) {
-                symheap_mapfail_flag = false;
-            } else {
-                symheap_mapfail_flag = true;
-                MPIDIG_WIN(win, mmap_sz) = 0;
-                MPIDIG_WIN(win, mmap_addr) = NULL;
-            }
-
-            /* throw error here if shm allocation is required but fails */
-            if (shm_option == SHM_WIN_REQUIRED)
-                MPIR_ERR_CHKANDJUMP(shm_mapfail_flag, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+    if (!shm_mapped) {
+        /* if this node has zero size, we are done. */
+        if (MPIDIG_WIN(win, mmap_sz) == 0) {
+            *base_ptr = NULL;
+            goto fn_exit;
         }
-
-        /* If only single process on a node or shm segment allocation fails, try malloc. */
-        if ((shm_comm_ptr == NULL || shm_mapfail_flag) && size > 0) {
+        /* single process do not need shared memory, just malloc */
+        if (!has_local) {
             MPIR_CHKPMEM_MALLOC(*base_ptr, size, MPL_MEM_SHM);
             MPL_VG_MEM_INIT(*base_ptr, size);
+            goto fn_exit;
+        }
+
+        /* normal shm segment allocation */
+        int rc = MPIDU_shm_alloc(shm_comm_ptr, MPIDIG_WIN(win, mmap_sz),
+                                 &MPIDIG_WIN(win, mmap_addr));
+        if (rc == MPI_SUCCESS) {
+            shm_mapped = true;
         }
     }
 
-    /* compute the base addresses of each process within the shared memory segment */
-    if (shm_comm_ptr != NULL && MPIDIG_WIN(win, mmap_addr)) {
-        char *cur_base = (char *) MPIDIG_WIN(win, mmap_addr);
-        for (i = 0; i < shm_comm_ptr->local_size; i++) {
-            if (shared_table[i].size)
-                shared_table[i].shm_base_addr = cur_base;
-            else
-                shared_table[i].shm_base_addr = NULL;
-
-            if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
-            else
-                cur_base += shared_table[i].size;
+    if (shm_mapped) {
+        if (has_local) {
+            update_shared_table(win, shm_comm_ptr->local_size, shm_comm_ptr->rank, base_ptr);
         }
-
-        *base_ptr = shared_table[shm_comm_ptr->rank].shm_base_addr;
-    } else if (MPIDIG_WIN(win, mmap_sz) > 0) {
-        /* if symm heap is allocated without shared memory, use the mapping address */
-        *base_ptr = MPIDIG_WIN(win, mmap_addr);
+        goto fn_exit;
     }
-    /* otherwise, it has already be assigned with a local memory region or NULL (zero size). */
 
-  fn_no_shm:
-    /* free shared_table if no shm segment allocated */
-    if (shared_table && !MPIDIG_WIN(win, mmap_addr)) {
-        MPL_free(MPIDIG_WIN(win, shared_table));
-        MPIDIG_WIN(win, shared_table) = NULL;
+    /* still no shm */
+    if (shm_option == SHM_WIN_REQUIRED) {
+        /* throw error here if shm allocation is required but fails */
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+    } else {
+        /* just malloc at this point */
+        MPIR_CHKPMEM_MALLOC(*base_ptr, size, MPL_MEM_SHM);
+        MPL_VG_MEM_INIT(*base_ptr, size);
+        goto fn_exit;
     }
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
+    /* free shared_table if no shm segment allocated */
+    if (has_local && !shm_mapped) {
+        MPL_free(MPIDIG_WIN(win, shared_table));
+        MPIDIG_WIN(win, shared_table) = NULL;
+    }
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
+}
+
+/* global symm heap can be successful only when any of the following conditions meet.
+ * Thus, we can skip unnecessary global symm heap retry based on condition check.
+ * - no shared memory node (i.e., single process per node)
+ * - size of each process on the shared memory node is page aligned,
+ *   thus all process can be assigned to a page aligned start address.
+ * - user sets alloc_shared_noncontig=true, thus we can internally make
+ *   the size aligned on each process.
+ */
+static int need_symmheap(MPIR_Win * win, MPIR_Comm * comm_ptr, MPI_Aint size, bool has_local,
+                         bool * flag_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIDIG_WIN(win, info_args).symheap_required) {
+        *flag_out = false;
+        goto fn_exit;
+    }
+
+    /* single process can't tell symmheap anyway */
+    if (comm_ptr->local_size == 1) {
+        *flag_out = false;
+        goto fn_fail;
+    }
+
+    bool symheap_flag;
+    /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
+    if (size != MPIDU_shm_get_mapsize(size, NULL) &&
+        !MPIDIG_WIN(win, info_args).alloc_shared_noncontig) {
+        symheap_flag = false;
+    } else {
+        symheap_flag = true;
+    }
+    mpi_errno = MPIR_Allreduce(&symheap_flag, flag_out, 1, MPIR_C_BOOL_INTERNAL,
+                               MPI_LAND, comm_ptr, MPIR_COLL_ATTR_SYNC);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!(*flag_out)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winsymheap");
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int init_shared_table(MPIR_Win * win, MPIR_Comm * shm_comm_ptr, MPI_Aint size, int disp_unit)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_win_shared_info_t *shared_table;
+    shared_table = MPL_malloc(sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size,
+                              MPL_MEM_SHM);
+    MPIR_ERR_CHKANDJUMP(!shared_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    shared_table[shm_comm_ptr->rank].size = size;
+    shared_table[shm_comm_ptr->rank].disp_unit = disp_unit;
+    shared_table[shm_comm_ptr->rank].shm_base_addr = NULL;
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, shared_table,
+                               sizeof(MPIDIG_win_shared_info_t), MPIR_BYTE_INTERNAL,
+                               shm_comm_ptr, MPIR_COLL_ATTR_SYNC);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint total_shm_size = 0;
+    for (int i = 0; i < shm_comm_ptr->local_size; i++) {
+        if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig) {
+            total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, NULL);
+        } else {
+            total_shm_size += shared_table[i].size;
+        }
+    }
+
+    /* because MPI_shm follows a create & attach mode, we need to set the
+     * size of entire shared memory segment on each node as the size of
+     * each process. */
+    MPIDIG_WIN(win, mmap_sz) = MPIDU_shm_get_mapsize(total_shm_size, NULL);
+    MPIDIG_WIN(win, shared_table) = shared_table;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void update_shared_table(MPIR_Win * win, int local_size, int local_rank, void **base_ptr)
+{
+    MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
+    char *cur_base = (char *) MPIDIG_WIN(win, mmap_addr);
+    for (int i = 0; i < local_size; i++) {
+        if (shared_table[i].size) {
+            shared_table[i].shm_base_addr = cur_base;
+        } else {
+            shared_table[i].shm_base_addr = NULL;
+        }
+
+        if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig) {
+            cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, NULL);
+        } else {
+            cur_base += shared_table[i].size;
+        }
+    }
+    *base_ptr = shared_table[local_rank].shm_base_addr;
 }
 
 int MPIDIG_RMA_Init_sync_pvars(void)
@@ -828,6 +897,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     } else {
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "optimized_mr", "false");
     }
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDIG_WIN(win, info_args).symheap_required)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "symheap_required", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "symheap_required", "false");
+
     MPIR_ERR_CHECK(mpi_errno);
 
     if (win->comm_ptr) {
