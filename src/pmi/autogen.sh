@@ -16,6 +16,7 @@ if test -d mpl ; then
 fi
 
 check_python3() {
+    printf "Checking for python ..."
     PYTHON=
     if test 3 = `python -c 'import sys; print(sys.version_info[0])' 2> /dev/null || echo "0"`; then
         PYTHON=python
