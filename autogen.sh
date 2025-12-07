@@ -99,7 +99,7 @@ done
 MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl src/pmi"
+amdirs="."
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -198,7 +198,7 @@ set_externals() {
         #TODO: if necessary, run: git submodule update --init
 
         # external packages that require autogen.sh to be run for each of them
-        externals="test/mpi"
+        externals="src/mpl test/mpi"
 
         if [ "yes" = "$do_hydra" ] ; then
             externals="${externals} src/pm/hydra"

@@ -4,11 +4,15 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"} -I confdb
+if test -z "$AUTORECONF" ; then
+    AUTORECONF="autoreconf"
+fi
+
+$AUTORECONF -vif || exit 1
 
 if test -d mpl ; then
-    echo "=== running autoreconf in 'mpl' ==="
-    (cd mpl && ${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"}) || exit 1
+    echo "=== running autogen.sh in 'mpl' ==="
+    (cd mpl && ./autogen.sh) || exit 1
 fi
 
 check_python3() {
