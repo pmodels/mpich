@@ -564,7 +564,7 @@ autoreconf_amdir() {
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running $autoreconf in $_dir"
-        (cd $_dir && $autoreconf $autoreconf_args) || exit 1
+        (cd $_dir && $AUTORECONF $autoreconf_args) || exit 1
 
         # Patching ltmain.sh and libtool.m4
         # This works with libtool versions 2.4 - 2.4.2.
@@ -599,6 +599,21 @@ autogen_external() {
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running third-party initialization in $_dir"
+        if test "$need_libtoolize" = "yes" ; then
+            # external modules (e.g. hwloc/libfabric/ucx/json-c) need run libtoolize separately
+            case "$_dir" in
+                modules/*)
+                    echo "== running libtoolize in $_dir =="
+                    (cd $_dir && $libtoolize) || exit 1
+                    ;;
+            esac
+            for sub in modules/hwloc; do
+                if test -d "$_dir/$sub" ; then
+                    echo "== running libtoolize in $_dir =="
+                    (cd $_dir/$sub && $libtoolize) || exit 1
+                fi
+            done
+        fi
         if test "$_dir" = "src/mpi/datatype/typerep/yaksa" -a -n "$yaksa_depth" ; then
             (cd $_dir && ./autogen.sh --pup-max-nesting=$yaksa_depth) || exit 1
         else
@@ -811,8 +826,17 @@ EOF
 ACLOCAL_AMFLAGS = -I m4
 EOF
         if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-        if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+        if (cd .tmp && $autoreconf $autoreconf_args) >/dev/null 2>&1 ; then
+            need_libtoolize=no
             echo ">= $ver"
+            AUTORECONF="$autoreconf"
+        elif (cd .tmp && $libtoolize && $autoreconf $autoreconf_args) >/dev/null 2>&1 ; then
+            need_libtoolize=yes
+            echo ">= $ver"
+            AUTORECONF="eval $libtoolize && $autoreconf"
+            export AUTORECONF
+            echo "Need run libtoolize before autoreconf."
+            echo "export AUTORECONF=\"$AUTORECONF\""
         else
             echo "bad libtool installation"
             cat <<EOF
