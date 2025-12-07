@@ -144,22 +144,6 @@ set_autotools() {
                 else
                     libtoolize=$autotoolsdir/libtoolize
                 fi
-
-                AUTOCONF=$autoconf
-                AUTOHEADER=$autoheader
-                AUTORECONF=$autoreconf
-                AUTOMAKE=$automake
-                AUTOM4TE=$autom4te
-                ACLOCAL=$aclocal
-                LIBTOOLIZE=$libtoolize
-
-                export AUTOCONF
-                export AUTOHEADER
-                export AUTORECONF
-                export AUTOM4TE
-                export AUTOMAKE
-                export ACLOCAL
-                export LIBTOOLIZE
             else
                 echo "could not find executable autoconf and autoheader in $autotoolsdir"
                 exit 1
