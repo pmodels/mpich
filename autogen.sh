@@ -113,18 +113,6 @@ recreate_tmp() {
     mkdir .tmp 2>&1 >/dev/null
 }
 
-# Assume Program's install-dir is <install-dir>/bin/<prog>.
-# Given program name as the 1st argument,
-# the install-dir is returned is returned in 2nd argument.
-# e.g., ProgHomeDir libtoolize libtooldir.
-ProgHomeDir() {
-    prog=$1
-    progpath="`which $prog`"
-    progbindir="`dirname $progpath`"
-    proghome=`(cd $progbindir/.. && pwd)`
-    eval $2=$proghome
-}
-
 # checking and patching submodules
 check_submodule_presence() {
     if test ! -f "$SRCROOTDIR/$1/configure.ac"; then
@@ -645,92 +633,6 @@ fn_build_configure() {
 
 fn_check_autotools() {
     set_autotools
-    ProgHomeDir $autoconf   autoconfdir
-    ProgHomeDir $automake   automakedir
-    ProgHomeDir $libtoolize libtooldir
-
-    echo_n "Checking if autotools are in the same location... "
-    if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
-        same_atdir=yes
-        echo "yes, all in $autoconfdir"
-    else
-        same_atdir=no
-        echo "no"
-        echo "	autoconf is in $autoconfdir"
-        echo "	automake is in $automakedir"
-        echo "	libtool  is in $libtooldir"
-        # Emit a big warning message if $same_atdir = no.
-        warn "Autotools are in different locations. In rare occasion,"
-        warn "resulting configure or makefile may fail in some unexpected ways."
-    fi
-
-    ########################################################################
-    ## Check if autoreconf can be patched to work
-    ## when autotools are not in the same location.
-    ## This test needs to be done before individual tests of autotools
-    ########################################################################
-
-    # If autotools are not in the same location, override autoreconf appropriately.
-    if [ "$same_atdir" != "yes" ] ; then
-        if [ -z "$libtooldir" ] ; then
-            ProgHomeDir $libtoolize libtooldir
-        fi
-        libtoolm4dir="$libtooldir/share/aclocal"
-        echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
-        new_autoreconf_works=no
-        if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
-            recreate_tmp
-            cat >.tmp/configure.ac <<_EOF
-AC_INIT(foo,1.0)
-AC_PROG_LIBTOOL
-AC_OUTPUT
-_EOF
-            AUTORECONF="$autoreconf -I $libtoolm4dir"
-            if (cd .tmp && $AUTORECONF -ivf >/dev/null 2>&1) ; then
-                new_autoreconf_works=yes
-            fi
-            rm -rf .tmp
-        fi
-        echo "$new_autoreconf_works"
-        # If autoreconf accepts -I <libtool's m4 dir> correctly, use -I.
-        # If not, run libtoolize before autoreconf (i.e. for autoconf <= 2.63)
-        # This test is more general than checking the autoconf version.
-        if [ "$new_autoreconf_works" != "yes" ] ; then
-            echo_n "Checking if $autoreconf works after an additional $libtoolize step... "
-            new_autoreconf_works=no
-            recreate_tmp
-            # Need AC_CONFIG_
-            cat >.tmp/configure.ac <<_EOF
-AC_INIT(foo,1.0)
-AC_CONFIG_AUX_DIR([m4])
-AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_LIBTOOL
-AC_OUTPUT
-_EOF
-            cat >.tmp/Makefile.am <<_EOF
-ACLOCAL_AMFLAGS = -I m4
-_EOF
-            AUTORECONF="eval $libtoolize && $autoreconf"
-            if (cd .tmp && $AUTORECONF -ivf >u.txt 2>&1) ; then
-                new_autoreconf_works=yes
-            fi
-            rm -rf .tmp
-            echo "$new_autoreconf_works"
-        fi
-        if [ "$new_autoreconf_works" = "yes" ] ; then
-            export AUTORECONF
-            autoreconf="$AUTORECONF"
-        else
-            # Since all autoreconf workarounds do not work, we need
-            # to require all autotools to be in the same directory.
-            do_atdir_check=yes
-            error "Since none of the autoreconf workaround works"
-            error "and autotools are not in the same directory, aborting..."
-            error "Updating autotools or putting all autotools in the same location"
-            error "may resolve the issue."
-            exit 1
-        fi
-    fi
 
     if test $do_quick = "yes" ; then
         : # skip autotool versions check in quick mode (since it is too slow)
