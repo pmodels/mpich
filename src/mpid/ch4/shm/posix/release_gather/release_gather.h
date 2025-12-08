@@ -124,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                               datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recv_bytes);
-                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
+                MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(MPI_Aint),
                                   MPIR_TYPEREP_FLAG_NONE);
                 /* It is necessary to copy the coll_attr as well to handle the case when non-root
                  * becomes temporary root as part of compositions (or smp aware colls). These temp
@@ -149,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             /* When error checking is enabled, place the datasize in shm_buf first, followed by the
              * coll_attr, followed by the actual data with an offset of (2*cacheline_size) bytes from
              * the starting address */
-            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Typerep_copy(bcast_data_addr, &count, sizeof(MPI_Aint), MPIR_TYPEREP_FLAG_NONE);
             /* It is necessary to copy the coll_attr as well to handle the case when non-root
              * becomes root as part of compositions (or smp aware colls). These roots might
              * expect same data as other ranks but different from the actual root. So only
@@ -221,8 +221,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
              * datasize is copied out from shm_buffer and compared against the count a rank was
              * expecting. Also, the coll_attr is copied out. In case of mismatch mpi_errno is set.
              * Actual data starts after (2*cacheline_size) bytes */
-            int recv_bytes, recv_errflag;
-            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
+            MPI_Aint recv_bytes;
+            int recv_errflag;
+            MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(MPI_Aint),
+                              MPIR_TYPEREP_FLAG_NONE);
             MPIR_Typerep_copy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
                               sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             MPIR_ERR_CHKANDJUMP2(recv_bytes != count, mpi_errno, MPI_ERR_OTHER,
