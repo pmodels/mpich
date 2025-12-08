@@ -438,6 +438,7 @@ be in the range 0 to %d
 **filerdonly:Read-only file or filesystem name
 **nameservice:Invalid service name (see MPI_Publish_name)
 **spawn:Error in spawn call
+**ch4avgrow:Can't grow avtables in thread multiple
 **datarepunsupported:Unsupported datarep passed to MPI_File_set_view 
 **fileopunsupported:Unsupported file operation 
 **win:Invalid MPI_Win

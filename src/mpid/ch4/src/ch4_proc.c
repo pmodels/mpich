@@ -13,7 +13,15 @@
 
 #define MPIDI_CH4_AVTABLE_USE_DDR    1
 
-static int get_next_avtid(void);
+/* growing av_tables are problematic in thread-multiple case as another thread may performing fastpath av lookup.
+ * 1. start with a decent initial size so we can spawn multiple times without needing to grow tables.
+ * 2. TODO: track and recycle MPIR_Worlds to maximize the usage of existing av_tables
+ * 3. There is no issue growing av_tables in the thread-single case. For thread-multiple, abort for now.
+ * 4. In future, user may pass some hints to indicate that we can safely re-grow the tables.
+ */
+#define MPIDI_CH4_AVTABLE_INITIAL_SIZE 1024
+
+static int get_next_avtid(int *avtid_out);
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
@@ -38,15 +46,18 @@ int MPIDIU_get_avt_size(int avtid)
     return ret;
 }
 
-static int get_next_avtid(void)
+static int get_next_avtid(int *avtid_out)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     /* return a free entry if we have one */
     if (MPIDI_global.avt_mgr.n_free > 0) {
         /* find a free one */
         for (int i = 0; i < MPIDI_global.avt_mgr.n_avts; i++) {
             if (MPIDI_global.avt_mgr.av_tables[i] == NULL) {
                 MPIDI_global.avt_mgr.n_free--;
-                return i;
+                *avtid_out = i;
+                goto fn_exit;
             }
         }
         MPIR_Assert(0);
@@ -55,12 +66,15 @@ static int get_next_avtid(void)
     /* check if we need grow the tables */
     if (MPIDI_global.avt_mgr.max_n_avts == 0) {
         /* allocate the initial tables */
-        MPIDI_global.avt_mgr.max_n_avts = 10;
+        MPIDI_global.avt_mgr.max_n_avts = MPIDI_CH4_AVTABLE_INITIAL_SIZE;
         size_t table_size = MPIDI_global.avt_mgr.max_n_avts * sizeof(MPIDI_av_table_t *);
         MPIDI_global.avt_mgr.av_tables = MPL_malloc(table_size, MPL_MEM_ADDRESS);
         MPIR_Assert(MPIDI_global.avt_mgr.av_tables);
     } else if (MPIDI_global.avt_mgr.n_avts + 1 > MPIDI_global.avt_mgr.max_n_avts) {
         /* grow the tables */
+        if (MPIR_IS_THREADED) {
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4avgrow");
+        }
         MPIDI_global.avt_mgr.max_n_avts *= 2;
         size_t table_size = MPIDI_global.avt_mgr.max_n_avts * sizeof(MPIDI_av_table_t *);
         MPIDI_global.avt_mgr.av_tables = MPL_realloc(MPIDI_global.avt_mgr.av_tables,
@@ -68,7 +82,12 @@ static int get_next_avtid(void)
     }
 
     /* return the next available entry */
-    return MPIDI_global.avt_mgr.n_avts++;
+    *avtid_out = MPIDI_global.avt_mgr.n_avts++;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDIU_new_avt(int size, int *avtid)
@@ -81,7 +100,8 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
-    *avtid = get_next_avtid();
+    mpi_errno = get_next_avtid(avtid);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* note: zeroed so is_local default to 0, which is true for *avtid > 0 */
     new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * sizeof(MPIDI_av_entry_t)
@@ -94,8 +114,11 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDIU_free_avt(int avtid)
@@ -124,7 +147,8 @@ int MPIDIU_avt_init(void)
     MPIR_FUNC_ENTER;
 
     int first_avtid ATTRIBUTE((unused));
-    first_avtid = get_next_avtid();
+    mpi_errno = get_next_avtid(&first_avtid);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(first_avtid == 0);
 
     int size = MPIR_Process.size;
@@ -152,8 +176,11 @@ int MPIDIU_avt_init(void)
 
     init_dynamic_av_table();
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDIU_avt_finalize(void)
