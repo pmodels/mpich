@@ -51,7 +51,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPI_Aint single_size = extent * count - (extent - true_extent);
+    MPI_Aint single_size = extent * count;
     if (extent > true_extent) {
         single_size -= (extent - true_extent);
         /* prevent alignment problem */
