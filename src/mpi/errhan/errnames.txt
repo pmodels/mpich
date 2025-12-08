@@ -222,6 +222,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **rmatypenotatomic %D: Datatype (%D) not permitted for atomic operations
 **winflavor: Window flavor is not compatible with the given operation
 **winflavor %s: Window flavor is not compatible with the given operation (expected %s)
+**winsymheap: Symmetric heap is requested but we failed to allocate it
 
 **typenotpredefined: Datatype must be predefined
 
