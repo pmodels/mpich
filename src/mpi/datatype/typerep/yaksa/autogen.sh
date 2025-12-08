@@ -4,6 +4,10 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+if test -z "$AUTORECONF" ; then
+    AUTORECONF="autoreconf"
+fi
+
 ########################################################################
 ## Utility functions
 ########################################################################
@@ -63,7 +67,7 @@ done
 # generate configure files
 echo
 echo "=== generating configure files in main directory ==="
-autoreconf -vif
+$AUTORECONF -vif
 if test "$?" = "0" ; then
     echo "=== done === "
 else

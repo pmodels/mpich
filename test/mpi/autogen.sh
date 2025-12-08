@@ -4,6 +4,10 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+if test -z "$AUTORECONF" ; then
+    AUTORECONF="autoreconf"
+fi
+
 echo_n() {
     # "echo -n" isn't portable, must portably implement with printf
     printf "%s" "$*"
@@ -93,7 +97,7 @@ fi
 generate_benchmarks
 
 echo "Running autoreconf in dtpools"
-(cd dtpools && autoreconf -ivf)
+(cd dtpools && $AUTORECONF -vif) || exit 1
 
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
@@ -130,4 +134,4 @@ echo "done"
 $PYTHON maint/gen_all_mpitests.py
 
 echo "Running autoreconf in ."
-autoreconf -ivf
+$AUTORECONF -vif || exit 1
