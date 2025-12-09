@@ -1609,32 +1609,12 @@ AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
 AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
 # ---- $with_pmilib ----
-pmisrcdir=""
-AC_SUBST([pmisrcdir])
-pmilib=""
-AC_SUBST([pmilib])
-
 case "$with_pmilib" in
   no)
     ;;
   default|mpich|install)
-    pmisrcdir="src/pmi"
-    pmilib="src/pmi/libpmi.la"
-
-    pmi_subdir_args=""
-    if test "$with_pmilib" != "install" ; then
-        pmi_subdir_args="--enable-embedded"
-    fi
-    if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
-        pmi_subdir_args="$pmi_subdir_args --disable-pmi1 --disable-pmi2"
-    fi
-    if test "$pac_have_pmix" = "yes" ; then
-        pmi_subdir_args="$pmi_subdir_args --disable-pmix"
-    fi
-    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
-
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+    m4_define([pmi_embedded_dir], [src/pmi])
+    PAC_CONFIG_PMI
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
