@@ -209,3 +209,53 @@ AC_DEFUN([PAC_CONFIG_PMI],[
         fi
     ])
 ])
+
+dnl ==== json-c ====
+
+AC_DEFUN([PAC_CONFIG_JSON],[
+    json_srcdir=""
+    json_lib=""
+    AC_SUBST([json_srcdir])
+    AC_SUBST([json_lib])
+
+    PAC_CHECK_HEADER_LIB_EXPLICIT([json],[json.h],[json-c],[json_token_parse])
+    if test "$with_json" = "embedded" ; then
+        json_lib="modules/json-c/libjson-c.la"
+        if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$json_lib"; then
+            json_srcdir=""
+        else
+            PAC_PUSH_ALL_FLAGS()
+            PAC_RESET_ALL_FLAGS()
+            PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+            PAC_POP_ALL_FLAGS()
+            json_srcdir="${main_top_builddir}/modules/json-c"
+        fi
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
+    fi
+])
+
+dnl ==== yaksa ====
+
+AC_DEFUN([PAC_CONFIG_YAKSA],[
+    yaksa_srcdir=""
+    yaksa_lib=""
+    AC_SUBST([yaksa_srcdir])
+    AC_SUBST([yaksa_lib])
+
+    PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa.h],[yaksa],[yaksa_init])
+    if test "$with_yaksa" = "embedded" ; then
+        yaksa_lib="yaksa_embedded_dir/libyaksa.la"
+        if test ! -e "${use_top_srcdir}/modules/PREBUILT-yaksa"; then
+            PAC_PUSH_ALL_FLAGS()
+            PAC_RESET_ALL_FLAGS()
+            # no need for libtool versioning when embedding YAKSA
+            yaksa_subdir_args="--enable-embedded"
+            PAC_CONFIG_SUBDIR_ARGS(yaksa_embedded_dir,[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
+            PAC_POP_ALL_FLAGS()
+            yaksa_srcdir="yaksa_embedded_dir"
+        fi
+        PAC_APPEND_FLAG(-I${main_top_builddir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
+        PAC_APPEND_FLAG(-I${use_top_srcdir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
+    fi
+])
