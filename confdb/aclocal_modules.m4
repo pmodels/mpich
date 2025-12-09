@@ -164,3 +164,48 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
         fi
     fi
 ])
+
+dnl ==== pmi ====
+
+AC_DEFUN([PAC_CONFIG_PMI],[
+    pmi_srcdir=""
+    pmi_lib=""
+    pmi_includedir=""
+    AC_SUBST([pmi_srcdir])
+    AC_SUBST([pmi_lib])
+    AC_SUBST([pmi_includedir])
+
+    m4_ifdef([MPICH_CONFIGURE], [
+        pmi_srcdir="src/pmi"
+        pmi_lib="src/pmi/libpmi.la"
+
+        pmi_subdir_args=""
+        if test "$with_pmilib" != "install" ; then
+            pmi_subdir_args="--enable-embedded"
+        fi
+        if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
+            pmi_subdir_args="$pmi_subdir_args --disable-pmi1 --disable-pmi2"
+        fi
+        if test "$pac_have_pmix" = "yes" ; then
+            pmi_subdir_args="$pmi_subdir_args --disable-pmix"
+        fi
+        PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
+
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+        # let subconfigure know we has libpmiutil.la
+        HAS_LIBPMIUTIL_LA=yes
+        export HAS_LIBPMIUTIL_LA
+    ] , [
+        dnl hydra - need libpmiutil.la
+        if test "$HAS_LIBPMIUTIL_LA" = "yes" ; then
+            pmi_includedir="-I$main_top_srcdir/src/pmi/src"
+            pmi_lib="$main_top_builddir/src/pmi/libpmiutil.la"
+        else
+            pmi_srcdir=pmi_embedded_dir
+            pmi_includedir='-I$(top_srcdir)/pmi_embedded_dir/src'
+            pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmiutil.la'
+            PAC_CONFIG_SUBDIR_ARGS(pmi_embedded_dir, [--enable-embedded])
+        fi
+    ])
+])
