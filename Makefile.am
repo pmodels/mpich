@@ -48,12 +48,12 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mplsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@
-external_ldflags = @RPATHS@ @mpllibdir@ @yaksalibdir@
+external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@
+external_ldflags = @RPATHS@ @yaksalibdir@
 external_libs = @WRAPPER_LIBS@
 
 # convenience libs that do not depend on MPI
-pmpi_convenience_libs = @mpllib@ @hwloclib@ @jsonlib@ @yaksalib@ @pmilib@
+pmpi_convenience_libs = @mpl_lib@ @hwloc_lib@ @jsonlib@ @yaksalib@ @pmilib@
 
 # convenience libs that depend on MPI (either MPI functions or MPI constants)
 mpi_convenience_libs =
@@ -125,7 +125,7 @@ mpi_abi_sources =
 mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
-mpifort_convenience_libs = @mpllib@
+mpifort_convenience_libs = @mpl_lib@
 
 lib_LTLIBRARIES =
 

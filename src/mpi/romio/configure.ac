@@ -107,36 +107,12 @@ AM_CONDITIONAL([BUILD_BINDING], [test "$FROM_MPICH" != "yes"])
 AM_CONDITIONAL([INSTALL_HEADERS], [test "$FROM_MPICH" != "yes"])
 
 # MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-mpl_srcdir=""
-AC_SUBST([mpl_srcdir])
-# Controls whether we recurse into the MPL dir when running "dist" rules like
-# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-# superset of SUBDIRS, but we don't want to double-distclean and similar.
-mpl_dist_srcdir=""
-AC_SUBST(mpl_dist_srcdir)
-mpl_includedir=""
-AC_SUBST([mpl_includedir])
-mpl_libdir=""
-AC_SUBST([mpl_libdir])
-mpl_lib=""
-AC_SUBST([mpl_lib])
-if test "$FROM_MPICH" = "no" ; then
-    mpl_srcdir="mpl"
-    mpl_dist_srcdir="mpl"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-    mpl_lib="mpl/lib${MPLLIBNAME}.la"
-else
-    # we are configuring romio inside mpich. MPICH should configured MPL already,
-    # just set mpl_includedir and source mpl/localdefs if any.
-    pac_skip_mpl_lib=yes
-    PAC_CONFIG_MPL
-fi
+# we are configuring romio inside mpich. MPICH should configured MPL already,
+# just set mpl_includedir and source mpl/localdefs if any.
+pac_skip_mpl_lib=yes
+
+m4_define([mpl_embedded_dir], [mpl])
+PAC_CONFIG_MPL
 
 CFLAGS=${CFLAGS:-""}
 LL="lld"

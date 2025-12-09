@@ -1054,13 +1054,6 @@ if test "$NEEDSPLIB" = "yes" ; then
 fi
 
 # MPL
-mplsrcdir=""
-AC_SUBST([mplsrcdir])
-mpllibdir=""
-AC_SUBST([mpllibdir])
-mpllib=""
-AC_SUBST([mpllib])
-
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL
 
@@ -1087,11 +1080,6 @@ PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 # ----------------------------------------------------------------------------
 # HWLOC / NETLOC
 # ----------------------------------------------------------------------------
-hwlocsrcdir=""
-AC_SUBST([hwlocsrcdir])
-hwloclib=""
-AC_SUBST([hwloclib])
-
 m4_define([hwloc_embedded_dir],[modules/hwloc])
 PAC_CONFIG_HWLOC
 
