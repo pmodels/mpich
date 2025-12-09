@@ -127,16 +127,6 @@ if test -z "$FROM_MPICH" ; then
 fi
 
 # MPL
-mpl_srcdir=""
-AC_SUBST([mpl_srcdir])
-# Controls whether we recurse into the MPL dir when running "dist" rules like
-# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-# superset of SUBDIRS, but we don't want to double-distclean and similar.
-AC_SUBST(mpl_dist_srcdir)
-mpl_includedir=""
-AC_SUBST([mpl_includedir])
-mpl_lib=""
-AC_SUBST([mpl_lib])
 m4_define([mpl_embedded_dir],[modules/mpl])
 PAC_CONFIG_MPL
 
@@ -399,13 +389,6 @@ AC_MSG_CHECKING([desired processor topology libraries])
 AC_MSG_RESULT([$hydra_topolib_list])
 
 hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
-
-hwloc_srcdir=""
-hwloc_includedir=""
-hwloc_lib=""
-AC_SUBST([hwloc_srcdir])
-AC_SUBST([hwloc_includedir])
-AC_SUBST([hwloc_lib])
 
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in

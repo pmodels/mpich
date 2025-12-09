@@ -13,14 +13,26 @@ AC_DEFUN([PAC_CONFIG_MPL_EMBEDDED],[
 
 AC_DEFUN([PAC_CONFIG_MPL],[
     dnl NOTE: we only support embedded mpl
+    mpl_srcdir=""
+    mpl_includedir=""
+    mpl_lib=""
+    AC_SUBST([mpl_srcdir])
+    AC_SUBST([mpl_includedir])
+    AC_SUBST([mpl_lib])
+    # Controls whether we recurse into the MPL dir when running "dist" rules like
+    # "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
+    # superset of SUBDIRS, but we don't want to double-distclean and similar.
+    mpl_dist_srcdir=""
+    AC_SUBST(mpl_dist_srcdir)
+
     m4_ifdef([MPICH_CONFIGURE], [
         dnl ---- the main MPICH configure ----
         PAC_CONFIG_MPL_EMBEDDED
         PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
         PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
-        mplsrcdir="src/mpl"
-        mpllib="src/mpl/libmpl.la"
+        mpl_srcdir="src/mpl"
+        mpl_lib="src/mpl/libmpl.la"
     ], [
         dnl ---- sub-configure (e.g. hydra, romio) ----
         if test "$FROM_MPICH" = "yes"; then
@@ -46,6 +58,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
                 . ../mpl/localdefs
             ])
         else
+            dnl stand-alone ROMIO
             PAC_CONFIG_MPL_EMBEDDED
             mpl_srcdir="mpl_embedded_dir"
             mpl_dist_srcdir="mpl_embedded_dir"
@@ -83,6 +96,13 @@ AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
 
 AC_DEFUN([PAC_CONFIG_HWLOC],[
     dnl minor difference from e.g. mpl -- we'll prioritize system hwloc by default
+    hwloc_srcdir=""
+    hwloc_includedir=""
+    hwloc_lib=""
+    AC_SUBST([hwloc_srcdir])
+    AC_SUBST([hwloc_includedir])
+    AC_SUBST([hwloc_lib])
+
     PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
     if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
         AC_MSG_CHECKING([if hwloc meets minimum version requirement])
@@ -108,11 +128,11 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
     if test "$with_hwloc" = "embedded" ; then
         m4_ifdef([MPICH_CONFIGURE], [
             dnl ---- the main MPICH configure ----
-            hwloclib="modules/hwloc/hwloc/libhwloc_embedded.la"
-            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloclib"; then
-                hwlocsrcdir=""
+            hwloc_lib="modules/hwloc/hwloc/libhwloc_embedded.la"
+            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloc_lib"; then
+                hwloc_srcdir=""
             else
-                hwlocsrcdir="${main_top_builddir}/modules/hwloc"
+                hwloc_srcdir="${main_top_builddir}/modules/hwloc"
                 PAC_CONFIG_HWLOC_EMBEDDED([$VISIBILITY_CFLAGS])
             fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
