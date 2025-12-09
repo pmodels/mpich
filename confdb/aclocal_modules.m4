@@ -262,3 +262,31 @@ AC_DEFUN([PAC_CONFIG_YAKSA],[
         PAC_APPEND_FLAG(-I${use_top_srcdir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
     fi
 ])
+
+dnl ==== romio ====
+
+AC_DEFUN([PAC_CONFIG_ROMIO],[
+    # make it possible to "#include" mpio.h at build time
+    #
+    # This ought to be sufficient, but there is also a symlink setup in
+    # src/include to accommodate current mpicc limitations.  See
+    # src/mpi/Makefile.mk for more info.
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+
+    # Set environment variables that the romio configure expects
+    export use_top_srcdir
+    top_build_dir=`pwd`
+    export top_build_dir
+    # if there is no $top_build_dir/lib, romio puts lib in wrong place
+    # This test used -e under Linux, but not all test programs understand
+    # -e
+    if test ! -d lib ; then mkdir lib ; fi
+    # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
+    ROMIO_VERSION='#define ROMIO_VERSION 126'
+
+    romio_subdir_args=""
+    if test "$enable_mpi_abi" = "yes" ; then
+        romio_subdir_args="--enable-mpi-abi"
+    fi
+    PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
+])
