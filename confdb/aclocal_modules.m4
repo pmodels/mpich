@@ -25,47 +25,50 @@ AC_DEFUN([PAC_CONFIG_MPL],[
     mpl_dist_srcdir=""
     AC_SUBST(mpl_dist_srcdir)
 
-    m4_ifdef([MPICH_CONFIGURE], [
-        dnl ---- the main MPICH configure ----
-        PAC_CONFIG_MPL_EMBEDDED
-        PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
-        mpl_srcdir="src/mpl"
-        mpl_lib="src/mpl/libmpl.la"
-    ], [
-        dnl ---- sub-configure (e.g. hydra, romio) ----
-        if test "$FROM_MPICH" = "yes"; then
-            dnl skip ROMIO since mpich already links libmpl.la
-            if test "$pac_skip_mpl_lib" != "yes" ; then
-                mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
-            fi
-            mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
-            # source variables that are configured by MPL
-            AC_MSG_NOTICE([sourcing $main_top_builddir/src/mpl/localdefs])
-            . $main_top_builddir/src/mpl/localdefs
-        elif test "$FROM_HYDRA" = "yes"; then
-            m4_ifdef([HYDRA_CONFIGURE], [
+    PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mpl.h],[mpl],[MPL_env2int])
+    if test "$with_mpl" = "embedded" ; then
+        m4_ifdef([MPICH_CONFIGURE], [
+            dnl ---- the main MPICH configure ----
+            PAC_CONFIG_MPL_EMBEDDED
+            PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
+            mpl_srcdir="src/mpl"
+            mpl_lib="src/mpl/libmpl.la"
+        ], [
+            dnl ---- sub-configure (e.g. hydra, romio) ----
+            if test "$FROM_MPICH" = "yes"; then
+                dnl skip ROMIO since mpich already links libmpl.la
+                if test "$pac_skip_mpl_lib" != "yes" ; then
+                    mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
+                fi
+                mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
+                # source variables that are configured by MPL
+                AC_MSG_NOTICE([sourcing $main_top_builddir/src/mpl/localdefs])
+                . $main_top_builddir/src/mpl/localdefs
+            elif test "$FROM_HYDRA" = "yes"; then
+                m4_ifdef([HYDRA_CONFIGURE], [
+                    PAC_CONFIG_MPL_EMBEDDED
+                    mpl_srcdir="mpl_embedded_dir"
+                    mpl_dist_srcdir="mpl_embedded_dir"
+                    mpl_lib="mpl_embedded_dir/libmpl.la"
+                    mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
+                ], [
+                    dnl both mpl and pmi are in modules/
+                    mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
+                    AC_MSG_NOTICE([sourcing ../mpl/localdefs])
+                    . ../mpl/localdefs
+                ])
+            else
+                dnl stand-alone ROMIO
                 PAC_CONFIG_MPL_EMBEDDED
                 mpl_srcdir="mpl_embedded_dir"
                 mpl_dist_srcdir="mpl_embedded_dir"
                 mpl_lib="mpl_embedded_dir/libmpl.la"
                 mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
-            ], [
-                dnl both mpl and pmi are in modules/
-                mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
-                AC_MSG_NOTICE([sourcing ../mpl/localdefs])
-                . ../mpl/localdefs
-            ])
-        else
-            dnl stand-alone ROMIO
-            PAC_CONFIG_MPL_EMBEDDED
-            mpl_srcdir="mpl_embedded_dir"
-            mpl_dist_srcdir="mpl_embedded_dir"
-            mpl_lib="mpl_embedded_dir/libmpl.la"
-            mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
-        fi
-    ])
+            fi
+        ])
+    fi
 ])
 
 dnl ==== hwloc ====
