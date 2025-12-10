@@ -262,6 +262,53 @@ sync_external () {
     cp -pPR "$srcdir" "$destdir"
 }
 
+# ./autogen.sh -do=hydra if *only* build hydra
+fn_hydra() {
+    echo "####################################"
+    echo "## Prepareing src/pm/hydra        ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 src/pm/hydra/version.m4
+
+    sync_external confdb src/pm/hydra/confdb
+
+    mkdir -p src/pm/hydra/modules
+    sync_external src/mpl src/pm/hydra/modules/mpl
+    sync_external src/pmi src/pm/hydra/modules/pmi
+    if test -f "modules/hwloc/configure.ac"; then
+        sync_external modules/hwloc src/pm/hydra/modules/hwloc
+        # remove .git directories to avoid confusing git clean
+        rm -rf src/pm/hydra/modules/hwloc/.git
+    fi
+
+    (cd src/pm/hydra && ./autogen.sh)
+}
+
+# ./autogen.sh -do=pmi if *only* build libpmi
+fn_pmi() {
+    echo "####################################"
+    echo "## Prepareing src/pmi             ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 src/pmi/version.m4
+
+    sync_external confdb src/pmi/confdb
+
+    sync_external src/mpl src/pmi/mpl
+
+    (cd src/pmi && ./autogen.sh)
+}
+
+# ./autogen.sh -do=test if *only* build testsuite
+fn_test() {
+    echo "####################################"
+    echo "## Prepareing test/mpi            ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 test/mpi/version.m4
+
+    sync_external confdb test/mpi/confdb
+
+    (cd test/mpi && ./autogen.sh)
+}
+
 fn_copy_confdb_etc() {
     echo
     echo "####################################"
