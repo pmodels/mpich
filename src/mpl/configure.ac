@@ -46,7 +46,7 @@ else
 fi
 
 AC_CONFIG_HEADERS([include/config.h])
-AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
+AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/maint/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
