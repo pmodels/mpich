@@ -8,6 +8,20 @@ if test -z "$AUTORECONF" ; then
     AUTORECONF="autoreconf"
 fi
 
+if test -n "$MPICH_CONFDB" ; then
+    CONFARGS="-I $MPICH_CONFDB -vif"
+    mkdir -p confdb
+else
+    if ! test -d confdb ; then
+        echo "Missing confdb!"
+        exit 1
+    fi
+
+    CONFARGS="-vif"
+    # set it for mpl
+    export MPICH_CONFDB=`realpath confdb`
+fi
+
 echo_n() {
     # "echo -n" isn't portable, must portably implement with printf
     printf "%s" "$*"
@@ -97,7 +111,7 @@ fi
 generate_benchmarks
 
 echo "Running autoreconf in dtpools"
-(cd dtpools && $AUTORECONF -vif) || exit 1
+(cd dtpools && ./autogen.sh $AUTORECONF -I $MPICH_CONFDB -vif) || exit 1
 
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
@@ -134,4 +148,4 @@ echo "done"
 $PYTHON maint/gen_all_mpitests.py
 
 echo "Running autoreconf in ."
-$AUTORECONF -vif || exit 1
+$AUTORECONF $CONFARGS || exit 1
