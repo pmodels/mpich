@@ -1,4 +1,22 @@
 ===============================================================================
+                               Changes in 0.4
+===============================================================================
+
+# Add compatibility with ROCm >= 6.0
+
+# Add compatibility with CUDA >= 13
+
+# Fix GPU initialization when no devices are present
+
+# Fix reproducibility of code generation
+
+# Disable leaked handle warnings by default
+
+# Change default max nesting level from 3 to 2
+
+# Other bug and warning fixes
+
+===============================================================================
                                Changes in 0.3
 ===============================================================================
 
