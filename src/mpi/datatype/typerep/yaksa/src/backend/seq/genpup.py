@@ -217,7 +217,7 @@ def generate_kernels(b, darray, blklen):
 if __name__ == '__main__':
     ##### parse user arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pup-max-nesting', type=int, default=3, help='maximum nesting levels to generate')
+    parser.add_argument('--pup-max-nesting', type=int, default=2, help='maximum nesting levels to generate')
     args = parser.parse_args()
     if (args.pup_max_nesting < 0):
         parser.print_help()
