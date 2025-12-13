@@ -31,34 +31,9 @@ AM_CONDITIONAL([BUILD_YAKSA_ENGINE], [test "${with_datatype_engine}" = "yaksa"])
 AM_CONDITIONAL([BUILD_DATALOOP_ENGINE], [test "${with_datatype_engine}" = "dataloop"])
 
 # YAKSA
-AC_ARG_VAR([YAKSALIBNAME],[can be used to override the name of the YAKSA library (default: "yaksa")])
-YAKSALIBNAME=${YAKSALIBNAME:-"yaksa"}
-export YAKSALIBNAME
-AC_SUBST(YAKSALIBNAME)
-yaksasrcdir=""
-AC_SUBST([yaksasrcdir])
-yaksalibdir=""
-AC_SUBST([yaksalibdir])
-yaksalib=""
-AC_SUBST([yaksalib])
-
 AM_COND_IF([BUILD_YAKSA_ENGINE], [
-m4_define([yaksa_embedded_dir],[src/mpi/datatype/typerep/yaksa])
-PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa.h],[$YAKSALIBNAME],[yaksa_init])
-if test "$with_yaksa" = "embedded" ; then
-    yaksalib="yaksa_embedded_dir/lib${YAKSALIBNAME}.la"
-    if test ! -e "${use_top_srcdir}/modules/PREBUILT-yaksa"; then
-        PAC_PUSH_ALL_FLAGS()
-        PAC_RESET_ALL_FLAGS()
-        # no need for libtool versioning when embedding YAKSA
-        yaksa_subdir_args="--enable-embedded"
-        PAC_CONFIG_SUBDIR_ARGS(yaksa_embedded_dir,[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
-        PAC_POP_ALL_FLAGS()
-        yaksasrcdir="yaksa_embedded_dir"
-    fi
-    PAC_APPEND_FLAG(-I${main_top_builddir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
-    PAC_APPEND_FLAG(-I${use_top_srcdir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
-fi
+    m4_define([yaksa_embedded_dir],[src/mpi/datatype/typerep/yaksa])
+    PAC_CONFIG_YAKSA
 ])
 
 ])dnl end _BODY

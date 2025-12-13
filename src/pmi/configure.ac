@@ -68,18 +68,12 @@ AC_ARG_WITH([thread-package],
     AS_HELP_STRING([--with-thread-package], [whether to enable threads]))
 
 # MPL
-m4_define([mpl_embedded_dir],[mpl])
-
-mpl_srcdir=
-AC_SUBST([mpl_srcdir])
-mpl_includedir=
-AC_SUBST([mpl_includedir])
-mpl_lib=
-AC_SUBST([mpl_lib])
-
 if test "$enable_embedded" = "yes" ; then
+    # mpich already has mpl, do not double link it
     pac_skip_mpl_lib=yes
 fi
+
+m4_define([mpl_embedded_dir],[mpl])
 PAC_CONFIG_MPL
 
 if test "$enable_error_checking" != "no" ; then

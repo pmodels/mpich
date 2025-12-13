@@ -13,46 +13,62 @@ AC_DEFUN([PAC_CONFIG_MPL_EMBEDDED],[
 
 AC_DEFUN([PAC_CONFIG_MPL],[
     dnl NOTE: we only support embedded mpl
-    m4_ifdef([MPICH_CONFIGURE], [
-        dnl ---- the main MPICH configure ----
-        PAC_CONFIG_MPL_EMBEDDED
-        PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
-        mplsrcdir="src/mpl"
-        mpllib="src/mpl/libmpl.la"
-    ], [
-        dnl ---- sub-configure (e.g. hydra, romio) ----
-        if test "$FROM_MPICH" = "yes"; then
-            dnl skip ROMIO since mpich already links libmpl.la
-            if test "$pac_skip_mpl_lib" != "yes" ; then
-                mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
-            fi
-            mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
-            # source variables that are configured by MPL
-            AC_MSG_NOTICE([sourcing $main_top_builddir/src/mpl/localdefs])
-            . $main_top_builddir/src/mpl/localdefs
-        elif test "$FROM_HYDRA" = "yes"; then
-            m4_ifdef([HYDRA_CONFIGURE], [
+    mpl_srcdir=""
+    mpl_includedir=""
+    mpl_lib=""
+    AC_SUBST([mpl_srcdir])
+    AC_SUBST([mpl_includedir])
+    AC_SUBST([mpl_lib])
+    # Controls whether we recurse into the MPL dir when running "dist" rules like
+    # "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
+    # superset of SUBDIRS, but we don't want to double-distclean and similar.
+    mpl_dist_srcdir=""
+    AC_SUBST(mpl_dist_srcdir)
+
+    PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mpl.h],[mpl],[MPL_env2int])
+    if test "$with_mpl" = "embedded" ; then
+        m4_ifdef([MPICH_CONFIGURE], [
+            dnl ---- the main MPICH configure ----
+            PAC_CONFIG_MPL_EMBEDDED
+            PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
+            mpl_srcdir="src/mpl"
+            mpl_lib="src/mpl/libmpl.la"
+        ], [
+            dnl ---- sub-configure (e.g. hydra, romio) ----
+            if test "$FROM_MPICH" = "yes"; then
+                dnl skip ROMIO since mpich already links libmpl.la
+                if test "$pac_skip_mpl_lib" != "yes" ; then
+                    mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
+                fi
+                mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
+                # source variables that are configured by MPL
+                AC_MSG_NOTICE([sourcing $main_top_builddir/src/mpl/localdefs])
+                . $main_top_builddir/src/mpl/localdefs
+            elif test "$FROM_HYDRA" = "yes"; then
+                m4_ifdef([HYDRA_CONFIGURE], [
+                    PAC_CONFIG_MPL_EMBEDDED
+                    mpl_srcdir="mpl_embedded_dir"
+                    mpl_dist_srcdir="mpl_embedded_dir"
+                    mpl_lib="mpl_embedded_dir/libmpl.la"
+                    mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
+                ], [
+                    dnl both mpl and pmi are in modules/
+                    mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
+                    AC_MSG_NOTICE([sourcing ../mpl/localdefs])
+                    . ../mpl/localdefs
+                ])
+            else
+                dnl stand-alone ROMIO
                 PAC_CONFIG_MPL_EMBEDDED
                 mpl_srcdir="mpl_embedded_dir"
                 mpl_dist_srcdir="mpl_embedded_dir"
                 mpl_lib="mpl_embedded_dir/libmpl.la"
                 mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
-            ], [
-                dnl both mpl and pmi are in modules/
-                mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
-                AC_MSG_NOTICE([sourcing ../mpl/localdefs])
-                . ../mpl/localdefs
-            ])
-        else
-            PAC_CONFIG_MPL_EMBEDDED
-            mpl_srcdir="mpl_embedded_dir"
-            mpl_dist_srcdir="mpl_embedded_dir"
-            mpl_lib="mpl_embedded_dir/libmpl.la"
-            mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
-        fi
-    ])
+            fi
+        ])
+    fi
 ])
 
 dnl ==== hwloc ====
@@ -71,10 +87,10 @@ AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
     hwloc_config_args="$hwloc_config_args --disable-rsmi"
     # disable GPU support in embedded hwloc if explicitly disabled in MPICH
     # NOTE: there is no --disable-rocm option for the hwloc configure
-    if test $with_ze = "no" ; then
+    if test "$with_ze" = "no" ; then
         hwloc_config_args="$hwloc_config_args --disable-levelzero"
     fi
-    if test $with_cuda = "no" ; then
+    if test "$with_cuda" = "no" ; then
         hwloc_config_args="$hwloc_config_args --disable-cuda"
     fi
     PAC_CONFIG_SUBDIR_ARGS(hwloc_embedded_dir, [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
@@ -83,6 +99,13 @@ AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
 
 AC_DEFUN([PAC_CONFIG_HWLOC],[
     dnl minor difference from e.g. mpl -- we'll prioritize system hwloc by default
+    hwloc_srcdir=""
+    hwloc_includedir=""
+    hwloc_lib=""
+    AC_SUBST([hwloc_srcdir])
+    AC_SUBST([hwloc_includedir])
+    AC_SUBST([hwloc_lib])
+
     PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
     if test "$pac_have_hwloc" = "yes" -a "$with_hwloc" != "embedded"; then
         AC_MSG_CHECKING([if hwloc meets minimum version requirement])
@@ -108,11 +131,11 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
     if test "$with_hwloc" = "embedded" ; then
         m4_ifdef([MPICH_CONFIGURE], [
             dnl ---- the main MPICH configure ----
-            hwloclib="modules/hwloc/hwloc/libhwloc_embedded.la"
-            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloclib"; then
-                hwlocsrcdir=""
+            hwloc_lib="modules/hwloc/hwloc/libhwloc_embedded.la"
+            if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloc_lib"; then
+                hwloc_srcdir=""
             else
-                hwlocsrcdir="${main_top_builddir}/modules/hwloc"
+                hwloc_srcdir="${main_top_builddir}/modules/hwloc"
                 PAC_CONFIG_HWLOC_EMBEDDED([$VISIBILITY_CFLAGS])
             fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
@@ -143,4 +166,127 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
             PAC_APPEND_FLAG([$hwloc_darwin_ldflags], [WRAPPER_DEPENDENCY_LDFLAGS])
         fi
     fi
+])
+
+dnl ==== pmi ====
+
+AC_DEFUN([PAC_CONFIG_PMI],[
+    pmi_srcdir=""
+    pmi_lib=""
+    pmi_includedir=""
+    AC_SUBST([pmi_srcdir])
+    AC_SUBST([pmi_lib])
+    AC_SUBST([pmi_includedir])
+
+    m4_ifdef([MPICH_CONFIGURE], [
+        pmi_srcdir="src/pmi"
+        pmi_lib="src/pmi/libpmi.la"
+
+        pmi_subdir_args=""
+        if test "$with_pmilib" != "install" ; then
+            pmi_subdir_args="--enable-embedded"
+        fi
+        if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
+            pmi_subdir_args="$pmi_subdir_args --disable-pmi1 --disable-pmi2"
+        fi
+        if test "$pac_have_pmix" = "yes" ; then
+            pmi_subdir_args="$pmi_subdir_args --disable-pmix"
+        fi
+        PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
+
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+        # let subconfigure know we has libpmiutil.la
+        HAS_LIBPMIUTIL_LA=yes
+        export HAS_LIBPMIUTIL_LA
+    ] , [
+        dnl hydra - need libpmiutil.la
+        if test "$HAS_LIBPMIUTIL_LA" = "yes" ; then
+            pmi_includedir="-I$main_top_srcdir/src/pmi/src"
+            pmi_lib="$main_top_builddir/src/pmi/libpmiutil.la"
+        else
+            pmi_srcdir=pmi_embedded_dir
+            pmi_includedir='-I$(top_srcdir)/pmi_embedded_dir/src'
+            pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmiutil.la'
+            PAC_CONFIG_SUBDIR_ARGS(pmi_embedded_dir, [--enable-embedded])
+        fi
+    ])
+])
+
+dnl ==== json-c ====
+
+AC_DEFUN([PAC_CONFIG_JSON],[
+    json_srcdir=""
+    json_lib=""
+    AC_SUBST([json_srcdir])
+    AC_SUBST([json_lib])
+
+    PAC_CHECK_HEADER_LIB_EXPLICIT([json],[json.h],[json-c],[json_token_parse])
+    if test "$with_json" = "embedded" ; then
+        json_lib="modules/json-c/libjson-c.la"
+        if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$json_lib"; then
+            json_srcdir=""
+        else
+            PAC_PUSH_ALL_FLAGS()
+            PAC_RESET_ALL_FLAGS()
+            PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+            PAC_POP_ALL_FLAGS()
+            json_srcdir="${main_top_builddir}/modules/json-c"
+        fi
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
+    fi
+])
+
+dnl ==== yaksa ====
+
+AC_DEFUN([PAC_CONFIG_YAKSA],[
+    yaksa_srcdir=""
+    yaksa_lib=""
+    AC_SUBST([yaksa_srcdir])
+    AC_SUBST([yaksa_lib])
+
+    PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa.h],[yaksa],[yaksa_init])
+    if test "$with_yaksa" = "embedded" ; then
+        yaksa_lib="yaksa_embedded_dir/libyaksa.la"
+        if test ! -e "${use_top_srcdir}/modules/PREBUILT-yaksa"; then
+            PAC_PUSH_ALL_FLAGS()
+            PAC_RESET_ALL_FLAGS()
+            # no need for libtool versioning when embedding YAKSA
+            yaksa_subdir_args="--enable-embedded"
+            PAC_CONFIG_SUBDIR_ARGS(yaksa_embedded_dir,[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
+            PAC_POP_ALL_FLAGS()
+            yaksa_srcdir="yaksa_embedded_dir"
+        fi
+        PAC_APPEND_FLAG(-I${main_top_builddir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
+        PAC_APPEND_FLAG(-I${use_top_srcdir}/yaksa_embedded_dir/src/frontend/include, [CPPFLAGS])
+    fi
+])
+
+dnl ==== romio ====
+
+AC_DEFUN([PAC_CONFIG_ROMIO],[
+    # make it possible to "#include" mpio.h at build time
+    #
+    # This ought to be sufficient, but there is also a symlink setup in
+    # src/include to accommodate current mpicc limitations.  See
+    # src/mpi/Makefile.mk for more info.
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+
+    # Set environment variables that the romio configure expects
+    export use_top_srcdir
+    top_build_dir=`pwd`
+    export top_build_dir
+    # if there is no $top_build_dir/lib, romio puts lib in wrong place
+    # This test used -e under Linux, but not all test programs understand
+    # -e
+    if test ! -d lib ; then mkdir lib ; fi
+    # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
+    ROMIO_VERSION='#define ROMIO_VERSION 126'
+
+    romio_subdir_args=""
+    if test "$enable_mpi_abi" = "yes" ; then
+        romio_subdir_args="--enable-mpi-abi"
+    fi
+    PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
 ])

@@ -262,58 +262,61 @@ sync_external () {
     cp -pPR "$srcdir" "$destdir"
 }
 
+# ./autogen.sh -do=hydra if *only* build hydra
+fn_hydra() {
+    echo "####################################"
+    echo "## Prepareing src/pm/hydra        ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 src/pm/hydra/version.m4
+
+    sync_external confdb src/pm/hydra/confdb
+
+    mkdir -p src/pm/hydra/modules
+    sync_external src/mpl src/pm/hydra/modules/mpl
+    sync_external src/pmi src/pm/hydra/modules/pmi
+    if test -f "modules/hwloc/configure.ac"; then
+        sync_external modules/hwloc src/pm/hydra/modules/hwloc
+        # remove .git directories to avoid confusing git clean
+        rm -rf src/pm/hydra/modules/hwloc/.git
+    fi
+
+    (cd src/pm/hydra && ./autogen.sh)
+}
+
+# ./autogen.sh -do=pmi if *only* build libpmi
+fn_pmi() {
+    echo "####################################"
+    echo "## Prepareing src/pmi             ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 src/pmi/version.m4
+
+    sync_external confdb src/pmi/confdb
+
+    sync_external src/mpl src/pmi/mpl
+
+    (cd src/pmi && ./autogen.sh)
+}
+
+# ./autogen.sh -do=test if *only* build testsuite
+fn_test() {
+    echo "####################################"
+    echo "## Prepareing test/mpi            ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 test/mpi/version.m4
+
+    sync_external confdb test/mpi/confdb
+
+    (cd test/mpi && ./autogen.sh)
+}
+
 fn_copy_confdb_etc() {
-    # This used to be an optionally installed hook to help with git-svn
-    # versions of the old SVN repo.  Now that we are using git, this is our
-    # mechanism that replaces relative svn:externals paths, such as for
-    # "confdb" and "mpl". The basic plan is to delete the destdir and then
-    # copy all of the files, warts and all, from the source directory to the
-    # destination directory.
     echo
     echo "####################################"
-    echo "## Replicating confdb (and similar)"
+    echo "## Preparing for autogen in subdirs"
     echo "####################################"
     echo
 
-    confdb_dirs=
-    confdb_dirs="${confdb_dirs} src/mpl/confdb"
-    if test "$do_pmi" = "yes" ; then
-        confdb_dirs="${confdb_dirs} src/pmi/confdb"
-        if test "$do_quick" = "no" ; then
-            sync_external src/mpl src/pmi/mpl
-            confdb_dirs="${confdb_dirs} src/pmi/mpl/confdb"
-        fi
-    fi
-    if test "$do_romio" = "yes" ; then
-        confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
-        if test "$do_quick" = "no" ; then
-            sync_external src/mpl src/mpi/romio/mpl
-            confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
-        fi
-    fi
-    if test "$do_hydra" = "yes" ; then
-        confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
-        if test "$do_quick" = "no" ; then
-            mkdir -p src/pm/hydra/modules
-            sync_external src/mpl src/pm/hydra/modules/mpl
-            sync_external src/pmi src/pm/hydra/modules/pmi
-            sync_external modules/hwloc src/pm/hydra/modules/hwloc
-            # remove .git directories to avoid confusing git clean
-            rm -rf src/pm/hydra/modules/hwloc/.git
-            confdb_dirs="${confdb_dirs} src/pm/hydra/modules/mpl/confdb"
-            confdb_dirs="${confdb_dirs} src/pm/hydra/modules/pmi/confdb"
-            confdb_dirs="${confdb_dirs} src/pm/hydra/modules/pmi/mpl/confdb"
-        fi
-    fi
-    if test "$do_test" = "yes" ; then
-        confdb_dirs="${confdb_dirs} test/mpi/confdb"
-        confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
-    fi
-
-    # all the confdb directories, by various names
-    for destdir in $confdb_dirs ; do
-        sync_external confdb "$destdir"
-    done
+    export MPICH_CONFDB=`realpath confdb`
 
     # a couple of other random files
     if [ -f maint/version.m4 ] ; then
@@ -322,16 +325,6 @@ fn_copy_confdb_etc() {
         cp -pPR maint/version.m4 src/pmi/version.m4
         cp -pPR maint/version.m4 test/mpi/version.m4
     fi
-
-    # Now sanity check that some of the above sync was successful
-    f="aclocal_cc.m4"
-    for d in $confdb_dirs ; do
-        if [ -f "$d/$f" ] ; then :
-        else
-            error "expected to find '$f' in '$d'"
-            exit 1
-        fi
-    done
 }
 
 fn_maint_configure() {
