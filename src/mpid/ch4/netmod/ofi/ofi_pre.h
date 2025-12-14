@@ -381,6 +381,9 @@ typedef struct {
     struct MPIDI_OFI_win_request *syncQ;
     struct MPIDI_OFI_win_request *deferredQ;
     MPIDI_OFI_win_targetinfo_t *winfo;
+    void *mirror_buf;           /* used in gpu fallback paths to avoid repeated host registration */
+    MPL_pointer_attr_t base_attr;
+    MPL_pointer_attr_t mirror_attr;
 
     MPL_gavl_tree_t *dwin_target_mrs;   /* MR key and address pairs registered to remote processes.
                                          * One AVL tree per process. */
