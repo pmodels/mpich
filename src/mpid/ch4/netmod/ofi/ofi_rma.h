@@ -525,14 +525,43 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
+
+    /* TODO: move pre-checks to ch4_rma */
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
+
+    /* check early exit */
+    if (target_count == 0)
+        goto fn_exit;
+
+    if (target_rank == win->comm_ptr->rank) {
+        MPI_Aint offset;
+        offset = win->disp_unit * target_disp;
+        mpi_errno = MPIR_Localcopy((char *) win->base + offset, target_count, target_datatype,
+                                   origin_addr, origin_count, origin_datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
 
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
         !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
-        MPIDI_OFI_register_am_bufs();
-        mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win);
+        MPI_Aint data_sz;
+        MPIDI_Datatype_check_size(target_datatype, target_count, data_sz);
+        bool good_size = (data_sz >= MPIDI_NM_am_eager_limit());
+        int origin_is_contig, target_is_contig;
+        MPIR_Datatype_is_contig(origin_datatype, &origin_is_contig);
+        MPIR_Datatype_is_contig(target_datatype, &target_is_contig);
+        /* for now, only optimize for large contig data */
+        if (origin_is_contig && target_is_contig && good_size && MPIR_CVAR_OFI_ENABLE_WIN_MIRROR) {
+            /* use mirror_buf optimization */
+            mpi_errno = MPIDI_OFI_mirror_get(origin_addr, origin_count, origin_datatype,
+                                             target_rank,
+                                             target_disp, target_count, target_datatype, win);
+        } else {
+            MPIDI_OFI_register_am_bufs();
+            mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_disp, target_count, target_datatype, win);
+        }
         goto fn_exit;
     }
 
@@ -546,6 +575,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,

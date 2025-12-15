@@ -656,15 +656,38 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int targ
 
                 MPIR_cc_inc(&target_ptr->local_cmpl_cnts);
                 MPIR_cc_inc(&target_ptr->remote_cmpl_cnts);
-
-                *local_cmpl_cnts_ptr = &target_ptr->local_cmpl_cnts;
+                if (local_cmpl_cnts_ptr) {
+                    *local_cmpl_cnts_ptr = &target_ptr->local_cmpl_cnts;
+                }
                 break;
             }
         default:
             MPIR_cc_inc(&MPIDIG_WIN(win, local_cmpl_cnts));
             MPIR_cc_inc(&MPIDIG_WIN(win, remote_cmpl_cnts));
+            if (local_cmpl_cnts_ptr) {
+                *local_cmpl_cnts_ptr = &MPIDIG_WIN(win, local_cmpl_cnts);
+            }
+            break;
+    }
+}
 
-            *local_cmpl_cnts_ptr = &MPIDIG_WIN(win, local_cmpl_cnts);
+/* Use this if local_cmpl_cnts_ptr is NULL in MPIDIG_win_cmpl_cnts_incr */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_decr(MPIR_Win * win, int target_rank)
+{
+    switch (MPIDIG_WIN(win, sync).access_epoch_type) {
+        case MPIDIG_EPOTYPE_LOCK:
+        case MPIDIG_EPOTYPE_LOCK_ALL:
+        case MPIDIG_EPOTYPE_START:
+            {
+                MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, target_rank);
+
+                MPIR_cc_dec(&target_ptr->local_cmpl_cnts);
+                MPIR_cc_dec(&target_ptr->remote_cmpl_cnts);
+                break;
+            }
+        default:
+            MPIR_cc_dec(&MPIDIG_WIN(win, local_cmpl_cnts));
+            MPIR_cc_dec(&MPIDIG_WIN(win, remote_cmpl_cnts));
             break;
     }
 }

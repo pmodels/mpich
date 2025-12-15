@@ -298,6 +298,15 @@ int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_rndv_info_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                                 uint32_t attr, MPIR_Request ** req);
+
+int MPIDI_OFI_mirror_get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype origin_datatype,
+                         int target_rank, MPI_Aint target_disp, MPI_Aint target_count,
+                         MPI_Datatype target_datatype, MPIR_Win * win);
+int MPIDI_OFI_get_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                          uint32_t attr, MPIR_Request ** req);
+int MPIDI_OFI_getack_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                             uint32_t attr, MPIR_Request ** req);
+
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(struct fid_ep *ep);
 int MPIDI_OFI_mr_key_allocator_init(void);
