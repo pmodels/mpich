@@ -41,13 +41,15 @@ MPI_Abi_get_fortran_info:
     .desc: Return an info object that provides information related to the Fortran ABI
     .seealso: MPI_Abi_get_info
 {
-#ifdef HAVE_FORTRAN_BINDING
-    MPIR_Info *info_ptr;
-    mpi_errno = MPIR_Info_alloc(&info_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_Internal_types[MPI_INTEGER & 0xff].internal_type == MPI_DATATYPE_NULL) {
+        *info = MPI_INFO_NULL;
+    } else {
+        MPIR_Info *info_ptr;
+        mpi_errno = MPIR_Info_alloc(&info_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    MPI_Datatype type;
-    char str[8];
+        MPI_Datatype type;
+        char str[8];
 #define PUSH_TYPE_INFO(type_, keyname) \
     do { \
         type = type_; \
@@ -55,10 +57,10 @@ MPI_Abi_get_fortran_info:
         snprintf(str, sizeof(str), "%d", MPIR_Datatype_get_basic_size(type)); \
         MPIR_Info_push(info_ptr, keyname, str); \
     } while (0)
-    PUSH_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size");
-    PUSH_TYPE_INFO(MPI_INTEGER, "mpi_integer_size");
-    PUSH_TYPE_INFO(MPI_REAL, "mpi_real_size");
-    PUSH_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size");
+        PUSH_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size");
+        PUSH_TYPE_INFO(MPI_INTEGER, "mpi_integer_size");
+        PUSH_TYPE_INFO(MPI_REAL, "mpi_real_size");
+        PUSH_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size");
 #undef PUSH_TYPE_INFO
 #define PUSH_TYPE_INFO(type_, keyname) \
     do { \
@@ -66,31 +68,28 @@ MPI_Abi_get_fortran_info:
         MPIR_DATATYPE_REPLACE_BUILTIN(type); \
         MPIR_Info_push(info_ptr, keyname, type != MPI_DATATYPE_NULL ? "true" : "false"); \
     } while (0)
-    PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
-    PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
-    PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
-    PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
-    PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
-    PUSH_TYPE_INFO(MPI_INTEGER1, "mpi_integer1_supported");
-    PUSH_TYPE_INFO(MPI_INTEGER2, "mpi_integer2_supported");
-    PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
-    PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
-    PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
-    PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
-    PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
-    PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
-    PUSH_TYPE_INFO(MPI_REAL16, "mpi_real16_supported");
-    PUSH_TYPE_INFO(MPI_COMPLEX4, "mpi_complex4_supported");
-    PUSH_TYPE_INFO(MPI_COMPLEX8, "mpi_complex8_supported");
-    PUSH_TYPE_INFO(MPI_COMPLEX16, "mpi_complex16_supported");
-    PUSH_TYPE_INFO(MPI_COMPLEX32, "mpi_complex32_supported");
-    PUSH_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported");
+        PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
+        PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
+        PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
+        PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
+        PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
+        PUSH_TYPE_INFO(MPI_INTEGER1, "mpi_integer1_supported");
+        PUSH_TYPE_INFO(MPI_INTEGER2, "mpi_integer2_supported");
+        PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
+        PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
+        PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
+        PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
+        PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
+        PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
+        PUSH_TYPE_INFO(MPI_REAL16, "mpi_real16_supported");
+        PUSH_TYPE_INFO(MPI_COMPLEX4, "mpi_complex4_supported");
+        PUSH_TYPE_INFO(MPI_COMPLEX8, "mpi_complex8_supported");
+        PUSH_TYPE_INFO(MPI_COMPLEX16, "mpi_complex16_supported");
+        PUSH_TYPE_INFO(MPI_COMPLEX32, "mpi_complex32_supported");
+        PUSH_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported");
 #undef PUSH_TYPE_INFO
-    *info = info_ptr->handle;
-#else
-    *info = MPI_INFO_NULL;
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
+        *info = info_ptr->handle;
+    }
 }
 
 MPI_Abi_get_info:
