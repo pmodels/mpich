@@ -510,6 +510,7 @@ struct get_context {
     MPI_Aint data_sz;
     void *origin_addr;
     MPI_Aint target_offset;
+    MPIR_Request *req;
 };
 
 struct get_hdr {
@@ -553,6 +554,14 @@ int MPIDI_OFI_mirror_get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype 
     origin_context->data_sz = data_sz;
     origin_context->origin_addr = (char *) origin_addr + origin_true_lb;
     origin_context->target_offset = target_disp * win->disp_unit + target_true_lb;
+
+    /* allocate a request, used for reuse the code from ofi_rndv_read. */
+    MPIR_Request *req;
+    MPIDI_OFI_REQUEST_CREATE(req, MPIR_REQUEST_KIND__RMA, vci);
+    if (1) {
+        MPIDI_CH4_REQUEST_FREE(req);
+    }
+    origin_context->req = req;
 
     /* fill am_hdr */
     struct get_hdr am_hdr;
@@ -638,6 +647,7 @@ int MPIDI_OFI_get_handler(void *am_hdr, void *data, MPI_Aint in_data_sz,
 struct getack_hdr {
     void *origin_context;
     uint64_t rkey;
+    uint64_t remote_base;
 };
 
 /* target side - async callback */
@@ -652,6 +662,7 @@ static int target_mirror_copy_poll(MPIX_Async_thing thing)
         struct getack_hdr am_hdr;
         am_hdr.origin_context = p->origin_context;
         am_hdr.rkey = fi_mr_key(MPIDI_OFI_WIN(p->win).mr);
+        am_hdr.remote_base = (uintptr_t) MPIDI_OFI_WIN(p->win).mirror_buf;
 
         int rc = MPIDI_NM_am_send_hdr(p->origin_rank, p->win->comm_ptr, MPIDI_OFI_GET_ACK,
                                       &am_hdr, sizeof(am_hdr), p->vci_target, p->vci_origin);
@@ -672,6 +683,8 @@ struct read_req {
     struct get_context *origin_context;
 };
 
+static int rdmaread_completion(void *context);
+
 /* origin side - AM callback */
 int MPIDI_OFI_getack_handler(void *am_hdr, void *data, MPI_Aint in_data_sz,
                              uint32_t attr, MPIR_Request ** req)
@@ -682,56 +695,48 @@ int MPIDI_OFI_getack_handler(void *am_hdr, void *data, MPI_Aint in_data_sz,
     struct get_context *origin_context = msg_hdr->origin_context;
     MPIR_Win *win = origin_context->win;
     int target_rank = origin_context->target_rank;
-    void *buf = origin_context->origin_addr;
-    MPI_Aint len = origin_context->data_sz;
     MPI_Aint target_offset = origin_context->target_offset;
 
-    /* rdma read */
-    /* FIXME: potentially we need allocate a staging buffer */
-    void *desc = NULL;
-    int nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);
+    MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(origin_context->req);
+    p->buf = origin_context->origin_addr;
+    p->count = origin_context->data_sz;
+    p->datatype = MPIR_BYTE_INTERNAL;
 
-    MPL_pointer_attr_t bufattr;
-    MPIR_GPU_query_pointer_attr(buf, &bufattr);
-    if (MPL_gpu_attr_is_strict_dev(&bufattr)) {
-        MPIDI_OFI_gpu_rma_register(buf, len, &bufattr, win, nic_target, &desc);
+    MPIR_GPU_query_pointer_attr(p->buf, &p->attr);
+    p->need_pack = MPL_gpu_attr_is_dev(&p->attr);
+
+    p->data_sz = p->remote_data_sz = origin_context->data_sz;
+    p->vci_local = MPIDI_WIN(win, am_vci);
+    p->vci_remote = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    p->av = MPIDIU_win_rank_to_av(win, target_rank, MPIDI_WIN(win, winattr));
+
+    p->num_nics = 1;
+    if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+        p->u.recv.remote_base = msg_hdr->remote_base + target_offset;
+    } else {
+        p->u.recv.remote_base = target_offset;
     }
+    p->u.recv.rkeys = &p->u.recv.rkey0;
+    p->u.recv.rkey0 = msg_hdr->rkey;
+    p->u.recv.cmpl_cb = rdmaread_completion;
+    p->u.recv.context = origin_context;
 
-    int vci = MPIDI_WIN(win, am_vci);
-    int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    mpi_errno = MPIR_Async_things_add(MPIDI_OFI_rdmaread_poll, origin_context->req, NULL);
 
-    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, MPIDI_WIN(win, winattr));
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(av, vci, 0, vci_target, nic_target);
-
-    struct read_req *r = MPL_malloc(sizeof(struct read_req), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!r, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    r->event_id = MPIDI_OFI_EVENT_MIRROR_READ;
-    r->origin_context = origin_context;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-    MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_WIN(win).ep, buf, len, desc,
-                                 addr, target_offset, msg_hdr->rkey, (void *) &r->context),
-                         vci, rdma_readfrom);
-    /* Complete signal request to inform completion to user. */
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
-/* origin side - rdma event callback */
-int MPIDI_OFI_mirror_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
+static int rdmaread_completion(void *context)
 {
-    struct read_req *r = (void *) req;
-    struct get_context *origin_context = r->origin_context;
+    struct get_context *origin_context = context;
+
     MPIR_Win *win = origin_context->win;
     int target_rank = origin_context->target_rank;
 
     MPIDIG_win_cmpl_cnts_decr(win, target_rank);
 
+    MPIDI_Request_complete_fast(origin_context->req);
     MPL_free(origin_context);
-    MPL_free(r);
+
+    return MPI_SUCCESS;
 }

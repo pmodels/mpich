@@ -25,7 +25,6 @@ int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r
 int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 int MPIDI_OFI_rndvwrite_write_chunk_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 int MPIDI_OFI_rndvwrite_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
-int MPIDI_OFI_mirror_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
