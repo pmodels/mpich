@@ -316,6 +316,8 @@ void MPIDI_OFI_mr_key_allocator_destroy(void);
 int MPIDI_OFI_datatype_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt);
 int MPIDI_OFI_op_to_ofi(MPI_Op op, enum fi_op *fi_op);
 
+int MPIDI_OFI_rdmaread_poll(MPIX_Async_thing thing);
+
 /* RMA */
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
     do {                                                                \
