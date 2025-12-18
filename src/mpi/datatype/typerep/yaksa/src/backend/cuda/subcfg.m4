@@ -161,7 +161,7 @@ fi
 ##########################################################################
 
 if test "${have_cuda}" = "yes" ; then
-    for version in 12000 11080 11050 11010 11000 10000 9000 8000 7000 6000 5000 ; do
+    for version in 13000 12000 11080 11050 11010 11000 10000 9000 8000 7000 6000 5000 ; do
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
                               #include <cuda.h>
                               int x[[CUDA_VERSION - $version]];
@@ -222,7 +222,10 @@ if test "${have_cuda}" = "yes" ; then
     for sm in ${with_cuda_sm} ; do
         case "$sm" in
             all-major)
-                if test ${cuda_version} -ge 11080 ; then
+                if test ${cuda_version} -ge 13000; then
+                    # ampere (80) to blackwell (120)
+                    supported_cuda_sms="80 100 120"
+                elif test ${cuda_version} -ge 11080 ; then
                     # maxwell (52) to hopper (90)
                     supported_cuda_sms="52 60 70 80 90"
                 elif test ${cuda_version} -ge 11010 ; then
@@ -292,6 +295,13 @@ if test "${have_cuda}" = "yes" ; then
             hopper)
                 PAC_APPEND_FLAG([90],[CUDA_SM])
                 PAC_APPEND_FLAG([90a],[CUDA_SM])
+                ;;
+
+            blackwell)
+                PAC_APPEND_FLAG([100],[CUDA_SM])
+                PAC_APPEND_FLAG([100a],[CUDA_SM])
+                PAC_APPEND_FLAG([120],[CUDA_SM])
+                PAC_APPEND_FLAG([120a],[CUDA_SM])
                 ;;
 
             none)
