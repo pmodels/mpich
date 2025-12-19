@@ -7,6 +7,23 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_OFI_ENABLE_WIN_MIRROR
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If enabled, allocate a host mirror buffer to avoid repeated host pack buffer registrations.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static void load_acc_hint(MPIR_Win * win);
 static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo);
 static int win_allgather(MPIR_Win * win, void *base, int disp_unit);
@@ -124,6 +141,15 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     MPIR_FUNC_ENTER;
 
+    /* dynamic window need fallback for most cases */
+    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC &&
+        (MPIDI_OFI_ENABLE_MR_ALLOCATED || !MPIDI_OFI_ENABLE_MR_REGISTER_NULL)) {
+        /* We may still do native atomics with collective attach, let's load acc_hint */
+        load_acc_hint(win);
+        goto fn_exit;
+    }
+
+    /* init mr_key */
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         if (MPIDIG_WIN(win, info_args).optimized_mr &&
             MPIDIG_WIN(win, info_args).accumulate_ordering == 0) {
@@ -167,95 +193,132 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
      * providers. For providers like CXI, FI_MR_ALLOCATED is not set but registration with
      * non-zero address is not supported. For such providers, registration is skipped by
      * using the MPIDI_OFI_ENABLE_MR_REGISTER_NULL capability set variable. */
-    int rc = 0, allrc = 0;
     MPIDI_OFI_WIN(win).mr = NULL;
 
-    if (base || (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC &&
-                 !MPIDI_OFI_ENABLE_MR_ALLOCATED && MPIDI_OFI_ENABLE_MR_REGISTER_NULL)) {
-        size_t len;
-        if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
-            len = UINTPTR_MAX - (uintptr_t) base;
-        } else {
-            len = (size_t) win->size;
-        }
+    bool need_mr, is_gpu, do_mirror;
+    need_mr = MPIDI_OFI_ENABLE_RMA;
 
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(base, &attr);
-        if (MPL_gpu_attr_is_dev(&attr)) {
-            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_strict_dev(&attr)) {
-                mpi_errno =
-                    MPIDI_OFI_register_memory(base, len, &attr, ctx_idx, MPIDI_OFI_WIN(win).mr_key,
-                                              &MPIDI_OFI_WIN(win).mr);
-                if (mpi_errno != MPI_SUCCESS)
-                    rc = -1;
+    MPL_pointer_attr_t *attr = &MPIDI_OFI_WIN(win).base_attr;
+    if (base) {
+        MPIR_GPU_query_pointer_attr(base, attr);
+        is_gpu = MPL_gpu_attr_is_dev(attr);
+        if (is_gpu) {
+            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_strict_dev(attr)) {
+                do_mirror = false;
+            } else if (MPIR_CVAR_OFI_ENABLE_WIN_MIRROR && need_mr) {
+                do_mirror = true;
             } else {
-                rc = -1;
+                need_mr = false;
+                do_mirror = false;
             }
         } else {
-            MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,       /* In:  Domain Object */
-                                            base,       /* In:  Lower memory address */
-                                            len,        /* In:  Length              */
-                                            FI_REMOTE_READ | FI_REMOTE_WRITE,   /* In:  Expose MR for read  */
-                                            0ULL,       /* In:  offset(not used)    */
+            do_mirror = false;
+        }
+    } else {
+        MPIR_Assert(win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->size == 0);
+        MPIR_Assert(MPIDI_OFI_ENABLE_RMA);
+        /* provider allows registering the whole address space */
+        is_gpu = false;
+        do_mirror = false;
+    }
+
+    void *addr;
+    uintptr_t len;
+    if (base) {
+        len = (uintptr_t) win->size;
+    } else {
+        len = UINTPTR_MAX - (uintptr_t) base;
+    }
+    if (do_mirror) {
+        int ret = MPL_gpu_malloc_host(&addr, len);
+        MPIR_ERR_CHKANDJUMP(ret || !addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIDI_OFI_WIN(win).mirror_buf = addr;
+        MPIR_GPU_query_pointer_attr(base, &MPIDI_OFI_WIN(win).mirror_attr);
+    } else {
+        addr = base;
+        MPIDI_OFI_WIN(win).mirror_buf = NULL;
+    }
+
+    if (need_mr) {
+        int rc;
+        if (is_gpu) {
+            rc = MPIDI_OFI_register_memory(base, len, attr, ctx_idx,
+                                           MPIDI_OFI_WIN(win).mr_key, &MPIDI_OFI_WIN(win).mr);
+        } else {
+            MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain, base, len, FI_REMOTE_READ | FI_REMOTE_WRITE, 0ULL,    /* In:  offset(not used)    */
                                             MPIDI_OFI_WIN(win).mr_key,  /* In:  requested key       */
                                             0ULL,       /* In:  flags               */
                                             &MPIDI_OFI_WIN(win).mr,     /* Out: memregion object    */
                                             NULL), rc); /* In:  context             */
         }
-        if (rc == 0) {
+
+        if (rc == MPI_SUCCESS) {
             mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
                                           MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
             MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            MPIDI_OFI_WIN(win).mr = NULL;
         }
-    } else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
-        /* We may still do native atomics with collective attach, let's load acc_hint */
-        load_acc_hint(win);
-        goto fn_exit;
-    } else {
-        /* Do nothing */
     }
 
-    /* Check if any process fails to register. If so, release local MR and force AM path. */
-    MPIR_Allreduce(&rc, &allrc, 1, MPIR_INT_INTERNAL, MPI_MIN, comm_ptr, MPIR_COLL_ATTR_SYNC);
-    if (allrc < 0) {
-        if (rc >= 0 && MPIDI_OFI_WIN(win).mr)
-            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), fi_close);
-        MPIDI_OFI_WIN(win).mr = NULL;
-        goto fn_exit;
-    } else {
+    /* collectively check whether MPIDI_WINATTR_NM_REACHABLE */
+    /* NOTE: mirror_buf is not exposed to remote processes directly.
+     *       They are just for optimizing the fallback path */
+    int got_mr = (!do_mirror && MPIDI_OFI_WIN(win).mr != NULL);
+    int min_got_mr;
+    MPIR_Allreduce(&got_mr, &min_got_mr, 1, MPIR_INT_INTERNAL, MPI_MIN, comm_ptr,
+                   MPIR_COLL_ATTR_SYNC);
+    if (min_got_mr) {
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;  /* enable NM native RMA */
-    }
-
-    MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
-
-    winfo = MPIDI_OFI_WIN(win).winfo;
-    winfo[comm_ptr->rank].disp_unit = disp_unit;
-
-    if ((MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) && MPIDI_OFI_WIN(win).mr) {
-        /* MR_BASIC */
-        MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
-        winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
-        winfo[comm_ptr->rank].base = (uintptr_t) base;
-    }
-
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
-                               MPI_DATATYPE_NULL,
-                               winfo, sizeof(*winfo), MPIR_BYTE_INTERNAL, comm_ptr,
-                               MPIR_COLL_ATTR_SYNC);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
-        first = winfo[0].disp_unit;
-        same_disp = 1;
-        for (i = 1; i < comm_ptr->local_size; i++) {
-            if (winfo[i].disp_unit != first) {
-                same_disp = 0;
-                break;
-            }
+    } else {
+        /* every one need aggree on using mirror buffer */
+        /* FIXME: do we need collectively check? */
+        if (MPIR_CVAR_OFI_ENABLE_WIN_MIRROR) {
+            MPIR_Assert(MPIDI_OFI_WIN(win).mirror_buf && MPIDI_OFI_WIN(win).mr);
         }
-        if (same_disp) {
-            MPL_free(MPIDI_OFI_WIN(win).winfo);
-            MPIDI_OFI_WIN(win).winfo = NULL;
+    }
+
+    if (!min_got_mr && !do_mirror && MPIDI_OFI_WIN(win).mr) {
+        /* mr not needed */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), fi_close);
+        MPIDI_OFI_WIN(win).mr = NULL;
+    }
+
+    if (min_got_mr) {
+        /* allgather winfo */
+        MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
+
+        if (MPIDI_OFI_ENABLE_MR_PROV_KEY && MPIDI_OFI_WIN(win).mr) {
+            MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
+        }
+        winfo = MPIDI_OFI_WIN(win).winfo;
+        winfo[comm_ptr->rank].disp_unit = disp_unit;
+        if (MPIDI_OFI_WIN(win).mr_key) {
+            winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
+            winfo[comm_ptr->rank].base = (uintptr_t) addr;
+        } else {
+            winfo[comm_ptr->rank].mr_key = 0;
+            winfo[comm_ptr->rank].base = 0;
+        }
+
+        mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                   winfo, sizeof(*winfo), MPIR_BYTE_INTERNAL, comm_ptr,
+                                   MPIR_COLL_ATTR_SYNC);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+            first = winfo[0].disp_unit;
+            same_disp = 1;
+            for (i = 1; i < comm_ptr->local_size; i++) {
+                if (winfo[i].disp_unit != first) {
+                    same_disp = 0;
+                    break;
+                }
+            }
+            if (same_disp) {
+                MPL_free(MPIDI_OFI_WIN(win).winfo);
+                MPIDI_OFI_WIN(win).winfo = NULL;
+            }
         }
     }
 
@@ -1088,6 +1151,10 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
         MPIDI_OFI_WIN(win).winfo = NULL;
         MPL_free(MPIDI_OFI_WIN(win).acc_hint);
         MPIDI_OFI_WIN(win).acc_hint = NULL;
+
+        if (MPIDI_OFI_WIN(win).mirror_buf) {
+            MPL_gpu_free_host(MPIDI_OFI_WIN(win).mirror_buf);
+        }
 
         /* Free storage of per-attach memory regions for dynamic window */
         if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC &&
