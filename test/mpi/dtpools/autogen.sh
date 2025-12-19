@@ -23,8 +23,3 @@ else
 fi
 
 $AUTORECONF $CONFARGS || exit 1
-
-if test -d mpl ; then
-    echo "=== running autogen.sh in 'mpl' ==="
-    (cd mpl && ./autogen.sh) || exit 1
-fi
