@@ -159,7 +159,7 @@ if (!$has_doctext || !$has_latex) {
 }
 print("\n");
 
-## NOTE: Different autotools versions may result in accidental ABI chanages.
+## NOTE: Different autotools versions may result in accidental ABI changes.
 ## For flexibility, we no longer enforce the check for specific versions of
 ## autoconf and libtool. We do require a minimum version of automake so tarballs
 ## contain up-to-date config.guess files. Always double check using the ABI
@@ -300,6 +300,16 @@ chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/pmi libpmi-${version}");
 run_cmd("tar -czvf libpmi-${version}.tar.gz libpmi-${version}");
 run_cmd("cp -a libpmi-${version}.tar.gz ${root}/");
+print("done\n");
+
+# Create the libfortran tarball
+print("===> Creating the final libfortran tarball... ");
+chdir("${expdir}");
+run_cmd("./autogen.sh -do=fortran");
+chdir("${tdir}");
+run_cmd("cp -a ${expdir}/src/binding/fortran libfortran-${version}");
+run_cmd("tar -czvf libfortran-${version}.tar.gz libfortran-${version}");
+run_cmd("cp -a libfortran-${version}.tar.gz ${root}/");
 print("done\n");
 
 # Create the testsuite tarball

@@ -9,8 +9,6 @@ ACLOCAL_AMFLAGS = -I confdb
 # before appending to them with "+="
 AM_CFLAGS = @VISIBILITY_CFLAGS@
 AM_CPPFLAGS =
-AM_FFLAGS =
-AM_FCFLAGS =
 include_HEADERS =
 nodist_include_HEADERS =
 nodist_noinst_HEADERS =
@@ -48,7 +46,7 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi_srcdir@
+external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi_srcdir@ @fortrandir@
 external_ldflags = @RPATHS@
 external_libs = @WRAPPER_LIBS@
 
@@ -87,19 +85,6 @@ lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(lib_lib@PMPILIBNAME@_la_CFLAGS) $(CFLAGS) \
 	$(lib_lib@PMPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
 
-if BUILD_F77_BINDING
-if BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=FC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(FCLD) \
-	$(AM_FCFLAGS) $(FCFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-else !BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
-	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-endif !BUILD_FC_BINDING
-endif BUILD_F77_BINDING
 
 ## Create lists of files for different libraries
 ##
@@ -121,10 +106,8 @@ endif BUILD_F77_BINDING
 ## that are used by all bindings.
 mpi_sources =
 mpi_abi_sources =
-mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
-mpifort_convenience_libs = @mpl_lib@
 
 lib_LTLIBRARIES =
 
@@ -168,8 +151,6 @@ abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
 if BUILD_PROFILING_LIB
 # -------- mpi-abi: libpmpi + libmpi ------------------
 #
-# dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
-# don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
@@ -198,16 +179,6 @@ EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_conve
 
 endif !BUILD_PROFILING_LIB
 endif BUILD_ABI_LIB
-
-if BUILD_F77_BINDING
-lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
-lib_lib@MPIFCLIBNAME@_la_SOURCES =
-if BUILD_FC_BINDING
-modinc_HEADERS = $(mpi_fc_modules)
-endif BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
-endif BUILD_F77_BINDING
 
 if ! BUILD_ABI_LIB
 if BUILD_CXX_BINDING
@@ -269,7 +240,6 @@ install-exec-hook:
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
 	fi ;
-if BUILD_FC_BINDING
 if INSTALL_MPIF90
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
 		if test "@MPIFORT_NAME@" != "@MPIF90_NAME@" ; then \
@@ -277,8 +247,6 @@ if INSTALL_MPIF90
 		fi ; \
 	fi ;
 endif INSTALL_MPIF90
-endif BUILD_FC_BINDING
-if BUILD_F77_BINDING
 if INSTALL_MPIF77
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
 		if test "@MPIFORT_NAME@" != "@MPIF77_NAME@" ; then \
@@ -286,7 +254,6 @@ if INSTALL_MPIF77
 		fi ; \
 	fi ;
 endif INSTALL_MPIF77
-endif BUILD_F77_BINDING
 
 
 # the configure step checks for the 'lib' dir to decide whether a source

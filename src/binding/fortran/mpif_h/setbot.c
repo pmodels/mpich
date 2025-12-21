@@ -4,6 +4,7 @@
  */
 
 #include "mpi_fortimpl.h"
+#include <assert.h>
 
 
 #ifdef F77_NAME_UPPER
@@ -44,6 +45,13 @@ void *MPI_F_ARGV_NULL = 0;
 void *MPI_F_ARGVS_NULL = 0;
 void *MPIR_F_MPI_WEIGHTS_EMPTY = 0;
 
+static void info_set_int(MPI_Info info, const char *key, int val)
+{
+    char str[20];
+    snprintf(str, 20, "%d", val);
+    MPI_Info_set(info, key, str);
+}
+
 FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
                                         void *bt, void *ip, void *c_ba,
                                         void *uw, void *ecsi,
@@ -83,11 +91,11 @@ void MPIX_Init_fortran(void)
     if (info == MPI_INFO_NULL) {
         /* MPI_Abi_set_fortran_info */
         MPI_Info_create(&info);
-        MPI_Info_set(info, "mpi_character_size", MPI_CHARACTER_SIZE);
-        MPI_Info_set(info, "mpi_logical_size", MPI_LOGICAL_SIZE);
-        MPI_Info_set(info, "mpi_integer_size", MPI_INTEGER_SIZE);
-        MPI_Info_set(info, "mpi_real_size", MPI_REAL_SIZE);
-        MPI_Info_set(info, "mpi_double_precision_size", MPI_DOUBLE_PRECISION_SIZE);
+        info_set_int(info, "mpi_character_size", MPI_CHARACTER_SIZE);
+        info_set_int(info, "mpi_logical_size", MPI_LOGICAL_SIZE);
+        info_set_int(info, "mpi_integer_size", MPI_INTEGER_SIZE);
+        info_set_int(info, "mpi_real_size", MPI_REAL_SIZE);
+        info_set_int(info, "mpi_double_precision_size", MPI_DOUBLE_PRECISION_SIZE);
 #ifdef MPI_LOGICAL1_SUPPORTED
         MPI_Info_set(info, "mpi_logical1_supported", "true");
 #endif
@@ -151,7 +159,23 @@ void MPIX_Init_fortran(void)
         MPI_Info_free(&info);
 
         /* MPI_Abi_set_fortran_boolean */
-        mpi_errno = MPI_Abi_set_fortran_boolean(MPI_LOGICAL_SIZE, F77_TRUE_VALUE, F77_FALSE_VALUE);
+#if MPI_LOGICAL_SIZE == 1
+        int8_t true_val = F77_TRUE_VALUE;
+        int8_t false_val = F77_FALSE_VALUE;
+#elif MPI_LOGICAL_SIZE == 2
+        int16_t true_val = F77_TRUE_VALUE;
+        int16_t false_val = F77_FALSE_VALUE;
+#elif MPI_LOGICAL_SIZE == 4
+        int32_t true_val = F77_TRUE_VALUE;
+        int32_t false_val = F77_FALSE_VALUE;
+#elif MPI_LOGICAL_SIZE == 8
+        int64_t true_val = F77_TRUE_VALUE;
+        int64_t false_val = F77_FALSE_VALUE;
+#else
+#error Configure did not define a good MPI_LOGICAL_SIZE!
+#endif
+        mpi_errno =
+            MPI_Abi_set_fortran_booleans(MPI_LOGICAL_SIZE, (void *) &true_val, (void *) &false_val);
         assert(mpi_errno == MPI_SUCCESS);
     }
 }
