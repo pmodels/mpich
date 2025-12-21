@@ -314,6 +314,16 @@ run_cmd("tar -czvf libpmi-${version}.tar.gz libpmi-${version}");
 run_cmd("cp -a libpmi-${version}.tar.gz ${root}/");
 print("done\n");
 
+# Create the libfortran tarball
+print("===> Creating the final libfortran tarball... ");
+chdir("${expdir}");
+run_cmd("./autogen.sh -do=fortran");
+chdir("${tdir}");
+run_cmd("cp -a ${expdir}/src/binding/fortran libfortran-${version}");
+run_cmd("tar -czvf libfortran-${version}.tar.gz libfortran-${version}");
+run_cmd("cp -a libfortran-${version}.tar.gz ${root}/");
+print("done\n");
+
 # Create the testsuite tarball
 print("===> Creating the final mpich-testsuite tarball... ");
 chdir("${expdir}");

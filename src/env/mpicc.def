@@ -22,9 +22,11 @@ page: mpicxx.bash.in
     $call mpicc_main, bash, cxx
 
 page: mpifort.sh.in
+    output_dir: ../binding/fortran/env
     $call mpicc_main, sh, fc
 
 page: mpifort.bash.in
+    output_dir: ../binding/fortran/env
     $call mpicc_main, bash, fc
 
 #----------------------------------------
