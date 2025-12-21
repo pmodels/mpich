@@ -152,7 +152,7 @@ def main():
     # mpi_f08_compile_constants.f90
     G.mpih_defines = {}
     load_mpi_h(G.opts['mpi-h'])
-    f = "%s/mpi_f08_compile_constants.f90.in" % G.f08_dir
+    f = "%s/mpi_f08_compile_constants.f90" % G.f08_dir
     dump_compile_constants_f90(f)
 
 # ---------------------------------------------------------

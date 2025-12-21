@@ -66,7 +66,9 @@ class MPI_API_Global:
     # By default assumes sizes for LP64 model.
     # The F08 bindings use the sizes to detect duplicate large interfaces
     # The F90 bindings use the sizes to implement MPI_SIZEOF (although deprecated in MPI-4)
-    opts = {'fint-size':4, 'aint-size':8, 'count-size':8, 'cint-size':4, 'f-logical-size':4,
+    opts = {'integer-kind':4, 'address-kind':8, 'count-kind':8, 'offset-kind':8,
+            'max-processor-name':128, 'max-version-string':8192, 'max-error-string':512, 'bsend-overhead':96,
+            'fint-size':4, 'aint-size':8, 'count-size':8, 'cint-size':4, 'f-logical-size':4,
             'mpi-h':'src/include/mpi_mpich.h.in',
             'iso-c-binding':'yes'}
 

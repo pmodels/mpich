@@ -7,7 +7,12 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#ifdef HAS_LIB_MPL
 #include "mpl.h"
+#else
+#define MPL_malloc(size, class)  malloc(size)
+#define MPL_free(p)              free(p)
+#endif
 
 /* ---- attr -----*/
 struct F77_attr_state {

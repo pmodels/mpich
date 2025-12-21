@@ -15,9 +15,7 @@ bin_PROGRAMS += src/env/mpichversion \
 src_env_mpichversion_LDADD = lib/lib@MPILIBNAME@.la
 src_env_mpivars_LDADD   = lib/lib@MPILIBNAME@.la
 
-if BUILD_FC_BINDING
 bin_SCRIPTS += src/env/mpifort
-endif BUILD_FC_BINDING
 
 if INSTALL_MPICXX
 bin_SCRIPTS += src/env/mpicxx
