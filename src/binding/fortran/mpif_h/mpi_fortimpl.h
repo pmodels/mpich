@@ -6,7 +6,7 @@
 #ifndef MPI_FORTIMPL_H_INCLUDED
 #define MPI_FORTIMPL_H_INCLUDED
 
-#include "mpichconf.h"
+#include "mpifort_config.h"
 #include "mpi.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
@@ -51,6 +51,18 @@
 #define FORT_MIXED_LEN(a)
 #define FORT_END_LEN(a)       , FORT_SIZE_INT a
 #endif
+
+/* configure defines F77_TRUE_VALUE and F77_FALSE_VALUE */
+#define MPII_TO_FLOG(a)   ((a) ? F77_TRUE_VALUE : F77_FALSE_VALUE)
+#define MPII_FROM_FLOG(a) ((a) == F77_FALSE_VALUE ? 0 : 1)
+
+/* define internal MPI usage to PMPI */
+#define MPI_Abi_get_fortran_info    PMPI_Abi_get_fortran_info
+#define MPI_Abi_set_fortran_info    PMPI_Abi_set_fortran_info
+#define MPI_Abi_set_fortran_boolean PMPI_Abi_set_fortran_boolean
+#define MPI_Info_create PMPI_Info_create
+#define MPI_Info_set    PMPI_Info_set
+#define MPI_Info_free   PMPI_Info_free
 
 /* NOTE: both leading and trailing spaces are not counted */
 static inline int get_fort_str_len(char *s, int len)
@@ -273,13 +285,6 @@ typedef MPI_Aint MPI_FAint;
 /* Utility functions */
 
 /* Define the internal values needed for Fortran support */
-
-/* Fortran logicals */
-/* The definitions for the Fortran logical values are also needed
-   by the reduction operations in mpi/coll/opland, oplor, and oplxor,
-   so they are defined in src/include/mpii_fortlogical.h */
-#include "mpii_fortlogical.h"
-
 
 /* MPIR_F_MPI_BOTTOM is the address of the Fortran MPI_BOTTOM value */
 extern FORT_DLL_SPEC int MPIR_F_NeedInit;
