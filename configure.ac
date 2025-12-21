@@ -462,15 +462,6 @@ dnl interfaces including mpif.h, use mpi, and use_mpi_f08.
 AC_ARG_ENABLE(fortran,
         AS_HELP_STRING([--disable-fortran], [Whether to disable Fortran bindings]),,[enable_fortran=yes])
 
-AC_ARG_ENABLE(f77,
-        AS_HELP_STRING([--disable-f77], [Whether to disable "include 'mpif.h'" interface]),,[enable_f77=yes])
-
-AC_ARG_ENABLE(f90,
-        AS_HELP_STRING([--disable-f90], [Whether to disable "use mpi" interface]),,[enable_f90=yes])
-
-AC_ARG_ENABLE(f08,
-        AS_HELP_STRING([--disable-f08], [Whether to disable "use mpi_f08" interface]),,[enable_f08=yes])
-
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
@@ -488,9 +479,14 @@ AC_ARG_ENABLE(mpi-abi,
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
 AC_SUBST(enable_mpi_abi)
 
+# export $WITH_MPI for libmpifort
 if test "$enable_mpi_abi" = "yes" ; then
     enable_cxx=no
+    WITH_MPI=abi
+else
+    WITH_MPI=mpich
 fi
+export WITH_MPI
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
@@ -581,10 +577,6 @@ else
 fi
 AC_SUBST(ENABLE_QMPI)
 
-AC_ARG_ENABLE(multi-aliases,
-	AS_HELP_STRING([--enable-multi-aliases],
-		[Multiple aliasing to support multiple fortran compilers (default)]),,
-		enable_multi_aliases=yes)
 
 AC_ARG_ENABLE([long-double],
               [AS_HELP_STRING([--disable-long-double],
@@ -645,12 +637,21 @@ AC_ARG_ENABLE([nvml], [AS_HELP_STRING([--disable-nvml], [passed to hwloc])])
 AC_ARG_ENABLE([opencl], [AS_HELP_STRING([--disable-opencl], [passed to hwloc])])
 AC_ARG_ENABLE([rsmi], [AS_HELP_STRING([--disable-rsmi], [passed to hwloc])])
 
+# options passed to libmpifort configure
+AC_ARG_ENABLE([two-level-namespace],
+              [AS_HELP_STRING([--enable-two-level-namespace],
+                              [(Darwin only) Do not use `-Wl,-flat_namespace` to
+                               link libmpifort.dylib. MacOS uses two-level namespace
+                               to compile dylibs by default. This may cause issues
+                               not resolving MPI constants, such as MPI_IN_PLACE.
+                               Thus, we use flat_namespace by default. Enable this
+                               option to use two-level-namespace instead. ])],
+              [],
+              [enable_two_level_namespace=no])
+
 
 AC_CANONICAL_TARGET
 
-# Find a C compiler.
-# We also need to do this before the F77 and FC test to ensure that we
-# find the C preprocessor reliably.
 AC_PROG_CC
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
@@ -738,27 +739,6 @@ if test "$pac_cv_cxx_builds_exe" = "no" ; then
     CXX=
 fi
 
-if test "$enable_fortran" = "no" ; then
-    enable_f77=no
-    enable_f90=no
-    enable_f08=no
-fi
-
-# Python 3 is needed to generate Fortran bindings
-PAC_CHECK_PYTHON
-
-if test "$enable_fortran" != "no" ; then
-    # suppress default "-g -O2" from AC_PROG_FC
-    : ${FCFLAGS=""}
-    AC_PROG_FC
-
-    F77=$FC
-
-    FFLAGS=$FCFLAGS
-    AC_PROG_F77
-
-fi
-
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])
 
@@ -841,10 +821,6 @@ export CFLAGS
 export CPPFLAGS
 export CXX
 export CXXFLAGS
-export F77
-export FC
-export FCFLAGS
-export FFLAGS
 export LDFLAGS
 export LIBS
 
@@ -881,7 +857,6 @@ m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpi")])
 AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
-AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 if test "$enable_mpi_abi" = "yes" ; then
     MPILIBNAME=${MPILIBNAME:-"mpi_abi"}
 else
@@ -898,11 +873,8 @@ PMPILIBNAME=${PMPILIBNAME:-"p$MPILIBNAME"}
 # We use a different library for the C++ wrappers to avoid problems when
 # creating shared libraries
 if test -z "$MPICXXLIBNAME" ; then MPICXXLIBNAME="${MPILIBNAME}cxx" ; fi
-if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPICXXLIBNAME
-export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
-AC_SUBST(MPIFCLIBNAME)
 
 # enable-fast
 # strip off multiple options, separated by commas
@@ -1756,438 +1728,8 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_PVAR_MULTINIC,$status_multinic_pvars,
           [Define to 1 to enable message count transmitted through multiple NICs MPI_T performance variables])
 
-# ---------------------------------------------------------------------------
-# Support for the language bindings: Fortran 77, Fortran 90, and C++
-#
-# First, we handle the case of no explicit enable/disable option.  In that
-# case, we look for a usable compiler.  We cannot use the ac macros for this
-# because they abort the configure step if they fail to find a compiler
-# (earlier versions of autoconf did not have this behavior!).
-#
-# Second, we perform the langugage-specific tests, if necessary.  This may
-# be relatively simple (C++) or complex (Fortran 77, including formation of
-# the encoded MPI handles).
-#
-# Note that the bindings support needs to know some of the properties of
-# the C compiler, so those tests (particularly for weak symbols)
-# must come first.
-# ----------------------------------------------------------------------------
-
-#
-# First, determine whether we are/can support the language bindings
-#
-# Handle default choices for the Fortran compilers
-# Note that these have already been set above
-
-if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
-    if test "$FC" = "" -o "$FC" = "no"; then
-        # No Fortran compiler found; abort
-        AC_MSG_ERROR([No Fortran compiler found. If you don't need to
-        build any Fortran programs, you can disable Fortran support using
-        --disable-fortran. If you do want to build Fortran
-        programs, you need to install a Fortran compiler such as gfortran
-        or ifort before you can proceed.])
-    fi
-
-    # Determine the extension for Fortran 90 files (it isn't always .f90)
-    PAC_FC_EXT
-    FCEXT=$ac_fc_srcext
-    AC_SUBST(FCEXT)
-fi
-
-if test "$enable_f77" = yes ; then
-    # Check if $MPI_DEFAULT_FOPTS is valid with $F77
-    if test -n "$MPI_DEFAULT_FOPTS" ; then
-        if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
-            FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
-                                         ] )
-        else
-            FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
-        fi
-    fi
-fi
-
-#
-# We need to know the name mangling for Fortran before testing for FC
-# compatibility (we need this because of the way we decide to generate
-# the Fortran 77 bindings)
-if test "$enable_f77" = yes ; then
-    FLIBS_save="$FLIBS"
-    FLIBS=""
-    AC_F77_LIBRARY_LDFLAGS
-    # The autoconf macro for finding FLIBS sometimes makes mistakes
-    # (particularly with the Fujitsu frt compiler).  This next step
-    # first sees if the FLIBS is valid with the Fortran compiler
-    PAC_PROG_F77_FLIBS_VALID
-    # Now see if FLIBS works with the C compiler
-    PAC_PROG_F77_CHECK_FLIBS
-
-    # Check F77+FLAGS is compatible with CC+CFLAGS before using F77+CC.
-    PAC_PROG_F77_OBJ_LINKS_WITH_C
-
-    PAC_PROG_F77_LINKER_WITH_C
-    # For name mangle, we need the library flags
-    PAC_PROG_F77_NAME_MANGLE
-    # Check whether additional libraries are needed when linking with C
-    PAC_PROG_F77_AND_C_STDIO_LIBS
-    AC_SUBST(F77_OTHER_LIBS)
-
-    # Warn about mixed name mangling, since many of the tests will fail
-    if test "$pac_cv_prog_f77_name_mangle" = "mixed" ; then
-        AC_MSG_WARN([The compiler $F77 uses mixed case names.  Fortran is monocase
-and many Fortran programs may use either upper or lower case names for MPI
-calls.  Consider specifying a particular parameter to your Fortran compiler
-to select either upper or lower case names.  For the Absoft compiler,
--f selects lower case and -N109 selects upper case (if you use -f, also use
--B108 to enable the iargc and getarg routines, which are needed for some
-tests and by many user programs).  Specify new command
-line options by setting the environment variable FFLAGS to include
-the options (e.g., setenv FFLAGS "-f -B108").  In addition, make sure that your
-Fortran 90 compiler uses a compatible naming choice.  For the
-Absoft Fortran 90, -YALL_NAMES=LCS selects lower case names and -B108
-adds underscores to names, as required for iargc and getarg.  Pass this
-information to configure with the FCFLAGS environment variable.])
-        # If Fortran implicitly enabled, disable it now.  Otherwise,
-	# abort the configure since warning messages are often lost in
-	# the output.
-	AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-fortran or set FCFLAGS to force the compiler to select monocase names])
-    fi
-
-    # The MPI standard requires that MPI_Init in any language initialize
-    # MPI in all languages.  This can be a problem when objects produced
-    # by the Fortran compiler require symbols from the Fortran runtime
-    # (making linking C-only programs unnecessarily difficult).  What we test
-    # here is whether the much more restricted needs of the Fortran
-    # initialize can be met with no special use of the Fortran runtime
-   PAC_F77_INIT_WORKS_WITH_C
-   if test "$pac_f_init_works_with_c" = "yes" ; then
-       AC_DEFINE(HAVE_MPI_F_INIT_WORKS_WITH_C,1,[Define if the Fortran init code for MPI works from C programs without special libraries])
-   fi
-
-   #
-   # Some Fortran compilers now pass CHARACTER length as a size_t instead
-   # of as an int.  This is hard to test for, since the data is passed by
-   # value and for characters less than about 2GB long, the correct
-   # value will be used.  In this case, we must use an approach similar to
-   # the one used by libtool for shared library options - look at the
-   # compiler name or vendor.
-   # Known compilers that use size_t instead of int:
-   #    Intel Fortran
-   #    gfortran
-   # Add others as they become known
-   AC_ARG_ENABLE(f77characterlen,
-       AS_HELP_STRING([--enable-f77characterlen],
-           [Select between int and size_t for the length of a Fortran CHARACTER, depending on the F77 compiler.  If --enable-f77characterlen=size_t is given, force the use of size_t.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=no)
-
-   # Set the default
-   f77_uses_int_for_str=default
-
-   case "$enable_f77characterlen" in
-      yes|no)
-      ;;
-      size_t)
-         f77_uses_int_for_str=no
-	 enable_f77characterlen=yes
-      ;;
-      int)
-         f77_uses_int_for_str=yes
-	 enable_f77characterlen=yes
-      ;;
-      *)
-      AC_MSG_ERROR([Invalid value provided for --enable-f77characterlen])
-      ;;
-   esac
-
-   # If we might change the size (enable) and we haven't set the choice,
-   # attempt to determine it from the compiler name.  Risky, but we haven't
-   # found a reliable way to do this with test codes.
-   if test "$enable_f77characterlen" = "yes" -a \
-           "$f77_uses_int_for_str" = "default" ; then
-       f77_uses_int_for_str=yes
-       f77Basename=`basename $F77`
-       case $f77Basename in
-       ifort*)
-       f77_uses_int_for_str=no
-       ;;
-       gfortran*)
-       f77_uses_int_for_str=no
-       ;;
-       esac
-   fi
-   # This test is disabled for now.  Despite information in documentation
-   # on gfortran, it appears to pass lengths as int, at least in some
-   # builds (it used movl when tested in 2/2013).  Tests that failed
-   # included infotestf.f, in a call to mpi_info_get.
-   # Leave this as a place holder until a proper test can be determined.
-   if test  "$enable_f77characterlen" = "yes" -a \
-            "$f77_uses_int_for_str" = "no" ; then
-       AC_DEFINE(USE_FORT_STR_LEN_SIZET,1,[Define if the length of a CHARACTER*(*) string in Fortran should be passed as size_t instead of int] )
-   fi
-
-fi
-
-if test "$enable_f90" = "yes" -a "$enable_f77" != "yes" ; then
-   # Fortran 90 support requires compatible Fortran 77 support
-   AC_MSG_ERROR([
-Fortran 90 support requires compatible Fortran 77 support.
-To force the use of the Fortran 90 compiler for Fortran 77,
-do not use configure option --disable-fortran, and set the environment
-variable F77 to the name of the Fortran 90 compiler, or \$FC.
-If you do not want any Fortran support, use configure options
---disable-fortran.])
-fi
-
-# ----------------------------------------------------------------------------
-# Now test for Fortran compiler characteristics
-# ----------------------------------------------------------------------------
-if test "$enable_f77" = "yes" ; then
-    # determine shared library flags for F77
-    f77_shlib_conf=src/env/f77_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
-    AC_SUBST_FILE([f77_shlib_conf])
-
-    AC_LANG([Fortran 77])
-    PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
-    PAC_PROG_F77_HAS_INCDIR(src)
-    PAC_PROG_F77_LIBRARY_DIR_FLAG
-
-    AC_SUBST(MPIFPMPI)
-    if test "$MPI_WITH_PMPI" = "no" ; then
-        # If the PMPI routines are not in the same library with the MPI
-        # routines, we may need to remove the pmpi declarations
-        PAC_PROG_F77_ALLOWS_UNUSED_EXTERNALS([MPIFPMPI=",PMPI_WTIME,PMPI_WTICK"],[
-        MPIFPMPI="";
-        AC_MSG_WARN([Removed PMPI_WTIME and PMPI_WTICK from mpif.h])])
-    else
-        MPIFPMPI=",PMPI_WTIME,PMPI_WTICK"
-    fi
-
-    # Once we have name mangle, we can try to limit the number of needed libs
-    dnl F77_IN_C_LIBS is not needed currently because mpirinitf_() in setbotf.f
-    dnl is called in initthread.c only when FLIBS is not needed to initialize
-    dnl Fortran constants from a C main, See PAC_F77_INIT_WORKS_WITH_C.
-    dnl PAC_PROG_F77_IN_C_LIBS
-    dnl AC_SUBST(F77_IN_C_LIBS)
-
-    # Most systems allow the Fortran compiler to process .F and .F90 files
-    # using the C preprocessor.  However, some systems either do not
-    # allow this or have serious bugs (OSF Fortran compilers have a bug
-    # that generates an error message from cpp).  The following test
-    # checks to see if .F works, and if not, whether "cpp -P -C" can be used
-    # This is needed for Mac OSX 10.5
-    PAC_F77_WORKS_WITH_CPP([F77CPP])
-    AC_SUBST(F77CPP)
-
-    # Check that the Fortran compiler will allow us to pass arguments
-    # of different types (e.g., for MPI_Send)
-    PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
-    if test "X$addarg" != "X" ; then
-        # Code using mpif.h interface will likely need this flag to compile.
-        # Code with `use mpi` or `use mpi_f08` do not need this flag.
-        # Add the flag to mpif77 wrappers.
-        WRAPPER_EXTRA_F77_FLAGS="$addarg"
-    fi
-    AC_SUBST(WRAPPER_EXTRA_F77_FLAGS)
-
-    bindings="$bindings f77"
-    PAC_APPEND_CSV([mpif.h], [fortran_bindings])
-    AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
-fi
-
-dnl By modifying mpif.h to use ! for comments, it can work with many f90
-dnl compilers without creating a separate version.
-dnl Note that this is run AFTER the AC_OUTPUT actions
-AC_CONFIG_COMMANDS([src/include/mpif.h],[if test "$enable_f77" = yes ; then
-if test "$has_exclaim" = "yes" ; then
-    sed -e 's/^C/\!/g' src/binding/fortran/mpif_h/mpif.h > src/include/mpif.h
-	cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-else
-    cp src/binding/fortran/mpif_h/mpif.h src/include
-fi
-if test "$has_fort_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
-    mv src/include/mpif.h.new src/include/mpif.h
-    cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-fi
-fi],
-main_top_srcdir=$main_top_srcdir
-enable_f77=$enable_f77
-has_exclaim=$has_exclaim
-has_fort_real8=$pac_cv_fort_real8
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
-
-if test "$enable_f90" = "yes" ; then
-    bindings="$bindings f90"
-    PAC_APPEND_CSV([use mpi], [fortran_bindings])
-fi
-
-if test "$enable_f08" = "yes" ; then
-    PAC_FC_2008_SUPPORT([:],[enable_f08=no])
-fi
-AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
-
-if test "$enable_f08" = "yes" ; then
-    bindings="$bindings f08"
-    PAC_APPEND_CSV([use mpi_f08], [fortran_bindings])
-    AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
-fi
-
-# Set defaults for these values so that the Makefile in src/bindings/f90
-# is valid even if fc is not enabled (this is necessary for the
-# distclean target)
-MPIMODNAME=mpi
-MPICONSTMODNAME=mpi_constants
-MPISIZEOFMODNAME=mpi_sizeofs
-MPIBASEMODNAME=mpi_base
-PMPIBASEMODNAME=pmpi_base
-
-# F08 binding stuff
-MPI_F08_LINK_CONSTANTS_NAME=mpi_f08_link_constants
-PMPI_F08_NAME=pmpi_f08
-MPI_F08_CALLBACKS_NAME=mpi_f08_callbacks
-MPI_C_INTERFACE_NAME=mpi_c_interface
-MPI_C_INTERFACE_GLUE_NAME=mpi_c_interface_glue
-MPI_F08_TYPES_NAME=mpi_f08_types
-MPI_C_INTERFACE_NOBUF_NAME=mpi_c_interface_nobuf
-MPI_F08_COMPILE_CONSTANTS_NAME=mpi_f08_compile_constants
-MPI_F08_NAME=mpi_f08
-MPI_C_INTERFACE_TYPES_NAME=mpi_c_interface_types
-MPI_C_INTERFACE_CDESC_NAME=mpi_c_interface_cdesc
-
-if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
-    # determine shared library flags for FC
-    fc_shlib_conf=src/env/fc_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
-    AC_SUBST_FILE([fc_shlib_conf])
-
-    # Determine characteristics of the Fortran 90 compiler
-    # Find a Fortran 90 compiler.  Sets FC
-    # Work around bug in autoconf that adds -g to FCFLAGS
-    saveFCFLAGS="$FCFLAGS"
-    dnl FIXME XXX DJG this needs to be reconciled with our separate use of
-    dnl AC_PROG_FC earlier
-    dnl PAC_PROG_FC
-    PAC_PROG_FC_WORKS
-    FCFLAGS=$saveFCFLAGS
-    if test "$pac_cv_prog_fc_works" = no ; then
-        # Reject this compiler
-        if test "$FC" != "no" ; then
-            fc_rejected=yes
-            oldFC="$FC"
-            FC="no"
-        fi
-    fi
-
-    if test "$FC" = "no" ; then
-        if test "$fc_rejected" = "yes" ; then
-            AC_MSG_ERROR([Could not find a usable Fortran 90 compiler.  The compiler $oldFC may be incompatible with the Fortran 77 compiler $F77; check the output of configure and consult the installation manuals])
-        else
-            AC_MSG_ERROR([Could not find a usable Fortran 90 compiler.])
-        fi
-    fi
-
-    # Find the extension that this compiler uses for modules.
-    # Sets FCMODEXT (and adds it to the list substed)
-    # Sets FCMODINCFLAG (and adds it to the list substed)
-    PAC_FC_MODULE
-    AC_SUBST(FCMODINCSPEC)
-    if test -z "$FCMODOUTFLAG" ; then
-        AC_MSG_ERROR([FCMODOUTFLAG could not be determined but is critical for the current Fortran build system])
-    fi
-
-    if test "$pac_cv_fc_module_case" = "upper" ; then
-        MPIMODNAME=MPI
-        MPICONSTMODNAME=MPI_CONSTANTS
-	MPISIZEOFMODNAME=MPI_SIZEOFS
-	MPIBASEMODNAME=MPI_BASE
-	PMPIBASEMODNAME=PMPI_BASE
-        MPI_F08_NAME=MPI_F08
-        MPI_F08_LINK_CONSTANTS_NAME=MPI_F08_LINK_CONSTANTS
-        MPI_F08_CALLBACKS_NAME=MPI_F08_CALLBACKS
-        MPI_F08_TYPES_NAME=MPI_F08_TYPES
-        MPI_F08_COMPILE_CONSTANTS_NAME=MPI_F08_COMPILE_CONSTANTS
-        PMPI_F08_NAME=PMPI_F08
-        MPI_C_INTERFACE_NAME=MPI_C_INTERFACE
-        MPI_C_INTERFACE_NOBUF_NAME=MPI_C_INTERFACE_NOBUF
-        MPI_C_INTERFACE_GLUE_NAME=MPI_C_INTERFACE_GLUE
-        MPI_C_INTERFACE_TYPES_NAME=MPI_C_INTERFACE_TYPES
-        MPI_C_INTERFACE_CDESC_NAME=MPI_C_INTERFACE_CDESC
-    else
-        MPIMODNAME=mpi
-        MPICONSTMODNAME=mpi_constants
-	MPISIZEOFMODNAME=mpi_sizeofs
-	MPIBASEMODNAME=mpi_base
-	PMPIBASEMODNAME=pmpi_base
-        MPI_F08_NAME=mpi_f08
-        MPI_F08_LINK_CONSTANTS_NAME=mpi_f08_link_constants
-        MPI_F08_CALLBACKS_NAME=mpi_f08_callbacks
-        MPI_F08_TYPES_NAME=mpi_f08_types
-        MPI_F08_COMPILE_CONSTANTS_NAME=mpi_f08_compile_constants
-        PMPI_F08_NAME=pmpi_f08
-        MPI_C_INTERFACE_NAME=mpi_c_interface
-        MPI_C_INTERFACE_NOBUF_NAME=mpi_c_interface_nobuf
-        MPI_C_INTERFACE_GLUE_NAME=mpi_c_interface_glue
-        MPI_C_INTERFACE_TYPES_NAME=mpi_c_interface_types
-        MPI_C_INTERFACE_CDESC_NAME=mpi_c_interface_cdesc
-    fi
-    AC_SUBST(MPIMODNAME)
-    AC_SUBST(MPICONSTMODNAME)
-    AC_SUBST(MPISIZEOFMODNAME)
-    AC_SUBST(MPIBASEMODNAME)
-    AC_SUBST(PMPIBASEMODNAME)
-
-    AC_SUBST(MPI_F08_NAME)
-    AC_SUBST(MPI_F08_LINK_CONSTANTS_NAME)
-    AC_SUBST(MPI_F08_CALLBACKS_NAME)
-    AC_SUBST(MPI_F08_TYPES_NAME)
-    AC_SUBST(MPI_F08_COMPILE_CONSTANTS_NAME)
-    AC_SUBST(PMPI_F08_NAME)
-    AC_SUBST(MPI_C_INTERFACE_NAME)
-    AC_SUBST(MPI_C_INTERFACE_NOBUF_NAME)
-    AC_SUBST(MPI_C_INTERFACE_GLUE_NAME)
-    AC_SUBST(MPI_C_INTERFACE_TYPES_NAME)
-    AC_SUBST(MPI_C_INTERFACE_CDESC_NAME)
-
-    # Assume that all Fortran 90 compilers accept -I for include directories
-    FCINC=-I
-    AC_SUBST(FCINC)
-    FCINCFLAG=-I
-    AC_SUBST(FCINCFLAG)
-
-    # Check if $MPI_DEFAULT_FCOPTS is valid with $F90
-    if test -n "$MPI_DEFAULT_FCOPTS" ; then
-        if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_FC_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FCOPTS], [
-            FCFLAGS="$FCFLAGS $MPI_DEFAULT_FCOPTS"
-                                     ] )
-        else
-            FCFLAGS="$FCFLAGS $MPI_DEFAULT_FCOPTS"
-        fi
-    fi
-
-    # Most systems allow the Fortran compiler to process .F and .F90 files
-    # using the C preprocessor.  However, some systems either do not
-    # allow this or have serious bugs (OSF Fortran compilers have a bug
-    # that generates an error message from cpp).  The following test
-    # checks to see if .F works, and if not, whether "cpp -P -C" can be used
-    PAC_FC_WORKS_WITH_CPP([FCCPP])
-    AC_SUBST(FCCPP)
-
-    # Check whether additional libraries are needed when linking with C
-    PAC_PROG_FC_AND_C_STDIO_LIBS
-    AC_SUBST(FC_OTHER_LIBS)
-fi
-
-if test "X$modincdir" = "X" ; then
-  modincdir=$includedir
-fi
-export modincdir
-AC_SUBST(modincdir)
-
 AC_LANG_PUSH([C])
+
 AC_MSG_CHECKING([whether TRUE has been defined])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[return TRUE;])],
                   [has_true_upper_case=yes],
@@ -2201,8 +1743,8 @@ AC_LANG_POP([C])
 
 # ----------------------------------------------------------------------------
 # We previously allowed "default" as a valid value for $enable_cxx.  Now we
-# assume its available by default and error out if it doesn't work (just like
-# F77 & FC).  The user must pass "--disable-cxx" in order to successfully
+# assume its available by default and error out if it doesn't work.
+# The user must pass "--disable-cxx" in order to successfully
 # complete configure in this case.
 if test "$enable_cxx" = "default" ; then
     AC_MSG_ERROR([aborting because "--enable-cxx=default" is no longer a supported value])
@@ -2892,332 +2434,6 @@ AH_TEMPLATE([MPIR_ALT_COMPLEX96_CTYPE], [The C type for MPIR_ALT_COMPLEX96])
 AH_TEMPLATE([MPIR_ALT_COMPLEX128_CTYPE], [The C type for MPIR_ALT_COMPLEX128])
 
 # ----------------------------------------------------------------------------
-# We can now create the Fortran versions of the datatype values, along with
-# some of the other datatype-dependent sizes
-
-# There are two parts to handling the datatypes:
-#    Convert the C datatype values to their Fortran equivalent.  This
-#    involves converting the hex values for the C version into decimal
-#    since standard Fortran does not have hex constants
-#
-#    Determine the existence of the Fortran 'sized' types and set those
-#    values.
-#
-# In addition, we need to look at a few additional constants that depend
-# on how the compiler sizes some datatypes.  These are:
-#    INTEGER_KIND, ADDRESS_KIND, and OFFSET_KIND
-#
-# ----------------------------------------------------------------------------
-if test "$enable_f77" = yes ; then
-    pac_cv_f77_sizeof_character=1
-
-    # Up to size checking code in main configure.ac (where it tries to
-    # find the matching C sizes) as part of defining mpi_integer8 etc.
-    # The results are available in pac_cv_sizeof_f77_<type>
-    # Size is 0 if unknown or unavailable (or cross-compiling)
-    # Due to limitations in autoconf, we cannot put these into a loop.
-    # We also check integer to find the type of MPI_Fint
-    #
-    # Cross-compilation results can be included with the --with-cross=file
-    # option.
-    CROSS_F77_SIZEOF_INTEGER=${CROSS_F77_SIZEOF_INTEGER:-0}
-    CROSS_F77_SIZEOF_REAL=${CROSS_F77_SIZEOF_REAL:-0}
-    CROSS_F77_SIZEOF_DOUBLE_PRECISION=${CROSS_F77_SIZEOF_DOUBLE_PRECISION:-0}
-    CROSS_F77_SIZEOF_LOGICAL=${CROSS_F77_SIZEOF_LOGICAL:-0}
-    PAC_PROG_F77_CHECK_SIZEOF_EXT(integer,$CROSS_F77_SIZEOF_INTEGER)
-    PAC_PROG_F77_CHECK_SIZEOF_EXT(real,$CROSS_F77_SIZEOF_REAL)
-    PAC_PROG_F77_CHECK_SIZEOF_EXT(double precision,$CROSS_F77_SIZEOF_DOUBLE_PRECISION)
-    PAC_PROG_F77_CHECK_SIZEOF_EXT(logical,$CROSS_F77_SIZEOF_LOGICAL)
-    AC_LANG([Fortran 77])
-    # If we have sizes for real and double, we do not need to call
-    # mpir_get_fsize at run time.
-    # For the size-defined types (e.g., integer*2), we assume that if the
-    # compiler allows it, it has the stated size.
-    AC_CACHE_CHECK([whether integer*1 is supported],pac_cv_fort_integer1,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*1 i])],
-         pac_cv_fort_integer1=yes,
-         pac_cv_fort_integer1=no)])
-    AC_CACHE_CHECK([whether integer*2 is supported],pac_cv_fort_integer2,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*2 i])],
-        pac_cv_fort_integer2=yes,
-        pac_cv_fort_integer2=no)])
-    AC_CACHE_CHECK([whether integer*4 is supported],pac_cv_fort_integer4,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*4 i])],
-        pac_cv_fort_integer4=yes,
-        pac_cv_fort_integer4=no)])
-    AC_CACHE_CHECK([whether integer*8 is supported],pac_cv_fort_integer8,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*8 i])],
-        pac_cv_fort_integer8=yes,
-        pac_cv_fort_integer8=no)])
-    AC_CACHE_CHECK([whether integer*16 is supported],pac_cv_fort_integer16,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*16 i])],
-        pac_cv_fort_integer16=yes,
-        pac_cv_fort_integer16=no)])
-    AC_CACHE_CHECK([whether real*2 is supported],pac_cv_fort_real2,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*2 a])],
-        pac_cv_fort_real2=yes,
-        pac_cv_fort_real2=no)])
-    AC_CACHE_CHECK([whether real*4 is supported],pac_cv_fort_real4,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*4 a])],
-        pac_cv_fort_real4=yes,
-        pac_cv_fort_real4=no)])
-    AC_CACHE_CHECK([whether real*8 is supported],pac_cv_fort_real8,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*8 a])],
-        pac_cv_fort_real8=yes,
-        pac_cv_fort_real8=no)])
-    AC_CACHE_CHECK([whether real*16 is supported],pac_cv_fort_real16,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*16 a])],
-        pac_cv_fort_real16=yes,
-        pac_cv_fort_real16=no)])
-    AC_CACHE_CHECK([whether complex*4 is supported],pac_cv_fort_complex4,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*4 a])],
-        pac_cv_fort_complex4=yes,
-        pac_cv_fort_complex4=no)])
-    AC_CACHE_CHECK([whether complex*8 is supported],pac_cv_fort_complex8,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*8 a])],
-        pac_cv_fort_complex8=yes,
-        pac_cv_fort_complex8=no)])
-    AC_CACHE_CHECK([whether complex*16 is supported],pac_cv_fort_complex16,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*16 a])],
-        pac_cv_fort_complex16=yes,
-        pac_cv_fort_complex16=no)])
-    AC_CACHE_CHECK([whether complex*32 is supported],pac_cv_fort_complex32,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*32 a])],
-        pac_cv_fort_complex32=yes,
-        pac_cv_fort_complex32=no)])
-    AC_CACHE_CHECK([whether double precision is supported],pac_cv_fort_double_precision,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      double precision a])],
-        pac_cv_fort_double_precision=yes,
-        pac_cv_fort_double_precision=no)])
-
-    if test -z "$pac_cv_f77_sizeof_integer" -o \
-       "X$pac_cv_f77_sizeof_integer" = "X0" ; then
-        AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran INTEGER.  Consider setting CROSS_F77_SIZEOF_INTEGER to the length in bytes of a Fortran INTEGER])
-    fi
-
-    AC_DEFINE_UNQUOTED([MPI_CHARACTER_SIZE], [$pac_cv_f77_sizeof_character], [Define the size of Fortran CHARACTER])
-    AC_DEFINE_UNQUOTED([MPI_LOGICAL_SIZE], [$pac_cv_f77_sizeof_logical], [Define the size of Fortran LOGICAL])
-    AC_DEFINE_UNQUOTED([MPI_INTEGER_SIZE], [$pac_cv_f77_sizeof_integer], [Define the size of Fortran INTEGER])
-    AC_DEFINE_UNQUOTED([MPI_REAL_SIZE], [$pac_cv_f77_sizeof_real], [Define the size of Fortran REAL])
-    AC_DEFINE_UNQUOTED([MPI_DOUBLE_PRECISION_SIZE], [$pac_cv_f77_sizeof_double_precision], [Define the size of Fortran DOUBLE PRECISION])
-
-    if test "$pac_cv_fort_double_precision" = "yes"; then
-        AC_DEFINE([MPI_DOUBLE_PRECISION_SUPPORTED], [1], [Define if Fortran DOUBLE PRECISION is supported])
-    fi
-    if test "$pac_cv_fort_logical1" = "yes"; then
-        AC_DEFINE([MPI_LOGICAL1_SUPPORTED], [1], [Define if Fortran LOGICAL*1 is supported])
-    fi
-    if test "$pac_cv_fort_logical2" = "yes"; then
-        AC_DEFINE([MPI_LOGICAL2_SUPPORTED], [1], [Define if Fortran LOGICAL*2 is supported])
-    fi
-    if test "$pac_cv_fort_logical4" = "yes"; then
-        AC_DEFINE([MPI_LOGICAL4_SUPPORTED], [1], [Define if Fortran LOGICAL*4 is supported])
-    fi
-    if test "$pac_cv_fort_logical8" = "yes"; then
-        AC_DEFINE([MPI_LOGICAL8_SUPPORTED], [1], [Define if Fortran LOGICAL*8 is supported])
-    fi
-    if test "$pac_cv_fort_logical16" = "yes"; then
-        AC_DEFINE([MPI_LOGICAL16_SUPPORTED], [1], [Define if Fortran LOGICAL*16 is supported])
-    fi
-    if test "$pac_cv_fort_integer1" = "yes"; then
-        AC_DEFINE([MPI_INTEGER1_SUPPORTED], [1], [Define if Fortran INTEGER*1 is supported])
-    fi
-    if test "$pac_cv_fort_integer2" = "yes"; then
-        AC_DEFINE([MPI_INTEGER2_SUPPORTED], [1], [Define if Fortran INTEGER*2 is supported])
-    fi
-    if test "$pac_cv_fort_integer4" = "yes"; then
-        AC_DEFINE([MPI_INTEGER4_SUPPORTED], [1], [Define if Fortran INTEGER*4 is supported])
-    fi
-    if test "$pac_cv_fort_integer8" = "yes"; then
-        AC_DEFINE([MPI_INTEGER8_SUPPORTED], [1], [Define if Fortran INTEGER*8 is supported])
-    fi
-    if test "$pac_cv_fort_integer16" = "yes"; then
-        AC_DEFINE([MPI_INTEGER16_SUPPORTED], [1], [Define if Fortran INTEGER*16 is supported])
-    fi
-    if test "$pac_cv_fort_real2" = "yes"; then
-        AC_DEFINE([MPI_REAL2_SUPPORTED], [1], [Define if Fortran REAL*2 is supported])
-    fi
-    if test "$pac_cv_fort_real4" = "yes"; then
-        AC_DEFINE([MPI_REAL4_SUPPORTED], [1], [Define if Fortran REAL*4 is supported])
-    fi
-    if test "$pac_cv_fort_real8" = "yes"; then
-        AC_DEFINE([MPI_REAL8_SUPPORTED], [1], [Define if Fortran REAL*8 is supported])
-    fi
-    if test "$pac_cv_fort_real16" = "yes"; then
-        AC_DEFINE([MPI_REAL16_SUPPORTED], [1], [Define if Fortran REAL*16 is supported])
-    fi
-    if test "$pac_cv_fort_complex4" = "yes"; then
-        AC_DEFINE([MPI_COMPLEX4_SUPPORTED], [1], [Define if Fortran COMPLEX*4 is supported])
-    fi
-    if test "$pac_cv_fort_complex8" = "yes"; then
-        AC_DEFINE([MPI_COMPLEX8_SUPPORTED], [1], [Define if Fortran COMPLEX*8 is supported])
-    fi
-    if test "$pac_cv_fort_complex16" = "yes"; then
-        AC_DEFINE([MPI_COMPLEX16_SUPPORTED], [1], [Define if Fortran COMPLEX*16 is supported])
-    fi
-    if test "$pac_cv_fort_complex32" = "yes"; then
-        AC_DEFINE([MPI_COMPLEX32_SUPPORTED], [1], [Define if Fortran COMPLEX*32 is supported])
-    fi
-
-    # Provide the corresponding C types for MPI_INTEGER
-    AC_MSG_CHECKING([for C type matching Fortran integer])
-    get_c_int_type $pac_cv_f77_sizeof_integer
-    MPI_FINT=$pac_retval
-    AC_MSG_RESULT($MPI_FINT)
-
-    # We also need to check the size of MPI_Aint vs MPI_Fint, and
-    # define AINT_LARGER_THAN_FINT if aint is larger (this
-    # affects code in MPI_Address)
-    if test "$ac_cv_sizeof_void_p" != "0" -a \
-        "$ac_cv_sizeof_void_p" -gt "$pac_cv_f77_sizeof_integer" ; then
-        AC_DEFINE(HAVE_AINT_LARGER_THAN_FINT,1,[Define if addresses are larger than Fortran integers])
-    fi
-    if test "$ac_cv_sizeof_void_p" != 0 -a \
-        "$ac_cv_sizeof_void_p" != "$pac_cv_f77_sizeof_integer" ; then
-	AC_DEFINE(HAVE_AINT_DIFFERENT_THAN_FINT,1,[Define if addresses are a different size than Fortran integers])
-    fi
-
-    # Include a defined value for Fint is int
-    if test "$pac_cv_f77_sizeof_integer" = "$ac_cv_sizeof_int" ; then
-        AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
-    else
-        AC_MSG_WARN([Fortran integers and C ints are not the same size.  C programs that directly use MPI_Fint may be incorrect.])
-    fi
-
-    # Try and compute the values of .true. and .false. in Fortran
-    # This code has been removed because the Fortran binding code does
-    # not yet support it.
-    PAC_F77_LOGICALS_IN_C([$MPI_FINT])
-
-    # Get the INTEGER_KIND, ADDRESS_KIND and OFFSET_KIND if possible
-    #
-    # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
-    # Since our compiler might BE a Fortran 90 compiler, try and determine the
-    # values.
-    if test "$FC" = "no" ; then
-        PAC_F77_IS_FC([
-            FC=$F77
-            if test -z "$FCFLAGS" ; then
-                FCFLAGS="$FFLAGS"
-            fi
-        ])
-    fi
-    if test "$FC" != "no" ; then
-        # Offset kind should be for 8 bytes if possible (Romio prefers that)
-        # address should be sizeof void * (unless --with-aint-size has
-        # been set)
-        # FIXME in the current configure implementation OFFSET_KIND and
-        # MPI_Offset won't always agree, but generally will.  The MPI Standard
-        # implies that these types must have identical size, so this is a bug
-        # waiting to happen.
-	if test "$with_aint_size" -gt 0 -a \
-	        "$with_aint_size" -gt "$ac_cv_sizeof_void_p" ; then
-	    testsize=$with_aint_size
-        else
-            testsize=$ac_cv_sizeof_void_p
-        fi
-        if test "$testsize" = 0 ; then
-            # Set a default
-            testsize=4
-        fi
-        dnl Using the {} around testsize helps the comments work correctly
-        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
-        if test "$testsize" = 8 ; then
-            OFFSET_KIND=$ADDRESS_KIND
-        else
-            PAC_PROG_FC_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
-        fi
-        #
-        PAC_PROG_FC_INT_KIND(INTEGER_KIND,$pac_cv_f77_sizeof_integer,$CROSS_F90_INTEGER_KIND)
-        if test "$INTEGER_KIND" = "-1" ; then
-	    # In our experience, this usually means that there is some
-	    # problem building and/or running the f90 program.  Fail
-	    # in this case rather than attempt to continue
-	    AC_MSG_ERROR([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.])
-        fi
-	#
-        # Some compilers won't allow a -1 kind (e.g., absoft).  In this case,
-        # use a fallback (sizeof(int) kind)
-        if test "$ADDRESS_KIND" = "-1" -o "$OFFSET_KIND" = "-1" ; then
-            if test "$ADDRESS_KIND" = "-1" ; then
-	        ADDRESS_KIND=$INTEGER_KIND
-            fi
-            if test "$OFFSET_KIND" = "-1" ; then
-	        OFFSET_KIND=$INTEGER_KIND
-            fi
-        fi
-	AC_LANG_PUSH([Fortran])
-        AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
-                       [pac_cv_fort90_real8],[
-            AC_COMPILE_IFELSE([
-                AC_LANG_PROGRAM([],[      real*8 a])
-            ],[
-                pac_cv_fort90_real8=yes
-            ],[
-                pac_cv_fort90_real8=no
-            ])
-        ])
-	AC_LANG_POP([Fortran])
-	WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
-	if test "$pac_cv_fort90_real8" = "yes" ; then
-	    WTIME_DOUBLE_TYPE="REAL*8"
-        fi
-	# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
-	AC_SUBST(WTIME_DOUBLE_TYPE)
-    fi
-    # Make sure that address kind and offset kind have values.
-    if test -z "$ADDRESS_KIND" ; then
-        ADDRESS_KIND=0
-    fi
-    if test -z "$OFFSET_KIND" ; then
-        OFFSET_KIND=0
-    fi
-    # Note, however, that zero value are (in all practical case) invalid
-    # for Fortran 90, and indicate a failure.  Test and fail if Fortran 90
-    # enabled.
-    if test "$enable_f90" = "yes" ; then
-        if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
-	    AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
-        fi
-    fi
-    AC_SUBST(ADDRESS_KIND)
-    AC_SUBST(OFFSET_KIND)
-    AC_SUBST(INTEGER_KIND)
-
-    # Some compilers may require special directives to handle the common
-    # block in a library.  In particular, directives are needed for Microsoft
-    # Windows to support dynamic library import.  The following six
-    # directives may be needed:
-    #  CMS\$ATTRIBUTES DLLIMPORT::/MPIPRIV1/
-    #  CMS\$ATTRIBUTES DLLIMPORT::/MPIPRIV2/
-    #  CMS\$ATTRIBUTES DLLIMPORT::/MPIPRIVC/
-    #  CDEC\$ATTRIBUTES DLLIMPORT::/MPIPRIV1/
-    #  CDEC\$ATTRIBUTES DLLIMPORT::/MPIPRIV2/
-    #  CDEC\$ATTRIBUTES DLLIMPORT::/MPIPRIVC/
-    # CMS is for the Microsoft compiler,
-    # CDEC is (we believe) for the DEC Fortran compiler.
-    # We need to make this a configure-time variable because some compilers
-    # (in particular, a version of the Intel Fortran compiler for Linux)
-    # will read directives for other compilers and then flag as fatal
-    # errors directives that it does not support but does recognize.
-
-    DLLIMPORT=""
-    AC_SUBST(DLLIMPORT)
-
-    AC_LANG([C])
-else
-    MPI_FINT=int
-
-    # set following sizes to 0 will disable the corresponding datatype
-    pac_cv_f77_sizeof_character=0
-    pac_cv_f77_sizeof_integer=0
-    pac_cv_f77_sizeof_real=0
-    pac_cv_f77_sizeof_double_precision=0
-    pac_cv_f77_sizeof_logical=0
-
-    AC_DEFINE(HAVE_NO_FORTRAN_MPI_TYPES_IN_C,1,[Define if the Fortran types are not available in C])
-fi
-# ----------------------------------------------------------------------------
 # C++ types - we support CXX datatypes if there is a working CXX compiler
 
 if test -n "$CXX" ; then
@@ -3372,7 +2588,6 @@ if test -n "$MPI_OFFSET_TYPE" ; then
   	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
         fi
     fi
-    export MPI_SIZEOF_OFFSET
 else
     # Make a guess at the appropriate definition for offset.  Try to
     # find a 64bit type.
@@ -3388,8 +2603,8 @@ else
         MPI_OFFSET=long
         MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
     fi
-    export MPI_SIZEOF_OFFSET
 fi
+export MPI_SIZEOF_OFFSET
 AC_SUBST(MPI_OFFSET)
 
 AS_CASE([$MPI_OFFSET],
@@ -3420,17 +2635,15 @@ AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
 AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
       [# an unlikely case, but I suppose it's theoretically possible
        MPI_COUNT="$MPI_AINT"
-       COUNT_KIND="$ADDRESS_KIND"
        MPIR_COUNT_MAX="$MPIR_AINT_MAX"
        MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
       [# don't bother checking whether Aint or Offset are larger than int, they
        # surely will be
        MPI_COUNT="$MPI_OFFSET"
-       COUNT_KIND="$OFFSET_KIND"
        MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"
        MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
+export MPI_SIZEOF_COUNT
 AC_SUBST([MPI_COUNT])
-AC_SUBST([COUNT_KIND])
 AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
 AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
 
@@ -3908,7 +3121,8 @@ fi
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
-# We explicitly configure most modules now. $subsystems only contains hydra and nameserv/* (if configured).
+# now configure any actual recursively configures subsystems, such as ROMIO and
+# hydra, or older components that haven't been updated to a subconfigure.m4 yet
 for subsys in $subsystems ; do
     PAC_CONFIG_SUBDIR_ARGS([$subsys],[$subsys_config_args],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
@@ -3916,31 +3130,6 @@ if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
     set +x
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
-
-# MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
-MPI_STATUS_SIZE=5
-AC_SUBST([MPI_STATUS_SIZE])
-
-if test "$enable_f77" = yes ; then
-    # Check if multiple __attribute__((alias)) is available
-    # This test requires MPI_STATUS_SIZE, and thus must be made after
-    # MPI_STATUS_SIZE is determined
-    if test "$enable_multi_aliases" = "yes" ; then
-        PAC_C_MULTI_ATTR_ALIAS
-        if test "$pac_c_multi_attr_alias" = "yes" ; then
-            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
-            AC_SUBST(CMB_1INT_ALIGNMENT)
-            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
-                                      [32])
-            AC_SUBST(CMB_STATUS_ALIGNMENT)
-            if test "X$CMB_1INT_ALIGNMENT" != "X" \
-                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
-                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                    [Define if multiple __attribute__((alias)) are supported])
-            fi
-        fi
-    fi
-fi
 
 # -----------------------------------------------------------------------------
 # enable_nolocal option may get overwritten by device subconfigure, e.g. with "with_ch4_shmmods=none"
@@ -3983,8 +3172,6 @@ MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
 
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
-AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
-AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_f90" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then
@@ -4052,10 +3239,6 @@ fi
 if test -z "$libbuild_dir" ; then
     libbuild_dir=`pwd`/lib
 fi
-if test -z "$modincbuild_dir" ; then
-    # The include files may be in a different directory from the mpif.h file
-    modincbuild_dir=`pwd`/src/binding/fortran/use_mpi
-fi
 
 dnl
 dnl If we rerun configure, place a file in the lib directory with the
@@ -4077,99 +3260,6 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # linking issue on Darwin
 LT_OUTPUT
 
-AC_ARG_ENABLE([two-level-namespace],
-              [AS_HELP_STRING([--enable-two-level-namespace],
-                              [(Darwin only) Do not use `-Wl,-flat_namespace` to
-                               link libmpifort.dylib. MacOS uses two-level namespace
-                               to compile dylibs by default. This may cause issues
-                               not resolving MPI constants, such as MPI_IN_PLACE.
-                               Thus, we use flat_namespace by default. Enable this
-                               option to use two-level-namespace instead. ])],
-              [],
-              [enable_two_level_namespace=no])
-FCLIB_LDFLAGS=
-AC_SUBST([FCLIB_LDFLAGS])
-
-if test "X$enable_shared" = "Xyes" ; then
-    # see ticket #1590 for some more background on these Darwin linking issues
-    AS_CASE([$host],
-        [*-*-darwin*],
-        [
-
-        # The linker on Darwin does not allow common symbols, thus libtool
-        # adds the -fno-common option by default for shared libraries.
-        # However, the common symbols defined in different shared libraries
-        # and object files still can not be treated as the same symbol.
-        # For example:
-        # with gfortran, the same common block in the shared libraries and
-        # the object files will have different memory locations separately;
-        # with ifort, the same common block in different shared libraries
-        # will get the same memory location but still get a different location
-        # in the object file.
-
-        # On the other hand, the -flat-namespace option allows linker to
-        # unify the same common symbols in different dylibs. It needs to be
-        # added in linking stage for both the shared library and the final
-        # executable file.
-
-        # In Fortran programs, we implement global definitions such as MPI_BOTTOM
-        # as common symbols. We check the address of the user input and translate it
-        # to the C global definition if it is equal to the internal pre-stored address
-        # in the Fortran binding layer. Without -flat-namespace, we may get different
-        # addresses and thus treat the predefined constant as a normal buffer.
-
-        # sanity check that -Wl,-flat_namespace works on darwin, unless the user
-        # asked us not to add it
-        if test "X$enable_two_level_namespace" = "Xno"; then
-            # TODO, move this into a PAC macro with real autoconf caching
-            pac_cv_wl_flat_namespace_works=no
-            AC_MSG_CHECKING([if the C compiler accepts -Wl,-flat_namespace])
-            PAC_PUSH_FLAG([LDFLAGS])
-            PAC_APPEND_FLAG([-Wl,-flat_namespace],[LDFLAGS])
-            AC_LINK_IFELSE([AC_LANG_PROGRAM([],[int i;])],
-                           [AC_MSG_RESULT([yes])
-                            pac_cv_wl_flat_namespace_works=yes],
-                           [AC_MSG_RESULT([no])])
-            PAC_POP_FLAG([LDFLAGS])
-
-            # Technically we may not be able to use the same form of the argument
-            # for all three compilers (CC/CXX/FC).  But we only think this is
-            # necessary for Darwin for now, so this unconditional, single-var
-            # approximation will work for now.
-            if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
-                FCLIB_LDFLAGS="-Wl,-flat_namespace"
-            fi
-        fi
-        ]
-    )
-fi
-
-if test "$enable_f08" = "yes"; then
-    AS_CASE([$MPI_AINT],
-        [short],       [F08_C_AINT="c_short"],
-        [int],         [F08_C_AINT="c_int"],
-        [long],        [F08_C_AINT="c_long"],
-        ['long long'], [F08_C_AINT="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_AINT type in Fortran 2008])])
-
-    AS_CASE([$MPI_COUNT],
-        [short],       [F08_C_COUNT="c_short"],
-        [int],         [F08_C_COUNT="c_int"],
-        [long],        [F08_C_COUNT="c_long"],
-        ['long long'], [F08_C_COUNT="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_COUNT type in Fortran 2008])])
-
-    AS_CASE([$MPI_OFFSET],
-        [short],       [F08_C_OFFSET="c_short"],
-        [int],         [F08_C_OFFSET="c_int"],
-        [long],        [F08_C_OFFSET="c_long"],
-        ['long long'], [F08_C_OFFSET="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_OFFSET type in Fortran 2008])])
-
-    AC_SUBST(F08_C_AINT)
-    AC_SUBST(F08_C_COUNT)
-    AC_SUBST(F08_C_OFFSET)
-fi
 
 ########################################################################
 # Some of the settings need to be applied at the end
@@ -4185,59 +3275,43 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-if test "$enable_f90" = "yes" ; then
-    PAC_FC_CHECK_IGNORE_TKR
-    PAC_FC_ISO_C_BINDING
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
-            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
-        fi
-    else
-        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
-        # pass in type sizes for MPI_SIZEOF
-        cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
-        if test "$pac_fc_ignore_tkr" != "no" ; then
-            cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
-        fi
-        if test "$pac_fc_iso_c_binding" = "no" ; then
-            cmd_f90="$cmd_f90 -iso-c-binding=no"
-        fi
-        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
-    fi
-fi
-
-if test "$enable_f08" = "yes" ; then
-    PAC_FC_CHECK_REAL128
-    PAC_FC_CHECK_IGNORE_TKR_D
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
-            AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
-        fi
-    else
-        cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
-        if test "$pac_fc_has_real128" = "no" ; then
-            cmd_f08="$cmd_f08 -no-real128"
-        fi
-        if test "$pac_fc_ignore_tkr_d" != "no" ; then
-            cmd_f08="$cmd_f08 -ignore-tkr-d=$pac_fc_ignore_tkr_d"
-        fi
-        if test "$enable_romio" = "no" ; then
-            cmd_f08="$cmd_f08 -no-mpiio"
-        fi
-        cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
-        AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])
-    fi
-fi
-
 case "$host_os" in
     freebsd*)
         AC_DEFINE(DELAY_SHM_MUTEX_DESTROY, 1, [Define to workaround interprocess mutex issue on FreeBSD])
         ;;
 esac
+
+fortrandir=
+AC_SUBST(fortrandir)
+
+# for src/include/mpif90model.h.in
+# TODO: remove the dependency on Fortran - maybe move MPI_Type_create_f90_xxx etc. to libmpifort.so
+FC_REAL_MODEL="6, 37"
+FC_DOUBLE_MODEL="15, 307"
+FC_INTEGER_MODEL="4"
+FC_INTEGER_MODEL_MAP="{ 9, 4, 4 },"
+FC_ALL_INTEGER_MODELS="9, 4,"
+AC_SUBST(FC_REAL_MODEL)
+AC_SUBST(FC_DOUBLE_MODEL)
+AC_SUBST(FC_INTEGER_MODEL)
+AC_SUBST(FC_ALL_INTEGER_MODELS)
+AC_SUBST(FC_INTEGER_MODEL_MAP)
+
+if test "$enable_fortran" = "yes" ; then
+    fortrandir="src/binding/fortran"
+    PAC_CONFIG_SUBDIR_ARGS([src/binding/fortran],[$fortran_args],[],[AC_MSG_ERROR(Fortran binding configure failed)])
+
+    AC_MSG_NOTICE([sourcing $main_top_builddir/src/binding/fortran/localdefs])
+    . $main_top_builddir/src/binding/fortran/localdefs
+
+    # For now, we build/install mpifort in mpich
+    fc_shlib_conf="src/binding/fortran/fc_shlib.conf"
+    AC_SUBST([fc_shlib_conf])
+fi
+
+# FCEXT used in mpifort.bash.in
+FCEXT="f90"
+AC_SUBST([FCEXT])
 
 AC_CONFIG_COMMANDS([src/include/mpi.h],[
     if test "$enable_mpi_abi" = "yes" ; then
@@ -4271,15 +3345,6 @@ AC_CONFIG_FILES([Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests])
-if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
-                     src/binding/fortran/mpif_h/setbotf.f \
-                     src/binding/fortran/mpif_h/setbot.c])
-fi
-if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
-                     src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90])
-fi
 AC_OUTPUT
 
 if test "$enable_mpi_abi" = "yes" ; then
@@ -4298,7 +3363,7 @@ cat <<EOF
 *** ----------------
 *** C       : yes
 *** C++     : $enable_cxx
-*** Fortran : $fortran_bindings
+*** Fortran : $FORTRAN_BINDINGS
 ***
 *** Device Configuration
 *** --------------------

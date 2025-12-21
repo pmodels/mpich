@@ -47,7 +47,7 @@ def main():
     # mpif.h
     G.mpih_defines = {}
     load_mpi_h(G.opts['mpi-h'])
-    f = "%s/mpif.h.in" % G.f77_dir
+    f = "%s/mpif.h" % G.f77_dir
     dump_mpif_h(f)
 
 # ---------------------------------------------------------
