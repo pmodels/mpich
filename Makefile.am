@@ -287,30 +287,7 @@ if INSTALL_MPIF77
 	fi ;
 endif INSTALL_MPIF77
 endif BUILD_F77_BINDING
-	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
-		if test "@MPILIBNAME@" != "mpl" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
-		fi ; \
-		if test "@MPILIBNAME@" != "opa" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \
-		fi ; \
-		if test "@MPILIBNAME@" != "mpich" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpich@SHLIB_EXT@ ; \
-		fi ; \
-	fi ; \
-	if test -e ${DESTDIR}${libdir}/lib@MPIFCLIBNAME@@SHLIB_EXT@ ; then \
-		if test "@MPIFCLIBNAME@" != "fmpich" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libfmpich@SHLIB_EXT@ ; \
-		fi ; \
-		if test "@MPIFCLIBNAME@" != "mpichf90" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libmpichf90@SHLIB_EXT@ ; \
-		fi ; \
-	fi ; \
-	if test -e ${DESTDIR}${libdir}/lib@MPICXXLIBNAME@@SHLIB_EXT@ ; then \
-		if test "@MPICXXLIBNAME@" != "mpichcxx" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPICXXLIBNAME@@SHLIB_EXT@ libmpichcxx@SHLIB_EXT@ ; \
-		fi ; \
-	fi
+
 
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
