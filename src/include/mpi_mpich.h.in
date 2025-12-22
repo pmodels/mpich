@@ -369,8 +369,12 @@ typedef int MPI_Info;
 
 #ifndef MPICH_BUILD_MPI_ABI
 /* Definitions that are determined by configure. */
+#ifdef MPI_FINT_CTYPE
+typedef MPI_FINT_CTYPE MPI_Fint;
+#else
+typedef int MPI_Fint;
+#endif
 typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
 typedef @MPI_COUNT@ MPI_Count;
 
 /* Let ROMIO know that MPI_Offset is already defined */
