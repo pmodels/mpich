@@ -3013,10 +3013,94 @@ if test "$enable_f77" = yes ; then
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*16 a])],
         pac_cv_fort_real16=yes,
         pac_cv_fort_real16=no)])
+    AC_CACHE_CHECK([whether complex*4 is supported],pac_cv_fort_complex4,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*4 a])],
+        pac_cv_fort_complex4=yes,
+        pac_cv_fort_complex4=no)])
+    AC_CACHE_CHECK([whether complex*8 is supported],pac_cv_fort_complex8,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*8 a])],
+        pac_cv_fort_complex8=yes,
+        pac_cv_fort_complex8=no)])
+    AC_CACHE_CHECK([whether complex*16 is supported],pac_cv_fort_complex16,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*16 a])],
+        pac_cv_fort_complex16=yes,
+        pac_cv_fort_complex16=no)])
+    AC_CACHE_CHECK([whether complex*32 is supported],pac_cv_fort_complex32,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      complex*32 a])],
+        pac_cv_fort_complex32=yes,
+        pac_cv_fort_complex32=no)])
+    AC_CACHE_CHECK([whether double precision is supported],pac_cv_fort_double_precision,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      double precision a])],
+        pac_cv_fort_double_precision=yes,
+        pac_cv_fort_double_precision=no)])
 
     if test -z "$pac_cv_f77_sizeof_integer" -o \
        "X$pac_cv_f77_sizeof_integer" = "X0" ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran INTEGER.  Consider setting CROSS_F77_SIZEOF_INTEGER to the length in bytes of a Fortran INTEGER])
+    fi
+
+    AC_DEFINE_UNQUOTED([MPI_CHARACTER_SIZE], [$pac_cv_f77_sizeof_character], [Define the size of Fortran CHARACTER])
+    AC_DEFINE_UNQUOTED([MPI_LOGICAL_SIZE], [$pac_cv_f77_sizeof_logical], [Define the size of Fortran LOGICAL])
+    AC_DEFINE_UNQUOTED([MPI_INTEGER_SIZE], [$pac_cv_f77_sizeof_integer], [Define the size of Fortran INTEGER])
+    AC_DEFINE_UNQUOTED([MPI_REAL_SIZE], [$pac_cv_f77_sizeof_real], [Define the size of Fortran REAL])
+    AC_DEFINE_UNQUOTED([MPI_DOUBLE_PRECISION_SIZE], [$pac_cv_f77_sizeof_double_precision], [Define the size of Fortran DOUBLE PRECISION])
+
+    if test "$pac_cv_fort_double_precision" = "yes"; then
+        AC_DEFINE([MPI_DOUBLE_PRECISION_SUPPORTED], [1], [Define if Fortran DOUBLE PRECISION is supported])
+    fi
+    if test "$pac_cv_fort_logical1" = "yes"; then
+        AC_DEFINE([MPI_LOGICAL1_SUPPORTED], [1], [Define if Fortran LOGICAL*1 is supported])
+    fi
+    if test "$pac_cv_fort_logical2" = "yes"; then
+        AC_DEFINE([MPI_LOGICAL2_SUPPORTED], [1], [Define if Fortran LOGICAL*2 is supported])
+    fi
+    if test "$pac_cv_fort_logical4" = "yes"; then
+        AC_DEFINE([MPI_LOGICAL4_SUPPORTED], [1], [Define if Fortran LOGICAL*4 is supported])
+    fi
+    if test "$pac_cv_fort_logical8" = "yes"; then
+        AC_DEFINE([MPI_LOGICAL8_SUPPORTED], [1], [Define if Fortran LOGICAL*8 is supported])
+    fi
+    if test "$pac_cv_fort_logical16" = "yes"; then
+        AC_DEFINE([MPI_LOGICAL16_SUPPORTED], [1], [Define if Fortran LOGICAL*16 is supported])
+    fi
+    if test "$pac_cv_fort_integer1" = "yes"; then
+        AC_DEFINE([MPI_INTEGER1_SUPPORTED], [1], [Define if Fortran INTEGER*1 is supported])
+    fi
+    if test "$pac_cv_fort_integer2" = "yes"; then
+        AC_DEFINE([MPI_INTEGER2_SUPPORTED], [1], [Define if Fortran INTEGER*2 is supported])
+    fi
+    if test "$pac_cv_fort_integer4" = "yes"; then
+        AC_DEFINE([MPI_INTEGER4_SUPPORTED], [1], [Define if Fortran INTEGER*4 is supported])
+    fi
+    if test "$pac_cv_fort_integer8" = "yes"; then
+        AC_DEFINE([MPI_INTEGER8_SUPPORTED], [1], [Define if Fortran INTEGER*8 is supported])
+    fi
+    if test "$pac_cv_fort_integer16" = "yes"; then
+        AC_DEFINE([MPI_INTEGER16_SUPPORTED], [1], [Define if Fortran INTEGER*16 is supported])
+    fi
+    if test "$pac_cv_fort_real2" = "yes"; then
+        AC_DEFINE([MPI_REAL2_SUPPORTED], [1], [Define if Fortran REAL*2 is supported])
+    fi
+    if test "$pac_cv_fort_real4" = "yes"; then
+        AC_DEFINE([MPI_REAL4_SUPPORTED], [1], [Define if Fortran REAL*4 is supported])
+    fi
+    if test "$pac_cv_fort_real8" = "yes"; then
+        AC_DEFINE([MPI_REAL8_SUPPORTED], [1], [Define if Fortran REAL*8 is supported])
+    fi
+    if test "$pac_cv_fort_real16" = "yes"; then
+        AC_DEFINE([MPI_REAL16_SUPPORTED], [1], [Define if Fortran REAL*16 is supported])
+    fi
+    if test "$pac_cv_fort_complex4" = "yes"; then
+        AC_DEFINE([MPI_COMPLEX4_SUPPORTED], [1], [Define if Fortran COMPLEX*4 is supported])
+    fi
+    if test "$pac_cv_fort_complex8" = "yes"; then
+        AC_DEFINE([MPI_COMPLEX8_SUPPORTED], [1], [Define if Fortran COMPLEX*8 is supported])
+    fi
+    if test "$pac_cv_fort_complex16" = "yes"; then
+        AC_DEFINE([MPI_COMPLEX16_SUPPORTED], [1], [Define if Fortran COMPLEX*16 is supported])
+    fi
+    if test "$pac_cv_fort_complex32" = "yes"; then
+        AC_DEFINE([MPI_COMPLEX32_SUPPORTED], [1], [Define if Fortran COMPLEX*32 is supported])
     fi
 
     # Provide the corresponding C types for MPI_INTEGER
@@ -3464,66 +3548,6 @@ AC_DEFINE_UNQUOTED([MPIR_2INT_INTERNAL],          [MPIR_2INT$len], [Internal typ
 AC_DEFINE_UNQUOTED([MPIR_SIGNED_CHAR_INTERNAL],   [MPIR_INT8], [Internal type for MPI_SIGNED_CHAR])
 len=`expr $ac_cv_sizeof_long_long \* 8`
 AC_DEFINE_UNQUOTED([MPIR_UNSIGNED_LONG_LONG_INTERNAL],[MPIR_UINT$len], [Internal type for MPI_UNSIGNED_LONG_LONG])
-if test "$enable_f77" = "yes" ; then
-    len=`expr $pac_cv_f77_sizeof_character \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPIR_INT$len], [Internal type for MPI_CHARACTER])
-    len=`expr $pac_cv_f77_sizeof_integer \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPIR_INT$len], [Internal type for MPI_INTEGER])
-    len=`expr $pac_cv_f77_sizeof_real \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPIR_INT$len], [Internal type for MPI_REAL])
-    len=`expr $pac_cv_f77_sizeof_logical \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPIR_FORTRAN_LOGICAL$len], [Internal type for MPI_LOGICAL])
-    len=`expr $pac_cv_f77_sizeof_real \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX_INTERNAL],       [MPIR_COMPLEX$len], [Internal type for MPI_COMPLEX])
-    len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_PRECISION_INTERNAL],[MPIR_FLOAT$len], [Internal type for MPI_DOUBLE_PRECISION])
-    len=`expr $pac_cv_f77_sizeof_integer \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_2INTEGER_INTERNAL],      [MPIR_2INT$len], [Internal type for MPI_2INTEGER])
-    len=`expr $pac_cv_f77_sizeof_real \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_2REAL_INTERNAL],         [MPIR_2FLOAT$len], [Internal type for MPI_2REAL])
-    len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_DOUBLE_COMPLEX])
-    AC_DEFINE_UNQUOTED([MPIR_2DOUBLE_PRECISION_INTERNAL],[MPIR_2FLOAT$len], [Internal type for MPI_2DOUBLE_PRECISION])
-    # skip MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX
-    AC_DEFINE_UNQUOTED([MPIR_REAL2_INTERNAL],         [MPIR_FLOAT16], [Internal type for MPI_REAL2])
-    AC_DEFINE_UNQUOTED([MPIR_REAL4_INTERNAL],         [MPIR_FLOAT32], [Internal type for MPI_REAL4])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX8_INTERNAL],      [MPIR_COMPLEX32], [Internal type for MPI_COMPLEX8])
-    AC_DEFINE_UNQUOTED([MPIR_REAL8_INTERNAL],         [MPIR_FLOAT64], [Internal type for MPI_REAL8])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX16_INTERNAL],     [MPIR_COMPLEX64], [Internal type for MPI_COMPLEX16])
-    AC_DEFINE_UNQUOTED([MPIR_REAL16_INTERNAL],        [MPIR_FLOAT128], [Internal type for MPI_REAL16])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_INTERNAL],     [MPIR_COMPLEX128], [Internal type for MPI_COMPLEX32])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER1_INTERNAL],      [MPIR_INT8], [Internal type for MPI_INTEGER1])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX4_INTERNAL],      [MPIR_COMPLEX16], [Internal type for MPI_COMPLEX4])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER2_INTERNAL],      [MPIR_INT16], [Internal type for MPI_INTEGER2])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER4_INTERNAL],      [MPIR_INT32], [Internal type for MPI_INTEGER4])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER8_INTERNAL],      [MPIR_INT64], [Internal type for MPI_INTEGER8])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER16_INTERNAL],     [MPIR_INT128], [Internal type for MPI_INTEGER16])
-else
-    AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_CHARACTER])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER])
-    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPI_DATATYPE_NULL], [Internal type for MPI_REAL])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX])
-    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_PRECISION_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_DOUBLE_PRECISION])
-    AC_DEFINE_UNQUOTED([MPIR_2INTEGER_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_2INTEGER])
-    AC_DEFINE_UNQUOTED([MPIR_2REAL_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_2REAL])
-    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_DOUBLE_COMPLEX])
-    AC_DEFINE_UNQUOTED([MPIR_2DOUBLE_PRECISION_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_2DOUBLE_PRECISION])
-    # skip MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX
-    AC_DEFINE_UNQUOTED([MPIR_REAL2_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL2])
-    AC_DEFINE_UNQUOTED([MPIR_REAL4_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL4])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX8_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX8])
-    AC_DEFINE_UNQUOTED([MPIR_REAL8_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL8])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX16_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX16])
-    AC_DEFINE_UNQUOTED([MPIR_REAL16_INTERNAL],        [MPI_DATATYPE_NULL], [Internal type for MPI_REAL16])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX32])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER1_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER1])
-    AC_DEFINE_UNQUOTED([MPIR_COMPLEX4_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX4])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER2_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER2])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER4_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER4])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER8_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER8])
-    AC_DEFINE_UNQUOTED([MPIR_INTEGER16_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER16])
-fi
 if test -n "$CXX" ; then
     len=`expr $ac_cv_sizeof_bool \* 8`
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],      [MPIR_INT$len], [Internal type for MPI_CXX_BOOL])
@@ -3586,19 +3610,6 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_INTERNAL],[MPIR_INT$len], [Internal type for MPI
 len=`expr $MPI_SIZEOF_COUNT \* 8`
 AC_DEFINE_UNQUOTED([MPIR_COUNT_INTERNAL], [MPIR_INT$len], [Internal type for MPI_COUNT_DATATYPE])
 AC_DEFINE_UNQUOTED([MPIR_C_FLOAT16_INTERNAL], [MPIR_FLOAT16], [Internal type for MPIX_C_FLOAT16])
-if test "$enable_f77" = "yes" ; then
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL1_INTERNAL],  [MPIR_FORTRAN_LOGICAL8], [Internal type for MPI_LOGICAL1])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL2_INTERNAL],  [MPIR_FORTRAN_LOGICAL16], [Internal type for MPI_LOGICAL2])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL4_INTERNAL],  [MPIR_FORTRAN_LOGICAL32], [Internal type for MPI_LOGICAL4])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL8_INTERNAL],  [MPIR_FORTRAN_LOGICAL64], [Internal type for MPI_LOGICAL8])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL16_INTERNAL], [MPIR_FORTRAN_LOGICAL128],[Internal type for MPI_LOGICAL16])
-else
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL1_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL1])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL2_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL2])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL4_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL4])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL8_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL8])
-    AC_DEFINE_UNQUOTED([MPIR_LOGICAL16_INTERNAL], [MPI_DATATYPE_NULL],[Internal type for MPI_LOGICAL16])
-fi
 AC_DEFINE_UNQUOTED([MPIR_BFLOAT16_INTERNAL],  [MPIR_BFLOAT16],[Internal type for MPIX_BFLOAT16])
 AC_MSG_RESULT([done])
 
