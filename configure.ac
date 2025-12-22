@@ -919,9 +919,6 @@ export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
 AC_SUBST(MPIFCLIBNAME)
 
-# We'll set FORTRAN_BINDING to 1 if we support Fortran
-FORTRAN_BINDING=0
-
 # enable-fast
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
@@ -2011,9 +2008,6 @@ if test "$enable_f77" = "yes" ; then
     bindings="$bindings f77"
     PAC_APPEND_CSV([mpif.h], [fortran_bindings])
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
-    # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
-    FORTRAN_BINDING=1
-
 fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
@@ -2329,13 +2323,6 @@ if test "$enable_cxx" = "yes" ; then
     AC_DEFINE(HAVE_CXX_BINDING,1,[Define if C++ is supported])
     INCLUDE_MPICXX_H='#include "mpicxx.h"'
     AC_SUBST(INCLUDE_MPICXX_H)
-
-    # In order to support the Fortran datatypes within C++,
-    #
-    # FORTRAN_BINDING always has a CPP-time value of either 0 or 1,
-    # so that it may be used in #if statements without adding to
-    # the CPP name space
-    AC_SUBST(FORTRAN_BINDING)
 fi
 
 # we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
