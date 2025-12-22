@@ -1857,7 +1857,6 @@ sub PrintConstants {
     # Fortran types
     if ($giveValue) {
 	print $OUTFD "
-#ifdef HAVE_FORTRAN_BINDING
 Datatype INTEGER(MPI_INTEGER);
 Datatype REAL(MPI_REAL);
 Datatype DOUBLE_PRECISION(MPI_DOUBLE_PRECISION);
@@ -1868,14 +1867,10 @@ Datatype CHARACTER(MPI_CHARACTER);
 Datatype TWOREAL(MPI_2REAL);
 Datatype TWODOUBLE_PRECISION(MPI_2DOUBLE_PRECISION);
 Datatype TWOINTEGER(MPI_2INTEGER);
-#endif\n";
+\n";
     }
     else {
-	# This is for the mpicxx.h.in file, so instead of assuming that
-	# we have mpichconf.h (which we do not, so as to keep the user's
-	# CPP name space clean), we directly set this value
 	print $OUTFD "
-#if \@FORTRAN_BINDING\@
 extern Datatype INTEGER;
 extern Datatype REAL;
 extern Datatype DOUBLE_PRECISION;
@@ -1886,7 +1881,7 @@ extern Datatype CHARACTER;
 extern Datatype TWOREAL;
 extern Datatype TWODOUBLE_PRECISION;
 extern Datatype TWOINTEGER;
-#endif\n";
+\n";
     }
     # Still to do: Fortran optional types, integer1,2,4, real2,4,8,
 
