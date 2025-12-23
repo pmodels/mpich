@@ -1418,7 +1418,7 @@ elif test -f $devicedir/subconfigure.m4 ; then
     :
 else
     # Add the device to the configure list
-    devsubsystems="$devsubsystems $devicereldir"
+    subsystems="$subsystems $devicereldir"
     # Make device_name available to subdirs
 fi
 
@@ -2041,7 +2041,6 @@ libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
 if test "$enable_f90" = "yes" ; then
-    bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
     bindings="$bindings f90"
     PAC_APPEND_CSV([use mpi], [fortran_bindings])
 fi
@@ -3956,19 +3955,14 @@ fi
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
-# now configure any actual recursively configures subsystems, such as ROMIO and
-# hydra, or older components that haven't been updated to a subconfigure.m4 yet
-for subsys in $devsubsystems $subsystems ; do
+# We explicitly configure most modules now. $subsystems only contains hydra and nameserv/* (if configured).
+for subsys in $subsystems ; do
     PAC_CONFIG_SUBDIR_ARGS([$subsys],[$subsys_config_args],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
     set +x
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
-
-# Make subsystems available to makefiles.
-# FIXME does the makefile actually need this?
-subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
 # MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
 MPI_STATUS_SIZE=5
