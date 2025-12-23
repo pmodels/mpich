@@ -26,17 +26,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         # $ac_configure_args - all arguments passed to configure
         #
         
-        found_dir="no"
-        for sys in $devsubsystems ; do
-            if test "$sys" = "src/mpid/common/sock" ; then
-               found_dir="yes"
-               break
-            fi
-        done
-        if test "$found_dir" = "no" ; then
-           devsubsystems="$devsubsystems src/mpid/common/sock"
-        fi
-        
         # FIXME: The setup file has a weird requirement that it needs to be
         # run *before* the MPICH device (not the setup directory itself) is
         # configured, but the actual configuration of the associated directory
