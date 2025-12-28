@@ -3451,36 +3451,6 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant 
 # We may wish to use a different approach
 MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
 AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT)
-# and is needed in mpif.h.in.
-# First, we check that this works with both Fortran compilers (if
-# they are defined)
-#
-if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
-    FORTRAN_MPI_OFFSET="INTEGER(KIND=$OFFSET_KIND)"
-
-    AC_LANG_PUSH([Fortran 77])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
-    AC_MSG_RESULT($has_f77_offsettype)
-    AC_LANG_POP([Fortran 77])
-
-    AC_LANG_PUSH([Fortran])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
-    AC_LANG_POP([Fortran])
-    AC_MSG_RESULT($has_fc_offsettype)
-
-    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
-        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
-    fi
-fi
-AC_SUBST(FORTRAN_MPI_OFFSET)
 
 # ------------
 # MPI_COUNT

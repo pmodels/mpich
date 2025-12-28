@@ -1017,7 +1017,7 @@ def dump_mpif_h(f):
             elif re.match(r'MPI_(UNWEIGHTED|WEIGHTS_EMPTY|BUFFER_AUTOMATIC|BOTTOM|IN_PLACE|STATUS_IGNORE|STATUSES_IGNORE|ERRCODES_IGNORE|ARGVS_NULL|ARGV_NULL)', name):
                 continue
             elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
-                T = '@FORTRAN_MPI_OFFSET@'
+                T = 'INTEGER(KIND=@OFFSET_KIND@)'
             print("       %s %s" % (T, name), file=Out)
             print("       PARAMETER (%s=%s)" % (name, G.mpih_defines[name]), file=Out)
 
