@@ -577,6 +577,50 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
     SET_TYPE_SUPPORTED(MPI_COMPLEX32, "mpi_complex32_supported", MPIR_COMPLEX128);
     SET_TYPE_SUPPORTED(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported", MPIR_COMPLEX64);
 
+    /* setup for MPI_Type_create_F90_{integer,real,complex} */
+    /* NOTE: Assume all the available types are represented with the above infos. Otherwise,
+     *       we will need additional info keys to set all available integer and real models.
+     */
+    /* NOTE: use separate macros for clarity */
+#define ADD_F90_INT(keyname, mpir_type, range) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_int(range, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_INT("mpi_integer1_supported", MPIR_INT8, 2);
+    ADD_F90_INT("mpi_integer2_supported", MPIR_INT16, 4);
+    ADD_F90_INT("mpi_integer4_supported", MPIR_INT32, 9);
+    ADD_F90_INT("mpi_integer8_supported", MPIR_INT64, 18);
+    ADD_F90_INT("mpi_integer16_supported", MPIR_INT128, 38);
+#define ADD_F90_REAL(keyname, mpir_type, digits, exponent) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_real(digits, exponent, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_REAL("mpi_real2_supported", MPIR_FLOAT16, 3, 4);
+    ADD_F90_REAL("mpi_real4_supported", MPIR_FLOAT32, 6, 37);
+    ADD_F90_REAL("mpi_real8_supported", MPIR_FLOAT64, 15, 307);
+    ADD_F90_REAL("mpi_real16_supported", MPIR_FLOAT128, 33, 4931);
+#define ADD_F90_COMPLEX(keyname, mpir_type, digits, exponent) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_complex(digits, exponent, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_COMPLEX("mpi_complex4_supported", MPIR_COMPLEX16, 3, 4);
+    ADD_F90_COMPLEX("mpi_complex8_supported", MPIR_COMPLEX32, 6, 37);
+    ADD_F90_COMPLEX("mpi_complex16_supported", MPIR_COMPLEX64, 15, 307);
+    ADD_F90_COMPLEX("mpi_complex32_supported", MPIR_COMPLEX128, 33, 4931);
+
+    /* In case none of the fixed types are supported, we fallback to support INTEGER, REAL, DOUBLE, COMPLEX */
+    MPIR_check_f90_fallback();
+
+
   fn_exit:
     return mpi_errno;
   fn_fail:

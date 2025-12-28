@@ -4189,50 +4189,6 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
-if test "$enable_f90" = "yes"; then
-    # Determine the precision and range of the standard Fortran types.  This
-    # isn't quite enough for a full implementation of the Type_create_f90_xxx
-    # routines, but will handle most programs.  We can extend this by trying to
-    # find (through selected_real_kind and selected_int_kind) types with larger or
-    # smaller precisions and/or ranges than the basic types.
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
-                            [real aa],
-                            [precision(aa), ",", range(aa)],
-                            [FC_REAL_MODEL],
-                            [$CROSS_F90_REAL_MODEL])
-    #
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
-                            [double precision aa],
-                            [precision(aa), ",", range(aa)],
-                            [FC_DOUBLE_MODEL],
-                            [$CROSS_F90_DOUBLE_MODEL])
-    #
-    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
-                            [integer aa],
-                            [range(aa)],
-                            [FC_INTEGER_MODEL],
-                            [$CROSS_F90_INTEGER_MODEL])
-
-    # Try to find the available integer kinds by using selected_int_kind
-    # This produces a table of range,kind
-    PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS],
-                                [$CROSS_F90_ALL_INTEGER_MODELS])
-    #
-    PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP],
-                            [$CROSS_F90_INTEGER_MODEL_MAP])
-else
-    FC_REAL_MODEL="6, 37"
-    FC_DOUBLE_MODEL="15, 307"
-    FC_INTEGER_MODEL="4"
-    FC_INTEGER_MODEL_MAP="{ 9, 4, 4 },"
-    FC_ALL_INTEGER_MODELS="9, 4,"
-fi
-AC_SUBST(FC_REAL_MODEL)
-AC_SUBST(FC_DOUBLE_MODEL)
-AC_SUBST(FC_INTEGER_MODEL)
-AC_SUBST(FC_ALL_INTEGER_MODELS)
-AC_SUBST(FC_INTEGER_MODEL_MAP)    
-
 if test "$enable_f08" = "yes"; then
     AS_CASE([$MPI_AINT],
         [short],       [F08_C_AINT="c_short"],
@@ -4356,7 +4312,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi_mpich.h \
-          src/include/mpif90model.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
