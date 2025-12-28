@@ -477,10 +477,6 @@ if test $WITHIN_KNOWN_MPI_IMPL = no ; then
 else
    AC_DEFINE(HAVE_MPI_INFO,1,[Define if MPI Info is available])
    HAVE_MPI_INFO="#define HAVE_MPI_INFO"
-   MPI_FINFO1="!"
-   MPI_FINFO2="!"
-   MPI_FINFO3="!"
-   MPI_FINFO4="!"
 fi
 #
 if test -n "$mpi_sgi"; then
@@ -489,7 +485,6 @@ dnl      PAC_CHECK_MPI_SGI_INFO_NULL  # is MPI_INFO_NULL defined in mpi.h?
 dnl   fi
    PAC_TEST_MPI_SGI_type_is_contig
    PAC_TEST_MPI_COMBINERS
-   PAC_TEST_MPI_HAVE_OFFSET_KIND
 fi
 #
 # check if darray and subarray constructors are defined in the MPI
@@ -504,13 +499,6 @@ if test $FROM_MPICH = yes ; then
    unset BUILD_MPI_ARRAY
    AC_DEFINE(HAVE_MPI_DARRAY_SUBARRAY,1,[Define if Darray is available])
    HAVE_MPI_DARRAY_SUBARRAY="#define HAVE_MPI_DARRAY_SUBARRAY"
-   MPI_FARRAY1="!"
-   MPI_FARRAY2="!"
-   MPI_FARRAY3="!"
-   MPI_FARRAY4="!"
-   MPI_FARRAY5="!"
-   MPI_FARRAY6="!"
-   MPI_FARRAY7="!"
 fi
 
 # Check to see if weak symbols work correctly
