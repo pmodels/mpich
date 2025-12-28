@@ -488,8 +488,7 @@ Compiling and Running MPI-IO Programs
 -------------------------------------
 
 If ROMIO is not already included in the MPI implementation, you need
-to include the file mpio.h for C or mpiof.h for Fortran in your MPI-IO
-program.  
+to include the file mpio.h for C in your MPI-IO program.  
 
 Note that on HP machines running HPUX and on NEC SX-4, you need to
 compile Fortran programs with mpifort, because the f77 compilers on
@@ -519,7 +518,7 @@ or
 
 If you have built ROMIO with some other MPI implementation, you can
 compile MPI-IO programs by explicitly giving the path to the include
-file mpio.h or mpiof.h and explicitly specifying the path to the
+file mpio.h and explicitly specifying the path to the
 library libmpio.a, which is located in $(ROMIO_HOME)/lib/$(ARCH)/libmpio.a .
 
 
