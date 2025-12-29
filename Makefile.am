@@ -111,8 +111,7 @@ endif BUILD_F77_BINDING
 ## lib@PMPILIBNAME@ (which is the same as lib@MPILIBNAME@ on systems
 ## that support weak symbols).
 ##
-## mpi_abi_sources: similar to mpi_sources, but used to compile
-## lib@MPIABILIBNAME@.
+## mpi_abi_sources: similar to mpi_sources, but used if BUILD_ABI_LIB.
 ##
 ## mpi_cxx_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
 ## files provide the "MPI" public functions for the C++ bindings and
@@ -133,7 +132,10 @@ lib_LTLIBRARIES =
 include maint/Makefile.mk
 include src/Makefile.mk
 
+if ! BUILD_ABI_LIB
 if BUILD_PROFILING_LIB
+# -------- mpich-abi: libpmpi + libmpi ------------------
+#
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
@@ -150,7 +152,8 @@ lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
-
+# -------- mpich-abi: libmpi ------------------
+#
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
@@ -160,35 +163,38 @@ EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_conve
 
 endif !BUILD_PROFILING_LIB
 
-if BUILD_ABI_LIB
+else BUILD_ABI_LIB
 abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
 if BUILD_PROFILING_LIB
+# -------- mpi-abi: libpmpi + libmpi ------------------
+#
 # dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
 # don't contribute any PMPI symbols.
-lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
-lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
-lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
-lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
-lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
-EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
+lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
+lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
+lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
+lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
+EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
 
-# lib@MPIABILIBNAME@.la might depend on lib@PMPIABILIBNAME@.la.  We add them
+# lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
 # in that order to lib_LTLIBRARIES so libtool doesn't get
 # confused. (see https://bugzilla.redhat.com/show_bug.cgi?id=91110)
-lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
-lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources)
-lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABI_ABIVERSIONFLAGS)
-lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
-lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la
+lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
+lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_abi_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABI_ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
+lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
-
-lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
-lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
-lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
-lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
-lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
-EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
+# -------- mpi-abi: libmpi ------------------
+#
+lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
+lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
+lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
+EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
 
 endif !BUILD_PROFILING_LIB
 endif BUILD_ABI_LIB
@@ -203,12 +209,14 @@ lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
 lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
 endif BUILD_F77_BINDING
 
+if ! BUILD_ABI_LIB
 if BUILD_CXX_BINDING
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
 lib_lib@MPICXXLIBNAME@_la_SOURCES = $(mpi_cxx_sources)
 lib_lib@MPICXXLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_CXX_BINDING
+endif ! BUILD_ABI_LIB
 
 # build the current directory and then the examples directory after everything else
 SUBDIRS += . examples
@@ -261,6 +269,9 @@ install-exec-hook:
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
 	fi ;
+if BUILD_ABI_LIB
+	cd ${DESTDIR}${includedir} && ln -sf mpi_abi.h mpi.h ;
+endif BUILD_ABI_LIB
 if BUILD_FC_BINDING
 if INSTALL_MPIF90
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
@@ -279,18 +290,6 @@ if INSTALL_MPIF77
 	fi ;
 endif INSTALL_MPIF77
 endif BUILD_F77_BINDING
-if BUILD_ABI_LIB
-	if test -e ${DESTDIR}${bindir}/@MPICC_NAME@ ; then \
-		if test "@MPICC_NAME@" != "@MPICC_ABI_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPICC_NAME@ @MPICC_ABI_NAME@ ; \
-		fi ; \
-	fi ; \
-	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
-		if test "@MPICXX_NAME@" != "@MPICXX_ABI_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICXX_ABI_NAME@ ; \
-		fi ; \
-	fi ;
-endif BUILD_ABI_LIB
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		if test "@MPILIBNAME@" != "mpl" ; then \
 			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \

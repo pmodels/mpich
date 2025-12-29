@@ -209,7 +209,6 @@ subcode: parse_args
             $call parse_arg_cases
             $(if:cc=cc or cc=cxx)
                 $call parse_delay_libs
-                $call parse_mpi_abi
             $call parse_arg_help
             # fc args such as -I*, -D* need be in between the case for *'*|*"*) and *)
             &call parse_other_args_$(sh)
@@ -358,12 +357,6 @@ subcode: parse_args
             fi
         fi
 
-    subcode: parse_mpi_abi
-        $(block:parse_args_init)
-            mpi_abi=no
-        &call case, -mpi-abi|-mpi_abi
-            mpi_abi=yes
-
     subcode: parse_fc_args
         $(set:addarg=1)
         $(if:sh=sh)
@@ -465,21 +458,8 @@ subcode: set_final_vars
         final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
     fi
 
-    $(if:cc=cc or cc=cxx)
-        if [ "${0%_abi}" != "$0" ] ; then
-            mpi_abi=yes
-        fi
-        if [ "$mpi_abi" = no ] ; then
-            mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
-            mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
-        else
-            final_cppflags="-DMPI_ABI ${final_cppflags}"
-            mpi_libs_shared="-l@MPIABILIBNAME@ @LPMPIABILIBNAME@"
-            mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
-        fi
-    $(else)
-        mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
-        mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
+    mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
+    mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
 
     $(if:cc=fc)
         $call patch_final_fcflags
