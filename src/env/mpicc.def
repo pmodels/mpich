@@ -381,9 +381,11 @@ subcode: parse_args
 
     subcode: parse_mpi_abi
         $(block:parse_args_init)
-            mpi_abi=no
+            mpi_abi=@DEFAULT_MPI_ABI@
         &call case, -mpi-abi|-mpi_abi
             mpi_abi=yes
+        &call case, -mpich-abi|-mpich_abi
+            mpi_abi=no
 
     subcode: parse_fc_args
         $(set:addarg=1)
@@ -487,9 +489,12 @@ subcode: set_final_vars
     fi
 
     $(if:cc=cc or cc=cxx)
-        if [ "${0%_abi}" != "$0" ] ; then
-            mpi_abi=yes
-        fi
+        # mpicc_abi is equivalent to mpicc -mpi-abi
+        # mpicc_mpich is equivalent to mpicc -mpich-abi
+        case "$0" in
+            *_abi)   mpi_abi=yes ;;
+            *_mpich) mpi_abi=no ;;
+        esac
         if [ "$mpi_abi" = no ] ; then
             mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
             mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"

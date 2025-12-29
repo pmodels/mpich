@@ -64,11 +64,8 @@ include mpi-io/Makefile.mk
 include adio/Makefile.mk
 
 if BUILD_ROMIO_EMBEDDED
-# Build a libtool convenience library that the enclosing MPI implementation can
-# use by adding it to the right _LIBADD variable.
-noinst_LTLIBRARIES = libromio.la
-libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
-
+noinst_LTLIBRARIES =
+#
 ## NOTE: ROMIO's old build system builds a bunch of _foo.o objects that contain
 ## PMPI_ implementations as well as calls to only other PMPI routines.  In
 ## MPICH, these are the objects that need to go into libmpi, while the foo.o
@@ -78,25 +75,35 @@ libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources
 ## libmpi library, regardless of the separate profiling library's existence.
 ##
 ## Annoying, right?
-if BUILD_PROFILING_LIB
 # The current best strategy for now is to build the PMPI symbols as a separate
 # convenience lib to permit adding the special "-D..." argument for all objects.
 # MPICH will then link in both convenience library into libmpi, since it
 # won't work very well the other way around.
+#
+if BUILD_MPICH_LIB
+# Build a libtool convenience library that the enclosing MPI implementation can
+# use by adding it to the right _LIBADD variable.
+noinst_LTLIBRARIES += libromio.la
+libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+libromio_la_CPPFLAGS = $(AM_CPPFLAGS)
+libromio_la_LDFLAGS = $(external_ldflags)
+libromio_la_LIBADD = $(external_libs)
+
+if BUILD_PROFILING_LIB
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
 libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING 
 libpromio_la_LDFLAGS = $(external_ldflags)
 libpromio_la_LIBADD = $(external_libs)
-else !BUILD_PROFILING_LIB
-libromio_la_LDFLAGS = $(external_ldflags)
-libromio_la_LIBADD = $(external_libs)
-endif !BUILD_PROFILING_LIB
+endif BUILD_PROFILING_LIB
+endif BUILD_MPICH_LIB
 
 if BUILD_ABI_LIB
 noinst_LTLIBRARIES += libromio_abi.la
 libromio_abi_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
 libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_BUILD_MPI_ABI
+libromio_abi_la_LDFLAGS = $(external_ldflags)
+libromio_abi_la_LIBADD = $(external_libs)
 
 if BUILD_PROFILING_LIB
 noinst_LTLIBRARIES += libpromio_abi.la
@@ -105,8 +112,6 @@ libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DMPICH_BUILD_
 libpromio_abi_la_LDFLAGS = $(external_ldflags)
 libpromio_abi_la_LIBADD = $(external_libs)
 endif BUILD_PROFILING_LIB
-libromio_abi_la_LDFLAGS = $(external_ldflags)
-libromio_abi_la_LIBADD = $(external_libs)
 endif BUILD_ABI_LIB
 
 # ---------------------------

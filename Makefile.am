@@ -60,7 +60,9 @@ abi_convenience_libs =
 
 if BUILD_ROMIO
     external_subdirs += src/mpi/romio
+if BUILD_MPICH_LIB
     mpi_convenience_libs += src/mpi/romio/libromio.la
+endif
 if BUILD_ABI_LIB
     abi_convenience_libs += src/mpi/romio/libromio_abi.la
 endif
@@ -124,10 +126,14 @@ lib_LTLIBRARIES =
 include src/Makefile.mk
 include packaging/Makefile.mk
 
+if BUILD_MPICH_LIB
 if BUILD_PROFILING_LIB
+# -------- mpich-abi: libpmpi + libmpi ------------------
+#
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
 lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
 
@@ -141,7 +147,8 @@ lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
-
+# -------- mpich-abi: libmpi ------------------
+#
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
@@ -150,16 +157,19 @@ lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_
 EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
 
 endif !BUILD_PROFILING_LIB
+endif BUILD_MPICH_LIB
 
 if BUILD_ABI_LIB
 abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
 if BUILD_PROFILING_LIB
+# -------- mpi-abi: libpmpi_abi + libmpi_abi ------------------
+#
 # dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
 # don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
 lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources) $(mpi_abi_core_sources)
 lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
-lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
+lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
 lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
 EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
 
@@ -173,7 +183,8 @@ lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_
 lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
-
+# -------- mpich-abi: libmpi_abi ------------------
+#
 lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
 lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources) $(mpi_abi_core_sources)
 lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
@@ -273,6 +284,18 @@ if BUILD_ABI_LIB
 		fi ; \
 	fi ;
 endif BUILD_ABI_LIB
+if BUILD_MPICH_LIB
+	if test -e ${DESTDIR}${bindir}/@MPICC_NAME@ ; then \
+		if test "@MPICC_NAME@" != "@MPICC_MPICH_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPICC_NAME@ @MPICC_MPICH_NAME@ ; \
+		fi ; \
+	fi ; \
+	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
+		if test "@MPICXX_NAME@" != "@MPICXX_MPICH_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICXX_MPICH_NAME@ ; \
+		fi ; \
+	fi ;
+endif BUILD_MPICH_LIB
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		if test "@MPILIBNAME@" != "mpl" ; then \
 			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
