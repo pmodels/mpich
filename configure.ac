@@ -496,6 +496,11 @@ AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
         enable_mpi_abi=no)
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
+AC_SUBST(enable_mpi_abi)
+
+if test "$enable_mpi_abi" = "yes" ; then
+    enable_cxx=no
+fi
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
@@ -903,21 +908,24 @@ m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 # Set default library names if names haven't already been provided
 AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpi")])
 AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
-AC_ARG_VAR([MPIABILIBNAME],[can be used to override the name of the MPI library (default: "mpi_abi")])
-AC_ARG_VAR([PMPIABILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPIABILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
 AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
-MPILIBNAME=${MPILIBNAME:-"mpi"}
+
+if test "$enable_mpi_abi" = "yes" ; then
+    MPILIBNAME=${MPILIBNAME:-"mpi_abi"}
+else
+    MPILIBNAME=${MPILIBNAME:-"mpi"}
+fi
+
 # ROMIO is configured as a subdirectory and needs the resolved library name
 # when building its legacy tests against the top-level build tree.
 export MPILIBNAME
+
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then
    PMPILIBNAME_set=yes
 fi
 PMPILIBNAME=${PMPILIBNAME:-"p$MPILIBNAME"}
-MPIABILIBNAME=${MPIABILIBNAME:-"mpi_abi"}
-PMPIABILIBNAME=${PMPIABILIBNAME:-"p$MPIABILIBNAME"}
 # Note that the name for this library may be updated after we check for
 # enable_shmem
 # Fortran names are set later.
@@ -3807,15 +3815,11 @@ fi
 # Setup other replaceable values
 AC_SUBST(MPILIBNAME)
 AC_SUBST(PMPILIBNAME)
-AC_SUBST(MPIABILIBNAME)
-AC_SUBST(PMPIABILIBNAME)
 
 if test "$NEEDSPLIB" = "yes" ; then
    LPMPILIBNAME="-l${PMPILIBNAME}"
-   LPMPIABILIBNAME="-l${PMPIABILIBNAME}"
 fi
 AC_SUBST(LPMPILIBNAME)
-AC_SUBST(LPMPIABILIBNAME)
 
 if test "enable_cxx" = "yes" -a "$enable_mpi_abi" = "no" -a x"$MPICXXLIBNAME" != x"$MPILIBNAME" ; then
     LMPICXXLIBNAME="-l${MPICXXLIBNAME}"
@@ -4361,11 +4365,17 @@ if test "$enable_f08" = "yes" ; then
 fi
 AC_OUTPUT
 
-# TODO: add info about MPI ABI
+if test "$enable_mpi_abi" = "yes" ; then
+    ABI_INFO="MPI ABI 1.0"
+else
+    ABI_INFO="MPICH ABI"
+fi
 cat <<EOF
 *****************************************************
 ***
 *** MPICH $MPICH_VERSION ($MPICH_RELEASE_DATE)
+***
+*** ABI: $ABI_INFO
 ***
 *** Language Support
 *** ----------------
