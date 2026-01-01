@@ -6,7 +6,7 @@
 #ifndef MPIR_REFCOUNT_H_INCLUDED
 #define MPIR_REFCOUNT_H_INCLUDED
 
-#include "mpi.h"
+#include "mpi_mpich.h"
 #include "mpichconf.h"
 
 #if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE

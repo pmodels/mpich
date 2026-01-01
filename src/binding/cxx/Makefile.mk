@@ -16,7 +16,7 @@ cxx_buildiface_out_files = $(top_srcdir)/src/binding/cxx/mpicxx.h.in \
                            $(top_srcdir)/src/binding/cxx/initcxx.cxx
 if MAINTAINER_MODE
 $(cxx_buildiface_out_files): src/binding/cxx/buildiface-stamp
-src/binding/cxx/buildiface-stamp: $(top_srcdir)/src/binding/cxx/buildiface $(top_srcdir)/src/include/mpi.h.in
+src/binding/cxx/buildiface-stamp: $(top_srcdir)/src/binding/cxx/buildiface $(top_srcdir)/src/include/mpi_mpich.h.in
 	( cd $(top_srcdir)/src/binding/cxx && ./buildiface -nosep -initfile=./cxx.vlist )
 endif MAINTAINER_MODE
 

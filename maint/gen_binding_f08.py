@@ -155,8 +155,7 @@ def main():
     if G.is_autogen():
         # mpi_f08_compile_constants.f90.in
         G.mpih_defines = {}
-        load_mpi_h_in("src/include/mpi.h.in")
-        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
+        load_mpi_h_in("src/include/mpi_mpich.h.in")
         f = "%s/mpi_f08_compile_constants.f90.in" % f08_dir
         dump_compile_constants_f90(f)
 

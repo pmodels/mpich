@@ -6,9 +6,6 @@
 #ifndef DATALOOP_H_INCLUDED
 #define DATALOOP_H_INCLUDED
 
-#include <mpi.h>
-#include <mpl.h>
-
 struct MPIR_Datatype;
 
 #define MPIR_DATALOOP_GET_LOOPPTR(a,lptr_) do {                         \
