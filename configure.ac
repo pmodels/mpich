@@ -797,7 +797,7 @@ PAC_C_CHECK_fPIE_OK
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
-PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc,lib)
+PAC_VPATH_CHECK(src/include/mpi_mpich.h src/env/mpicc,lib)
 
 # ----------------------------------------------------------------------------
 # This test is complicated by the fact that top_srcdir is not set until
@@ -4336,6 +4336,13 @@ case "$host_os" in
         ;;
 esac
 
+AC_CONFIG_COMMANDS([src/include/mpi.h],[
+    if test "$enable_mpi_abi" = "yes" ; then
+        cp $srcdir/src/binding/abi/mpi_abi.h src/include/mpi.h
+    else
+        cp $srcdir/src/include/mpi_mpich.h src/include/mpi.h
+    fi], [enable_mpi_abi="$enable_mpi_abi"])
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_CONFIG_FILES([Makefile \
@@ -4356,7 +4363,7 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.sh \
 	  src/env/mpifort.bash \
           src/env/parkill \
-          src/include/mpi.h \
+          src/include/mpi_mpich.h \
           src/include/mpif90model.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \

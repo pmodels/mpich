@@ -269,9 +269,6 @@ install-exec-hook:
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
 	fi ;
-if BUILD_ABI_LIB
-	cd ${DESTDIR}${includedir} && ln -sf mpi_abi.h mpi.h ;
-endif BUILD_ABI_LIB
 if BUILD_FC_BINDING
 if INSTALL_MPIF90
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \

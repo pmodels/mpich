@@ -6,7 +6,6 @@
 #ifndef OFI_PRE_H_INCLUDED
 #define OFI_PRE_H_INCLUDED
 
-#include <mpi.h>
 #include <rdma/fabric.h>
 #include <rdma/fi_endpoint.h>
 #include <rdma/fi_domain.h>

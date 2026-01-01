@@ -6,7 +6,7 @@
 #ifndef MPIR_POINTERS_H_INCLUDED
 #define MPIR_POINTERS_H_INCLUDED
 
-#include "mpi.h"
+#include "mpi_mpich.h"
 #include "mpichconf.h"
 #include "mpichconfconst.h"
 #include "mpir_assert.h"

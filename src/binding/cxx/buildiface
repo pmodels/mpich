@@ -2062,7 +2062,7 @@ sub build_specials {
     $files[$#files+1] = "initcxx.cxx";
     &print_header;
     print $OUTFD "#include \"mpichconf.h\"\n"; # Requires for HAVE_FORTRAN_BINDING
-    print $OUTFD "#include \"mpi.h\"\n";
+    print $OUTFD "#include \"mpi_mpich.h\"\n";
     print $OUTFD "#include <stdarg.h>\n";    # Required for pcontrol
 
     # Add exception for coding style checker
