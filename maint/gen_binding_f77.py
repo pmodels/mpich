@@ -50,8 +50,7 @@ def main():
     # .in files has to be generated in the source tree
     if G.is_autogen():
         G.mpih_defines = {}
-        load_mpi_h_in("src/include/mpi.h.in")
-        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
+        load_mpi_h_in("src/include/mpi_mpich.h.in")
         f = "%s/mpif.h.in" % f77_dir
         dump_mpif_h(f)
 
