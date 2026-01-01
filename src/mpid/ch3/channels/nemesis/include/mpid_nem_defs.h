@@ -7,7 +7,6 @@
 #define MPID_NEM_DEFS_H_INCLUDED
 
 #include "mpid_nem_datatypes.h"
-#include "mpi.h"
 #include "mpiimpl.h"
 #include "mpidu_init_shm.h"
 

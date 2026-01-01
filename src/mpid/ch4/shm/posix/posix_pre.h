@@ -6,7 +6,6 @@
 #ifndef POSIX_PRE_H_INCLUDED
 #define POSIX_PRE_H_INCLUDED
 
-#include <mpi.h>
 #include "release_gather_types.h"
 
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     800     /* constrained by MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE */
