@@ -46,7 +46,7 @@ foreach my $k ("envvarparse", "cvar_val"){
 }
 
 # Check for special args
-my $mpi_h = "src/include/mpi.h.in";
+my $mpi_h = "src/include/mpi_mpich.h.in";
 my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
 my @files = ();
 my %skipFiles = ();
