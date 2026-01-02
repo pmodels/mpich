@@ -1647,7 +1647,7 @@ def dump_compile_constants_f90(f):
 
         print("end module mpi_f08_compile_constants", file=Out)
 
-def load_mpi_h_in(f):
+def load_mpi_h(f):
     def hex_to_signed_int(s):
         val = int(s, 16)
         if val >= 0x80000000:
