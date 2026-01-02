@@ -207,12 +207,28 @@ fi
 
 # check if compiler supports avx, avx512f
 # also check if the building machine can run them if not force enabled
-AC_CACHE_CHECK([whether -mavx2 is supported], pac_cv_found_avx,
-              [PAC_C_CHECK_COMPILER_OPTION([-mavx2],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
-              pac_cv_found_avx=no,pac_cv_found_avx=yes)
-AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f,
-               [PAC_C_CHECK_COMPILER_OPTION([-mavx512f],pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)],
-               pac_cv_found_avx512f=no,pac_cv_found_avx512f=yes)
+AC_CACHE_CHECK([whether -mavx2 is supported], pac_cv_found_avx, [
+    PAC_PUSH_FLAG([CFLAGS])
+    PAC_APPEND_FLAG([-mavx2], [CFLAGS])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <immintrin.h>]],[[
+        const void *src;
+        void *dest;
+        __m256i ymm = _mm256_loadu_si256(src);
+        _mm256_stream_si256(dest, ymm);
+    ]])],
+    pac_cv_found_avx=yes,pac_cv_found_avx=no)
+    PAC_POP_FLAG([CFLAGS])])
+AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f, [
+    PAC_PUSH_FLAG([CFLAGS])
+    PAC_APPEND_FLAG([-mavx512f], [CFLAGS])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <immintrin.h>]],[[
+        const void *src;
+        void *dest;
+        __m512i zmm = _mm512_loadu_si512(src);
+        _mm512_stream_si512(dest, zmm);
+    ]])],
+    pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)
+    PAC_POP_FLAG([CFLAGS])])
 
 AM_CONDITIONAL([MPL_BUILD_AVX], [test "x$pac_cv_found_avx" = "xyes"])
 if test "x$pac_cv_found_avx" = "xyes"; then
