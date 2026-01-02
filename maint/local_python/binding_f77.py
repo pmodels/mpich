@@ -1061,7 +1061,7 @@ def dump_mpif_h(f):
         print("       SAVE /MPIFCMB5/, /MPIFCMB9/, /MPIFCMBa/", file=Out)
         print("       SAVE /MPIPRIV1/, /MPIPRIV2/, /MPIPRIVC/", file=Out)
 
-def load_mpi_h_in(f):
+def load_mpi_h(f):
     def hex_to_signed_int(s):
         val = int(s, 16)
         if val >= 0x80000000:
