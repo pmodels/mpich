@@ -197,17 +197,7 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
     /* Note that if we are called from Fortran, we must return the values,
      * not the addresses, of these attributes */
     if (HANDLE_IS_BUILTIN(comm_keyval)) {
-        int attr_idx = comm_keyval & 0x0000000f;
         void **attr_val_p = (void **) attribute_val;
-#ifdef HAVE_FORTRAN_BINDING
-        /* This is an address-sized int instead of a Fortran (MPI_Fint)
-         * integer because, even for the Fortran keyvals, the C interface is
-         * used which stores the result in a pointer (hence we need a
-         * pointer-sized int).  Thus we use intptr_t instead of MPI_Fint.
-         * On some 64-bit platforms, such as Solaris-SPARC, using an MPI_Fint
-         * will cause the value to placed into the high, rather than low,
-         * end of the output value. */
-#endif
         *flag = 1;
 
         /* FIXME : We could initialize some of these here; only tag_ub is
@@ -218,25 +208,20 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
          * and the Fortran versions provide the actual value (as an Fint)
          */
         attr_copy = MPIR_Process.attrs;
-        switch (attr_idx) {
-            case 1:    /* TAG_UB */
-            case 2:
+        switch (comm_keyval) {
+            case MPI_TAG_UB:
                 *attr_val_p = &attr_copy.tag_ub;
                 break;
-            case 3:    /* HOST */
-            case 4:
+            case MPI_HOST:
                 *attr_val_p = &attr_copy.host;
                 break;
-            case 5:    /* IO */
-            case 6:
+            case MPI_IO:
                 *attr_val_p = &attr_copy.io;
                 break;
-            case 7:    /* WTIME */
-            case 8:
+            case MPI_WTIME_IS_GLOBAL:
                 *attr_val_p = &attr_copy.wtime_is_global;
                 break;
-            case 9:    /* UNIVERSE_SIZE */
-            case 10:
+            case MPI_UNIVERSE_SIZE:
                 /* This is a special case.  If universe is not set, then we
                  * attempt to get it from the device.  If the device is doesn't
                  * supply a value, then we set the flag accordingly.  Note that
@@ -267,12 +252,10 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
                     }
                 }
                 break;
-            case 11:   /* LASTUSEDCODE */
-            case 12:
+            case MPI_LASTUSEDCODE:
                 *attr_val_p = &attr_copy.lastusedcode;
                 break;
-            case 13:   /* APPNUM */
-            case 14:
+            case MPI_APPNUM:
                 /* This is another special case.  If appnum is negative,
                  * we take that as indicating no value of APPNUM, and set
                  * the flag accordingly */
@@ -708,11 +691,6 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
      * not the addresses, of these attributes */
     if (HANDLE_IS_BUILTIN(win_keyval)) {
         void **attr_val_p = (void **) attribute_val;
-#ifdef HAVE_FORTRAN_BINDING
-        /* Note that this routine only has a Fortran 90 binding,
-         * so the attribute value is an address-sized int */
-        intptr_t *attr_int = (intptr_t *) attribute_val;
-#endif
         *flag = 1;
 
         /*
@@ -740,29 +718,6 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
                 win_ptr->copyModel = win_ptr->model;
                 *attr_val_p = &win_ptr->copyModel;
                 break;
-#ifdef HAVE_FORTRAN_BINDING
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_BASE):
-                /* The Fortran routine that matches this routine should
-                 * provide an address-sized integer, not an MPI_Fint */
-                *attr_int = (MPI_Aint) win_ptr->base;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_SIZE):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->size;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_DISP_UNIT):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->disp_unit;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_CREATE_FLAVOR):
-                *attr_int = win_ptr->create_flavor;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_MODEL):
-                *attr_int = win_ptr->model;
-                break;
-#endif
             default:
                 MPIR_Assert(FALSE);
                 break;

@@ -1720,10 +1720,7 @@ def load_mpi_h_in(f):
                 elif RE.match(r'0x([0-9a-fA-F]+)', val):
                     # direct hex constants (KEYVAL constants)
                     val = int(RE.m.group(1), 16)
-                    if RE.match(r'MPI_(TAG_UB|HOST|IO|WTIME_IS_GLOBAL|UNIVERSE_SIZE|LASTUSEDCODE|APPNUM|WIN_(BASE|SIZE|DISP_UNIT|CREATE_FLAVOR|MODEL))', name):
-                        # KEYVAL, Fortran value is C-value + 1
-                        val = val + 1
-                        val = str(val) + (" ! 0x%08x" % val)
+                    val = str(val) + (" ! 0x%08x" % val)
                 elif RE.match(r'MPI_MAX_', name):
                     # Fortran string buffer limit need be 1-less
                     if re.match(r'@\w+@', val):
