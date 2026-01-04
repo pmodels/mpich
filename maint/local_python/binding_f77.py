@@ -348,7 +348,7 @@ def dump_f77_c_func(func, is_cptr=False):
         code_list_common.append("    %s_i[i] = (MPI_Aint) %s[i];" % (v, v))
         code_list_common.append("}")
         code_list_common.append("#else")
-        code_list_common.append("%s_i = %s;" % (v, v))
+        code_list_common.append("%s_i = (MPI_Aint *) %s;" % (v, v))
         code_list_common.append("#endif")
         end_list_common.append("#ifdef HAVE_AINT_DIFFERENT_THAN_FINT")
         end_list_common.append("free(%s_i);" % v)
