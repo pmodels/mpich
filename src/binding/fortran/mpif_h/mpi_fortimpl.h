@@ -8,13 +8,10 @@
 
 #include "mpichconf.h"
 #include "mpi.h"
-#include "mpir_attr_generic.h"
-#include "mpii_f77interface.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -407,6 +404,7 @@ typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *
 
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
+void MPII_builtin_attr_c2f(int keyval, void **attr);
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op);
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
 int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);

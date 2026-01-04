@@ -29,13 +29,11 @@ def dump_f77_c_func(func, is_cptr=False):
     code_list_B = []
     end_list_B = []
 
-    need_ATTR_AINT = False
     is_custom_fn = False  # custom function body
     need_skip_ierr = False
+    keyval_name = None    # _get_attr functions need check for builtin keyvals
 
-    if re.match(r'MPI_((\w+)_(get|set)_attr|Attr_(put|get))', func['name'], re.IGNORECASE):
-        need_ATTR_AINT = True
-    elif re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
+    if re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
     elif re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
         is_custom_fn = True
@@ -499,9 +497,10 @@ def dump_f77_c_func(func, is_cptr=False):
         c_arg_list_B.append(v)
 
     def dump_attr_in(v, c_type):
+        code_list_common.append("void *%s_i = (void *) (intptr_t) *%s;" % (v, v))
         c_param_list.append("%s *%s" % (c_type, v))
-        c_arg_list_A.append("(void *) (intptr_t) (*%s)" % v)
-        c_arg_list_B.append("(void *) (intptr_t) (*%s)" % v)
+        c_arg_list_A.append("%s_i" % v)
+        c_arg_list_B.append("%s_i" % v)
 
     def dump_attr_out(v, c_type, flag):
         c_param_list.append("%s *%s" % (c_type, v))
@@ -511,7 +510,8 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
-        end_list_common.append("    *%s = (MPI_Aint) %s_i;" % (v, v))
+        end_list_common.append("    MPII_builtin_attr_c2f(*%s, &%s_i);" % (keyval_name, v))
+        end_list_common.append("    *%s = (%s) (intptr_t) %s_i;" % (v, c_type, v))
         end_list_common.append("}")
 
     def dump_sum(codelist, sum_v, sum_n, array):
@@ -556,6 +556,7 @@ def dump_f77_c_func(func, is_cptr=False):
 
     # ----------------------------------
     def process_func_parameters():
+        nonlocal keyval_name
         n = len(func['parameters'])
         i = 0
         while i < n:
@@ -596,6 +597,10 @@ def dump_f77_c_func(func, is_cptr=False):
                 continue
             else:
                 i += 1
+
+            # remember the name of some variables for cross usages
+            if p['kind'] == 'KEYVAL' and re.match(r'mpi_\w+_get_attr|mpi_attr_get', func['name'], re.IGNORECASE):
+                keyval_name = p['name']
 
             if f90_param_need_skip(p):
                 pass;
@@ -847,18 +852,11 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
-    if need_ATTR_AINT:
-        if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
-            if RE.m.group(1) == 'put':
-                c_func_name = "MPII_Comm_set_attr"
-            else:
-                c_func_name = "MPII_Comm_get_attr"
-            c_arg_list_A.append("MPIR_ATTR_INT")
-            c_arg_list_B.append("MPIR_ATTR_INT")
+    if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
+        if RE.m.group(1) == 'put':
+            c_func_name = "MPI_Comm_set_attr"
         else:
-            c_func_name = re.sub(r'MPI_', 'MPII_', func['name'])
-            c_arg_list_A.append("MPIR_ATTR_AINT")
-            c_arg_list_B.append("MPIR_ATTR_AINT")
+            c_func_name = "MPI_Comm_get_attr"
     elif re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
