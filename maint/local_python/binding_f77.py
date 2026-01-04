@@ -479,6 +479,10 @@ def dump_f77_c_func(func, is_cptr=False):
             c_param_list.append("F77_OpFunction *%s" % v)
         elif RE.match(r'MPI_Grequest_(\w+)_function', func_type, re.IGNORECASE):
             c_param_list.append("F77_greq_%s_function *%s" % (RE.m.group(1), v))
+        elif re.match(r'MPI_(\w+)_copy_attr_function|MPI_Copy_function', func_type, re.IGNORECASE):
+            c_param_list.append("F90_CopyFunction *%s" % v)
+        elif re.match(r'MPI_(\w+)_delete_attr_function|MPI_Delete_function', func_type, re.IGNORECASE):
+            c_param_list.append("F90_DeleteFunction *%s" % v)
         else:
             c_param_list.append("%s %s" % (func_type, v))
         c_arg_list_A.append(v)
@@ -771,10 +775,6 @@ def dump_f77_c_func(func, is_cptr=False):
                 if p['length'] is None:
                     if p['param_direction'] == 'out':
                         dump_int_out(p['name'], c_type, False)
-                        if p['kind'] == "KEYVAL":
-                            end_list_common.append("if (!*ierr) {")
-                            end_list_common.append("    MPII_Keyval_set_f90_proxy((int) *%s);" % p['name'])
-                            end_list_common.append("}")
                     elif p['param_direction'] == 'inout' or p['pointer']:
                         if re.match(r'MPI_Info_get_string$', func['name'], re.IGNORECASE):
                             dump_string_len_inout(p['name'])
@@ -863,11 +863,22 @@ def dump_f77_c_func(func, is_cptr=False):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
+    elif RE.match(r'MPI_(\w+)_(create|free)_keyval$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_%s" % RE.m.group(2)
+        f77_type = get_f77_type(RE.m.group(1))
+        c_arg_list_A.append(f77_type)
+        c_arg_list_B.append(f77_type)
+    elif RE.match(r'MPI_Keyval_(create|free)$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_%s" % RE.m.group(1)
+        c_arg_list_A.append("F77_COMM")
+        c_arg_list_B.append("F77_COMM")
+    elif RE.match(r'MPI_(\w+)_free_keyval|MPI_Keyval_free$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_free"
     elif re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_op_create"
     elif RE.match(r'MPI_(\w+)_create_errhandler$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_errhan_create"
-        c_arg_list_A.append("F77_" + RE.m.group(1).upper())
+        c_arg_list_A.append(get_f77_type(RE.m.group(1)))
     elif RE.match(r'MPI_Errhandler_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_errhan_create"
         c_arg_list_A.append("F77_COMM")
@@ -1290,3 +1301,9 @@ def f90_param_need_skip(p):
     if p['kind'] == 'VARARGS':
         return True
     return False
+
+def get_f77_type(Name):
+    if Name == 'Type':
+        return 'F77_DATATYPE'
+    else:
+        return 'F77_' + Name.upper()
