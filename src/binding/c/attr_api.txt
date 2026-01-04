@@ -55,7 +55,6 @@ MPI_Comm_free_keyval:
 
 MPI_Comm_get_attr:
     .desc: Retrieves attribute value by key
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
     .skip: Fortran
     .extra: ignore_revoked_comm
 /*
@@ -78,7 +77,6 @@ MPI_Comm_get_attr:
 MPI_Comm_set_attr:
     .desc: Stores attribute value associated with a key
     .seealso: MPI_Comm_create_keyval, MPI_Comm_delete_attr
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
     .extra: ignore_revoked_comm
 /*
     Notes:
@@ -122,7 +120,6 @@ MPI_Type_free_keyval:
 
 MPI_Type_get_attr:
     .desc: Retrieves attribute value by key
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
     .skip: Fortran
 /*
     Notes:
@@ -143,7 +140,6 @@ MPI_Type_get_attr:
 
 MPI_Type_set_attr:
     .desc: Stores attribute value associated with a key
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
 /*
     Notes:
 
@@ -182,7 +178,6 @@ MPI_Win_free_keyval:
 
 MPI_Win_get_attr:
     .desc: Get attribute cached on an MPI window object
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
     .skip: Fortran
 /*
     Notes:
@@ -209,7 +204,6 @@ MPI_Win_get_attr:
 
 MPI_Win_set_attr:
     .desc: Stores attribute value associated with a key
-    .polymorph: MPIR_Attr_type attr_type=MPIR_ATTR_PTR
 /*
     Notes:
 

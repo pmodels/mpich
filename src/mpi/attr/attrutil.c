@@ -82,7 +82,6 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
     rc = kv->delfn.proxy(kv->delfn.user_function,
                          handle,
                          attr_p->keyval->handle,
-                         attr_p->attrType,
                          (void *) (intptr_t) attr_p->value, attr_p->keyval->extra_state);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* --BEGIN ERROR HANDLING-- */
@@ -126,7 +125,7 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
                           handle,
                           attr_p->keyval->handle,
                           attr_p->keyval->extra_state,
-                          attr_p->attrType, (void *) (intptr_t) attr_p->value, value_copy, flag);
+                          (void *) (intptr_t) attr_p->value, value_copy, flag);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -180,11 +179,10 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
         /* Remember that we need this keyval */
         MPII_Keyval_add_ref(p->keyval);
 
-        new_p->attrType = p->attrType;
         new_p->pre_sentinal = 0;
         /* FIXME: This is not correct in some cases (size(MPI_Aint)>
          * sizeof(intptr_t)) */
-        new_p->value = (MPII_Attr_val_t) (intptr_t) new_value;
+        new_p->value = new_value;
         new_p->post_sentinal = 0;
         new_p->next = 0;
 
@@ -265,19 +263,12 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
 int
 MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
                        int handle,
-                       int keyval,
-                       void *extra_state,
-                       MPIR_Attr_type attrib_type, void *attrib, void **attrib_copy, int *flag)
+                       int keyval, void *extra_state, void *attrib, void **attrib_copy, int *flag)
 {
     void *attrib_val = NULL;
     int ret;
 
-    /* Make sure that the attribute value is delieverd as a pointer */
-    if (MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)) {
-        attrib_val = &attrib;
-    } else {
-        attrib_val = attrib;
-    }
+    attrib_val = attrib;
 #ifndef BUILD_MPI_ABI
     ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
 #else
@@ -291,17 +282,12 @@ MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
 
 int
 MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
-                         int handle,
-                         int keyval, MPIR_Attr_type attrib_type, void *attrib, void *extra_state)
+                         int handle, int keyval, void *attrib, void *extra_state)
 {
     void *attrib_val = NULL;
     int ret;
 
-    /* Make sure that the attribute value is delieverd as a pointer */
-    if (MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT))
-        attrib_val = &attrib;
-    else
-        attrib_val = attrib;
+    attrib_val = attrib;
 #ifndef BUILD_MPI_ABI
     ret = user_function(handle, keyval, attrib_val, extra_state);
 #else

@@ -2294,19 +2294,11 @@ MPIR_Comm_delete_attr_cxx_proxy(
     MPI_Comm_delete_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
 {
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
     MPI::Comm::Delete_attr_function* f = (MPI::Comm::Delete_attr_function*)user_function;
     
     int ttype;
@@ -2360,20 +2352,12 @@ MPII_Comm_copy_attr_cxx_proxy(
     MPI_Comm comm,
     int keyval,
     void* extra_state,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
     )
 {
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
 
     *flag = 0;
     MPI::Comm::Copy_attr_function* f = (MPI::Comm::Copy_attr_function*)user_function;
@@ -2448,21 +2432,13 @@ MPIR_Type_delete_attr_cxx_proxy(
     MPI_Type_delete_attr_function* user_function,
     MPI_Datatype datatype,
     int keyval,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
 {
     MPI::Datatype d = datatype;
     MPI::Datatype::Delete_attr_function* f = (MPI::Datatype::Delete_attr_function*)user_function;
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
     return f( d, keyval, value, extra_state );
 }
 
@@ -2473,7 +2449,6 @@ MPIR_Type_copy_attr_cxx_proxy(
     MPI_Datatype datatype,
     int keyval,
     void* extra_state,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
@@ -2482,14 +2457,7 @@ MPIR_Type_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Datatype d = datatype;
     MPI::Datatype::Copy_attr_function* f = (MPI::Datatype::Copy_attr_function*)user_function;
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
     return f( d, keyval, extra_state, value, new_value, *(bool*)flag );
 }
 
@@ -2518,21 +2486,13 @@ MPIR_Win_delete_attr_cxx_proxy(
     MPI_Win_delete_attr_function* user_function,
     MPI_Win win,
     int keyval,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
 {
     MPI::Win w = win;
     MPI::Win::Delete_attr_function* f = (MPI::Win::Delete_attr_function*)user_function;
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
     return f( w, keyval, value, extra_state );
 }
 
@@ -2543,7 +2503,6 @@ MPIR_Win_copy_attr_cxx_proxy(
     MPI_Win win,
     int keyval,
     void* extra_state,
-    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
@@ -2552,14 +2511,7 @@ MPIR_Win_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Win w = win;
     MPI::Win::Copy_attr_function* f = (MPI::Win::Copy_attr_function*)user_function;
-    void *value = 0;
-    /* Make sure that the attribute value is delivered as a pointer */
-    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
-        value = &attrib;
-    }
-    else{
-        value = attrib;
-    }
+    void *value = attrib;
     return f( w, keyval, extra_state, value, new_value, *(bool*)flag );
 }
 
