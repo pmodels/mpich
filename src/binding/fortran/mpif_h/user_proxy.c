@@ -146,3 +146,79 @@ int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandl
 {
     return MPII_errhan_create(err_fn, errhandler, F77_SESSION);
 }
+
+/* ---- generalized request ----------------- */
+struct F77_greq_state {
+    F77_greq_cancel_function *cancel_fn;
+    F77_greq_free_function *free_fn;
+    F77_greq_query_function *query_fn;
+    void *extra_state;
+};
+
+static int F77_greq_cancel_proxy(void *extra_state, int complete)
+{
+    struct F77_greq_state *p = extra_state;
+
+    MPI_Fint ierr;
+    MPI_Fint complete_i = complete;
+    p->cancel_fn(p->extra_state, &complete_i, &ierr);
+
+    return ierr;
+}
+
+static int F77_greq_free_proxy(void *extra_state)
+{
+    struct F77_greq_state *p = extra_state;
+
+    MPI_Fint ierr;
+    p->free_fn(p->extra_state, &ierr);
+
+    MPL_free(p);
+
+    return ierr;
+}
+
+static int F77_greq_query_proxy(void *extra_state, MPI_Status * status)
+{
+    struct F77_greq_state *p = extra_state;
+
+    MPI_Fint ierr;
+    if (status == MPI_STATUS_IGNORE) {
+        p->query_fn(p->extra_state, MPI_F_STATUS_IGNORE, &ierr);
+    } else {
+#ifdef HAVE_FINT_IS_INT
+        MPI_Fint *status_p = (void *) status;
+        p->query_fn(p->extra_state, status_p, &ierr);
+#else
+        MPI_Fint status_i[MPI_F_STATUS_SIZE];
+        p->query_fn(p->extra_state, status_i, &ierr);
+
+        int *t = (void *) status;
+        for (int i = 0; i < MPI_F_STATUS_SIZE; i++) {
+            t[i] = status_i[i];
+        }
+#endif
+    }
+
+    return ierr;
+}
+
+int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function free_fn,
+                    F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request)
+{
+    struct F77_greq_state *p = MPL_malloc(sizeof(struct F77_greq_state), MPL_MEM_OTHER);
+    p->query_fn = query_fn;
+    p->free_fn = free_fn;
+    p->cancel_fn = cancel_fn;
+    p->extra_state = extra_state;
+
+    int mpi_errno;
+    MPI_Request req_i;
+    mpi_errno = MPI_Grequest_start(F77_greq_query_proxy, F77_greq_free_proxy, F77_greq_cancel_proxy,
+                                   p, &req_i);
+    if (mpi_errno == MPI_SUCCESS) {
+        *request = MPI_Request_toint(req_i);
+    }
+
+    return mpi_errno;
+}
