@@ -11,30 +11,17 @@ implicit none
 
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
-
-public :: MPIR_Grequest_set_lang_fortran
-public :: MPII_Keyval_set_f90_proxy
-
-! Bind to C's enum MPIR_Attr_type in mpir_attr_generic.h
-enum, bind(C)
-    enumerator :: MPIR_ATTR_PTR  = 0
-    enumerator :: MPIR_ATTR_AINT = 1
-    enumerator :: MPIR_ATTR_INT  = 3
-end enum
+public :: MPIR_builtin_attr_c2f
 
 interface
 
-! Just need to tag the lang is Fortran, so it is fine to bind to *_lang_f77
-subroutine MPIR_Grequest_set_lang_fortran(request) bind(C, name="MPII_Grequest_set_lang_f77")
-    use :: mpi_c_interface_types, only : c_Request
-    integer(c_Request), value, intent(in) :: request
-    ! The subroutine is implemented in mpir_request.c on the C side
-end subroutine MPIR_Grequest_set_lang_fortran
-
-subroutine MPII_Keyval_set_f90_proxy(keyval) bind(C, name="MPII_Keyval_set_f90_proxy")
-    use :: iso_c_binding, only : c_int
+subroutine MPIR_builtin_attr_c2f(keyval, attr) &
+    bind(C, name="MPII_builtin_attr_c2f")
+    USE, intrinsic :: iso_c_binding, ONLY : c_int
+    USE :: mpi_f08_compile_constants, ONLY : MPI_ADDRESS_KIND
+    implicit none
     integer(c_int), value, intent(in) :: keyval
-    ! The subroutine is implemented in mpif_h/attr_proxy.c on the C side
+    integer(kind=MPI_ADDRESS_KIND), intent(inout) :: attr
 end subroutine
 
 end interface

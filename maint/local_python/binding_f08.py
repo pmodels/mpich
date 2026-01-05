@@ -17,8 +17,6 @@ def get_cdesc_name(func, is_large):
 
 def get_f08_c_name(func, is_large):
     name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
-    if RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
-        name = re.sub(r'MPIR_', r'MPII_', name)
     if is_large:
         name += "_large"
     return name
@@ -235,32 +233,6 @@ def dump_f08_wrappers_f(func, is_large):
     def process_integer(p):
         nonlocal need_check_int_kind
 
-        # deal with user callbacks
-        def set_grequest_lang(arg):
-            # assume need_check_int_kind is False
-            uses['MPI_SUCCESS'] = 1
-            uses['MPIR_Grequest_set_lang_fortran'] = 1
-            convert_list_2.append("IF (ierror_c == MPI_SUCCESS) THEN")
-            convert_list_2.append("    call MPIR_Grequest_set_lang_fortran(%s)" % arg)
-            convert_list_2.append("END IF")
-
-        def set_attr_proxy(arg):
-            # assume need_check_int_kind is False
-            uses['MPI_SUCCESS'] = 1
-            uses['MPII_Keyval_set_f90_proxy'] = 1
-            convert_list_2.append("IF (ierror_c == MPI_SUCCESS) THEN")
-            convert_list_2.append("    call MPII_Keyval_set_f90_proxy(%s)" % arg)
-            convert_list_2.append("END IF")
-
-        def check_proxy_requirement(func_name, p):
-            if p['kind'] == "REQUEST" and RE.match(r'mpi_grequest_start', func_name, re.IGNORECASE):
-                set_grequest_lang(arg_2)
-                return True
-            elif p['kind'] == "KEYVAL" and RE.match(r'mpi_(.*)_create_keyval', func_name, re.IGNORECASE):
-                set_attr_proxy(arg_2)
-                return True
-            return False
-
         def info_get_string_buflen():
             convert_list_pre.append("IF (buflen > 0) THEN")
             convert_list_pre.append("    buflen_c = buflen + 1")
@@ -293,10 +265,6 @@ def dump_f08_wrappers_f(func, is_large):
             if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                 convert_list_1.append("%s = %s" % (arg_2, arg_1))
             if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
-                if check_proxy_requirement(func['name'], p):
-                    # proxy doesn't work with the branches
-                    need_check_int_kind = False
-
                 convert_list_2.append("%s = %s" % (arg_1, arg_2))
         return (arg_1, arg_2)
 
@@ -622,12 +590,12 @@ def dump_f08_wrappers_f(func, is_large):
         arg_list_2.append("%s_len" % v)
 
     # ----
-    has_attribute_val = False
+    keyval_name = None  # needed for converting attributes (which need to check for builtin keyval)
     for p in func['parameters']:
         if f08_param_need_skip(p, f08_mapping):
             continue
-        if p['kind'] == "ATTRIBUTE_VAL":
-            has_attribute_val = True
+        if p['kind'] == 'KEYVAL':
+            keyval_name = p['name']
         f_param_list.append(p['name'])
         f_decl = get_F_decl(p, f08_mapping)
         if is_alltoallvw and p['name'] == 'sendbuf':
@@ -642,6 +610,10 @@ def dump_f08_wrappers_f(func, is_large):
                 uses['c_loc'] = 1
             elif p['kind'] == "INFO":
                 arg_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], p['_array_length'])
+            elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
+                arg_1 = p['name']
+                convert_list_post.append("IF (flag_c /= 0) CALL MPIR_builtin_attr_c2f(%s, %s)" % (keyval_name, p['name']))
+                uses["MPIR_builtin_attr_c2f"] = 1
             else:
                 # no conversion needed, e.g. choice buffer, MPI_Aint, etc.
                 arg_1 = p['name']
@@ -675,11 +647,7 @@ def dump_f08_wrappers_f(func, is_large):
             uses[RE.m.group(1)] = 1
 
     # -- extra args for wrapper functions
-    if has_attribute_val:
-        uses["MPIR_ATTR_AINT"] = 1
-        arg_list_1.append("MPIR_ATTR_AINT")
-        arg_list_2.append("MPIR_ATTR_AINT")
-    elif func['name'] == "MPI_Comm_spawn":
+    if func['name'] == "MPI_Comm_spawn":
         post_string_len("argv")
     elif func['name'] == "MPI_Comm_spawn_multiple":
         post_string_len("array_of_commands")
@@ -796,12 +764,7 @@ def dump_mpi_c_interface_cdesc(func, is_large):
 
 def dump_mpi_c_interface_nobuf(func, is_large):
     name = get_f08_c_name(func, is_large)
-    if RE.match(r'mpi_(comm|type|win)_(set|get)_attr', func['name'], re.IGNORECASE):
-        # use C wrapper functions exposed by C binding
-        c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
-        if is_large:
-            c_name += "_large"
-    elif RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
+    if RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
         c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
@@ -809,6 +772,8 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     elif RE.match(r'mpi_op_create', func['name'], re.IGNORECASE) and not is_large:
         # defined in src/binding/fortran/mpif_h/user_proxy.c
         c_name = "MPII_op_create"
+    elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
+        c_name = "MPII_greq_start"
     else:
         # uses PMPI c binding directly
         c_name = 'P' + get_function_name(func, is_large)
@@ -842,12 +807,7 @@ def dump_interface_function(func, name, c_name, is_large):
         check_decl_uses(c_decl, uses)
 
     # -- extra parameters for wrapper functions
-    if RE.match(r'MPII_\w+_(get|set)_attr', c_name):
-        # MPII attribute wrapper functions
-        f_param_list.append("attr_type")
-        decl_list.append("INTEGER(kind(MPIR_ATTR_AINT)), VALUE, INTENT(in) :: attr_type")
-        uses['MPIR_ATTR_AINT'] = 1
-    elif func['name'] == "MPI_Comm_spawn":
+    if func['name'] == "MPI_Comm_spawn":
         f_param_list.append("argv_elem_len")
         decl_list.append("INTEGER(c_int), VALUE, INTENT(in) :: argv_elem_len")
     elif func['name'] == "MPI_Comm_spawn_multiple":
@@ -963,7 +923,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_ATTR_AINT|MPII_.*_proxy|MPIR.*set_lang|MPIR_.*string_(f2c|c2f)', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_builtin_attr_c2f', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)
