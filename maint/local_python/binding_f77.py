@@ -477,6 +477,8 @@ def dump_f77_c_func(func, is_cptr=False):
             c_param_list.append("F77_ErrFunction %s" % v)
         elif re.match(r'MPI_User_function', func_type, re.IGNORECASE):
             c_param_list.append("F77_OpFunction *%s" % v)
+        elif RE.match(r'MPI_Grequest_(\w+)_function', func_type, re.IGNORECASE):
+            c_param_list.append("F77_greq_%s_function *%s" % (RE.m.group(1), v))
         else:
             c_param_list.append("%s %s" % (func_type, v))
         c_arg_list_A.append(v)
@@ -760,6 +762,10 @@ def dump_f77_c_func(func, is_cptr=False):
                 # use MPII_op_create(opfn, *commute, op)
                 c_param_list.append("MPI_Fint *%s" % p['name'])
                 c_arg_list_A.append(p['name'])
+            elif p['kind'] == "REQUEST" and re.match(r'mpi_grequest_start$', func['name'], re.IGNORECASE):
+                # use MPII_greq_start
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             elif p['kind'] in G.handle_mpir_types or c_mapping[p['kind']] == "int":
                 c_type = c_mapping[p['kind']]
                 if p['length'] is None:
@@ -768,10 +774,6 @@ def dump_f77_c_func(func, is_cptr=False):
                         if p['kind'] == "KEYVAL":
                             end_list_common.append("if (!*ierr) {")
                             end_list_common.append("    MPII_Keyval_set_f90_proxy((int) *%s);" % p['name'])
-                            end_list_common.append("}")
-                        elif re.match(r'MPI_Grequest_start', func['name'], re.IGNORECASE):
-                            end_list_common.append("if (!*ierr) {")
-                            end_list_common.append("    MPII_Grequest_set_lang_f77((int) *%s);" % p['name'])
                             end_list_common.append("}")
                     elif p['param_direction'] == 'inout' or p['pointer']:
                         if re.match(r'MPI_Info_get_string$', func['name'], re.IGNORECASE):
@@ -869,6 +871,8 @@ def dump_f77_c_func(func, is_cptr=False):
     elif RE.match(r'MPI_Errhandler_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_errhan_create"
         c_arg_list_A.append("F77_COMM")
+    elif re.match(r'MPI_Grequest_start$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_greq_start"
 
     if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"
