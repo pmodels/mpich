@@ -45,9 +45,6 @@
 typedef enum MPIR_Lang_t {
     MPIR_LANG__C,
     MPIR_LANG__X
-#ifdef HAVE_FORTRAN_BINDING
-        , MPIR_LANG__FORTRAN, MPIR_LANG__FORTRAN90
-#endif
 #ifdef HAVE_CXX_BINDING
         , MPIR_LANG__CXX
 #endif
