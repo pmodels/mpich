@@ -6,6 +6,8 @@
 #include "mpi_fortimpl.h"
 #include <assert.h>
 
+#include "mpl.h"
+
 /* ---- user op ----------------- */
 struct F77_op_state {
     F77_OpFunction *opfn;
@@ -23,12 +25,12 @@ static void F77_op_proxy(void *invec, void *inoutvec, MPI_Count len, MPI_Datatyp
 
 static void F77_op_free(void *extra_state)
 {
-    free(extra_state);
+    MPL_free(extra_state);
 }
 
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op)
 {
-    struct F77_op_state *p = malloc(sizeof(struct F77_op_state));
+    struct F77_op_state *p = MPL_malloc(sizeof(struct F77_op_state), MPL_MEM_OTHER);
     p->opfn = opfn;
 
     MPI_Op op_i;
@@ -36,7 +38,7 @@ int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op)
     if (ret == MPI_SUCCESS) {
         *op = MPI_Op_c2f(op_i);
     } else {
-        free(p);
+        MPL_free(p);
     }
 
     return ret;
@@ -85,12 +87,12 @@ static void F77_session_errhan_proxy(MPI_Session session, int error_code, void *
 
 static void F77_errhan_free(void *extra_state)
 {
-    free(extra_state);
+    MPL_free(extra_state);
 }
 
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type)
 {
-    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
+    struct F77_errhan_state *p = MPL_malloc(sizeof(struct F77_errhan_state), MPL_MEM_OTHER);
     p->err_fn = err_fn;
 
     MPI_Errhandler errhandler_i;
@@ -118,7 +120,7 @@ int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77
     if (ret == MPI_SUCCESS) {
         *errhandler = MPI_Errhandler_c2f(errhandler_i);
     } else {
-        free(p);
+        MPL_free(p);
     }
 
     return ret;
@@ -127,73 +129,20 @@ int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77
 /* For use by MPI_F08 */
 int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
 {
-    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
-    p->err_fn = err_fn;
-
-    MPI_Errhandler errhandler_i;
-    int ret = MPI_SUCCESS;
-
-    ret = MPIX_Comm_create_errhandler_x(F77_comm_errhan_proxy, F77_errhan_free, p, &errhandler_i);
-    if (ret == MPI_SUCCESS) {
-        *errhandler = MPI_Errhandler_c2f(errhandler_i);
-    } else {
-        free(p);
-    }
-
-    return ret;
+    return MPII_errhan_create(err_fn, errhandler, F77_COMM);
 }
 
 int MPII_File_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
 {
-    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
-    p->err_fn = err_fn;
-
-    MPI_Errhandler errhandler_i;
-    int ret = MPI_SUCCESS;
-
-    ret = MPIX_File_create_errhandler_x(F77_file_errhan_proxy, F77_errhan_free, p, &errhandler_i);
-    if (ret == MPI_SUCCESS) {
-        *errhandler = MPI_Errhandler_c2f(errhandler_i);
-    } else {
-        free(p);
-    }
-
-    return ret;
+    return MPII_errhan_create(err_fn, errhandler, F77_FILE);
 }
 
 int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
 {
-    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
-    p->err_fn = err_fn;
-
-    MPI_Errhandler errhandler_i;
-    int ret = MPI_SUCCESS;
-
-    ret = MPIX_Win_create_errhandler_x(F77_win_errhan_proxy, F77_errhan_free, p, &errhandler_i);
-    if (ret == MPI_SUCCESS) {
-        *errhandler = MPI_Errhandler_c2f(errhandler_i);
-    } else {
-        free(p);
-    }
-
-    return ret;
+    return MPII_errhan_create(err_fn, errhandler, F77_WIN);
 }
 
 int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
 {
-    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
-    p->err_fn = err_fn;
-
-    MPI_Errhandler errhandler_i;
-    int ret = MPI_SUCCESS;
-
-    ret = MPIX_Session_create_errhandler_x(F77_session_errhan_proxy, F77_errhan_free,
-                                           p, &errhandler_i);
-    if (ret == MPI_SUCCESS) {
-        *errhandler = MPI_Errhandler_c2f(errhandler_i);
-    } else {
-        free(p);
-    }
-
-    return ret;
+    return MPII_errhan_create(err_fn, errhandler, F77_SESSION);
 }

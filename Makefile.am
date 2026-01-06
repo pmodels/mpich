@@ -125,7 +125,7 @@ mpi_abi_sources =
 mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
-mpifort_convenience_libs =
+mpifort_convenience_libs = @mpllib@
 
 lib_LTLIBRARIES =
 
