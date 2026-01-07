@@ -101,6 +101,7 @@ typedef struct MPII_Keyval {
     void *extra_state;
     copy_function copyfn;
     delete_function delfn;
+    MPIX_Destructor_function *destructor_fn;
     /* other, device-specific information */
 #ifdef MPID_DEV_KEYVAL_DECL
      MPID_DEV_KEYVAL_DECL
@@ -112,11 +113,18 @@ typedef struct MPII_Keyval {
         MPIR_Object_add_ref(_keyval);                                 \
     } while (0)
 
-#define MPII_Keyval_release_ref(_keyval, _inuse)                      \
-    do {                                                                \
-        MPIR_Object_release_ref(_keyval, _inuse);                     \
-    } while (0)
-
+extern MPIR_Object_alloc_t MPII_Keyval_mem;
+MPL_STATIC_INLINE_PREFIX void MPIR_Keyval_release(MPII_Keyval * keyval_ptr)
+{
+    int in_use;
+    MPIR_Object_release_ref(keyval_ptr, &in_use);
+    if (!in_use) {
+        if (keyval_ptr->destructor_fn) {
+            keyval_ptr->destructor_fn(keyval_ptr->extra_state);
+        }
+        MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
+    }
+}
 
 /* Attribute values in C/C++ are void * and in Fortran are ADDRESS_SIZED
    integers.  Normally, these are the same size, but in at least one

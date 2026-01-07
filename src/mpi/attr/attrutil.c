@@ -238,14 +238,7 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
          * even if the attr delete failed, as we then remove the
          * attribute.
          */
-        {
-            int in_use;
-            /* Decrement the use of the keyval */
-            MPII_Keyval_release_ref(p->keyval, &in_use);
-            if (!in_use) {
-                MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-            }
-        }
+        MPIR_Keyval_release(p->keyval);
 
         MPIR_Handle_obj_free(&MPID_Attr_mem, p);
 

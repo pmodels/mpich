@@ -13,10 +13,7 @@ void MPIR_free_keyval(MPII_Keyval * keyval_ptr)
 
     if (!keyval_ptr->was_freed) {
         keyval_ptr->was_freed = 1;
-        MPII_Keyval_release_ref(keyval_ptr, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
-        }
+        MPIR_Keyval_release(keyval_ptr);
     }
 }
 
@@ -50,9 +47,10 @@ int MPIR_Win_free_keyval_impl(MPII_Keyval * keyval_ptr)
     return MPI_SUCCESS;
 }
 
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                                 int *comm_keyval, void *extra_state)
+static int create_keyval_x(MPI_Comm_copy_attr_function * copy_fn,
+                           MPI_Comm_delete_attr_function * delete_fn,
+                           MPIX_Destructor_function * destructor_fn,
+                           int *keyval, void *extra_state, MPII_Object_kind kind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
@@ -67,6 +65,35 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
         MPIR_Process.attr_dup = MPIR_Attr_dup_list;
         MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
+
+    /* The handle encodes the keyval kind.  Modify it to have the correct
+     * field */
+    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (kind << 22);
+    MPIR_Object_set_ref(keyval_ptr, 1);
+    keyval_ptr->was_freed = 0;
+    keyval_ptr->kind = kind;
+    keyval_ptr->extra_state = extra_state;
+    keyval_ptr->copyfn.user_function = copy_fn;
+    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
+    keyval_ptr->delfn.user_function = delete_fn;
+    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
+    keyval_ptr->destructor_fn = destructor_fn;
+
+    MPIR_OBJ_PUBLISH_HANDLE(*keyval, keyval_ptr->handle);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+
+    goto fn_exit;
+}
+
+int MPIR_Comm_create_keyval_x_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                   MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                                   MPIX_Destructor_function * destructor_fn,
+                                   int *comm_keyval, void *extra_state)
+{
 #ifdef BUILD_MPI_ABI
     if (comm_copy_attr_fn == MPI_COMM_NULL_COPY_FN) {
         comm_copy_attr_fn = NULL;
@@ -78,45 +105,15 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_COMM << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_COMM;
-    keyval_ptr->extra_state = extra_state;
-    keyval_ptr->copyfn.user_function = comm_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = comm_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
-    MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
+    return create_keyval_x(comm_copy_attr_fn, comm_delete_attr_fn, destructor_fn,
+                           comm_keyval, extra_state, MPIR_COMM);
 }
 
-int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
-                                 MPI_Type_delete_attr_function * type_delete_attr_fn,
-                                 int *type_keyval, void *extra_state)
+int MPIR_Type_create_keyval_x_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
+                                   MPI_Type_delete_attr_function * type_delete_attr_fn,
+                                   MPIX_Destructor_function * destructor_fn,
+                                   int *type_keyval, void *extra_state)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
-
-    MPIR_FUNC_ENTER;
-
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
 #ifdef BUILD_MPI_ABI
     if (type_copy_attr_fn == MPI_TYPE_NULL_COPY_FN) {
         type_copy_attr_fn = NULL;
@@ -128,49 +125,18 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_DATATYPE << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_DATATYPE;
-    keyval_ptr->extra_state = extra_state;
-    /* Cast since we are assigning MPI_Type_copy_attr_function to
-     * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) type_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) type_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
     /* Tell finalize to check for attributes on permanent types */
     MPII_Datatype_attr_finalize();
 
-    MPIR_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return create_keyval_x(type_copy_attr_fn, type_delete_attr_fn, destructor_fn,
+                           type_keyval, extra_state, MPIR_DATATYPE);
 }
 
-int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
-                                MPI_Win_delete_attr_function * win_delete_attr_fn,
-                                int *win_keyval, void *extra_state)
+int MPIR_Win_create_keyval_x_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
+                                  MPI_Win_delete_attr_function * win_delete_attr_fn,
+                                  MPIX_Destructor_function * destructor_fn,
+                                  int *win_keyval, void *extra_state)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
-
-    MPIR_FUNC_ENTER;
-
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
 #ifdef BUILD_MPI_ABI
     if (win_copy_attr_fn == MPI_WIN_NULL_COPY_FN) {
         win_copy_attr_fn = NULL;
@@ -182,27 +148,32 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_WIN << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_WIN;
-    keyval_ptr->extra_state = extra_state;
-    /* Cast since we are assigning MPI_Win_copy_attr_function to
-     * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) win_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) win_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
+    return create_keyval_x(win_copy_attr_fn, win_delete_attr_fn, destructor_fn,
+                           win_keyval, extra_state, MPIR_WIN);
+}
 
-    MPIR_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
+int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                                 int *comm_keyval, void *extra_state)
+{
+    return MPIR_Comm_create_keyval_x_impl(comm_copy_attr_fn, comm_delete_attr_fn, NULL,
+                                          comm_keyval, extra_state);
+}
 
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
+                                 MPI_Type_delete_attr_function * type_delete_attr_fn,
+                                 int *type_keyval, void *extra_state)
+{
+    return MPIR_Type_create_keyval_x_impl(type_copy_attr_fn, type_delete_attr_fn, NULL,
+                                          type_keyval, extra_state);
+}
+
+int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
+                                MPI_Win_delete_attr_function * win_delete_attr_fn,
+                                int *win_keyval, void *extra_state)
+{
+    return MPIR_Win_create_keyval_x_impl(win_copy_attr_fn, win_delete_attr_fn, NULL,
+                                         win_keyval, extra_state);
 }
 
 /* Find the requested attribute.  If it exists, return either the attribute
@@ -492,11 +463,7 @@ static void delete_attr(MPIR_Attribute ** attributes_list, MPIR_Attribute * attr
         if (p == attr) {
             *old_p = p->next;
 
-            int in_use;
-            MPII_Keyval_release_ref(p->keyval, &in_use);
-            if (!in_use) {
-                MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-            }
+            MPIR_Keyval_release(p->keyval);
             MPID_Attr_free(p);
             break;
         }
