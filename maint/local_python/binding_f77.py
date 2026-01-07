@@ -863,17 +863,15 @@ def dump_f77_c_func(func, is_cptr=False):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
-    elif RE.match(r'MPI_(\w+)_(create|free)_keyval$', func['name'], re.IGNORECASE):
-        c_func_name = "MPII_Keyval_%s" % RE.m.group(2)
+    elif RE.match(r'MPI_(\w+)_create_keyval$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_create"
         f77_type = get_f77_type(RE.m.group(1))
         c_arg_list_A.append(f77_type)
         c_arg_list_B.append(f77_type)
-    elif RE.match(r'MPI_Keyval_(create|free)$', func['name'], re.IGNORECASE):
-        c_func_name = "MPII_Keyval_%s" % RE.m.group(1)
+    elif RE.match(r'MPI_Keyval_create$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_create"
         c_arg_list_A.append("F77_COMM")
         c_arg_list_B.append("F77_COMM")
-    elif RE.match(r'MPI_(\w+)_free_keyval|MPI_Keyval_free$', func['name'], re.IGNORECASE):
-        c_func_name = "MPII_Keyval_free"
     elif re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_op_create"
     elif RE.match(r'MPI_(\w+)_create_errhandler$', func['name'], re.IGNORECASE):
@@ -1286,7 +1284,7 @@ def dump_fortran_line(s):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session)_create_errhandler_x|op_create_x)', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90
