@@ -9,8 +9,6 @@
  * the same routine. */
 void MPIR_free_keyval(MPII_Keyval * keyval_ptr)
 {
-    int in_use;
-
     if (!keyval_ptr->was_freed) {
         keyval_ptr->was_freed = 1;
         MPIR_Keyval_release(keyval_ptr);

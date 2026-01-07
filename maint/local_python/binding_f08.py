@@ -801,7 +801,7 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
         if is_large:
             c_name += "_large"
-    elif RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
         c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
@@ -1358,7 +1358,7 @@ def check_func_directives(func):
     elif RE.match(r'mpi_keyval_(create|free)$', func['name'], re.IGNORECASE):
         # deprecated and not defined in mpi_f08
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_op_create_x|mpix_(\w+)_create_errhandler_x$', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpix_op_create_x|mpix_(\w+)_create_(errhandler|keyval)_x$', func['name'], re.IGNORECASE):
         # c-only
         func['_skip_fortran'] = 1
 

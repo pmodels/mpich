@@ -7,7 +7,6 @@
 #include <assert.h>
 
 #include "mpl.h"
-#include "uthash.h"
 
 /* ---- attr -----*/
 struct F77_attr_state {
@@ -15,10 +14,7 @@ struct F77_attr_state {
     F90_CopyFunction *copy_fn;
     F90_DeleteFunction *delete_fn;
     void *extra_state;
-    UT_hash_handle hh;
 };
-
-static struct F77_attr_state *keyval_hash = NULL;
 
 static int F77_attr_copy_proxy(int handle, int keyval, void *context,
                                void *value_in, void *value_out, int *flag)
@@ -50,6 +46,11 @@ static int F77_attr_delete_proxy(int handle, int keyval, void *value, void *cont
 
     p->delete_fn(&fhandle, &fkeyval, &fvalue, fextra, &ierr);
     return (int) ierr;
+}
+
+static void F77_keyval_free(void *extra_state)
+{
+    MPL_free(extra_state);
 }
 
 static int F77_Comm_attr_copy_proxy(MPI_Comm comm, int keyval, void *context,
@@ -102,16 +103,19 @@ int MPII_Keyval_create(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn, i
     int mpi_errno = MPI_SUCCESS;
     switch (type) {
         case F77_COMM:
-            mpi_errno = MPI_Comm_create_keyval(F77_Comm_attr_copy_proxy, F77_Comm_attr_delete_proxy,
-                                               keyval_out, p);
+            mpi_errno = MPIX_Comm_create_keyval_x(F77_Comm_attr_copy_proxy,
+                                                  F77_Comm_attr_delete_proxy,
+                                                  F77_keyval_free, keyval_out, p);
             break;
         case F77_WIN:
-            mpi_errno = MPI_Win_create_keyval(F77_Win_attr_copy_proxy, F77_Win_attr_delete_proxy,
-                                              keyval_out, p);
+            mpi_errno = MPIX_Win_create_keyval_x(F77_Win_attr_copy_proxy,
+                                                 F77_Win_attr_delete_proxy,
+                                                 F77_keyval_free, keyval_out, p);
             break;
         case F77_DATATYPE:
-            mpi_errno = MPI_Type_create_keyval(F77_Type_attr_copy_proxy, F77_Type_attr_delete_proxy,
-                                               keyval_out, p);
+            mpi_errno = MPIX_Type_create_keyval_x(F77_Type_attr_copy_proxy,
+                                                  F77_Type_attr_delete_proxy,
+                                                  F77_keyval_free, keyval_out, p);
             break;
         default:
             assert(0);
@@ -119,48 +123,10 @@ int MPII_Keyval_create(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn, i
 
     if (mpi_errno == MPI_SUCCESS) {
         p->keyval = *keyval_out;
-        HASH_ADD_INT(keyval_hash, keyval, p, MPL_MEM_OTHER);
     } else {
         MPL_free(p);
     }
 
-    return mpi_errno;
-}
-
-int MPII_Keyval_free(int *keyval, enum F77_handle_type type)
-{
-    struct F77_attr_state *p;
-    HASH_FIND_INT(keyval_hash, keyval, p);
-    if (p) {
-        MPL_free(p);
-    } else {
-        /* The keyval is probably created from C or another binding. The former
-         * is OK, but the latter would be problemetic. We shouldn't allow cross-
-         * language split of callback creation and free. Otherwise, the C impl is
-         * forced to handle *all possible* language bindings.
-         *
-         * Potential cases, where callbacks are registered and deregistered:
-         * * within the same language binding - OK
-         * * C and Fortran - OK, Fortran need ignore clean up
-         * * Fortran and C - Not OK, potentially a memory leak
-         * * One language binding and another language binding - Not OK, potentially memory leak
-         */
-    }
-
-    int mpi_errno = MPI_SUCCESS;;
-    switch (type) {
-        case F77_COMM:
-            mpi_errno = MPI_Comm_free_keyval(keyval);
-            break;
-        case F77_WIN:
-            mpi_errno = MPI_Win_free_keyval(keyval);
-            break;
-        case F77_DATATYPE:
-            mpi_errno = MPI_Type_free_keyval(keyval);
-            break;
-        default:
-            assert(0);
-    }
     return mpi_errno;
 }
 
@@ -181,21 +147,6 @@ int MPII_Type_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_
                             int *keyval_out, void *extra_state)
 {
     return MPII_Keyval_create(copy_fn, delete_fn, keyval_out, extra_state, F77_DATATYPE);
-}
-
-int MPII_Comm_free_keyval(int *keyval)
-{
-    return MPII_Keyval_free(keyval, F77_COMM);
-}
-
-int MPII_Win_free_keyval(int *keyval)
-{
-    return MPII_Keyval_free(keyval, F77_WIN);
-}
-
-int MPII_Type_free_keyval(int *keyval)
-{
-    return MPII_Keyval_free(keyval, F77_DATATYPE);
 }
 
 /* ---- user op ----------------- */
