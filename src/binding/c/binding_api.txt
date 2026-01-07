@@ -46,3 +46,24 @@ MPIX_Session_create_errhandler_x:
     extra_state: EXTRA_STATE, [extra state]
     errhandler: ERRHANDLER, direction=out
     .desc: Creates an MPI-style session errorhandler with an extra_state
+
+MPIX_Comm_create_keyval_x:
+    comm_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Comm_copy_attr_function, [copy callback function for comm_keyval]
+    comm_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Comm_delete_attr_function, [delete callback function for comm_keyval]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
+    comm_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
+
+MPIX_Type_create_keyval_x:
+    type_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Type_copy_attr_function, [copy callback function for type_keyval]
+    type_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Type_delete_attr_function, [delete callback function for type_keyval]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
+    type_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
+
+MPIX_Win_create_keyval_x:
+    win_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Win_copy_attr_function, [copy callback function for win_keyval]
+    win_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Win_delete_attr_function, [delete callback function for win_keyval]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
+    win_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
