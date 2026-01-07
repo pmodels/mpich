@@ -13,10 +13,6 @@
 #include <stdlib.h>
 #include "mpl_dbg.h"
 
-#if defined (MPL_USE_DBG_LOGGING)
-extern MPL_dbg_class MPIR_DBG_STRING;
-#endif /* MPL_USE_DBG_LOGGING */
-
 #define MPL_STR_QUOTE_CHAR     '\"'
 #define MPL_STR_QUOTE_STR      "\""
 #define MPL_STR_DELIM_CHAR     '#'
