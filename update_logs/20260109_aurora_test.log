@@ -1,0 +1,68 @@
+UPDATE aurora_test bc1c14cc31e615dedbcc7ced1fdd2166b31429d4 126f8163ae
+
+    current aurora_test HEAD ef439d5092
+
+dddd08c833 2025-11-03 ch4: use 1 bit to distinguish message direction8238f6dbe2 2025-10-31 ch4/cma: check ptrace_scope at init
+659c335e88 2025-11-05 configure: fix a typo using == instead of =
+10894a7927 2025-10-30 ch4/abort: missing critical section in abort path
+7a9e39bc51 2025-11-04 test/datatype: use error return for checking optional types
+7305a33102 2025-10-30 ch4/posix: clean up shm header size calculation
+5f9f5a206b 2025-11-06 ucc: add support for UCC in mpid/common
+a441f78971 2025-11-06 ucc: add support for UCC in mpid/ch4:ucx
+2be053883a 2025-11-06 mpid/ucc: make BUILD_UCC optional
+3b9ce1d1a0 2025-11-06 ucx/coll: suppress warnings due to unused label
+ef2033951e 2025-11-05 coll: cleanup a couple more outdated CVARs
+69f5558b8a 2025-11-05 ch4/cma: fix typo in probing ptrace_scope
+41fee1a6fb 2025-11-07 ch4/cma: fix ptrace_scope check
+92ff17799e 2025-11-07 misc: update version to 5.0.0b1 and update CHANGES
+8af5b4bde8 2025-11-05 misc: fine tune default fast copy threshold
+27369c294a 2025-11-10 common/genq: fix false sharing and alignment issue in shared pool
+6d4d757e14 2025-10-23 ch4: initialize `num_worlds` before `MPIR_ERR_CHKANDJUMP`
+60e11e48da 2025-10-23 mpl: remove `-Wdiscarded-qualifiers` ignore pragma
+564924ee3b 2025-10-23 op: only define software f16 routines ifndef `MPIR_FLOAT16_CTYPE`
+c0c8badb45 2025-10-23 ch4/ucx: explicitly cast `UCS_OK` to `ucs_status_ptr_t`
+b87eed9637 2025-11-07 configure: define MPICH_COMMIT_HASH
+2e4a16035b 2025-10-22 init: add MPICH version to DEBUG_SUMMARY
+6e55376965 2025-11-07 mpl: use sched_yield by default
+06126c5484 2025-10-22 ch4/progress: use MPID_Thread_yield for progress throttle
+2c12245515 2025-11-18 hydra: fix standalone build on MacOS
+d303a4cc5c 2025-11-13 abi: do not convert builtin handles in _{from,to}int
+aa24f2550e 2025-11-21 abi: handle MPI_File_(c2f|f2c|toint|fromint)
+181837a845 2025-11-13 romio: offset handle conversion by ROMIO_HANDLE_OFFSET
+b1d8b50c1d 2025-11-24 makefile: fix missing semicolon in `uninstall-local`
+cfb074b24f 2025-11-25 cma: fix CMA detection
+8be257440f 2025-11-17 mpid/thread: Remove thread unsafe lock ownership check
+1b697435a4 2025-11-18 mpid/sched: Fix thread unsafe recursive check
+6a0a15d8fb 2025-11-18 comm: Fix thread unsafe variable access
+fe46e5d6fc 2025-11-18 ch4/ofi: Remove unused globals for striping and hashing
+b38ed8aa56 2025-11-18 comm: Fix thread unsafe accesses in contextid allocation
+3be6ffc346 2025-11-18 comm: Remove volatile from global variables
+81102cd2a0 2025-11-18 ch4/proc: Add lock when creating new av tables
+d9c006fa25 2025-11-20 mpl: Fix configure checks for pthread attributes
+b4b997182e 2025-11-25 test/threads: Make shared variables atomic
+91245273a2 2025-12-01 test/threads: Fix potential thread leak
+3e21a89e80 2025-12-01 ch4: Remove unused function
+1a4ef60ede 2025-12-01 test/xfail: th_taskmanager triggers a data race
+ca32df6be1 2025-12-04 autogen: add missing echo in checking commit hash
+fea4ea721a 2025-12-04 configure: prevent empty variables in -eq test
+9b17fdc756 2025-12-04 config: add rpaths of dependency libraries
+ab249afa58 2025-12-04 hydra: add RPATHS
+5c8aa6683f 2025-12-02 hydra: do not use -lhydra to link
+b65aaf890e 2025-12-02 mpid/shm: make page_sz optional in MPIDU_shm_get_mapsize
+70eaa5062a 2025-12-02 ch4/mpidig_win: refactor win_shm_alloc_impl
+b6e5cf6bb6 2025-12-03 ch4/win: add symheap_required info hint
+29ad9a0123 2025-12-03 test: add win_info test for symheap_required
+c4c2294d2a 2025-12-06 autogen: standardize autogen.sh
+c6b8bd895a 2025-12-06 autogen: add libtoolize if necessary
+6adab7b6ef 2025-12-06 autogen: remove the previous autotool work-around
+1afa3ad92a 2025-12-06 pmi/autogen: add missing prompt in check_python3
+2945c38313 2025-12-06 autogen: remove exporting AUTOCONF etc.
+d3788457bd 2025-12-07 coll/recursive_multiplying: fix calc of single_size
+fd08d295c4 2025-12-05 ch4: use larger initial size for av_tables
+829c6348cb 2025-12-05 Revert "test/xfail: th_taskmanager triggers a data race"
+3c2c333d60 2025-12-05 configure: add --enable-g=tsan option
+e31c1f85d2 2025-12-11 yaksa: update to sync-up with yaksa repo
+9cc5a7e46d 2025-12-16 abi: fix MPI_Abi_get_fortran_info
+eed5279c30 2025-11-08 ch4: shm: fix data type for recv_bytes in MPIDI_POSIX_mpi_release_gather_release
+b62f80749f 2025-12-18 yaksa: fix automatic compilation for CUDA 13
+26ec6060ae 2026-01-02 mpl: Improved check for AVX/AVX512F support
