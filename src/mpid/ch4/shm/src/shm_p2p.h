@@ -85,13 +85,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq, bool is_anysrc_partner)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_mpi_cancel_recv(rreq);
+    ret = MPIDI_POSIX_mpi_cancel_recv(rreq, is_anysrc_partner);
 
     MPIR_FUNC_EXIT;
     return ret;

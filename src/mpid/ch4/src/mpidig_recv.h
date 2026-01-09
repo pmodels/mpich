@@ -367,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq, bool is_anysrc_partner)
 {
     int mpi_errno = MPI_SUCCESS, found;
 
@@ -383,8 +383,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
             MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
         }
 
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
-        MPIR_STATUS_SET_COUNT(rreq->status, 0);
+        if (is_anysrc_partner) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            /* this is when we want to keep the NM request and cancel the SHM request.
+             * Since the SHM request is user-visible, we shouldn't touch status */
+            rreq->dev.anysrc_partner = NULL;
+#endif
+        } else {
+            MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
+            MPIR_STATUS_SET_COUNT(rreq->status, 0);
+        }
         MPID_Request_complete(rreq);
     }
 
