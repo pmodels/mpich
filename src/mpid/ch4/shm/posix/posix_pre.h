@@ -183,11 +183,4 @@ typedef struct {
                              "**windows_mutex %s", "MPL_proc_mutex_unlock");        \
 } while (0)
 
-int MPIDI_POSIX_progress_throttle_start(void);
-void MPIDI_POSIX_progress_throttle_stop(void);
-#ifndef MPIDI_progress_throttle_start
-#define MPIDI_progress_throttle_start MPIDI_POSIX_progress_throttle_start
-#define MPIDI_progress_throttle_stop  MPIDI_POSIX_progress_throttle_stop
-#endif
-
 #endif /* POSIX_PRE_H_INCLUDED */

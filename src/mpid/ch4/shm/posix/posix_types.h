@@ -50,10 +50,6 @@ typedef struct {
     MPL_atomic_int_t num_shared_vci;    /* number of processes currently using shm_vci_slab */
     MPL_atomic_int_t shm_ready; /* root (1st proc that allocates shm_slab) set it to MPIDI_POSIX_READY_FLAG */
     MPL_atomic_uint64_t shm_limit_counter;      /* release_gather use this to track total amount of shared memory allocated */
-    MPL_atomic_int_t progress_throttle_counter; /* When a process enter no progress state, it increment the counter and
-                                                 * provide the process a throttle id. This allows some processes to skip
-                                                 * throttle based on the throttle id.
-                                                 */
     MPL_atomic_int_t eager_ready[];     /* size of local_size. Each process update its flag to MPIDI_POSIX_READY_FLAG */
 } MPIDI_POSIX_shm_t;
 

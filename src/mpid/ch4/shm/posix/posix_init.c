@@ -484,25 +484,3 @@ int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
 }
-
-static int progress_throttle_id;
-
-int MPIDI_POSIX_progress_throttle_start(void)
-{
-    if (MPIDI_POSIX_global.shm_slab && progress_throttle_id == 0) {
-        MPL_atomic_int_t *counter_ptr =
-            &((MPIDI_POSIX_shm_t *) MPIDI_POSIX_global.shm_slab)->progress_throttle_counter;
-        progress_throttle_id = MPL_atomic_fetch_add_int(counter_ptr, 1) + 1;
-    }
-    return progress_throttle_id;
-}
-
-void MPIDI_POSIX_progress_throttle_stop(void)
-{
-    if (MPIDI_POSIX_global.shm_slab && progress_throttle_id > 0) {
-        MPL_atomic_int_t *counter_ptr =
-            &((MPIDI_POSIX_shm_t *) MPIDI_POSIX_global.shm_slab)->progress_throttle_counter;
-        MPL_atomic_fetch_sub_int(counter_ptr, 1);
-        progress_throttle_id = 0;
-    }
-}
