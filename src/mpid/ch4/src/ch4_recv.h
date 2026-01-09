@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
             MPIR_ERR_CHECK(mpi_errno);
             MPIDI_CH4_REQUEST_FREE(partner_rreq);
         }
-        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
+        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq, false /* is_anysrc_partner */);
     } else {
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq, false);
     }
