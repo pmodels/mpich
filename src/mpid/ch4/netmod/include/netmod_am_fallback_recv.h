@@ -61,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool is_blocking)
 {
-    return MPIDIG_mpi_cancel_recv(rreq);
+    return MPIDIG_mpi_cancel_recv(rreq, false /* is_anysrc_partner */);
 }
 
 #endif /* NETMOD_AM_FALLBACK_RECV_H_INCLUDED */

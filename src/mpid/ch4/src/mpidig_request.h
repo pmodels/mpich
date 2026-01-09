@@ -91,7 +91,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
 
     MPIR_Request *anysrc_partner = rreq->dev.anysrc_partner;
     if (unlikely(anysrc_partner)) {
-        if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
+        /* NOTE: the SHM request is the user-visible request, thus we can't touch the cancel-bit if
+         *       we need to cancel the SHM request. Instead, we set its anysrc_partner to NULL.
+         *       Thus, if anysrc_partner->dev.anysrc_partner is not NULL, the request is active.
+         */
+        if (anysrc_partner->dev.anysrc_partner) {
             if (MPIDI_REQUEST(rreq, is_local)) {
                 /* SHM, cancel NM partner */
                 /* canceling a netmod recv request in libfabric ultimately
@@ -108,10 +112,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                 mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner, true);     /* blocking */
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
-                    /* either complete or failed, cancel SHM rreq instead
+                    /* either complete or failed, cancel SHM rreq instead (i.e. mark
+                     * anysrc_partner to NULL)
                      * NOTE: comm and datatype will be defreferenced at caller site
                      */
-                    MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
+                    rreq->dev.anysrc_partner = NULL;
                     *is_cancelled = 0;
                 } else {
                     /* NM partner is not user-visible, free it now, which means
@@ -127,7 +132,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                 /* NM, cancel SHM partner */
                 /* prevent free, we'll complete it separately */
                 MPIR_cc_inc(anysrc_partner->cc_ptr);
-                mpi_errno = MPIDI_SHM_mpi_cancel_recv(anysrc_partner);
+                mpi_errno = MPIDI_SHM_mpi_cancel_recv(anysrc_partner,
+                                                      true /* is_anysrc_partner */);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 /* NOTE: We assume the cancel is always successful.
