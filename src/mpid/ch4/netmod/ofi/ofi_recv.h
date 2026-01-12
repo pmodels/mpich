@@ -393,7 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci, MPIDI_OFI_REQUEST(rreq, nic_num));
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_cancel_recv(rreq);
+        mpi_errno = MPIDIG_mpi_cancel_recv(rreq, false /* is_anysrc_partner */);
         goto fn_exit;
     }
 
