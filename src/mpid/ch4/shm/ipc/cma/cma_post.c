@@ -36,9 +36,8 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
         src_iovs[0].iov_len = src_data_sz;
     } else {
         void *flattened_type = ipc_hdr + 1;
-        MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-        MPIR_Assert(dt);
-        mpi_errno = MPIR_Typerep_unflatten(dt, flattened_type);
+        MPIR_Datatype *dt;
+        mpi_errno = MPIR_Typerep_unflatten(&dt, flattened_type);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = get_iovs((void *) ipc_hdr->ipc_handle.cma.vaddr, ipc_hdr->count, dt->handle,
