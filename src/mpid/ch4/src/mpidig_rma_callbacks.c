@@ -871,11 +871,9 @@ static void handle_acc_data(MPI_Aint in_data_sz, MPIR_Request * rreq)
     MPIDIG_REQUEST(rreq, req->areq.data) = p_data;
 
     if (MPIDIG_REQUEST(rreq, req->areq.flattened_dt)) {
-        /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-        MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+        MPIR_Datatype *dt;
+        MPIR_Typerep_unflatten(&dt, MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
         MPIR_Assert(dt);
-        MPIR_Object_set_ref(dt, 1);
-        MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
         MPIDIG_REQUEST(rreq, req->areq.target_datatype) = dt->handle;
     }
 
@@ -912,14 +910,9 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
         goto fn_exit;
     }
 
-    /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-    MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    if (!dt) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Datatype_mem");
-    }
-    MPIR_Object_set_ref(dt, 1);
-    MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
+    MPIR_Datatype *dt;
+    mpi_errno = MPIR_Typerep_unflatten(&dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDIG_REQUEST(rreq, datatype) = dt->handle;
     /* count is still target_data_sz now, use it for reply */
     get_ack.target_data_sz = MPIDIG_REQUEST(rreq, count);
@@ -1472,14 +1465,9 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     offset = win->disp_unit * msg_hdr->target_disp;
     if (msg_hdr->flattened_sz) {
-        /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-        MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-        if (!dt) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                                 "MPIR_Datatype_mem");
-        }
-        MPIR_Object_set_ref(dt, 1);
-        MPIR_Typerep_unflatten(dt, (char *) am_hdr + sizeof(*msg_hdr));
+        MPIR_Datatype *dt;
+        mpi_errno = MPIR_Typerep_unflatten(&dt, (char *) am_hdr + sizeof(*msg_hdr));
+        MPIR_ERR_CHECK(mpi_errno);
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
@@ -1715,15 +1703,9 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
 
-    /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-    MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    if (!dt) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Datatype_mem");
-    }
-    /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(dt, 1);
-    MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
+    MPIR_Datatype *dt;
+    mpi_errno = MPIR_Typerep_unflatten(&dt, MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDIG_REQUEST(rreq, datatype) = dt->handle;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
@@ -1922,14 +1904,9 @@ int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDIG_REQUEST(rreq, u.target.origin_rank) = msg_hdr->src_rank;
 
     if (msg_hdr->flattened_sz) {
-        /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-        MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-        if (!dt) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                                 "MPIR_Datatype_mem");
-        }
-        MPIR_Object_set_ref(dt, 1);
-        MPIR_Typerep_unflatten(dt, (char *) am_hdr + sizeof(*msg_hdr));
+        MPIR_Datatype *dt;
+        mpi_errno = MPIR_Typerep_unflatten(&dt, (char *) am_hdr + sizeof(*msg_hdr));
+        MPIR_ERR_CHECK(mpi_errno);
         MPIDIG_REQUEST(rreq, req->areq.target_datatype) = dt->handle;
     }
 

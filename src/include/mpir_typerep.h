@@ -41,7 +41,7 @@ void MPIR_Typerep_free(MPIR_Datatype * typeptr);
 
 int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size);
 int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
-int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
+int MPIR_Typerep_unflatten(MPIR_Datatype ** datatype_ptr, void *flattened_type);
 
 /* byte-based offset routine: do not use; only maintained for backward
  * compatibility with ch3 */
