@@ -98,41 +98,48 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
  * datatype_ptr   - (OUT) datatype into which the buffer will be unflattened
  * flattened_type - (IN)  buffer that contains the flattened representation
  */
-int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
+int MPIR_Typerep_unflatten(MPIR_Datatype ** datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
     void *flattened_typerep = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
     int mpi_errno = MPI_SUCCESS;
 
-    datatype_ptr->is_committed = 1;
-    datatype_ptr->attributes = 0;
-    datatype_ptr->name[0] = 0;
-    datatype_ptr->is_contig = flatten_hdr->is_contig;
-    datatype_ptr->typerep.num_contig_blocks = flatten_hdr->num_contig_blocks;
-    datatype_ptr->size = flatten_hdr->size;
-    datatype_ptr->extent = flatten_hdr->extent;
-    datatype_ptr->basic_type = flatten_hdr->basic_type;
-    datatype_ptr->ub = flatten_hdr->ub;
-    datatype_ptr->lb = flatten_hdr->lb;
-    datatype_ptr->true_ub = flatten_hdr->true_ub;
-    datatype_ptr->true_lb = flatten_hdr->true_lb;
-    datatype_ptr->contents = NULL;
-    datatype_ptr->flattened = NULL;
-    if (datatype_ptr->basic_type != MPI_DATATYPE_NULL) {
-        datatype_ptr->builtin_element_size = MPIR_Datatype_get_basic_size(datatype_ptr->basic_type);
+    /* Allocate the datatype object */
+    *datatype_ptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+    MPIR_ERR_CHKANDJUMP(!(*datatype_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIR_Object_set_ref(*datatype_ptr, 1);
+
+    (*datatype_ptr)->is_committed = 1;
+    (*datatype_ptr)->attributes = 0;
+    (*datatype_ptr)->name[0] = 0;
+    (*datatype_ptr)->is_contig = flatten_hdr->is_contig;
+    (*datatype_ptr)->typerep.num_contig_blocks = flatten_hdr->num_contig_blocks;
+    (*datatype_ptr)->size = flatten_hdr->size;
+    (*datatype_ptr)->extent = flatten_hdr->extent;
+    (*datatype_ptr)->basic_type = flatten_hdr->basic_type;
+    (*datatype_ptr)->ub = flatten_hdr->ub;
+    (*datatype_ptr)->lb = flatten_hdr->lb;
+    (*datatype_ptr)->true_ub = flatten_hdr->true_ub;
+    (*datatype_ptr)->true_lb = flatten_hdr->true_lb;
+    (*datatype_ptr)->contents = NULL;
+    (*datatype_ptr)->flattened = NULL;
+    if ((*datatype_ptr)->basic_type != MPI_DATATYPE_NULL) {
+        (*datatype_ptr)->builtin_element_size =
+            MPIR_Datatype_get_basic_size((*datatype_ptr)->basic_type);
     } else {
-        datatype_ptr->builtin_element_size = 0;
+        (*datatype_ptr)->builtin_element_size = 0;
     }
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
-    int rc = yaksa_unflatten(&datatype_ptr->typerep.handle, flattened_typerep);
+    int rc = yaksa_unflatten(&(*datatype_ptr)->typerep.handle, flattened_typerep);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 #else
-    mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_typerep);
+    mpi_errno = MPIR_Dataloop_unflatten(*datatype_ptr, flattened_typerep);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPID_Type_commit_hook(datatype_ptr);
+    mpi_errno = MPID_Type_commit_hook(*datatype_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
