@@ -66,7 +66,7 @@ bcast-intra:
     binomial
     scatter_recursive_doubling_allgather
     scatter_ring_allgather
-    circ_qvring
+    circ_graph
         extra_params: chunk_size, q_len
         cvar_params: CIRC_CHUNK_SIZE, CIRC_Q_LEN
     smp

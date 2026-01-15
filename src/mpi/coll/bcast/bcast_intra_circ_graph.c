@@ -28,11 +28,9 @@ static int all_blocks(int r, int r_prime, int s, int e, int k, int *buffer,
 static void gen_rsched(int r, int *buffer, struct sched_args_t *args);
 static void gen_ssched(int r, struct sched_args_t *args);
 
-int MPIR_Bcast_intra_circ_qvring(void *buffer,
-                                 MPI_Aint count,
-                                 MPI_Datatype datatype,
-                                 int root, MPIR_Comm * comm,
-                                 const int chunk_size, const int q_len, int coll_attr)
+int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datatype,
+                                int root, MPIR_Comm * comm,
+                                const int chunk_size, const int q_len, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
 
