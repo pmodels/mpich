@@ -488,3 +488,255 @@ int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win)
   fn_fail:
     goto fn_exit;
 }
+
+/* -- active message fallback using mirror buffers -- */
+
+/* assumptions:
+ * 1. both origin and target datatypes are contig
+ * 2. data_sz <= MPIDI_OFI_global.max_msg_size
+ */
+
+/* Get using AM mirror buffer -
+ * 1. Origin send am MPIDI_OFI_GET_REQ
+ * 2. Target async localcopy to mirror buffer
+ * 3. Target send am MPIDI_OFI_GET_ACK
+ * 4. Origin RDMA read
+ * 5. Origin complete
+ */
+
+struct get_context {
+    MPIR_Win *win;
+    int target_rank;
+    MPI_Aint data_sz;
+    void *origin_addr;
+    MPI_Aint target_offset;
+    MPIR_Request *req;
+};
+
+struct get_hdr {
+    uint64_t win_id;
+    int origin_rank;
+    void *origin_context;
+    MPI_Aint target_offset;
+    MPI_Aint data_sz;
+};
+
+/* origin side - issue AM req */
+int MPIDI_OFI_mirror_get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype origin_datatype,
+                         int target_rank, MPI_Aint target_disp, MPI_Aint target_count,
+                         MPI_Datatype target_datatype, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* query target datatype */
+    int is_contig;
+    MPIR_Datatype_is_contig(target_datatype, &is_contig);
+
+    MPI_Aint data_sz;
+    MPIR_Datatype_get_size_macro(origin_datatype, data_sz);
+    data_sz *= origin_count;
+
+    MPI_Aint origin_true_lb, target_true_lb;
+    MPIR_Datatype_get_true_lb(target_datatype, &target_true_lb);
+    MPIR_Datatype_get_true_lb(origin_datatype, &origin_true_lb);
+
+    int vci = MPIDI_WIN(win, am_vci);
+    int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
+
+    /* fill origin context */
+    struct get_context *origin_context;
+    origin_context = MPL_malloc(sizeof(struct get_context), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP((origin_context == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    origin_context->win = win;
+    origin_context->target_rank = target_rank;
+    origin_context->data_sz = data_sz;
+    origin_context->origin_addr = (char *) origin_addr + origin_true_lb;
+    origin_context->target_offset = target_disp * win->disp_unit + target_true_lb;
+
+    /* allocate a request, used for reuse the code from ofi_rndv_read. */
+    MPIR_Request *req;
+    MPIDI_OFI_REQUEST_CREATE(req, MPIR_REQUEST_KIND__RMA, vci);
+    if (1) {
+        MPIDI_CH4_REQUEST_FREE(req);
+    }
+    origin_context->req = req;
+
+    /* fill am_hdr */
+    struct get_hdr am_hdr;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
+    am_hdr.origin_context = origin_context;
+    am_hdr.data_sz = origin_context->data_sz;
+    am_hdr.target_offset = origin_context->target_offset;
+
+    MPIDIG_win_cmpl_cnts_incr(win, target_rank, NULL);
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+    mpi_errno = MPIDI_NM_am_send_hdr(target_rank, win->comm_ptr, MPIDI_OFI_GET_REQ,
+                                     &am_hdr, sizeof(am_hdr), vci, vci_target);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+struct target_mirror_copy {
+    MPIR_Win *win;
+    int origin_rank;
+    void *origin_context;
+    int vci_origin;
+    int vci_target;
+    MPIR_gpu_req async_req;
+};
+
+static int target_mirror_copy_poll(MPIX_Async_thing thing);
+
+/* target side - AM callback */
+int MPIDI_OFI_get_handler(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                          uint32_t attr, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    struct get_hdr *msg_hdr = am_hdr;
+
+    MPIR_Win *win;
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
+    MPIR_Assert(win);
+
+    void *mirror_buf = MPIDI_OFI_WIN(win).mirror_buf;
+    void *mirror_attr = &(MPIDI_OFI_WIN(win).mirror_attr);
+    void *base_buf = win->base;
+    void *base_attr = &(MPIDI_OFI_WIN(win).base_attr);
+
+    /* async localcopy */
+    MPIR_gpu_req async_req;
+    int engine_type = MPIDI_OFI_gpu_get_send_engine_type();
+    mpi_errno = MPIR_Ilocalcopy_gpu(base_buf, msg_hdr->data_sz, MPIR_BYTE_INTERNAL,
+                                    msg_hdr->target_offset, base_attr,
+                                    mirror_buf, msg_hdr->data_sz, MPIR_BYTE_INTERNAL,
+                                    msg_hdr->target_offset, mirror_attr,
+                                    engine_type, 1, &async_req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* add async things */
+    struct target_mirror_copy *p = MPL_malloc(sizeof(struct target_mirror_copy), MPL_MEM_OTHER);
+    p->win = win;
+    p->origin_rank = msg_hdr->origin_rank;
+    p->origin_context = msg_hdr->origin_context;
+    p->vci_origin = MPIDIG_AM_ATTR_SRC_VCI(attr);
+    p->vci_target = MPIDIG_AM_ATTR_DST_VCI(attr);
+    p->async_req = async_req;
+
+    mpi_errno = MPIR_Async_things_add(target_mirror_copy_poll, p, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+struct getack_hdr {
+    void *origin_context;
+    uint64_t rkey;
+    uint64_t remote_base;
+};
+
+/* target side - async callback */
+static int target_mirror_copy_poll(MPIX_Async_thing thing)
+{
+    struct target_mirror_copy *p = MPIR_Async_thing_get_state(thing);
+    int is_done;
+    MPIR_async_test(&p->async_req, &is_done);
+
+    if (is_done) {
+        /* send get_ack */
+        struct getack_hdr am_hdr;
+        am_hdr.origin_context = p->origin_context;
+        am_hdr.rkey = fi_mr_key(MPIDI_OFI_WIN(p->win).mr);
+        am_hdr.remote_base = (uintptr_t) MPIDI_OFI_WIN(p->win).mirror_buf;
+
+        int rc = MPIDI_NM_am_send_hdr(p->origin_rank, p->win->comm_ptr, MPIDI_OFI_GET_ACK,
+                                      &am_hdr, sizeof(am_hdr), p->vci_target, p->vci_origin);
+        MPIR_Assertp(rc == MPI_SUCCESS);
+
+        MPL_free(p);
+
+        return MPIX_ASYNC_DONE;
+    }
+
+    return MPIX_ASYNC_NOPROGRESS;
+}
+
+struct read_req {
+    char pad[MPIDI_REQUEST_HDR_SIZE];
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];
+    int event_id;
+    struct get_context *origin_context;
+};
+
+static int rdmaread_completion(void *context);
+
+/* origin side - AM callback */
+int MPIDI_OFI_getack_handler(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                             uint32_t attr, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct getack_hdr *msg_hdr = am_hdr;
+    struct get_context *origin_context = msg_hdr->origin_context;
+    MPIR_Win *win = origin_context->win;
+    int target_rank = origin_context->target_rank;
+    MPI_Aint target_offset = origin_context->target_offset;
+
+    MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(origin_context->req);
+    p->buf = origin_context->origin_addr;
+    p->count = origin_context->data_sz;
+    p->datatype = MPIR_BYTE_INTERNAL;
+
+    MPIR_GPU_query_pointer_attr(p->buf, &p->attr);
+    p->need_pack = MPL_gpu_attr_is_dev(&p->attr);
+
+    p->data_sz = p->remote_data_sz = origin_context->data_sz;
+    p->vci_local = MPIDI_WIN(win, am_vci);
+    p->vci_remote = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    p->av = MPIDIU_win_rank_to_av(win, target_rank, MPIDI_WIN(win, winattr));
+
+    p->num_nics = 1;
+    if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+        p->u.recv.remote_base = msg_hdr->remote_base + target_offset;
+    } else {
+        p->u.recv.remote_base = target_offset;
+    }
+    p->u.recv.rkeys = &p->u.recv.rkey0;
+    p->u.recv.rkey0 = msg_hdr->rkey;
+    p->u.recv.cmpl_cb = rdmaread_completion;
+    p->u.recv.context = origin_context;
+
+    mpi_errno = MPIR_Async_things_add(MPIDI_OFI_rdmaread_poll, origin_context->req, NULL);
+
+    return mpi_errno;
+}
+
+static int rdmaread_completion(void *context)
+{
+    struct get_context *origin_context = context;
+
+    MPIR_Win *win = origin_context->win;
+    int target_rank = origin_context->target_rank;
+
+    MPIDIG_win_cmpl_cnts_decr(win, target_rank);
+
+    MPIDI_Request_complete_fast(origin_context->req);
+    MPL_free(origin_context);
+
+    return MPI_SUCCESS;
+}

@@ -234,10 +234,12 @@ typedef struct {
 
 typedef struct {
     MPIDI_OFI_RNDV_COMMON_FIELDS;
+    int num_nics;
     MPI_Aint sz_per_nic;
     union {
         struct {
             const void *data;
+            struct fid_mr *mr0;
             struct fid_mr **mrs;
         } send;
         struct {
@@ -246,11 +248,14 @@ typedef struct {
                 int copy_infly; /*  need_pack */
             } u;
             uint64_t remote_base;
+            uint64_t rkey0;     /* avoid malloc when num_nics == 1 */
             uint64_t *rkeys;
             MPI_Aint chunks_per_nic;
             MPI_Aint cur_chunk_index;
             int num_infly;
             bool all_issued;
+            int (*cmpl_cb) (void *context);     /* context will be cast to (MPIR_Request *) */
+            void *context;
         } recv;
     } u;
 } MPIDI_OFI_rndvread_t;
@@ -381,6 +386,9 @@ typedef struct {
     struct MPIDI_OFI_win_request *syncQ;
     struct MPIDI_OFI_win_request *deferredQ;
     MPIDI_OFI_win_targetinfo_t *winfo;
+    void *mirror_buf;           /* used in gpu fallback paths to avoid repeated host registration */
+    MPL_pointer_attr_t base_attr;
+    MPL_pointer_attr_t mirror_attr;
 
     MPL_gavl_tree_t *dwin_target_mrs;   /* MR key and address pairs registered to remote processes.
                                          * One AVL tree per process. */
