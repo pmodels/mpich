@@ -193,6 +193,9 @@ int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 
 int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
 {
+#ifdef MPID_COMM_AGREE
+    return MPID_Comm_agree(comm_ptr, flag);
+#else
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
     MPIR_Group *comm_grp = NULL, *failed_grp = NULL, *new_group_ptr = NULL, *global_failed = NULL;
     int result, success = 1;
@@ -264,4 +267,5 @@ int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
