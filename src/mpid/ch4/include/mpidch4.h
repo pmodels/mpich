@@ -421,6 +421,7 @@ int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char 
 
 #define MPID_COMM_AGREE 1
 int MPID_Comm_agree(MPIR_Comm * comm, int *flag);
+int MPID_Comm_get_failed(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr);
 
 
 /* This function is not exposed to the upper layers but functions in a way

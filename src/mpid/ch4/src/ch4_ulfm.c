@@ -55,10 +55,49 @@ typedef struct {
 
 static comm_agree_entry *comm_agree_hash = NULL;
 
+static int num_global_failed_procs;
+static MPIR_Lpid *global_failed_procs;
+
 static comm_agree_entry *find_comm_agree_entry(int context_id, int comm_size);
 static void update_failed_proc(comm_agree_entry * entry, int rank);
 static int send_probe(comm_agree_entry * entry, MPIR_Comm * comm,
                       int epoch, int level, int level_dir);
+static int update_global_failed_procs(MPIR_Comm * comm, int num_failed, int *failed_procs);
+
+int MPID_Comm_get_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKPMEM_DECL();
+
+    if (num_global_failed_procs == 0) {
+        *failed_group_ptr = MPIR_Group_empty;
+    } else {
+        int num = 0;
+        MPIR_Lpid *procs = NULL;
+        for (int i = 0; i < num_global_failed_procs; i++) {
+            int r = MPIR_Group_lpid_to_rank(comm->local_group, global_failed_procs[i]);
+            if (r != MPI_UNDEFINED) {
+                if (procs == NULL) {
+                    MPIR_CHKPMEM_MALLOC(procs, num_global_failed_procs * sizeof(MPIR_Lpid),
+                                        MPL_MEM_COMM);
+                }
+                procs[num++] = global_failed_procs[i];
+            }
+        }
+        if (num > 0) {
+            mpi_errno = MPIR_Group_create_map(num, -1, comm->session_ptr, procs, failed_group_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            *failed_group_ptr = MPIR_Group_empty;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
 
 int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
 {
@@ -124,6 +163,9 @@ int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
             has_new_failures = true;
         }
     }
+
+    mpi_errno = update_global_failed_procs(comm, entry->num_failed, entry->failed_procs);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (has_new_failures) {
         mpi_errno = MPIX_ERR_PROC_FAILED;
@@ -341,4 +383,53 @@ static void update_failed_proc(comm_agree_entry * entry, int rank)
         /* add the entry */
         entry->failed_procs[entry->num_failed++] = rank;
     }
+}
+
+/* -- routine for update global_failed_procs -- */
+
+/* qsort compare function */
+static int sort_fn(const void *a, const void *b)
+{
+    return (*(MPIR_Lpid *) a - *(MPIR_Lpid *) b);
+}
+
+static int update_global_failed_procs(MPIR_Comm * comm, int num_failed, int *failed_procs)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
+
+    int num_new_failed = 0;
+    MPIR_Lpid *new_failed = NULL;
+    for (int i = 0; i < num_failed; i++) {
+        MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, failed_procs[i]);
+        bool is_new = true;
+        for (int j = 0; j < num_global_failed_procs; j++) {
+            if (global_failed_procs[j] == lpid) {
+                is_new = false;
+                break;
+            }
+        }
+        if (is_new) {
+            if (!new_failed) {
+                MPIR_CHKLMEM_MALLOC(new_failed, num_failed * sizeof(MPIR_Lpid));
+            }
+            new_failed[num_new_failed++] = lpid;
+        }
+    }
+
+    if (num_new_failed > 0) {
+        int num = num_global_failed_procs + num_new_failed;
+        global_failed_procs = MPL_realloc(global_failed_procs, num * sizeof(MPIR_Lpid),
+                                          MPL_MEM_OTHER);
+        for (int i = 0; i < num_new_failed; i++) {
+            global_failed_procs[num_global_failed_procs++] = new_failed[i];
+        }
+        qsort(global_failed_procs, num, sizeof(MPIR_Lpid), sort_fn);
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

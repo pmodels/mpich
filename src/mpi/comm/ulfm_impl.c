@@ -14,6 +14,7 @@
  *       implementation. Since ULFM require local discovery, we should remove that
  */
 
+#ifndef MPID_COMM_AGREE
 /* maintain a list of failed process in comm_world */
 /* NOTE: we need maintain the order of failed_procs as the show up. We do it here because
  *       it isn't fair to require PMI to do it.
@@ -67,9 +68,13 @@ static void parse_failed_procs_string(char *failed_procs_string)
         token = strtok(NULL, delim);
     }
 }
+#endif
 
 int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
+#ifdef MPID_COMM_AGREE
+    return MPID_Comm_get_failed(comm_ptr, failed_group_ptr);
+#else
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
@@ -119,6 +124,7 @@ int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_p
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 /* comm shrink impl; assumes that standard error checking has already taken
