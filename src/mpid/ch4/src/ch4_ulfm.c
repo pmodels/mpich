@@ -99,6 +99,8 @@ int MPID_Comm_get_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
     goto fn_exit;
 }
 
+#define ULFM_MAX_RETRY 1000
+
 int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -125,13 +127,21 @@ int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
 
     /* first ascending the level as we probe the peer. */
     while (level < q) {
-        int peer_root = ((rank >> level) ^ 1) << level;
+        int peer_root;
+      fn_retry:
+        peer_root = ((rank >> level) ^ 1) << level;
         mpi_errno = send_probe(entry, comm, epoch, level, DIR_UP);
         if (mpi_errno == MPI_SUCCESS) {
             /* probe sent, wait for reply */
+            int count = 0;
             while (entry->up_probes[level] < epoch) {
                 mpi_errno = MPIDI_progress_test_vci(0);
                 MPIR_ERR_CHECK(mpi_errno);
+                count++;
+                if (count > ULFM_MAX_RETRY && entry->up_probes[level] < epoch) {
+                    /* potentially the process died since we last probed, probe it again  */
+                    goto fn_retry;
+                }
             }
 
             if (rank > peer_root) {
@@ -151,6 +161,7 @@ int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
         level--;
     } else if (level < q - 1) {
         /* all other processes wait for the broadcast before proceed */
+        /* TODO: add retry probe incast the process died during Comm_agree */
         while (entry->down_probes[level] < epoch) {
             mpi_errno = MPIDI_progress_test_vci(0);
             MPIR_ERR_CHECK(mpi_errno);
