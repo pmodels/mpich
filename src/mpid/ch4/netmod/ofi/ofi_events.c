@@ -509,6 +509,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
     struct fi_cq_err_entry e;
     char err_data[MPIDI_OFI_MAX_ERR_DATA_SIZE];
     MPIR_Request *req;
+    int event_id;
     ssize_t ret_cqerr;
     MPIR_FUNC_ENTER;
 
@@ -556,7 +557,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                     /* Clean up the request. Reference MPIDI_OFI_recv_event.
                      * NOTE: assuming only the receive request can be cancelled and reach here
                      */
-                    int event_id = MPIDI_OFI_REQUEST(req, event_id);
+                    event_id = MPIDI_OFI_REQUEST(req, event_id);
                     switch (event_id) {
                         case MPIDI_OFI_EVENT_DYNPROC_DONE:
                             dynproc_done_event(vci, e.op_context, req);
@@ -587,9 +588,24 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                     break;
 
                 default:
-                    MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                         "**ofid_poll %s %s",
-                                         MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                    req = MPIDI_OFI_context_to_request(e.op_context);
+                    event_id = MPIDI_OFI_REQUEST(req, event_id);
+                    switch (event_id) {
+                        case MPIDI_OFI_EVENT_AM_SEND:
+                            /* set req->status.MPI_ERROR */
+                            MPIR_ERR_SET2(req->status.MPI_ERROR, MPI_ERR_OTHER, "**ofid_poll",
+                                          "**ofid_poll %s %s",
+                                          MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                            mpi_errno = am_isend_event(vci, NULL, req);
+                            break;
+                        default:
+                            /* FIXME: application can't handle error in progress due to loss of
+                             *        context. We should try best to set error in req->status instead.
+                             */
+                            MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                                 "**ofid_poll %s %s",
+                                                 MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                    }
             }
 
             break;
