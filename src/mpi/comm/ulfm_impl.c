@@ -127,73 +127,49 @@ int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_p
 #endif
 }
 
-/* comm shrink impl; assumes that standard error checking has already taken
- * place in the calling function */
+/* Supposedly caller already agreed on the result of MPIX_Comm_get_failed
+ * by running MPIX_Comm_agree. Thus, shrink is merely MPI_Comm_create_group.
+ */
 int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Group *global_failed = NULL, *comm_grp = NULL, *new_group_ptr = NULL;
-    int attempts = 0;
-
     MPIR_FUNC_ENTER;
 
     /* TODO - Implement this function for intercommunicators */
-    MPIR_Comm_group_impl(comm_ptr, &comm_grp);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    do {
-        int coll_attr = 0;
+    MPIR_Group *comm_grp;
+    mpi_errno = MPIR_Comm_group_impl(comm_ptr, &comm_grp);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        MPID_Comm_get_all_failed_procs(comm_ptr, &global_failed, MPIR_SHRINK_TAG);
-        /* Ignore the mpi_errno value here as it will definitely communicate
-         * with failed procs */
+    MPIR_Group *global_failed;
+    mpi_errno = MPIR_Comm_get_failed_impl(comm_ptr, &global_failed);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-        if (MPIR_Group_empty != global_failed)
-            MPIR_Group_release(global_failed);
+    MPIR_Group *new_group_ptr;
+    mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Comm_create_group_impl(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG,
-                                                newcomm_ptr);
-        if (*newcomm_ptr == NULL) {
-            coll_attr = MPIR_ERR_PROC_FAILED;
-        } else if (mpi_errno) {
-            coll_attr =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_Comm_release(*newcomm_ptr);
-        }
+    if (MPIR_Group_empty != global_failed) {
+        MPIR_Group_release(global_failed);
+    }
 
-        mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &coll_attr, 1, MPIR_INT_INTERNAL, MPI_MAX,
-                                         comm_ptr, new_group_ptr, MPIR_SHRINK_TAG,
-                                         MPIR_COLL_ATTR_SYNC);
-        MPIR_Group_release(new_group_ptr);
-
-        if (coll_attr) {
-            if (*newcomm_ptr != NULL && MPIR_Object_get_ref(*newcomm_ptr) > 0) {
-                MPIR_Object_set_ref(*newcomm_ptr, 1);
-                MPIR_Comm_release(*newcomm_ptr);
-            }
-            if (MPIR_Object_get_ref(new_group_ptr) > 0) {
-                MPIR_Object_set_ref(new_group_ptr, 1);
-                MPIR_Group_release(new_group_ptr);
-            }
-        } else {
-            mpi_errno = MPI_SUCCESS;
-            goto fn_exit;
-        }
-    } while (++attempts < 5);
-
-    goto fn_fail;
+    mpi_errno = MPIR_Comm_create_group_impl(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG, newcomm_ptr);
+    /* FIXME: what if user have not run MPIX_Comm_agree or there are new failed procs?
+     *        We need handle MPIX_ERR_PROC_FAILED.
+     */
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_Group_release(comm_grp);
+    if (new_group_ptr) {
+        MPIR_Group_release(new_group_ptr);
+    }
+    if (comm_grp) {
+        MPIR_Group_release(comm_grp);
+    }
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    if (*newcomm_ptr)
-        MPIR_Object_set_ref(*newcomm_ptr, 0);
-    MPIR_Object_set_ref(global_failed, 0);
-    MPIR_Object_set_ref(new_group_ptr, 0);
     goto fn_exit;
 }
 
