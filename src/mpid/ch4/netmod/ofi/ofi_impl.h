@@ -134,6 +134,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_CALL_RETRY_AM(FUNC,vci_,STR)                          \
     do {                                                                \
         ssize_t _ret;                                                   \
+        int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY; \
         do {                                                            \
             _ret = FUNC;                                                \
             if (likely(_ret==0)) break;                                  \
@@ -144,9 +145,12 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                                    "**ofid_"#STR" %s %s",               \
                                    MPIDI_OFI_DEFAULT_NIC_NAME,          \
                                    fi_strerror(-_ret));                 \
+            if (_retry > 0) { \
+                _retry--; \
+                MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
+            } \
             mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
-            if (mpi_errno != MPI_SUCCESS)                                \
-                MPIR_ERR_CHECK(mpi_errno);                               \
+            MPIR_ERR_CHECK(mpi_errno);                                  \
         } while (_ret == -FI_EAGAIN);                                   \
     } while (0)
 
