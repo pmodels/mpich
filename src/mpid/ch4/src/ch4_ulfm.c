@@ -39,10 +39,11 @@ typedef struct {
     int comm_size;
 
     int flag;
-    /* {up,down}_probes[level] is the latest epoch for the {up,down} probe
-     * at this level that we received. */
-    int *up_probes;
-    int *down_probes;
+    /* {up,down}_probes[level] is the latest received probe at this level. */
+    struct {
+        int epoch;
+        int origin_rank;
+    } *up_probes, *down_probes;
     /* process_dead_map[rank] is true if rank is dead */
     bool *process_dead_map;
     /* failed_procs is a dynamic array of failed processes */
@@ -61,7 +62,7 @@ static MPIR_Lpid *global_failed_procs;
 static comm_agree_entry *find_comm_agree_entry(int context_id, int comm_size);
 static void update_failed_proc(comm_agree_entry * entry, int rank);
 static int send_probe(comm_agree_entry * entry, MPIR_Comm * comm,
-                      int epoch, int level, int level_dir);
+                      int epoch, int level, int level_dir, int *peer_rank);
 static int update_global_failed_procs(MPIR_Comm * comm, int num_failed, int *failed_procs);
 
 int MPID_Comm_get_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
@@ -127,21 +128,29 @@ int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
 
     /* first ascending the level as we probe the peer. */
     while (level < q) {
-        int peer_root;
+        int peer_root, peer_rank;
       fn_retry:
         peer_root = ((rank >> level) ^ 1) << level;
-        mpi_errno = send_probe(entry, comm, epoch, level, DIR_UP);
+        mpi_errno = send_probe(entry, comm, epoch, level, DIR_UP, &peer_rank);
         if (mpi_errno == MPI_SUCCESS) {
             /* probe sent, wait for reply */
             int count = 0;
-            while (entry->up_probes[level] < epoch) {
+            while (entry->up_probes[level].epoch < epoch) {
                 mpi_errno = MPIDI_progress_test_vci(0);
                 MPIR_ERR_CHECK(mpi_errno);
                 count++;
-                if (count > ULFM_MAX_RETRY && entry->up_probes[level] < epoch) {
+                if (count > ULFM_MAX_RETRY && entry->up_probes[level].epoch < epoch) {
                     /* potentially the process died since we last probed, probe it again  */
                     goto fn_retry;
                 }
+            }
+            /* make sure we got from the expected rank, or we need resend the probe */
+            if (entry->up_probes[level].origin_rank > peer_rank) {
+                mpi_errno = send_probe(entry, comm, epoch, level, DIR_UP, &peer_rank);
+                /* TODO: handle the error
+                 *   The process send us a prove then died? */
+                MPIR_Assert(mpi_errno == MPI_SUCCESS &&
+                            peer_rank == entry->up_probes[level].origin_rank);
             }
 
             if (rank > peer_root) {
@@ -162,14 +171,15 @@ int MPID_Comm_agree(MPIR_Comm * comm, int *flag)
     } else if (level < q - 1) {
         /* all other processes wait for the broadcast before proceed */
         /* TODO: add retry probe incast the process died during Comm_agree */
-        while (entry->down_probes[level] < epoch) {
+        while (entry->down_probes[level].epoch < epoch) {
             mpi_errno = MPIDI_progress_test_vci(0);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
     while (level > 0) {
+        int peer_rank;
         level--;
-        mpi_errno = send_probe(entry, comm, epoch, level, DIR_DOWN);
+        mpi_errno = send_probe(entry, comm, epoch, level, DIR_DOWN, &peer_rank);
         if (mpi_errno == MPIX_ERR_PROC_FAILED) {
             has_new_failures = true;
         }
@@ -241,10 +251,12 @@ static int ulfm_probe_target_msg_cb(void *am_hdr, void *data, MPI_Aint data_sz, 
     struct probe_hdr *hdr = am_hdr;
     comm_agree_entry *entry = find_comm_agree_entry(hdr->context_id, hdr->comm_size);
     if (hdr->level_dir == DIR_UP) {
-        entry->up_probes[hdr->level] = hdr->epoch;
+        entry->up_probes[hdr->level].epoch = hdr->epoch;
+        entry->up_probes[hdr->level].origin_rank = hdr->origin_rank;
         entry->flag &= hdr->flag;
     } else {
-        entry->down_probes[hdr->level] = hdr->epoch;
+        entry->down_probes[hdr->level].epoch = hdr->epoch;
+        entry->down_probes[hdr->level].origin_rank = hdr->origin_rank;
         entry->flag = hdr->flag;
     }
 
@@ -265,7 +277,7 @@ static int ulfm_probe_target_msg_cb(void *am_hdr, void *data, MPI_Aint data_sz, 
 /* ---- routines for sending probe ---- */
 
 static int send_probe(comm_agree_entry * entry, MPIR_Comm * comm,
-                      int epoch, int level, int level_dir)
+                      int epoch, int level, int level_dir, int *peer_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -312,6 +324,7 @@ static int send_probe(comm_agree_entry * entry, MPIR_Comm * comm,
                     if (newly_failed_procs && level_dir == DIR_DOWN) {
                         mpi_errno = MPIX_ERR_PROC_FAILED;
                     }
+                    *peer_rank = r;
                     goto fn_exit;
                 } else {
                     newly_failed_procs++;
@@ -326,6 +339,7 @@ static int send_probe(comm_agree_entry * entry, MPIR_Comm * comm,
     /* all processes in the peer group failed. We only need know is Comm_agree
      * during the UP (reduction) stage */
     if (level_dir == DIR_UP) {
+        *peer_rank = -1;
         mpi_errno = MPIX_ERR_PROC_FAILED;
     }
 
@@ -359,9 +373,9 @@ static comm_agree_entry *find_comm_agree_entry(int context_id, int comm_size)
         entry->flag = 0xffffffff;
 
         int pof2 = MPL_pof2(comm_size);
-        entry->up_probes = MPL_calloc(pof2, sizeof(int), MPL_MEM_OTHER);
+        entry->up_probes = MPL_calloc(pof2, sizeof(*entry->up_probes), MPL_MEM_OTHER);
         MPIR_Assert(entry->up_probes);
-        entry->down_probes = MPL_calloc(pof2, sizeof(int), MPL_MEM_OTHER);
+        entry->down_probes = MPL_calloc(pof2, sizeof(*entry->down_probes), MPL_MEM_OTHER);
         MPIR_Assert(entry->down_probes);
 
         entry->process_dead_map = MPL_calloc(comm_size, sizeof(int), MPL_MEM_OTHER);
