@@ -247,7 +247,7 @@ print OUTPUT_C <<EOT;
 int ${fn_ns}_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc, got_rc;
+    int rc, is_set;
     const char *tmp_str;
     MPIR_T_cvar_value_t defaultval;
 
@@ -327,34 +327,33 @@ foreach my $p (@cvars) {
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${uc_ns}_" . $p->{name};
 
-    print OUTPUT_C "    got_rc = 0;\n";
+    print OUTPUT_C "    is_set = 0;\n";
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         if ($p->{type} eq 'range') {
 print OUTPUT_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
     MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
-    got_rc += rc;
+    is_set += rc;
 EOT
         }
         elsif ($p->{type} eq 'string' or $p->{type} eq 'enum') {
 print OUTPUT_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &tmp_str);
-    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
-    got_rc += rc;
+    is_set += rc;
 EOT
         }
         else {
 print OUTPUT_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name));
     MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
-    got_rc += rc;
+    is_set += rc;
 EOT
         }
     }
 
     # debugging
-    print OUTPUT_C "    if (got_rc && debug) {\n";
+    print OUTPUT_C "    if (is_set && debug) {\n";
     if ($p->{type} eq 'string' or $p->{type} eq 'enum') {
         print OUTPUT_C "        printf(\"CVAR: $var_name = %s\\n\", tmp_str);\n";
     } elsif ($p->{type} eq "range") {
