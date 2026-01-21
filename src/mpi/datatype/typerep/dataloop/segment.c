@@ -198,11 +198,9 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         SEGMENT_PUSH;
 
                         continue;
-                    } else {
-                        goto fn_exit;
                     }
 
-                    break;
+                    goto fn_exit;
                 }
 
             case MPII_DATALOOP_KIND_VECTOR:
@@ -246,11 +244,9 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         SEGMENT_PUSH;
 
                         continue;
-                    } else {
-                        goto fn_exit;
                     }
 
-                    break;
+                    goto fn_exit;
                 }
 
             case MPII_DATALOOP_KIND_BLOCKINDEXED:
@@ -294,11 +290,9 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         SEGMENT_PUSH;
 
                         continue;
-                    } else {
-                        goto fn_exit;
                     }
 
-                    break;
+                    goto fn_exit;
                 }
 
             case MPII_DATALOOP_KIND_INDEXED:
@@ -350,11 +344,9 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         SEGMENT_PUSH;
 
                         continue;
-                    } else {
-                        goto fn_exit;
                     }
 
-                    break;
+                    goto fn_exit;
                 }
 
             case MPII_DATALOOP_KIND_STRUCT:
@@ -412,22 +404,15 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         SEGMENT_PUSH;
 
                         continue;
-                    } else {
-                        goto fn_exit;
                     }
 
-                    break;
+                    goto fn_exit;
                 }
 
             default:
                 goto fallback_path;
         }
-
-        MPIR_Assert(segp->stream_off == position);
-        break;
     }
-
-    goto fn_exit;
 
   fallback_path:
     {
@@ -959,9 +944,6 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
     MPL_DBG_MSG("hit end of datatype\n");
 #endif
-
-    SEGMENT_SAVE_LOCAL_VALUES;
-    return;
 }
 
 /* MPII_Dataloop_stackelm_blocksize - returns block size for stackelm based on current
@@ -971,7 +953,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
  * before this is called!
  *
  */
-MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
+MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm *elmp)
 {
     MPII_Dataloop *dlp = elmp->loop_p;
 
@@ -982,19 +964,14 @@ MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
              * in the init call.
              */
             return dlp->loop_params.c_t.count;
-            break;
         case MPII_DATALOOP_KIND_VECTOR:
             return dlp->loop_params.v_t.blocksize;
-            break;
         case MPII_DATALOOP_KIND_BLOCKINDEXED:
             return dlp->loop_params.bi_t.blocksize;
-            break;
         case MPII_DATALOOP_KIND_INDEXED:
             return dlp->loop_params.i_t.blocksize_array[elmp->orig_count - elmp->curcount];
-            break;
         case MPII_DATALOOP_KIND_STRUCT:
             return dlp->loop_params.s_t.blocksize_array[elmp->orig_count - elmp->curcount];
-            break;
         default:
             /* --BEGIN ERROR HANDLING-- */
             MPIR_Assert(0);
@@ -1022,16 +999,12 @@ MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
         case MPII_DATALOOP_KIND_VECTOR:
         case MPII_DATALOOP_KIND_CONTIG:
             return 0;
-            break;
         case MPII_DATALOOP_KIND_BLOCKINDEXED:
             return dlp->loop_params.bi_t.offset_array[elmp->orig_count - elmp->curcount];
-            break;
         case MPII_DATALOOP_KIND_INDEXED:
             return dlp->loop_params.i_t.offset_array[elmp->orig_count - elmp->curcount];
-            break;
         case MPII_DATALOOP_KIND_STRUCT:
             return dlp->loop_params.s_t.offset_array[elmp->orig_count - elmp->curcount];
-            break;
         default:
             /* --BEGIN ERROR HANDLING-- */
             MPIR_Assert(0);

@@ -46,6 +46,7 @@ static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int process_
                                  int buflen, int pmi_version)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
 
     HYDU_FUNC_ENTER();
 
@@ -53,8 +54,8 @@ static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int process_
         HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
 
     struct PMIU_cmd pmi;
-    status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
-    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+    pmi_errno = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
+    HYDU_ASSERT(!pmi_errno, status);
 
 #if defined ENABLE_PROFILING
     if (HYD_server_info.enable_profiling)
