@@ -859,7 +859,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         /* sockets provider need flush any last lightweight send. */
         mpi_errno = flush_send_queue();
         MPIR_ERR_CHECK(mpi_errno);
-    } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+    } else if (!MPIR_Process.comm_world || MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
         /* skip collective work arounds */
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
                || strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
