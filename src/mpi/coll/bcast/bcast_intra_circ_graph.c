@@ -106,8 +106,17 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
     if (comm_size < 2) {
         goto fn_exit;
     }
-    if (q_len < 1) {
-        q_len = 1;
+    /* minimum q_len is 2.
+     * Consider the case p=10, k=2, when rank 1 sends to rank 3, and 3->5, 5->7, 7->9, 9->1,
+     * which forms a send ring. In a rndv protocol, the send only can complete once the
+     * corresponding recv is posted. Thus, in order to prevent deadlock when q_len is 1,
+     * one of the process need post recv before send while other processes posts send before
+     * recv. Because as p and k varies, the potential ring varies, and it require additional
+     * complexity to post send and recv in each round correctly. Instead, when q_len >= 2,
+     * the send and recv dependency within a round disappears.
+     */
+    if (q_len < 2) {
+        q_len = 2;
     }
 
     int p = comm_size;
