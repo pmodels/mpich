@@ -854,9 +854,11 @@ def dump_f77_c_func(func, is_cptr=False):
     c_func_name = func_name
     if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
         if RE.m.group(1) == 'put':
-            c_func_name = "MPI_Comm_set_attr"
+            c_func_name = "MPIX_Comm_set_attr_as_fortran"
         else:
-            c_func_name = "MPI_Comm_get_attr"
+            c_func_name = "MPIX_Comm_get_attr_as_fortran"
+    elif RE.match(r'MPI_(Comm|Type|Win)_(get|set)_attr$', func['name'], re.IGNORECASE):
+        c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     elif re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")

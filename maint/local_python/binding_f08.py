@@ -774,6 +774,8 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         c_name = "MPII_op_create"
     elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
         c_name = "MPII_greq_start"
+    elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large:
+        c_name = "PMPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:
         # uses PMPI c binding directly
         c_name = 'P' + get_function_name(func, is_large)
