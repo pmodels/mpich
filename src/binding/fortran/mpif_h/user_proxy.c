@@ -150,34 +150,6 @@ int MPII_Type_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_
     return MPII_Keyval_create(copy_fn, delete_fn, keyval_out, extra_state, F77_DATATYPE);
 }
 
-/* When keyval is builtin (e.g. MPI_TAG_UB), C returns a pointer to an internal int instead of
- * directly returning the int value casted as a (void *), which is the behavior in fortran when
- * the keyval is not builtin.
- * It's a very stupid divergence of behavior, but now we have to deal with it in the binding.
- */
-static bool keyval_is_builtin(int keyval)
-{
-    /* There is no API for checking builtin handles, so we are *hacking* it. */
-    /* Assume builting keyval is between [0, MPI_WIN_MODEL] */
-    if (keyval >= 0 && keyval <= MPI_WIN_MODEL) {
-        return true;
-    } else if ((keyval & 0xffff0000) == 0x64400000) {
-        /* MPICH ABI */
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void MPII_builtin_attr_c2f(int keyval, void **attr)
-{
-    if (keyval_is_builtin(keyval)) {
-        /* cast the value as a pointer */
-        int *p = (void *) (intptr_t) * attr;
-        *attr = (void *) (intptr_t) (*p);
-    }
-}
-
 /* ---- user op ----------------- */
 struct F77_op_state {
     F77_OpFunction *opfn;
