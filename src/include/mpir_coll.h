@@ -11,14 +11,26 @@
 
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
- * are safe to use during init. They are all intra algorithms.
+ * are safe to use during init.
  */
-#define MPIR_Barrier_fallback    MPIR_Barrier_intra_dissemination
-#define MPIR_Allgather_fallback  MPIR_Allgather_intra_brucks
-#define MPIR_Allgatherv_fallback MPIR_Allgatherv_intra_brucks
-#define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling
-#define MPIR_Bcast_fallback      MPIR_Bcast_intra_binomial
-#define MPIR_Gather_fallback     MPIR_Gather_intra_binomial
+int MPIR_Barrier_fallback(MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgather_fallback(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                            MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgatherv_fallback(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                             MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allreduce_fallback(const void *sendbuf, void *recvbuf,
+                            MPI_Aint count, MPI_Datatype datatype,
+                            MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Bcast_fallback(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                        MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Gather_fallback(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                         MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Reduce_scatter_block_fallback(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
+                                       MPI_Datatype datatype, MPI_Op op,
+                                       MPIR_Comm * comm_ptr, int coll_attr);
 
 
 /* Internal point-to-point communication for collectives */

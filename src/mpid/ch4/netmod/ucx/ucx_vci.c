@@ -75,9 +75,9 @@ static int all_vcis_address_exchange(MPIR_Comm * comm)
                MPIDI_UCX_global.ctx[i].addrname_len);
     }
     /* Allgather */
-    mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPIR_BYTE_INTERNAL,
-                                            all_names, my_len, MPIR_BYTE_INTERNAL,
-                                            comm, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPIR_BYTE_INTERNAL,
+                                        all_names, my_len, MPIR_BYTE_INTERNAL,
+                                        comm, MPIR_COLL_ATTR_SYNC);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* insert the addresses */

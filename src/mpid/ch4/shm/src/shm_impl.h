@@ -12,6 +12,8 @@
 #ifndef SHM_IMPL_H_INCLUDED
 #define SHM_IMPL_H_INCLUDED
 
+#include "shm_am.h"
+
 #ifdef MPIDI_ENABLE_AM_ONLY
 #include "shm_am_fallback.h"
 #else
@@ -22,7 +24,6 @@
 #include "shm_hooks.h"
 #endif
 
-#include "shm_am.h"
 #include "shm_progress.h"
 #include "shm_hooks_internal.h"
 
