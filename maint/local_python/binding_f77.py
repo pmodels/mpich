@@ -31,7 +31,6 @@ def dump_f77_c_func(func, is_cptr=False):
 
     is_custom_fn = False  # custom function body
     need_skip_ierr = False
-    keyval_name = None    # _get_attr functions need check for builtin keyvals
 
     if re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
@@ -510,7 +509,6 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
-        end_list_common.append("    MPII_builtin_attr_c2f(*%s, &%s_i);" % (keyval_name, v))
         end_list_common.append("    *%s = (%s) (intptr_t) %s_i;" % (v, c_type, v))
         end_list_common.append("}")
 
@@ -556,7 +554,6 @@ def dump_f77_c_func(func, is_cptr=False):
 
     # ----------------------------------
     def process_func_parameters():
-        nonlocal keyval_name
         n = len(func['parameters'])
         i = 0
         while i < n:
@@ -597,10 +594,6 @@ def dump_f77_c_func(func, is_cptr=False):
                 continue
             else:
                 i += 1
-
-            # remember the name of some variables for cross usages
-            if p['kind'] == 'KEYVAL' and re.match(r'mpi_\w+_get_attr|mpi_attr_get', func['name'], re.IGNORECASE):
-                keyval_name = p['name']
 
             if f90_param_need_skip(p):
                 pass;

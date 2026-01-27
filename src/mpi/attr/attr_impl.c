@@ -208,18 +208,19 @@ static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_
          * and the Fortran versions provide the actual value (as an Fint)
          */
         attr_copy = MPIR_Process.attrs;
+        int *val_p = NULL;
         switch (comm_keyval) {
             case MPI_TAG_UB:
-                *attr_val_p = &attr_copy.tag_ub;
+                val_p = &attr_copy.tag_ub;
                 break;
             case MPI_HOST:
-                *attr_val_p = &attr_copy.host;
+                val_p = &attr_copy.host;
                 break;
             case MPI_IO:
-                *attr_val_p = &attr_copy.io;
+                val_p = &attr_copy.io;
                 break;
             case MPI_WTIME_IS_GLOBAL:
-                *attr_val_p = &attr_copy.wtime_is_global;
+                val_p = &attr_copy.wtime_is_global;
                 break;
             case MPI_UNIVERSE_SIZE:
                 /* This is a special case.  If universe is not set, then we
@@ -231,7 +232,7 @@ static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_
                  * the copy from the cache (yes, there was a time when the code
                  * did the wrong thing here). */
                 if (attr_copy.universe >= 0) {
-                    *attr_val_p = &attr_copy.universe;
+                    val_p = &attr_copy.universe;
                 } else if (attr_copy.universe == MPIR_UNIVERSE_SIZE_NOT_AVAILABLE) {
                     *flag = 0;
                 } else {
@@ -246,14 +247,14 @@ static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_
                     /* --END ERROR HANDLING-- */
                     attr_copy.universe = MPIR_Process.attrs.universe;
                     if (attr_copy.universe >= 0) {
-                        *attr_val_p = &attr_copy.universe;
+                        val_p = &attr_copy.universe;
                     } else {
                         *flag = 0;
                     }
                 }
                 break;
             case MPI_LASTUSEDCODE:
-                *attr_val_p = &attr_copy.lastusedcode;
+                val_p = &attr_copy.lastusedcode;
                 break;
             case MPI_APPNUM:
                 /* This is another special case.  If appnum is negative,
@@ -262,12 +263,20 @@ static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_
                 if (attr_copy.appnum < 0) {
                     *flag = 0;
                 } else {
-                    *attr_val_p = &attr_copy.appnum;
+                    val_p = &attr_copy.appnum;
                 }
                 break;
             default:
                 MPIR_Assert(0);
                 break;
+        }
+        if (*flag) {
+            if (as_fortran) {
+                /* Fortran retrieves scalar integer cast as void * */
+                *attr_val_p = (void *) (intptr_t) (*val_p);
+            } else {
+                *attr_val_p = val_p;
+            }
         }
     } else {
         MPIR_Attribute *p;
@@ -627,19 +636,35 @@ static int win_get_attr(MPIR_Win * win_ptr, int win_keyval, void *attribute_val,
                 break;
             case MPI_WIN_SIZE:
                 win_ptr->copySize = win_ptr->size;
-                *attr_val_p = &win_ptr->copySize;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copySize;
+                } else {
+                    *attr_val_p = &win_ptr->copySize;
+                }
                 break;
             case MPI_WIN_DISP_UNIT:
                 win_ptr->copyDispUnit = win_ptr->disp_unit;
-                *attr_val_p = &win_ptr->copyDispUnit;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyDispUnit;
+                } else {
+                    *attr_val_p = &win_ptr->copyDispUnit;
+                }
                 break;
             case MPI_WIN_CREATE_FLAVOR:
                 win_ptr->copyCreateFlavor = win_ptr->create_flavor;
-                *attr_val_p = &win_ptr->copyCreateFlavor;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyCreateFlavor;
+                } else {
+                    *attr_val_p = &win_ptr->copyCreateFlavor;
+                }
                 break;
             case MPI_WIN_MODEL:
                 win_ptr->copyModel = win_ptr->model;
-                *attr_val_p = &win_ptr->copyModel;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyModel;
+                } else {
+                    *attr_val_p = &win_ptr->copyModel;
+                }
                 break;
             default:
                 MPIR_Assert(FALSE);
