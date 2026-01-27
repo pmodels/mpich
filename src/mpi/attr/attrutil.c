@@ -183,6 +183,7 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
         /* FIXME: This is not correct in some cases (size(MPI_Aint)>
          * sizeof(intptr_t)) */
         new_p->value = new_value;
+        new_p->as_fortran = p->as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = 0;
 

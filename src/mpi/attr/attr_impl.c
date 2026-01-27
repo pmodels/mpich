@@ -182,7 +182,8 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
    If the attribute has the same type as the request, it is returned as-is.
    Otherwise, the address of the attribute is returned.
 */
-int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val, int *flag)
+static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val, int *flag,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     static PreDefined_attrs attr_copy;  /* Used to provide a copy of the
@@ -284,7 +285,12 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
         while (p) {
             if (p->keyval->handle == comm_keyval) {
                 *flag = 1;
-                *(void **) attribute_val = p->value;
+                if (p->as_fortran && !as_fortran) {
+                    /* Fortran set as integer, C get a pointer to its internal storage */
+                    *(void **) attribute_val = &(p->value);
+                } else {
+                    *(void **) attribute_val = p->value;
+                }
                 break;
             }
             p = p->next;
@@ -298,7 +304,8 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
     goto fn_exit;
 }
 
-int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+static int comm_set_attr(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p; /* old_p is needed if we are adding new attribute */
@@ -331,6 +338,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
                 goto fn_fail;
             }
             p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* printf("Updating attr at %x\n", &p->value); */
             /* Does not change the reference count on the keyval */
             break;
@@ -345,6 +353,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
         new_p->keyval = keyval_ptr;
         new_p->pre_sentinal = 0;
         new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = *old_p;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -440,8 +449,8 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
     goto fn_exit;
 }
 
-int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *attribute_val,
-                            int *flag)
+static int type_get_attr(MPIR_Datatype * type_ptr, int type_keyval, void *attribute_val, int *flag,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
@@ -455,7 +464,12 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
     while (p) {
         if (p->keyval->handle == type_keyval) {
             *flag = 1;
-            *(void **) attribute_val = p->value;
+            if (p->as_fortran && !as_fortran) {
+                /* Fortran set as integer, C get a pointer to its internal storage */
+                *(void **) attribute_val = &(p->value);
+            } else {
+                *(void **) attribute_val = p->value;
+            }
 
             break;
         }
@@ -466,7 +480,8 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
     return mpi_errno;
 }
 
-int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+static int type_set_attr(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -489,6 +504,7 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
                 goto fn_fail;
             }
             p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -498,6 +514,7 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
             new_p->keyval = keyval_ptr;
             new_p->pre_sentinal = 0;
             new_p->value = attribute_val;
+            new_p->as_fortran = as_fortran;
             new_p->post_sentinal = 0;
             new_p->next = p->next;
             MPII_Keyval_add_ref(keyval_ptr);
@@ -515,6 +532,7 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
         new_p->keyval = keyval_ptr;
         new_p->pre_sentinal = 0;
         new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = 0;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -581,7 +599,8 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
     goto fn_exit;
 }
 
-int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_val, int *flag)
+static int win_get_attr(MPIR_Win * win_ptr, int win_keyval, void *attribute_val, int *flag,
+                        bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -633,7 +652,12 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
         while (p) {
             if (p->keyval->handle == win_keyval) {
                 *flag = 1;
-                *(void **) attribute_val = (void *) (intptr_t) (p->value);
+                if (p->as_fortran && !as_fortran) {
+                    /* Fortran set as integer, C get a pointer to its internal storage */
+                    *(void **) attribute_val = &(p->value);
+                } else {
+                    *(void **) attribute_val = p->value;
+                }
 
                 break;
             }
@@ -645,7 +669,8 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
     return mpi_errno;
 }
 
-int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+static int win_set_attr(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                        bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -668,6 +693,7 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
                 goto fn_fail;
             }
             p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -677,6 +703,7 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
             new_p->keyval = keyval_ptr;
             new_p->pre_sentinal = 0;
             new_p->value = attribute_val;
+            new_p->as_fortran = as_fortran;
             new_p->post_sentinal = 0;
             new_p->next = p->next;
             MPII_Keyval_add_ref(keyval_ptr);
@@ -694,6 +721,7 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
         new_p->keyval = keyval_ptr;
         new_p->pre_sentinal = 0;
         new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = 0;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -756,4 +784,75 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* C API */
+
+int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val, int *flag)
+{
+    return comm_get_attr(comm_ptr, comm_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return comm_set_attr(comm_ptr, keyval_ptr, attribute_val, false);
+}
+
+int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval,
+                            void *attribute_val, int *flag)
+{
+    return type_get_attr(type_ptr, type_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return type_set_attr(type_ptr, keyval_ptr, attribute_val, false);
+}
+
+int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_val, int *flag)
+{
+    return win_get_attr(win_ptr, win_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return win_set_attr(win_ptr, keyval_ptr, attribute_val, false);
+}
+
+/* Fortran binding call MPIX_{Comm,Type,Win}_{get,set}_attr */
+
+int MPIR_Comm_get_attr_as_fortran_impl(MPIR_Comm * comm_ptr, int comm_keyval,
+                                       void *attribute_val, int *flag)
+{
+    return comm_get_attr(comm_ptr, comm_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Comm_set_attr_as_fortran_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr,
+                                       void *attribute_val)
+{
+    return comm_set_attr(comm_ptr, keyval_ptr, attribute_val, true);
+}
+
+int MPIR_Type_get_attr_as_fortran_impl(MPIR_Datatype * type_ptr, int type_keyval,
+                                       void *attribute_val, int *flag)
+{
+    return type_get_attr(type_ptr, type_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Type_set_attr_as_fortran_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr,
+                                       void *attribute_val)
+{
+    return type_set_attr(type_ptr, keyval_ptr, attribute_val, true);
+}
+
+int MPIR_Win_get_attr_as_fortran_impl(MPIR_Win * win_ptr, int win_keyval,
+                                      void *attribute_val, int *flag)
+{
+    return win_get_attr(win_ptr, win_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Win_set_attr_as_fortran_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr,
+                                      void *attribute_val)
+{
+    return win_set_attr(win_ptr, keyval_ptr, attribute_val, true);
 }

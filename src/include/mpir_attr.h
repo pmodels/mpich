@@ -173,6 +173,7 @@ typedef struct MPIR_Attribute {
                                  * the value */
     void *value;                /* Stored value */
     long post_sentinal;         /* Like pre_sentinal */
+    bool as_fortran;            /* true if it is set via MPIX_Comm_set_attr_as_fortran */
     /* other, device-specific information */
 #ifdef MPID_DEV_ATTR_DECL
      MPID_DEV_ATTR_DECL
