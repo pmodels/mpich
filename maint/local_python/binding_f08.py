@@ -590,12 +590,9 @@ def dump_f08_wrappers_f(func, is_large):
         arg_list_2.append("%s_len" % v)
 
     # ----
-    keyval_name = None  # needed for converting attributes (which need to check for builtin keyval)
     for p in func['parameters']:
         if f08_param_need_skip(p, f08_mapping):
             continue
-        if p['kind'] == 'KEYVAL':
-            keyval_name = p['name']
         f_param_list.append(p['name'])
         f_decl = get_F_decl(p, f08_mapping)
         if is_alltoallvw and p['name'] == 'sendbuf':
@@ -612,8 +609,6 @@ def dump_f08_wrappers_f(func, is_large):
                 arg_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], p['_array_length'])
             elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
                 arg_1 = p['name']
-                convert_list_post.append("IF (flag_c /= 0) CALL MPIR_builtin_attr_c2f(%s, %s)" % (keyval_name, p['name']))
-                uses["MPIR_builtin_attr_c2f"] = 1
             else:
                 # no conversion needed, e.g. choice buffer, MPI_Aint, etc.
                 arg_1 = p['name']
@@ -925,7 +920,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_builtin_attr_c2f', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)

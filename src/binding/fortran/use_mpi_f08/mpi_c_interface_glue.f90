@@ -11,20 +11,6 @@ implicit none
 
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
-public :: MPIR_builtin_attr_c2f
-
-interface
-
-subroutine MPIR_builtin_attr_c2f(keyval, attr) &
-    bind(C, name="MPII_builtin_attr_c2f")
-    USE, intrinsic :: iso_c_binding, ONLY : c_int
-    USE :: mpi_f08_compile_constants, ONLY : MPI_ADDRESS_KIND
-    implicit none
-    integer(c_int), value, intent(in) :: keyval
-    integer(kind=MPI_ADDRESS_KIND), intent(inout) :: attr
-end subroutine
-
-end interface
 
 contains
 
