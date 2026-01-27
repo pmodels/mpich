@@ -669,6 +669,8 @@ def process_func_parameters(func):
         elif kind == "DATATYPE":
             if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|lb|ub|extent)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
+            elif RE.match(r'mpix_type_(get|set)_attr_as_fortran', func_name, re.IGNORECASE):
+                do_handle_ptr = 1
             elif RE.match(r'mpi_type_get_name', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_DATATYPE_NULL"
                 do_handle_ptr = 1
@@ -691,7 +693,7 @@ def process_func_parameters(func):
         elif kind == "MESSAGE" and p['param_direction'] == 'inout':
             do_handle_ptr = 1
         elif kind == "KEYVAL":
-            if RE.search(r'_(set_attr|delete_attr|free_keyval)$', func_name):
+            if RE.search(r'_(set_attr(_as_fortran)?|delete_attr|free_keyval)$', func_name):
                 do_handle_ptr = 1
             if is_pointer_type(p):
                 validation_list.append({'kind': "KEYVAL", 'name': '*' + name})

@@ -67,3 +67,36 @@ MPIX_Win_create_keyval_x:
     destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
     win_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
+
+MPIX_Comm_get_attr_as_fortran:
+    comm: COMMUNICATOR, [communicator to which the attribute is attached]
+    comm_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+
+MPIX_Comm_set_attr_as_fortran:
+    comm: COMMUNICATOR, direction=in, [communicator to which attribute will be attached]
+    comm_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
+
+MPIX_Type_get_attr_as_fortran:
+    datatype: DATATYPE, [datatype to which the attribute is attached]
+    type_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+
+MPIX_Type_set_attr_as_fortran:
+    datatype: DATATYPE, direction=in, [datatype to which attribute will be attached]
+    type_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
+
+MPIX_Win_get_attr_as_fortran:
+    win: WINDOW, [window to which the attribute is attached]
+    win_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+
+MPIX_Win_set_attr_as_fortran:
+    win: WINDOW, direction=in, [window to which attribute will be attached]
+    win_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
