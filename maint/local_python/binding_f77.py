@@ -728,9 +728,9 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
             elif re.match(r'ATTRIBUTE_VAL', p['kind']):
-                if re.match(r'MPI_((Comm|Type|Win)_get_attr)', func['name'], re.IGNORECASE):
+                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Aint", "flag_i")
-                elif re.match(r'MPI_((Comm|Type|Win)_set_attr)', func['name'], re.IGNORECASE):
+                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
                     dump_attr_in(p['name'], "MPI_Aint")
                 elif re.match(r'MPI_Attr_get', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Fint", "flag_i")
