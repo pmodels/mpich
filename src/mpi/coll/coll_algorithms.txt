@@ -179,6 +179,7 @@ allgather-intra:
         func_name: recexch
         extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
         cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+    circ_graph
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
@@ -312,6 +313,8 @@ ialltoallw-inter:
 
 reduce-intra:
     binomial
+    circ_graph
+        restrictions: commutative
     smp
         restrictions: commutative, parent-comm
     reduce_scatter_gather

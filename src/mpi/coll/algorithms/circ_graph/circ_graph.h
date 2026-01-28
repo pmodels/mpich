@@ -34,7 +34,7 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 
 enum MPII_cga_type {
     MPII_CGA_BCAST,
-    /* more types to be defined later */
+    MPII_CGA_REDUCE,
 };
 
 typedef struct {
@@ -60,6 +60,11 @@ typedef struct {
             MPI_Aint count;
             MPI_Datatype datatype;
         } bcast;
+        struct {
+            void *tmp_buf;
+            void *recvbuf;
+            MPI_Op op;
+        } reduce;
     } u;
 
     MPIR_Comm *comm;
@@ -80,6 +85,9 @@ typedef struct {
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
                               MPIR_Comm * comm, int coll_attr, bool is_root);
+int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue,
+                               void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                               MPI_Op op, MPIR_Comm * comm, int coll_attr);
 int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
