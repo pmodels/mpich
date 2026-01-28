@@ -1188,6 +1188,26 @@ cvars:
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
 
+    - name        : MPIR_CVAR_REDUCE_CIRC_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines message chunk size for the circ_graph algorithm (0 forces single message send)
+
+    - name        : MPIR_CVAR_REDUCE_CIRC_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many bcast rounds can be in flight at once for the circ_graph algorithm
+
     - name        : MPIR_CVAR_REDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1199,6 +1219,7 @@ cvars:
         Variable to select reduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         binomial              - Force binomial algorithm
+        circ_graph            - Force circulant graph algorithm
         nb                    - Force nonblocking algorithm
         smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm

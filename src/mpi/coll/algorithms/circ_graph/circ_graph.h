@@ -32,15 +32,31 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 /* We assume there are n chunks in a contiguous buf with equal chunk_size except the last chunk.
  * This may get relaxed (extended) later */
 
+#define MPII_CGA_BCAST  1
+#define MPII_CGA_REDUCE 2
+
 typedef struct {
     int q_len;
-    void *buf;
     int n;                      /* total number of blocks */
     int chunk_count;
     int last_chunk_count;
-    MPI_Aint chunk_offset;      /* chunk_count * extent */
+    MPI_Aint chunk_extent;      /* chunk_count * extent */
     MPI_Datatype datatype;
+
+    int coll_type;              /* bcast or reduce */
+    union {
+        struct {
+            void *buf;
+        } bcast;
+        struct {
+            void *tmp_buf;
+            void *recvbuf;
+            MPI_Op op;
+        } reduce;
+    } u;
+
     MPIR_Comm *comm;
+    int tag;
     int coll_attr;
 
     int *pending_blocks;        /* pending_blocks[n], points to the index of the pending requests
@@ -56,6 +72,11 @@ typedef struct {
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
                               int q_len, void *buf, int n, int chunk_size, int last_chunk_size,
                               MPIR_Comm * comm, int coll_attr);
+int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int q_len,
+                               void *tmp_buf, void *recvbuf, int n,
+                               int chunk_count, int last_chunk_count,
+                               MPI_Datatype datatype, MPI_Aint extent, MPI_Op op,
+                               MPIR_Comm * comm, int coll_attr);
 int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
