@@ -472,6 +472,9 @@ algorithms:
             binomial
             smp
             reduce_scatter_gather
+            circ_graph
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=2,4,8
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768

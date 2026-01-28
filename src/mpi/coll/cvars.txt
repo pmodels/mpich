@@ -1199,6 +1199,7 @@ cvars:
         Variable to select reduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         binomial              - Force binomial algorithm
+        circ_graph            - Force circulant graph algorithm
         nb                    - Force nonblocking algorithm
         smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
