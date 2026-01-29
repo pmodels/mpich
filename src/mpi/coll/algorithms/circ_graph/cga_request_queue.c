@@ -23,23 +23,20 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->q_head = 0;
     queue->q_tail = 0;
 
-    queue->can_send = MPL_malloc(n * sizeof(*queue->can_send), MPL_MEM_OTHER);
-    if (!queue->can_send) {
+    queue->pending_blocks = MPL_malloc(n * sizeof(*queue->pending_blocks), MPL_MEM_OTHER);
+    if (!queue->pending_blocks) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     queue->requests = MPL_malloc(q_len * sizeof(*queue->requests), MPL_MEM_OTHER);
     if (!queue->requests) {
-        MPL_free(queue->can_send);
+        MPL_free(queue->pending_blocks);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     for (int i = 0; i < n; i++) {
-        /* the schedule ensures a recv always precedes a send for the same block
-         * unless the block is already available (e.g. root in bcast). So we can
-         * initialize can_send[i] to true and reset it to false as we issue recvs.
-         */
-        queue->can_send[i] = true;
+        /* -1 marks the block not pending (available to send) */
+        queue->pending_blocks[i] = -1;
     }
 
     for (int i = 0; i < q_len; i++) {
@@ -80,16 +77,11 @@ int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!queue->can_send[block]) {
-        for (int i = 0; i < queue->q_len; i++) {
-            if (queue->requests[i].chunk_id == block) {
-                mpi_errno = wait_for_request(queue, i);
-                MPIR_ERR_CHECK(mpi_errno);
-                break;
-            }
-        }
+    if (queue->pending_blocks[block] >= 0) {
+        int i = queue->pending_blocks[block];
+        mpi_errno = wait_for_request(queue, i);
+        MPIR_ERR_CHECK(mpi_errno);
     }
-    MPIR_Assert(queue->can_send[block]);
 
     void *buf;
     if (queue->coll_type == MPII_CGA_BCAST) {
@@ -136,7 +128,7 @@ int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank
                            &(queue->requests[queue->q_head].req));
     MPIR_ERR_CHECK(mpi_errno);
 
-    queue->can_send[block] = false;
+    queue->pending_blocks[block] = queue->q_head;
     queue->requests[queue->q_head].chunk_id = block;
 
     queue->q_head = (queue->q_head + 1) % queue->q_len;
@@ -162,7 +154,7 @@ int MPII_cga_waitall(MPII_cga_request_queue * queue)
             MPIR_Request_free(queue->requests[i].req);
         }
     }
-    MPL_free(queue->can_send);
+    MPL_free(queue->pending_blocks);
     MPL_free(queue->requests);
 
   fn_exit:
@@ -200,8 +192,9 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (queue->requests[i].chunk_id != -1) {
-        /* it's a recv, update can_send */
-        queue->can_send[queue->requests[i].chunk_id] = true;
+        /* it's a recv, update pending_blocks */
+        int block = queue->requests[i].chunk_id;
+        queue->pending_blocks[block] = -1;
     }
     MPIR_Request_free(queue->requests[i].req);
     queue->requests[i].req = NULL;
