@@ -1054,44 +1054,16 @@ if test "$NEEDSPLIB" = "yes" ; then
 fi
 
 # MPL
-mplsrcdir=""
-AC_SUBST([mplsrcdir])
-mpllibdir=""
-AC_SUBST([mpllibdir])
-mpllib=""
-AC_SUBST([mpllib])
-
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL
 
 # json-c
-
-jsonsrcdir=""
-AC_SUBST([jsonsrcdir])
-jsonlib=""
-AC_SUBST([jsonlib])
-
-jsonlib="modules/json-c/libjson-c.la"
-if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$jsonlib"; then
-    jsonsrcdir=""
-else
-    PAC_PUSH_ALL_FLAGS()
-    PAC_RESET_ALL_FLAGS()
-    PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-    PAC_POP_ALL_FLAGS()
-    jsonsrcdir="${main_top_builddir}/modules/json-c"
-fi
-PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
-PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
+m4_define([json_embedded_dir],[modules/json-c])
+PAC_CONFIG_JSON
 
 # ----------------------------------------------------------------------------
 # HWLOC / NETLOC
 # ----------------------------------------------------------------------------
-hwlocsrcdir=""
-AC_SUBST([hwlocsrcdir])
-hwloclib=""
-AC_SUBST([hwloclib])
-
 m4_define([hwloc_embedded_dir],[modules/hwloc])
 PAC_CONFIG_HWLOC
 
@@ -1431,35 +1403,10 @@ fi
 
 # This goes here because we need the top_srcdir
 if test "$enable_romio" = "yes" ; then
-   if test -d $use_top_srcdir/src/mpi/romio ; then
-       AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
+    AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
 
-       # make it possible to "#include" mpio.h at build time
-       #
-       # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accommodate current mpicc limitations.  See
-       # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
-
-       # Set environment variables that the romio configure expects
-       export use_top_srcdir
-       top_build_dir=`pwd`
-       export top_build_dir
-       # if there is no $top_build_dir/lib, romio puts lib in wrong place
-       # This test used -e under Linux, but not all test programs understand
-       # -e
-       if test ! -d lib ; then mkdir lib ; fi
-       # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
-       ROMIO_VERSION='#define ROMIO_VERSION 126'
-
-       romio_subdir_args=""
-       if test "$enable_mpi_abi" = "yes" ; then
-           romio_subdir_args="--enable-mpi-abi"
-       fi
-       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
-   else
-       AC_MSG_WARN([ROMIO src directory is not available])
-   fi
+    m4_define([romio_embedded_dir], [src/mpi/romio])
+    PAC_CONFIG_ROMIO
 fi
 AC_SUBST(ROMIO_VERSION)
 
@@ -1621,32 +1568,12 @@ AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
 AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
 # ---- $with_pmilib ----
-pmisrcdir=""
-AC_SUBST([pmisrcdir])
-pmilib=""
-AC_SUBST([pmilib])
-
 case "$with_pmilib" in
   no)
     ;;
   default|mpich|install)
-    pmisrcdir="src/pmi"
-    pmilib="src/pmi/libpmi.la"
-
-    pmi_subdir_args=""
-    if test "$with_pmilib" != "install" ; then
-        pmi_subdir_args="--enable-embedded"
-    fi
-    if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
-        pmi_subdir_args="$pmi_subdir_args --disable-pmi1 --disable-pmi2"
-    fi
-    if test "$pac_have_pmix" = "yes" ; then
-        pmi_subdir_args="$pmi_subdir_args --disable-pmix"
-    fi
-    PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
-
-    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
+    m4_define([pmi_embedded_dir], [src/pmi])
+    PAC_CONFIG_PMI
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
