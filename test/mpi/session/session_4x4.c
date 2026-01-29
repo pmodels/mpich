@@ -5,25 +5,22 @@
 
 #include "mpi.h"
 #include <stdio.h>
-#include <assert.h>
 #include "mpitest.h"
 
-/* This test divide 16 processes into 4 groups (nodes), each group
- * creates a node_comm. Then roots of each node group creates a roots_comm.
+/* This test divides 16 processes into 4 groups (nodes), each group
+ * creates a node_comm. Then roots of each node group create a roots_comm.
  */
 
-#define NP 16
 #define PPN 4
 #define N 4
+#define NP (PPN * N)
 
 int main(int argc, char *argv[])
 {
     int errs = 0;
 
-    int ret;
     MPI_Session session;
     MPI_Group world_group;
-    MPI_Comm comm;
 
     MPI_Session_init(MPI_INFO_NULL, MPI_ERRORS_ARE_FATAL, &session);
 
@@ -34,11 +31,8 @@ int main(int argc, char *argv[])
     MPI_Group_size(world_group, &world_size);
 
     if (world_size != NP) {
-        printf("This test require %d processes, world_size is %d.\n", NP, world_size);
-        goto fn_exit;
-    }
-    if (N * PPN != NP) {
-        printf("N(%d) x PPN(%d) != NP(%d)\n", N, PPN, NP);
+        errs++;
+        printf("This test requires %d processes, world_size is %d.\n", NP, world_size);
         goto fn_exit;
     }
 
@@ -73,6 +67,7 @@ int main(int argc, char *argv[])
     if (world_rank == 0) {
         int expect_sum = NP * (NP - 1) / 2;
         if (world_sum != expect_sum) {
+            errs++;
             printf("Expect world_sum %d, got %d\n", expect_sum, world_sum);
         } else {
             printf("No Errors\n");
@@ -90,5 +85,5 @@ int main(int argc, char *argv[])
     MPI_Session_finalize(&session);
 
   fn_exit:
-    return errs;
+    return MTestReturnValue(errs);
 }
