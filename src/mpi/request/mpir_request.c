@@ -294,19 +294,6 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
     return mpi_errno;
 }
 
-#ifdef HAVE_FORTRAN_BINDING
-/* Set the language type to Fortran for this (generalized) request */
-void MPII_Grequest_set_lang_f77(MPI_Request greq)
-{
-    MPIR_Request *greq_ptr;
-
-    MPIR_Request_get_ptr(greq, greq_ptr);
-
-    greq_ptr->u.ureq.greq_fns->greq_lang = MPIR_LANG__FORTRAN;
-}
-#endif
-
-
 int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 {
     int rc;
@@ -323,23 +310,6 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;, "**user",
                                  "**usercancel %d", rc);
             break;
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN:
-        case MPIR_LANG__FORTRAN90:
-            {
-                MPI_Fint ierr;
-                MPI_Fint icomplete = complete;
-
-                (request_ptr->u.ureq.greq_fns->U.F.cancel_fn) (request_ptr->u.ureq.
-                                                               greq_fns->grequest_extra_state,
-                                                               &icomplete, &ierr);
-                rc = (int) ierr;
-                MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}, "**user",
-                                     "**usercancel %d", rc);
-                break;
-            }
-#endif
-
         default:
             {
                 /* --BEGIN ERROR HANDLING-- */
@@ -374,26 +344,6 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);
             break;
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN:
-        case MPIR_LANG__FORTRAN90:
-            {
-                MPI_Fint ierr;
-                MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
-                /* Take off the global locks before calling user functions */
-                MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                (request_ptr->u.ureq.greq_fns->U.F.query_fn) (request_ptr->u.ureq.
-                                                              greq_fns->grequest_extra_state, is,
-                                                              &ierr);
-                rc = (int) ierr;
-                if (rc == MPI_SUCCESS)
-                    PMPI_Status_f2c(is, &request_ptr->status);
-                MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
-                                     , "**user", "**userquery %d", rc);
-            }
-            break;
-#endif
         default:
             {
                 /* --BEGIN ERROR HANDLING-- */
@@ -424,21 +374,6 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userfree %d", rc);
             break;
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN:
-        case MPIR_LANG__FORTRAN90:
-            {
-                MPI_Fint ierr;
-
-                (request_ptr->u.ureq.greq_fns->U.F.free_fn) (request_ptr->u.ureq.
-                                                             greq_fns->grequest_extra_state, &ierr);
-                rc = (int) ierr;
-                MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}, "**user",
-                                     "**userfree %d", rc);
-                break;
-            }
-#endif
-
         default:
             {
                 /* --BEGIN ERROR HANDLING-- */

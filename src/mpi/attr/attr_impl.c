@@ -9,14 +9,9 @@
  * the same routine. */
 void MPIR_free_keyval(MPII_Keyval * keyval_ptr)
 {
-    int in_use;
-
     if (!keyval_ptr->was_freed) {
         keyval_ptr->was_freed = 1;
-        MPII_Keyval_release_ref(keyval_ptr, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
-        }
+        MPIR_Keyval_release(keyval_ptr);
     }
 }
 
@@ -50,9 +45,10 @@ int MPIR_Win_free_keyval_impl(MPII_Keyval * keyval_ptr)
     return MPI_SUCCESS;
 }
 
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                                 int *comm_keyval, void *extra_state)
+static int create_keyval_x(MPI_Comm_copy_attr_function * copy_fn,
+                           MPI_Comm_delete_attr_function * delete_fn,
+                           MPIX_Destructor_function * destructor_fn,
+                           int *keyval, void *extra_state, MPII_Object_kind kind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
@@ -67,6 +63,35 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
         MPIR_Process.attr_dup = MPIR_Attr_dup_list;
         MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
+
+    /* The handle encodes the keyval kind.  Modify it to have the correct
+     * field */
+    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (kind << 22);
+    MPIR_Object_set_ref(keyval_ptr, 1);
+    keyval_ptr->was_freed = 0;
+    keyval_ptr->kind = kind;
+    keyval_ptr->extra_state = extra_state;
+    keyval_ptr->copyfn.user_function = copy_fn;
+    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
+    keyval_ptr->delfn.user_function = delete_fn;
+    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
+    keyval_ptr->destructor_fn = destructor_fn;
+
+    MPIR_OBJ_PUBLISH_HANDLE(*keyval, keyval_ptr->handle);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+
+    goto fn_exit;
+}
+
+int MPIR_Comm_create_keyval_x_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                   MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                                   MPIX_Destructor_function * destructor_fn,
+                                   int *comm_keyval, void *extra_state)
+{
 #ifdef BUILD_MPI_ABI
     if (comm_copy_attr_fn == MPI_COMM_NULL_COPY_FN) {
         comm_copy_attr_fn = NULL;
@@ -78,45 +103,15 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_COMM << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_COMM;
-    keyval_ptr->extra_state = extra_state;
-    keyval_ptr->copyfn.user_function = comm_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = comm_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
-    MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
+    return create_keyval_x(comm_copy_attr_fn, comm_delete_attr_fn, destructor_fn,
+                           comm_keyval, extra_state, MPIR_COMM);
 }
 
-int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
-                                 MPI_Type_delete_attr_function * type_delete_attr_fn,
-                                 int *type_keyval, void *extra_state)
+int MPIR_Type_create_keyval_x_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
+                                   MPI_Type_delete_attr_function * type_delete_attr_fn,
+                                   MPIX_Destructor_function * destructor_fn,
+                                   int *type_keyval, void *extra_state)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
-
-    MPIR_FUNC_ENTER;
-
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
 #ifdef BUILD_MPI_ABI
     if (type_copy_attr_fn == MPI_TYPE_NULL_COPY_FN) {
         type_copy_attr_fn = NULL;
@@ -128,49 +123,18 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_DATATYPE << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_DATATYPE;
-    keyval_ptr->extra_state = extra_state;
-    /* Cast since we are assigning MPI_Type_copy_attr_function to
-     * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) type_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) type_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
     /* Tell finalize to check for attributes on permanent types */
     MPII_Datatype_attr_finalize();
 
-    MPIR_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return create_keyval_x(type_copy_attr_fn, type_delete_attr_fn, destructor_fn,
+                           type_keyval, extra_state, MPIR_DATATYPE);
 }
 
-int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
-                                MPI_Win_delete_attr_function * win_delete_attr_fn,
-                                int *win_keyval, void *extra_state)
+int MPIR_Win_create_keyval_x_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
+                                  MPI_Win_delete_attr_function * win_delete_attr_fn,
+                                  MPIX_Destructor_function * destructor_fn,
+                                  int *win_keyval, void *extra_state)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
-
-    MPIR_FUNC_ENTER;
-
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
 #ifdef BUILD_MPI_ABI
     if (win_copy_attr_fn == MPI_WIN_NULL_COPY_FN) {
         win_copy_attr_fn = NULL;
@@ -182,27 +146,32 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
     }
 #endif
 
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_WIN << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_WIN;
-    keyval_ptr->extra_state = extra_state;
-    /* Cast since we are assigning MPI_Win_copy_attr_function to
-     * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) win_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) win_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
+    return create_keyval_x(win_copy_attr_fn, win_delete_attr_fn, destructor_fn,
+                           win_keyval, extra_state, MPIR_WIN);
+}
 
-    MPIR_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
+int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                                 int *comm_keyval, void *extra_state)
+{
+    return MPIR_Comm_create_keyval_x_impl(comm_copy_attr_fn, comm_delete_attr_fn, NULL,
+                                          comm_keyval, extra_state);
+}
 
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
+                                 MPI_Type_delete_attr_function * type_delete_attr_fn,
+                                 int *type_keyval, void *extra_state)
+{
+    return MPIR_Type_create_keyval_x_impl(type_copy_attr_fn, type_delete_attr_fn, NULL,
+                                          type_keyval, extra_state);
+}
+
+int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
+                                MPI_Win_delete_attr_function * win_delete_attr_fn,
+                                int *win_keyval, void *extra_state)
+{
+    return MPIR_Win_create_keyval_x_impl(win_copy_attr_fn, win_delete_attr_fn, NULL,
+                                         win_keyval, extra_state);
 }
 
 /* Find the requested attribute.  If it exists, return either the attribute
@@ -213,8 +182,8 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
    If the attribute has the same type as the request, it is returned as-is.
    Otherwise, the address of the attribute is returned.
 */
-int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
-                            int *flag, MPIR_Attr_type outAttrType)
+static int comm_get_attr(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val, int *flag,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     static PreDefined_attrs attr_copy;  /* Used to provide a copy of the
@@ -228,17 +197,7 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
     /* Note that if we are called from Fortran, we must return the values,
      * not the addresses, of these attributes */
     if (HANDLE_IS_BUILTIN(comm_keyval)) {
-        int attr_idx = comm_keyval & 0x0000000f;
         void **attr_val_p = (void **) attribute_val;
-#ifdef HAVE_FORTRAN_BINDING
-        /* This is an address-sized int instead of a Fortran (MPI_Fint)
-         * integer because, even for the Fortran keyvals, the C interface is
-         * used which stores the result in a pointer (hence we need a
-         * pointer-sized int).  Thus we use intptr_t instead of MPI_Fint.
-         * On some 64-bit platforms, such as Solaris-SPARC, using an MPI_Fint
-         * will cause the value to placed into the high, rather than low,
-         * end of the output value. */
-#endif
         *flag = 1;
 
         /* FIXME : We could initialize some of these here; only tag_ub is
@@ -249,25 +208,21 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
          * and the Fortran versions provide the actual value (as an Fint)
          */
         attr_copy = MPIR_Process.attrs;
-        switch (attr_idx) {
-            case 1:    /* TAG_UB */
-            case 2:
-                *attr_val_p = &attr_copy.tag_ub;
+        int *val_p = NULL;
+        switch (comm_keyval) {
+            case MPI_TAG_UB:
+                val_p = &attr_copy.tag_ub;
                 break;
-            case 3:    /* HOST */
-            case 4:
-                *attr_val_p = &attr_copy.host;
+            case MPI_HOST:
+                val_p = &attr_copy.host;
                 break;
-            case 5:    /* IO */
-            case 6:
-                *attr_val_p = &attr_copy.io;
+            case MPI_IO:
+                val_p = &attr_copy.io;
                 break;
-            case 7:    /* WTIME */
-            case 8:
-                *attr_val_p = &attr_copy.wtime_is_global;
+            case MPI_WTIME_IS_GLOBAL:
+                val_p = &attr_copy.wtime_is_global;
                 break;
-            case 9:    /* UNIVERSE_SIZE */
-            case 10:
+            case MPI_UNIVERSE_SIZE:
                 /* This is a special case.  If universe is not set, then we
                  * attempt to get it from the device.  If the device is doesn't
                  * supply a value, then we set the flag accordingly.  Note that
@@ -277,7 +232,7 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
                  * the copy from the cache (yes, there was a time when the code
                  * did the wrong thing here). */
                 if (attr_copy.universe >= 0) {
-                    *attr_val_p = &attr_copy.universe;
+                    val_p = &attr_copy.universe;
                 } else if (attr_copy.universe == MPIR_UNIVERSE_SIZE_NOT_AVAILABLE) {
                     *flag = 0;
                 } else {
@@ -292,60 +247,35 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
                     /* --END ERROR HANDLING-- */
                     attr_copy.universe = MPIR_Process.attrs.universe;
                     if (attr_copy.universe >= 0) {
-                        *attr_val_p = &attr_copy.universe;
+                        val_p = &attr_copy.universe;
                     } else {
                         *flag = 0;
                     }
                 }
                 break;
-            case 11:   /* LASTUSEDCODE */
-            case 12:
-                *attr_val_p = &attr_copy.lastusedcode;
+            case MPI_LASTUSEDCODE:
+                val_p = &attr_copy.lastusedcode;
                 break;
-            case 13:   /* APPNUM */
-            case 14:
+            case MPI_APPNUM:
                 /* This is another special case.  If appnum is negative,
                  * we take that as indicating no value of APPNUM, and set
                  * the flag accordingly */
                 if (attr_copy.appnum < 0) {
                     *flag = 0;
                 } else {
-                    *attr_val_p = &attr_copy.appnum;
+                    val_p = &attr_copy.appnum;
                 }
                 break;
+            default:
+                MPIR_Assert(0);
+                break;
         }
-        /* All of the predefined attributes are stored internally as C ints;
-         * since we've set the output value as the pointer to these, we need
-         * to dereference it here. We must also be very careful of the 3
-         * different output cases, since the two Fortran cases correspond
-         * to MPI_Fint and MPIR_FAint (an internal MPICH typedef for C
-         * version of INTEGER (KIND=MPI_ADDRESS_KIND)) */
         if (*flag) {
-            /* Use the internal pointer-sized-int for systems (e.g., BG/P)
-             * that define MPI_Aint as a different size than intptr_t.
-             * The casts must be as they are:
-             * On the right, the value is a pointer to an int, so to
-             * get the correct value, we need to extract the int.
-             * On the left, the output type is given by the argument
-             * outAttrType - and the cast must match the intended results */
-            /* FIXME: This code is broken.  The MPIR_ATTR_INT is for Fortran
-             * MPI_Fint types, not int, and MPIR_ATTR_AINT is for Fortran
-             * INTEGER(KIND=MPI_ADDRESS_KIND), which is probably an MPI_Aint,
-             * and intptr_t is for exactly the case where MPI_Aint is not
-             * the same as intptr_t.
-             * This code needs to be fixed in every place that it occurs
-             * (i.e., see the win and type get_attr routines). */
-            if (outAttrType == MPIR_ATTR_AINT)
-                *(intptr_t *) attr_val_p = *(int *) *(void **) attr_val_p;
-            else if (outAttrType == MPIR_ATTR_INT) {
-                /* *(int*)attr_val_p = *(int *)*(void **)attr_val_p; */
-                /* This is correct, because the corresponding code
-                 * in the Fortran interface expects to find a pointer-length
-                 * integer value.  Thus, this works for both big and little
-                 * endian systems. Any changes made here must have
-                 * corresponding changes in src/binding/f77/attr_getf.c ,
-                 * which is generated by src/binding/f77/buildiface . */
-                *(intptr_t *) attr_val_p = *(int *) *(void **) attr_val_p;
+            if (as_fortran) {
+                /* Fortran retrieves scalar integer cast as void * */
+                *attr_val_p = (void *) (intptr_t) (*val_p);
+            } else {
+                *attr_val_p = val_p;
             }
         }
     } else {
@@ -364,32 +294,12 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
         while (p) {
             if (p->keyval->handle == comm_keyval) {
                 *flag = 1;
-                if (outAttrType == MPIR_ATTR_PTR) {
-                    if (p->attrType == MPIR_ATTR_INT) {
-                        /* This is the tricky case: if the system is
-                         * bigendian, and we have to return a pointer to
-                         * an int, then we may need to point to the
-                         * correct location in the word. */
-#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
-                        *(void **) attribute_val = &(p->value);
-#else
-                        int *p_loc = (int *) &(p->value);
-#if SIZEOF_VOID_P == 2 * SIZEOF_INT
-                        p_loc++;
-#else
-#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
-#endif
-                        *(void **) attribute_val = p_loc;
-#endif
-                    } else if (p->attrType == MPIR_ATTR_AINT) {
-                        *(void **) attribute_val = &(p->value);
-                    } else {
-                        *(void **) attribute_val = (void *) (intptr_t) (p->value);
-                    }
+                if (p->as_fortran && !as_fortran) {
+                    /* Fortran set as integer, C get a pointer to its internal storage */
+                    *(void **) attribute_val = &(p->value);
                 } else {
-                    *(void **) attribute_val = (void *) (intptr_t) (p->value);
+                    *(void **) attribute_val = p->value;
                 }
-
                 break;
             }
             p = p->next;
@@ -403,8 +313,8 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
     goto fn_exit;
 }
 
-int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
-                            MPIR_Attr_type attrType)
+static int comm_set_attr(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p; /* old_p is needed if we are adding new attribute */
@@ -436,15 +346,8 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
             if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            p->attrType = attrType;
-            /* FIXME: This code is incorrect in some cases, particularly
-             * in the case where intptr_t is different from MPI_Aint,
-             * since in that case, the Fortran 9x interface will provide
-             * more bytes in the attribute_val than this allows. The
-             * dual casts are a sign that this is faulty. This will
-             * need to be fixed in the type/win set_attr routines as
-             * well. */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* printf("Updating attr at %x\n", &p->value); */
             /* Does not change the reference count on the keyval */
             break;
@@ -457,10 +360,9 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
         MPIR_ERR_CHKANDJUMP(!new_p, mpi_errno, MPI_ERR_OTHER, "**nomem");
         /* Did not find in list.  Add at end */
         new_p->keyval = keyval_ptr;
-        new_p->attrType = attrType;
         new_p->pre_sentinal = 0;
-        /* FIXME: See the comment above on this dual cast. */
-        new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+        new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = *old_p;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -492,11 +394,7 @@ static void delete_attr(MPIR_Attribute ** attributes_list, MPIR_Attribute * attr
         if (p == attr) {
             *old_p = p->next;
 
-            int in_use;
-            MPII_Keyval_release_ref(p->keyval, &in_use);
-            if (!in_use) {
-                MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-            }
+            MPIR_Keyval_release(p->keyval);
             MPID_Attr_free(p);
             break;
         }
@@ -560,8 +458,8 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
     goto fn_exit;
 }
 
-int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *attribute_val,
-                            int *flag, MPIR_Attr_type outAttrType)
+static int type_get_attr(MPIR_Datatype * type_ptr, int type_keyval, void *attribute_val, int *flag,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
@@ -575,30 +473,12 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
     while (p) {
         if (p->keyval->handle == type_keyval) {
             *flag = 1;
-            if (outAttrType == MPIR_ATTR_PTR) {
-                if (p->attrType == MPIR_ATTR_INT) {
-                    /* This is the tricky case: if the system is
-                     * bigendian, and we have to return a pointer to
-                     * an int, then we may need to point to the
-                     * correct location in the word. */
-#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
-                    *(void **) attribute_val = &(p->value);
-#else
-                    int *p_loc = (int *) &(p->value);
-#if SIZEOF_VOID_P == 2 * SIZEOF_INT
-                    p_loc++;
-#else
-#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
-#endif
-                    *(void **) attribute_val = p_loc;
-#endif
-                } else if (p->attrType == MPIR_ATTR_AINT) {
-                    *(void **) attribute_val = &(p->value);
-                } else {
-                    *(void **) attribute_val = (void *) (intptr_t) (p->value);
-                }
-            } else
-                *(void **) attribute_val = (void *) (intptr_t) (p->value);
+            if (p->as_fortran && !as_fortran) {
+                /* Fortran set as integer, C get a pointer to its internal storage */
+                *(void **) attribute_val = &(p->value);
+            } else {
+                *(void **) attribute_val = p->value;
+            }
 
             break;
         }
@@ -609,8 +489,8 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
     return mpi_errno;
 }
 
-int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
-                            MPIR_Attr_type attrType)
+static int type_set_attr(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                         bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -632,8 +512,8 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
             if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            p->attrType = attrType;
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -641,9 +521,9 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
             MPIR_ERR_CHKANDJUMP1(!new_p, mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPIR_Attribute");
             new_p->keyval = keyval_ptr;
-            new_p->attrType = attrType;
             new_p->pre_sentinal = 0;
-            new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            new_p->value = attribute_val;
+            new_p->as_fortran = as_fortran;
             new_p->post_sentinal = 0;
             new_p->next = p->next;
             MPII_Keyval_add_ref(keyval_ptr);
@@ -659,9 +539,9 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
                              "**nomem", "**nomem %s", "MPIR_Attribute");
         /* Did not find in list.  Add at end */
         new_p->keyval = keyval_ptr;
-        new_p->attrType = attrType;
         new_p->pre_sentinal = 0;
-        new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+        new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = 0;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -728,8 +608,8 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
     goto fn_exit;
 }
 
-int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_val,
-                           int *flag, MPIR_Attr_type outAttrType)
+static int win_get_attr(MPIR_Win * win_ptr, int win_keyval, void *attribute_val, int *flag,
+                        bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -743,11 +623,6 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
      * not the addresses, of these attributes */
     if (HANDLE_IS_BUILTIN(win_keyval)) {
         void **attr_val_p = (void **) attribute_val;
-#ifdef HAVE_FORTRAN_BINDING
-        /* Note that this routine only has a Fortran 90 binding,
-         * so the attribute value is an address-sized int */
-        intptr_t *attr_int = (intptr_t *) attribute_val;
-#endif
         *flag = 1;
 
         /*
@@ -761,43 +636,36 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
                 break;
             case MPI_WIN_SIZE:
                 win_ptr->copySize = win_ptr->size;
-                *attr_val_p = &win_ptr->copySize;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copySize;
+                } else {
+                    *attr_val_p = &win_ptr->copySize;
+                }
                 break;
             case MPI_WIN_DISP_UNIT:
                 win_ptr->copyDispUnit = win_ptr->disp_unit;
-                *attr_val_p = &win_ptr->copyDispUnit;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyDispUnit;
+                } else {
+                    *attr_val_p = &win_ptr->copyDispUnit;
+                }
                 break;
             case MPI_WIN_CREATE_FLAVOR:
                 win_ptr->copyCreateFlavor = win_ptr->create_flavor;
-                *attr_val_p = &win_ptr->copyCreateFlavor;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyCreateFlavor;
+                } else {
+                    *attr_val_p = &win_ptr->copyCreateFlavor;
+                }
                 break;
             case MPI_WIN_MODEL:
                 win_ptr->copyModel = win_ptr->model;
-                *attr_val_p = &win_ptr->copyModel;
+                if (as_fortran) {
+                    *attr_val_p = (void *) (intptr_t) win_ptr->copyModel;
+                } else {
+                    *attr_val_p = &win_ptr->copyModel;
+                }
                 break;
-#ifdef HAVE_FORTRAN_BINDING
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_BASE):
-                /* The Fortran routine that matches this routine should
-                 * provide an address-sized integer, not an MPI_Fint */
-                *attr_int = (MPI_Aint) win_ptr->base;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_SIZE):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->size;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_DISP_UNIT):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->disp_unit;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_CREATE_FLAVOR):
-                *attr_int = win_ptr->create_flavor;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_MODEL):
-                *attr_int = win_ptr->model;
-                break;
-#endif
             default:
                 MPIR_Assert(FALSE);
                 break;
@@ -809,30 +677,12 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
         while (p) {
             if (p->keyval->handle == win_keyval) {
                 *flag = 1;
-                if (outAttrType == MPIR_ATTR_PTR) {
-                    if (p->attrType == MPIR_ATTR_INT) {
-                        /* This is the tricky case: if the system is
-                         * bigendian, and we have to return a pointer to
-                         * an int, then we may need to point to the
-                         * correct location in the word. */
-#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
-                        *(void **) attribute_val = &(p->value);
-#else
-                        int *p_loc = (int *) &(p->value);
-#if SIZEOF_VOID_P == 2 * SIZEOF_INT
-                        p_loc++;
-#else
-#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
-#endif
-                        *(void **) attribute_val = p_loc;
-#endif
-                    } else if (p->attrType == MPIR_ATTR_AINT) {
-                        *(void **) attribute_val = &(p->value);
-                    } else {
-                        *(void **) attribute_val = (void *) (intptr_t) (p->value);
-                    }
-                } else
-                    *(void **) attribute_val = (void *) (intptr_t) (p->value);
+                if (p->as_fortran && !as_fortran) {
+                    /* Fortran set as integer, C get a pointer to its internal storage */
+                    *(void **) attribute_val = &(p->value);
+                } else {
+                    *(void **) attribute_val = p->value;
+                }
 
                 break;
             }
@@ -844,8 +694,8 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
     return mpi_errno;
 }
 
-int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
-                           MPIR_Attr_type attrType)
+static int win_set_attr(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
+                        bool as_fortran)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -867,8 +717,8 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
             if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            p->attrType = attrType;
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            p->value = attribute_val;
+            p->as_fortran = as_fortran;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -876,9 +726,9 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
             MPIR_ERR_CHKANDJUMP1(!new_p, mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPIR_Attribute");
             new_p->keyval = keyval_ptr;
-            new_p->attrType = attrType;
             new_p->pre_sentinal = 0;
-            new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            new_p->value = attribute_val;
+            new_p->as_fortran = as_fortran;
             new_p->post_sentinal = 0;
             new_p->next = p->next;
             MPII_Keyval_add_ref(keyval_ptr);
@@ -893,10 +743,10 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
         MPIR_ERR_CHKANDJUMP1(!new_p, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "MPIR_Attribute");
         /* Did not find in list.  Add at end */
-        new_p->attrType = attrType;
         new_p->keyval = keyval_ptr;
         new_p->pre_sentinal = 0;
-        new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+        new_p->value = attribute_val;
+        new_p->as_fortran = as_fortran;
         new_p->post_sentinal = 0;
         new_p->next = 0;
         MPII_Keyval_add_ref(keyval_ptr);
@@ -959,4 +809,75 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* C API */
+
+int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val, int *flag)
+{
+    return comm_get_attr(comm_ptr, comm_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return comm_set_attr(comm_ptr, keyval_ptr, attribute_val, false);
+}
+
+int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval,
+                            void *attribute_val, int *flag)
+{
+    return type_get_attr(type_ptr, type_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return type_set_attr(type_ptr, keyval_ptr, attribute_val, false);
+}
+
+int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_val, int *flag)
+{
+    return win_get_attr(win_ptr, win_keyval, attribute_val, flag, false);
+}
+
+int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val)
+{
+    return win_set_attr(win_ptr, keyval_ptr, attribute_val, false);
+}
+
+/* Fortran binding call MPIX_{Comm,Type,Win}_{get,set}_attr */
+
+int MPIR_Comm_get_attr_as_fortran_impl(MPIR_Comm * comm_ptr, int comm_keyval,
+                                       void *attribute_val, int *flag)
+{
+    return comm_get_attr(comm_ptr, comm_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Comm_set_attr_as_fortran_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr,
+                                       void *attribute_val)
+{
+    return comm_set_attr(comm_ptr, keyval_ptr, attribute_val, true);
+}
+
+int MPIR_Type_get_attr_as_fortran_impl(MPIR_Datatype * type_ptr, int type_keyval,
+                                       void *attribute_val, int *flag)
+{
+    return type_get_attr(type_ptr, type_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Type_set_attr_as_fortran_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr,
+                                       void *attribute_val)
+{
+    return type_set_attr(type_ptr, keyval_ptr, attribute_val, true);
+}
+
+int MPIR_Win_get_attr_as_fortran_impl(MPIR_Win * win_ptr, int win_keyval,
+                                      void *attribute_val, int *flag)
+{
+    return win_get_attr(win_ptr, win_keyval, attribute_val, flag, true);
+}
+
+int MPIR_Win_set_attr_as_fortran_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr,
+                                      void *attribute_val)
+{
+    return win_set_attr(win_ptr, keyval_ptr, attribute_val, true);
 }

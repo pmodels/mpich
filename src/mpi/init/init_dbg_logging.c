@@ -22,7 +22,6 @@ MPL_dbg_class MPIR_DBG_REQUEST;
 
 /* these classes might need to move out later */
 MPL_dbg_class MPIR_DBG_ASSERT;
-MPL_dbg_class MPIR_DBG_STRING;
 
 void MPII_pre_init_dbg_logging(int *argc, char ***argv)
 {
@@ -50,7 +49,6 @@ void MPII_init_dbg_logging(void)
     MPIR_DBG_COLL = MPL_dbg_class_alloc("COLL", "coll");
 
     MPIR_DBG_ASSERT = MPL_dbg_class_alloc("ASSERT", "assert");
-    MPIR_DBG_STRING = MPL_dbg_class_alloc("STRING", "string");
 }
 
 #else

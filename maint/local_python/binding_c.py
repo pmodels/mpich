@@ -92,14 +92,6 @@ def dump_mpi_c(func, is_large=False):
         # The mpi-abi version of io bindings does not have access to MPICH internals (i.e. mpiimpl.h)
         dump_function_io(func)
         skip_wrappers = True
-    elif 'polymorph' in func:
-        # MPII_ function to support C/Fortran Polymorphism, eg MPI_Comm_get_attr
-        G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
-        dump_function_internal(func, kind="polymorph")
-        G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
-        G.out.append("")
-
-        dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
         pass
     else:
@@ -677,6 +669,8 @@ def process_func_parameters(func):
         elif kind == "DATATYPE":
             if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|lb|ub|extent)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
+            elif RE.match(r'mpix_type_(get|set)_attr_as_fortran', func_name, re.IGNORECASE):
+                do_handle_ptr = 1
             elif RE.match(r'mpi_type_get_name', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_DATATYPE_NULL"
                 do_handle_ptr = 1
@@ -699,7 +693,7 @@ def process_func_parameters(func):
         elif kind == "MESSAGE" and p['param_direction'] == 'inout':
             do_handle_ptr = 1
         elif kind == "KEYVAL":
-            if RE.search(r'_(set_attr|delete_attr|free_keyval)$', func_name):
+            if RE.search(r'_(set_attr(_as_fortran)?|delete_attr|free_keyval)$', func_name):
                 do_handle_ptr = 1
             if is_pointer_type(p):
                 validation_list.append({'kind': "KEYVAL", 'name': '*' + name})
@@ -1421,17 +1415,8 @@ def dump_function_internal(func, kind):
     func_name = get_function_name(func, func['_is_large']);
 
     s = get_declare_function(func, func['_is_large'])
-    if kind == "polymorph":
-        (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
-        s = re.sub(r'MPI(X?)_([a-zA-Z0-9_]*\()', r'MPI\1I_\2', s, 1)
-        s = re.sub(r'\)$', ', '+extra_param+')', s)
-        # prepare for the latter body of routines calling MPIR impl
-        RE.search(r'(\w+)$', extra_param)
-        func['_impl_arg_list'].append(RE.m.group(1))
-        func['_impl_param_list'].append(extra_param)
-    else:
-        G.out.append("")
-        s = get_function_internal_prototype(s)
+    G.out.append("")
+    s = get_function_internal_prototype(s)
 
     dump_line_with_break(s)
     G.out.append("{")
@@ -1440,12 +1425,6 @@ def dump_function_internal(func, kind):
     if "impl" in func and func['impl'] == "direct":
         # e.g. MPI_Aint_add
         dump_function_direct(func)
-    elif kind == 'call-polymorph':
-        (extra_param, extra_arg) = get_polymorph_param_and_arg(func['polymorph'])
-        repl_name = re.sub(r'MPI(X?)_', r'MPI\1I_', func_name, 1)
-        repl_args = get_function_args(func) + ', ' + extra_arg
-        repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, repl_call)
     else:
         dump_function_normal(func)
 
@@ -3051,14 +3030,6 @@ def get_impl_param(func, param):
             # SMALL but internally use MPI_Aint
             s = re.sub(r'\bint\b', r'MPI_Aint', s)
     return s
-
-def get_polymorph_param_and_arg(s):
-    # s is a polymorph spec, e.g. "MPIR_Attr_type attr_type=MPIR_ATTR_PTR"
-    # Note: we assume limit of single extra param for now (which is sufficient)
-    RE.match(r'^\s*(.+?)\s*(\w+)\s*=\s*(.+)', s)
-    extra_param = RE.m.group(1) + ' ' + RE.m.group(2)
-    extra_arg = RE.m.group(3)
-    return (extra_param, extra_arg)
 
 def get_funcname_from_decl(l):
     m = re.match(r'([a-zA-Z0-9_]+|void \*) ([a-zA-Z0-9_]*)\(.*', l);
