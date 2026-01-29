@@ -43,7 +43,8 @@ typedef struct {
     MPIR_Comm *comm;
     int coll_attr;
 
-    bool *can_send;             /* can_send[n], set to true once the block is received */
+    int *pending_blocks;        /* pending_blocks[n], points to the index of the pending requests
+                                 * if the block is in transit */
     struct {
         MPIR_Request *req;
         int chunk_id;
