@@ -746,6 +746,7 @@ cvars:
         ring               - Force ring algorithm
         recexch_doubling   - Force recexch distance doubling algorithm
         recexch_halving    - Force recexch distance halving algorithm
+        circ_graph         - Force queued circulant graph algorithm
 
     - name        : MPIR_CVAR_ALLGATHER_BRUCKS_KVAL
       category    : COLLECTIVE
