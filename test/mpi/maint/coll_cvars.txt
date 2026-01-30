@@ -193,6 +193,9 @@ algorithms:
             recexch_halving
                 .MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=2,3,4
                 .MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV=0,1
+            circ_graph
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=1,4,8
         intra-nonblocking:
             sched_ring
             sched_brucks

@@ -18,6 +18,11 @@ typedef struct {
 
     int *Skip;                  /* Skip[q+1] - each round process r send to r+Skip[k] and receive from r-Skip[k],
                                  *             with a "MOD p" assumption. */
+    /* The receive schedule R[] and send scheduld S[].
+     * For bcast and reduce, we only need the schedule for this rank, thus the dimension is R[q] and S[q].
+     * For allgather and allreduce, we need schedules for every rank, thus the dimension is R[p][q] and S[p][q].
+     *     In the latter case, R[r][q] and S[r][q] are the schedule for root = (rank - r) MOD p.
+     */
     int *R;                     /* R[q] - in round k, this process receives the block R[k] (from r-Skip[k]) */
     int *S;                     /* S[q] - in round k, this process sends the block S[k] (to r+Skip[k]) */
 
@@ -25,6 +30,7 @@ typedef struct {
 } MPII_circ_graph;
 
 int MPII_circ_graph_create(MPII_circ_graph * cga, int p, int r);
+int MPII_circ_graph_create_all(MPII_circ_graph * cga, int p);
 int MPII_circ_graph_free(MPII_circ_graph * cga);
 
 /* runtime request queue */
@@ -35,6 +41,7 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 enum MPII_cga_type {
     MPII_CGA_BCAST,
     MPII_CGA_REDUCE,
+    MPII_CGA_ALLGATHER,
 };
 
 typedef struct {
@@ -61,6 +68,20 @@ typedef struct {
             MPI_Datatype datatype;
         } bcast;
         struct {
+            void *buf;
+            int rank;
+            int comm_size;
+            MPI_Aint buf_size;
+            MPI_Aint buf_extent;
+            bool need_pack;
+            /* following fields are needed for pack/unpack */
+            bool last_chunk_unpacked;   /* The last chunk will be sent multiple times in the last q rounds,
+                                         * but we only need unpack once */
+            void *pack_buf;
+            MPI_Aint count;
+            MPI_Datatype datatype;
+        } allgather;
+        struct {
             void *tmp_buf;
             void *recvbuf;
             MPI_Op op;
@@ -85,11 +106,17 @@ typedef struct {
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
                               MPIR_Comm * comm, int coll_attr, bool is_root);
+int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue,
+                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                  MPIR_Comm * comm, int coll_attr, int rank, int comm_size);
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue,
                                void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm, int coll_attr);
-int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank);
-int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
+int MPII_cga_send_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
+int MPII_cga_recv_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
+
+#define MPII_cga_issue_send(queue, block, peer) MPII_cga_send_root_block(queue, 0, block, peer)
+#define MPII_cga_issue_recv(queue, block, peer) MPII_cga_recv_root_block(queue, 0, block, peer)
 
 #endif
