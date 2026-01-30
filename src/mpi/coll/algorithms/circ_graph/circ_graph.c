@@ -125,6 +125,50 @@ int MPII_circ_graph_create(MPII_circ_graph * cga, int p, int r)
     goto fn_exit;
 }
 
+int MPII_circ_graph_create_all(MPII_circ_graph * cga, int p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int q = calc_log_p(p);
+
+    cga->p = p;
+    cga->q = q;
+
+    int *mem;
+    mem = MPL_malloc((q * (4 + p * 2) + 4) * sizeof(int), MPL_MEM_COLL);
+    MPIR_ERR_CHKANDJUMP(!mem, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    cga->mem = mem;
+
+#define SET_MEM(V, size) V = mem; mem += size
+
+    /* schedule: in round k, send to r + Skip[k] block S[k], and receive from r - Skip[k] block R[k] */
+    SET_MEM(cga->Skip, q + 1);
+    SET_MEM(cga->R, p * q);
+    SET_MEM(cga->S, p * q);
+    /* working memory needed by gen_rsched and gen_ssched */
+    int *stack, *next, *prev;
+    SET_MEM(stack, q + 1);
+    SET_MEM(next, q + 1);
+    SET_MEM(prev, q + 1);
+
+    /* Generate the send and receive schedule */
+    gen_skips(cga->Skip, p, q);
+    for (int r = 0; r < p; r++) {
+        gen_rsched(r, cga->R + r * q, p, q, cga->Skip, stack, next, prev);
+    }
+    for (int r = 0; r < p; r++) {
+        for (int k = 0; k < q; k++) {
+            int rt = (r + cga->Skip[k]) % p;
+            cga->S[r * q + k] = cga->R[rt * q + k];
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPII_circ_graph_free(MPII_circ_graph * cga)
 {
     MPL_free(cga->mem);
