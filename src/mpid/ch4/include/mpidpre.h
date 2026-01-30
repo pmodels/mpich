@@ -575,6 +575,7 @@ typedef struct MPIDIG_comm_t {
 
 typedef struct MPIDI_Devcomm_t {
     struct {
+        int comm_agree_epoch;
         /* The first fields are used by the AM(MPIDIG) apis */
         MPIDIG_comm_t am;
         /* for netmod internal send/recv (e.g. am_tag_{send,recv}, pipeline, rndv_{read,write} */
