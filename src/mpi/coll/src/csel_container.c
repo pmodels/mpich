@@ -109,6 +109,20 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_circ_graph:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                        cnt->u.reduce.intra_circ_graph.chunk_size =
+                            atoi(ckey + strlen("chunk_size="));
+                    else if (!strncmp(ckey, "q_len=", strlen("q_len=")))
+                        cnt->u.reduce.intra_circ_graph.q_len = atoi(ckey + strlen("q_len="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_tree:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -797,6 +811,8 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Neighbor_alltoallw_allcomm_nb;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_binomial"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_binomial;
+        else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_circ_graph"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_circ_graph;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_reduce_scatter_gather"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_reduce_scatter_gather;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_smp"))

@@ -314,6 +314,10 @@ ialltoallw-inter:
 
 reduce-intra:
     binomial
+    circ_graph
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_CHUNK_SIZE, CIRC_Q_LEN
+        restrictions: commutative
     smp
         restrictions: commutative, parent-comm
     reduce_scatter_gather
