@@ -10,21 +10,13 @@ static int wait_if_full(MPII_cga_request_queue * queue);
 static int wait_for_request(MPII_cga_request_queue * queue, int i);
 
 /* Routines for managing non-blocking send/recv of chunks  */
-int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
-                              int q_len, void *buf, int n, int chunk_size, int last_chunk_size,
-                              MPIR_Comm * comm, int coll_attr)
+static int init_request_queue_common(MPII_cga_request_queue * queue,
+                                     int q_len, int n, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
 
     queue->q_len = q_len;
-    queue->buf = buf;
     queue->n = n;
-    /* only with contig chunks for now */
-    queue->chunk_count = chunk_size;
-    queue->last_chunk_count = last_chunk_size;
-    queue->chunk_extent = chunk_size;
-    queue->datatype = MPIR_BYTE_INTERNAL;
-
     queue->comm = comm;
     queue->coll_attr = coll_attr;
 
@@ -33,13 +25,11 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
 
     queue->can_send = MPL_malloc(n * sizeof(*queue->can_send), MPL_MEM_OTHER);
     if (!queue->can_send) {
-        MPL_free(queue);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     queue->requests = MPL_malloc(q_len * sizeof(*queue->requests), MPL_MEM_OTHER);
     if (!queue->requests) {
-        MPL_free(queue);
         MPL_free(queue->can_send);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
@@ -63,6 +53,29 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
     goto fn_exit;
 }
 
+int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
+                              int q_len, void *buf, int n, int chunk_size, int last_chunk_size,
+                              MPIR_Comm * comm, int coll_attr)
+{
+    int mpi_errno;
+    mpi_errno = init_request_queue_common(queue, q_len, n, comm, coll_attr);
+
+    queue->coll_type = MPII_CGA_BCAST;
+    queue->u.bcast.buf = buf;
+
+    /* only with contig chunks for now */
+    queue->chunk_count = chunk_size;
+    queue->last_chunk_count = last_chunk_size;
+    queue->chunk_extent = chunk_size;
+    queue->datatype = MPIR_BYTE_INTERNAL;
+    queue->tag = MPIR_BCAST_TAG;
+
+    return mpi_errno;
+}
+
+#define GET_BLOCK_BUF(base, block) ((char *) (base) + (block) * queue->chunk_extent)
+#define GET_BLOCK_COUNT(block)     (((block) == queue->n - 1) ? queue->last_chunk_count : queue->chunk_count)
+
 int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -78,11 +91,17 @@ int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank
     }
     MPIR_Assert(queue->can_send[block]);
 
-    void *buf = (char *) queue->buf + block * queue->chunk_extent;
-    MPI_Aint count = (block == queue->n - 1) ? queue->last_chunk_count : queue->chunk_count;
+    void *buf;
+    if (queue->coll_type == MPII_CGA_BCAST) {
+        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+    } else {
+        MPIR_Assert(0);
+        buf = NULL;
+    }
 
+    MPI_Aint count = GET_BLOCK_COUNT(block);
     mpi_errno = MPIC_Isend(buf, count, queue->datatype,
-                           peer_rank, MPIR_BCAST_TAG, queue->comm,
+                           peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req), queue->coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -103,11 +122,17 @@ int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank
 {
     int mpi_errno = MPI_SUCCESS;
 
-    void *buf = (char *) queue->buf + block * queue->chunk_extent;
-    MPI_Aint msg_size = (block == queue->n - 1) ? queue->last_chunk_count : queue->chunk_count;
+    void *buf;
+    if (queue->coll_type == MPII_CGA_BCAST) {
+        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+    } else {
+        MPIR_Assert(0);
+        buf = NULL;
+    }
 
-    mpi_errno = MPIC_Irecv(buf, msg_size, MPIR_BYTE_INTERNAL,
-                           peer_rank, MPIR_BCAST_TAG, queue->comm,
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
+                           peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req));
     MPIR_ERR_CHECK(mpi_errno);
 
