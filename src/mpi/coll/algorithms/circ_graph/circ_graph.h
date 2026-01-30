@@ -32,15 +32,28 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 /* We assume there are n chunks in a contiguous buf with equal chunk_size except the last chunk.
  * This may get relaxed (extended) later */
 
+enum MPII_cga_type {
+    MPII_CGA_BCAST,
+    /* more types to be defined later */
+};
+
 typedef struct {
     int q_len;
-    void *buf;
     int n;                      /* total number of blocks */
     int chunk_count;
     int last_chunk_count;
-    MPI_Aint chunk_offset;      /* chunk_count * extent */
+    MPI_Aint chunk_extent;      /* chunk_count * extent */
     MPI_Datatype datatype;
+
+    enum MPII_cga_type coll_type;
+    union {
+        struct {
+            void *buf;
+        } bcast;
+    } u;
+
     MPIR_Comm *comm;
+    int tag;
     int coll_attr;
 
     bool *can_send;             /* can_send[n], set to true once the block is received */
