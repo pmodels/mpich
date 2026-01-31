@@ -24,8 +24,6 @@
  *     R[q] - in round k, this process receives the block R[k] (from r-Skip[k])
  */
 
-static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
-
 int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                 int root, MPIR_Comm * comm, int coll_attr)
 {
@@ -39,66 +37,22 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
         goto fn_exit;
     }
 
-    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
-    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
-    /* minimum q_len is 2.
-     * Consider the case p=10, k=2, when rank 1 sends to rank 3, and 3->5, 5->7, 7->9, 9->1,
-     * which forms a send ring. In a rndv protocol, the send only can complete once the
-     * corresponding recv is posted. Thus, in order to prevent deadlock when q_len is 1,
-     * one of the process need post recv before send while other processes posts send before
-     * recv. Because as p and k varies, the potential ring varies, and it require additional
-     * complexity to post send and recv in each round correctly. Instead, when q_len >= 2,
-     * the send and recv dependency within a round disappears.
-     */
-    if (q_len < 2) {
-        q_len = 2;
-    }
-
-    /* Prepare the data blocks */
-    MPI_Aint type_size;
-    int is_contig;
-    int buf_size;
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    buf_size = count * type_size;
-
-    if (buf_size == 0)
-        goto fn_exit;
-
-    MPIR_Datatype_is_contig(datatype, &is_contig);
-
     /* calculate the schedule */
     MPII_circ_graph cga;
     int relative_rank = (rank - root + comm_size) % comm_size;
     mpi_errno = MPII_circ_graph_create(&cga, comm_size, relative_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* if necessary, pack data in tmp_buf */
-    void *tmp_buf;
-    if (is_contig) {
-        tmp_buf = buffer;
-    } else {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
-        if (rank == root) {
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack(buffer, count, datatype, 0,
-                              tmp_buf, buf_size, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-            MPIR_Assert(actual_pack_bytes == buf_size);
-        }
-    }
-
-    /* Handle pipeline chunks */
-    int last_msg_size;
-    int n = calc_chunks(buf_size, chunk_size, &last_msg_size);
-
-    /* Run schedule */
+    /* request queue */
     MPII_cga_request_queue queue;
-    mpi_errno = MPII_cga_init_bcast_queue(&queue, q_len, tmp_buf, n, chunk_size, last_msg_size,
-                                          comm, coll_attr);
+    mpi_errno = MPII_cga_init_bcast_queue(&queue, buffer, count, datatype, comm, coll_attr,
+                                          (rank == root));
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Run schedule */
     int p = cga.p;
     int q = cga.q;
+    int n = queue.num_chunks;
     int x = (q - ((n - 1) % q)) % q;
     int offset = -x;
 
@@ -142,13 +96,6 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
     mpi_errno = MPII_cga_waitall(&queue);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!is_contig) {
-        MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(tmp_buf, buf_size, buffer, count, datatype,
-                            0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
-        MPIR_Assert(actual_unpack_bytes == buf_size);
-    }
-
     MPII_circ_graph_free(&cga);
     MPIR_CHKLMEM_FREEALL();
 
@@ -156,25 +103,4 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static int calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, int *last_msg_size_out)
-{
-    int n;
-    int last_msg_size;
-
-    if (chunk_size == 0) {
-        n = 1;
-        last_msg_size = buf_size;
-    } else {
-        n = (buf_size / chunk_size);
-        if (buf_size % chunk_size == 0) {
-            last_msg_size = chunk_size;
-        } else {
-            n++;
-            last_msg_size = buf_size % chunk_size;
-        }
-    }
-    *last_msg_size_out = last_msg_size;
-    return n;
 }
