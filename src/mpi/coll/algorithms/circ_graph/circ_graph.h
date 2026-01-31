@@ -39,7 +39,9 @@ enum MPII_cga_type {
 
 typedef struct {
     int q_len;
-    int n;                      /* total number of blocks */
+    int num_chunks;             /* total number of blocks */
+
+    /* datatype for each chunk */
     int chunk_count;
     int last_chunk_count;
     MPI_Aint chunk_extent;      /* chunk_count * extent */
@@ -49,6 +51,14 @@ typedef struct {
     union {
         struct {
             void *buf;
+            bool need_pack;
+            /* following fields are needed for pack/unpack */
+            bool is_root;       /* root pack on send, non-root unpack on recv */
+            bool last_chunk_unpacked;   /* root will send the last chunk in the last q rounds,
+                                         * but we only need unpack once */
+            void *pack_buf;
+            MPI_Aint count;
+            MPI_Datatype datatype;
         } bcast;
     } u;
 
@@ -60,6 +70,7 @@ typedef struct {
                                  * if the block is in transit */
     struct {
         MPIR_Request *req;
+        void *buf;
         int chunk_id;
     } *requests;                /* requests[q_len] */
     int q_head;
@@ -67,8 +78,8 @@ typedef struct {
 } MPII_cga_request_queue;       /* note: cga refers to "circulant graph algorithm" */
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
-                              int q_len, void *buf, int n, int chunk_size, int last_chunk_size,
-                              MPIR_Comm * comm, int coll_attr);
+                              void *buf, MPI_Aint count, MPI_Datatype datatype,
+                              MPIR_Comm * comm, int coll_attr, bool is_root);
 int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
