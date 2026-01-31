@@ -6,24 +6,25 @@
 #include "mpiimpl.h"
 #include "circ_graph.h"
 
+static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
 static int wait_if_full(MPII_cga_request_queue * queue);
 static int wait_for_request(MPII_cga_request_queue * queue, int i);
 
 /* Routines for managing non-blocking send/recv of chunks  */
 static int init_request_queue_common(MPII_cga_request_queue * queue,
-                                     int q_len, int n, MPIR_Comm * comm, int coll_attr)
+                                     int q_len, int num_chunks, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
 
     queue->q_len = q_len;
-    queue->n = n;
+    queue->num_chunks = num_chunks;
     queue->comm = comm;
     queue->coll_attr = coll_attr;
 
     queue->q_head = 0;
     queue->q_tail = 0;
 
-    queue->pending_blocks = MPL_malloc(n * sizeof(*queue->pending_blocks), MPL_MEM_OTHER);
+    queue->pending_blocks = MPL_malloc(num_chunks * sizeof(*queue->pending_blocks), MPL_MEM_OTHER);
     if (!queue->pending_blocks) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
@@ -34,7 +35,7 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < num_chunks; i++) {
         /* -1 marks the block not pending (available to send) */
         queue->pending_blocks[i] = -1;
     }
@@ -51,16 +52,48 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
 }
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
-                              int q_len, void *buf, int n, int chunk_size, int last_chunk_size,
-                              MPIR_Comm * comm, int coll_attr)
+                              void *buf, MPI_Aint count, MPI_Datatype datatype,
+                              MPIR_Comm * comm, int coll_attr, bool is_root)
 {
     int mpi_errno;
-    mpi_errno = init_request_queue_common(queue, q_len, n, comm, coll_attr);
+
+    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
+
+    /* minimum q_len is 2 to avoid circular dependency issues within a round */
+    if (q_len < 2) {
+        q_len = 2;
+    }
+
+    int is_contig;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+
+    bool need_pack = (!is_contig);
+
+    MPI_Aint type_size, data_size;
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    data_size = count * type_size;
+
+    int last_chunk_size;
+    int num_chunks = calc_chunks(data_size, chunk_size, &last_chunk_size);
+
+    mpi_errno = init_request_queue_common(queue, q_len, num_chunks, comm, coll_attr);
 
     queue->coll_type = MPII_CGA_BCAST;
     queue->u.bcast.buf = buf;
+    queue->u.bcast.need_pack = need_pack;
+    if (need_pack) {
+        /* TODO: In theory, we only need q blocks of pack buffer. */
+        queue->u.bcast.pack_buf = MPL_malloc(data_size, MPL_MEM_OTHER);
+        MPIR_Assert(queue->u.bcast.pack_buf);   /* TODO: proper error handling */
 
-    /* only with contig chunks for now */
+        queue->u.bcast.is_root = is_root;
+        queue->u.bcast.last_chunk_unpacked = false;
+        queue->u.bcast.count = count;
+        queue->u.bcast.datatype = datatype;
+    }
+
+    /* bcast send and recv in bytes */
     queue->chunk_count = chunk_size;
     queue->last_chunk_count = last_chunk_size;
     queue->chunk_extent = chunk_size;
@@ -71,7 +104,7 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
 }
 
 #define GET_BLOCK_BUF(base, block) ((char *) (base) + (block) * queue->chunk_extent)
-#define GET_BLOCK_COUNT(block)     (((block) == queue->n - 1) ? queue->last_chunk_count : queue->chunk_count)
+#define GET_BLOCK_COUNT(block)     (((block) == queue->num_chunks - 1) ? queue->last_chunk_count : queue->chunk_count)
 
 int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank)
 {
@@ -84,14 +117,29 @@ int MPII_cga_issue_send(MPII_cga_request_queue * queue, int block, int peer_rank
     }
 
     void *buf;
+    MPI_Aint count = GET_BLOCK_COUNT(block);
     if (queue->coll_type == MPII_CGA_BCAST) {
-        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+        if (queue->u.bcast.need_pack &&
+            queue->u.bcast.is_root && !queue->u.bcast.last_chunk_unpacked) {
+            buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+
+            MPI_Aint actual_pack_bytes;
+            MPI_Aint offset = block * queue->chunk_count;       /* this is in bytes */
+            MPIR_Typerep_pack(queue->u.bcast.buf, queue->u.bcast.count, queue->u.bcast.datatype,
+                              offset, buf, count, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Assert(actual_pack_bytes == count);
+
+            if (block == queue->num_chunks - 1) {
+                queue->u.bcast.last_chunk_unpacked = true;
+            }
+        } else {
+            buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+        }
     } else {
         MPIR_Assert(0);
         buf = NULL;
     }
 
-    MPI_Aint count = GET_BLOCK_COUNT(block);
     mpi_errno = MPIC_Isend(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req), queue->coll_attr);
@@ -115,14 +163,18 @@ int MPII_cga_issue_recv(MPII_cga_request_queue * queue, int block, int peer_rank
     int mpi_errno = MPI_SUCCESS;
 
     void *buf;
+    MPI_Aint count = GET_BLOCK_COUNT(block);
     if (queue->coll_type == MPII_CGA_BCAST) {
-        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+        if (queue->u.bcast.need_pack) {
+            buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+        } else {
+            buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+        }
     } else {
         MPIR_Assert(0);
         buf = NULL;
     }
 
-    MPI_Aint count = GET_BLOCK_COUNT(block);
     mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req));
@@ -148,10 +200,13 @@ int MPII_cga_waitall(MPII_cga_request_queue * queue)
 
     for (int i = 0; i < queue->q_len; i++) {
         if (queue->requests[i].req) {
-            mpi_errno = MPIC_Wait(queue->requests[i].req);
+            mpi_errno = wait_for_request(queue, i);
             MPIR_ERR_CHECK(mpi_errno);
-
-            MPIR_Request_free(queue->requests[i].req);
+        }
+    }
+    if (queue->coll_type == MPII_CGA_BCAST) {
+        if (queue->u.bcast.need_pack) {
+            MPL_free(queue->u.bcast.pack_buf);
         }
     }
     MPL_free(queue->pending_blocks);
@@ -195,6 +250,20 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
         /* it's a recv, update pending_blocks */
         int block = queue->requests[i].chunk_id;
         queue->pending_blocks[block] = -1;
+        if (queue->coll_type == MPII_CGA_BCAST) {
+            if (queue->u.bcast.need_pack && !queue->u.bcast.is_root) {
+                MPI_Aint count = GET_BLOCK_COUNT(block);
+                void *buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+
+                MPI_Aint actual_unpack_bytes;
+                MPI_Aint offset = block * queue->chunk_count;   /* this is in bytes */
+                MPIR_Typerep_unpack(buf, count,
+                                    queue->u.bcast.buf, queue->u.bcast.count,
+                                    queue->u.bcast.datatype, offset, &actual_unpack_bytes,
+                                    MPIR_TYPEREP_FLAG_NONE);
+                MPIR_Assert(actual_unpack_bytes == count);
+            }
+        }
     }
     MPIR_Request_free(queue->requests[i].req);
     queue->requests[i].req = NULL;
@@ -204,4 +273,25 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static int calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, int *last_msg_size_out)
+{
+    int n;
+    int last_msg_size;
+
+    if (chunk_size == 0) {
+        n = 1;
+        last_msg_size = buf_size;
+    } else {
+        n = (buf_size / chunk_size);
+        if (buf_size % chunk_size == 0) {
+            last_msg_size = chunk_size;
+        } else {
+            n++;
+            last_msg_size = buf_size % chunk_size;
+        }
+    }
+    *last_msg_size_out = last_msg_size;
+    return n;
 }
