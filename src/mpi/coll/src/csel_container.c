@@ -43,20 +43,6 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_circ_graph:
-            {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.bcast.intra_circ_graph.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    else if (!strncmp(ckey, "q_len=", strlen("q_len=")))
-                        cnt->u.bcast.intra_circ_graph.q_len = atoi(ckey + strlen("q_len="));
-                    MPL_free(ckey);
-                }
-            }
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree:
             {
                 json_object_object_foreach(obj, key, val) {
