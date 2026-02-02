@@ -193,25 +193,25 @@ cvars:
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
 
-    - name        : MPIR_CVAR_BCAST_CIRC_CHUNK_SIZE
+    - name        : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
       category    : COLLECTIVE
       type        : int
-      default     : 0
+      default     : 131072
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Determines message chunk size for circ_graph (0 forces single message send)
+        Determines message chunk size for the circ_graph algorithm. 0 forces single message send.
 
-    - name        : MPIR_CVAR_BCAST_CIRC_Q_LEN
+    - name        : MPIR_CVAR_CIRC_GRAPH_Q_LEN
       category    : COLLECTIVE
       type        : int
-      default     : 1
+      default     : 8
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Determines how many bcast rounds can be in flight at once for circ_graph
+        Determines how many messages can be in flight at once for the circ_graph algorithm
 
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE

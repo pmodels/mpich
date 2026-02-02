@@ -326,10 +326,6 @@ typedef struct {
                 int chunk_size;
                 int recv_pre_posted;
             } intra_pipelined_tree;
-            struct {
-                int chunk_size;
-                int q_len;
-            } intra_circ_graph;
         } bcast;
         struct {
             struct {
