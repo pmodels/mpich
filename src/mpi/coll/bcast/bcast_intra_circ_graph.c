@@ -27,8 +27,7 @@
 static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
 
 int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                int root, MPIR_Comm * comm,
-                                int chunk_size, int q_len, int coll_attr)
+                                int root, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -39,6 +38,9 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
     if (comm_size < 2) {
         goto fn_exit;
     }
+
+    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
     /* minimum q_len is 2.
      * Consider the case p=10, k=2, when rank 1 sends to rank 3, and 3->5, 5->7, 7->9, 9->1,
      * which forms a send ring. In a rndv protocol, the send only can complete once the
