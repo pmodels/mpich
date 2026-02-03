@@ -68,11 +68,11 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
     int is_contig;
     MPIR_Datatype_is_contig(datatype, &is_contig);
 
-    bool need_pack = (!is_contig);
-
     MPI_Aint type_size, data_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     data_size = count * type_size;
+
+    bool need_pack = (!is_contig && data_size > 0);
 
     int last_chunk_size;
     int num_chunks = calc_chunks(data_size, chunk_size, &last_chunk_size);
@@ -280,7 +280,8 @@ static int calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, int *last_msg_siz
     int n;
     int last_msg_size;
 
-    if (chunk_size == 0) {
+    /* note: bcast zero sized messages is valid */
+    if (chunk_size == 0 || buf_size == 0) {
         n = 1;
         last_msg_size = buf_size;
     } else {
