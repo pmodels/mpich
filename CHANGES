@@ -1,5 +1,5 @@
 ===============================================================================
-                               Changes in 5.0
+                               Changes in 5.0.0
 ===============================================================================
 # MPI_VERSION/MPI_SUBVERSION updated to 5 and 0. MPICH now supports the MPI 5.0
   standard.
