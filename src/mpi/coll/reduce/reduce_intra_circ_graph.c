@@ -92,7 +92,7 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
                 }
 
                 /* note: issue_send will wait for the receive if send_block is in receive or the queue is full */
-                mpi_errno = MPII_cga_issue_send(&queue, send_block, peer);
+                mpi_errno = MPII_cga_reduce_send(&queue, send_block, peer);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -106,7 +106,7 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
                 }
 
                 /* note: issue_recv will wait for a request to complete if the queue is full */
-                mpi_errno = MPII_cga_issue_recv(&queue, recv_block, peer);
+                mpi_errno = MPII_cga_reduce_recv(&queue, recv_block, peer);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
