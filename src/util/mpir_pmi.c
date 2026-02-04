@@ -333,6 +333,7 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 {
     SWITCH_PMI(pmi1_abort(exit_code, error_msg),
                pmi2_abort(exit_code, error_msg), pmix_abort(exit_code, error_msg));
+    exit(exit_code);
 }
 
 /* getters for internal constants */
