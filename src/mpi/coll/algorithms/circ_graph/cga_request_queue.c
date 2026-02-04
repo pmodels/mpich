@@ -7,8 +7,13 @@
 #include "circ_graph.h"
 
 static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
+static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint count,
+                      int peer_rank, int chunk_id, int *req_idx_out);
+static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
+                      int peer_rank, int chunk_id, int *req_idx_out);
 static int wait_if_full(MPII_cga_request_queue * queue);
 static int wait_for_request(MPII_cga_request_queue * queue, int i);
+static int reduce_local(MPII_cga_request_queue * queue, int block);
 
 /* Routines for managing non-blocking send/recv of chunks  */
 static int init_request_queue_common(MPII_cga_request_queue * queue,
@@ -236,7 +241,102 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue,
 #define GET_BLOCK_BUF(base, block) ((char *) (base) + (block) * queue->chunk_extent)
 #define GET_BLOCK_COUNT(block)     (((block) == queue->num_chunks - 1) ? queue->last_chunk_count : queue->chunk_count)
 
-int MPII_cga_send_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank)
+/* ---- bcast ---- */
+
+int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* In bcast, send may depend on a recv in the previous rounds, recv does not depend
+     * on sends since we only receive each block exactly once */
+
+    int chunk_id = block;
+    if (queue->pending_blocks[chunk_id] >= 0) {
+        int i = queue->pending_blocks[chunk_id];
+        mpi_errno = wait_for_request(queue, i);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    void *buf;
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    if (queue->u.bcast.need_pack && queue->u.bcast.is_root && !queue->u.bcast.last_chunk_unpacked) {
+        buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+
+        MPI_Aint actual_pack_bytes;
+        MPI_Aint offset = block * queue->chunk_count;   /* this is in bytes */
+        MPIR_Typerep_pack(queue->u.bcast.buf, queue->u.bcast.count, queue->u.bcast.datatype,
+                          offset, buf, count, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Assert(actual_pack_bytes == count);
+
+        if (block == queue->num_chunks - 1) {
+            queue->u.bcast.last_chunk_unpacked = true;
+        }
+    } else {
+        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+    }
+
+    int req_idx /* unused */ ;
+    mpi_errno = issue_send(queue, buf, count, peer_rank, block, &req_idx);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* In bcast, recv does not check dependency since we only recv each block exactly once
+     * before send (if at all).
+     */
+
+    void *buf;
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    if (queue->u.bcast.need_pack) {
+        buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+        /* unpack in wait_for_request() */
+    } else {
+        buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+    }
+
+    int req_idx;
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, &req_idx);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int chunk_id = block;
+    queue->requests[req_idx].chunk_id = chunk_id;
+    queue->pending_blocks[chunk_id] = req_idx;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int bcast_recv_unpack(MPII_cga_request_queue * queue, int block)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    void *buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+
+    MPI_Aint actual_unpack_bytes;
+    MPI_Aint offset = block * queue->chunk_count;       /* this is in bytes */
+    MPIR_Typerep_unpack(buf, count,
+                        queue->u.bcast.buf, queue->u.bcast.count,
+                        queue->u.bcast.datatype, offset, &actual_unpack_bytes,
+                        MPIR_TYPEREP_FLAG_NONE);
+    MPIR_Assert(actual_unpack_bytes == count);
+
+    return mpi_errno;
+}
+
+/* ---- allgather ---- */
+
+int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int root, int block, int peer_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -249,63 +349,28 @@ int MPII_cga_send_root_block(MPII_cga_request_queue * queue, int root, int block
 
     void *buf;
     MPI_Aint count = GET_BLOCK_COUNT(block);
-    if (queue->coll_type == MPII_CGA_BCAST) {
-        MPIR_Assert(root == 0);
-        if (queue->u.bcast.need_pack &&
-            queue->u.bcast.is_root && !queue->u.bcast.last_chunk_unpacked) {
-            buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
+    if (queue->u.allgather.need_pack &&
+        root == queue->u.allgather.rank && !queue->u.allgather.last_chunk_unpacked) {
+        void *pack_buf = (char *) queue->u.allgather.pack_buf + root * queue->u.allgather.buf_size;
+        buf = GET_BLOCK_BUF(pack_buf, block);
 
-            MPI_Aint actual_pack_bytes;
-            MPI_Aint offset = block * queue->chunk_count;       /* this is in bytes */
-            MPIR_Typerep_pack(queue->u.bcast.buf, queue->u.bcast.count, queue->u.bcast.datatype,
-                              offset, buf, count, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-            MPIR_Assert(actual_pack_bytes == count);
+        MPI_Aint actual_pack_bytes;
+        MPI_Aint offset = block * queue->chunk_count;   /* this is in bytes */
+        void *src_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_extent;
+        MPIR_Typerep_pack(src_buf, queue->u.allgather.count, queue->u.allgather.datatype,
+                          offset, buf, count, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Assert(actual_pack_bytes == count);
 
-            if (block == queue->num_chunks - 1) {
-                queue->u.bcast.last_chunk_unpacked = true;
-            }
-        } else {
-            buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
+        if (block == queue->num_chunks - 1) {
+            queue->u.allgather.last_chunk_unpacked = true;
         }
-    } else if (queue->coll_type == MPII_CGA_ALLGATHER) {
-        if (queue->u.allgather.need_pack &&
-            root == queue->u.allgather.rank && !queue->u.allgather.last_chunk_unpacked) {
-            void *pack_buf = (char *) queue->u.allgather.pack_buf +
-                root * queue->u.allgather.buf_size;
-            buf = GET_BLOCK_BUF(pack_buf, block);
-
-            MPI_Aint actual_pack_bytes;
-            MPI_Aint offset = block * queue->chunk_count;       /* this is in bytes */
-            void *src_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_extent;
-            MPIR_Typerep_pack(src_buf, queue->u.allgather.count, queue->u.allgather.datatype,
-                              offset, buf, count, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-            MPIR_Assert(actual_pack_bytes == count);
-
-            if (block == queue->num_chunks - 1) {
-                queue->u.allgather.last_chunk_unpacked = true;
-            }
-        } else {
-            void *src_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_size;
-            buf = GET_BLOCK_BUF(src_buf, block);
-        }
-    } else if (queue->coll_type == MPII_CGA_REDUCE) {
-        MPIR_Assert(root == 0);
-        buf = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
     } else {
-        MPIR_Assert(0);
-        buf = NULL;
+        void *src_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_size;
+        buf = GET_BLOCK_BUF(src_buf, block);
     }
 
-    mpi_errno = MPIC_Isend(buf, count, queue->datatype,
-                           peer_rank, queue->tag, queue->comm,
-                           &(queue->requests[queue->q_head].req), queue->coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    queue->requests[queue->q_head].chunk_id = -1;
-
-    queue->q_head = (queue->q_head + 1) % queue->q_len;
-
-    mpi_errno = wait_if_full(queue);
+    int req_idx /* unused */ ;
+    mpi_errno = issue_send(queue, buf, count, peer_rank, chunk_id, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -314,61 +379,134 @@ int MPII_cga_send_root_block(MPII_cga_request_queue * queue, int root, int block
     goto fn_exit;
 }
 
-int MPII_cga_recv_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank)
+int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int root, int block, int peer_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
     void *buf;
     MPI_Aint count = GET_BLOCK_COUNT(block);
-    if (queue->coll_type == MPII_CGA_BCAST) {
-        if (queue->u.bcast.need_pack) {
-            buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
-        } else {
-            buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
-        }
-    } else if (queue->coll_type == MPII_CGA_ALLGATHER) {
-        if (queue->u.allgather.need_pack) {
-            void *dst_buf = (char *) queue->u.allgather.pack_buf +
-                root * queue->u.allgather.buf_size;
-            buf = GET_BLOCK_BUF(dst_buf, block);
-        } else {
-            void *dst_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_size;
-            buf = GET_BLOCK_BUF(dst_buf, block);
-        }
-    } else if (queue->coll_type == MPII_CGA_REDUCE) {
-        /* reduction receives the same block from different processes */
-        /* note: root is 0, chunk_id is block */
-        if (queue->pending_blocks[block] >= 0) {
-            int i = queue->pending_blocks[block];
-            mpi_errno = wait_for_request(queue, i);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        buf = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
+    if (queue->u.allgather.need_pack) {
+        void *dst_buf = (char *) queue->u.allgather.pack_buf + root * queue->u.allgather.buf_size;
+        buf = GET_BLOCK_BUF(dst_buf, block);
     } else {
-        MPIR_Assert(0);
-        buf = NULL;
+        void *dst_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_size;
+        buf = GET_BLOCK_BUF(dst_buf, block);
     }
 
-    mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
-                           peer_rank, queue->tag, queue->comm,
-                           &(queue->requests[queue->q_head].req));
-    MPIR_ERR_CHECK(mpi_errno);
-
     int chunk_id = block + root * queue->num_chunks;
-    queue->pending_blocks[chunk_id] = queue->q_head;
-    queue->requests[queue->q_head].chunk_id = chunk_id;
 
-    queue->q_head = (queue->q_head + 1) % queue->q_len;
-
-    mpi_errno = wait_if_full(queue);
+    int req_idx;
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, chunk_id, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
+
+    queue->requests[req_idx].chunk_id = chunk_id;
+    queue->pending_blocks[chunk_id] = req_idx;
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
+
+static int allgather_recv_unpack(MPII_cga_request_queue * queue, int block)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int root = chunk_id / queue->num_chunks;
+    int block = chunk_id % queue->num_chunks;
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    void *src_buf = (char *) queue->u.allgather.pack_buf + root * queue->u.allgather.buf_size;
+    void *buf = GET_BLOCK_BUF(src_buf, block);
+
+    MPI_Aint actual_unpack_bytes;
+    MPI_Aint offset = block * queue->chunk_count;       /* this is in bytes */
+    void *dst_buf = (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_extent;
+    MPIR_Typerep_unpack(buf, count, dst_buf, queue->u.allgather.count,
+                        queue->u.allgather.datatype, offset, &actual_unpack_bytes,
+                        MPIR_TYPEREP_FLAG_NONE);
+    MPIR_Assert(actual_unpack_bytes == count);
+
+    return mpi_errno;
+}
+
+/* ---- reduce ---- */
+
+int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* in reduce, send may depend on recv from the previous rounds; recv may depend
+     * on both the previous send and the previous recv */
+
+    int chunk_id = block;
+    if (queue->pending_blocks[chunk_id] >= 0) {
+        int i = queue->pending_blocks[chunk_id];
+        mpi_errno = wait_for_request(queue, i);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    void *buf = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
+
+    int req_idx;
+    mpi_errno = issue_send(queue, buf, count, peer_rank, chunk_id, &req_idx);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    queue->pending_blocks[chunk_id] = req_idx;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* reduction receives the same block from multiple processes and may reduce
+     * into the pending send buffer, thus it may depend on either previous send
+     * or recv.
+     *
+     * However, strictly, only the reduce_local depend on previous send. We will need
+     * separaten pending_blocks tracking to make it precise.
+     * */
+    if (queue->pending_blocks[block] >= 0) {
+        int i = queue->pending_blocks[block];
+        mpi_errno = wait_for_request(queue, i);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    void *buf = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
+
+    int req_idx;
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, &req_idx);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int chunk_id = block;
+    queue->requests[req_idx].chunk_id = chunk_id;
+    queue->pending_blocks[chunk_id] = req_idx;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int reduce_local(MPII_cga_request_queue * queue, int block)
+{
+    int mpi_errno;
+
+    void *buf_in = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
+    void *buf_inout = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
+    MPI_Aint count = GET_BLOCK_COUNT(block);
+    mpi_errno = MPIR_Reduce_local(buf_in, buf_inout, count, queue->datatype, queue->u.reduce.op);
+
+    return mpi_errno;
+}
+
+/* ---- final completion ---- */
 
 int MPII_cga_waitall(MPII_cga_request_queue * queue)
 {
@@ -402,6 +540,54 @@ int MPII_cga_waitall(MPII_cga_request_queue * queue)
 
 /* internal routines */
 
+static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint count,
+                      int peer_rank, int chunk_id, int *req_idx_out)
+{
+    int mpi_errno;
+
+    *req_idx_out = queue->q_head;
+    mpi_errno = MPIC_Isend(buf, count, queue->datatype,
+                           peer_rank, queue->tag, queue->comm,
+                           &(queue->requests[queue->q_head].req), queue->coll_attr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    queue->requests[queue->q_head].op_type = MPII_CGA_OP_SEND;
+    queue->requests[queue->q_head].chunk_id = chunk_id;
+    queue->q_head = (queue->q_head + 1) % queue->q_len;
+
+    mpi_errno = wait_if_full(queue);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
+                      int peer_rank, int chunk_id, int *req_idx_out)
+{
+    int mpi_errno;
+
+    *req_idx_out = queue->q_head;
+    mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
+                           peer_rank, queue->tag, queue->comm,
+                           &(queue->requests[queue->q_head].req));
+    MPIR_ERR_CHECK(mpi_errno);
+
+    queue->requests[queue->q_head].op_type = MPII_CGA_OP_RECV;
+    queue->requests[queue->q_head].chunk_id = chunk_id;
+    queue->q_head = (queue->q_head + 1) % queue->q_len;
+
+    mpi_errno = wait_if_full(queue);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int wait_if_full(MPII_cga_request_queue * queue)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -421,8 +607,6 @@ static int wait_if_full(MPII_cga_request_queue * queue)
     goto fn_exit;
 }
 
-static int reduce_local(MPII_cga_request_queue * queue, int block);
-
 static int wait_for_request(MPII_cga_request_queue * queue, int i)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -430,45 +614,22 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
     mpi_errno = MPIC_Wait(queue->requests[i].req);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (queue->requests[i].chunk_id != -1) {
+    if (queue->requests[i].op_type == MPII_CGA_OP_RECV) {
         /* it's a recv, update pending_blocks */
         int chunk_id = queue->requests[i].chunk_id;
         queue->pending_blocks[chunk_id] = -1;
         if (queue->coll_type == MPII_CGA_BCAST) {
-            if (queue->u.bcast.need_pack && !queue->u.bcast.is_root) {
-                int block = chunk_id;
-                MPI_Aint count = GET_BLOCK_COUNT(block);
-                void *buf = GET_BLOCK_BUF(queue->u.bcast.pack_buf, block);
-
-                MPI_Aint actual_unpack_bytes;
-                MPI_Aint offset = block * queue->chunk_count;   /* this is in bytes */
-                MPIR_Typerep_unpack(buf, count,
-                                    queue->u.bcast.buf, queue->u.bcast.count,
-                                    queue->u.bcast.datatype, offset, &actual_unpack_bytes,
-                                    MPIR_TYPEREP_FLAG_NONE);
-                MPIR_Assert(actual_unpack_bytes == count);
+            if (queue->u.bcast.need_pack) {
+                mpi_errno = bcast_recv_unpack(queue, chunk_id);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else if (queue->coll_type == MPII_CGA_ALLGATHER) {
             if (queue->u.allgather.need_pack) {
-                int root = chunk_id / queue->num_chunks;
-                int block = chunk_id % queue->num_chunks;
-                MPI_Aint count = GET_BLOCK_COUNT(block);
-                void *src_buf = (char *) queue->u.allgather.pack_buf +
-                    root * queue->u.allgather.buf_size;
-                void *buf = GET_BLOCK_BUF(src_buf, block);
-
-                MPI_Aint actual_unpack_bytes;
-                MPI_Aint offset = block * queue->chunk_count;   /* this is in bytes */
-                void *dst_buf =
-                    (char *) queue->u.allgather.buf + root * queue->u.allgather.buf_extent;
-                MPIR_Typerep_unpack(buf, count, dst_buf, queue->u.allgather.count,
-                                    queue->u.allgather.datatype, offset, &actual_unpack_bytes,
-                                    MPIR_TYPEREP_FLAG_NONE);
-                MPIR_Assert(actual_unpack_bytes == count);
+                mpi_errno = allgather_recv_unpack(queue, chunk_id);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else if (queue->coll_type == MPII_CGA_REDUCE) {
-            int block = chunk_id;
-            mpi_errno = reduce_local(queue, block);
+            mpi_errno = reduce_local(queue, chunk_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -502,16 +663,4 @@ static int calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, int *last_msg_siz
     }
     *last_msg_size_out = last_msg_size;
     return n;
-}
-
-static int reduce_local(MPII_cga_request_queue * queue, int block)
-{
-    int mpi_errno;
-
-    void *buf_in = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
-    void *buf_inout = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
-    MPI_Aint count = GET_BLOCK_COUNT(block);
-    mpi_errno = MPIR_Reduce_local(buf_in, buf_inout, count, queue->datatype, queue->u.reduce.op);
-
-    return mpi_errno;
 }
