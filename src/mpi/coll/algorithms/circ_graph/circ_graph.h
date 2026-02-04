@@ -44,6 +44,11 @@ enum MPII_cga_type {
     MPII_CGA_ALLGATHER,
 };
 
+enum MPII_cga_op_type {
+    MPII_CGA_OP_SEND,
+    MPII_CGA_OP_RECV,
+};
+
 typedef struct {
     int q_len;
     int num_chunks;             /* total number of blocks */
@@ -95,9 +100,10 @@ typedef struct {
     int *pending_blocks;        /* pending_blocks[n], points to the index of the pending requests
                                  * if the block is in transit */
     struct {
+        enum MPII_cga_op_type op_type;
         MPIR_Request *req;
-        void *buf;
         int chunk_id;
+        int round;
     } *requests;                /* requests[q_len] */
     int q_head;
     int q_tail;
@@ -112,11 +118,14 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue,
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue,
                                void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm, int coll_attr);
-int MPII_cga_send_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
-int MPII_cga_recv_root_block(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
-int MPII_cga_waitall(MPII_cga_request_queue * queue);
 
-#define MPII_cga_issue_send(queue, block, peer) MPII_cga_send_root_block(queue, 0, block, peer)
-#define MPII_cga_issue_recv(queue, block, peer) MPII_cga_recv_root_block(queue, 0, block, peer)
+int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank);
+int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
+int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
+int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
+int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_rank);
+int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
+
+int MPII_cga_waitall(MPII_cga_request_queue * queue);
 
 #endif
