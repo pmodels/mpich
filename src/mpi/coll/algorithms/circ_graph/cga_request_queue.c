@@ -11,6 +11,8 @@ static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint 
                       int peer_rank, int chunk_id, int *req_idx_out);
 static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
                       int peer_rank, int chunk_id, int *req_idx_out);
+static void add_pending(MPII_cga_request_queue * queue, int chunk_id, int req_idx);
+static void remove_pending(MPII_cga_request_queue * queue, int chunk_id, int req_idx);
 static int wait_if_full(MPII_cga_request_queue * queue);
 static int wait_for_request(MPII_cga_request_queue * queue, int i);
 static int reduce_local(MPII_cga_request_queue * queue, int block);
@@ -252,8 +254,7 @@ int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank
 
     int chunk_id = block;
     if (queue->pending_blocks[chunk_id] >= 0) {
-        int i = queue->pending_blocks[chunk_id];
-        mpi_errno = wait_for_request(queue, i);
+        mpi_errno = wait_for_request(queue, queue->pending_blocks[chunk_id]);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -306,9 +307,7 @@ int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank
     mpi_errno = issue_recv(queue, buf, count, peer_rank, block, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int chunk_id = block;
-    queue->requests[req_idx].chunk_id = chunk_id;
-    queue->pending_blocks[chunk_id] = req_idx;
+    add_pending(queue, block, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -342,8 +341,7 @@ int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int root, int block,
 
     int chunk_id = block + root * queue->num_chunks;
     if (queue->pending_blocks[chunk_id] >= 0) {
-        int i = queue->pending_blocks[chunk_id];
-        mpi_errno = wait_for_request(queue, i);
+        mpi_errno = wait_for_request(queue, queue->pending_blocks[chunk_id]);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -399,8 +397,7 @@ int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int root, int block,
     mpi_errno = issue_recv(queue, buf, count, peer_rank, chunk_id, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    queue->requests[req_idx].chunk_id = chunk_id;
-    queue->pending_blocks[chunk_id] = req_idx;
+    add_pending(queue, chunk_id, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -408,7 +405,7 @@ int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int root, int block,
     goto fn_exit;
 }
 
-static int allgather_recv_unpack(MPII_cga_request_queue * queue, int block)
+static int allgather_recv_unpack(MPII_cga_request_queue * queue, int chunk_id)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -435,13 +432,20 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* in reduce, send may depend on recv from the previous rounds; recv may depend
-     * on both the previous send and the previous recv */
+    /* Dependency consideration for reduce:
+     * * Recv - there are two operations, recv into tmp_buf and reduce into recvbuf.
+     *          Recv into tmp_buf require clear of previous recv (with the same block).
+     *          Reduction require clear of previous sends (with the same block).
+     * * Send - assume we always issue send before recv, send require clear previous
+     *          recv (from previous rounds with the same block) and clear all previous
+     *          sends as part of recv completion (the reduction dependency). However,
+     *          if there is no pending recv, multiple pending sends are ok.
+     * Thus, we may have a single pending recv request and multiple pending send requests.
+     */
 
-    int chunk_id = block;
-    if (queue->pending_blocks[chunk_id] >= 0) {
-        int i = queue->pending_blocks[chunk_id];
-        mpi_errno = wait_for_request(queue, i);
+    int pending = queue->pending_blocks[block];
+    if (pending >= 0 && queue->requests[pending].op_type == MPII_CGA_OP_RECV) {
+        mpi_errno = wait_for_request(queue, pending);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -449,10 +453,10 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
     void *buf = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
 
     int req_idx;
-    mpi_errno = issue_send(queue, buf, count, peer_rank, chunk_id, &req_idx);
+    mpi_errno = issue_send(queue, buf, count, peer_rank, block, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    queue->pending_blocks[chunk_id] = req_idx;
+    add_pending(queue, block, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -464,16 +468,12 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* reduction receives the same block from multiple processes and may reduce
-     * into the pending send buffer, thus it may depend on either previous send
-     * or recv.
-     *
-     * However, strictly, only the reduce_local depend on previous send. We will need
-     * separaten pending_blocks tracking to make it precise.
-     * */
-    if (queue->pending_blocks[block] >= 0) {
-        int i = queue->pending_blocks[block];
-        mpi_errno = wait_for_request(queue, i);
+    /* Reference the comments in MPII_cga_reduce_send. Issuing recv only need clear
+     * previous pending recvs
+     */
+    int pending = queue->pending_blocks[block];
+    if (pending >= 0 && queue->requests[pending].op_type == MPII_CGA_OP_RECV) {
+        mpi_errno = wait_for_request(queue, pending);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -484,9 +484,7 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
     mpi_errno = issue_recv(queue, buf, count, peer_rank, block, &req_idx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int chunk_id = block;
-    queue->requests[req_idx].chunk_id = chunk_id;
-    queue->pending_blocks[chunk_id] = req_idx;
+    add_pending(queue, block, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -588,6 +586,59 @@ static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
     goto fn_exit;
 }
 
+static void add_pending(MPII_cga_request_queue * queue, int chunk_id, int req_idx)
+{
+    if (queue->coll_type != MPII_CGA_REDUCE) {
+        /* simple case - at most a single pending request per block */
+        queue->requests[req_idx].next_req_id = -1;
+        queue->pending_blocks[chunk_id] = req_idx;
+    } else {
+        /* reduction may have a single piending recv and multiple pending send */
+        if (queue->requests[req_idx].op_type == MPII_CGA_OP_RECV) {
+            /* prepend */
+            queue->requests[req_idx].next_req_id = queue->pending_blocks[chunk_id];
+            queue->pending_blocks[chunk_id] = req_idx;
+        } else {
+            /* there is no dependency between pending sends, just insert after the pending recv (if exist) */
+            int pending = queue->pending_blocks[chunk_id];
+            if (pending < 0) {
+                /* no pending request */
+                queue->requests[req_idx].next_req_id = -1;
+                queue->pending_blocks[chunk_id] = req_idx;
+            } else if (queue->requests[pending].op_type == MPII_CGA_OP_RECV) {
+                /* insert after the first pending recv */
+                queue->requests[req_idx].next_req_id = queue->requests[pending].next_req_id;
+                queue->requests[pending].next_req_id = req_idx;
+            } else {
+                /* prepend */
+                queue->requests[req_idx].next_req_id = queue->pending_blocks[chunk_id];
+                queue->pending_blocks[chunk_id] = req_idx;
+            }
+        }
+    }
+}
+
+static void remove_pending(MPII_cga_request_queue * queue, int chunk_id, int req_idx)
+{
+    int pending = queue->pending_blocks[chunk_id];
+    if (pending == -1) {
+        /* in bcast and allgather, sends are never added to pending_blocks */
+        return;
+    } else if (pending == req_idx) {
+        queue->pending_blocks[chunk_id] = queue->requests[req_idx].next_req_id;
+    } else {
+        /* not the first pending recv. This can happen in a reduce in wait_if_full or
+         * MPII_cga_waitall when we need complete a send request not due to dependency
+         */
+        MPIR_Assert(pending >= 0);
+        while (queue->requests[pending].next_req_id != req_idx) {
+            pending = queue->requests[pending].next_req_id;
+            MPIR_Assert(pending >= 0);
+        }
+        queue->requests[pending].next_req_id = queue->requests[req_idx].next_req_id;
+    }
+}
+
 static int wait_if_full(MPII_cga_request_queue * queue)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -614,10 +665,10 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
     mpi_errno = MPIC_Wait(queue->requests[i].req);
     MPIR_ERR_CHECK(mpi_errno);
 
+    int chunk_id = queue->requests[i].chunk_id;
     if (queue->requests[i].op_type == MPII_CGA_OP_RECV) {
         /* it's a recv, update pending_blocks */
-        int chunk_id = queue->requests[i].chunk_id;
-        queue->pending_blocks[chunk_id] = -1;
+        remove_pending(queue, chunk_id, i);
         if (queue->coll_type == MPII_CGA_BCAST) {
             if (queue->u.bcast.need_pack) {
                 mpi_errno = bcast_recv_unpack(queue, chunk_id);
@@ -629,9 +680,18 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
                 MPIR_ERR_CHECK(mpi_errno);
             }
         } else if (queue->coll_type == MPII_CGA_REDUCE) {
+            /* clear all pending sends */
+            while (queue->pending_blocks[chunk_id] >= 0) {
+                int req_id = queue->pending_blocks[chunk_id];
+                MPIR_Assert(queue->requests[req_id].op_type == MPII_CGA_OP_SEND);
+                mpi_errno = wait_for_request(queue, req_id);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             mpi_errno = reduce_local(queue, chunk_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
+    } else {
+        remove_pending(queue, chunk_id, i);
     }
     MPIR_Request_free(queue->requests[i].req);
     queue->requests[i].req = NULL;

@@ -91,6 +91,11 @@ typedef struct {
             void *recvbuf;
             MPI_Op op;
         } reduce;
+        struct {
+            void *tmp_buf;
+            void *recvbuf;
+            MPI_Op op;
+        } allreduce;
     } u;
 
     MPIR_Comm *comm;
@@ -104,6 +109,9 @@ typedef struct {
         MPIR_Request *req;
         int chunk_id;
         int round;
+        /* for reduction, we may have multiple requests concurrent on the same block,
+         * thus we may need a linked list */
+        int next_req_id;
     } *requests;                /* requests[q_len] */
     int q_head;
     int q_tail;
