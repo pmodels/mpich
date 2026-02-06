@@ -116,6 +116,11 @@ typedef struct {
     int q_head;
 } MPII_cga_request_queue;       /* note: cga refers to "circulant graph algorithm" */
 
+extern MPIDU_genq_private_pool_t MPIR_cga_chunk_pool;
+
+int MPIR_cga_init(void);
+int MPIR_cga_finalize(void);
+
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
                               MPIR_Comm * comm, int coll_attr, bool is_root);

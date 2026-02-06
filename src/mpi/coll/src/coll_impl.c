@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "coll_impl.h"
+#include "circ_graph.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -202,6 +203,9 @@ int MPII_Coll_init(void)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_cga_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -219,6 +223,9 @@ int MPII_Coll_finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_cga_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
