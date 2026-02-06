@@ -3584,18 +3584,30 @@ fi
 if test -n "$CXX" ; then
     len=`expr $ac_cv_sizeof_bool \* 8`
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],      [MPIR_INT$len], [Internal type for MPI_CXX_BOOL])
-    len=`expr $ac_cv_sizeof_Complex / 2 \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_FLOAT_COMPLEX])
-    len=`expr $ac_cv_sizeof_DoubleComplex / 2 \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
-    len=`expr $ac_cv_sizeof_LongDoubleComplex / 2 \* 8`
-    if test "$len" = 64 ; then
-        # long double is an alias of double, e.g. arm64
-        internal_type=MPIR_COMPLEX$len
+    if test "$ac_cv_sizeof_Complex" -gt 0 ; then
+        len=`expr $ac_cv_sizeof_Complex / 2 \* 8`
+        AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_FLOAT_COMPLEX])
     else
-        internal_type=MPIR_ALT_COMPLEX$len
+        AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL], [MPI_DATATYPE_NULL], [Internal type for MPI_CXX_FLOAT_COMPLEX])
     fi
-    AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+    if test "$ac_cv_sizeof_Complex" -gt 0 ; then
+        len=`expr $ac_cv_sizeof_DoubleComplex / 2 \* 8`
+        AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
+    else
+        AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
+    fi
+    if test "$ac_cv_sizeof_LongDoubleComplex" -gt 0 ; then
+        len=`expr $ac_cv_sizeof_LongDoubleComplex / 2 \* 8`
+        if test "$len" = 64 ; then
+            # long double is an alias of double, e.g. arm64
+            internal_type=MPIR_COMPLEX$len
+        else
+            internal_type=MPIR_ALT_COMPLEX$len
+        fi
+        AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+    else
+        AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+    fi
 else
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],          [MPI_DATATYPE_NULL], [Internal type for MPI_CXX_BOOL])
     AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL], [MPI_DATATYPE_NULL], [Internal type for MPI_CXX_FLOAT_COMPLEX])
