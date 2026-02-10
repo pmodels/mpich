@@ -894,6 +894,14 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Internal_op_dt_check(MPI_Op op, MPI_Datatype 
         case MPI_LAND:
         case MPI_LOR:
         case MPI_LXOR:
+            switch (dt_type) {
+                case MPIR_TYPE_SIGNED:
+                case MPIR_TYPE_UNSIGNED:
+                case MPIR_TYPE_FORTRAN_LOGICAL:
+                    return true;
+                default:
+                    return false;
+            }
         case MPI_BAND:
         case MPI_BOR:
         case MPI_BXOR:
