@@ -250,11 +250,20 @@ static HYD_status do_spawn(void)
     struct HYD_node *node_list;
     if (pg->user_node_list) {
         node_list = pg->user_node_list;
+        status = HYDU_merge_user_node_list(pg->user_node_list, &HYD_server_info.node_list);
+        HYDU_ERR_POP(status, "unable to merge user_node_list\n");
     } else {
         node_list = HYD_server_info.node_list;
     }
     status = HYDU_gen_rankmap(pg->pg_process_count, node_list, &pg->rankmap);
     HYDU_ERR_POP(status, "error create rankmap\n");
+
+    /* we only need user_node_list to generate rankmap */
+    if (pg->user_node_list) {
+        HYDU_free_node_list(pg->user_node_list);
+        pg->user_node_list = NULL;
+        node_list = HYD_server_info.node_list;
+    }
 
     status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list,
                                     pg->pgid, pg->rankmap,
