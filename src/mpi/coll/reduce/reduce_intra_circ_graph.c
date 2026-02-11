@@ -65,7 +65,9 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
 
     /* Run schedule */
     MPII_cga_request_queue queue;
-    mpi_errno = MPII_cga_init_reduce_queue(&queue, recvbuf, count, datatype, op, comm, coll_attr);
+    int min_pending_blocks = cga.q * 2;
+    mpi_errno = MPII_cga_init_reduce_queue(&queue, min_pending_blocks,
+                                           recvbuf, count, datatype, op, comm, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* reduction is the reverse of bcast schedule. Specifically -

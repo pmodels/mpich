@@ -39,7 +39,9 @@ int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI
 
     /* Run schedule */
     MPII_cga_request_queue queue;
-    mpi_errno = MPII_cga_init_allgather_queue(&queue, recvbuf, recvcount, recvtype,
+    int min_pending_blocks = cga.q * 2;
+    mpi_errno = MPII_cga_init_allgather_queue(&queue, min_pending_blocks,
+                                              recvbuf, recvcount, recvtype,
                                               comm, coll_attr, rank, comm_size);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -70,7 +72,7 @@ int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI
                     send_block = n - 1;
                 }
 
-                mpi_errno = MPII_cga_allgather_send(&queue, root, send_block, peer_to);
+                mpi_errno = MPII_cga_allgather_send(&queue, send_block, root, peer_to);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -81,7 +83,7 @@ int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI
                     recv_block = n - 1;
                 }
 
-                mpi_errno = MPII_cga_allgather_recv(&queue, root, recv_block, peer_from);
+                mpi_errno = MPII_cga_allgather_recv(&queue, recv_block, root, peer_from);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

@@ -55,7 +55,6 @@ cvars:
 
 #include "mpiimpl.h"
 #include "circ_graph.h"
-#include "src/mpid/common/genq/mpidu_genq.h"
 
 MPIDU_genq_private_pool_t MPIR_cga_chunk_pool;
 
