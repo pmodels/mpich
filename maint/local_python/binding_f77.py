@@ -29,13 +29,10 @@ def dump_f77_c_func(func, is_cptr=False):
     code_list_B = []
     end_list_B = []
 
-    need_ATTR_AINT = False
     is_custom_fn = False  # custom function body
     need_skip_ierr = False
 
-    if re.match(r'MPI_((\w+)_(get|set)_attr|Attr_(put|get))', func['name'], re.IGNORECASE):
-        need_ATTR_AINT = True
-    elif re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
+    if re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
     elif re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
         is_custom_fn = True
@@ -348,7 +345,7 @@ def dump_f77_c_func(func, is_cptr=False):
         code_list_common.append("    %s_i[i] = (MPI_Aint) %s[i];" % (v, v))
         code_list_common.append("}")
         code_list_common.append("#else")
-        code_list_common.append("%s_i = %s;" % (v, v))
+        code_list_common.append("%s_i = (MPI_Aint *) %s;" % (v, v))
         code_list_common.append("#endif")
         end_list_common.append("#ifdef HAVE_AINT_DIFFERENT_THAN_FINT")
         end_list_common.append("free(%s_i);" % v)
@@ -477,6 +474,12 @@ def dump_f77_c_func(func, is_cptr=False):
             c_param_list.append("F77_ErrFunction %s" % v)
         elif re.match(r'MPI_User_function', func_type, re.IGNORECASE):
             c_param_list.append("F77_OpFunction *%s" % v)
+        elif RE.match(r'MPI_Grequest_(\w+)_function', func_type, re.IGNORECASE):
+            c_param_list.append("F77_greq_%s_function *%s" % (RE.m.group(1), v))
+        elif re.match(r'MPI_(\w+)_copy_attr_function|MPI_Copy_function', func_type, re.IGNORECASE):
+            c_param_list.append("F90_CopyFunction *%s" % v)
+        elif re.match(r'MPI_(\w+)_delete_attr_function|MPI_Delete_function', func_type, re.IGNORECASE):
+            c_param_list.append("F90_DeleteFunction *%s" % v)
         else:
             c_param_list.append("%s %s" % (func_type, v))
         c_arg_list_A.append(v)
@@ -493,9 +496,10 @@ def dump_f77_c_func(func, is_cptr=False):
         c_arg_list_B.append(v)
 
     def dump_attr_in(v, c_type):
+        code_list_common.append("void *%s_i = (void *) (intptr_t) *%s;" % (v, v))
         c_param_list.append("%s *%s" % (c_type, v))
-        c_arg_list_A.append("(void *) (intptr_t) (*%s)" % v)
-        c_arg_list_B.append("(void *) (intptr_t) (*%s)" % v)
+        c_arg_list_A.append("%s_i" % v)
+        c_arg_list_B.append("%s_i" % v)
 
     def dump_attr_out(v, c_type, flag):
         c_param_list.append("%s *%s" % (c_type, v))
@@ -505,7 +509,7 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
-        end_list_common.append("    *%s = (MPI_Aint) %s_i;" % (v, v))
+        end_list_common.append("    *%s = (%s) (intptr_t) %s_i;" % (v, c_type, v))
         end_list_common.append("}")
 
     def dump_sum(codelist, sum_v, sum_n, array):
@@ -717,9 +721,9 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
             elif re.match(r'ATTRIBUTE_VAL', p['kind']):
-                if re.match(r'MPI_((Comm|Type|Win)_get_attr)', func['name'], re.IGNORECASE):
+                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Aint", "flag_i")
-                elif re.match(r'MPI_((Comm|Type|Win)_set_attr)', func['name'], re.IGNORECASE):
+                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
                     dump_attr_in(p['name'], "MPI_Aint")
                 elif re.match(r'MPI_Attr_get', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Fint", "flag_i")
@@ -760,19 +764,15 @@ def dump_f77_c_func(func, is_cptr=False):
                 # use MPII_op_create(opfn, *commute, op)
                 c_param_list.append("MPI_Fint *%s" % p['name'])
                 c_arg_list_A.append(p['name'])
+            elif p['kind'] == "REQUEST" and re.match(r'mpi_grequest_start$', func['name'], re.IGNORECASE):
+                # use MPII_greq_start
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             elif p['kind'] in G.handle_mpir_types or c_mapping[p['kind']] == "int":
                 c_type = c_mapping[p['kind']]
                 if p['length'] is None:
                     if p['param_direction'] == 'out':
                         dump_int_out(p['name'], c_type, False)
-                        if p['kind'] == "KEYVAL":
-                            end_list_common.append("if (!*ierr) {")
-                            end_list_common.append("    MPII_Keyval_set_f90_proxy((int) *%s);" % p['name'])
-                            end_list_common.append("}")
-                        elif re.match(r'MPI_Grequest_start', func['name'], re.IGNORECASE):
-                            end_list_common.append("if (!*ierr) {")
-                            end_list_common.append("    MPII_Grequest_set_lang_f77((int) *%s);" % p['name'])
-                            end_list_common.append("}")
                     elif p['param_direction'] == 'inout' or p['pointer']:
                         if re.match(r'MPI_Info_get_string$', func['name'], re.IGNORECASE):
                             dump_string_len_inout(p['name'])
@@ -845,30 +845,36 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
-    if need_ATTR_AINT:
-        if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
-            if RE.m.group(1) == 'put':
-                c_func_name = "MPII_Comm_set_attr"
-            else:
-                c_func_name = "MPII_Comm_get_attr"
-            c_arg_list_A.append("MPIR_ATTR_INT")
-            c_arg_list_B.append("MPIR_ATTR_INT")
+    if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
+        if RE.m.group(1) == 'put':
+            c_func_name = "MPIX_Comm_set_attr_as_fortran"
         else:
-            c_func_name = re.sub(r'MPI_', 'MPII_', func['name'])
-            c_arg_list_A.append("MPIR_ATTR_AINT")
-            c_arg_list_B.append("MPIR_ATTR_AINT")
+            c_func_name = "MPIX_Comm_get_attr_as_fortran"
+    elif RE.match(r'MPI_(Comm|Type|Win)_(get|set)_attr$', func['name'], re.IGNORECASE):
+        c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     elif re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
+    elif RE.match(r'MPI_(\w+)_create_keyval$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_create"
+        f77_type = get_f77_type(RE.m.group(1))
+        c_arg_list_A.append(f77_type)
+        c_arg_list_B.append(f77_type)
+    elif RE.match(r'MPI_Keyval_create$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_Keyval_create"
+        c_arg_list_A.append("F77_COMM")
+        c_arg_list_B.append("F77_COMM")
     elif re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_op_create"
     elif RE.match(r'MPI_(\w+)_create_errhandler$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_errhan_create"
-        c_arg_list_A.append("F77_" + RE.m.group(1).upper())
+        c_arg_list_A.append(get_f77_type(RE.m.group(1)))
     elif RE.match(r'MPI_Errhandler_create$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_errhan_create"
         c_arg_list_A.append("F77_COMM")
+    elif re.match(r'MPI_Grequest_start$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_greq_start"
 
     if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"
@@ -1063,9 +1069,6 @@ def load_mpi_h_in(f):
                 elif RE.match(r'0x([0-9a-fA-F]+)', val):
                     # direct hex constants (KEYVAL constants)
                     val = int(RE.m.group(1), 16)
-                    if RE.match(r'MPI_(TAG_UB|HOST|IO|WTIME_IS_GLOBAL|UNIVERSE_SIZE|LASTUSEDCODE|APPNUM|WIN_(BASE|SIZE|DISP_UNIT|CREATE_FLAVOR|MODEL))', name):
-                        # KEYVAL, Fortran value is C-value + 1
-                        val = val + 1
                 elif RE.match(r'MPI_MAX_', name):
                     # Fortran string buffer limit need be 1-less
                     if re.match(r'@\w+@', val):
@@ -1271,7 +1274,7 @@ def dump_fortran_line(s):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session)_create_errhandler_x|op_create_x)', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90
@@ -1286,3 +1289,9 @@ def f90_param_need_skip(p):
     if p['kind'] == 'VARARGS':
         return True
     return False
+
+def get_f77_type(Name):
+    if Name == 'Type':
+        return 'F77_DATATYPE'
+    else:
+        return 'F77_' + Name.upper()

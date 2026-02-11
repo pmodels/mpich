@@ -8,8 +8,6 @@
 
 #include "mpichconf.h"
 #include "mpi.h"
-#include "mpir_attr_generic.h"
-#include "mpii_f77interface.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
 #include <stdlib.h>
@@ -399,14 +397,21 @@ typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *,
 typedef void (FORT_CALL F77_OpFunction) (void *, void *, MPI_Fint *, MPI_Fint *);
 /* compatible as MPI_{Comm,Win,File,Session}_errhandler_function */
 typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
+/* compatible as MPI_Grequest_{cancel,free,query}_function */
+typedef void (FORT_CALL F77_greq_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F77_greq_free_function) (void *, MPI_Fint *);
+typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *);
 
-void MPII_Keyval_set_f90_proxy(int keyval);
+int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
+                       void *extra_state, enum F77_handle_type type);
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op);
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
 int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_File_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
+int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function free_fn,
+                    F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
