@@ -33,6 +33,8 @@ static int F77_attr_copy_proxy(int handle, int keyval, void *context,
     p->copy_fn(&fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr);
     *flag = MPII_FROM_FLOG(fflag);
     *(void **) value_out = (void *) fnew;
+
+    return (int) ierr;
 }
 
 static int F77_attr_delete_proxy(int handle, int keyval, void *value, void *context)
