@@ -103,8 +103,8 @@ int MPIR_Comm_create_keyval_x_impl(MPI_Comm_copy_attr_function * comm_copy_attr_
     }
 #endif
 
-    return create_keyval_x(comm_copy_attr_fn, comm_delete_attr_fn, destructor_fn,
-                           comm_keyval, extra_state, MPIR_COMM);
+    return create_keyval_x(comm_copy_attr_fn, comm_delete_attr_fn,
+                           destructor_fn, comm_keyval, extra_state, MPIR_COMM);
 }
 
 int MPIR_Type_create_keyval_x_impl(MPI_Type_copy_attr_function * type_copy_attr_fn,
@@ -126,8 +126,9 @@ int MPIR_Type_create_keyval_x_impl(MPI_Type_copy_attr_function * type_copy_attr_
     /* Tell finalize to check for attributes on permanent types */
     MPII_Datatype_attr_finalize();
 
-    return create_keyval_x(type_copy_attr_fn, type_delete_attr_fn, destructor_fn,
-                           type_keyval, extra_state, MPIR_DATATYPE);
+    return create_keyval_x((MPI_Comm_copy_attr_function *) type_copy_attr_fn,
+                           (MPI_Comm_delete_attr_function *) type_delete_attr_fn,
+                           destructor_fn, type_keyval, extra_state, MPIR_DATATYPE);
 }
 
 int MPIR_Win_create_keyval_x_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
@@ -146,8 +147,9 @@ int MPIR_Win_create_keyval_x_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
     }
 #endif
 
-    return create_keyval_x(win_copy_attr_fn, win_delete_attr_fn, destructor_fn,
-                           win_keyval, extra_state, MPIR_WIN);
+    return create_keyval_x((MPI_Comm_copy_attr_function *) win_copy_attr_fn,
+                           (MPI_Comm_delete_attr_function *) win_delete_attr_fn,
+                           destructor_fn, win_keyval, extra_state, MPIR_WIN);
 }
 
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
