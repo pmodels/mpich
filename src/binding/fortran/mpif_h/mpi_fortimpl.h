@@ -404,6 +404,12 @@ typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *
 
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
+int MPII_Comm_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn,
+                            int *keyval_out, void *extra_state);
+int MPII_Win_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn,
+                           int *keyval_out, void *extra_state);
+int MPII_Type_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn,
+                            int *keyval_out, void *extra_state);
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op);
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
 int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
