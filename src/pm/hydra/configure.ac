@@ -127,40 +127,12 @@ if test -z "$FROM_MPICH" ; then
 fi
 
 # MPL
-mpl_srcdir=""
-AC_SUBST([mpl_srcdir])
-# Controls whether we recurse into the MPL dir when running "dist" rules like
-# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-# superset of SUBDIRS, but we don't want to double-distclean and similar.
-AC_SUBST(mpl_dist_srcdir)
-mpl_includedir=""
-AC_SUBST([mpl_includedir])
-mpl_lib=""
-AC_SUBST([mpl_lib])
 m4_define([mpl_embedded_dir],[modules/mpl])
 PAC_CONFIG_MPL
 
 # PMI
-pmi_srcdir=""
-pmi_includedir=""
-pmi_lib=""
-AC_SUBST([pmi_srcdir])
-AC_SUBST([pmi_includedir])
-AC_SUBST([pmi_lib])
-m4_define([pmi_embedded_dir],[modules/pmi])
-# NOTE: we do not need the public pmi include dir (where pmi.h and pmi2.h are contained)
-#       we need the "pmi/src" path for accessing internal headers such as pmi_wire.h
-if test "$FROM_MPICH" = "yes"; then
-    pmi_includedir="-I$main_top_srcdir/src/pmi/src"
-    pmi_lib="$main_top_builddir/src/pmi/libpmiutil.la"
-else
-    # TODO: option for --with-pmilib=xxx
-    pmi_srcdir=pmi_embedded_dir
-    pmi_includedir='-I$(top_srcdir)/pmi_embedded_dir/src'
-    pmi_subdir_args="--enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS(pmi_embedded_dir, [$pmi_subdir_args])
-    pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmiutil.la'
-fi
+m4_define([pmi_embedded_dir], [modules/pmi])
+PAC_CONFIG_PMI
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
@@ -399,13 +371,6 @@ AC_MSG_CHECKING([desired processor topology libraries])
 AC_MSG_RESULT([$hydra_topolib_list])
 
 hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
-
-hwloc_srcdir=""
-hwloc_includedir=""
-hwloc_lib=""
-AC_SUBST([hwloc_srcdir])
-AC_SUBST([hwloc_includedir])
-AC_SUBST([hwloc_lib])
 
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in

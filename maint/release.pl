@@ -295,6 +295,9 @@ print("done\n");
 
 # Create the hydra tarball
 print("===> Creating the final hydra tarball... ");
+chdir("${expdir}");
+run_cmd("./autogen.sh -do=hydra");
+chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/pm/hydra hydra-${version}");
 run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
 run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
@@ -302,6 +305,9 @@ print("done\n");
 
 # Create the pmi tarball
 print("===> Creating the final libpmi tarball... ");
+chdir("${expdir}");
+run_cmd("./autogen.sh -do=pmi");
+chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/pmi libpmi-${version}");
 run_cmd("tar -czvf libpmi-${version}.tar.gz libpmi-${version}");
 run_cmd("cp -a libpmi-${version}.tar.gz ${root}/");
@@ -309,6 +315,9 @@ print("done\n");
 
 # Create the testsuite tarball
 print("===> Creating the final mpich-testsuite tarball... ");
+chdir("${expdir}");
+run_cmd("./autogen.sh -do=test");
+chdir("${tdir}");
 my $target = "mpich-testsuite-$version";
 run_cmd("cp -a ${expdir}/test/mpi $target");
 run_cmd("tar -czvf $target.tar.gz $target");

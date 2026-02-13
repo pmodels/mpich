@@ -8,4 +8,11 @@ if test -z "$AUTORECONF" ; then
     AUTORECONF="autoreconf"
 fi
 
-$AUTORECONF -vif || exit 1
+if test -n "$MPICH_CONFDB" ; then
+    CONFARGS="-I $MPICH_CONFDB -vif"
+    mkdir -p confdb
+else
+    CONFARGS="-vif"
+fi
+
+$AUTORECONF $CONFARGS || exit 1
