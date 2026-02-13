@@ -454,7 +454,8 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
      * Thus, we may have a single pending recv request and multiple pending send requests.
      */
 
-    int req_id = get_pending_req_id(queue, block, 0);
+    int inv_block = queue->num_chunks - block;
+    int req_id = get_pending_req_id(queue, inv_block, 0);
     if (req_id >= 0 && queue->requests[req_id].op_type == MPII_CGA_OP_RECV) {
         mpi_errno = wait_for_request(queue, req_id);
         MPIR_ERR_CHECK(mpi_errno);
@@ -463,7 +464,7 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
     MPI_Aint count = GET_BLOCK_COUNT(block);
     void *buf = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
 
-    mpi_errno = issue_send(queue, buf, count, peer_rank, block, 0);
+    mpi_errno = issue_send(queue, buf, count, peer_rank, inv_block, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -479,7 +480,8 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
     /* Reference the comments in MPII_cga_reduce_send. Issuing recv only need clear
      * previous pending recvs
      */
-    int req_id = get_pending_req_id(queue, block, 0);
+    int inv_block = queue->num_chunks - block;
+    int req_id = get_pending_req_id(queue, inv_block, 0);
     if (req_id >= 0 && queue->requests[req_id].op_type == MPII_CGA_OP_RECV) {
         mpi_errno = wait_for_request(queue, req_id);
         MPIR_ERR_CHECK(mpi_errno);
@@ -488,7 +490,7 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
     MPI_Aint count = GET_BLOCK_COUNT(block);
     void *buf = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
 
-    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, 0);
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, inv_block, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -783,7 +785,8 @@ static int wait_for_request(MPII_cga_request_queue * queue, int i)
                 mpi_errno = wait_for_request(queue, req_id);
                 MPIR_ERR_CHECK(mpi_errno);
             }
-            mpi_errno = reduce_local(queue, block);
+            int real_block = queue->num_chunks - block;
+            mpi_errno = reduce_local(queue, real_block);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
