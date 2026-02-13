@@ -9,9 +9,9 @@
 static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
 
 static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint count,
-                      int peer_rank, int block, int root, int *req_idx_out);
+                      int peer_rank, int block, int root);
 static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
-                      int peer_rank, int block, int root, int *req_idx_out);
+                      int peer_rank, int block, int root);
 
 static int get_pending_id(MPII_cga_request_queue * queue, int block, int root);
 static int get_pending_req_id(MPII_cga_request_queue * queue, int block, int root);
@@ -290,8 +290,7 @@ int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank
         buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
     }
 
-    int req_idx /* unused */ ;
-    mpi_errno = issue_send(queue, buf, count, peer_rank, block, 0, &req_idx);
+    mpi_errno = issue_send(queue, buf, count, peer_rank, block, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -322,11 +321,8 @@ int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank
         buf = GET_BLOCK_BUF(queue->u.bcast.buf, block);
     }
 
-    int req_idx;
-    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, 0, &req_idx);
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, 0);
     MPIR_ERR_CHECK(mpi_errno);
-
-    add_pending_req_id(queue, block, 0, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -385,8 +381,7 @@ int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int block, int root,
         buf = GET_BLOCK_BUF(src_buf, block);
     }
 
-    int req_idx /* unused */ ;
-    mpi_errno = issue_send(queue, buf, count, peer_rank, block, root, &req_idx);
+    mpi_errno = issue_send(queue, buf, count, peer_rank, block, root);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -413,11 +408,8 @@ int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int block, int root,
         buf = GET_BLOCK_BUF(dst_buf, block);
     }
 
-    int req_idx;
-    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, root, &req_idx);
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, root);
     MPIR_ERR_CHECK(mpi_errno);
-
-    add_pending_req_id(queue, block, root, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -471,11 +463,8 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
     MPI_Aint count = GET_BLOCK_COUNT(block);
     void *buf = GET_BLOCK_BUF(queue->u.reduce.recvbuf, block);
 
-    int req_idx;
-    mpi_errno = issue_send(queue, buf, count, peer_rank, block, 0, &req_idx);
+    mpi_errno = issue_send(queue, buf, count, peer_rank, block, 0);
     MPIR_ERR_CHECK(mpi_errno);
-
-    add_pending_req_id(queue, block, 0, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -499,11 +488,8 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
     MPI_Aint count = GET_BLOCK_COUNT(block);
     void *buf = GET_BLOCK_BUF(queue->u.reduce.tmp_buf, block);
 
-    int req_idx;
-    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, 0, &req_idx);
+    mpi_errno = issue_recv(queue, buf, count, peer_rank, block, 0);
     MPIR_ERR_CHECK(mpi_errno);
-
-    add_pending_req_id(queue, block, 0, req_idx);
 
   fn_exit:
     return mpi_errno;
@@ -561,14 +547,14 @@ int MPII_cga_waitall(MPII_cga_request_queue * queue)
 /* internal routines */
 
 static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint count,
-                      int peer_rank, int block, int root, int *req_idx_out)
+                      int peer_rank, int block, int root)
 {
     int mpi_errno;
 
     mpi_errno = wait_if_full(queue);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *req_idx_out = queue->q_head;
+    int req_id = queue->q_head;
     mpi_errno = MPIC_Isend(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req), queue->coll_attr);
@@ -579,6 +565,8 @@ static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint 
     queue->requests[queue->q_head].root = root;
     queue->q_head = (queue->q_head + 1) % queue->q_len;
 
+    add_pending_req_id(queue, block, root, req_id);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -586,14 +574,14 @@ static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint 
 }
 
 static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
-                      int peer_rank, int block, int root, int *req_idx_out)
+                      int peer_rank, int block, int root)
 {
     int mpi_errno;
 
     mpi_errno = wait_if_full(queue);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *req_idx_out = queue->q_head;
+    int req_id = queue->q_head;
     mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
                            &(queue->requests[queue->q_head].req));
@@ -603,6 +591,8 @@ static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
     queue->requests[queue->q_head].block = block;
     queue->requests[queue->q_head].root = root;
     queue->q_head = (queue->q_head + 1) % queue->q_len;
+
+    add_pending_req_id(queue, block, root, req_id);
 
   fn_exit:
     return mpi_errno;
