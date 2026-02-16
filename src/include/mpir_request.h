@@ -155,7 +155,8 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
 enum MPIR_sched_type {
     MPIR_SCHED_INVALID,
     MPIR_SCHED_NORMAL,
-    MPIR_SCHED_GENTRAN
+    MPIR_SCHED_GENTRAN,
+    MPIR_SCHED_REQUEST,
 };
 
 /*S

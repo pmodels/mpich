@@ -93,6 +93,8 @@ int MPII_Coll_finalize(void);
         } else if (sched_type == MPIR_SCHED_GENTRAN) { \
             mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \
             MPIR_ERR_CHECK(mpi_errno); \
+        } else if (sched_type == MPIR_SCHED_REQUEST) { \
+            *request = sched; \
         } else { \
             MPIR_Assert(0); \
         } \
