@@ -377,6 +377,7 @@ cvars:
         tsp_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
         tsp_scatterv_ring_allgatherv           - Force Generic Transport Scatterv followed by Ring Allgatherv algorithm
         tsp_ring                               - Force Generic Transport Ring algorithm
+        circ_graph                             - Force queued circulant graph algorithm
 
     - name        : MPIR_CVAR_IBCAST_SCATTERV_KVAL
       category    : COLLECTIVE

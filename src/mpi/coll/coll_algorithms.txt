@@ -96,6 +96,7 @@ ibcast-intra:
         func_name: tree
         extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size
         cvar_params: -, -, RING_CHUNK_SIZE
+    circ_graph
 bcast-inter:
     remote_send_local_bcast
 ibcast-inter:
