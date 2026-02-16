@@ -14,17 +14,15 @@ if BUILD_PM_REMSHELL
 if PRIMARY_PM_REMSHELL
 bin_PROGRAMS += src/pm/remshell/mpiexec
 src_pm_remshell_mpiexec_SOURCES = src/pm/remshell/mpiexec.c 
-src_pm_remshell_mpiexec_LDADD = src/pm/util/libmpiexec.la $(mpllib)
-src_pm_remshell_mpiexec_LDFLAGS = $(mpllibdir)
-EXTRA_src_pm_remshell_mpiexec_DEPENDENCIES = $(mpllib)
+src_pm_remshell_mpiexec_LDADD = src/pm/util/libmpiexec.la $(mpl_lib)
+EXTRA_src_pm_remshell_mpiexec_DEPENDENCIES = $(mpl_lib)
 # we may not want to add AM_CPPFLAGS for this program
 src_pm_remshell_mpiexec_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 else !PRIMARY_PM_REMSHELL
 bin_PROGRAMS += src/pm/remshell/mpiexec.remshell
 src_pm_remshell_mpiexec_remshell_SOURCES = src/pm/remshell/mpiexec.c 
-src_pm_remshell_mpiexec_remshell_LDADD = src/pm/util/libmpiexec.la $(mpllib)
-src_pm_remshell_mpiexec_remshell_LDFLAGS = $(mpllibdir)
-EXTRA_src_pm_remshell_mpiexec_remshell_DEPENDENCIES = $(mpllib)
+src_pm_remshell_mpiexec_remshell_LDADD = src/pm/util/libmpiexec.la $(mpl_lib)
+EXTRA_src_pm_remshell_mpiexec_remshell_DEPENDENCIES = $(mpl_lib)
 # we may not want to add AM_CPPFLAGS for this program
 src_pm_remshell_mpiexec_remshell_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 endif !PRIMARY_PM_REMSHELL
