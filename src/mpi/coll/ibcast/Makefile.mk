@@ -12,6 +12,7 @@ mpi_core_sources += \
     src/mpi/coll/ibcast/ibcast_intra_sched_scatter_ring_allgather.c               \
     src/mpi/coll/ibcast/ibcast_intra_sched_scatter_recursive_doubling_allgather.c \
     src/mpi/coll/ibcast/ibcast_intra_sched_smp.c                                  \
+    src/mpi/coll/ibcast/ibcast_intra_circ_graph.c \
     src/mpi/coll/ibcast/ibcast_inter_sched_flat.c                                 \
     src/mpi/coll/ibcast/ibcast_tsp_scatterv_allgatherv.c \
     src/mpi/coll/ibcast/ibcast_tsp_scatterv_ring_allgatherv.c \
