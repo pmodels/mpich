@@ -30,7 +30,6 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->coll_attr = coll_attr;
 
     queue->q_head = 0;
-    queue->q_tail = 0;
 
     queue->pending_blocks = MPL_malloc(all_size * num_chunks * sizeof(*queue->pending_blocks),
                                        MPL_MEM_OTHER);
@@ -543,6 +542,9 @@ static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint 
 {
     int mpi_errno;
 
+    mpi_errno = wait_if_full(queue);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *req_idx_out = queue->q_head;
     mpi_errno = MPIC_Isend(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
@@ -552,9 +554,6 @@ static int issue_send(MPII_cga_request_queue * queue, const void *buf, MPI_Aint 
     queue->requests[queue->q_head].op_type = MPII_CGA_OP_SEND;
     queue->requests[queue->q_head].chunk_id = chunk_id;
     queue->q_head = (queue->q_head + 1) % queue->q_len;
-
-    mpi_errno = wait_if_full(queue);
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -567,6 +566,9 @@ static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
 {
     int mpi_errno;
 
+    mpi_errno = wait_if_full(queue);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *req_idx_out = queue->q_head;
     mpi_errno = MPIC_Irecv(buf, count, queue->datatype,
                            peer_rank, queue->tag, queue->comm,
@@ -576,9 +578,6 @@ static int issue_recv(MPII_cga_request_queue * queue, void *buf, MPI_Aint count,
     queue->requests[queue->q_head].op_type = MPII_CGA_OP_RECV;
     queue->requests[queue->q_head].chunk_id = chunk_id;
     queue->q_head = (queue->q_head + 1) % queue->q_len;
-
-    mpi_errno = wait_if_full(queue);
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -643,13 +642,9 @@ static int wait_if_full(MPII_cga_request_queue * queue)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (queue->q_head == queue->q_tail) {
-        if (queue->requests[queue->q_tail].req) {
-            mpi_errno = wait_for_request(queue, queue->q_tail);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        queue->q_tail = (queue->q_tail + 1) % queue->q_len;
+    if (queue->requests[queue->q_head].req) {
+        mpi_errno = wait_for_request(queue, queue->q_head);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
