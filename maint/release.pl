@@ -235,17 +235,6 @@ chdir($expdir);
 }
 print("done\n");
 
-# Create test/mpi/configure
-print("===> Creating configure in the test/mpi... ");
-chdir("$expdir/test/mpi");
-{
-    my $cmd = "./autogen.sh";
-    $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
-    $cmd .= " --with-automake=$with_automake" if $with_automake;
-    run_cmd($cmd);
-}
-print("done\n");
-
 # Disable unnecessary tests in the release tarball
 print("===> Disabling unnecessary tests in the main codebase... ");
 chdir($expdir);
