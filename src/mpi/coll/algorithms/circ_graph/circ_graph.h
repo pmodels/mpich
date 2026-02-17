@@ -114,7 +114,6 @@ typedef struct {
         int next_req_id;
     } *requests;                /* requests[q_len] */
     int q_head;
-    int q_tail;
 } MPII_cga_request_queue;       /* note: cga refers to "circulant graph algorithm" */
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
