@@ -307,7 +307,7 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], MPIR_Lpid lpid[] )
 		   an error message and its not appropriate to use the
 		   regular error code system */
 		/* printf("No matching pg foung for id = %d\n", pgid ); */
-		lpid[i] = -1;
+		lpid[i] = (uint64_t) - 1;
 		MPIR_ERR_SET2(mpi_errno,MPI_ERR_INTERN, "**unknowngpid",
 			      "**unknowngpid %d %d", gpid[0], gpid[1] );
 		return mpi_errno;
@@ -324,7 +324,7 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], MPIR_Lpid lpid[] )
 		}
 		else {
 		    /* --BEGIN ERROR HANDLING-- */
-		    lpid[i] = -1;
+		    lpid[i] = (uint64_t) - 1;
 		    MPIR_ERR_SET2(mpi_errno,MPI_ERR_INTERN, "**unknowngpid",
 				  "**unknowngpid %d %d", gpid[0], gpid[1] );
 		    return mpi_errno;

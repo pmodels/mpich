@@ -950,7 +950,7 @@ int MPIDI_PG_Close_VCs( void )
     MPIR_FUNC_ENTER;
 
     while (pg) {
-	int i, inuse, n, i_start;
+	int i, n, i_start;
 
 	MPL_DBG_MSG_S(MPIDI_CH3_DBG_DISCONNECT,VERBOSE,"Closing vcs for pg %s",
 		       (char *)pg->id );
@@ -967,10 +967,7 @@ int MPIDI_PG_Close_VCs( void )
 	    vc = &pg->vct[i];
 	    /* If the VC is myself then skip the close message */
 	    if (pg == MPIDI_Process.my_pg && i == MPIDI_Process.my_pg_rank) {
-                /* XXX DJG FIXME-MT should we be checking this? */
-                if (MPIR_Object_get_ref(vc) != 0) {
-                    MPIDI_PG_release_ref(pg, &inuse);
-                }
+                MPIR_Assert(MPIR_Object_get_ref(vc) == 0);
 		continue;
 	    }
 
@@ -980,12 +977,7 @@ int MPIDI_PG_Close_VCs( void )
                 MPIR_ERR_CHECK(mpi_errno);
 	    } else if (vc->state == MPIDI_VC_STATE_INACTIVE ||
                        vc->state == MPIDI_VC_STATE_MORIBUND) {
-                /* XXX DJG FIXME-MT should we be checking this? */
-                if (MPIR_Object_get_ref(vc) != 0) {
-		    /* FIXME: If the reference count for the vc is not 0,
-		       something is wrong */
-                    MPIDI_PG_release_ref(pg, &inuse);
-                }
+                MPIR_Assert(MPIR_Object_get_ref(vc) == 0);
                 /* Inactive connections need to be marked
                    INACTIVE_CLOSED, so that if a connection request
                    comes in during the close protocol, we know to

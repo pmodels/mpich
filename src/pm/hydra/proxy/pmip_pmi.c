@@ -485,8 +485,8 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_ASSERT(!pmi_errno, status);
 
     if (strncmp(key, "PMI_", 4) == 0) {
-        status = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
-                                            1, "Keys with PMI_ prefix are reserved");
+        pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
+                                               1, "Keys with PMI_ prefix are reserved");
         HYDU_ASSERT(!pmi_errno, status);
 
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
@@ -755,8 +755,8 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_ASSERT(!pmi_errno, status);
 
     if (strncmp(key, "PMI_", 4) == 0) {
-        status = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
-                                            1, "Keys with PMI_ prefix are reserved");
+        pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
+                                               1, "Keys with PMI_ prefix are reserved");
         HYDU_ASSERT(!pmi_errno, status);
 
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
