@@ -238,42 +238,106 @@ static int allocate_context_bit(uint32_t mask[], int id)
     return id;
 }
 
-/* Allocates the first available context ID from context_mask based on the available
- * bits given in local_mask.  This function will clear the corresponding bit in
- * context_mask if allocation was successful.
+/* The CONTEXT ID allocation algorithms:
+ * A. The basic serial blocking allocation algorithm:
+ *     1) Each process copy the local mask (a map for all context id availability)
+ *     2) Run Allreduce using MPI_BAND, this results in a common mask
+ *     3) Call allocate_context_bit() to allocate the context_id
+ * B. Concurrent allocation (either from multiple threads or multiple nonblocking allocations) -
+ *     1) Only one allocation can use the mask at a time. Because there is no guarantee that
+ *        all processes with the same allocation grab their masks at the same time, all need
+ *        participate in Allreduce whether or not it owns the mask.
+ *     2) If an allreduce collects all the mask, it allocates an id and finish. Otherwise, it
+ *        need retry until succeeded.
+ *     3) We collectively order the concurrent allocations by parentcomm's context_id and the tag
+ *        to ensure the retry will eventually complete.
+ * C. Potential deadlock - user may block some allocations within a thread and inconsistently
+ *    across processes, shown in the following diagram:
+ *   ┌────────────────────────────────────────────────┬─────────────────────────────────────────────────┐
+ *   │                  Process 0                     │                   Process 1                     │
+ *   ├───────────────────────┬────────────────────────┼────────────────────────┬────────────────────────┤
+ *   │          Thread 0     │   Thread 1             │          Thread 0      │   Thread 1             │
+ *   │                       │                        │                        │                        │
+ *   │                       │ +--------------------+ │ +--------------------+ │                        │
+ *   │                       │ | Dup(Comm_1)        | │ | Dup(Comm_0)        | │                        │
+ *   │ +--------------------+│ | (holds mask)       | │ | (holds mask)       | │ +--------------------+ │
+ *   │ | Dup(Comm_2)        |│ +--------------------+ │ +--------------------+ │ | Dup(Comm_2)        | │
+ *   │ | (mask unavailable) |│                        │                        │ | (mask unavailable) | │
+ *   │ +--------------------+│                        │                        │ +--------------------+ │
+ *   │                       │                        │                        │                        │
+ *   │ [Dup(Comm_0)]         │                        │                        │ [Dup(Comm_1)]          │
+ *   │  (unreachable)        │                        │                        │  (unreachable)         │
+ *   │                       │                        │                        │                        │
+ *   └───────────────────────┴────────────────────────┴────────────────────────┴────────────────────────┘
+ *     1) The solution is to perform a barrier before each allocation can hold mask. In the above diagram,
+ *        the barrier would let Comm_2 complete before Comm_1 or Comm_0 can hold mask. It is guaranteed
+ *        by the collective semantics that barriers will not deadlock.
+ *     2) Instead of a barrier, alternatively we could split a portion for eager mask and try the first
+ *        allreduce using eager mask. Allreduce will achieve the barrier synchronizatiion with an
+ *        opportunity to complete id allocation for better performance.
  *
- * Returns 0 on failure.  Returns the allocated context ID on success. */
-static int find_and_allocate_context_id(uint32_t local_mask[])
-{
-    int context_id;
-    context_id = locate_context_bit(local_mask);
-    if (context_id != 0) {
-        context_id = allocate_context_bit(context_mask, context_id);
-    }
-    return context_id;
-}
+ */
 
 /* EAGER CONTEXT ID ALLOCATION: Attempt to allocate the context ID during the
  * initial synchronization step.  If eager protocol fails, threads fall back to
  * the base algorithm.
- *
- * They are used to avoid deadlock in multi-threaded case. In single-threaded
- * case, they are not used.
  */
 static int eager_nelem = -1;
 static int eager_in_use = 0;
 
-/* In multi-threaded case, mask_in_use is used to maintain thread safety. In
- * single-threaded case, it is always 0. */
+/* Only one allocation can own the mask at a time. */
 static volatile int mask_in_use = 0;
 
-/* In multi-threaded case, lowest_context_id is used to prioritize access when
- * multiple threads are contending for the mask, lowest_tag is used to break
- * ties when MPI_Comm_create_group is invoked my multiple threads on the same
- * parent communicator.  In single-threaded case, lowest_context_id is always
- * set to parent context id in sched_cb_gcn_copy_mask and lowest_tag is not
- * used.
- */
+
+struct gcn_state {
+    int *ctx0;
+    int *ctx1;
+    int own_mask;
+    int own_eager_mask;
+    int iter;
+    uint64_t tag;
+    MPIR_Comm *comm_ptr;
+    MPIR_Comm *comm_ptr_inter;
+    MPIR_Request *req_ptr;
+    MPIR_Comm *new_comm;
+    MPIR_Group *group_ptr;
+    bool ignore_id;
+    bool is_inter_comm;
+    bool gcn_in_list;
+    int error;
+    uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
+    struct gcn_state *next;
+    /* fields needed by the nonblocking algorithm */
+    enum {
+        MPIR_GCN__COPYMASK,
+        MPIR_GCN__ALLREDUCE,
+        MPIR_GCN__INTERCOMM_SENDRECV,
+        MPIR_GCN__INTERCOMM_BCAST,
+    } stage;
+    union {
+        MPIR_Request *allreduce_request;
+        MPIR_Request *sendrecv_reqs[2];
+        MPIR_Request *bcast_request;
+    } u;
+};
+struct gcn_state *next_gcn = NULL;
+
+/* routines used by both blocking and nonblocking algorithms */
+static void gcn_init(struct gcn_state *st, MPIR_Comm * comm_ptr, int tag,
+                     bool ignore_id, MPIR_Group * group_ptr);
+static void add_gcn_to_list(struct gcn_state *st);
+static void remove_gcn_from_list(struct gcn_state *st);
+static int gcn_copy_mask(struct gcn_state *st);
+static int gcn_allocate_cid(struct gcn_state *st);
+static int gcn_check_id_exhaustion(struct gcn_state *st);
+/* routines used by the nonblocking algorithm */
+static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Comm * comm_inter,
+                         MPIR_Request ** req);
+static int async_gcn_poll(MPIX_Async_thing thing);
+static int gcn_allreduce(struct gcn_state *st);
+static int gcn_intercomm_sendrecv(struct gcn_state *st);
+static int gcn_intercomm_bcast(struct gcn_state *st);
+static int gcn_complete(struct gcn_state *st);
 
 int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, int *context_id, int ignore_id)
 {
@@ -282,54 +346,9 @@ int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, int *context_id, int ignore_
                                            context_id, ignore_id);
 }
 
-struct gcn_state {
-    int *ctx0;
-    int *ctx1;
-    int own_mask;
-    int own_eager_mask;
-    int first_iter;
-    uint64_t tag;
-    MPIR_Comm *comm_ptr;
-    MPIR_Comm *comm_ptr_inter;
-    MPIR_Sched_t s;
-    MPIR_Comm *new_comm;
-    MPIR_Comm_kind_t gcn_cid_kind;
-    uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
-    struct gcn_state *next;
-};
-struct gcn_state *next_gcn = NULL;
-
-/* All pending context_id allocations are added to a list. The context_id allocations are ordered
- * according to the context_id of of parent communicator and the tag, wherby blocking context_id
- * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
- * case, the user is responsible for the right tags if "comm_create_group" is used */
-static void add_gcn_to_list(struct gcn_state *new_state)
-{
-    struct gcn_state *tmp = NULL;
-    if (next_gcn == NULL) {
-        next_gcn = new_state;
-        new_state->next = NULL;
-    } else if (next_gcn->comm_ptr->context_id > new_state->comm_ptr->context_id ||
-               (next_gcn->comm_ptr->context_id == new_state->comm_ptr->context_id &&
-                next_gcn->tag > new_state->tag)) {
-        new_state->next = next_gcn;
-        next_gcn = new_state;
-    } else {
-        for (tmp = next_gcn;
-             tmp->next != NULL &&
-             ((new_state->comm_ptr->context_id > tmp->next->comm_ptr->context_id) ||
-              ((new_state->comm_ptr->context_id == tmp->next->comm_ptr->context_id) &&
-               (new_state->tag >= tmp->next->tag))); tmp = tmp->next);
-
-        new_state->next = tmp->next;
-        tmp->next = new_state;
-
-    }
-}
-
 /* Allocates a new context ID collectively over the given communicator.  This
  * routine is "sparse" in the sense that while it is collective, some processes
- * may not care about the value selected context ID.
+ * may not care about the value selected context ID (ignore_id==TRUE).
  *
  * One example of this case is processes who pass MPI_UNDEFINED as the color
  * value to MPI_Comm_split.  Such processes should pass ignore_id==TRUE to
@@ -346,698 +365,53 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                     int *context_id, int ignore_id)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state st;
-    struct gcn_state *tmp;
-
     MPIR_FUNC_ENTER;
 
-    st.first_iter = 1;
-    st.comm_ptr = comm_ptr;
-    st.tag = tag;
-    st.own_mask = 0;
-    st.own_eager_mask = 0;
     /* Group-collective and ignore_id should never be combined */
     MPIR_Assert(!(group_ptr != NULL && ignore_id));
 
+    struct gcn_state st;
+    gcn_init(&st, comm_ptr, tag, ignore_id, group_ptr);
+
     *context_id = 0;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                             "Entering; shared state is %d:%d, my ctx id is %d, tag=%d",
-                                             mask_in_use, eager_in_use, comm_ptr->context_id, tag));
-
     while (*context_id == 0) {
-        /* We lock only around access to the mask (except in the global locking
-         * case).  If another thread is using the mask, we take a mask of zero. */
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-        if (eager_nelem < 0) {
-            /* Ensure that at least one word of deadlock-free context IDs is
-             * always set aside for the base protocol */
-            MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
-                        MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
-            eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
-        }
-
-        if (ignore_id) {
-            /* We are not participating in the resulting communicator, so our
-             * context ID space doesn't matter.  Set the mask to "all available". */
-            memset(st.local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-            st.own_mask = 0;
-            /* don't need to touch mask_in_use/lowest_context_id b/c our thread
-             * doesn't ever need to "win" the mask */
-        }
-
-        /* Deadlock avoidance: Only participate in context id loop when all
-         * processes have called this routine.  On the first iteration, use the
-         * "eager" allocation protocol.
-         */
-        else if (st.first_iter) {
-            memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-            st.own_eager_mask = 0;
-            /* Attempt to reserve the eager mask segment */
-            if (!eager_in_use && eager_nelem > 0) {
-                int i;
-                for (i = 0; i < eager_nelem; i++)
-                    st.local_mask[i] = context_mask[i];
-
-                eager_in_use = 1;
-                st.own_eager_mask = 1;
-            }
-        }
-
-        else {
-            MPIR_Assert(next_gcn != NULL);
-            /*If we are here, at least one element must be in the list, at least myself */
-
-            /* only the first element in the list can own the mask. However, maybe the mask is used
-             * by another thread, which added another allocation to the list before. So we have to check,
-             * if the mask is used and mark, if we own it */
-            if (mask_in_use || &st != next_gcn) {
-                memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-                st.own_mask = 0;
-                MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                                         "Mask is in use, my context_id is %d, owner context id is %d",
-                                                         st.comm_ptr->context_id,
-                                                         next_gcn->comm_ptr->context_id));
-            } else {
-                int i;
-                /* Copy safe mask segment to local_mask */
-                for (i = 0; i < eager_nelem; i++)
-                    st.local_mask[i] = 0;
-                for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                    st.local_mask[i] = context_mask[i];
-
-                mask_in_use = 1;
-                st.own_mask = 1;
-                MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "Copied local_mask");
-            }
-        }
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-        /* Note: MPIR_MAX_CONTEXT_MASK elements of local_mask are used by the
-         * context ID allocation algorithm.  The additional element is ignored
-         * by the context ID mask access routines and is used as a flag for
-         * detecting context ID exhaustion (explained below). */
-        if (st.own_mask || ignore_id)
-            st.local_mask[ALL_OWN_MASK_FLAG] = 1;
-        else
-            st.local_mask[ALL_OWN_MASK_FLAG] = 0;
-
-        /* Now, try to get a context id */
-        MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-        /* In the global and brief-global cases, note that this routine will
-         * release that global lock when it needs to wait.  That will allow
-         * other processes to enter the global or brief global critical section.
-         */
-        if (group_ptr != NULL) {
-            int coll_tag = tag | MPIR_TAG_COLL_BIT;     /* Shift tag into the tagged coll space */
-            mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                             MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, group_ptr,
-                                             coll_tag, MPIR_COLL_ATTR_SYNC);
-        } else {
-            mpi_errno =
-                MPIR_Allreduce_fallback(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                        MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, MPIR_COLL_ATTR_SYNC);
-        }
+        mpi_errno = gcn_copy_mask(&st);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
-         * narrow this region */
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-        if (ignore_id) {
-            /* we don't care what the value was, but make sure that everyone
-             * who did care agreed on a value */
-            *context_id = locate_context_bit(st.local_mask);
-            /* used later in out-of-context ids check and outer while loop condition */
-        } else if (st.own_eager_mask) {
-            /* There is a chance that we've found a context id */
-            /* Find_and_allocate_context_id updates the context_mask if it finds a match */
-            *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %d", *context_id);
+        mpi_errno = gcn_allreduce(&st);
+        MPIR_ERR_CHECK(mpi_errno);
 
-            st.own_eager_mask = 0;
-            eager_in_use = 0;
-            if (*context_id <= 0) {
-                /* else we did not find a context id. Give up the mask in case
-                 * there is another thread (with a lower input context id)
-                 * waiting for it.  We need to ensure that any other threads
-                 * have the opportunity to run, hence yielding */
-                /* FIXME: Do we need to do an GLOBAL yield here?
-                 * When we do a collective operation, we anyway yield
-                 * for other others */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-            }
-        } else if (st.own_mask) {
-            /* There is a chance that we've found a context id */
-            /* Find_and_allocate_context_id updates the context_mask if it finds a match */
-            *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %d", *context_id);
+        *context_id = gcn_allocate_cid(&st);
 
-            mask_in_use = 0;
+        if (*context_id == 0) {
+            mpi_errno = st.error;
+            MPIR_ERR_CHECK(mpi_errno);
 
-            if (*context_id > 0) {
-                /* If we found a new context id, we have to remove the element from the list, so the
-                 * next allocation can own the mask */
-                if (next_gcn == &st) {
-                    next_gcn = st.next;
-                } else {
-                    for (tmp = next_gcn; tmp->next != &st; tmp = tmp->next);    /* avoid compiler warnings */
-                    tmp->next = st.next;
-                }
-            } else {
-                /* else we did not find a context id. Give up the mask in case
-                 * there is another thread in the gcn_next_list
-                 * waiting for it.  We need to ensure that any other threads
-                 * have the opportunity to run, hence yielding */
-                /* FIXME: Do we need to do an GLOBAL yield here?
-                 * When we do a collective operation, we anyway yield
-                 * for other others */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-            }
-        } else {
-            /* As above, force this thread to yield */
-            /* FIXME: Do we need to do an GLOBAL yield here?  When we
-             * do a collective operation, we anyway yield for other
-             * others */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-        }
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-        /* Test for context ID exhaustion: All threads that will participate in
-         * the new communicator owned the mask and could not allocate a context
-         * ID.  This indicates that either some process has no context IDs
-         * available, or that some are available, but the allocation cannot
-         * succeed because there is no common context ID. */
-        if (*context_id == 0 && st.local_mask[ALL_OWN_MASK_FLAG] == 1) {
-            /* --BEGIN ERROR HANDLING-- */
-            int nfree = 0;
-            int ntotal = 0;
-            int minfree;
-
-            if (st.own_mask) {
-                MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-                mask_in_use = 0;
-                MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-            }
-
-            context_mask_stats(&nfree, &ntotal);
-            if (ignore_id)
-                minfree = INT_MAX;
-            else
-                minfree = nfree;
-
-            if (group_ptr != NULL) {
-                int coll_tag = tag | MPIR_TAG_COLL_BIT; /* Shift tag into the tagged coll space */
-                mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
-                                                 MPI_MIN, comm_ptr, group_ptr, coll_tag,
-                                                 MPIR_COLL_ATTR_SYNC);
-            } else {
-                mpi_errno = MPIR_Allreduce_fallback(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
-                                                    MPI_MIN, comm_ptr, MPIR_COLL_ATTR_SYNC);
-            }
-
-            if (minfree > 0) {
-                MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                     "**toomanycommfrag", "**toomanycommfrag %d %d %d",
-                                     nfree, ntotal, ignore_id);
-            } else {
-                MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                     "**toomanycomm", "**toomanycomm %d %d %d",
-                                     nfree, ntotal, ignore_id);
-            }
-            /* --END ERROR HANDLING-- */
-        }
-        if (st.first_iter == 1) {
-            st.first_iter = 0;
-            /* to avoid deadlocks, the element is not added to the list before the first iteration */
-            if (!ignore_id && *context_id == 0) {
-                MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-                add_gcn_to_list(&st);
-                MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-            }
         }
     }
 
   fn_exit:
     if (ignore_id)
         *context_id = MPIR_INVALID_CONTEXT_ID;
-    MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "Context mask = %s", context_mask_to_str());
     MPIR_FUNC_EXIT;
     return mpi_errno;
 
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    /* Release the masks */
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-    if (st.own_mask) {
-        mask_in_use = 0;
-    }
-    /*If in list, remove it */
-    if (!st.first_iter && !ignore_id) {
-        if (next_gcn == &st) {
-            next_gcn = st.next;
-        } else {
-            for (tmp = next_gcn; tmp->next != &st; tmp = tmp->next);
-            tmp->next = st.next;
-        }
-    }
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-
-
-static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state);
-static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
-
-    mpi_errno = MPIR_Comm_commit(st->new_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_fail:
-    return mpi_errno;
-
-}
-
-static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
-
-    if (st->gcn_cid_kind == MPIR_COMM_KIND__INTERCOMM) {
-        if (st->comm_ptr_inter->rank == 0) {
-            mpi_errno =
-                MPIR_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno =
-                MPIR_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(st->s);
-        }
-
-        mpi_errno = MPIR_Ibcast_intra_sched_auto(st->ctx1, 1,
-                                                 MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
-                                                 st->s);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(st->s);
-    }
-
-    mpi_errno = MPIR_Sched_cb(&sched_cb_commit_comm, st, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_fail:
-    return mpi_errno;
-}
-
-/* Try to find a valid context id.
- *
- * If the context id is found, then broadcast it; if not, then retry the
- * nonblocking context id allocation algorithm again.
- *
- * Note the subtle difference on thread handling between the nonblocking
- * algorithm (sched_cb_gcn_allocate_cid) and the blocking algorithm
- * (MPIR_Get_contextid_sparse_group). In nonblocking algorithm, there is no
- * need to yield to another thread because this thread will not block the
- * progress. On the contrary, unnecessary yield will allow other threads to
- * execute and insert wrong order of entries to the nonblocking schedule and
- * cause errors.
- */
-static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state, *tmp;
-    int newctxid;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-    if (st->own_eager_mask) {
-        newctxid = find_and_allocate_context_id(st->local_mask);
-        if (st->ctx0)
-            *st->ctx0 = newctxid;
-        if (st->ctx1)
-            *st->ctx1 = newctxid;
-
-        st->own_eager_mask = 0;
-        eager_in_use = 0;
-    } else if (st->own_mask) {
-        newctxid = find_and_allocate_context_id(st->local_mask);
-        if (st->ctx0)
-            *st->ctx0 = newctxid;
-        if (st->ctx1)
-            *st->ctx1 = newctxid;
-
-        /* reset flag for the next try */
-        mask_in_use = 0;
-        /* If we found a ctx, remove element form list */
-        if (newctxid > 0) {
-            if (next_gcn == st) {
-                next_gcn = st->next;
-            } else {
-                for (tmp = next_gcn; tmp->next != st; tmp = tmp->next);
-                tmp->next = st->next;
-            }
-        }
-    }
-
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-    if (*st->ctx0 == 0) {
-        if (st->local_mask[ALL_OWN_MASK_FLAG] == 1) {
-            /* --BEGIN ERROR HANDLING-- */
-            int nfree = 0;
-            int ntotal = 0;
-            int minfree;
-            context_mask_stats(&nfree, &ntotal);
-            minfree = nfree;
-            /* hzhou: we are inside a MPID_Progress_wait/test and running MPIR_Allreduce here
-             * rellay complicates things up. I am commenting off the code below as it seems all it
-             * does is to have more detail in the error message, which I don't think it worth the
-             * complication.
-             * If we are to do this, we need explain exactly how things will work out. Otherwise,
-             * we are just placing a mine field here.
-             */
-            /* FIXME: study and resolve */
-            /*
-             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL, MPI_MIN, st->comm_ptr, 0);
-             * MPIR_ERR_CHECK(mpi_errno);
-             */
-            if (minfree > 0) {
-                MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                     "**toomanycommfrag", "**toomanycommfrag %d %d %d",
-                                     nfree, ntotal, minfree);
-            } else {
-                MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                     "**toomanycomm", "**toomanycomm %d %d %d",
-                                     nfree, ntotal, minfree);
-            }
-            /* --END ERROR HANDLING-- */
-        } else {
-            /* do not own mask, try again */
-            if (st->first_iter == 1) {
-                st->first_iter = 0;
-                /* Set the Tag for the idup-operations. We have two problems here:
-                 *  1.) The tag should not be used by another (blocking) context_id allocation.
-                 *      Therefore, we set tag_up as lower bound for the operation. tag_ub is used by
-                 *      most of the other blocking operations, but tag is always >0, so this
-                 *      should be fine.
-                 *  2.) We need ordering between multiple idup operations on the same communicator.
-                 *       The problem here is that the iallreduce operations of the first iteration
-                 *       are not necessarily completed in the same order as they are issued, also on the
-                 *       same communicator. To avoid deadlocks, we cannot add the elements to the
-                 *       list bevfore the first iallreduce is completed. The "tag" is created for the
-                 *       scheduling - by calling  MPIR_Sched_next_tag(comm_ptr, &tag) - and the same
-                 *       for a idup operation on all processes. So we use it here. */
-                /* FIXME I'm not sure if there can be an overflows for this tag */
-                st->tag = (uint64_t) tag + MPIR_Process.attrs.tag_ub;
-                add_gcn_to_list(st);
-            }
-            mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, st->s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(st->s);
-        }
-    } else {
-        /* Successfully allocated a context id */
-        mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(st->s);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    /* make sure that the pending allocations are scheduled */
-    if (!st->first_iter) {
-        if (next_gcn == st) {
-            next_gcn = st->next;
-        } else {
-            for (tmp = next_gcn; tmp && tmp->next != st; tmp = tmp->next);
-            tmp->next = st->next;
-        }
-    }
-    /* In the case of failure, the new communicator was half created.
-     * So we need to clean the memory allocated for it. */
-    MPII_COMML_FORGET(st->new_comm);
-    MPIR_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
-    MPL_free(st);
-    goto fn_exit;
-}
-
-static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-    if (st->first_iter) {
-        memset(st->local_mask, 0, (MPIR_MAX_CONTEXT_MASK + 1) * sizeof(int));
-        st->own_eager_mask = 0;
-
-        /* Attempt to reserve the eager mask segment */
-        if (!eager_in_use && eager_nelem > 0) {
-            int i;
-            for (i = 0; i < eager_nelem; i++)
-                st->local_mask[i] = context_mask[i];
-
-            eager_in_use = 1;
-            st->own_eager_mask = 1;
-        }
-    } else {
-        /* Same rules as for the blocking case */
-        if (mask_in_use || st != next_gcn) {
-            memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-            st->own_mask = 0;
-            st->local_mask[ALL_OWN_MASK_FLAG] = 0;
-        } else {
-            /* Copy safe mask segment to local_mask */
-            int i;
-            for (i = 0; i < eager_nelem; i++)
-                st->local_mask[i] = 0;
-            for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                st->local_mask[i] = context_mask[i];
-            mask_in_use = 1;
-            st->own_mask = 1;
-            st->local_mask[ALL_OWN_MASK_FLAG] = 1;
-        }
-    }
-
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-    mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
-                                                 MPIR_MAX_CONTEXT_MASK + 1,
-                                                 MPIR_UINT32_T_INTERNAL, MPI_BAND,
-                                                 st->comm_ptr, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(st->s);
-
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_allocate_cid, st, st->s);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(st->s);
-
-  fn_fail:
-    return mpi_errno;
-}
-
-
-/** Allocating a new context ID collectively over the given communicator in a
- * nonblocking way.
- *
- * The nonblocking mechanism is implemented by inserting MPIDU_Sched_entry to
- * the nonblocking collective progress, which is a part of the progress engine.
- * It uses a two-level linked list 'all_schedules' to manager all nonblocking
- * collective calls: the first level is a linked list of struct MPIDU_Sched;
- * and each struct MPIDU_Sched is an array of struct MPIDU_Sched_entry. The
- * following four functions are used together to implement the algorithm:
- * sched_cb_gcn_copy_mask, sched_cb_gcn_allocate_cid, sched_cb_gcn_bcast and
- * sched_get_cid_nonblock.
- *
- * The above four functions use the same algorithm as
- * MPIR_Get_contextid_sparse_group (multi-threaded version) to allocate a
- * context id. The algorithm needs to retry the allocation process in the case
- * of conflicts. In MPIR_Get_contextid_sparse_group, it is a while loop.  In
- * the nonblocking algorithm, 1) new entries are inserted to the end of
- * schedule to replace the 'while' loop in MPI_Comm_dup algorithm; 2) all
- * arguments passed to sched_get_cid_nonblock are saved to gcn_state in order
- * to be called in the future; 3) in sched_cb_gcn_allocate_cid, if the first
- * try failed, it will insert sched_cb_gcn_copy_mask to the schedule again.
- *
- * To ensure thread-safety, it shares the same global flag 'mask_in_use' with
- * other communicator functions to protect access to context_mask. And use
- * CONTEXTID lock to protect critical sections.
- *
- * There is a subtle difference between INTRACOMM and INTERCOMM when
- * duplicating a communicator.  They needed to be treated differently in
- * current algorithm. Specifically, 1) when calling sched_get_cid_nonblock, the
- * parameters are different; 2) updating newcommp->recvcontext_id in
- * MPIR_Get_intercomm_contextid_nonblock has been moved to sched_cb_gcn_bcast
- * because this should happen after sched_cb_gcn_allocate_cid has succeed.
- *
- * To avoid deadlock or livelock, it uses the same eager protocol as
- * multi-threaded MPIR_Get_contextid_sparse_group.
- */
-static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
-                                  int *ctx0, int *ctx1,
-                                  MPIR_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = NULL;
-    MPIR_CHKPMEM_DECL();
-
-    MPIR_CHKPMEM_MALLOC(st, sizeof(struct gcn_state), MPL_MEM_COMM);
-    st->ctx0 = ctx0;
-    st->ctx1 = ctx1;
-    if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {
-        st->comm_ptr = comm_ptr;
-        st->comm_ptr_inter = NULL;
-    } else {
-        st->comm_ptr = comm_ptr->local_comm;
-        st->comm_ptr_inter = comm_ptr;
-    }
-    st->s = s;
-    st->gcn_cid_kind = gcn_cid_kind;
-    *(st->ctx0) = 0;
-    st->own_eager_mask = 0;
-    st->first_iter = 1;
-    st->new_comm = newcomm;
-    st->own_mask = 0;
-    if (eager_nelem < 0) {
-        /* Ensure that at least one word of deadlock-free context IDs is
-         * always set aside for the base protocol */
-        MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
-                    MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
-        eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
-    }
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_SCHED_BARRIER(s);
-
-  fn_exit:
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int tag;
-    MPIR_Sched_t s;
-
-
-    MPIR_FUNC_ENTER;
-
-    /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Sched_set_tag(s, tag);
-
-    /* add some entries to it */
-    mpi_errno =
-        sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
-                               s, MPIR_COMM_KIND__INTRACOMM);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
-int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
-                                          MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int tag;
-    MPIR_Sched_t s;
-
-    MPIR_FUNC_ENTER;
-
-    /* do as much local setup as possible */
-    if (!comm_ptr->local_comm) {
-        mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Sched_set_tag(s, tag);
-
-    /* add some entries to it */
-
-    /* first get a context ID over the local comm */
-    mpi_errno =
-        sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
-                               s, MPIR_COMM_KIND__INTERCOMM);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(s, comm_ptr, req);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_fail:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-
-/* Get a context for a new intercomm.  There are two approaches
-   here (for MPI-1 codes only)
-   (a) Each local group gets a context; the groups exchange, and
-       the low value is accepted and the high one returned.  This
-       works because the context ids are taken from the same pool.
-   (b) Form a temporary intracomm over all processes and use that
-       with the regular algorithm.
-
-   In some ways, (a) is the better approach because it is the one that
-   extends to MPI-2 (where the last step, returning the context, is
-   not used and instead separate send and receive context id value
-   are kept).  For this reason, we'll use (a).
-
-   Even better is to separate the local and remote context ids.  Then
-   each group of processes can manage their context ids separately.
+/* Get a context for a new intercomm.
+   (a) Each local group gets a context_id using local_comm.
+   (b) Exchange context_id using parent intercomm using MPIC_Sendrecv.
 */
-/*
- * This uses the thread-safe (if necessary) routine to get a context id
- * and does not need its own thread-safe version.
- */
 int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, int *context_id, int *recvcontext_id)
 {
     int mycontext_id, remote_context_id;
     int mpi_errno = MPI_SUCCESS;
-    int tag = 31567;            /* FIXME  - we need an internal tag or
-                                 * communication channel.  Can we use a different
-                                 * context instead?.  Or can we use the tag
-                                 * provided in the intercomm routine? (not on a dup,
-                                 * but in that case it can use the collective context) */
+    int tag = MPIR_CTXID_TAG;
+
     MPIR_FUNC_ENTER;
 
     if (!comm_ptr->local_comm) {
@@ -1071,6 +445,42 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, int *context_id, int *rec
      * are attempting to post them for two separate communicators. */
     *context_id = remote_context_id;
     *recvcontext_id = mycontext_id;
+
+  fn_fail:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = async_get_cid(comm_ptr, newcommp, NULL /* comm_inter */ , req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
+                                          MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* do as much local setup as possible */
+    if (!comm_ptr->local_comm) {
+        mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    mpi_errno = async_get_cid(comm_ptr->local_comm, newcommp, comm_ptr, req);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_fail:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1119,8 +529,6 @@ void MPIR_Free_contextid(int context_id)
         }
     }
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
     /* --BEGIN ERROR HANDLING-- */
     /* Check that this context id has been allocated */
     if ((context_mask[idx] & (0x1U << bitpos)) != 0) {
@@ -1134,6 +542,7 @@ void MPIR_Free_contextid(int context_id)
     }
     /* --END ERROR HANDLING-- */
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     /* MT: Note that this update must be done atomically in the multithreaedd
      * case.  In the "one, single lock" implementation, that lock is indeed
      * held when this operation is called. */
@@ -1146,4 +555,496 @@ void MPIR_Free_contextid(int context_id)
                      context_id, idx, bitpos, raw_prefix));
   fn_exit:
     MPIR_FUNC_EXIT;
+}
+
+/* internal routines used by both blocking and nonblocking algorithms */
+
+static void gcn_init(struct gcn_state *st, MPIR_Comm * comm_ptr, int tag, bool ignore_id,
+                     MPIR_Group * group_ptr)
+{
+    if (eager_nelem < 0) {
+        /* Ensure that at least one word of deadlock-free context IDs is
+         * always set aside for the base protocol */
+        MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
+                    MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
+        eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
+    }
+
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    st->iter = 0;
+    st->comm_ptr = comm_ptr;
+    st->tag = tag;
+    st->ignore_id = ignore_id;
+    st->group_ptr = group_ptr;
+    st->own_mask = 0;
+    st->own_eager_mask = 0;
+    st->req_ptr = NULL;
+    st->error = 0;
+    st->gcn_in_list = false;
+}
+
+/* All pending context_id allocations are added to a list. The context_id allocations are ordered
+ * according to the context_id of of parent communicator and the tag, wherby blocking context_id
+ * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
+ * case, the user is responsible for the right tags if "comm_create_group" is used */
+static void add_gcn_to_list(struct gcn_state *st)
+{
+    /* we'll only call this from gcn_allocate_cid within CS */
+    struct gcn_state *tmp = NULL;
+    if (next_gcn == NULL) {
+        next_gcn = st;
+        st->next = NULL;
+    } else if (next_gcn->comm_ptr->context_id > st->comm_ptr->context_id ||
+               (next_gcn->comm_ptr->context_id == st->comm_ptr->context_id &&
+                next_gcn->tag > st->tag)) {
+        st->next = next_gcn;
+        next_gcn = st;
+    } else {
+        for (tmp = next_gcn;
+             tmp->next != NULL &&
+             ((st->comm_ptr->context_id > tmp->next->comm_ptr->context_id) ||
+              ((st->comm_ptr->context_id == tmp->next->comm_ptr->context_id) &&
+               (st->tag >= tmp->next->tag))); tmp = tmp->next);
+
+        st->next = tmp->next;
+        tmp->next = st;
+    }
+    st->gcn_in_list = true;
+}
+
+static void remove_gcn_from_list(struct gcn_state *st)
+{
+    /* we'll only call this from gcn_allocate_cid within CS */
+    if (next_gcn == st) {
+        next_gcn = st->next;
+    } else {
+        struct gcn_state *tmp;
+        for (tmp = next_gcn; tmp->next != st; tmp = tmp->next);
+        tmp->next = st->next;
+    }
+    st->gcn_in_list = false;
+}
+
+static int gcn_copy_mask(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
+    if (st->ignore_id) {
+        /* We are not participating in the resulting communicator, so our
+         * context ID space doesn't matter.  Set the mask to "all available". */
+        memset(st->local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+        st->own_mask = 0;
+        /* don't need to touch mask_in_use/lowest_context_id b/c our thread
+         * doesn't ever need to "win" the mask */
+    } else if (st->iter == 0) {
+        /* Deadlock avoidance: Only participate in context id loop when all
+         * processes have called this routine.  On the first iteration, use the
+         * "eager" allocation protocol.
+         */
+        memset(st->local_mask, 0, (MPIR_MAX_CONTEXT_MASK + 1) * sizeof(int));
+        st->own_eager_mask = 0;
+
+        /* Attempt to reserve the eager mask segment */
+        if (!eager_in_use && eager_nelem > 0) {
+            int i;
+            for (i = 0; i < eager_nelem; i++)
+                st->local_mask[i] = context_mask[i];
+
+            eager_in_use = 1;
+            st->own_eager_mask = 1;
+        }
+    } else {
+        MPIR_Assert(next_gcn != NULL);
+        /*If we are here, at least one element must be in the list, at least myself */
+
+        /* only the first element in the list can own the mask. However, maybe the mask is used
+         * by another thread, which added another allocation to the list before. So we have to check,
+         * if the mask is used and mark, if we own it */
+        if (mask_in_use || st != next_gcn) {
+            memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+            st->own_mask = 0;
+        } else {
+            /* Copy safe mask segment to local_mask */
+            int i;
+            for (i = 0; i < eager_nelem; i++)
+                st->local_mask[i] = 0;
+            for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
+                st->local_mask[i] = context_mask[i];
+            mask_in_use = 1;
+            st->own_mask = 1;
+        }
+    }
+
+    /* Note: MPIR_MAX_CONTEXT_MASK elements of local_mask are used by the
+     * context ID allocation algorithm.  The additional element is ignored
+     * by the context ID mask access routines and is used as a flag for
+     * detecting context ID exhaustion (explained below). */
+    if (st->own_mask || st->ignore_id)
+        st->local_mask[ALL_OWN_MASK_FLAG] = 1;
+    else
+        st->local_mask[ALL_OWN_MASK_FLAG] = 0;
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+    return mpi_errno;
+}
+
+/* Try to find a valid context id.
+ *
+ * If the context id is found, then broadcast it; if not, then retry the
+ * nonblocking context id allocation algorithm again.
+ *
+ * Note the subtle difference on thread handling between the nonblocking
+ * algorithm (sched_cb_gcn_allocate_cid) and the blocking algorithm
+ * (MPIR_Get_contextid_sparse_group). In nonblocking algorithm, there is no
+ * need to yield to another thread because this thread will not block the
+ * progress. On the contrary, unnecessary yield will allow other threads to
+ * execute and insert wrong order of entries to the nonblocking schedule and
+ * cause errors.
+ */
+static int gcn_allocate_cid(struct gcn_state *st)
+{
+    int context_id = 0;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
+    context_id = locate_context_bit(st->local_mask);
+    if (st->own_eager_mask) {
+        st->own_eager_mask = 0;
+        eager_in_use = 0;
+    } else if (st->own_mask) {
+        st->own_mask = 0;
+        mask_in_use = 0;
+    }
+
+    if (context_id > 0) {
+        if (!st->ignore_id) {
+            int id = allocate_context_bit(context_mask, context_id);
+            MPIR_Assertp(id == context_id);
+        }
+        if (st->gcn_in_list) {
+            remove_gcn_from_list(st);
+        }
+    } else {
+        st->error = gcn_check_id_exhaustion(st);
+        if (!st->error && !st->gcn_in_list && !st->ignore_id) {
+            add_gcn_to_list(st);
+        } else if (st->error && st->gcn_in_list) {
+            remove_gcn_from_list(st);
+        }
+    }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+
+    st->iter++;
+
+    return context_id;
+}
+
+static int gcn_check_id_exhaustion(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Test for context ID exhaustion: All threads that will participate in
+     * the new communicator owned the mask and could not allocate a context
+     * ID.  This indicates that either some process has no context IDs
+     * available, or that some are available, but the allocation cannot
+     * succeed because there is no common context ID. */
+    if (st->local_mask[ALL_OWN_MASK_FLAG] == 1) {
+        int nfree = 0;
+        int ntotal = 0;
+        int minfree;
+
+        /* NOTE: we only call this with CS from gcn_allocate_cid, so it's safe */
+        context_mask_stats(&nfree, &ntotal);
+
+        if (st->ignore_id)
+            minfree = INT_MAX;
+        else
+            minfree = nfree;
+
+        if (!st->req_ptr) {
+            /* only run Allreduce if we are in a blocking call */
+            if (st->group_ptr != NULL) {
+                int coll_tag = st->tag | MPIR_TAG_COLL_BIT;     /* Shift tag into the tagged coll space */
+                mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
+                                                 MPI_MIN, st->comm_ptr, st->group_ptr, coll_tag,
+                                                 MPIR_COLL_ATTR_SYNC);
+            } else {
+                mpi_errno = MPIR_Allreduce_fallback(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
+                                                    MPI_MIN, st->comm_ptr, MPIR_COLL_ATTR_SYNC);
+            }
+        }
+
+        if (minfree > 0) {
+            MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
+                                 "**toomanycommfrag", "**toomanycommfrag %d %d %d",
+                                 nfree, ntotal, st->ignore_id);
+        } else {
+            MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
+                                 "**toomanycomm", "**toomanycomm %d %d %d",
+                                 nfree, ntotal, st->ignore_id);
+        }
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+/* internal routines used by the nonblocking algorithm */
+
+static int query_fn(void *extra_state, MPI_Status * status)
+{
+    /* status points to request->status */
+    return status->MPI_ERROR;
+}
+
+static int free_fn(void *extra_state)
+{
+    return MPI_SUCCESS;
+}
+
+static int cancel_fn(void *extra_state, int complete)
+{
+    return MPI_SUCCESS;
+}
+
+/** Allocating a new context ID collectively over the given communicator in a
+ * nonblocking way.
+ *
+ * The nonblocking mechanism is implemented by inserting MPIDU_Sched_entry to
+ * the nonblocking collective progress, which is a part of the progress engine.
+ * It uses a two-level linked list 'all_schedules' to manager all nonblocking
+ * collective calls: the first level is a linked list of struct MPIDU_Sched;
+ * and each struct MPIDU_Sched is an array of struct MPIDU_Sched_entry. The
+ * following four functions are used together to implement the algorithm:
+ * sched_cb_gcn_copy_mask, sched_cb_gcn_allocate_cid, sched_cb_gcn_bcast and
+ * sched_get_cid_nonblock.
+ *
+ * The above four functions use the same algorithm as
+ * MPIR_Get_contextid_sparse_group (multi-threaded version) to allocate a
+ * context id. The algorithm needs to retry the allocation process in the case
+ * of conflicts. In MPIR_Get_contextid_sparse_group, it is a while loop.  In
+ * the nonblocking algorithm, 1) new entries are inserted to the end of
+ * schedule to replace the 'while' loop in MPI_Comm_dup algorithm; 2) all
+ * arguments passed to sched_get_cid_nonblock are saved to gcn_state in order
+ * to be called in the future; 3) in sched_cb_gcn_allocate_cid, if the first
+ * try failed, it will insert sched_cb_gcn_copy_mask to the schedule again.
+ *
+ * To ensure thread-safety, it shares the same global flag 'mask_in_use' with
+ * other communicator functions to protect access to context_mask. And use
+ * CONTEXTID lock to protect critical sections.
+ *
+ * There is a subtle difference between INTRACOMM and INTERCOMM when
+ * duplicating a communicator.  They needed to be treated differently in
+ * current algorithm. Specifically, 1) when calling sched_get_cid_nonblock, the
+ * parameters are different; 2) updating newcommp->recvcontext_id in
+ * MPIR_Get_intercomm_contextid_nonblock has been moved to sched_cb_gcn_bcast
+ * because this should happen after sched_cb_gcn_allocate_cid has succeed.
+ *
+ * To avoid deadlock or livelock, it uses the same eager protocol as
+ * multi-threaded MPIR_Get_contextid_sparse_group.
+ */
+static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Comm * comm_inter,
+                         MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKPMEM_DECL();
+
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, NULL, req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct gcn_state *st = NULL;
+    MPIR_CHKPMEM_MALLOC(st, sizeof(struct gcn_state), MPL_MEM_COMM);
+
+    int tag;
+    if (comm_inter) {
+        /* We need get the tag from the parent intercomm because the localcomm (comm_ptr) shares
+         * the same context_id as the parent. */
+        mpi_errno = MPIR_Sched_next_tag(comm_inter, &tag);
+    } else {
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+    gcn_init(st, comm_ptr, tag, false /* ignore_id */ , NULL /* group_ptr */);
+
+    st->new_comm = newcommp;
+    st->comm_ptr_inter = comm_inter;
+    st->ctx0 = &newcommp->recvcontext_id;
+    st->ctx1 = &newcommp->context_id;
+    if (comm_inter) {
+        st->is_inter_comm = true;
+    } else {
+        st->is_inter_comm = false;
+    }
+
+    st->req_ptr = *req;
+
+    *(st->ctx0) = 0;
+    st->stage = MPIR_GCN__COPYMASK;
+
+    mpi_errno = MPIR_Async_things_add(async_gcn_poll, st, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+static int async_gcn_poll(MPIX_Async_thing thing)
+{
+    struct gcn_state *st = MPIR_Async_thing_get_state(thing);
+
+    switch (st->stage) {
+        case MPIR_GCN__COPYMASK:
+            st->error = gcn_copy_mask(st);
+            MPIR_Assert(st->error == MPI_SUCCESS);
+
+            st->error = gcn_allreduce(st);
+            MPIR_Assert(st->error == MPI_SUCCESS);
+
+            st->stage = MPIR_GCN__ALLREDUCE;
+            return MPIX_ASYNC_NOPROGRESS;
+
+        case MPIR_GCN__ALLREDUCE:
+            if (!MPIR_Request_is_complete(st->u.allreduce_request)) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.allreduce_request);
+
+                int newctxid = gcn_allocate_cid(st);
+                if (newctxid) {
+                    if (st->ctx0)
+                        *st->ctx0 = newctxid;
+                    if (st->ctx1)
+                        *st->ctx1 = newctxid;
+                }
+
+                if (st->error) {
+                    gcn_complete(st);
+                    return MPIX_ASYNC_DONE;
+                } else if (*st->ctx0 == 0) {
+                    /* retry */
+                    st->stage = MPIR_GCN__COPYMASK;
+                    return MPIX_ASYNC_NOPROGRESS;
+                } else if (!st->is_inter_comm) {
+                    /* done */
+                    gcn_complete(st);
+                    return MPIX_ASYNC_DONE;
+                } else if (st->comm_ptr_inter->rank == 0) {
+                    st->error = gcn_intercomm_sendrecv(st);
+                    MPIR_Assert(st->error == MPI_SUCCESS);
+
+                    st->stage = MPIR_GCN__INTERCOMM_SENDRECV;
+                    return MPIX_ASYNC_NOPROGRESS;
+                } else {
+                    st->error = gcn_intercomm_bcast(st);
+                    MPIR_Assert(st->error == MPI_SUCCESS);
+
+                    st->stage = MPIR_GCN__INTERCOMM_BCAST;
+                    return MPIX_ASYNC_NOPROGRESS;
+                }
+            }
+
+        case MPIR_GCN__INTERCOMM_SENDRECV:
+            if (!MPIR_Request_is_complete(st->u.sendrecv_reqs[0]) ||
+                !MPIR_Request_is_complete(st->u.sendrecv_reqs[1])) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.sendrecv_reqs[0]);
+                MPIR_Request_free(st->u.sendrecv_reqs[1]);
+
+                st->error = gcn_intercomm_bcast(st);
+                MPIR_Assert(st->error == MPI_SUCCESS);
+
+                st->stage = MPIR_GCN__INTERCOMM_BCAST;
+                return MPIX_ASYNC_NOPROGRESS;
+            }
+
+        case MPIR_GCN__INTERCOMM_BCAST:
+            if (!MPIR_Request_is_complete(st->u.bcast_request)) {
+                return MPIX_ASYNC_NOPROGRESS;
+            } else {
+                MPIR_Request_free(st->u.bcast_request);
+
+                gcn_complete(st);
+                return MPIX_ASYNC_DONE;
+            }
+    }
+
+    MPIR_Assert(0);
+    return MPIX_ASYNC_NOPROGRESS;
+}
+
+static int gcn_allreduce(struct gcn_state *st)
+{
+    int mpi_errno;
+
+    int count = MPIR_MAX_CONTEXT_MASK + 1;
+    MPI_Datatype datatype = MPIR_UINT32_T_INTERNAL;
+    MPI_Op op = MPI_BAND;
+
+    if (st->req_ptr) {
+        mpi_errno = MPIR_Iallreduce_tag(MPI_IN_PLACE, st->local_mask, count, datatype, op,
+                                        st->comm_ptr, st->tag, &st->u.allreduce_request);
+    } else {
+        if (st->group_ptr != NULL) {
+            int coll_tag = st->tag | MPIR_TAG_COLL_BIT; /* Shift tag into the tagged coll space */
+            mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, st->local_mask, count, datatype, op,
+                                             st->comm_ptr, st->group_ptr,
+                                             coll_tag, MPIR_COLL_ATTR_SYNC);
+        } else {
+            mpi_errno = MPIR_Allreduce_fallback(MPI_IN_PLACE, st->local_mask, count, datatype, op,
+                                                st->comm_ptr, MPIR_COLL_ATTR_SYNC);
+        }
+    }
+
+    return mpi_errno;
+}
+
+static int gcn_intercomm_sendrecv(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIC_Irecv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                           0, st->tag, st->comm_ptr_inter, &st->u.sendrecv_reqs[0]);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIC_Isend(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                           0, st->tag, st->comm_ptr_inter, &st->u.sendrecv_reqs[1], 0);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+static int gcn_intercomm_bcast(struct gcn_state *st)
+{
+    return MPIR_Ibcast_tag(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
+                           st->tag, &st->u.bcast_request);
+}
+
+static int gcn_complete(struct gcn_state *st)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (st->error) {
+        /* In the case of failure, the new communicator was half created.
+         * So we need to clean the memory allocated for it. */
+        MPII_COMML_FORGET(st->new_comm);
+        MPIR_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
+        st->req_ptr->status.MPI_ERROR = st->error;
+    } else {
+        mpi_errno = MPIR_Comm_commit(st->new_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPIR_Grequest_complete_impl(st->req_ptr);
+
+    MPL_free(st);
+
+  fn_fail:
+    return mpi_errno;
 }

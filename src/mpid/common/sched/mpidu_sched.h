@@ -17,7 +17,6 @@
 enum MPIR_Sched_kind {
     MPIR_SCHED_KIND_REGULAR = 0,
     MPIR_SCHED_KIND_PERSISTENT, /* used by persistent collectives, do not free on completion */
-    MPIR_SCHED_KIND_GENERALIZED,        /* used by contextid code, callbacks may alter entries */
 };
 
 enum MPIDU_Sched_entry_type {

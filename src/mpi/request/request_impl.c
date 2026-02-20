@@ -774,9 +774,6 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
             /* wait for ith request to complete */
             DEBUG_PROGRESS_START;
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
-                /* generalized requests should already be finished */
-                MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
-
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
                 DEBUG_PROGRESS_CHECK;

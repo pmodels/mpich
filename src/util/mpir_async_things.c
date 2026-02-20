@@ -10,6 +10,8 @@ static struct MPIR_Async_thing *async_things_list[MPIR_MAX_VCIS + 1];
 static MPID_Thread_mutex_t async_things_mutex[MPIR_MAX_VCIS + 1];
 static int async_things_progress_hook_id[MPIR_MAX_VCIS + 1];
 
+int MPII_async_things_pending = 0;
+
 int MPIR_Async_things_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -68,13 +70,24 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
 
     if (was_empty) {
         MPIR_Progress_hook_activate(async_things_progress_hook_id[vci]);
+        MPII_async_things_pending++;
     }
 
     return MPI_SUCCESS;
 }
 
+/* If we allow async callbacks to call MPI progress, e.g. make blocking MPI calls,
+ * we need prevent recursively entering async progress or invoking recursive CS lock.
+ */
+static MPL_TLS int in_async_progress = 0;
+
 int MPIR_Async_things_progress(int vci, int *made_progress)
 {
+    if (in_async_progress) {
+        goto fn_exit;
+    }
+    in_async_progress = 1;
+
     if (vci == -1) {
         vci = MPIR_MAX_VCIS;
     }
@@ -93,9 +106,13 @@ int MPIR_Async_things_progress(int vci, int *made_progress)
             MPL_free(entry);
             if (async_things_list[vci] == NULL) {
                 MPIR_Progress_hook_deactivate(async_things_progress_hook_id[vci]);
+                MPII_async_things_pending--;
             }
         }
     }
     MPID_THREAD_CS_EXIT(VCI, async_things_mutex[vci]);
+
+    in_async_progress = 0;
+  fn_exit:
     return MPI_SUCCESS;
 }

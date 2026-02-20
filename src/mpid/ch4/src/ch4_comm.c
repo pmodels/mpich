@@ -323,7 +323,8 @@ int MPID_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
  * 1. leader exchange data.
  * 2. leader broadcast over local_comm.
  */
-static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid, int tag,
+static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid,
+                           MPIR_Comm * peer_comm, int tag,
                            int context_id, int *remote_data_size_out, void **remote_data_out,
                            int timeout);
 static int prepare_local_lpids(MPIR_Comm * local_comm, MPIR_Lpid ** lpids_out,
@@ -356,7 +357,7 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
     void *remote_data = NULL;
     if (is_local_leader) {
         MPIR_Lpid remote_lpid = MPIR_comm_rank_to_lpid(peer_comm, remote_leader);
-        mpi_errno = leader_exchange(local_comm, remote_lpid, tag, context_id,
+        mpi_errno = leader_exchange(local_comm, remote_lpid, peer_comm, tag, context_id,
                                     &remote_data_size, &remote_data, timeout);
     }
 
@@ -624,7 +625,8 @@ static int extract_remote_data(void *remote_data, int *remote_size_out,
 }
 
 /* exchange data between leaders */
-static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid, int tag, int context_id,
+static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid,
+                           MPIR_Comm * peer_comm, int tag, int context_id,
                            int *remote_data_size_out, void **remote_data_out, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -672,14 +674,16 @@ static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid, int ta
     /* exchange */
     int remote_data_size;
     void *remote_data;
-    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, tag, &local_data_size, sizeof(int),
+    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, peer_comm, tag,
+                                          &local_data_size, sizeof(int),
                                           &remote_data_size, sizeof(int), timeout);
     MPIR_ERR_CHECK(mpi_errno);
 
     remote_data = MPL_malloc(remote_data_size, MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!remote_data, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, tag, local_data, local_data_size,
+    mpi_errno = MPIDI_NM_dynamic_sendrecv(remote_lpid, peer_comm, tag,
+                                          local_data, local_data_size,
                                           remote_data, remote_data_size, timeout);
     MPIR_ERR_CHECK(mpi_errno);
 
