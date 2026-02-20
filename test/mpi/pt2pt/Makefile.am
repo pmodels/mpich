@@ -19,6 +19,7 @@ noinst_PROGRAMS =  \
     bsend4         \
     bsend5         \
     bsendalign     \
+    bsend_iflush   \
     cancelrecv     \
     cancelanysrc   \
     isendself      \
