@@ -21,6 +21,7 @@ bsend4 1
 bsend5 4
 bsendalign 2
 bsendpending 2
+bsend_iflush 1
 isendself 1
 issendselfcancel 1 xfail=ticket2276
 isendirecv 10
