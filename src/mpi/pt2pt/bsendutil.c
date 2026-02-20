@@ -208,53 +208,25 @@ struct flush_state {
     bool is_cancelled;
 };
 
-static int query_fn(void *extra_state, MPI_Status * status)
+static int bsend_iflush_poll(MPIX_Async_thing thing)
 {
-    struct flush_state *state = extra_state;
-    if (state->is_cancelled) {
-        MPIR_STATUS_SET_CANCEL_BIT(*status, TRUE);
-    } else {
-        MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
+    struct flush_state *state = MPIR_Async_thing_get_state(thing);
+
+    if (state->is_cancelled || MPIR_Bsend_poll(state->bsendbuffer)) {
+        MPIR_Request_complete(state->req);
+        MPL_free(state);
+        return MPIX_ASYNC_DONE;
     }
-    status->MPI_ERROR = MPI_SUCCESS;
 
-    return MPI_SUCCESS;
-}
-
-static int free_fn(void *extra_state)
-{
-    MPL_free(extra_state);
-    return MPI_SUCCESS;
+    return MPIX_ASYNC_NOPROGRESS;
 }
 
 static int cancel_fn(void *extra_state, int complete)
 {
     struct flush_state *state = extra_state;
     if (!complete) {
+        MPIR_STATUS_SET_CANCEL_BIT(state->req->status, TRUE);
         state->is_cancelled = true;
-    }
-    return MPI_SUCCESS;
-}
-
-static int poll_fn(void *extra_state, MPI_Status * status)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    struct flush_state *state = extra_state;
-    if (MPIR_Bsend_poll(state->bsendbuffer)) {
-        MPIR_Request_complete(state->req);
-    }
-
-    return mpi_errno;
-}
-
-static int wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status)
-{
-    /* just do a poll */
-    struct flush_state **states = (void *) array_of_states;
-    for (int i = 0; i < count; i++) {
-        MPIR_Bsend_flush(states[i]->bsendbuffer);
-        MPIR_Request_complete(states[i]->req);
     }
     return MPI_SUCCESS;
 }
@@ -267,14 +239,14 @@ static int MPIR_Bsend_iflush(MPII_BsendBuffer * bsendbuffer, MPIR_Request ** req
     state->bsendbuffer = bsendbuffer;
     state->is_cancelled = false;
 
-    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, state, req_p);
+    mpi_errno = MPIR_Grequest_start_impl(NULL, NULL, cancel_fn, state, req_p);
     MPIR_ERR_CHECK(mpi_errno);
-
-    (*req_p)->u.ureq.greq_fns->poll_fn = poll_fn;
-    (*req_p)->u.ureq.greq_fns->wait_fn = wait_fn;
 
     /* store request pointer so we can complete the request */
     state->req = *req_p;
+
+    mpi_errno = MPIR_Async_things_add(bsend_iflush_poll, state, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
