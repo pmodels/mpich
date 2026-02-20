@@ -193,6 +193,7 @@ Makefile.am-stamp
 # stamp "witness" files from the new build system
 /src/binding/fortran/use_mpi/mpi.mod-stamp
 /src/binding/fortran/use_mpi/mpi_base.mod-stamp
+/src/binding/fortran/use_mpi/pmpi_base.mod-stamp
 /src/binding/fortran/use_mpi/mpi_constants.mod-stamp
 /src/binding/fortran/use_mpi/mpi_sizeofs.mod-stamp
 /src/binding/fortran/use_mpi_f08/*.stamp
@@ -426,6 +427,7 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/mpimod.pcl
 /src/binding/fortran/use_mpi/mpi_sizeofs.f90
 /src/binding/fortran/use_mpi/mpi_base.f90
+/src/binding/fortran/use_mpi/pmpi_base.f90
 /src/binding/fortran/use_mpi/mpif90type.h
 /src/binding/fortran/use_mpi/mpi_constants.f90
 /src/binding/fortran/use_mpi/mpifnoext.h
