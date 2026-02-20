@@ -791,24 +791,6 @@ static int gcn_check_id_exhaustion(struct gcn_state *st)
     return mpi_errno;
 }
 
-/* internal routines used by the nonblocking algorithm */
-
-static int query_fn(void *extra_state, MPI_Status * status)
-{
-    /* status points to request->status */
-    return status->MPI_ERROR;
-}
-
-static int free_fn(void *extra_state)
-{
-    return MPI_SUCCESS;
-}
-
-static int cancel_fn(void *extra_state, int complete)
-{
-    return MPI_SUCCESS;
-}
-
 /** Allocating a new context ID collectively over the given communicator in a
  * nonblocking way.
  *
@@ -851,7 +833,8 @@ static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Comm *
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL();
 
-    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, NULL, req);
+    /* Internally we can use NULL for query_fn, free_fn, and cancel_fn */
+    mpi_errno = MPIR_Grequest_start_impl(NULL, NULL, NULL, NULL, req);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct gcn_state *st = NULL;
