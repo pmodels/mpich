@@ -21,11 +21,17 @@ static void dynamic_recv_cb(void *request, ucs_status_t status,
     /* request always released in MPIDI_UCX_dynamic_recv due to its blocking design */
 }
 
+static uint64_t get_dynamic_match_bits(int context_id, int tag)
+{
+    return MPIDI_UCX_DYNPROC |
+        ((uint64_t) context_id << MPIDI_UCX_CONTEXT_ID_SHIFT) | (tag & MPIDI_UCX_TAG_MASK);
+}
+
 int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
+    uint64_t ucx_tag = get_dynamic_match_bits(0, tag);
     int vci = 0;
 #ifdef MPICH_DEBUG_MUTEX
     MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
@@ -75,7 +81,7 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
+    uint64_t ucx_tag = get_dynamic_match_bits(0, tag);
     uint64_t tag_mask = 0xffffffffffffffff;
     int vci = 0;
 #ifdef MPICH_DEBUG_MUTEX
@@ -118,11 +124,6 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
 
   fn_exit:
     return mpi_errno;
-}
-
-static uint64_t get_dynamic_match_bits(int context_id, int tag)
-{
-    return MPIDI_UCX_DYNPROC_MASK | ((uint64_t) context_id << MPIDI_UCX_TAG_BITS) | tag;
 }
 
 int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, MPIR_Comm * peer_comm, int tag,
