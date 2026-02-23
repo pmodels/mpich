@@ -302,7 +302,7 @@ int MPIR_pmi_init(void)
     goto fn_exit;
 }
 
-static void fallback_free_hwloc_topology(void);
+static void free_hwloc_topology(void);
 
 void MPIR_pmi_finalize(void)
 {
@@ -322,7 +322,7 @@ void MPIR_pmi_finalize(void)
     MPL_free(MPIR_Process.coords);
 
 #ifdef HAVE_HWLOC
-    fallback_free_hwloc_topology();
+    free_hwloc_topology();
 #endif
 
     /* delay PMI_Finalize to the exit hook */
@@ -947,6 +947,9 @@ enum {
 };
 static int got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
 static hwloc_topology_t hwloc_topology;
+#ifdef HAVE_PMIX_LOAD_TOPOLOGY
+static pmix_topology_t ptopo;
+#endif
 
 static int fallback_load_hwloc_topology(void)
 {
@@ -976,12 +979,18 @@ static int fallback_load_hwloc_topology(void)
     return mpi_errno;
 }
 
-static void fallback_free_hwloc_topology(void)
+static void free_hwloc_topology(void)
 {
     if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_FALLBACK) {
         hwloc_topology_destroy(hwloc_topology);
         got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
     }
+#ifdef HAVE_PMIX_LOAD_TOPOLOGY
+    if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_PMIX) {
+        PMIX_TOPOLOGY_DESTRUCT(&ptopo);
+        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
+    }
+#endif
 }
 
 int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo)
@@ -993,7 +1002,6 @@ int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo)
     }
 #ifdef HAVE_PMIX_LOAD_TOPOLOGY
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
-        pmix_topology_t ptopo;
         PMIX_TOPOLOGY_CONSTRUCT(&ptopo);
         pmix_status_t rc = PMIx_Load_topology(&ptopo);
         /* example of ptopo.source: hwloc:2.9.0 */
