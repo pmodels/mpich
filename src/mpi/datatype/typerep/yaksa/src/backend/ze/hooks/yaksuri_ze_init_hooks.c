@@ -84,6 +84,7 @@ static int finalize_hook(void)
         YAKSURI_ZEI_ZE_ERR_CHKANDJUMP(zerr, rc, fn_fail);
         free(device_state->events);
         free(device_state->queueProperties);
+        free(device_state->subdevices);
     }
     free(yaksuri_zei_global.device_states);
 
