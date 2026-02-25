@@ -436,12 +436,6 @@ fn_gen_subcfg_m4() {
     echo "done"
 }
 
-fn_romio_glue() {
-    echo_n "Building ROMIO glue code... "
-    ( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
-    echo "done"
-}
-
 fn_abi() {
     ($PYTHON maint/gen_abi.py)
 }
@@ -943,11 +937,6 @@ if [ "X$do_subcfg_m4" = Xyes ] ; then
     fn_gen_subcfg_m4
 fi
 
-
-########################################################################
-## Building ROMIO glue code
-########################################################################
-fn_romio_glue
 
 ########################################################################
 ## Building Collective top-level code
