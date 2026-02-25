@@ -144,11 +144,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int *made_progress)
 
     MPIR_Assert(vci < MPIDI_POSIX_global.num_vcis);
 
-    mpi_errno = MPIDI_POSIX_progress_recv(vci, made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
+    for (int i = 0; i < MPIR_CVAR_CH4_SHM_POSIX_PROGRESS_RECV_LOOPS; i++) {
+        int made_recv_progress = 0;
+        mpi_errno = MPIDI_POSIX_progress_recv(vci, &made_recv_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (!made_recv_progress)
+            break;
 
-    mpi_errno = MPIDI_POSIX_progress_send(vci, made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
+        *made_progress |= made_recv_progress;
+    }
+
+    for (int i = 0; i < MPIR_CVAR_CH4_SHM_POSIX_PROGRESS_SEND_LOOPS; i++) {
+        int made_send_progress = 0;
+        mpi_errno = MPIDI_POSIX_progress_send(vci, &made_send_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (!made_send_progress)
+            break;
+
+        *made_progress |= made_send_progress;
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
