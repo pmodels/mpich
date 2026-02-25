@@ -187,7 +187,6 @@ Makefile.am-stamp
 /src/include/mpichinfo.h
 /src/packaging/envmods/mpich.module
 /src/packaging/pkgconfig/mpich.pc
-/src/glue/romio/all_romio_symbols.c
 /src/mpi/coll/src/csel_json_autogen.c
 
 # stamp "witness" files from the new build system
