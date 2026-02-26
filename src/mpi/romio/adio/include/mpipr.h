@@ -538,6 +538,16 @@
 #undef MPIX_Type_iov_len
 #define MPIX_Type_iov_len PMPIX_Type_iov_len
 
+/* some file APIs are implemented outside ROMIO */
+#undef MPI_File_create_errhandler
+#define MPI_File_create_errhandler PMPI_File_create_errhandler
+#undef MPI_File_set_errhandler
+#define MPI_File_set_errhandler PMPI_File_set_errhandler
+#undef MPI_File_get_errhandler
+#define MPI_File_get_errhandler PMPI_File_get_errhandler
+#undef MPI_File_call_errhandler
+#define MPI_File_call_errhandler PMPI_File_call_errhandler
+
 #endif
 
 #endif /* MPIPR_H_INCLUDED */
