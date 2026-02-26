@@ -1,7 +1,7 @@
 [#] start of __file__
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sched
-dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/genq
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
@@ -53,8 +53,8 @@ fi
 
 # the CH3 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
-build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
+build_mpid_common_genq=yes
 
 ])dnl end AM_COND_IF(BUILD_CH3,...)
 ])dnl end PREREQ
