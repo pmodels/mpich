@@ -183,12 +183,12 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
 
     if (rank == 0) {
         MPI_File fh;
-        mpi_errno = MPI_File_open(MPI_COMM_SELF, filename,
-                                  MPI_MODE_CREATE | MPI_MODE_EXCL | MPI_MODE_WRONLY,
-                                  MPI_INFO_NULL, &fh);
+        mpi_errno = MPIR_File_open_impl(MPI_COMM_SELF, filename,
+                                        MPI_MODE_CREATE | MPI_MODE_EXCL | MPI_MODE_WRONLY,
+                                        MPI_INFO_NULL, &fh);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
-        MPI_File_close(&fh);
+        MPIR_File_close_impl(&fh);
         /* the check for file has to happen after file created. only need one
          * process, though, not a full barrier */
         MPI_Send(NULL, 0, MPI_BYTE, challenge_rank, 0, comm);
@@ -202,10 +202,11 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
         /* too bad there's no ADIO equivalent of access: we'll have to
          * open/close the file instead */
 
-        mpi_errno = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+        mpi_errno = MPIR_File_open_impl(MPI_COMM_SELF, filename, MPI_MODE_RDONLY,
+                                        MPI_INFO_NULL, &fh);
         if (mpi_errno == MPI_SUCCESS) {
             globally_visible = 1;
-            MPI_File_close(&fh);
+            MPIR_File_close_impl(&fh);
         } else {
             /* do not report error up to caller.  we are merely testing the
              * presence of the file */
@@ -228,7 +229,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
         MPI_Comm_split(comm, id, key, newcomm);
     }
     if (rank == 0)
-        MPI_File_delete(filename, MPI_INFO_NULL);
+        MPIR_File_delete_impl(filename, MPI_INFO_NULL);
 
   fn_exit:
     MPL_free(all_ids);
