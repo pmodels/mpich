@@ -54,7 +54,7 @@ fi
 # the CH3 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_thread=yes
-build_mpid_common_genq=yes
+build_mpid_common_genq_private=yes
 
 ])dnl end AM_COND_IF(BUILD_CH3,...)
 ])dnl end PREREQ
