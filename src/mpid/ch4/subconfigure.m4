@@ -23,7 +23,7 @@ PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read], [-lucs -lucm
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_thread=yes
-build_mpid_common_genq=yes
+build_mpid_common_genq_private=yes
 build_mpid_common_stream_workq=yes
 
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE

@@ -2,7 +2,8 @@
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
-    AM_CONDITIONAL([BUILD_MPID_COMMON_GENQ],[test "$build_mpid_common_genq" = "yes"])
+    AM_CONDITIONAL([BUILD_MPID_COMMON_GENQ_PRIVATE],[test "$build_mpid_common_genq_private" = "yes"])
+    AM_CONDITIONAL([BUILD_MPID_COMMON_GENQ_SHM],[test "$build_mpid_common_genq_shm" = "yes"])
 ])
 
 dnl _BODY handles the former role of configure in the subsystem

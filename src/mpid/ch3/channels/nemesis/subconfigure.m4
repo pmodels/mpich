@@ -27,6 +27,7 @@ export nemesis_networks
 
 # the nemesis channel depends on the common shm code
 build_mpid_common_shm=yes
+build_mpid_common_genq_shm=yes
 ])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
 ])dnl
 dnl
