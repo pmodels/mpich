@@ -24,6 +24,16 @@ cvars:
 */
 
 #ifdef HAVE_LIBFABRIC_NIC
+/* Sometime the provider may report "null" pci info (looking at you: opx) */
+static bool is_nic_pci_valid(struct fi_info *info)
+{
+    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+        return (pci.domain_id > 0 || pci.bus_id > 0 || pci.device_id > 0 || pci.function_id > 0);
+    }
+    return false;
+}
+
 /* Return the parent object (typically socket) of the NIC */
 static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
 {
@@ -278,9 +288,17 @@ static int setup_multi_nic(int nic_count)
                 is_snc4_with_cxi_nics = true;
 
     int num_close_nics = 0;
+    /* check all nics have valid pci info */
+    bool all_valid = true;
+    for (int i = 0; i < nic_count; ++i) {
+        if (!is_nic_pci_valid(MPIDI_OFI_global.prov_use[i])) {
+            all_valid = false;
+            break;
+        }
+    }
 
-    /* Special case of nic assignment for SPR in SNC4 mode */
-    if (is_snc4_with_cxi_nics && !pref_nic_set) {
+    if (is_snc4_with_cxi_nics && !pref_nic_set && all_valid) {
+        /* Special case of nic assignment for SPR in SNC4 mode */
         for (int i = 0; i < nic_count; ++i) {
             nics[i].nic = MPIDI_OFI_global.prov_use[i];
             nics[i].id = i;
@@ -319,18 +337,24 @@ static int setup_multi_nic(int nic_count)
             nics[i].nic = MPIDI_OFI_global.prov_use[i];
             nics[i].id = i;
             /* Determine NIC's "closeness" to current process */
-            nics[i].close = is_nic_close(nics[i].nic);
-            if (nics[i].close)
-                num_close_nics++;
+            if (all_valid) {
+                nics[i].close = is_nic_close(nics[i].nic);
+                /* Determine NIC's first normal parent topology
+                 * item (e.g., typically the socket parent) */
+                nics[i].parent = get_nic_parent(nics[i].nic);
+            } else {
+                /* treat all nics as equally close */
+                nics[i].close = 0;
+                nics[i].parent = 0;
+            }
             /* Set the preference of all NICs to least preferable (lower is more preferable) */
             nics[i].prefer = nic_count + 1;
             nics[i].count = 0;
             nics[i].num_close_ranks = 0;
-            /* Determine NIC's first normal parent topology
-             * item (e.g., typically the socket parent) */
-            nics[i].parent = get_nic_parent(nics[i].nic);
             /* Expand list of close NIC-parent topology items or increment */
             if (nics[i].close) {
+                num_close_nics++;
+
                 int found = 0;
                 for (int j = 0; j < num_parents; ++j) {
                     if (parents[j] == nics[i].parent) {
