@@ -67,8 +67,6 @@ bcast-intra:
     scatter_recursive_doubling_allgather
     scatter_ring_allgather
     circ_graph
-        extra_params: chunk_size, q_len
-        cvar_params: CIRC_CHUNK_SIZE, CIRC_Q_LEN
     smp
         restrictions: parent-comm
     tree
@@ -98,6 +96,7 @@ ibcast-intra:
         func_name: tree
         extra_params: tree_type=MPIR_TREE_TYPE_KARY, k=1, chunk_size
         cvar_params: -, -, RING_CHUNK_SIZE
+    circ_graph
 bcast-inter:
     remote_send_local_bcast
 ibcast-inter:
@@ -181,6 +180,7 @@ allgather-intra:
         func_name: recexch
         extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
         cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+    circ_graph
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
@@ -314,6 +314,8 @@ ialltoallw-inter:
 
 reduce-intra:
     binomial
+    circ_graph
+        restrictions: commutative
     smp
         restrictions: commutative, parent-comm
     reduce_scatter_gather

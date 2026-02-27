@@ -43,20 +43,6 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
-        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_circ_graph:
-            {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.bcast.intra_circ_graph.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    else if (!strncmp(ckey, "q_len=", strlen("q_len=")))
-                        cnt->u.bcast.intra_circ_graph.q_len = atoi(ckey + strlen("q_len="));
-                    MPL_free(ckey);
-                }
-            }
-            break;
-
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -406,6 +392,8 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_recexch_doubling;
         else if (!strcmp(ckey, "algorithm=MPIR_Allgather_intra_recexch_halving"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_recexch_halving;
+        else if (!strcmp(ckey, "algorithm=MPIR_Allgather_intra_circ_graph"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_circ_graph;
         else if (!strcmp(ckey, "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_inter_local_gather_remote_bcast;
@@ -797,6 +785,8 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Neighbor_alltoallw_allcomm_nb;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_binomial"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_binomial;
+        else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_circ_graph"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_circ_graph;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_reduce_scatter_gather"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_intra_reduce_scatter_gather;
         else if (!strcmp(ckey, "algorithm=MPIR_Reduce_intra_smp"))

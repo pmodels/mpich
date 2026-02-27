@@ -304,11 +304,13 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            rc = (request_ptr->u.ureq.greq_fns->U.C.cancel_fn) (request_ptr->u.ureq.
-                                                                greq_fns->grequest_extra_state,
-                                                                complete);
-            MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;, "**user",
-                                 "**usercancel %d", rc);
+            if (request_ptr->u.ureq.greq_fns->U.C.cancel_fn) {
+                rc = (request_ptr->u.ureq.greq_fns->U.C.cancel_fn) (request_ptr->u.ureq.
+                                                                    greq_fns->grequest_extra_state,
+                                                                    complete);
+                MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;, "**user",
+                                     "**usercancel %d", rc);
+            }
             break;
         default:
             {
@@ -335,12 +337,17 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            /* Take off the global locks before calling user functions */
-            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            rc = (request_ptr->u.ureq.greq_fns->U.C.query_fn) (request_ptr->u.ureq.
-                                                               greq_fns->grequest_extra_state,
-                                                               &request_ptr->status);
-            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            if (request_ptr->u.ureq.greq_fns->U.C.query_fn) {
+                /* Take off the global locks before calling user functions */
+                MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                rc = (request_ptr->u.ureq.greq_fns->U.C.query_fn) (request_ptr->u.ureq.
+                                                                   greq_fns->grequest_extra_state,
+                                                                   &request_ptr->status);
+                MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            } else {
+                /* internal usages of generalized request directly update request_ptr->status */
+                rc = request_ptr->status.MPI_ERROR;
+            }
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);
             break;
@@ -369,10 +376,12 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            rc = (request_ptr->u.ureq.greq_fns->U.C.free_fn) (request_ptr->u.ureq.
-                                                              greq_fns->grequest_extra_state);
-            MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
-                                 , "**user", "**userfree %d", rc);
+            if (request_ptr->u.ureq.greq_fns->U.C.free_fn) {
+                rc = (request_ptr->u.ureq.greq_fns->U.C.free_fn) (request_ptr->u.ureq.
+                                                                  greq_fns->grequest_extra_state);
+                MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
+                                     , "**user", "**userfree %d", rc);
+            }
             break;
         default:
             {
