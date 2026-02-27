@@ -34,8 +34,10 @@ def main():
     if 'output-mansrc' in G.opts:
         G.check_write_path(c_dir + '/mansrc/')
         G.hints = collect_info_hint_blocks("src")
+        G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
     else:
         G.hints = None
+        G.semantics = {}
 
     # -- prescan the functions and set internal attributes
     for func in func_list:
@@ -202,6 +204,15 @@ def main():
     dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
     dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")
+
+def collect_mansrc_semantics(filepath):
+    semantics = {}
+
+    with open(filepath, 'r') as f:
+        for line in f:
+            if RE.match(r'\/\/ *tag::(\w+)\[\]', line):
+                semantics[RE.m.group(1)] = 1
+    return semantics
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
