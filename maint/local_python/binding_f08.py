@@ -772,8 +772,8 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large:
         c_name = "PMPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:
-        # uses PMPI c binding directly
-        c_name = 'P' + get_function_name(func, is_large)
+        # uses MPI c binding directly
+        c_name = get_function_name(func, is_large)
     dump_interface_function(func, name, c_name, is_large)
 
 def dump_interface_function(func, name, c_name, is_large):
