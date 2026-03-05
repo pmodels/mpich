@@ -58,6 +58,21 @@ static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, boo
 
 /* test and make progress */
 static int test_for_request(MPII_cga_request_queue * queue, int i, bool * is_done);
+static int progress_for_request(MPII_cga_request_queue * queue, int i);
+
+/* define DEBUG to enable more detailed progress debugging */
+
+#ifdef DEBUG
+/* debug routines */
+static void debug_queue(MPII_cga_request_queue * queue);
+
+#undef DEBUG_PROGRESS_HOOK
+#define DEBUG_PROGREE_HOOK \
+    do { \
+        debug_queue(queue); \
+        MPL_backtrace_show(stdout); \
+    } while (0)
+#endif
 
 /* Routines for managing non-blocking send/recv of chunks  */
 static int init_request_queue_common(MPII_cga_request_queue * queue,
@@ -301,11 +316,13 @@ int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_bcast_isend(queue, block, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -319,11 +336,13 @@ int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_bcast_irecv(queue, block, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -367,11 +386,13 @@ int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int block, int root,
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_allgather_isend(queue, block, root, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -385,11 +406,13 @@ int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int block, int root,
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_allgather_irecv(queue, block, root, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -431,11 +454,13 @@ int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_ran
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_reduce_isend(queue, block, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -449,11 +474,13 @@ int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_ran
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_reduce_irecv(queue, block, peer_rank, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -499,11 +526,13 @@ int MPII_cga_waitall(MPII_cga_request_queue * queue)
     int mpi_errno = MPI_SUCCESS;
 
     bool flag = false;
+    DEBUG_PROGRESS_START;
     while (!flag) {
         mpi_errno = MPII_cga_testall(queue, &flag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_test(NULL);
+        DEBUG_PROGRESS_CHECK;
     }
 
   fn_exit:
@@ -1090,14 +1119,66 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
   fn_fail:
     goto fn_exit;
   fn_cont:
-    *is_done = false;
     return mpi_errno;
   fn_complete:
     remove_pending_req_id(queue, block, root, i);
     queue->requests[i].op_stage = MPII_CGA_STAGE_NULL;
-    *is_done = true;
     return mpi_errno;
 }
+
+/* ---- debug routines ---- */
+
+#ifdef DEBUG
+
+static const char *op_type_str(int op_type)
+{
+    switch (op_type) {
+        case MPII_CGA_OP_SEND:
+            return "SEND";
+        case MPII_CGA_OP_RECV:
+            return "RECV";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static const char *op_stage_str(int op_stage)
+{
+    switch (op_stage) {
+        case MPII_CGA_STAGE_NULL:
+            return "NULL";
+        case MPII_CGA_STAGE_START:
+            return "START";
+        case MPII_CGA_STAGE_COPY:
+            return "COPY";
+        case MPII_CGA_STAGE_REQUEST:
+            return "REQUEST";
+        case MPII_CGA_STAGE_REDUCE:
+            return "REDUCE";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static void debug_queue(MPII_cga_request_queue * queue)
+{
+    int j = queue->q_head;
+#define REQi queue->requests[j]
+    for (int i = 0; i < queue->q_len; i++) {
+        if (REQi.op_stage != MPII_CGA_STAGE_NULL) {
+            printf(" cga request %d: op_type=%s, op_stage=%s, block=%d, peer=%d\n", i,
+                   op_type_str(REQi.op_type), op_stage_str(REQi.op_stage),
+                   REQi.block, REQi.peer_rank);
+        }
+        j++;
+        if (j == queue->q_len) {
+            j = 0;
+        }
+    }
+#undef REQi
+}
+
+#endif /* DEBUG */
 
 /* ---- math routines ---- */
 
