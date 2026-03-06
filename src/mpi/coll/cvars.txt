@@ -193,26 +193,6 @@ cvars:
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
 
-    - name        : MPIR_CVAR_BCAST_CIRC_CHUNK_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Determines message chunk size for circ_graph (0 forces single message send)
-
-    - name        : MPIR_CVAR_BCAST_CIRC_Q_LEN
-      category    : COLLECTIVE
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Determines how many bcast rounds can be in flight at once for circ_graph
-
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
       type        : int
@@ -397,6 +377,7 @@ cvars:
         tsp_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
         tsp_scatterv_ring_allgatherv           - Force Generic Transport Scatterv followed by Ring Allgatherv algorithm
         tsp_ring                               - Force Generic Transport Ring algorithm
+        circ_graph                             - Force queued circulant graph algorithm
 
     - name        : MPIR_CVAR_IBCAST_SCATTERV_KVAL
       category    : COLLECTIVE
@@ -746,6 +727,7 @@ cvars:
         ring               - Force ring algorithm
         recexch_doubling   - Force recexch distance doubling algorithm
         recexch_halving    - Force recexch distance halving algorithm
+        circ_graph         - Force queued circulant graph algorithm
 
     - name        : MPIR_CVAR_ALLGATHER_BRUCKS_KVAL
       category    : COLLECTIVE
@@ -1199,6 +1181,7 @@ cvars:
         Variable to select reduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         binomial              - Force binomial algorithm
+        circ_graph            - Force circulant graph algorithm
         nb                    - Force nonblocking algorithm
         smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
