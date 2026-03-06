@@ -32,7 +32,7 @@ cvars:
     - name        : MPIR_CVAR_PMI_DISABLE_GROUP
       category    : PMI
       type        : boolean
-      default     : 1
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -333,7 +333,6 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 {
     SWITCH_PMI(pmi1_abort(exit_code, error_msg),
                pmi2_abort(exit_code, error_msg), pmix_abort(exit_code, error_msg));
-    exit(exit_code);
 }
 
 /* getters for internal constants */

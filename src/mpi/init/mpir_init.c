@@ -48,7 +48,7 @@ cvars:
     - name        : MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST
       category    : GPU
       type        : boolean
-      default     : true
+      default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
