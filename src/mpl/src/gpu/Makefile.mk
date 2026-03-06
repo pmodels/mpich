@@ -11,11 +11,11 @@ lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda_kernels.cu
 
 .cu.lo:
 	@if $(AM_V_P) ; then \
-		$(top_srcdir)/confdb/cudalt.sh --verbose $@ \
+		$(top_srcdir)/src/gpu/cudalt.sh --verbose $@ \
 			$(NVCC) $(AM_CPPFLAGS) -c $< ; \
 	else \
 		echo "  NVCC     $@" ; \
-		$(top_srcdir)/confdb/cudalt.sh $@ $(NVCC) $(AM_CPPFLAGS) -c $< ; \
+		$(top_srcdir)/src/gpu/cudalt.sh $@ $(NVCC) $(AM_CPPFLAGS) -c $< ; \
 	fi
 else
 if MPL_HAVE_ZE
