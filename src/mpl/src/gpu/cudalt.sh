@@ -60,4 +60,3 @@ pic_object="$LOCAL_PIC_FILEPATH"
 # Name of the non-PIC object.
 non_pic_object="$LOCAL_NPIC_FILEPATH"
 EOF
-
