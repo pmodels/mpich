@@ -1,0 +1,76 @@
+UPDATE aurora_test 126f8163ae9557245d80aff7680f637ed596b18b 5d5ff657e6
+
+    current aurora_test HEAD fcf050867e
+
+214c6bcfbe 2026-01-09 ch4: do not touch status cancelling SHM anysrc_partnerf892abb14f 2026-01-13 datatype: Allocate datatype object in MPIR_Typerep_unflatten
+1b00844d62 2026-01-22 mpl: define __HIP_PLATFORM_AMD__ for hip check
+e8d7b5811c 2025-09-04 mpit: fix an unused function warning
+0507a367f5 2025-08-25 misc: spelling check
+d1819009f9 2025-08-24 maint: move json_gen.sh to top of maint folder
+7acaa803d5 2025-08-22 ch4/shm: inclusion order for shm_am.h
+4ff0aa4707 2025-08-22 all: use fallback routines for internal collectives
+9f8c5e8ec0 2025-11-16 coll: define fallback algorithms
+8384a67bdf 2025-08-18 Adding the circulant graph algorithm for Bcast.
+07860de4b9 2026-01-15 coll: rename circ_qvring to circ_graph
+cb2ebb88e8 2026-01-09 coll/bcast: refactor bcast_intra_circ_graph
+0e6ffa4fe1 2026-01-23 test/coll: adjust MPIR_CVAR_BCAST_CIRC_CHUNK_SIZE
+1efb60a69b 2026-01-23 coll/bcast: add q_len requirement
+d47dc02116 2026-01-28 test/session: Clean up test session_4x4
+8da0072533 2026-02-10 Fix MPIR_Internal_op_dt_check to allow MPI_LOGICAL with MPI_LAND/MPI_LOR/MPI_LXOR
+319b09eb33 2026-01-07 attr: add MPIX_Comm_create_keyval_x etc.
+6fefc97864 2026-01-04 binding/fortran: add a missing cast Fint * to Aint *
+2cc20dca73 2026-01-05 binding/fortran: use MPL_malloc in user_proxy.c
+842d7a73a8 2026-01-06 mpl: remove MPIR_DBG_STRING
+ff6db8418b 2026-01-04 binding/fortran: use proxy functions for grequest callbacks
+e9a03b6372 2026-01-04 binding/fortran: use proxy functions for keyval callbacks
+a96a7c3e47 2026-01-07 binding/fortran: use MPIX_Comm_create_keyval_x etc
+290bd5796e 2026-01-04 binding/fortran: use standard interface for attr functions
+4f08a3df1d 2026-01-04 attr: remove the shift of builtin keyvals in Fortran
+5cd38cb858 2026-01-05 binding/f08: Use internal proxies from mpif_h/user_proxy.c
+cf4c76ed3f 2026-01-04 attr: remove MPII_Comm_{set,get}_attr etc.
+33e408272c 2026-01-05 greq: remove MPII_Grequest_set_lang_f77 etc.
+2ef36666c0 2026-01-27 attr: add MPIX_Comm_{get,set}_attr_as_fortran etc.
+7f07dfe905 2026-01-27 binding/fortran: use MPIX_Comm_get_attr_as_fortran etc.
+31823e9941 2026-01-27 attr: return builtin attributes based on as_fortran
+dfa615325b 2026-02-06 hydra: fix a missing update in pbs.h
+4ae7868382 2026-02-03 hydra: avoid duplicate proxies in spawn
+d456d2a2fe 2026-02-04 mpir/pmi: do not return from MPIR_pmi_abort
+d59de01c1e 2026-02-06 configure: check whether complex is available for CXX
+2ec3901031 2026-02-12 fortran/user_proxy: add missing return
+e4e6767b73 2026-02-13 fortran: fix missing prototypes for MPII_Comm_create_keyval
+5c299ddbc1 2025-12-09 configure: fix missing quote in test
+788c3b1a9c 2025-12-09 configure: unify make variables for MPL and HWLOC
+f338fda52b 2025-12-09 configure: move embedded pmi configure to aclocal_modules.m4
+544a00153f 2025-12-09 configure: move json-c and yaksa config to aclocal_modules.m4
+a8baf40628 2025-12-09 configure: allow external libmpl
+fae218eae3 2025-12-09 configure: move romio configure to confdb/aclocal_modules.m4
+633b735907 2025-12-10 mpl: move cmd_prefix_config_h.pl to src/mpl/maint
+f7e90c3647 2025-12-10 autogen: avoid duplicating confdb and submodules
+6b516077a4 2025-12-10 autogen: add fn_hydra, fn_pmi, and fn_test
+6f533a33dd 2025-12-10 maint: update release.pl for subpackage tarballs
+9cbde524f0 2026-02-12 attr: fix MPIX_(Type|Win)_create_keyval_x
+01585bb76d 2026-02-16 pm/gforker: fix build due to rename of mpllib
+8cd7f2004a 2026-02-17 maint: remove extra autogen in test/mpl in release.pl
+33393a59ab 2025-10-28 async: allow blocking MPI calls in async poll functions
+ed22f903ae 2025-10-28 comm: re-implement nonblocking contextid allocation
+77845786e6 2025-10-28 coll: add tagged version of nonblocking collectives
+abc34231d7 2025-10-28 comm/contextid: use tag nonblocking collectives
+de3011795e 2025-10-28 request: remove assertions on grequest in waitall
+e9b8db03e1 2025-10-28 test: remove idup xfails
+e5cbc89b0b 2025-10-28 sched: remove MPIR_SCHED_KIND_GENERALIZED
+96f31d9c73 2025-10-29 comm/contextid: replace first_iter with iter
+6ce3698094 2025-10-29 comm/contextid: refactor context_id allocation code
+54406eb176 2025-10-30 async_things: add MPII_async_things_pending
+f1c9e2a170 2025-11-02 ch4: add CS_YIELD in netmod dynamic_sendrecv
+6b569297b4 2026-02-20 yaksa: Free ZE subdevices in finalize_hook to fix memory leak
+7927a8db1b 2026-02-23 mpir/pmi: Call PMIx topology destructor
+37b86cacf1 2026-02-20 romio: add large count aliases in mpipr.h
+448abad5c3 2026-02-26 romio: add MPI_File_set_errhandler etc to mpipr.h
+81fa5bc1ce 2026-02-26 romio: replace reference to MPI_File_open etc.
+aadc43136a 2026-02-16 ch4/ofi: check whether nic pci info is valid
+edb48779c5 2026-02-23 ch4/ucx: fix usage of dynamic match_bits
+09445a6889 2026-02-25 romio: remove all_romio_symbols
+616c8b34a8 2026-02-16 request/greq: allow generalized request callbacks to be NULL
+120430e3f0 2026-02-20 comm: replace greq callbacks with NULL for MPI_Comm_idup
+53f21ec8d0 2026-02-20 bsendutil: replace greq poll/wait callbacks with MPIX Async
+f1b99c42cf 2026-02-20 test: add a test for MPI_Bsend_iflush
