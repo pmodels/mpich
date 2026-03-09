@@ -1003,10 +1003,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     /* Send data to root via point-to-point message if root is not rank 0 in comm */
     if (root != 0) {
         if (comm->rank == 0) {
-            MPIC_Send(recvbuf, count, datatype, root, MPIR_REDUCE_TAG, comm, coll_attr);
+            mpi_errno = MPIC_Send(recvbuf, count, datatype, root, MPIR_REDUCE_TAG, comm, coll_attr);
         } else if (comm->rank == root) {
-            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm, MPI_STATUS_IGNORE);
+            mpi_errno = MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm,
+                                  MPI_STATUS_IGNORE);
         }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
