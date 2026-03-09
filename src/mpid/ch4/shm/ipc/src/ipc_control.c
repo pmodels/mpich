@@ -132,6 +132,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     MPIDIG_REQUEST(rreq, u.ipc.peer_req) = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
     MPIDIG_REQUEST(rreq, u.ipc.src_dt_ptr) = NULL;
 
+    bool need_pack = false;
     if (ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__GPU) {
         void *buf = MPIDIG_REQUEST(rreq, buffer);
         MPI_Aint count = MPIDIG_REQUEST(rreq, count);
@@ -148,6 +149,8 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
             mpi_errno = reply_ipc_write(&ipc_attr, count, datatype, rreq);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
+        } else if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
+            need_pack = true;
         }
     }
     /* attach remote buffer */
@@ -168,7 +171,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_CMA
         case MPIDI_IPCI_TYPE__CMA:
-            mpi_errno = MPIDI_CMA_copy_data(ipc_hdr, rreq, src_data_sz);
+            mpi_errno = MPIDI_CMA_copy_data(ipc_hdr, rreq, src_data_sz, need_pack);
             MPIR_ERR_CHECK(mpi_errno);
             break;
 #endif
