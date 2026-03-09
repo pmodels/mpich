@@ -77,7 +77,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint c
     if (ipc_attr->ipc_type == MPIDI_IPCI_TYPE__SKIP) {
         /* GPU IPC is not supported but it is still a device memory,
          * we can't do shared memory IPC either, so skip to fn_exit. */
-        ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
         goto fn_exit;
     }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__NONE) {

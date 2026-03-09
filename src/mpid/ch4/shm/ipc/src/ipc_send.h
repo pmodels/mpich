@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, rank, comm, sizeof(MPIDIG_hdr_t),
                                         &ipc_attr);
 
-    if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
+    if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__SKIP) {
 
         mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype,
                                         rank, tag, comm, context_offset, addr, &ipc_attr,
