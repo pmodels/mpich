@@ -149,6 +149,7 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
 
     p->u.recv.cur_chunk_index = 0;
     p->u.recv.num_infly = 0;
+    p->u.recv.all_issued = false;
 
     /* issue fi_read */
     mpi_errno = MPIR_Async_things_add(rndvread_read_poll, rreq, NULL);
