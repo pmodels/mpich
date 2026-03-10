@@ -34,38 +34,12 @@ template<typename T> struct YaksuriOpBxor {
     __device__ static void apply(const T& in, T& out) { out ^= in; }
 };
 
-/* Integer MAX/MIN: branchless bitwise trick */
+/* MAX/MIN: CUDA overloaded max()/min() map to hardware instructions for all types */
 template<typename T> struct YaksuriOpMax {
-    __device__ static void apply(const T& in, T& out) {
-        out = in ^ ((in ^ out) & -(in < out));
-    }
+    __device__ static void apply(const T& in, T& out) { out = max(in, out); }
 };
 template<typename T> struct YaksuriOpMin {
-    __device__ static void apply(const T& in, T& out) {
-        out = out ^ ((in ^ out) & -(in < out));
-    }
-};
-
-/* Float/double MAX/MIN */
-template<> struct YaksuriOpMax<float> {
-    __device__ static void apply(const float& in, float& out) {
-        if (in > out) out = in;
-    }
-};
-template<> struct YaksuriOpMax<double> {
-    __device__ static void apply(const double& in, double& out) {
-        if (in > out) out = in;
-    }
-};
-template<> struct YaksuriOpMin<float> {
-    __device__ static void apply(const float& in, float& out) {
-        if (in < out) out = in;
-    }
-};
-template<> struct YaksuriOpMin<double> {
-    __device__ static void apply(const double& in, double& out) {
-        if (in < out) out = in;
-    }
+    __device__ static void apply(const T& in, T& out) { out = min(in, out); }
 };
 
 #endif  /* YAKSURI_CUDAI_OPS_CUH_INCLUDED */
