@@ -45,8 +45,9 @@ int MPIR_Bcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datat
 
     /* request queue */
     MPII_cga_request_queue queue;
-    mpi_errno = MPII_cga_init_bcast_queue(&queue, buffer, count, datatype, comm, coll_attr,
-                                          (rank == root));
+    int min_pending_blocks = cga.q * 2;
+    mpi_errno = MPII_cga_init_bcast_queue(&queue, min_pending_blocks,
+                                          buffer, count, datatype, comm, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Run schedule */
