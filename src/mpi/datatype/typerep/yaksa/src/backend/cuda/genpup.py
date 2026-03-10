@@ -24,6 +24,19 @@ builtin_types = [ "_Bool", "char", "wchar_t", "int8_t", "int16_t", "int32_t", "i
 builtin_maps = {
     "YAKSA_TYPE__LONG_DOUBLE": "double",
 }
+op_functor_names = {
+    'REPLACE': 'YaksuriOpReplace',
+    'SUM':     'YaksuriOpSum',
+    'PROD':    'YaksuriOpProd',
+    'MIN':     'YaksuriOpMin',
+    'MAX':     'YaksuriOpMax',
+    'LAND':    'YaksuriOpLand',
+    'LOR':     'YaksuriOpLor',
+    'LXOR':    'YaksuriOpLxor',
+    'BAND':    'YaksuriOpBand',
+    'BOR':     'YaksuriOpBor',
+    'BXOR':    'YaksuriOpBxor',
+}
 
 
 ########################################################################################
@@ -103,19 +116,20 @@ def resized(suffix, dtp, b, last):
 ########################################################################################
 ##### Core kernels
 ########################################################################################
-def generate_kernels(b, darray, op):
+def generate_kernels(b, darray):
     global need_extent
     global s
     global idx
 
     for func in "pack","unpack":
         ##### figure out the function name to use
-        funcprefix = "%s_%s_" % (func, op)
+        funcprefix = "%s_" % func
         for d in darray:
             funcprefix = funcprefix + "%s_" % d
         funcprefix = funcprefix + b.replace(" ", "_")
 
         ##### generate the CUDA kernel
+        yutils.display(OUTFILE, "template<typename Op>\n")
         yutils.display(OUTFILE, "__global__ void yaksuri_cudai_kernel_%s(const void *inbuf, void *outbuf, uintptr_t count, const yaksuri_cudai_md_s *__restrict__ md)\n" % funcprefix)
         yutils.display(OUTFILE, "{\n")
         yutils.display(OUTFILE, "const char *__restrict__ sbuf = (const char *) inbuf;\n");
@@ -184,15 +198,9 @@ def generate_kernels(b, darray, op):
             dtp = dtp + "->u.%s.child" % d
 
         if (func == "pack"):
-            if ((b == "float" or b == "double") and (op == "MAX" or op == "MIN")):
-                yutils.display(OUTFILE, "YAKSURI_CUDAI_OP_%s_FLOAT(%s, *((const %s *) (const void *) (sbuf + %s)), *((%s *) (void *) (dbuf + idx * sizeof(%s))));\n" % (op, b, b, s, b, b))
-            else:
-                yutils.display(OUTFILE, "YAKSURI_CUDAI_OP_%s(*((const %s *) (const void *) (sbuf + %s)), *((%s *) (void *) (dbuf + idx * sizeof(%s))));\n" % (op, b, s, b, b))
+            yutils.display(OUTFILE, "Op::apply(*((const %s *) (const void *) (sbuf + %s)), *((%s *) (void *) (dbuf + idx * sizeof(%s))));\n" % (b, s, b, b))
         else:
-            if ((b == "float" or b == "double") and (op == "MAX" or op == "MIN")):
-                yutils.display(OUTFILE, "YAKSURI_CUDAI_OP_%s_FLOAT(%s, *((const %s *) (const void *) (sbuf + idx * sizeof(%s))), *((%s *) (void *) (dbuf + %s)));\n" % (op, b, b, b, b, s))
-            else:
-                yutils.display(OUTFILE, "YAKSURI_CUDAI_OP_%s(*((const %s *) (const void *) (sbuf + idx * sizeof(%s))), *((%s *) (void *) (dbuf + %s)));\n" % (op, b, b, b, s))
+            yutils.display(OUTFILE, "Op::apply(*((const %s *) (const void *) (sbuf + idx * sizeof(%s))), *((%s *) (void *) (dbuf + %s)));\n" % (b, b, b, s))
 
         yutils.display(OUTFILE, "}\n\n")
 
@@ -211,12 +219,9 @@ def generate_host_function(b, darray):
         yutils.display(OUTFILE, "cudaError_t cerr;\n")
         yutils.display(OUTFILE, "switch (op) {\n")
         for op in gencomm.type_ops[b]:
-            funcprefix = "%s_%s_" % (func, op)
-            for d in darray:
-                funcprefix = funcprefix + "%s_" % d
-            funcprefix = funcprefix + b.replace(" ", "_")
+            functor = "%s<%s>" % (op_functor_names[op], b.replace(" ", "_"))
             yutils.display(OUTFILE, "case YAKSA_OP__%s:\n" % op)
-            yutils.display(OUTFILE, "cerr = cudaLaunchKernel((const void *) yaksuri_cudai_kernel_%s,\n" % funcprefix)
+            yutils.display(OUTFILE, "cerr = cudaLaunchKernel((const void *) yaksuri_cudai_kernel_%s<%s>,\n" % (funcprefix, functor))
             yutils.display(OUTFILE, "    dim3(n_blocks_x, n_blocks_y, n_blocks_z), dim3(n_threads), args, 0, stream);\n")
             yutils.display(OUTFILE, "YAKSURI_CUDAI_CUDA_ERR_CHECK(cerr);\n")
             yutils.display(OUTFILE, "break;\n\n")
@@ -252,11 +257,11 @@ if __name__ == '__main__':
             yutils.display(OUTFILE, "#include <cuda_runtime.h>\n")
             yutils.display(OUTFILE, "#include \"yaksuri_cudai_base.h\"\n")
             yutils.display(OUTFILE, "#include \"yaksuri_cudai_pup.h\"\n")
+            yutils.display(OUTFILE, "#include \"yaksuri_cudai_ops.cuh\"\n")
             yutils.display(OUTFILE, "\n")
 
             emptylist = [ ]
-            for op in gencomm.type_ops[b]:
-                generate_kernels(b, emptylist, op)
+            generate_kernels(b, emptylist)
             generate_host_function(b, emptylist)
 
             OUTFILE.close()
@@ -275,12 +280,12 @@ if __name__ == '__main__':
             yutils.display(OUTFILE, "#include <cuda_runtime.h>\n")
             yutils.display(OUTFILE, "#include \"yaksuri_cudai_base.h\"\n")
             yutils.display(OUTFILE, "#include \"yaksuri_cudai_pup.h\"\n")
+            yutils.display(OUTFILE, "#include \"yaksuri_cudai_ops.cuh\"\n")
             yutils.display(OUTFILE, "\n")
 
             emptylist = [ ]
             emptylist.append(d)
-            for op in gencomm.type_ops[b]:
-                generate_kernels(b, emptylist, op)
+            generate_kernels(b, emptylist)
             generate_host_function(b, emptylist)
             emptylist.pop()
 
@@ -304,13 +309,13 @@ if __name__ == '__main__':
                     yutils.display(OUTFILE, "#include <cuda_runtime.h>\n")
                     yutils.display(OUTFILE, "#include \"yaksuri_cudai_base.h\"\n")
                     yutils.display(OUTFILE, "#include \"yaksuri_cudai_pup.h\"\n")
+                    yutils.display(OUTFILE, "#include \"yaksuri_cudai_ops.cuh\"\n")
                     yutils.display(OUTFILE, "\n")
 
                     for darray in darraylist:
                         darray.append(d1)
                         darray.append(d2)
-                        for op in gencomm.type_ops[b]:
-                            generate_kernels(b, darray, op)
+                        generate_kernels(b, darray)
                         generate_host_function(b, darray)
                         darray.pop()
                         darray.pop()
