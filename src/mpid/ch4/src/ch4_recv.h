@@ -35,13 +35,10 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
 
     if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
         MPIR_Request *nm_rreq = NULL;
+        /* we pass the shm request in so both .dev.anysrc_partner will get set */
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
                                        av, &nm_rreq, *request);
         MPIR_ERR_CHECK(mpi_errno);
-        /* if netmod recv is not matched yet, attach it to the shm request's partner */
-        if (nm_rreq->dev.anysrc_partner) {
-            (*request)->dev.anysrc_partner = nm_rreq;
-        }
     }
   fn_exit:
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI

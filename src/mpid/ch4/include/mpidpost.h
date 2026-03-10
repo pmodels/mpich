@@ -6,6 +6,21 @@
 #ifndef MPIDPOST_H_INCLUDED
 #define MPIDPOST_H_INCLUDED
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+MPL_STATIC_INLINE_PREFIX void MPIDI_REQUEST_SET_LOCAL(struct MPIR_Request *req, bool is_local,
+                                                      struct MPIR_Request *partner)
+{
+    req->dev.is_local = is_local;
+    if (partner) {
+        MPIR_Assert(!is_local);
+        req->dev.anysrc_partner = partner;
+        partner->dev.anysrc_partner = req;
+    }
+}
+#else
+#define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_)  do { } while (0)
+#endif
+
 #include "mpir_datatype.h"
 #include "mpidch4.h"
 
