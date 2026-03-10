@@ -12,16 +12,27 @@ static int copy_iovs(pid_t pid, MPI_Aint src_data_sz,
                      struct iovec *src_iovs, MPI_Aint src_iov_len,
                      struct iovec *dst_iovs, MPI_Aint dst_iov_len);
 
-int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz)
+int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz,
+                        bool need_pack)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* local iovs */
+    void *pack_buf = NULL;
+    struct iovec static_dst_iov;
     struct iovec *dst_iovs;
     MPI_Aint dst_iov_len;
-    mpi_errno = get_iovs(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                         MPIDIG_REQUEST(rreq, datatype), -1, &dst_iovs, &dst_iov_len);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (need_pack) {
+        pack_buf = MPL_malloc(src_data_sz, MPL_MEM_OTHER);
+        dst_iovs = &static_dst_iov;
+        dst_iov_len = 1;
+        dst_iovs[0].iov_base = pack_buf;
+        dst_iovs[0].iov_len = src_data_sz;
+    } else {
+        mpi_errno = get_iovs(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), -1, &dst_iovs, &dst_iov_len);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* remote iovs */
     struct iovec static_src_iov;
@@ -55,7 +66,18 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
     if (src_iovs != &static_src_iov) {
         MPL_free(src_iovs);
     }
-    MPL_free(dst_iovs);
+    if (need_pack) {
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Typerep_unpack(pack_buf, src_data_sz,
+                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, datatype), 0,
+                                        &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(actual_unpack_bytes == src_data_sz);
+        MPL_free(pack_buf);
+    } else {
+        MPL_free(dst_iovs);
+    }
 
   fn_exit:
     return mpi_errno;
