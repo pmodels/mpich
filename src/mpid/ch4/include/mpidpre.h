@@ -352,16 +352,6 @@ typedef struct MPIDI_Devreq_t {
 
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-#define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_) \
-    do { \
-        (req)->dev.is_local = is_local_; \
-        (req)->dev.anysrc_partner = partner_; \
-    } while (0)
-#else
-#define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_)  do { } while (0)
-#endif
-
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req);
