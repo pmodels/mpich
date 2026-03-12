@@ -155,7 +155,8 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
 enum MPIR_sched_type {
     MPIR_SCHED_INVALID,
     MPIR_SCHED_NORMAL,
-    MPIR_SCHED_GENTRAN
+    MPIR_SCHED_GENTRAN,
+    MPIR_SCHED_REQUEST,
 };
 
 /*S
@@ -344,6 +345,12 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 #define MPIR_REQUEST_DEBUG(req) do { } while (0)
 #endif
 
+#define DEBUG_PROGREE_HOOK \
+    do { \
+        MPIR_Request_debug(); \
+        MPL_backtrace_show(stdout); \
+    } while (0)
+
 #define DEBUG_PROGRESS_START \
     int iter = 0; \
     bool progress_timed_out = false; \
@@ -361,8 +368,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             MPL_wtime(&time_cur); \
             MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
             if (time_diff > MPIR_CVAR_PROGRESS_TIMEOUT && !progress_timed_out) { \
-                MPIR_Request_debug(); \
-                MPL_backtrace_show(stdout); \
+                DEBUG_PROGREE_HOOK; \
                 progress_timed_out = true; \
             } else if (time_diff > MPIR_CVAR_PROGRESS_TIMEOUT * 2) { \
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
