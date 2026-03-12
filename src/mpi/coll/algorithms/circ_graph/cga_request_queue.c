@@ -62,7 +62,7 @@ static int test_for_request(MPII_cga_request_queue * queue, int i, bool * is_don
 /* Routines for managing non-blocking send/recv of chunks  */
 static int init_request_queue_common(MPII_cga_request_queue * queue,
                                      int q_len, int num_pending, int num_chunks, int all_size,
-                                     int chunk_size, int last_chunk_size,
+                                     int chunk_size, int last_chunk_size, bool inverse_order,
                                      void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      MPIR_Comm * comm, int coll_attr)
 {
@@ -83,7 +83,7 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->buf = buf;
     queue->count = count;
     queue->datatype = datatype;
-    queue->inverse_order = false;
+    queue->inverse_order = inverse_order;
 
     mpi_errno = MPIR_Sched_next_tag(comm, &queue->tag);
     MPIR_ERR_CHECK(mpi_errno);
@@ -96,8 +96,14 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
         num_pending = num_chunks;
     }
     queue->num_pending = num_pending;
-    queue->pending_head = 0;
-    queue->pending_head_block = 0;
+
+    if (!queue->inverse_order) {
+        queue->pending_head_block = 0;
+    } else {
+        queue->pending_head_block = queue->num_chunks - 1;
+    }
+    queue->pending_head = queue->pending_head_block % queue->num_pending;
+
     /* circular array of pending requests */
     queue->q_len = q_len;
     queue->q_head = 0;
@@ -150,9 +156,10 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
 
     int last_chunk_size;
     int num_chunks = calc_chunks(data_size, chunk_size, &last_chunk_size);
+    bool inverse_order = false;
 
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
-                                          chunk_size, last_chunk_size,
+                                          chunk_size, last_chunk_size, inverse_order,
                                           buf, count, datatype, comm, coll_attr);
 
     queue->coll_type = MPII_CGA_BCAST;
@@ -181,9 +188,10 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
     int last_chunk_size;
     int num_chunks = calc_chunks(count * type_size, chunk_size, &last_chunk_size);
     int all_size = comm_size;
+    bool inverse_order = false;
 
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, all_size,
-                                          chunk_size, last_chunk_size,
+                                          chunk_size, last_chunk_size, inverse_order,
                                           buf, count, datatype, comm, coll_attr);
 
     queue->coll_type = MPII_CGA_BCAST;
@@ -239,13 +247,13 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
+    bool inverse_order = true;
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
-                                          chunk_size, last_chunk_size,
+                                          chunk_size, last_chunk_size, inverse_order,
                                           recvbuf, count, datatype, comm, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     queue->coll_type = MPII_CGA_REDUCE;
-    queue->inverse_order = true;
     queue->u.reduce.op = op;
     queue->u.reduce.type_size = type_size;
     queue->u.reduce.type_extent = extent;
@@ -734,15 +742,22 @@ static int issue_irecv_packed(MPII_cga_request_queue * queue, int block, int roo
 
 static int get_pending_id(MPII_cga_request_queue * queue, int block, int root)
 {
-    int use_block = block;
-    if (queue->inverse_order) {
-        use_block = queue->num_chunks - 1 - block;
-    }
-    if (use_block >= queue->pending_head_block &&
-        use_block < queue->pending_head_block + queue->num_pending) {
-        return (use_block % queue->num_pending) * queue->all_size + root;
+    if (!queue->inverse_order) {
+        /* forward, HEAD is the larges block: [..., i-2, i-1, i(HEAD), i-N+1, ...] */
+        if (block < queue->pending_head_block &&
+            block >= queue->pending_head_block - queue->num_pending) {
+            return (block % queue->num_pending) * queue->all_size + root;
+        } else {
+            return -1;
+        }
     } else {
-        return -1;
+        /* inverse, HEAD is the lowest block: [..., i+N-1, i(HEAD), i+1, i+2, ...] */
+        if (block > queue->pending_head_block &&
+            block <= queue->pending_head_block + queue->num_pending) {
+            return (block % queue->num_pending) * queue->all_size + root;
+        } else {
+            return -1;
+        }
     }
 }
 
@@ -751,40 +766,51 @@ static int test_new_pending_block(MPII_cga_request_queue * queue, int block, int
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int use_block = block;
-    if (queue->inverse_order) {
-        use_block = queue->num_chunks - 1 - block;
+    /* move pending_head num_beyond positions, starting at pending_head */
+    int num_beyond;
+    if (!queue->inverse_order) {
+        num_beyond = block - queue->pending_head_block + 1;
+    } else {
+        num_beyond = queue->pending_head_block - block + 1;
     }
 
-    /* The schedule must guarantee num_pending is sufficient */
-    MPIR_Assert(use_block >= queue->pending_head_block);
-
-    /* if use_block is beyond num_pending, vacate earlier blocks */
-    if (use_block >= queue->pending_head_block + queue->num_pending) {
-        int num_vacate = use_block - queue->num_pending + 1 - queue->pending_head_block;
+    /* if block is beyond pending_head, vacate earlier blocks */
+    if (num_beyond > 0) {
         int k = queue->pending_head * queue->all_size;
-        for (int i = 0; i < num_vacate; i++) {
+        for (int i = 0; i < num_beyond; i++) {
             for (int j = 0; j < queue->all_size; j++) {
-                while (queue->pending_blocks[k].req_id >= 0) {
-                    mpi_errno = test_for_request(queue, queue->pending_blocks[k].req_id, flag);
+#define PENDING queue->pending_blocks[k + j]
+                while (PENDING.req_id >= 0) {
+                    mpi_errno = test_for_request(queue, PENDING.req_id, flag);
                     MPIR_ERR_CHECK(mpi_errno);
                     if (!*flag) {
                         goto fn_exit;
                     }
                 }
-                if (queue->pending_blocks[k].pack_buf) {
-                    MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool,
-                                                      queue->pending_blocks[k].pack_buf);
-                    queue->pending_blocks[k].pack_buf = NULL;
+                if (PENDING.pack_buf) {
+                    MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, PENDING.pack_buf);
+                    PENDING.pack_buf = NULL;
                 }
-                k++;
+#undef PENDING
             }
-            queue->pending_head++;
-            if (queue->pending_head == queue->num_pending) {
-                queue->pending_head = 0;
-                k = 0;
+            if (!queue->inverse_order) {
+                queue->pending_head++;
+                k += queue->all_size;
+                if (queue->pending_head == queue->num_pending) {
+                    queue->pending_head = 0;
+                    k = 0;
+                }
+                queue->pending_head_block++;
+            } else {
+                if (queue->pending_head > 0) {
+                    queue->pending_head--;
+                    k -= queue->all_size;
+                } else {
+                    queue->pending_head = queue->num_pending - 1;
+                    k = queue->pending_head * queue->all_size;
+                }
+                queue->pending_head_block--;
             }
-            queue->pending_head_block++;
         }
     }
     *flag = true;
