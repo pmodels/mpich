@@ -93,7 +93,7 @@ typedef struct {
 
     struct {
         int req_id;             /* points to the index of the pending requests */
-        void *pack_buf;         /* if need_pack, allocated chunk buffer */
+        void *persist_packbuf;  /* for bcast, avoid packing for every send */
     } *pending_blocks;
     int pending_head;
     int pending_head_block;
@@ -109,6 +109,7 @@ typedef struct {
             MPIR_gpu_req async_req;
             MPIR_Request *req;
         } u;
+        void *packbuf;          /* if need_pack, allocated chunk buffer */
         void *tmpbuf;           /* reduce need recv into a tmpbuf before reduce_local */
         int block;
         int root;
