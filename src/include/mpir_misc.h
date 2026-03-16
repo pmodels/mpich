@@ -81,10 +81,16 @@ MPL_STATIC_INLINE_PREFIX void MPIR_async_test(MPIR_gpu_req * areq, int *is_done)
             break;
         case MPIR_TYPEREP_REQUEST:
             MPIR_Typerep_test(areq->u.y_req, is_done);
+            if (*is_done) {
+                areq->type = MPIR_NULL_REQUEST;
+            }
             break;
         case MPIR_GPU_REQUEST:
             err = MPL_gpu_test(&areq->u.gpu_req, is_done);
             MPIR_Assertp(err == MPL_SUCCESS);
+            if (*is_done) {
+                areq->type = MPIR_NULL_REQUEST;
+            }
             break;
         default:
             MPIR_Assert(0);
