@@ -101,6 +101,7 @@ typedef struct {
 
     struct {
         enum MPII_cga_op_type op_type;
+        enum MPII_cga_type coll_type;
         enum MPII_cga_op_stage op_stage;
         /* sends and recvs need be issued in order. It is difficult to figure out whether
          * the request has been issued yet from op_stage. Use an explicit flag as shortcut. */
@@ -137,6 +138,7 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
                                void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm, int coll_attr);
+int MPII_cga_switch_coll_type(MPII_cga_request_queue * queue, enum MPII_cga_type coll_type);
 
 int MPII_cga_bcast_isend(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
 int MPII_cga_bcast_irecv(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
