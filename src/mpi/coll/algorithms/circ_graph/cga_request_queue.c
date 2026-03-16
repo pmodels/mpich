@@ -331,6 +331,20 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     return mpi_errno;
 }
 
+int MPII_cga_switch_coll_type(MPII_cga_request_queue * queue, enum MPII_cga_type coll_type)
+{
+    /* for now, we only support switching from REDUCE to BCAST (as an ALLREDUCE composition) */
+    MPIR_Assert(queue->coll_type == MPII_CGA_REDUCE && coll_type == MPII_CGA_BCAST);
+    queue->coll_type = MPII_CGA_BCAST;
+    queue->inverse_order = false;
+    /* at this point, pending_blocks must be tracking 0, 1, ..., num_pending-1 */
+    MPIR_Assert(queue->pending_head_block == -1);
+    queue->pending_head_block = queue->num_pending;
+    queue->pending_head = 0;
+
+    return MPI_SUCCESS;
+}
+
 #define GET_BLOCK_SIZE(block)     (((block) == queue->num_chunks - 1) ? queue->last_chunk_size : queue->chunk_size)
 
 /* ---- bcast ---- */
@@ -643,6 +657,7 @@ static int issue_nb_op(MPII_cga_request_queue * queue, enum MPII_cga_op_type op_
     int req_id = queue->q_head;
 #define REQi queue->requests[req_id]
     REQi.op_type = op_type;
+    REQi.coll_type = queue->coll_type;
     REQi.peer_rank = peer_rank;
     REQi.block = block;
     REQi.root = root;
@@ -650,7 +665,7 @@ static int issue_nb_op(MPII_cga_request_queue * queue, enum MPII_cga_op_type op_
     REQi.issued = false;
 
     REQi.tmpbuf = NULL;
-    if (op_type == MPII_CGA_OP_RECV && queue->coll_type == MPII_CGA_REDUCE) {
+    if (op_type == MPII_CGA_OP_RECV && REQi.coll_type == MPII_CGA_REDUCE) {
         /* reduce need recv (or unpack) into a tmp buffer before reduce_local */
         if (queue->u.reduce.tmpbuf_size > 0) {
             REQi.tmpbuf = MPL_malloc(queue->u.reduce.tmpbuf_size, MPL_MEM_OTHER);
@@ -932,7 +947,7 @@ static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf)
 static void clear_request(MPII_cga_request_queue * queue, int req_id)
 {
 #define REQi queue->requests[req_id]
-    if (queue->coll_type == MPII_CGA_REDUCE) {
+    if (REQi.coll_type == MPII_CGA_REDUCE) {
         if (REQi.packbuf) {
             free_packbuf(queue, REQi.packbuf);
             REQi.packbuf = NULL;
@@ -983,10 +998,17 @@ static int clear_pending_recvs(MPII_cga_request_queue * queue, int cur_req_id, b
     int root = queue->requests[cur_req_id].root;
 
     int req_id = get_pending_req_id(queue, block, root);
-    if (req_id >= 0 && req_id != cur_req_id && queue->requests[req_id].op_type == MPII_CGA_OP_RECV) {
-        *flag = (queue->requests[req_id].op_stage == MPII_CGA_STAGE_NULL);
-    } else {
-        *flag = true;
+    while (true) {
+        MPIR_Assert(req_id >= 0);
+        if (req_id == cur_req_id) {
+            *flag = true;
+            break;
+        }
+        if (queue->requests[req_id].op_type == MPII_CGA_OP_RECV) {
+            *flag = false;
+            break;
+        }
+        req_id = queue->requests[req_id].next_req_id;
     }
 
     return MPI_SUCCESS;
@@ -1104,7 +1126,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                         MPIR_ERR_CHECK(mpi_errno);
 
                         REQi.packbuf = pack_buf;
-                        if (queue->coll_type == MPII_CGA_BCAST) {
+                        if (REQi.coll_type == MPII_CGA_BCAST) {
                             add_persist_packbuf(queue, block, root, pack_buf);
                         }
 
@@ -1112,7 +1134,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                         MPIR_ERR_CHECK(mpi_errno);
                         REQi.op_stage = MPII_CGA_STAGE_COPY;
                     } else {
-                        MPIR_Assert(queue->coll_type == MPII_CGA_BCAST);
+                        MPIR_Assert(REQi.coll_type == MPII_CGA_BCAST);
                         /* the send that packs this block may not be done */
                         TEST_PENDING(clear_pending_packs(queue, i, &flag));
                         REQi.packbuf = pack_buf;
@@ -1140,7 +1162,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                     MPIR_ERR_CHECK(mpi_errno);
 
                     REQi.packbuf = pack_buf;
-                    if (queue->coll_type == MPII_CGA_BCAST) {
+                    if (REQi.coll_type == MPII_CGA_BCAST) {
                         add_persist_packbuf(queue, block, root, pack_buf);
                     }
 
@@ -1175,7 +1197,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 REQi.issued = true;
                 REQi.op_stage = MPII_CGA_STAGE_REQUEST;
             } else {
-                if (queue->coll_type == MPII_CGA_REDUCE) {
+                if (REQi.coll_type == MPII_CGA_REDUCE) {
                     /* can't have multiple reduce into the same buffer */
                     TEST_PENDING(clear_pending_recvs(queue, i, &flag));
                     /* blocking reduce will be done in the next loop.
@@ -1198,7 +1220,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 goto fn_complete;
             } else {
                 if (queue->need_pack) {
-                    if (queue->coll_type == MPII_CGA_REDUCE && !REQi.tmpbuf) {
+                    if (REQi.coll_type == MPII_CGA_REDUCE && !REQi.tmpbuf) {
                         /* contig (gpu) case, we can directly reduce from pack_buf */
                         REQi.op_stage = MPII_CGA_STAGE_REDUCE;
                     } else {
@@ -1209,7 +1231,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                         REQi.op_stage = MPII_CGA_STAGE_COPY;
                     }
                 } else {
-                    if (queue->coll_type == MPII_CGA_REDUCE) {
+                    if (REQi.coll_type == MPII_CGA_REDUCE) {
                         REQi.op_stage = MPII_CGA_STAGE_REDUCE;
                     } else {
                         goto fn_complete;
