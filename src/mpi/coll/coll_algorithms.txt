@@ -542,6 +542,8 @@ allreduce-intra:
         restrictions: MPIDI_CH4_release_gather
     cnc
         macro_guard: defined(ENABLE_CNC)
+    circ_graph
+        restrictions: commutative
 allreduce-inter:
     reduce_exchange_bcast
         inner: reduce-intra@local_comm, bcast-intra@local_comm
