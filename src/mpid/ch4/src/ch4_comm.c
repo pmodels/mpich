@@ -148,6 +148,7 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_COMM(comm, comm_agree_epoch) = 0;
     /* initialize next_am_tag for internal messaging */
     int total_tag_bits = get_num_bits(MPIR_Process.attrs.tag_ub);
     MPIDI_COMM(comm, next_am_tag) = 0;
