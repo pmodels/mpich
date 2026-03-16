@@ -1201,6 +1201,7 @@ cvars:
         ccl                      - Force CCL algorithm
         release_gather           - Force CH4 POSIX release_gather algorithm
         cnc                      - Force CN collectives (libcncoll) algorithm
+        circ_graph               - Force circulant graph algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE
