@@ -193,6 +193,9 @@ algorithms:
             recexch_halving
                 .MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=2,3,4
                 .MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV=0,1
+            circ_graph
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=1,4,8
         intra-nonblocking:
             sched_ring
             sched_brucks
@@ -356,8 +359,8 @@ algorithms:
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
             circ_graph
-                .MPIR_CVAR_BCAST_CIRC_CHUNK_SIZE=0,1024,131072,262144
-                .MPIR_CVAR_BCAST_CIRC_Q_LEN=1,4,8
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=1,4,8
 	    tree
 		.MPIR_CVAR_BCAST_TREE_TYPE=kary,knomial_1,knomial_2
 		.MPIR_CVAR_BCAST_IS_NON_BLOCKING=1
@@ -472,6 +475,9 @@ algorithms:
             binomial
             smp
             reduce_scatter_gather
+            circ_graph
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=2,4,8
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
