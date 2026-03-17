@@ -34,7 +34,9 @@ static void remove_pending_req_id(MPII_cga_request_queue * queue, int block, int
  * - for reduce, packbuf is stored in the requests[].packbuf, and freed with the request
  */
 static void *get_persist_packbuf(MPII_cga_request_queue * queue, int block, int root);
+static bool is_persist_packbuf_loaded(MPII_cga_request_queue * queue, int block, int root);
 static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int root, void *packbuf);
+static void set_persist_packbuf_loaded(MPII_cga_request_queue * queue, int block, int root);
 static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out);
 static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf);
 /* free buffers depend on where they are stored */
@@ -63,7 +65,6 @@ static int test_new_pending_block(MPII_cga_request_queue * queue, int block, int
 /* return true all pending recvs on the same block are COMPLETED */
 static int clear_pending_recvs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
 /* return true if no other send on the same block is still packing into its packbuf */
-static int clear_pending_packs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
 /* return true if the pending requests of the same op_type and peer_rank are ISSUED. */
 static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
 
@@ -175,6 +176,7 @@ void MPII_cga_queue_reset(MPII_cga_request_queue * queue)
         /* -1 marks the block not pending (available to send) */
         queue->pending_blocks[i].req_id = -1;
         queue->pending_blocks[i].persist_packbuf = NULL;
+        queue->pending_blocks[i].persist_packbuf_loaded = false;
     }
 
     for (int i = 0; i < queue->q_len; i++) {
@@ -893,6 +895,14 @@ static void *get_persist_packbuf(MPII_cga_request_queue * queue, int block, int 
     return queue->pending_blocks[pending_id].persist_packbuf;
 }
 
+static bool is_persist_packbuf_loaded(MPII_cga_request_queue * queue, int block, int root)
+{
+    int pending_id = get_pending_id(queue, block, root);
+    MPIR_Assert(pending_id >= 0);
+    MPIR_Assert(queue->pending_blocks[pending_id].persist_packbuf);
+    return queue->pending_blocks[pending_id].persist_packbuf_loaded;
+}
+
 static void add_pending_req_id(MPII_cga_request_queue * queue, int block, int root, int req_id)
 {
     int pending_id = get_pending_id(queue, block, root);
@@ -918,6 +928,15 @@ static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int r
     int pending_id = get_pending_id(queue, block, root);
     MPIR_Assert(pending_id >= 0);
     queue->pending_blocks[pending_id].persist_packbuf = packbuf;
+    queue->pending_blocks[pending_id].persist_packbuf_loaded = false;
+}
+
+static void set_persist_packbuf_loaded(MPII_cga_request_queue * queue, int block, int root)
+{
+    int pending_id = get_pending_id(queue, block, root);
+    MPIR_Assert(pending_id >= 0);
+    MPIR_Assert(queue->pending_blocks[pending_id].persist_packbuf);
+    queue->pending_blocks[pending_id].persist_packbuf_loaded = true;
 }
 
 static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out)
@@ -1014,28 +1033,6 @@ static int clear_pending_recvs(MPII_cga_request_queue * queue, int cur_req_id, b
     return MPI_SUCCESS;
 }
 
-/* A bcast block has one persist packbuf, filled by the first send of the block (pack) or
- * by its recv. A later send of the block reuses it, so it must wait until no other send
- * is still packing into it (an async copy from a device buffer). */
-static int clear_pending_packs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag)
-{
-    int block = queue->requests[cur_req_id].block;
-    int root = queue->requests[cur_req_id].root;
-
-    *flag = true;
-    int req_id = get_pending_req_id(queue, block, root);
-    while (req_id >= 0) {
-        if (req_id != cur_req_id && queue->requests[req_id].op_type == MPII_CGA_OP_SEND &&
-            queue->requests[req_id].op_stage == MPII_CGA_STAGE_COPY) {
-            *flag = false;
-            break;
-        }
-        req_id = queue->requests[req_id].next_req_id;
-    }
-
-    return MPI_SUCCESS;
-}
-
 static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, bool * flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1054,12 +1051,24 @@ static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, boo
         if (req_id < 0) {
             req_id = queue->q_len - 1;
         }
-        /* we only need check 1 previous request since it is an all or none condition */
+        /* The goal is to ensure all sends or recvs to the same rank are issued in order.
+         * Thus, we check that no previous send (or recv) are in a stage before issuing.
+         */
         if (queue->requests[req_id].op_stage != MPII_CGA_STAGE_NULL &&
             queue->requests[req_id].op_type == op_type &&
             queue->requests[req_id].peer_rank == peer_rank) {
-            *flag = false;
-            goto fn_exit;
+            if (op_type == MPII_CGA_OP_SEND) {
+                if (queue->requests[req_id].op_stage == MPII_CGA_STAGE_START ||
+                    queue->requests[req_id].op_stage == MPII_CGA_STAGE_COPY) {
+                    *flag = false;
+                    goto fn_exit;
+                }
+            } else {    /* MPII_CGA_OP_RECV */
+                if (queue->requests[req_id].op_stage == MPII_CGA_STAGE_START) {
+                    *flag = false;
+                    goto fn_exit;
+                }
+            }
         }
     }
 
@@ -1120,24 +1129,37 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 /* send need clear previous recvs or the data is incorrect */
                 TEST_PENDING(clear_pending_recvs(queue, i, &flag));
                 if (queue->need_pack) {
-                    void *pack_buf = get_persist_packbuf(queue, block, root);
-                    if (!pack_buf) {
+                    void *pack_buf = NULL;
+                    bool new_pack_buf = false;
+                    if (REQi.coll_type == MPII_CGA_REDUCE) {
+                        /* reduce can't reuse pack buffer */
                         mpi_errno = alloc_packbuf(queue, &pack_buf);
                         MPIR_ERR_CHECK(mpi_errno);
 
                         REQi.packbuf = pack_buf;
-                        if (REQi.coll_type == MPII_CGA_BCAST) {
-                            add_persist_packbuf(queue, block, root, pack_buf);
-                        }
+                        new_pack_buf = true;
+                    } else {    /* MPII_CGA_BCAST */
+                        pack_buf = get_persist_packbuf(queue, block, root);
+                        if (!pack_buf) {
+                            mpi_errno = alloc_packbuf(queue, &pack_buf);
+                            MPIR_ERR_CHECK(mpi_errno);
 
+                            REQi.packbuf = pack_buf;
+                            add_persist_packbuf(queue, block, root, pack_buf);
+                            new_pack_buf = true;
+                        } else {
+                            /* make sure the packbuf is loaded */
+                            if (!is_persist_packbuf_loaded(queue, block, root)) {
+                                goto fn_cont;
+                            }
+                            REQi.packbuf = pack_buf;
+                        }
+                    }
+                    if (new_pack_buf) {
                         mpi_errno = issue_pack(queue, block, root, pack_buf, &REQi.u.async_req);
                         MPIR_ERR_CHECK(mpi_errno);
                         REQi.op_stage = MPII_CGA_STAGE_COPY;
                     } else {
-                        MPIR_Assert(REQi.coll_type == MPII_CGA_BCAST);
-                        /* the send that packs this block may not be done */
-                        TEST_PENDING(clear_pending_packs(queue, i, &flag));
-                        REQi.packbuf = pack_buf;
                         /* make sure all sends are in order */
                         TEST_PENDING(check_pending_ops(queue, i, &flag));
                         mpi_errno = issue_isend_packed(queue, block, root, REQi.peer_rank,
@@ -1191,6 +1213,9 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
             if (REQi.op_type == MPII_CGA_OP_SEND) {
                 /* make sure all sends are in order */
                 TEST_PENDING(check_pending_ops(queue, i, &flag));
+                if (REQi.coll_type == MPII_CGA_BCAST) {
+                    set_persist_packbuf_loaded(queue, block, root);
+                }
                 mpi_errno = issue_isend_packed(queue, block, root, REQi.peer_rank,
                                                REQi.packbuf, &REQi.u.req);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -1220,6 +1245,9 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 goto fn_complete;
             } else {
                 if (queue->need_pack) {
+                    if (REQi.coll_type == MPII_CGA_BCAST) {
+                        set_persist_packbuf_loaded(queue, block, root);
+                    }
                     if (REQi.coll_type == MPII_CGA_REDUCE && !REQi.tmpbuf) {
                         /* contig (gpu) case, we can directly reduce from pack_buf */
                         REQi.op_stage = MPII_CGA_STAGE_REDUCE;
