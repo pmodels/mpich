@@ -94,6 +94,7 @@ typedef struct {
     struct {
         int req_id;             /* points to the index of the pending requests */
         void *persist_packbuf;  /* for bcast, avoid packing for every send */
+        bool persist_packbuf_loaded;    /* avoid sending unloaded packbuf */
     } *pending_blocks;
     int pending_head;
     int pending_head_block;
