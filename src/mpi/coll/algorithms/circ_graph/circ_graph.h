@@ -6,6 +6,8 @@
 #ifndef CIRC_GRAPH_H_INCLUDED
 #define CIRC_GRAPH_H_INCLUDED
 
+#include "mpidu_genq_private_pool.h"
+
 /* Because reduce, allgather, allreduce are based on the bcast algorithm, we
  * assume the bcast context unless otherwise noted */
 
@@ -41,7 +43,6 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 enum MPII_cga_type {
     MPII_CGA_BCAST,
     MPII_CGA_REDUCE,
-    MPII_CGA_ALLGATHER,
 };
 
 enum MPII_cga_op_type {
@@ -49,66 +50,72 @@ enum MPII_cga_op_type {
     MPII_CGA_OP_RECV,
 };
 
+enum MPII_cga_op_stage {
+    MPII_CGA_STAGE_NULL,
+    MPII_CGA_STAGE_START,       /* request created but no op started yet */
+    MPII_CGA_STAGE_COPY,        /* waiting for the async local copy */
+    MPII_CGA_STAGE_REQUEST,     /* waiting for the send/recv request */
+    MPII_CGA_STAGE_REDUCE,      /* at reduce_local pending dependency */
+};
+
 typedef struct {
     int q_len;
-    int num_chunks;             /* total number of blocks */
+    int num_pending;
+    MPI_Aint num_chunks;        /* total number of blocks */
+    MPI_Aint chunk_size;
+    MPI_Aint last_chunk_size;
 
-    /* datatype for each chunk */
-    int chunk_count;
-    int last_chunk_count;
-    MPI_Aint chunk_extent;      /* chunk_count * extent */
+    void *buf;
+    MPI_Aint count;
     MPI_Datatype datatype;
+    MPI_Aint buf_extent;        /* count * extent, needed by allgather */
+
+    bool need_pack;
+    MPL_pointer_attr_t attr;
 
     enum MPII_cga_type coll_type;
     union {
         struct {
-            void *buf;
-            bool need_pack;
-            /* following fields are needed for pack/unpack */
-            bool is_root;       /* root pack on send, non-root unpack on recv */
-            bool last_chunk_unpacked;   /* root will send the last chunk in the last q rounds,
-                                         * but we only need unpack once */
-            void *pack_buf;
-            MPI_Aint count;
-            MPI_Datatype datatype;
-        } bcast;
-        struct {
-            void *buf;
-            int rank;
-            int comm_size;
-            MPI_Aint buf_size;
-            MPI_Aint buf_extent;
-            bool need_pack;
-            /* following fields are needed for pack/unpack */
-            bool last_chunk_unpacked;   /* The last chunk will be sent multiple times in the last q rounds,
-                                         * but we only need unpack once */
-            void *pack_buf;
-            MPI_Aint count;
-            MPI_Datatype datatype;
-        } allgather;
-        struct {
-            void *tmp_buf;
-            void *recvbuf;
+            MPI_Aint type_size; /* for calc chunk_size -> chunk_count */
+            MPI_Aint type_extent;
+            MPI_Aint chunk_extent;      /* for calc buf offset at a block */
+            MPI_Aint true_lb;   /* adjustment for tmp_buf */
+            MPI_Aint tmpbuf_size;       /* (chunk_count - 1) * extent + true_extent, but 0 if not needed */
             MPI_Op op;
         } reduce;
-        struct {
-            void *tmp_buf;
-            void *recvbuf;
-            MPI_Op op;
-        } allreduce;
     } u;
 
     MPIR_Comm *comm;
     int tag;
     int coll_attr;
+    int all_size;               /* for bcast and reduce, all_size is 1.
+                                 * for allgather and reduce_scatter, all_size is comm_size */
 
-    int *pending_blocks;        /* pending_blocks[n], points to the index of the pending requests
-                                 * if the block is in transit */
+    struct {
+        int req_id;             /* points to the index of the pending requests */
+        void *persist_packbuf;  /* for bcast, avoid packing for every send */
+    } *pending_blocks;
+    int pending_head;
+    int pending_head_block;
+    bool inverse_order;
+
     struct {
         enum MPII_cga_op_type op_type;
-        MPIR_Request *req;
-        int chunk_id;
-        int round;
+        enum MPII_cga_op_stage op_stage;
+        /* sends and recvs need be issued in order. It is difficult to figure out whether
+         * the request has been issued yet from op_stage. Use an explicit flag as shortcut. */
+        bool issued;
+        union {
+            MPIR_gpu_req async_req;
+            MPIR_Request *req;
+        } u;
+        void *packbuf;          /* if need_pack, allocated chunk buffer */
+        void *tmpbuf;           /* reduce need recv into a tmpbuf before reduce_local */
+        int block;
+        int root;
+
+        int peer_rank;
+
         /* for reduction, we may have multiple requests concurrent on the same block,
          * thus we may need a linked list */
         int next_req_id;
@@ -116,26 +123,37 @@ typedef struct {
     int q_head;
 } MPII_cga_request_queue;       /* note: cga refers to "circulant graph algorithm" */
 
+extern MPIDU_genq_private_pool_t MPIR_cga_chunk_pool;
+
 int MPIR_cga_init(void);
 int MPIR_cga_finalize(void);
 
-int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue,
+int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
-                              MPIR_Comm * comm, int coll_attr, bool is_root);
-int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue,
+                              MPIR_Comm * comm, int coll_attr);
+int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pending,
                                   void *buf, MPI_Aint count, MPI_Datatype datatype,
                                   MPIR_Comm * comm, int coll_attr, int rank, int comm_size);
-int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue,
+int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
                                void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm, int coll_attr);
 
+int MPII_cga_bcast_isend(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
+int MPII_cga_bcast_irecv(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
 int MPII_cga_bcast_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_bcast_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
-int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
-int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int root, int block, int peer_rank);
+int MPII_cga_allgather_isend(MPII_cga_request_queue * queue, int block, int root, int peer_rank,
+                             bool * flag);
+int MPII_cga_allgather_irecv(MPII_cga_request_queue * queue, int block, int root, int peer_rank,
+                             bool * flag);
+int MPII_cga_allgather_send(MPII_cga_request_queue * queue, int block, int root, int peer_rank);
+int MPII_cga_allgather_recv(MPII_cga_request_queue * queue, int block, int root, int peer_rank);
+int MPII_cga_reduce_isend(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
+int MPII_cga_reduce_irecv(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
 int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
 
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
+int MPII_cga_testall(MPII_cga_request_queue * queue, bool * is_done);
 
 #endif

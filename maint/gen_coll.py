@@ -202,6 +202,14 @@ def dump_allcomm_sched_auto(name):
         add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
+    def dump_cnt_algo_request(algo, commkind):
+        G.out.append("*sched_type_p = MPIR_SCHED_REQUEST;")
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "csel")
+        algo_params = get_algo_params(params, algo)
+        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
+
     dump_open("switch (cnt->id) {")
     for commkind in ("intra", "inter"):
         if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', name):
@@ -218,8 +226,10 @@ def dump_allcomm_sched_auto(name):
             G.out.append("INDENT")
             if algo['name'].startswith('tsp_'):
                 dump_cnt_algo_tsp(algo, use_commkind)
-            else:
+            elif algo['name'].startswith('sched_'):
                 dump_cnt_algo_sched(algo, use_commkind)
+            else:
+                dump_cnt_algo_request(algo, use_commkind)
             G.out.append("break;");
             G.out.append("DEDENT")
             G.out.append("")
@@ -342,6 +352,14 @@ def dump_sched_impl(name):
             commkind = "allcomm"
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
+    def dump_algo_request(algo, commkind):
+        G.out.append("*sched_type_p = MPIR_SCHED_REQUEST;")
+        algo_name = get_algo_name(algo)
+        algo_args = get_algo_args(args, algo, "cvar")
+        if "allcomm" in algo:
+            commkind = "allcomm"
+        dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
+
     def dump_cases(commkind):
         nonlocal need_fallback
         CVAR_PREFIX = "MPIR_CVAR_%s_%s_ALGORITHM" % (NAME, commkind.upper())
@@ -354,8 +372,10 @@ def dump_sched_impl(name):
                     need_fallback = True
                 if algo['name'].startswith('tsp_'):
                     dump_algo_tsp(algo, commkind)
-                else:
+                elif algo['name'].startswith('sched_'):
                     dump_algo_sched(algo, commkind)
+                else:
+                    dump_algo_request(algo, commkind)
                 G.out.append("break;");
                 G.out.append("DEDENT")
         G.out.append("case %s_auto:" % CVAR_PREFIX)
@@ -687,8 +707,11 @@ def get_algo_args(args, algo, kind):
 
     if algo['name'].startswith('tsp_'):
         algo_args += ", *sched_p"
-    elif algo['func-commkind'].startswith('i'):
+    elif algo['name'].startswith('sched_'):
         algo_args += ", *sched_p"
+    elif algo['func-commkind'].startswith('i'):
+        # sched_p is "MPIR_Request ** request" here
+        algo_args += ", (MPIR_Request **) sched_p"
     elif not algo['func-commkind'].startswith('neighbor_'):
         algo_args += ", coll_attr"
 
@@ -701,8 +724,10 @@ def get_algo_params(params, algo):
 
     if algo['name'].startswith('tsp_'):
         algo_params += ", MPIR_TSP_sched_t sched"
-    elif algo['func-commkind'].startswith('i'):
+    elif algo['name'].startswith('sched_'):
         algo_params += ", MPIR_Sched_t s"
+    elif algo['func-commkind'].startswith('i'):
+        algo_params += ", MPIR_Request ** request"
     elif not algo['func-commkind'].startswith('neighbor_'):
         algo_params += ", int coll_attr"
 
