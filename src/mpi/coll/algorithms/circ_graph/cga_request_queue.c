@@ -35,7 +35,7 @@ static void remove_pending_req_id(MPII_cga_request_queue * queue, int block, int
  */
 static void *get_persist_packbuf(MPII_cga_request_queue * queue, int block, int root);
 static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int root, void *packbuf);
-static int alloc_packbuf(void **packbuf_out);
+static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out);
 /* free buffers depend on where they are stored */
 static void clear_request(MPII_cga_request_queue * queue, int req_id);
 static void clear_pending(MPII_cga_request_queue * queue, int pending_id);
@@ -245,6 +245,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
 
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Assert(type_size > 0);
 
     MPI_Aint num_chunks, chunk_count, last_chunk_count, last_chunk_size;
     if (chunk_size == 0) {
@@ -875,10 +876,17 @@ static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int r
     queue->pending_blocks[pending_id].persist_packbuf = packbuf;
 }
 
-static int alloc_packbuf(void **packbuf_out)
+static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out)
 {
-    int mpi_errno;
-    mpi_errno = MPIDU_genq_private_pool_force_alloc_cell(MPIR_cga_chunk_pool, packbuf_out);
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIR_cga_chunk_pool) {
+        mpi_errno = MPIDU_genq_private_pool_force_alloc_cell(MPIR_cga_chunk_pool, packbuf_out);
+    } else {
+        *packbuf_out = MPL_malloc(queue->chunk_size, MPL_MEM_COLL);
+        if (!(*packbuf_out)) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
+    }
     return mpi_errno;
 }
 
@@ -887,7 +895,11 @@ static void clear_request(MPII_cga_request_queue * queue, int req_id)
 #define REQi queue->requests[req_id]
     if (queue->coll_type == MPII_CGA_REDUCE) {
         if (REQi.packbuf) {
-            MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, REQi.packbuf);
+            if (MPIR_cga_chunk_pool) {
+                MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, REQi.packbuf);
+            } else {
+                MPL_free(REQi.packbuf);
+            }
             REQi.packbuf = NULL;
         }
         if (REQi.tmpbuf) {
@@ -902,7 +914,11 @@ static void clear_pending(MPII_cga_request_queue * queue, int pending_id)
 {
 #define PENDING queue->pending_blocks[pending_id]
     if (PENDING.persist_packbuf) {
-        MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, PENDING.persist_packbuf);
+        if (MPIR_cga_chunk_pool) {
+            MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, PENDING.persist_packbuf);
+        } else {
+            MPL_free(PENDING.persist_packbuf);
+        }
         PENDING.persist_packbuf = NULL;
     }
 #undef PENDING
@@ -1031,7 +1047,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 if (queue->need_pack) {
                     void *pack_buf = get_persist_packbuf(queue, block, root);
                     if (!pack_buf) {
-                        mpi_errno = alloc_packbuf(&pack_buf);
+                        mpi_errno = alloc_packbuf(queue, &pack_buf);
                         MPIR_ERR_CHECK(mpi_errno);
 
                         REQi.packbuf = pack_buf;
@@ -1065,7 +1081,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                     /* make sure all recvs are in order */
                     TEST_PENDING(check_pending_ops(queue, i, &flag));
                     void *pack_buf;
-                    mpi_errno = alloc_packbuf(&pack_buf);
+                    mpi_errno = alloc_packbuf(queue, &pack_buf);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     REQi.packbuf = pack_buf;
