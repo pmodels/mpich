@@ -72,7 +72,8 @@ typedef struct {
     MPI_Datatype datatype;
     MPI_Aint buf_extent;        /* count * extent, needed by allgather */
     MPI_Aint true_lb;           /* data of a contig datatype starts at buf + true_lb */
-
+    bool dt_contig;
+    bool need_staging;          /* allreduce on a device buffer: reduce into a host staging_buf */
     bool need_pack;
     bool packbuf_from_pool;     /* pack buffers come from MPIR_cga_chunk_pool, else MPL_malloc */
     MPL_pointer_attr_t attr;
@@ -85,7 +86,9 @@ typedef struct {
             MPI_Aint chunk_extent;      /* for calc buf offset at a block */
             MPI_Aint tmpbuf_shift;      /* adjustment for tmp_buf */
             MPI_Aint tmpbuf_size;       /* buffer span of chunk_count elements, but 0 if not needed */
+            MPI_Aint true_extent;       /* for the size of staging_buf */
             MPI_Op op;
+            void *staging_buf;  /* if recvbuf is in GPU, use staging buf for intermediate results */
         } reduce;
     } u;
 
@@ -99,6 +102,8 @@ typedef struct {
         int req_id;             /* points to the index of the pending requests */
         void *persist_packbuf;  /* for bcast, avoid packing for every send */
         bool persist_packbuf_loaded;    /* avoid sending unloaded packbuf */
+        bool in_staging;        /* for allreduce, whether data is in staging_buf */
+        bool unstaged;          /* for allreduce, rank 0 has issued the copy back of its result */
     } *pending_blocks;
     int pending_head;
     int pending_head_block;
@@ -115,6 +120,7 @@ typedef struct {
             MPIR_gpu_req async_req;
             MPIR_Request *req;
         } u;
+        MPIR_gpu_req staging_areq;      /* allreduce may issue a concurrent staging_buf copy */
         void *packbuf;          /* if need_pack, allocated chunk buffer */
         void *tmpbuf;           /* reduce need recv into a tmpbuf before reduce_local */
         int block;
@@ -144,6 +150,9 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
                                void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm, int coll_attr);
+int MPII_cga_init_allreduce_queue(MPII_cga_request_queue * queue, int num_pending,
+                                  void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+                                  MPI_Op op, MPIR_Comm * comm, int coll_attr);
 int MPII_cga_switch_coll_type(MPII_cga_request_queue * queue, enum MPII_cga_type coll_type);
 
 int MPII_cga_bcast_isend(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);
