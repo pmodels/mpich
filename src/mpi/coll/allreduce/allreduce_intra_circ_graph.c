@@ -46,9 +46,12 @@ int MPIR_Allreduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
     /* Run schedule */
     MPII_cga_request_queue queue;
     int min_pending_blocks = cga.q * 2;
-    mpi_errno = MPII_cga_init_reduce_queue(&queue, min_pending_blocks,
-                                           recvbuf, count, datatype, op, comm, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPII_cga_init_allreduce_queue(&queue, min_pending_blocks,
+                                              recvbuf, count, datatype, op, comm, coll_attr);
+    if (mpi_errno) {
+        MPII_circ_graph_free(&cga);
+        MPIR_ERR_POP(mpi_errno);
+    }
 
     /* First run the reduce schedule */
     int n = queue.num_chunks;
