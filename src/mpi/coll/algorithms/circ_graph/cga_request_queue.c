@@ -253,9 +253,6 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     } else {
         /* reduction chunks have to contain whole datatypes */
         chunk_count = chunk_size / type_size;
-        if (chunk_size > 0 && chunk_size % type_size > 0) {
-            chunk_count++;
-        }
 
         num_chunks = count / chunk_count;
         last_chunk_count = count % chunk_count;
@@ -287,7 +284,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     if (!queue->need_pack) {
         /* datatype must be contig, no pack_buf, need tmpbuf to receive chunk data */
         queue->u.reduce.tmpbuf_size = chunk_size;
-    } else if (type_size == true_extent) {
+    } else if (type_size == true_extent && type_size == extent) {
         /* datatype is contig, skip tmpbuf, we can do reduce from pack_buf */
         queue->u.reduce.tmpbuf_size = 0;
     } else {
