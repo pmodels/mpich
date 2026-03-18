@@ -629,13 +629,13 @@ EOF
             echo "--- autoreconf diagnostics ---"
             cat <<EOF
 You either do not have autoconf in your path or it is too old (version
-$ver or higher required). You may be able to use
+$ver or higher required). You may be able to check its version with
 
     autoconf --version
 
 Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
+it changes between autotools versions. In addition, some versions of
+autoconf choose among many versions and provide incorrect output.
 EOF
             exit 1
         fi
@@ -667,13 +667,13 @@ EOF
             echo "bad automake installation"
             cat <<EOF
 You either do not have automake in your path or it is too old (version
-$ver or higher required). You may be able to use
+$ver or higher required). You may be able to check its version with
 
     automake --version
 
 Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
+it changes between autotools versions. In addition, some versions of
+autoconf choose among many versions and provide incorrect output.
 EOF
             exit 1
         fi
@@ -714,13 +714,13 @@ EOF
             echo "bad libtool installation"
             cat <<EOF
 You either do not have libtool in your path or it is too old
-(version $ver or higher required). You may be able to use
+(version $ver or higher required). You may be able to check its version with
 
-    libtool --version
+    libtool --version and libtoolize --version
 
 Unfortunately, there is no standard format for the version output and
-it changes between autotools versions.  In addition, some versions of
-autoconf choose among many versions and provide incorrect output).
+it changes between autotools versions. In addition, some versions of
+autoconf choose among many versions and provide incorrect output.
 EOF
             exit 1
         fi
