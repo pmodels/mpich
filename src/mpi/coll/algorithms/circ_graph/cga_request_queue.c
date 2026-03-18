@@ -22,7 +22,7 @@
  * Otherwise, the algorithm is inefficient or inconsistent.
  */
 
-static int calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, int *last_msg_size_out);
+static MPI_Aint calc_chunks(MPI_Aint data_size, MPI_Aint chunk_size, MPI_Aint * last_msg_size_out);
 
 static int get_pending_id(MPII_cga_request_queue * queue, int block, int root);
 static int get_pending_req_id(MPII_cga_request_queue * queue, int block, int root);
@@ -84,8 +84,9 @@ static void debug_queue(MPII_cga_request_queue * queue);
 
 /* Routines for managing non-blocking send/recv of chunks  */
 static int init_request_queue_common(MPII_cga_request_queue * queue,
-                                     int q_len, int num_pending, int num_chunks, int all_size,
-                                     int chunk_size, int last_chunk_size, bool inverse_order,
+                                     int q_len, int num_pending, MPI_Aint num_chunks, int all_size,
+                                     MPI_Aint chunk_size, MPI_Aint last_chunk_size,
+                                     bool inverse_order,
                                      void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      MPIR_Comm * comm, int coll_attr)
 {
@@ -179,8 +180,8 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     data_size = count * type_size;
 
-    int last_chunk_size;
-    int num_chunks = calc_chunks(data_size, chunk_size, &last_chunk_size);
+    MPI_Aint last_chunk_size;
+    MPI_Aint num_chunks = calc_chunks(data_size, chunk_size, &last_chunk_size);
     bool inverse_order = false;
 
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
@@ -210,8 +211,8 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    int last_chunk_size;
-    int num_chunks = calc_chunks(count * type_size, chunk_size, &last_chunk_size);
+    MPI_Aint last_chunk_size;
+    MPI_Aint num_chunks = calc_chunks(count * type_size, chunk_size, &last_chunk_size);
     int all_size = comm_size;
     bool inverse_order = false;
 
@@ -234,7 +235,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    MPI_Aint chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
     int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 */
@@ -1228,10 +1229,10 @@ static void debug_queue(MPII_cga_request_queue * queue)
 
 /* ---- math routines ---- */
 
-static int calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, int *last_msg_size_out)
+static MPI_Aint calc_chunks(MPI_Aint buf_size, MPI_Aint chunk_size, MPI_Aint * last_msg_size_out)
 {
-    int n;
-    int last_msg_size;
+    MPI_Aint n;
+    MPI_Aint last_msg_size;
 
     /* note: bcast zero sized messages is valid */
     if (chunk_size == 0 || buf_size == 0) {
