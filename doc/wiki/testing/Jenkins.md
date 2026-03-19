@@ -133,7 +133,7 @@ does not provide good filter/categorization functionality in the default
 
 
 - `maint`
-    - Including maitanance related jobs.
+    - Including maintenance related jobs.
 
 - `slurm-test`
     - Including BreadBoard slurm related jobs.

@@ -56,7 +56,7 @@ processes), and thus could block other threads in the same process
 unless the operation is non-blocking.
 
 To implement support for these split operations, any thread that is
-reading responses from the PMI server needs to be able to idenitfy the
+reading responses from the PMI server needs to be able to identify the
 operation that caused the response and update the necessary information.
 The easiest way to implement this is to have each nonblocking operation
 create a process-unique identifier and enqueue the operation on a
@@ -370,7 +370,7 @@ the method for securing this information.
   - threadsPerRank:
 
 The number of anticipated threads per MPI Process (integer). This may be
-used by a resource manager in allocating processor resourses.
+used by a resource manager in allocating processor resources.
 
 Note the use of `infokey`*i*`=key` and `infovalue`*i*`=value` instead of
 `key=value`. This avoids both possible conflict with predefined names in
