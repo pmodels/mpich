@@ -241,7 +241,7 @@ int MPIR_pmi_init(void)
 
     unsigned world_id = 0;
     if (pmi_kvs_name) {
-        if (strcmp(pmi_kvs_name, "singinit") == 0) {
+        if (!strcmp(pmi_kvs_name, "singinit") || !strcmp(pmi_kvs_name, "0")) {
             world_id = getpid();
         } else {
             HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
