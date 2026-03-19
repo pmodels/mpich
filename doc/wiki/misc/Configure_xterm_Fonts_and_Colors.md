@@ -2,12 +2,12 @@
 
 ## Screenshot
 
-If you want a xtem like
+If you want a xterm like
 
 ![xterm-color-zenburn.png](xterm-color-zenburn.png
 "xterm-color-zenburn.png")
 
-Do following steps:
+Do the following steps:
 
   - Create or update your `.Xresources` as
 

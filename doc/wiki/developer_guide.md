@@ -43,7 +43,7 @@ API prototypes.
 The types include MPI objects, which we internally refer as *handle objects*,
 such as MPI_Communicator, MPI_Datatype, MPI_Request, etc. In MPICH, all handle
 objects are exposed to user as integer handle. Internally we have a custom
-allocator system for these objects. How we manage handle objects is a cruicial
+allocator system for these objects. How we manage handle objects is a crucial
 piece in understanding the MPICH architecture. Refer to dedicated section
 below.
 
@@ -61,10 +61,10 @@ Reference:
 Nearly all internal source code includes `mpiimpl.h` and often only
 `mpiimpl.h`. The all encompassing nature makes this header quite complex and
 delicate. The best way to understand it is to refer to the header itself
-rather than repeat here. It is cruical for understanding how we organize types
+rather than repeat here. It is crucial for understanding how we organize types
 and inline functions.
 
-The all encompasing nature provides the convenience that most source file only
+The all encompassing nature provides the convenience that most source file only
 need include this single header. On the other hand, it is also responsible for
 the slow compilation. There is a balance between spending time maintaining
 headers and spending time waiting for compilations.
@@ -84,7 +84,7 @@ large amount of boilerplates, thus are more suited for script generation.
 
 PMPI prefixed function names are used to support MPI profiling interface. When
 user call MPI functions, e.g. MPI_Send, the symbol may link to a tool or
-profiling library function, which itercepts the call, do its profiling or
+profiling library function, which intercepts the call, do its profiling or
 analyses, and then calls PMPI_Send. Thus all top level functions are defined
 with PMPI_ names. This is why often PMPI names show up in traceback logs. To
 work when there isn't a tool library (the common case), both PMPI and MPI
@@ -111,7 +111,7 @@ functions that we directly handle in the binding layer.
 MPIR impl functions uses the same parameters as the MPI function with some
 exceptions. For one, all handle objects are passed as pointers. E.g. `MPI_Comm
 comm` in MPI function become `MPIR_Comm * comm_ptr` internally. For two,
-internally we use `MPI_Aint` as much as we can to avoid hazadous incompatible
+internally we use `MPI_Aint` as much as we can to avoid hazardous incompatible
 integer conversions, while MPI functions may use `int` or `MPI_Count`. These
 conversion are all handled by the binging layer.
 
@@ -181,7 +181,7 @@ compiler optimization. The other ADIs are not performance critical, but
 provided as hooks -- MPIR layer will call these hooks at key points -- to
 allow device properly setup and control the implementation behaviors.
 
-Note: all pt2pt communicatioin in ADI are nonblocking -- it will only initiate
+Note: all pt2pt communication in ADI are nonblocking -- it will only initiate
 the communication and completed during `MPID_Progress_wait/test`.
 
 Reference:
@@ -350,7 +350,7 @@ Use `MPI_Bcast` for example, `bcast/bcast.c` defines 3 functions, mostly
 boilerplates. The binding layer will call **`MPIR_Bcast`**, which will call
 `MPID_Bcast` unless the control variables (CVAR) directs differently.
 Typically `MPID_Bcast` will fallback to call **`MPIR_Bcast_impl`**,  which
-will check CVARs and select particlar algorithm.  By default, it will call
+will check CVARs and select a particular algorithm.  By default, it will call
 **`MPIR_Bcast_allcomm_auto`**, which will automatically choose a best
 algorithm based on selection logic defined by a runtime json file.
 
@@ -370,7 +370,7 @@ performance variables (PVAR), and the event callback interface.
 
 ## MPL
 
-All utilities, whose functionality is indepeendent of MPICH internals, are
+All utilities, whose functionality is independent of MPICH internals, are
 implemented inside MPL. All functions from MPL uses `MPL_` prefix.
 
 Some of the essential MPICH functionality are provided by MPL. They include:

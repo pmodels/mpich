@@ -66,7 +66,7 @@ should allow the developer to make that tradeoff.
 - `MPIU_INSTR_DURATION_END(handle)` - End a timing "epoch" for name
   and increment the time in the duration by the time since the
   corresponding start.
-- `MPIU_INSTR_DURNATION_INCR(handle,index,amount)` - Increment the
+- `MPIU_INSTR_DURATION_INCR(handle,index,amount)` - Increment the
   index'th counter in the named duration by amount
 
 The description field is used to create the code that writes out the

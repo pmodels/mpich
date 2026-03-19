@@ -10,7 +10,7 @@ including how to establish communications with each other.
 There are currently three varieties of PMI interfaces. PMI1, or just PMI, is
 the de-facto interface supported by most process managers and MPI
 implementations. It is still the current default interface for MPICH and
-hydra. PMI2 is an experiemental interface with a few enhancements including
+hydra. PMI2 is an experimental interface with a few enhancements including
 multi-threading support and separate API for job attributes. PMIx is a new
 effort to extend and push PMI beyond its original purpose of bootstrapping
 parallel processes.

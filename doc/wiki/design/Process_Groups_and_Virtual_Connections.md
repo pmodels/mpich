@@ -104,7 +104,7 @@ The communication routines refer to the virtual connections; they do not
 refer to the process groups nor to the VCRTs. This suggests that the
 VCRT and Process Group operations be managed together, with all of the
 routines in a single file. The VCs are exported, as they are used in the
-communication routines and because communcation-method-specific
+communication routines and because communication-method-specific
 information may be included in their definitions (more on this below).
 
 ### Old text on connection reference count
