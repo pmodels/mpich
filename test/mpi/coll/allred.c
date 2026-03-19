@@ -230,7 +230,7 @@ static void set_index_sum(MPI_Datatype mpi_type, int category, void *arr, int va
     int type_size = get_mpi_type_size(mpi_type);
     char *p = arr;
     for (int i = 0; i < count; i++) {
-        set_category_value(category, p, type_size, i + val);
+        set_category_value(category, p, type_size, (i % 10) + val);
         p += type_size;
     }
 }
@@ -240,7 +240,7 @@ static void set_index_factor(MPI_Datatype mpi_type, int category, void *arr, int
     int type_size = get_mpi_type_size(mpi_type);
     char *p = arr;
     for (int i = 0; i < count; i++) {
-        set_category_value(category, p, type_size, i * val);
+        set_category_value(category, p, type_size, (i % 10) * val);
         p += type_size;
     }
 }
@@ -259,7 +259,7 @@ static void set_index_power(MPI_Datatype mpi_type, int category, void *arr, int 
     int type_size = get_mpi_type_size(mpi_type);
     char *p = arr;
     for (int i = 0; i < count; i++) {
-        set_category_value(category, p, type_size, get_pow(i, val));
+        set_category_value(category, p, type_size, get_pow(i % 10, val));
         p += type_size;
     }
 }
