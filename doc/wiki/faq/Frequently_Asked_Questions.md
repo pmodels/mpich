@@ -606,7 +606,7 @@ A: The default device in MPICH (starting with the 3.4.x series) is
 `ch4`. This device uses busy polling in order to improve
 intranode shared-memory communication performance. The downside to this
 is that performance will generally take a dramatic hit if you
-oversubscribe your nodes. Oversusbscription is the case where you run
+oversubscribe your nodes. Oversubscription is the case where you run
 more processes on a node than there are cores on the node. In this
 scenario, you have a few choices:
 

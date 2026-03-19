@@ -196,7 +196,7 @@ region (in bytes) per node-leader and communicator for ALLREDUCE.
 + ============== + ================================================= + ============================================== +
 | Composition    | Name of CVAR                                      | Options                                        |
 + ============== + ================================================= + ============================================== +
-| BCAST/IBCASST  | MPIR_CVAR_BCAST_COMPOSITION                       | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
+| BCAST/IBCAST   | MPIR_CVAR_BCAST_COMPOSITION                       | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
 |                |                                                   | 2 (NM + SHM without send-recv), 3 (NM only)    |
 + -------------- + ------------------------------------------------- + ---------------------------------------------- +
 | REDUCE/IREDUCE | MPIR_CVAR_REDUCE_COMPOSITION                      | 0 (Auto Selection), 1 (NM + SHM with send-recv)|
@@ -788,7 +788,7 @@ Here are the standard hints from the MPI 4.0 standard that are supported
 * `mpi_assert_no_any_source`: Set this info hint if the application does
    not use the wildcard MPI_ANY_SOURCE on the given communicator.
 * `mpi_assert_no_any_tag`: Set this hint if the application does not use
-   MPI_ANY_TAG on the given communciator.
+   MPI_ANY_TAG on the given communicator.
 
 MPICH also supports a non-standard per-communicator info hint that provides the
 user with more control of a communicator-VCI mapping:
@@ -813,11 +813,11 @@ it can still be disabled at runtime.
 used. The default is 1.
 * `MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD`: If a send message size is greater
 than or equal to this threshold (in bytes), then XPMEM will be used to
-send messages (assuming it is enabled by `MPIR_CVAR_CH4_XPMEM_ENABLE`.
+send messages (assuming it is enabled by `MPIR_CVAR_CH4_XPMEM_ENABLE`).
 The default value is 64KB.
 
 There is an additional CVAR (`MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE`)
-to turn on recevier-side queuing when using iqueue. The genq shmem code
+to turn on receiver-side queuing when using iqueue. The genq shmem code
 allocates pools of cells on each process and, when needed, a cell is removed
 from the pool and passed to another process. This can happen by either
 removing a cell from the pool of the sending process or from the pool of
@@ -892,7 +892,7 @@ CVAR is 1MB (i.e., messages >= 1MB will use the striping optimization) when stri
 
 `MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_HASHING`: This CVAR enables hashing for all the communicators in the 
 application. The default value of this CVAR is 0 (i.e., hashing is disabled by default). Hashing 
-can be enabled on particular communicators by using the `enable_hasing` info hint. If this CVAR is 
+can be enabled on particular communicators by using the `enable_hashing` info hint. If this CVAR is 
 disabled, the application cannot use hashing on any communicator.
 
 `MPIR_CVAR_CH4_OFI_MAX_NICS`: This CVAR determines the number of physical NICs to use. The default 

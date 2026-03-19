@@ -4,7 +4,7 @@
 
 The ADI interface for MPI RMA operations is much like the point-to-point
 interface: the top-level routines validate arguments and convert handles
-to poniters and then pass those values to ADI routines with names
+to pointers and then pass those values to ADI routines with names
 beginning with MPID instead of MPI. For example, `MPI_Put` calls
 `MPID_Put`; `MPI_Win_lock` calls `MPID_Win_lock`.
 
@@ -126,7 +126,7 @@ The ch3 ADI channel interface included the routine
 MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns *ftable )
 ```
 
-This routine was responsible for initializine the global function table,
+This routine was responsible for initializing the global function table,
 if the device wanted to make any changes to that table. As pointed out
 above, this is incorrect, as changing the global table could cause
 failures.
