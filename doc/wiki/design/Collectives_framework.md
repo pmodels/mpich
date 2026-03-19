@@ -92,7 +92,7 @@ has a unique key associated with it which is used to store the schedule
 in a hash table. This key is made of the arguments to the collective
 operation and the unique parameters of the collective algorithm. Instead
 of generating a new schedule every time, the algorithm writer can first
-check if a schedule for the collective algorithm alreadys exists and
+check if a schedule for the collective algorithm already exists and
 reuse it if it exists. This saves the schedule generation time for
 persistent collectives. Once the persistent collectives API is accepted
 (proposed for MPI 4.4), these schedules can be stored in the

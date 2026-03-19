@@ -37,7 +37,7 @@ Normally, you should use the `maint/updatefiles` script to update the
 table of error messages. However, this step can be run independently.
 One reason to do this is to perform more detailed checks on the error
 message usage to ensure that messages meet the coding requirements.
-Assuing the sh shell,
+Assuming the sh shell,
 
 ```
 ./maint/extracterrmsgs -strict `cat maint/errmsgdirs` > newmsg.h

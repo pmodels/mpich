@@ -73,7 +73,7 @@ implementations use either a separate service or the process manager
 
 The interface described here provides all the services necessary for 
 implementing the MPI name service routines. In order to provide a hook for the
-name service implementation to initialize, there are separate initializating
+name service implementation to initialize, there are separate initializing
 and finalize calls. These can open a connection to a name service for example.
 The initialization call returns a handle of type `MPID_NS_Handle` that is used
 in all of the other calls. As in other MPI calls, the free routine takes a

@@ -375,7 +375,7 @@ The two lines, `MPIU_THREAD_CHECK_BEGIN` and `MPIU_THREAD_CHECK_END`,
 are used in executable code only (not in a declaration) to provide a
 hook to allow runtime checks on whether the MPICH implementation is
 multi-threaded. This will allow us to support running with a lower level
-of thread safety (e.g., `MPI_THREAD_FUNELLED`) than the library
+of thread safety (e.g., `MPI_THREAD_FUNNELED`) than the library
 supports, and thus allow us to perform experiments on the overhead of
 adding thread-safety support.
 

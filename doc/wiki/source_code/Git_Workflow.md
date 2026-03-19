@@ -15,7 +15,7 @@ Below you can find information on what is required for creating a commit in MPIC
 
 ### Commit Content
 #### Coding Standard
-MPICH has a [coding stadard](Coding_Standards.md) that should be followed for all newly added code,
+MPICH has a [coding standard](Coding_Standards.md) that should be followed for all newly added code,
 along with updating any old code.
 
 #### One Idea Per Commit

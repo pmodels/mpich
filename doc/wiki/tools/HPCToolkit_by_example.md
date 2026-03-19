@@ -157,7 +157,7 @@ Events are passed as arguments of the form ` --event ` $e_i @ p_i$, where:
     `WALLCLOCK`, cycles for `PAPI_TOT_CYC`, cache misses for `PAPI_L2_DCA`, etc.
 
 (Statically linked applications set the environment variable
-`HPCRUN_EVENT_LIST` instead, which uses the same format, and separes
+`HPCRUN_EVENT_LIST` instead, which uses the same format, and separates
 events by a ';'. Please check the chapter referred to above.)
 
 Now we pick a random metric to use, such as the performance of single

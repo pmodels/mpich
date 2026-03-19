@@ -8,7 +8,7 @@
 
 /* Notes for memory barriers in RMA synchronizations
 
-   When SHM is allocated for RMA window, we need to add memory berriers at proper
+   When SHM is allocated for RMA window, we need to add memory barriers at proper
    places in RMA synchronization routines to guarantee the ordering of read/write
    operations, so that any operations after synchronization calls will see the
    correct data.

@@ -324,7 +324,7 @@ FENCE() {
         issue (or piggyback) RMA_DONE packets to all active targets and increment ack_counter;
         do PROGRESS_WAIT until Operation Table is empty; // all operations are completed;
         do PROGRESS_WAIT until I received RMA_DONE_ACK packets from all active targets (decrement ack_counter, wait until it reaches 0);
-        do a global IBARRER;
+        do a global IBARRIER;
         set window state to FENCE_ISSUED; // I am done with all my outgoing messages
         do PROGRESS_WAIT until IBARRIER is completed;  // fence_req on window is freed now
         set window state to FENCE_GRANTED; // I know that everyone else is done
@@ -736,7 +736,7 @@ same. As long as the response request created by T1 gets completed,
 
 ## RMA + Shared Memory
 
-When SHM is allocated for RMA window, we need to add memory berriers at
+When SHM is allocated for RMA window, we need to add memory barriers at
 proper places in RMA synchronization routines to guarantee the ordering
 of read/write operations, so that any operations after synchronization
 calls will see the correct data.

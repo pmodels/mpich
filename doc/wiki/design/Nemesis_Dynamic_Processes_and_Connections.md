@@ -100,7 +100,7 @@ Calls <code>MPIDI_CH3I_Acceptq_dequeue()</code> to check whether the correspondi
 <tr class="odd">
 <td><p>2</p></td>
 <td><p> </p></td>
-<td><p>Calls <code>MPIDI_CH3I_Initialize_tmp_comm()</code> which creates a temporary intrercommunicator for the temporary VC</p></td>
+<td><p>Calls <code>MPIDI_CH3I_Initialize_tmp_comm()</code> which creates a temporary intercommunicator for the temporary VC</p></td>
 </tr>
 <tr class="even">
 <td><p>3</p></td>

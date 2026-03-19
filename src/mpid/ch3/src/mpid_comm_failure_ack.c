@@ -19,7 +19,7 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
     MPIDI_CH3U_Check_for_failed_procs();
 
     /* Update the marker for the last known failed process in this
-     * communciator. */
+     * communicator. */
     comm_ptr->dev.last_ack_rank = MPIDI_last_known_failed;
 
     /* Mark the communicator as any source active */

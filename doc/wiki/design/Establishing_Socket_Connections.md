@@ -287,7 +287,7 @@ Progress_handle_sock_event
                 (at this point, we need to check for head-to-head connections,
                 since we may already be attempting to form this VC, having
                 originated a connection from this side). If VC != NULL, we are in
-                an head-to-haed situation, otherwise the connection is accepted)
+                an head-to-head situation, otherwise the connection is accepted)
 
                 if (vc->conn == NULL || (mypg < pg) ||
                  (pg == mypg && myrank < pg_rank of conn) )
@@ -318,7 +318,7 @@ Progress_handle_sock_event
                  was send to remote side, so this connection can be closed */
                  conn->state = CONN_STATE_CLOSING
                  Sock_post_close(conn->sock)
-                    This primarily enquees SOCK_OP_CLOSE event
+                    This primarily enqueues SOCK_OP_CLOSE event
 ```
 
 On a close sock event: (to do; this isn't ready since it is clear that
@@ -356,7 +356,7 @@ MPI finalized is called. This is what is happening:
     connections in all process groups the closing protocol is started)
 2.  Discarded or refused connections are not recognized with this
     closing protocol, since they are not associated with and VC
-3.  The discadred/refused/not used connections still have got pending
+3.  The discarded/refused/not used connections still have got pending
     events, which may be handled anytime during the close protocol of
     the other connections
 

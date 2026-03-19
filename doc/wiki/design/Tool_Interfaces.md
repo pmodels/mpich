@@ -241,7 +241,7 @@ Notes:
     The parsing script depends on these two tags. A file can at most
     have one such block.
   - Enclosed are descriptions for categories or cvars in Perl YML
-    format, where indentaattion is used to express hierarchy.
+    format, where indentation is used to express hierarchy.
   - Use "categories: \\newline" or "cvars: \\newline" to start a
     section. A block should at least have one section.
   - Use "-(space)" to start a new entry in a section. key-value pairs in

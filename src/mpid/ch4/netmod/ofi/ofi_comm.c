@@ -61,7 +61,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
 
     if (comm) {
         /* If the user has set a preferred NIC, we need to exchange it with all processes and store
-         * it in the communciator object. If this happens while traffic is outstanding, it will
+         * it in the communicator object. If this happens while traffic is outstanding, it will
          * cause problems so the user needs to quiesce traffic first. */
         if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
             /* comm is used to exchange its pref_nic hints. So, to avoid its behavior change while it is
