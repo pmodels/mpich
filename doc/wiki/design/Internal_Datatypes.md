@@ -59,7 +59,7 @@ internal routines. Thus, internal routines only need support the finite set of
 internal types. Because we don't need all handle bits to encode an internal
 type, we use the last byte to encode the original MPI builtin type which it is
 converted from. For example, `MPI_INT` will be converted to `0x4c810405`
-althout `MPIR_INT32` is `0x4c810400`. Thus, we can recover the original
+although `MPIR_INT32` is `0x4c810400`. Thus, we can recover the original
 datatype when we need to, such as the case of calling user callbacks.
 
 Because of this, if internally we need to switch and compare to internal
