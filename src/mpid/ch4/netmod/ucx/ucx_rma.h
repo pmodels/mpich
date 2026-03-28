@@ -315,8 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
     } else {
@@ -341,8 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
     } else {
@@ -369,8 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
     } else {
@@ -473,8 +470,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
     } else {
