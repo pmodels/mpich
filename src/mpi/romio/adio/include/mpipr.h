@@ -17,26 +17,44 @@
 #define MPI_Abort PMPI_Abort
 #undef MPI_Allgather
 #define MPI_Allgather PMPI_Allgather
+#undef MPI_Allgather_c
+#define MPI_Allgather_c PMPI_Allgather_c
 #undef MPI_Allgatherv
 #define MPI_Allgatherv PMPI_Allgatherv
+#undef MPI_Allgatherv_c
+#define MPI_Allgatherv_c PMPI_Allgatherv_c
 #undef MPI_Allreduce
 #define MPI_Allreduce PMPI_Allreduce
+#undef MPI_Allreduce_c
+#define MPI_Allreduce_c PMPI_Allreduce_c
 #undef MPI_Alltoall
 #define MPI_Alltoall PMPI_Alltoall
+#undef MPI_Alltoall_c
+#define MPI_Alltoall_c PMPI_Alltoall_c
 #undef MPI_Alltoallv
 #define MPI_Alltoallv PMPI_Alltoallv
+#undef MPI_Alltoallv_c
+#define MPI_Alltoallv_c PMPI_Alltoallv_c
 #undef MPI_Alltoallw
 #define MPI_Alltoallw PMPI_Alltoallw
+#undef MPI_Alltoallw_c
+#define MPI_Alltoallw_c PMPI_Alltoallw_c
 #undef MPI_Attr_delete
 #define MPI_Attr_delete PMPI_Attr_delete
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 #undef MPI_Bcast
 #define MPI_Bcast PMPI_Bcast
+#undef MPI_Bcast_c
+#define MPI_Bcast_c PMPI_Bcast_c
 #undef MPI_Bsend
 #define MPI_Bsend PMPI_Bsend
+#undef MPI_Bsend_c
+#define MPI_Bsend_c PMPI_Bsend_c
 #undef MPI_Bsend_init
 #define MPI_Bsend_init PMPI_Bsend_init
+#undef MPI_Bsend_init_c
+#define MPI_Bsend_init_c PMPI_Bsend_init_c
 #undef MPI_Buffer_attach
 #define MPI_Buffer_attach PMPI_Buffer_attach
 #undef MPI_Buffer_detach
@@ -73,6 +91,8 @@
 #define MPI_Comm_free PMPI_Comm_free
 #undef MPI_Comm_get_attr
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
+#undef MPI_Comm_get_info
+#define MPI_Comm_get_info PMPI_Comm_get_info
 #undef MPI_Comm_group
 #define MPI_Comm_group PMPI_Comm_group
 #undef MPI_Comm_rank
@@ -105,12 +125,18 @@
 #define MPI_Finalize PMPI_Finalize
 #undef MPI_Gather
 #define MPI_Gather PMPI_Gather
+#undef MPI_Gather_c
+#define MPI_Gather_c PMPI_Gather_c
 #undef MPI_Gatherv
 #define MPI_Gatherv PMPI_Gatherv
+#undef MPI_Gatherv_c
+#define MPI_Gatherv_c PMPI_Gatherv_c
 #undef MPI_Get_address
 #define MPI_Get_address PMPI_Get_address
 #undef MPI_Get_count
 #define MPI_Get_count PMPI_Get_count
+#undef MPI_Get_count_c
+#define MPI_Get_count_c PMPI_Get_count_c
 #undef MPI_Get_elements
 #define MPI_Get_elements PMPI_Get_elements
 #undef MPI_Get_processor_name
@@ -167,26 +193,48 @@
 #define MPI_Iprobe PMPI_Iprobe
 #undef MPI_Irecv
 #define MPI_Irecv PMPI_Irecv
+#undef MPI_Irecv_c
+#define MPI_Irecv_c PMPI_Irecv_c
 #undef MPI_Irsend
 #define MPI_Irsend PMPI_Irsend
+#undef MPI_Irsend_c
+#define MPI_Irsend_c PMPI_Irsend_c
 #undef MPI_Isend
 #define MPI_Isend PMPI_Isend
+#undef MPI_Isend_c
+#define MPI_Isend_c PMPI_Isend_c
 #undef MPI_Issend
 #define MPI_Issend PMPI_Issend
+#undef MPI_Issend_c
+#define MPI_Issend_c PMPI_Issend_c
 #undef MPI_Ialltoall
 #define MPI_Ialltoall PMPI_Ialltoall
+#undef MPI_Ialltoall_c
+#define MPI_Ialltoall_c PMPI_Ialltoall_c
 #undef MPI_Iallgather
 #define MPI_Iallgather PMPI_Iallgather
+#undef MPI_Iallgather_c
+#define MPI_Iallgather_c PMPI_Iallgather_c
 #undef MPI_Iallreduce
 #define MPI_Iallreduce PMPI_Iallreduce
+#undef MPI_Iallreduce_c
+#define MPI_Iallreduce_c PMPI_Iallreduce_c
 #undef MPI_Ibcast
 #define MPI_Ibcast PMPI_Ibcast
+#undef MPI_Ibcast_c
+#define MPI_Ibcast_c PMPI_Ibcast_c
 #undef MPI_Accumulate
 #define MPI_Accumulate PMPI_Accumulate
+#undef MPI_Accumulate_c
+#define MPI_Accumulate_c PMPI_Accumulate_c
 #undef MPI_Get
 #define MPI_Get PMPI_Get
+#undef MPI_Get_c
+#define MPI_Get_c PMPI_Get_c
 #undef MPI_Put
 #define MPI_Put PMPI_Put
+#undef MPI_Put_c
+#define MPI_Put_c PMPI_Put_c
 #undef MPI_Win_create
 #define MPI_Win_create PMPI_Win_create
 #undef MPI_Win_free
@@ -205,50 +253,94 @@
 #define MPI_Name_put PMPI_Name_put
 #undef MPI_Op_create
 #define MPI_Op_create PMPI_Op_create
+#undef MPI_Op_create_c
+#define MPI_Op_create_c PMPI_Op_create_c
 #undef MPI_Op_free
 #define MPI_Op_free PMPI_Op_free
 #undef MPI_Pack
 #define MPI_Pack PMPI_Pack
+#undef MPI_Pack_c
+#define MPI_Pack_c PMPI_Pack_c
 #undef MPI_Pack_size
 #define MPI_Pack_size PMPI_Pack_size
+#undef MPI_Pack_size_c
+#define MPI_Pack_size_c PMPI_Pack_size_c
+#undef MPI_Pack_external
+#define MPI_Pack_external PMPI_Pack_external
+#undef MPI_Pack_external_c
+#define MPI_Pack_external_c PMPI_Pack_external_c
+#undef MPI_Pack_external_size
+#define MPI_Pack_external_size PMPI_Pack_external_size
+#undef MPI_Pack_external_size_c
+#define MPI_Pack_external_size_c PMPI_Pack_external_size_c
 #undef MPI_Pcontrol
 #define MPI_Pcontrol PMPI_Pcontrol
 #undef MPI_Probe
 #define MPI_Probe PMPI_Probe
 #undef MPI_Recv
 #define MPI_Recv PMPI_Recv
+#undef MPI_Recv_c
+#define MPI_Recv_c PMPI_Recv_c
 #undef MPI_Recv_init
 #define MPI_Recv_init PMPI_Recv_init
+#undef MPI_Recv_init_c
+#define MPI_Recv_init_c PMPI_Recv_init_c
 #undef MPI_Reduce
 #define MPI_Reduce PMPI_Reduce
+#undef MPI_Reduce_c
+#define MPI_Reduce_c PMPI_Reduce_c
 #undef MPI_Reduce_scatter
 #define MPI_Reduce_scatter PMPI_Reduce_scatter
+#undef MPI_Reduce_scatter_c
+#define MPI_Reduce_scatter_c PMPI_Reduce_scatter_c
 #undef MPI_Request_c2f
 #define MPI_Request_c2f PMPI_Request_c2f
 #undef MPI_Request_free
 #define MPI_Request_free PMPI_Request_free
 #undef MPI_Rsend
 #define MPI_Rsend PMPI_Rsend
+#undef MPI_Rsend_c
+#define MPI_Rsend_c PMPI_Rsend_c
 #undef MPI_Rsend_init
 #define MPI_Rsend_init PMPI_Rsend_init
+#undef MPI_Rsend_init_c
+#define MPI_Rsend_init_c PMPI_Rsend_init_c
 #undef MPI_Scan
 #define MPI_Scan PMPI_Scan
+#undef MPI_Scan_c
+#define MPI_Scan_c PMPI_Scan_c
 #undef MPI_Scatter
 #define MPI_Scatter PMPI_Scatter
+#undef MPI_Scatter_c
+#define MPI_Scatter_c PMPI_Scatter_c
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
+#undef MPI_Scatterv_c
+#define MPI_Scatterv_c PMPI_Scatterv_c
 #undef MPI_Send
 #define MPI_Send PMPI_Send
+#undef MPI_Send_c
+#define MPI_Send_c PMPI_Send_c
 #undef MPI_Send_init
 #define MPI_Send_init PMPI_Send_init
+#undef MPI_Send_init_c
+#define MPI_Send_init_c PMPI_Send_init_c
 #undef MPI_Sendrecv
 #define MPI_Sendrecv PMPI_Sendrecv
+#undef MPI_Sendrecv_c
+#define MPI_Sendrecv_c PMPI_Sendrecv_c
 #undef MPI_Sendrecv_replace
 #define MPI_Sendrecv_replace PMPI_Sendrecv_replace
+#undef MPI_Sendrecv_replace_c
+#define MPI_Sendrecv_replace_c PMPI_Sendrecv_replace_c
 #undef MPI_Ssend
 #define MPI_Ssend PMPI_Ssend
+#undef MPI_Ssend_c
+#define MPI_Ssend_c PMPI_Ssend_c
 #undef MPI_Ssend_init
 #define MPI_Ssend_init PMPI_Ssend_init
+#undef MPI_Ssend_init_c
+#define MPI_Ssend_init_c PMPI_Ssend_init_c
 #undef MPI_Start
 #define MPI_Start PMPI_Start
 #undef MPI_Startall
@@ -273,42 +365,70 @@
 #define MPI_Type_dup PMPI_Type_dup
 #undef MPI_Type_contiguous
 #define MPI_Type_contiguous PMPI_Type_contiguous
-/* #define MPI_Type_create_darray PMPI_Type_create_darray */
-#undef MPI_Type_create_indexed_block
-#define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
-#undef MPI_Type_create_hindexed_block
-#define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
-#undef MPI_Type_create_hindexed
-#define MPI_Type_create_hindexed PMPI_Type_create_hindexed
-#undef MPI_Type_create_struct
-#define MPI_Type_create_struct PMPI_Type_create_struct
+#undef MPI_Type_contiguous_c
+#define MPI_Type_contiguous_c PMPI_Type_contiguous_c
+#undef MPI_Type_vector
+#define MPI_Type_vector PMPI_Type_vector
+#undef MPI_Type_vector_c
+#define MPI_Type_vector_c PMPI_Type_vector_c
 #undef MPI_Type_create_hvector
 #define MPI_Type_create_hvector PMPI_Type_create_hvector
+#undef MPI_Type_create_hvector_c
+#define MPI_Type_create_hvector_c PMPI_Type_create_hvector_c
+#undef MPI_Type_create_indexed_block
+#define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
+#undef MPI_Type_create_indexed_block_c
+#define MPI_Type_create_indexed_block_c PMPI_Type_create_indexed_block_c
+#undef MPI_Type_create_hindexed_block
+#define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
+#undef MPI_Type_create_hindexed_block_c
+#define MPI_Type_create_hindexed_block_c PMPI_Type_create_hindexed_block_c
+#undef MPI_Type_create_hindexed
+#define MPI_Type_create_hindexed PMPI_Type_create_hindexed
+#undef MPI_Type_create_hindexed_c
+#define MPI_Type_create_hindexed_c PMPI_Type_create_hindexed_c
+#undef MPI_Type_create_struct
+#define MPI_Type_create_struct PMPI_Type_create_struct
+#undef MPI_Type_create_struct_c
+#define MPI_Type_create_struct_c PMPI_Type_create_struct_c
+#undef MPI_Type_create_resized
+#define MPI_Type_create_resized PMPI_Type_create_resized
+/* #define MPI_Type_create_darray PMPI_Type_create_darray */
 /* #define MPI_Type_create_subarray PMPI_Type_create_subarray */
 #undef MPI_Type_free
 #define MPI_Type_free PMPI_Type_free
 #undef MPI_Type_get_contents
 #define MPI_Type_get_contents PMPI_Type_get_contents
-#undef MPI_Type_get_envelope
-#define MPI_Type_get_envelope PMPI_Type_get_envelope
 #undef MPI_Type_get_contents_c
 #define MPI_Type_get_contents_c PMPI_Type_get_contents_c
+#undef MPI_Type_get_envelope
+#define MPI_Type_get_envelope PMPI_Type_get_envelope
 #undef MPI_Type_get_envelope_c
 #define MPI_Type_get_envelope_c PMPI_Type_get_envelope_c
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
 #undef MPI_Type_indexed
 #define MPI_Type_indexed PMPI_Type_indexed
+#undef MPI_Type_indexed_c
+#define MPI_Type_indexed_c PMPI_Type_indexed_c
 #undef MPI_Type_size
 #define MPI_Type_size PMPI_Type_size
+#undef MPI_Type_size_c
+#define MPI_Type_size_c PMPI_Type_size_c
 #undef MPI_Type_size_x
 #define MPI_Type_size_x PMPI_Type_size_x
 #undef MPI_Type_get_extent
 #define MPI_Type_get_extent PMPI_Type_get_extent
-#undef MPI_Type_vector
-#define MPI_Type_vector PMPI_Type_vector
+#undef MPI_Type_get_extent_c
+#define MPI_Type_get_extent_c PMPI_Type_get_extent_c
 #undef MPI_Unpack
 #define MPI_Unpack PMPI_Unpack
+#undef MPI_Unpack_c
+#define MPI_Unpack_c PMPI_Unpack_c
+#undef MPI_Unpack_external
+#define MPI_Unpack_external PMPI_Unpack_external
+#undef MPI_Unpack_external_c
+#define MPI_Unpack_external_c PMPI_Unpack_external_c
 #undef MPI_Wait
 #define MPI_Wait PMPI_Wait
 #undef MPI_Waitall
@@ -410,6 +530,23 @@
 #define MPI_Comm_set_attr PMPI_Comm_set_attr
 #undef MPI_Type_create_keyval
 #define MPI_Type_create_keyval PMPI_Type_create_keyval
+#undef MPI_Type_free_keyval
+#define MPI_Type_free_keyval PMPI_Type_free_keyval
+
+#undef MPIX_Type_iov
+#define MPIX_Type_iov PMPIX_Type_iov
+#undef MPIX_Type_iov_len
+#define MPIX_Type_iov_len PMPIX_Type_iov_len
+
+/* some file APIs are implemented outside ROMIO */
+#undef MPI_File_create_errhandler
+#define MPI_File_create_errhandler PMPI_File_create_errhandler
+#undef MPI_File_set_errhandler
+#define MPI_File_set_errhandler PMPI_File_set_errhandler
+#undef MPI_File_get_errhandler
+#define MPI_File_get_errhandler PMPI_File_get_errhandler
+#undef MPI_File_call_errhandler
+#define MPI_File_call_errhandler PMPI_File_call_errhandler
 
 #endif
 
