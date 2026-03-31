@@ -173,6 +173,8 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
         out.append("")
         out.append("int MPIX_Type_iov_len(MPI_Datatype datatype, MPI_Count max_iov_bytes, MPI_Count *iov_len, MPI_Count *actual_iov_bytes);")
         out.append("int MPIX_Type_iov(MPI_Datatype datatype, MPI_Count iov_offset, MPIX_Iov *iov, MPI_Count max_iov_len, MPI_Count *actual_iov_len);")
+        out.append("int PMPIX_Type_iov_len(MPI_Datatype datatype, MPI_Count max_iov_bytes, MPI_Count *iov_len, MPI_Count *actual_iov_bytes);")
+        out.append("int PMPIX_Type_iov(MPI_Datatype datatype, MPI_Count iov_offset, MPIX_Iov *iov, MPI_Count max_iov_len, MPI_Count *actual_iov_len);")
         out.append("")
 
     def add_other(out):
