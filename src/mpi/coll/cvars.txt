@@ -1374,6 +1374,7 @@ cvars:
         ring                     - Force ring algorithm
         k_reduce_scatter_allgather - Force reduce scatter allgather algorithm
         ccl                      - Force CCL algorithm
+        circ_graph               - Force circulant graph algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE
