@@ -152,7 +152,7 @@ For example, when all "typical" message are requested, all messages with
 level "typical" and below are logged; e.g., both TERSE and TYPICAL
 messages are logged. Both the predefined classes and levels are prefixed
 with `MPIU_DBG_`; the macro implementation adds the prefix (with the
-\#\# preprocessor operation) as part of the macro expansiong.
+\#\# preprocessor operation) as part of the macro expansion.
 
 ## Controlling the logging package
 
@@ -288,7 +288,7 @@ as executed, making it easier to see the trace of execution in MPICH.
 
 ### Rationale for Design Choices
 
-  - Why not use varadic macros (macros that allow a variable number of
+  - Why not use variadic macros (macros that allow a variable number of
     arguments)? They are part of the C99 standard.
     Some important compilers, including the Portland Group compilers, do
     not support this feature yet (there are many compilers that do not
