@@ -9,6 +9,23 @@
 #include "coll_impl.h"
 #include "coll_algos.h"
 
+/* Define values for collective attribute. Collective attributes pass
+ * down contexts including error flags.
+ *
+ * bit 0-7 are defined with backward compatibility. Addition bits may be defined
+ * in higher bits to carry information such as hints for lower-level algorithm
+ * selections.
+ */
+#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
+                                         * on synchronization rather than batch latency.
+                                         * In particular, advise netmod to avoid using
+                                         * injection send. */
+#define MPIR_ERR_PROC_FAILED 0x2
+#define MPIR_ERR_OTHER       0x4
+#define MPIR_COLL_ATTR_ERR_MASK 0x6
+
+#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
+
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
  * are safe to use during init.
