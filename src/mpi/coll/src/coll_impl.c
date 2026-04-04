@@ -402,11 +402,37 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
     }
 }
 
-int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * dummy)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(0);
+    /* First check whether user has set an algorithm CVAR */
+    int coll_type = coll_sig->coll_type;
+    int cvar_val = MPIR_Coll_cvar_table[coll_type];
+    if (cvar_val) {
+        int algo_id = MPIR_Coll_cvar_to_algo_id(coll_type, cvar_val);
+        bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
 
+        if (restriction_ok) {
+            MPII_Csel_container_s algo_cnt;
+            MPIR_Coll_init_algo_container(coll_sig, algo_id, &algo_cnt);
+            mpi_errno = MPIR_Coll_algo_table[algo_id] (coll_sig, &algo_cnt);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        } else {
+            /* Error or Fall-thru */
+        }
+    }
+
+    /* Search an algorithm by Csel */
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, coll_sig);
+    MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
+
+    mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
