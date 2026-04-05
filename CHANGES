@@ -1,11 +1,11 @@
 ===============================================================================
                                Changes in 5.1-dev
 ===============================================================================
-# Removed MPID collective interfaces. Device layer algorithms will be re-enabled
-  later with a flat CSEL selection. Binding layer call MPIR_Xxx_impl instead of
+<<<<<<< HEAD
+# Removed MPID collective interfaces. Binding layer call MPIR_Xxx_impl instead of
   MPIR_Xxx. Use a single json config file. Generate json parsing from
   coll_algorithms.txt. MPIR_Xxx_impl functions call MPIR_Coll_auto for CSEL
-  selections.
+  selections. 
 
 ===============================================================================
                                Changes in 5.0
