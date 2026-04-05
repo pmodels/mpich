@@ -60,6 +60,11 @@ int MPII_Coll_finalize(void);
 
 int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
+/* generated routines by gen_coll.py from coll_algorithms.txt */
+void MPII_Coll_type_init(void);
+void MPII_Coll_algo_init(void);
+void MPII_Csel_init_condition_names(void);
+
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
         *sched_type_p = MPIR_SCHED_GENTRAN; \

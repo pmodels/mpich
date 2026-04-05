@@ -213,7 +213,6 @@ def add_sched_auto_prototypes(name):
 def dump_MPII_Coll_type_init():
     G.out.append("")
     decl = "void MPII_Coll_type_init(void)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
 
@@ -242,7 +241,6 @@ def dump_MPII_Coll_type_init():
 def dump_MPII_Csel_init_condition_names():
     G.out.append("")
     decl = "void MPII_Csel_init_condition_names(void)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
     for a in G.conditions:
@@ -252,7 +250,6 @@ def dump_MPII_Csel_init_condition_names():
 def dump_MPII_Coll_algo_init():
     G.out.append("")
     decl = "void MPII_Coll_algo_init(void)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
     for a in G.algo_list:
@@ -317,7 +314,6 @@ def dump_MPII_Csel_parse_container():
         dump_close('}') # switch
 
     decl = "void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s *cnt)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
     dump_parse_params()
@@ -325,7 +321,6 @@ def dump_MPII_Csel_parse_container():
 
 def dump_MPII_Csel_run_condition():
     decl = "MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s *node, MPIR_Csel_coll_sig_s *coll_sig)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
     G.out.append("bool cond;")
@@ -377,7 +372,6 @@ def dump_MPII_Csel_parse_operator():
     dump_static_parse_thresh()
 
     decl = "int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s *node)"
-    add_prototype(decl)
     G.out.append(decl)
     dump_open('{')
     dump_open("if (ckey[0] == '!') {")
