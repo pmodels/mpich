@@ -36,6 +36,11 @@ int MPIR_Csel_free(MPIR_Csel_node_s * csel);
 MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
 
+/* generated routines by gen_coll.py from coll_algorithms.txt */
+void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt);
+int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s * node);
+MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s * node, MPIR_Csel_coll_sig_s * coll_sig);
+
 MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig)
 {
     /* FIXME: update when we have intercomm algorithms that need select on comm_size */
