@@ -19,6 +19,9 @@
 
 # Fix bug in CMA code when GPU support is enabled
 
+# Fix potential shared memory collision between multiple singleton
+  processes on the same node
+
 # Add large count and other necessary aliases to ROMIO to avoid
   accidental profiling of internal MPI function usage
 
