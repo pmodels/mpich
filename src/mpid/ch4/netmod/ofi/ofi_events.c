@@ -368,7 +368,8 @@ static int am_read_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    MPIR_ERR_CHECK(mpi_errno);
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool, ofi_req);

@@ -41,7 +41,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_progress_compl_list(int vci)
         if (curr->seq_no == MPL_atomic_load_uint64(&MPIDI_global.per_vci[vci].exp_seq_no)) {
             DL_DELETE(MPIDI_global.per_vci[vci].cmpl_list, curr);
             req = curr->request;
-            MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
+            int ret = MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
+            MPIR_Assertp(ret == 0);
             goto do_check_again;
         }
     }
