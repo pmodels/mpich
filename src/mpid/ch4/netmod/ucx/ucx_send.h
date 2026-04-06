@@ -25,7 +25,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
         /* FIXME: error handling? */
         MPIR_Request *am_req = MPIDI_UCX_REQ(req).s.am_req;
         int handler_id = MPIDI_UCX_REQ(req).s.am_handler_id;
-        MPIDIG_global.origin_cbs[handler_id] (am_req);
+        int ret = MPIDIG_global.origin_cbs[handler_id] (am_req);
+        MPIR_Assertp(ret == 0);
     }
 
     MPIDI_Request_complete_fast(req);

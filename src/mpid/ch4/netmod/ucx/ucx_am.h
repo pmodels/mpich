@@ -82,7 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     /* if send is done, free all resources and complete the request */
     if (ucp_request == NULL) {
         MPL_free(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
 
@@ -143,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
         MPL_free(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
 

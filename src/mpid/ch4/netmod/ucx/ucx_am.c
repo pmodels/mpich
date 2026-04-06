@@ -42,12 +42,14 @@ void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *req = ucp_request->req;
     int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
+    int ret;
 
     MPIR_FUNC_ENTER;
 
     MPIR_gpu_free_host(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
-    MPIDIG_global.origin_cbs[handler_id] (req);
+    ret = MPIDIG_global.origin_cbs[handler_id] (req);
+    MPIR_Assertp(ret == 0);
     ucp_request->req = NULL;
 
     MPIR_FUNC_EXIT;
@@ -163,6 +165,7 @@ ucs_status_t MPIDI_UCX_am_nbx_handler(void *arg, const void *header, size_t head
 void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t length,
                                     void *user_data)
 {
+    int ret;
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = ucp_request->req;
 
@@ -176,7 +179,8 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
     } else {
         MPIDIG_recv_done(length, rreq);
     }
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    ret = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    MPIR_Assertp(ret == 0);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 }
@@ -189,10 +193,12 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *req = ucp_request->req;
     int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
+    int ret;
 
     MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
-    MPIDIG_global.origin_cbs[handler_id] (req);
+    ret = MPIDIG_global.origin_cbs[handler_id] (req);
+    MPIR_Assertp(ret == 0);
     ucp_request->req = NULL;
 }
 #endif

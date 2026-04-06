@@ -20,8 +20,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
 
     int attr = 0;               /* is_local = 0, is_async = 0 */
     MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr,
-                                                       p_data, msg_hdr->payload_sz, attr, NULL);
+    mpi_errno = MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr,
+                                                                   p_data, msg_hdr->payload_sz,
+                                                                   attr, NULL);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -52,18 +53,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
     if (!rreq) {
         int attr = MPIDIG_AM_ATTR__IS_ASYNC;
         MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
-        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
-                                                           attr, &rreq);
+        mpi_errno =
+            MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
+                                                               attr, &rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
         MPIDIG_recv_setup(rreq);
         MPIDIG_req_cache_add(req_map, remote_id, rreq);
     }
 
     is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->payload_sz, rreq);
     if (is_done) {
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
         MPIDIG_req_cache_remove(req_map, remote_id);
     }
 
+  fn_fail:
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -77,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
 
     int attr = 0;
     MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, NULL);
+    mpi_errno = MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, NULL);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -169,7 +176,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     int attr = MPIDIG_AM_ATTR__IS_ASYNC | MPIDIG_AM_ATTR__IS_RNDV | MPIDI_OFI_AM_ATTR__RDMA;
     MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, &rreq);
+    mpi_errno = MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, &rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!rreq)
         goto fn_exit;
@@ -180,7 +188,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIR_cc_inc(rreq->cc_ptr);
 
     if (!lmt_msg->reg_sz) {
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
         MPID_Request_complete(rreq);
         goto fn_exit;
     }
