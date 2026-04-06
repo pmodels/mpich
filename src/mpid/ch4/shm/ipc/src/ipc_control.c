@@ -34,7 +34,8 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_Request *rreq = hdr->req_ptr;
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -280,7 +281,8 @@ int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type)
 
     /* send/recv complete */
     if (req->kind == MPIR_REQUEST_KIND__RECV) {
-        MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
+        mpi_errno = MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(req, datatype));
         mpi_errno = MPID_Request_complete(req);

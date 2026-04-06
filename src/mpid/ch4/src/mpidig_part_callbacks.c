@@ -168,7 +168,8 @@ int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

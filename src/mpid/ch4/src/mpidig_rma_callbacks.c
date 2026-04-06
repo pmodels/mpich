@@ -1277,9 +1277,11 @@ int MPIDIG_get_acc_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_fail:
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_ack);
     MPIR_FUNC_EXIT;
@@ -1309,9 +1311,11 @@ int MPIDIG_cswap_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_fail:
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas_ack);
     MPIR_FUNC_EXIT;
@@ -1499,7 +1503,8 @@ int MPIDIG_put_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1556,7 +1561,8 @@ int MPIDIG_put_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1733,7 +1739,8 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1764,11 +1771,13 @@ int MPIDIG_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIDIG_rma_set_am_flag();
 
+  fn_fail:
+    MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_data);
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -1793,9 +1802,11 @@ int MPIDIG_get_acc_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_fail:
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_data);
     MPIR_FUNC_EXIT;
@@ -1855,7 +1866,8 @@ int MPIDIG_cswap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1937,7 +1949,8 @@ int MPIDIG_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1970,9 +1983,11 @@ int MPIDIG_get_acc_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_fail:
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc);
     MPIR_FUNC_EXIT;
@@ -2030,7 +2045,8 @@ int MPIDIG_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -2062,9 +2078,11 @@ int MPIDIG_get_acc_dt_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_fail:
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_dt);
     MPIR_FUNC_EXIT;
@@ -2120,7 +2138,8 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -2156,11 +2175,13 @@ int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_ack);
     MPIR_FUNC_EXIT;
+  fn_fail:
     return mpi_errno;
 }
