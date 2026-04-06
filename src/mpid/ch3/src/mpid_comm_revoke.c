@@ -6,7 +6,7 @@
 #include "mpidimpl.h"
 
 /*
- * This function does all of the work or either revoking the communciator for
+ * This function does all of the work or either revoking the communicator for
  * the first time or keeping track of an ongoing revocation.
  *
  * comm_ptr  - The communicator being revoked
