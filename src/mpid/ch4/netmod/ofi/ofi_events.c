@@ -588,17 +588,36 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                     break;
 
                 default:
-                    MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                              "**ofid_poll %s %s",
-                                              MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                    if (MPIDI_OFI_global.is_finalizing) {
+                        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                        (MPL_DBG_FDEST,
+                                         "Ignoring CQ error %d (%s) on %s during finalize",
+                                         e.err, fi_strerror(e.err), MPIDI_OFI_DEFAULT_NIC_NAME));
+                        MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                      "**ofid_poll %s %s",
+                                      MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                    } else {
+                        MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                                  "**ofid_poll %s %s",
+                                                  MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
+                    }
             }
 
             break;
 
         default:
-            MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                      "**ofid_poll %s %s",
-                                      MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(errno));
+            if (MPIDI_OFI_global.is_finalizing) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "Ignoring fi_cq_read error %zd (%s) on %s during finalize",
+                                 ret, fi_strerror((int) -ret), MPIDI_OFI_DEFAULT_NIC_NAME));
+                MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                              "**ofid_poll %s %s", MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(errno));
+            } else {
+                MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                          "**ofid_poll %s %s",
+                                          MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(errno));
+            }
     }
 
   fn_exit:

@@ -489,6 +489,7 @@ typedef struct {
     MPIDI_OFI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
     int num_vcis;
     int num_nics;
+    bool is_finalizing;         /* set during MPI_Finalize to tolerate transient CQ errors */
     bool am_bufs_registered;    /* whether active message buffers are GPU registered */
 
     /* Window/RMA Globals */

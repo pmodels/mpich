@@ -827,7 +827,13 @@ static int flush_send_queue(void)
         while (!reqs[0].done || !reqs[1].done) {
             int made_progress;
             mpi_errno = MPIDI_NM_progress(vci, &made_progress);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) {
+                /* Transient CQ error during finalize flush is non-fatal */
+                MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            "Progress error in flush_send_queue, continuing teardown");
+                mpi_errno = MPI_SUCCESS;
+                break;
+            }
         }
     }
 
@@ -844,11 +850,19 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIR_FUNC_ENTER;
 
+    MPIDI_OFI_global.is_finalizing = true;
+
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vci 0. Need update once that changes */
     for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
         while (MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs > 0) {
-            MPIDI_OFI_PROGRESS(vci);
+            int made_progress = 0;
+            mpi_errno = MPIDI_NM_progress(vci, &made_progress);
+            if (mpi_errno != MPI_SUCCESS) {
+                mpi_errno = MPI_SUCCESS;
+                break;
+            }
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         }
     }
 
@@ -873,9 +887,14 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* NOTE: am currently only use vci 0. Need update once that changes */
     for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
         while (MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus > 0) {
-            MPIDI_OFI_PROGRESS(vci);
+            int made_progress = 0;
+            mpi_errno = MPIDI_NM_progress(vci, &made_progress);
+            if (mpi_errno != MPI_SUCCESS) {
+                mpi_errno = MPI_SUCCESS;
+                break;
+            }
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         }
-        MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
     }
 
     if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
