@@ -828,7 +828,8 @@ static int flush_send_queue(void)
             int made_progress;
             mpi_errno = MPIDI_NM_progress(vci, &made_progress);
             if (mpi_errno != MPI_SUCCESS) {
-                /* Transient CQ error during finalize flush is non-fatal */
+                /* Transient CQ error during finalize flush is non-fatal;
+                 * all real communication is already complete. */
                 MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             "Progress error in flush_send_queue, continuing teardown");
                 mpi_errno = MPI_SUCCESS;
@@ -849,8 +850,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int i = 0;
 
     MPIR_FUNC_ENTER;
-
-    MPIDI_OFI_global.is_finalizing = true;
 
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vci 0. Need update once that changes */
