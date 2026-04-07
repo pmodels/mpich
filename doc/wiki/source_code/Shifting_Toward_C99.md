@@ -43,7 +43,7 @@ feasible path for back porting.
 The standardized data type support -- stdbool.h, stdint.h, complex.h --
 are in. These features can be tested by configure and worked around with
 portability libraries; however, with growing code base, inconsistency in
-the portablity handling can creep in. Requiring minimum C99 support can
+the portability handling can creep in. Requiring minimum C99 support can
 greatly simplify the code.
 
 Mixing variable declarations and code are case dependent. In general, we
