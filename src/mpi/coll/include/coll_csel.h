@@ -8,6 +8,22 @@
 
 #include "json.h"
 
+typedef struct MPIR_Csel_node {
+    MPIR_Csel_node_type_e type;
+    union {
+        struct {
+            MPIR_Csel_coll_type_e coll_type;
+        } collective;
+        struct {
+            bool negate;
+            int thresh;
+        } condition;
+        MPII_Csel_container_s *container;
+    } u;
+    struct MPIR_Csel_node *success;
+    struct MPIR_Csel_node *failure;
+} MPIR_Csel_node_s;
+
 extern MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 extern int *MPIR_Coll_cvar_table;
 extern const char **MPIR_Coll_type_names;
