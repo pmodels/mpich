@@ -210,7 +210,6 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: this is hackish. Define the "num" constants in coll_algos.h (generated) */
-#define MPIR_CSEL_NUM_COLL_TYPES 1
 #define MPIR_CSEL_NUM_ALGORITHMS 1
 #define MPIR_CSEL_NUM_CONDITIONS 1
 

@@ -34,7 +34,7 @@ typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_con
 
 #define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
 
-enum MPIR_Csel_coll_type {
+enum MPIR_Csel_coll_type_old {
     MPIR_CSEL_COLL_TYPE__ALLGATHER = 0,
     MPIR_CSEL_COLL_TYPE__ALLGATHERV,
     MPIR_CSEL_COLL_TYPE__ALLREDUCE,
@@ -79,7 +79,6 @@ enum MPIR_Csel_coll_type {
     MPIR_CSEL_COLL_TYPE__SCAN,
     MPIR_CSEL_COLL_TYPE__SCATTER,
     MPIR_CSEL_COLL_TYPE__SCATTERV,
-    MPIR_CSEL_COLL_TYPE__END,
 };
 
 enum MPII_Csel_container_type {
