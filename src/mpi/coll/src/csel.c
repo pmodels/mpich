@@ -150,6 +150,43 @@ int MPIR_Csel_free(MPIR_Csel_node_s * csel_root)
     return mpi_errno;
 }
 
+void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level)
+{
+    for (int i = 0; i < level; i++) {
+        printf("    ");
+    }
+    if (node->type == CSEL_NODE_TYPE__CONTAINER) {
+        printf("Algorithm: %s\n", MPIR_Coll_algo_names[node->u.container->id]);
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__COLLECTIVE) {
+        printf("Collective: %s\n", MPIR_Coll_type_names[node->u.collective.coll_type]);
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__ANY) {
+        printf("ANY\n");
+    } else {
+        if (!node->u.condition.negate) {
+            if (!node->u.condition.thresh) {
+                printf("condition: %s\n", MPIR_Csel_condition_names[node->type]);
+            } else {
+                printf("condition: %s(%d)\n", MPIR_Csel_condition_names[node->type],
+                       node->u.condition.thresh);
+            }
+        } else {
+            if (!node->u.condition.thresh) {
+                printf("condition: !%s\n", MPIR_Csel_condition_names[node->type]);
+            } else {
+                printf("condition: !%s(%d)\n", MPIR_Csel_condition_names[node->type],
+                       node->u.condition.thresh);
+            }
+        }
+    }
+
+    if (node->success) {
+        MPIR_Csel_print_tree(node->success, level + 1);
+    }
+    if (node->failure) {
+        MPIR_Csel_print_tree(node->failure, level + 1);
+    }
+}
+
 MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig)
 {
     MPIR_Assert(csel);
