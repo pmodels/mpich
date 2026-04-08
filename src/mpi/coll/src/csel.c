@@ -72,7 +72,7 @@ typedef struct csel_node {
 
         /* collective selection operator */
         struct {
-            MPIR_Csel_coll_type_e coll_type;
+            enum MPIR_Csel_coll_type_old coll_type;
         } collective;
 
         /* message-specific operator types */

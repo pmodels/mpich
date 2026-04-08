@@ -13,7 +13,7 @@ def main():
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir, silent=True)
 
-    coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
+    G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
     # Loading coll_algorithms.txt. It sets -
     #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
@@ -26,13 +26,34 @@ def main():
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
     G.out.append("#include \"coll_csel.h\"")
-    for a in coll_names:
+    for a in G.coll_names:
         dump_coll(a, "blocking")
         dump_coll(a, "nonblocking")
         dump_coll(a, "persistent")
+
+    # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
+    dump_MPIR_Csel_coll_type_e()
+
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
 
+#----------------------------------------
+# e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
+def dump_MPIR_Csel_coll_type_e():
+    G.out2.append("")
+    G.out2.append("enum MPIR_Csel_coll_type {")
+    # IMPORTANT: MPIR_Coll_nb algorithm relies on that blocking coll_type is even and its
+    #            nonblocking correspondent is coll_type+1.
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                G.out2.append("    %s," % coll_type(a, is_blocking, commkind))
+    G.out2.append("    %s" % coll_type_END())
+    G.out2.append("};")
+    G.out2.append("")
+    G.out2.append("#define MPIR_CSEL_NUM_COLL_TYPES %s\n" % coll_type_END())
+
+#----------------------------------------
 def add_prototype(l):
     G.prototypes.append(l)
 
@@ -774,6 +795,17 @@ def get_func_args(args, name, kind):
         raise Exception("get_func_args - unexpected kind = %s" % kind)
 
     return func_args
+
+# ----------------------
+def coll_type(coll_name, is_blocking, commkind):
+    prefix = "MPIR_CSEL_COLL_TYPE"
+    if is_blocking:
+        return "%s__%s_%s" % (prefix, commkind.upper(), coll_name.upper())
+    else:
+        return "%s__%s_I%s" % (prefix, commkind.upper(), coll_name.upper())
+
+def coll_type_END():
+    return "MPIR_CSEL_COLL_TYPE__END"
 
 # ----------------------
 def dump_c_file(f, lines):
