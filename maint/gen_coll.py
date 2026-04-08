@@ -16,8 +16,8 @@ def main():
 
     coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
-    G.out = []
-    G.prototypes_hash = {}
+    G.out = []  # output to mpir_coll.c
+    G.out2 = [] # output to coll_algos.h
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
@@ -27,16 +27,10 @@ def main():
         dump_coll(a, "nonblocking")
         dump_coll(a, "persistent")
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
-    dump_prototypes("src/mpi/coll/include/coll_algos.h", G.prototypes)
+    dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
 
 def add_prototype(l):
-    if RE.match(r'int\s+(\w+)\(', l):
-        func_name = RE.m.group(1)
-        if func_name not in G.prototypes_hash:
-            G.prototypes_hash[func_name] = 1
-            G.prototypes.append(l)
-        else:
-            pass
+    G.prototypes.append(l)
 
 def load_coll_algos(algo_txt):
     All = {}
@@ -797,14 +791,19 @@ def dump_c_file(f, lines):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
-def dump_prototypes(f, prototypes):
+def dump_coll_algos_h(f, prototypes, extra_lines):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
         for l in G.copyright_c:
             print(l, file=Out)
+
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
         print("", file=Out)
+
+        for l in extra_lines:
+            print(l, file=Out)
+
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:
