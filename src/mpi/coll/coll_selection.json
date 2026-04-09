@@ -1,8 +1,6 @@
 {
-    "collective=bcast":
+    "collective=bcast-intra":
     {
-        "comm_type=intra":
-        {
             "comm_size<8":
             {
                 "algorithm=MPIR_Bcast_intra_binomial":{}
@@ -33,16 +31,13 @@
                     "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Bcast_inter_remote_send_local_bcast":{}
-        }
     },
-    "collective=allreduce":
+    "collective=bcast-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Bcast_inter_remote_send_local_bcast":{}
+    },
+    "collective=allreduce-intra":
+    {
             "avg_msg_size<=8":
             {
                 "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
@@ -65,16 +60,13 @@
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast":{}
-        }
     },
-    "collective=allgather":
+    "collective=allreduce-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast":{}
+    },
+    "collective=allgather-intra":
+    {
             "comm_size=pow2":
             {
                 "total_msg_size<524288":
@@ -97,16 +89,13 @@
                     "algorithm=MPIR_Allgather_intra_ring":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast":{}
-        }
     },
-    "collective=allgatherv":
+    "collective=allgather-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast":{}
+    },
+    "collective=allgatherv-intra":
+    {
             "comm_size=pow2":
             {
                 "total_msg_size<524288":
@@ -129,16 +118,13 @@
                     "algorithm=MPIR_Allgatherv_intra_ring":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Allgatherv_inter_remote_gather_local_bcast":{}
-        }
     },
-    "collective=reduce":
+    "collective=allgatherv-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Allgatherv_inter_remote_gather_local_bcast":{}
+    },
+    "collective=reduce-intra":
+    {
             "avg_msg_size<=2048":
             {
                 "algorithm=MPIR_Reduce_intra_binomial":{}
@@ -161,16 +147,13 @@
                     "algorithm=MPIR_Reduce_intra_binomial":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_inter_local_reduce_remote_send":{}
-        }
     },
-    "collective=reduce_scatter":
+    "collective=reduce-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Reduce_inter_local_reduce_remote_send":{}
+    },
+    "collective=reduce_scatter-intra":
+    {
             "is_commutative=yes":
             {
                 "total_msg_size<524288":
@@ -200,16 +183,13 @@
                     "algorithm=MPIR_Reduce_scatter_intra_recursive_doubling":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_scatter_inter_remote_reduce_local_scatter":{}
-        }
     },
-    "collective=reduce_scatter_block":
+    "collective=reduce_scatter-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Reduce_scatter_inter_remote_reduce_local_scatter":{}
+    },
+    "collective=reduce_scatter_block-intra":
+    {
             "is_commutative=yes":
             {
                 "total_msg_size<524288":
@@ -232,20 +212,17 @@
                     "algorithm=MPIR_Reduce_scatter_block_intra_recursive_doubling":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter":{}
-        }
     },
-    "collective=gather":
+    "collective=reduce_scatter_block-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter":{}
+    },
+    "collective=gather-intra":
+    {
             "algorithm=MPIR_Gather_intra_binomial":{}
-        },
-        "comm_type=inter":
-        {
+    },
+    "collective=gather-inter":
+    {
             "total_msg_size<2048":
             {
                 "algorithm=MPIR_Gather_inter_local_gather_remote_send":{}
@@ -254,16 +231,13 @@
             {
                 "algorithm=MPIR_Gather_inter_linear":{}
             }
-        }
     },
-    "collective=scatter":
+    "collective=scatter-intra":
     {
-        "comm_type=intra":
-        {
             "algorithm=MPIR_Scatter_intra_binomial":{}
-        },
-        "comm_type=inter":
-        {
+    },
+    "collective=scatter-inter":
+    {
             "total_msg_size<2048":
             {
                 "algorithm=MPIR_Scatter_inter_remote_send_local_scatter":{}
@@ -272,41 +246,43 @@
             {
                 "algorithm=MPIR_Scatter_inter_linear":{}
             }
-        }
     },
-    "collective=gatherv":
+    "collective=gatherv-intra":
     {
         "algorithm=MPIR_Gatherv_allcomm_linear":{}
     },
-    "collective=scatterv":
+    "collective=gatherv-inter":
+    {
+        "algorithm=MPIR_Gatherv_allcomm_linear":{}
+    },
+    "collective=scatterv-intra":
     {
         "algorithm=MPIR_Scatterv_allcomm_linear":{}
     },
-    "collective=scan":
+    "collective=scatterv-inter":
+    {
+        "algorithm=MPIR_Scatterv_allcomm_linear":{}
+    },
+    "collective=scan-intra":
     {
         "algorithm=MPIR_Scan_intra_recursive_doubling":{}
     },
-    "collective=exscan":
+    "collective=exscan-intra":
     {
         "algorithm=MPIR_Exscan_intra_recursive_doubling":{}
     },
-    "collective=barrier":
+    "collective=barrier-intra":
     {
-        "comm_type=intra":
-        {
             "algorithm=MPIR_Barrier_intra_k_dissemination":{
                   "k=2": {}
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Barrier_inter_bcast":{}
-        }
     },
-    "collective=alltoall":
+    "collective=barrier-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Barrier_inter_bcast":{}
+    },
+    "collective=alltoall-intra":
+    {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Alltoall_intra_pairwise_sendrecv_replace":{}
@@ -340,16 +316,13 @@
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoall_inter_pairwise_exchange":{}
-        }
     },
-    "collective=alltoallv":
+    "collective=alltoall-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Alltoall_inter_pairwise_exchange":{}
+    },
+    "collective=alltoallv-intra":
+    {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Alltoallv_intra_pairwise_sendrecv_replace":{}
@@ -358,16 +331,13 @@
             {
                 "algorithm=MPIR_Alltoallv_intra_scattered":{}
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoallv_inter_pairwise_exchange":{}
-        }
     },
-    "collective=alltoallw":
+    "collective=alltoallv-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Alltoallv_inter_pairwise_exchange":{}
+    },
+    "collective=alltoallw-intra":
+    {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Alltoallw_intra_pairwise_sendrecv_replace":{}
@@ -376,47 +346,41 @@
             {
                 "algorithm=MPIR_Alltoallw_intra_scattered":{}
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Alltoallw_inter_pairwise_exchange":{}
-        }
     },
-    "collective=neighbor_allgather":
+    "collective=alltoallw-inter":
+    {
+            "algorithm=MPIR_Alltoallw_inter_pairwise_exchange":{}
+    },
+    "collective=neighbor_allgather-intra":
     {
         "algorithm=MPIR_Neighbor_allgather_allcomm_nb":{}
     },
-    "collective=neighbor_allgatherv":
+    "collective=neighbor_allgatherv-intra":
     {
         "algorithm=MPIR_Neighbor_allgatherv_allcomm_nb":{}
     },
-    "collective=neighbor_alltoall":
+    "collective=neighbor_alltoall-intra":
     {
         "algorithm=MPIR_Neighbor_alltoall_allcomm_nb":{}
     },
-    "collective=neighbor_alltoallv":
+    "collective=neighbor_alltoallv-intra":
     {
         "algorithm=MPIR_Neighbor_alltoallv_allcomm_nb":{}
     },
-    "collective=neighbor_alltoallw":
+    "collective=neighbor_alltoallw-intra":
     {
         "algorithm=MPIR_Neighbor_alltoallw_allcomm_nb":{}
     },
-    "collective=ibarrier":
+    "collective=ibarrier-intra":
     {
-        "comm_type=intra":
-        {
             "algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling":{}
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ibarrier_inter_sched_bcast":{}
-        }
     },
-    "collective=iallreduce":
+    "collective=ibarrier-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ibarrier_inter_sched_bcast":{}
+    },
+    "collective=iallreduce-intra":
+    {
             "avg_msg_size<=2048":
             {
                 "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
@@ -439,16 +403,13 @@
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast":{}
-        }
     },
-    "collective=iallgather":
+    "collective=iallreduce-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast":{}
+    },
+    "collective=iallgather-intra":
+    {
             "comm_size=pow2":
             {
                 "total_msg_size<524288":
@@ -471,16 +432,13 @@
                     "algorithm=MPIR_Iallgather_intra_sched_ring":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallgather_inter_sched_local_gather_remote_bcast":{}
-        }
     },
-    "collective=iallgatherv":
+    "collective=iallgather-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Iallgather_inter_sched_local_gather_remote_bcast":{}
+    },
+    "collective=iallgatherv-intra":
+    {
             "comm_size=pow2":
             {
                 "total_msg_size<524288":
@@ -503,16 +461,13 @@
                     "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast":{}
-        }
     },
-    "collective=ibcast":
+    "collective=iallgatherv-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast":{}
+    },
+    "collective=ibcast-intra":
+    {
             "comm_size<8":
             {
                 "avg_msg_size=any":
@@ -546,16 +501,13 @@
                     "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ibcast_inter_sched_flat":{}
-        }
     },
-    "collective=ireduce":
+    "collective=ibcast-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ibcast_inter_sched_flat":{}
+    },
+    "collective=ireduce-intra":
+    {
             "avg_msg_size<=2048":
             {
                 "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
@@ -578,16 +530,13 @@
                     "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_inter_sched_local_reduce_remote_send":{}
-        }
     },
-    "collective=ireduce_scatter":
+    "collective=ireduce-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ireduce_inter_sched_local_reduce_remote_send":{}
+    },
+    "collective=ireduce_scatter-intra":
+    {
             "is_commutative=yes":
             {
                 "total_msg_size<524288":
@@ -617,20 +566,17 @@
                     "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv":{}
-        }
     },
-    "collective=igather":
+    "collective=ireduce_scatter-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv":{}
+    },
+    "collective=igather-intra":
+    {
             "algorithm=MPIR_Igather_intra_sched_binomial":{}
-        },
-        "comm_type=inter":
-        {
+    },
+    "collective=igather-inter":
+    {
             "total_msg_size<2048":
             {
                 "algorithm=MPIR_Igather_inter_sched_short":{}
@@ -639,16 +585,13 @@
             {
                 "algorithm=MPIR_Igather_inter_sched_long":{}
             }
-        }
     },
-    "collective=iscatter":
+    "collective=iscatter-intra":
     {
-        "comm_type=intra":
-        {
             "algorithm=MPIR_Iscatter_intra_sched_binomial":{}
-        },
-        "comm_type=inter":
-        {
+    },
+    "collective=iscatter-inter":
+    {
             "total_msg_size<2048":
             {
                 "algorithm=MPIR_Iscatter_inter_sched_remote_send_local_scatter":{}
@@ -657,24 +600,29 @@
             {
                 "algorithm=MPIR_Iscatter_inter_sched_linear":{}
             }
-        }
     },
-    "collective=igatherv":
+    "collective=igatherv-intra":
     {
         "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
     },
-    "collective=iscatterv":
+    "collective=igatherv-inter":
+    {
+        "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
+    },
+    "collective=iscatterv-intra":
     {
         "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
     },
-    "collective=iexscan":
+    "collective=iscatterv-inter":
+    {
+        "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
+    },
+    "collective=iexscan-intra":
     {
         "algorithm=MPIR_Iexscan_intra_sched_recursive_doubling":{}
     },
-    "collective=ialltoall":
+    "collective=ialltoall-intra":
     {
-        "comm_type=intra":
-        {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Ialltoall_intra_sched_inplace":{}
@@ -708,16 +656,13 @@
                     }
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoall_inter_sched_pairwise_exchange":{}
-        }
     },
-    "collective=ialltoallv":
+    "collective=ialltoall-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ialltoall_inter_sched_pairwise_exchange":{}
+    },
+    "collective=ialltoallv-intra":
+    {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Ialltoallv_intra_sched_inplace":{}
@@ -726,16 +671,13 @@
             {
                 "algorithm=MPIR_Ialltoallv_intra_sched_blocked":{}
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoallv_inter_sched_pairwise_exchange":{}
-        }
     },
-    "collective=ialltoallw":
+    "collective=ialltoallv-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ialltoallv_inter_sched_pairwise_exchange":{}
+    },
+    "collective=ialltoallw-intra":
+    {
             "is_sendbuf_inplace=yes":
             {
                 "algorithm=MPIR_Ialltoallw_intra_sched_inplace":{}
@@ -744,16 +686,13 @@
             {
                 "algorithm=MPIR_Ialltoallw_intra_sched_blocked":{}
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ialltoallw_inter_sched_pairwise_exchange":{}
-        }
     },
-    "collective=ireduce_scatter_block":
+    "collective=ialltoallw-inter":
     {
-        "comm_type=intra":
-        {
+            "algorithm=MPIR_Ialltoallw_inter_sched_pairwise_exchange":{}
+    },
+    "collective=ireduce_scatter_block-intra":
+    {
             "is_commutative=yes":
             {
                 "total_msg_size<524288":
@@ -776,33 +715,32 @@
                     "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling":{}
                 }
             }
-        },
-        "comm_type=inter":
-        {
-            "algorithm=MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv":{}
-        }
     },
-    "collective=iscan":
+    "collective=ireduce_scatter_block-inter":
+    {
+            "algorithm=MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv":{}
+    },
+    "collective=iscan-intra":
     {
         "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
     },
-    "collective=ineighbor_allgather":
+    "collective=ineighbor_allgather-intra":
     {
         "algorithm=MPIR_Ineighbor_allgather_allcomm_sched_linear":{}
     },
-    "collective=ineighbor_allgatherv":
+    "collective=ineighbor_allgatherv-intra":
     {
         "algorithm=MPIR_Ineighbor_allgatherv_allcomm_sched_linear":{}
     },
-    "collective=ineighbor_alltoall":
+    "collective=ineighbor_alltoall-intra":
     {
         "algorithm=MPIR_Ineighbor_alltoall_allcomm_sched_linear":{}
     },
-    "collective=ineighbor_alltoallv":
+    "collective=ineighbor_alltoallv-intra":
     {
         "algorithm=MPIR_Ineighbor_alltoallv_allcomm_sched_linear":{}
     },
-    "collective=ineighbor_alltoallw":
+    "collective=ineighbor_alltoallw-intra":
     {
         "algorithm=MPIR_Ineighbor_alltoallw_allcomm_sched_linear":{}
     }
