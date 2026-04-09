@@ -31,6 +31,9 @@ def main():
         dump_coll(a, "nonblocking")
         dump_coll(a, "persistent")
 
+    # initialize MPIR_Coll_cvar_table and MPIR_Coll_type_names
+    dump_MPII_Coll_type_init()
+
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
 
@@ -38,6 +41,35 @@ def main():
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
 
 #----------------------------------------
+def dump_MPII_Coll_type_init():
+    G.out.append("")
+    decl = "void MPII_Coll_type_init(void)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
+
+    # populate MPIR_Coll_cvar_table[] with CVAR values at init time
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', a):
+                    # CVARs for these inter-collective does not exist
+                    G.out.append("MPIR_Coll_cvar_table[%s] = 0;" % (coll_type(a, is_blocking, commkind)))
+                else:
+                    G.out.append("MPIR_Coll_cvar_table[%s] = %s;" % (coll_type(a, is_blocking, commkind), cvar_name(a, is_blocking, commkind)))
+
+    # populate MPIR_Coll_type_names[]
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                if is_blocking:
+                    coll_type_name = a + '-' + commkind
+                else:
+                    coll_type_name = 'i' + a + '-' + commkind
+                G.out.append("MPIR_Coll_type_names[%s] = \"%s\";" % (coll_type(a, is_blocking, commkind), coll_type_name))
+
+    dump_close('}')
+
 # e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
 def dump_MPIR_Csel_coll_type_e():
     G.out2.append("")
@@ -806,6 +838,12 @@ def coll_type(coll_name, is_blocking, commkind):
 
 def coll_type_END():
     return "MPIR_CSEL_COLL_TYPE__END"
+
+def cvar_name(coll_name, is_blocking, commkind):
+    if is_blocking:
+        return "MPIR_CVAR_%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
+    else:
+        return "MPIR_CVAR_I%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
 
 # ----------------------
 def dump_c_file(f, lines):

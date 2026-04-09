@@ -221,6 +221,7 @@ int MPII_Coll_init(void)
     MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
 
     /* initialize names and tables */
+    MPII_Coll_type_init();
 
     /* initialize selection tree */
     LOAD_CSEL_JSON(MPIR_Csel_selection,
