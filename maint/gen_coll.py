@@ -149,11 +149,14 @@ def dump_allcomm_auto_blocking(name):
 
     # -- Csel_search
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
-    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
+    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
+    dump_close("};")
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
     dump_close("};")
     G.out.append("")
     G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
@@ -224,11 +227,14 @@ def dump_allcomm_sched_auto(name):
 
     # -- Csel_search
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
-    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
+    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
+    dump_close("};")
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
     dump_close("};")
     G.out.append("")
     G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
