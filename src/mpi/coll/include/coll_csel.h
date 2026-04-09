@@ -31,8 +31,10 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig
 }
 
 #define COLL_TYPE_ALL_CASE(NAME) \
-    case MPIR_CSEL_COLL_TYPE__  ## NAME: \
-    case MPIR_CSEL_COLL_TYPE__I ## NAME
+    case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTER_  ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTER_I ## NAME
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_avg_msg_size(MPIR_Csel_coll_sig_s * coll_sig)
 {
