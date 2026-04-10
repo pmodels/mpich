@@ -210,7 +210,6 @@ int MPII_Coll_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: this is hackish. Define the "num" constants in coll_algos.h (generated) */
-#define MPIR_CSEL_NUM_ALGORITHMS 1
 #define MPIR_CSEL_NUM_CONDITIONS 1
 
     MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
@@ -222,6 +221,7 @@ int MPII_Coll_init(void)
 
     /* initialize names and tables */
     MPII_Coll_type_init();
+    MPII_Coll_algo_init();
 
     /* initialize selection tree */
     LOAD_CSEL_JSON(MPIR_Csel_selection,
