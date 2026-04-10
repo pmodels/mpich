@@ -42,9 +42,13 @@ def main():
 
     # initialize MPIR_Coll_cvar_table and MPIR_Coll_type_names
     dump_MPII_Coll_type_init()
+    # initialize MPIR_Coll_algo_table and MPIR_Coll_algo_names
+    dump_MPII_Coll_algo_init()
 
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
+    # enum for algorithm id, define MPIR_CSEL_NUM_ALGORITHMS
+    dump_MPIR_Csel_container_type_e()
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
@@ -223,6 +227,26 @@ def dump_MPII_Coll_type_init():
 
     dump_close('}')
 
+def dump_MPII_Coll_algo_init():
+    G.out.append("")
+    decl = "void MPII_Coll_algo_init(void)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        idx = algo_id(algo_funcname)
+        if a['func-commkind'] != 'general':
+            algo_funcname += "_cnt"
+        G.out.append("MPIR_Coll_algo_table[%s] = %s;" % (idx, algo_funcname))
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        idx = algo_id(algo_funcname)
+        G.out.append("MPIR_Coll_algo_names[%s] = \"%s\";" % (idx, algo_funcname))
+    dump_close('}')
+
+#---- dumping to G.out2 (coll_algos.h) ----
+
 # e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
 def dump_MPIR_Csel_coll_type_e():
     G.out2.append("")
@@ -236,7 +260,18 @@ def dump_MPIR_Csel_coll_type_e():
     G.out2.append("    %s" % coll_type_END())
     G.out2.append("};")
     G.out2.append("")
-    G.out2.append("#define MPIR_CSEL_NUM_COLL_TYPES %s\n" % coll_type_END())
+    G.out2.append("#define MPIR_CSEL_NUM_COLL_TYPES %s" % coll_type_END())
+
+def dump_MPIR_Csel_container_type_e():
+    G.out2.append("")
+    G.out2.append("enum MPII_Csel_container_type {")
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        G.out2.append("    %s," % algo_id(algo_funcname))
+    G.out2.append("    %s" % algo_id_END())
+    G.out2.append("};")
+    G.out2.append("")
+    G.out2.append("#define MPIR_CSEL_NUM_ALGORITHMS %s" % algo_id_END())
 
 #----------------------------------------
 def add_prototype(l):
@@ -262,6 +297,10 @@ def load_coll_algos(algo_txt):
                     algo_list.append(algo)
                 elif RE.match(r'\s+(\w+):\s*(.+)', line):
                     algo[RE.m.group(1)] = RE.m.group(2)
+    # temporarily add nb entries
+    for coll in G.coll_names:
+        algo = {"name": "nb", "func-commkind": "%s-intra" % coll, "allcomm": 1}
+        G.algos[algo["func-commkind"]].append(algo)
 
 def dump_coll(name, blocking_type):
     if blocking_type == "blocking":
@@ -342,11 +381,6 @@ def dump_allcomm_auto_blocking(name):
             G.out.append("break;");
             G.out.append("DEDENT")
             G.out.append("")
-    G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_allcomm_nb:" % Name)
-    add_prototype("int MPIR_%s_allcomm_nb(%s);" % (Name, func_params))
-    dump_split(2, "   mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, func_args))
-    G.out.append("   break;");
-    G.out.append("")
     G.out.append("default:")
     G.out.append("    MPIR_Assert(0);")
     dump_close("}")
@@ -428,7 +462,8 @@ def dump_allcomm_sched_auto(name):
                 else:
                     # skip inter since it is covered already
                     continue
-            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
+            algo_funcname = get_algo_funcname(algo)
+            G.out.append("case %s:" % algo_id(algo_funcname))
             G.out.append("INDENT")
             if algo['name'].startswith('tsp_'):
                 dump_cnt_algo_tsp(algo, use_commkind)
@@ -1012,6 +1047,13 @@ def cvar_name(coll_name, is_blocking, commkind):
         return "MPIR_CVAR_%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
     else:
         return "MPIR_CVAR_I%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
+
+def algo_id(algo_funcname):
+    prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
+    return "%s__%s" % (prefix, algo_funcname)
+
+def algo_id_END():
+    return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
 
 # ----------------------
 def dump_c_file(f, lines):
