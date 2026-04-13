@@ -167,9 +167,9 @@ int get_ccl_from_string(const char *ccl_str)
 #define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
    do { \
         if (!strcmp(cvar_name, "")) { \
-            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, &csel_var); \
         } else { \
-            mpi_errno = MPIR_Csel_create_from_file(cvar_name, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_file(cvar_name, &csel_var); \
         } \
         MPIR_ERR_CHECK(mpi_errno); \
    } while (0)
