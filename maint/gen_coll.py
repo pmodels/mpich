@@ -44,11 +44,15 @@ def main():
     dump_MPII_Coll_type_init()
     # initialize MPIR_Coll_algo_table and MPIR_Coll_algo_names
     dump_MPII_Coll_algo_init()
+    # parsing routines for loading JSONs
+    dump_MPII_Csel_parse_container()
 
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
     # enum for algorithm id, define MPIR_CSEL_NUM_ALGORITHMS
     dump_MPIR_Csel_container_type_e()
+    # algorithm container struct
+    dump_MPII_Csel_container()
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
@@ -245,6 +249,62 @@ def dump_MPII_Coll_algo_init():
         G.out.append("MPIR_Coll_algo_names[%s] = \"%s\";" % (idx, algo_funcname))
     dump_close('}')
 
+def dump_MPII_Csel_parse_container():
+    """Generate MPII_Csel_parse_container_params()."""
+    G.out.append("")
+    def dump_json_foreach_open():
+        dump_open("json_object_object_foreach(obj, key, val) {")
+        G.out.append("char *ckey = MPL_strdup_no_spaces(key);")
+
+    def dump_json_foreach_close():
+        G.out.append("MPL_free(ckey);")
+        dump_close("}")
+
+    def dump_parse_params():
+        dump_open("switch (cnt->id) {")
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                struct_name = algo_struct_name(algo)
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+                dump_open('{') # protect json_object_object_foreach
+                G.out.append("int num_params = 0;")
+                num_expect = 0
+                dump_json_foreach_open()
+                ifstr = "if"
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        num_expect += 1
+                        n = len(a) + 1
+                        atoi = "atoi"
+                        if a == "tree_type":
+                            atoi = "get_tree_type_from_string"
+                        G.out.append("%s (!strncmp(ckey, \"%s=\", %d)) {" % (ifstr, a, n))
+                        G.out.append("    cnt->u.%s.%s = %s(ckey + %d);" % (struct_name, a, atoi, n))
+                        G.out.append("    num_params++;")
+                        ifstr = "} else if"
+                G.out.append("}")
+                dump_json_foreach_close();
+                dump_open("if (num_params != %d) {" % num_expect)
+                G.out.append("printf(\"MPII_Csel_parse_container_params: algorithm %s expect %d parameters\\\n\");" % (struct_name, num_expect))
+                dump_close('}')
+                G.out.append("MPIR_Assert(num_params == %d);" % num_expect)
+                dump_close('}')
+                G.out.append("    break;")
+        G.out.append("default:")
+        G.out.append("    break;")
+        dump_close('}') # switch
+
+    decl = "void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s *cnt)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open('{')
+    dump_parse_params()
+    dump_close('}')
+
 #---- dumping to G.out2 (coll_algos.h) ----
 
 # e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
@@ -272,6 +332,29 @@ def dump_MPIR_Csel_container_type_e():
     G.out2.append("};")
     G.out2.append("")
     G.out2.append("#define MPIR_CSEL_NUM_ALGORITHMS %s" % algo_id_END())
+
+def dump_MPII_Csel_container():
+    """Generate struct MPII_Csel_container."""
+    G.out2.append("")
+    def dump_algo_params():
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out2.append("        struct {")
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        G.out2.append("            int %s;" % a)
+                G.out2.append("        } %s;" % algo_struct_name(algo))
+
+    G.out2.append("typedef struct MPII_Csel_container {")
+    G.out2.append("    MPII_Csel_container_type_e id;")
+    G.out2.append("    union {")
+    dump_algo_params()
+    G.out2.append("    } u;")
+    G.out2.append("} MPII_Csel_container_s;")
 
 #----------------------------------------
 def add_prototype(l):
@@ -914,7 +997,7 @@ def get_algo_extra_args(algo, kind):
             out_list.append(RE.m.group(1))
         else:
             if kind == "csel":
-                prefix = "cnt->u.%s.%s_%s." % (func_name, commkind, algo['name'])
+                prefix = "cnt->u.%s." % algo_struct_name(algo)
                 out_list.append(prefix + extra_params[i])
             elif kind == "cvar":
                 prefix = "MPIR_CVAR_%s_" % func_name.upper() 
@@ -1054,6 +1137,12 @@ def algo_id(algo_funcname):
 
 def algo_id_END():
     return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
+
+def algo_struct_name(algo):
+    """Union member name for this algo, i.e. cnt->u.xxx, which is a struct for its extra params."""
+    algo_funcname = get_algo_funcname(algo)
+    struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
+    return struct_name
 
 # ----------------------
 def dump_c_file(f, lines):

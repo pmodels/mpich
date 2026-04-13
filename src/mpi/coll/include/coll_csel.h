@@ -14,10 +14,8 @@ extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
 
-int MPIR_Csel_create_from_file(const char *json_file,
-                               void *(*create_container) (struct json_object *), void **csel);
-int MPIR_Csel_create_from_buf(const char *json,
-                              void *(*create_container) (struct json_object *), void **csel);
+int MPIR_Csel_create_from_file(const char *json_file, void **csel);
+int MPIR_Csel_create_from_buf(const char *json, void **csel);
 int MPIR_Csel_free(void *csel);
 void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
 

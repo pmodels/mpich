@@ -298,30 +298,38 @@ static bool key_is_any(const char *ckey)
     }
 }
 
-static csel_node_s *parse_json_tree(struct json_object *obj,
-                                    void *(*create_container) (struct json_object *))
+static csel_node_s *parse_json_tree(struct json_object *obj)
 {
     enum json_type type ATTRIBUTE((unused));
     csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
-        type = json_object_get_type(val);
-        MPIR_Assert(type == json_type_object);
-
-        char *ckey = MPL_strdup_no_spaces(key);
+        char *ckey = key;
 
         tmp = MPL_malloc(sizeof(csel_node_s), MPL_MEM_COLL);
 
-        if (!strncmp(ckey, "composition=", strlen("composition=")) ||
-            !strncmp(ckey, "algorithm=", strlen("algorithm="))) {
+        if (!strncmp(ckey, "algorithm=", strlen("algorithm="))) {
+            const char *s = ckey + strlen("algorithm=");
+
+            MPII_Csel_container_s *cnt = MPL_calloc(sizeof(MPII_Csel_container_s), 1, MPL_MEM_COLL);
+            cnt->id = MPIR_CSEL_NUM_ALGORITHMS;
+            for (int i = 0; i < MPIR_CSEL_NUM_ALGORITHMS; i++) {
+                if (!strcmp(s, MPIR_Coll_algo_names[i])) {
+                    cnt->id = i;
+                    break;
+                }
+            }
+            /* TODO: process error */
+            MPIR_Assert(cnt->id != MPIR_CSEL_NUM_ALGORITHMS);
+            MPII_Csel_parse_container_params(val, cnt);
+
             tmp->type = CSEL_NODE_TYPE__CONTAINER;
-            tmp->u.cnt.container = create_container(obj);
-            MPL_free(ckey);
+            tmp->u.cnt.container = cnt;
             return tmp;
         }
 
         /* this node must be an operator type */
-        tmp->success = parse_json_tree(json_object_object_get(obj, key), create_container);
+        tmp->success = parse_json_tree(json_object_object_get(obj, key));
         tmp->failure = NULL;
 
         if (node == NULL)
@@ -434,22 +442,19 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             fflush(stderr);
             MPIR_Assert(0);
         }
-
-        MPL_free(ckey);
     }
 
     return node;
 }
 
-int MPIR_Csel_create_from_buf(const char *json,
-                              void *(*create_container) (struct json_object *), void **csel_)
+int MPIR_Csel_create_from_buf(const char *json, void **csel_)
 {
     struct json_object *tree;
     tree = json_tokener_parse(json);
     if (tree == NULL)
         goto fn_exit;
 
-    csel_node_s *csel_root = parse_json_tree(tree, create_container);
+    csel_node_s *csel_root = parse_json_tree(tree);
     if (csel_root) {
         validate_tree(csel_root);
     } else {
@@ -463,8 +468,7 @@ int MPIR_Csel_create_from_buf(const char *json,
     return 0;
 }
 
-int MPIR_Csel_create_from_file(const char *json_file,
-                               void *(*create_container) (struct json_object *), void **csel_)
+int MPIR_Csel_create_from_file(const char *json_file, void **csel_)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -479,7 +483,7 @@ int MPIR_Csel_create_from_file(const char *json_file,
     char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
-    MPIR_Csel_create_from_buf(json, create_container, csel_);
+    MPIR_Csel_create_from_buf(json, csel_);
 
   fn_fail:
     return mpi_errno;
