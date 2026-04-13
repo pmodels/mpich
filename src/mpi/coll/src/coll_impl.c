@@ -105,7 +105,7 @@ MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
-void *MPIR_Csel_selection = NULL;
+MPIR_Csel_node_s *MPIR_Csel_selection = NULL;
 
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
@@ -209,9 +209,6 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* FIXME: this is hackish. Define the "num" constants in coll_algos.h (generated) */
-#define MPIR_CSEL_NUM_CONDITIONS 1
-
     MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
     MPIR_Coll_type_names = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(char *), MPL_MEM_COLL);
     MPIR_Coll_algo_table =
@@ -222,6 +219,7 @@ int MPII_Coll_init(void)
     /* initialize names and tables */
     MPII_Coll_type_init();
     MPII_Coll_algo_init();
+    MPII_Csel_init_condition_names();
 
     /* initialize selection tree */
     LOAD_CSEL_JSON(MPIR_Csel_selection,

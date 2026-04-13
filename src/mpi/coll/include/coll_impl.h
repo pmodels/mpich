@@ -39,7 +39,7 @@ extern MPIR_Tree_type_t MPIR_Allreduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 extern MPIR_Tree_type_t MPIR_Bcast_tree_type;
-extern void *MPIR_Csel_selection;
+extern MPIR_Csel_node_s *MPIR_Csel_selection;
 extern char MPII_coll_selection_json[];
 
 MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str);
