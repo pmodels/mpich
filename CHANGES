@@ -3,8 +3,8 @@
 ===============================================================================
 # Removed MPID collective interfaces. Device layer algorithms will be re-enabled
   later with a flat CSEL selection. Binding layer call MPIR_Xxx_impl instead of
-  MPIR_Xxx. Use a single json config file. We will generate most of the CSEL
-  parsing and search routines from coll_algorithms.txt.
+  MPIR_Xxx. Use a single json config file. Generate json parsing from
+  coll_algorithms.txt.
 
 ===============================================================================
                                Changes in 5.0
