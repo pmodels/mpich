@@ -30,9 +30,10 @@ def main():
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
     G.out.append("#include \"coll_csel.h\"")
     for a in G.coll_names:
-        dump_coll(a, "blocking")
-        dump_coll(a, "nonblocking")
-        dump_coll(a, "persistent")
+        dump_coll_impl(a, "blocking")
+        dump_coll_impl(a, "nonblocking")
+        dump_coll_impl(a, "persistent")
+        dump_coll_impl(a, "nonblocking_tag")
 
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
@@ -613,6 +614,84 @@ def load_coll_algos(algo_txt):
         algo = {"name": "nb", "func-commkind": "%s-intra" % coll, "allcomm": 1}
         G.algos[algo["func-commkind"]].append(algo)
 
+def dump_coll_impl(name, blocking_type):
+    func = G.FUNCS["mpi_" + name]
+    func_params = get_impl_params(func, blocking_type)
+
+    func_name = get_func_name(name, blocking_type)
+    Name = func_name.capitalize()
+
+    decl_name = "MPIR_%s_impl" % Name
+    if blocking_type == 'nonblocking_tag':
+        decl_name = "MPIR_%s_tag" % Name
+
+    G.out.append("")
+    add_prototype("int %s(%s)" % (decl_name, func_params))
+    dump_split(0, "int %s(%s)" % (decl_name, func_params))
+    dump_open('{')
+    G.out.append("int mpi_errno = MPI_SUCCESS;")
+    G.out.append("")
+
+    # Initialize coll_sig
+    G.out.append("MPIR_Csel_coll_sig_s coll_sig;")
+    NAME = name.upper()
+    if blocking_type != "blocking":
+        # nonblocking and persistent
+        NAME = 'I' + NAME
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s;" % NAME)
+    dump_else()
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
+    dump_close('}')
+    G.out.append("coll_sig.comm_ptr = comm_ptr;")
+    if blocking_type == "persistent":
+        G.out.append("coll_sig.is_persistent = true;")
+    else:
+        G.out.append("coll_sig.is_persistent = false;")
+    if blocking_type == "nonblocking_tag":
+        G.out.append("coll_sig.tag = tag;")
+    else:
+        G.out.append("coll_sig.tag = 0;")
+    G.out.append("coll_sig.sched = NULL;")
+
+    phash = {}
+    for p in func['parameters']:
+        if p['name'] == 'comm':
+            pass
+        else:
+            phash[p['name']] = 1
+            G.out.append("coll_sig.u.%s.%s = %s;" % (name, p['name'], p['name']))
+
+    # Call csel
+    G.out.append("")
+    G.out.append("mpi_errno = MPIR_Coll_auto(&coll_sig, NULL);")
+    G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+    G.out.append("")
+
+    # Set request if nonblocking or persistent
+    if blocking_type == "blocking":
+        pass
+    elif blocking_type == "nonblocking" or blocking_type == "nonblocking_tag":
+        G.out.append("MPII_SCHED_START(coll_sig.sched_type, coll_sig.sched, comm_ptr, request);")
+        G.out.append("")
+    elif blocking_type == "persistent":
+        G.out.append("MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);")
+        G.out.append("MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, \"**nomem\");")
+        G.out.append("MPIR_Comm_add_ref(comm_ptr);")
+        G.out.append("req->comm = comm_ptr;")
+        G.out.append("MPIR_Comm_save_inactive_request(comm_ptr, req);")
+        G.out.append("req->u.persist_coll.sched_type = coll_sig.sched_type;")
+        G.out.append("req->u.persist_coll.sched = coll_sig.sched;")
+        G.out.append("req->u.persist_coll.real_request = NULL;")
+        G.out.append("*request = req;")
+        G.out.append("")
+    else:
+        raise Exception("Wrong blocking_type")
+
+    dump_fn_exit()
+    dump_close('}')
+
+#---------------------------------------- 
 def dump_coll(name, blocking_type):
     if blocking_type == "blocking":
         dump_allcomm_auto_blocking(name)
@@ -1170,7 +1249,7 @@ def dump_fallback(algo):
 def get_func_name(name, blocking_type):
     if blocking_type == "blocking":
         return name
-    elif blocking_type == "nonblocking":
+    elif blocking_type == "nonblocking" or blocking_type == "nonblocking_tag":
         return 'i' + name
     elif blocking_type == "persistent":
         return name + "_init"
@@ -1341,6 +1420,34 @@ def get_func_args(args, name, kind):
         raise Exception("get_func_args - unexpected kind = %s" % kind)
 
     return func_args
+
+def get_impl_params(func, blocking_type):
+    mapping = G.MAPS['SMALL_C_KIND_MAP']
+
+    params = []
+    for p in func['parameters']:
+        if p['name'] == 'comm':
+            params.append("MPIR_Comm * comm_ptr")
+        else:
+            s = get_C_param(p, func, mapping)
+            if p['kind'].startswith('POLY'):
+                s = re.sub(r'\bint ', 'MPI_Aint ', s)
+            params.append(s)
+
+    if blocking_type == "blocking":
+        pass
+    elif blocking_type == "nonblocking":
+        params.append("MPIR_Request ** request")
+    elif blocking_type == "persistent":
+        params.append("MPIR_Info * info_ptr")
+        params.append("MPIR_Request ** request")
+    elif blocking_type == "nonblocking_tag":
+        params.append("int tag")
+        params.append("MPIR_Request ** request")
+    else:
+        raise Exception("get_impl_params - unexpected blocking_type = %s" % blocking_type)
+
+    return ', '.join(params)
 
 # ----------------------
 def coll_type(coll_name, is_blocking, commkind):
