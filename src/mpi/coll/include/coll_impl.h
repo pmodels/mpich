@@ -58,6 +58,8 @@ int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
 
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \
         *sched_type_p = MPIR_SCHED_GENTRAN; \
