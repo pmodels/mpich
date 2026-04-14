@@ -64,6 +64,12 @@ int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 void MPII_Coll_type_init(void);
 void MPII_Coll_algo_init(void);
 void MPII_Csel_init_condition_names(void);
+void MPIR_Coll_cvar_init(void);
+bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig,
+                                      MPII_Csel_container_type_e algo_id);
+void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
+                                   MPII_Csel_container_type_e algo_id,
+                                   MPII_Csel_container_s * algo_cnt);
 
 #define MPII_GENTRAN_CREATE_SCHED_P() \
     do { \

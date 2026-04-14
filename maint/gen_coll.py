@@ -51,6 +51,10 @@ def main():
     dump_MPII_Csel_parse_operator()
     # check operator condition in Csel search
     dump_MPII_Csel_run_condition()
+    # routines for checking algorithm CVARs
+    dump_MPIR_Coll_cvar_to_algo_id()
+    dump_MPIR_Coll_init_algo_container()
+    dump_MPIR_Coll_check_algo_restriction()
 
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
@@ -402,6 +406,118 @@ def dump_MPII_Csel_parse_operator():
     G.out.append("")
     G.out.append("return MPI_SUCCESS;")
     dump_close('}')
+
+def dump_MPIR_Coll_cvar_to_algo_id():
+    G.out.append("")
+    def dump_cvar_cases(name, commkind):
+        algo_id_prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
+
+        dump_open("switch (cvar_val) {")
+        G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_auto:" % (name.upper(), commkind.upper()))
+        G.out.append("    MPIR_Assert(0); /* auto cvar_val should be 0 and shouldn't be called here */")
+        G.out.append("    return %s;" % algo_id_END())
+
+        func_commkind = name + '-' + commkind
+        for algo in G.algos[func_commkind]:
+            G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_%s:" % (name.upper(), commkind.upper(), algo['name']))
+            G.out.append("    return %s__%s;" % (algo_id_prefix, get_algo_funcname(algo)))
+        dump_close("}")
+
+    decl = "int MPIR_Coll_cvar_to_algo_id(int coll_type, int cvar_val)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open("{")
+    G.out.append("MPIR_Assert(cvar_val > 0);")
+    dump_open("switch (coll_type) {")
+    for coll in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                if is_blocking:
+                    name = coll
+                else:
+                    name = 'i' + coll
+                if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', coll):
+                    continue
+                G.out.append("case %s:" % coll_type(coll, is_blocking, commkind))
+                G.out.append("INDENT")
+                dump_cvar_cases(name, commkind)
+                G.out.append("break;")
+                G.out.append("DEDENT")
+    dump_close("}")
+    G.out.append("MPIR_Assert(0);")
+    G.out.append("return 0;")
+    dump_close("}")
+
+def dump_MPIR_Coll_init_algo_container():
+    G.out.append("")
+    decl = "void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_type_e algo_id, MPII_Csel_container_s * cnt)"
+    G.out.append(decl)
+    dump_open("{")
+    G.out.append("memset(cnt, 0, sizeof(*cnt));")
+    G.out.append("cnt->id = algo_id;")
+    dump_open("switch (algo_id) {")
+    for algo in G.algo_list:
+        if "extra_params" in algo:
+            struct_name = algo_struct_name(algo)
+            extra_params = algo['extra_params'].replace(' ', '').split(',')
+            cvar_params = algo['cvar_params'].replace(' ', '').split(',')
+            coll_name = algo['func-commkind'].split('-')[0]
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            for i, a in enumerate(extra_params):
+                if re.match(r'\w+=(.+)', a):
+                    # skip constant parameter
+                    continue
+                else:
+                    cvar_param = "MPIR_CVAR_%s_%s" % (coll_name.upper(), cvar_params[i])
+                    if a == "tree_type":
+                        cvar_param = "get_tree_type_from_string(%s)" % cvar_param
+                    elif cvar_params[i] == "THROTTLE":
+                        cvar_param = "MPIR_CVAR_ALLTOALL_THROTTLE"
+                    G.out.append("    cnt->u.%s.%s = %s;" % (struct_name, a, cvar_param))
+            G.out.append("    break;")
+    G.out.append("default:")
+    G.out.append("    break;")
+    dump_close("}")
+    dump_close("}")
+
+def dump_MPIR_Coll_check_algo_restriction():
+    G.out.append("")
+    def dump_check_restriction(restriction):
+        r = restriction
+        negate = False
+        if restriction.startswith('!'):
+            r = restriction[1:]
+            negate = True
+        if RE.match(r'.*\(.*\)', r):
+            raise Exception("Threshold condition %s cannot be used as a restriction" % r)
+
+        if r in G.conditions:
+            # We assume we can directly call conditional condition since we are inside the algorithm macro_guard
+            cond = "%s(coll_sig)" % get_condition_function(r)
+            if negate:
+                G.out.append("    if (%s) return false;" % cond)
+            else:
+                G.out.append("    if (!%s) return false;" % cond)
+        else:
+            raise Exception("Restriction %s not listed" % restriction)
+
+
+    decl = "bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_type_e algo_id)"
+    G.out.append(decl)
+    dump_open("{")
+    dump_open("switch (algo_id) {")
+    for algo in G.algo_list:
+        if "restrictions" in algo:
+            restrictions = algo['restrictions'].replace(' ', '').split(',')
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            for r in restrictions:
+                dump_check_restriction(r)
+            G.out.append("    break;")
+    G.out.append("default:")
+    G.out.append("    return true;")
+    dump_close("}")
+    G.out.append("return true;")
+    dump_close("}")
 
 #---- dumping to G.out2 (coll_algos.h) ----
 
