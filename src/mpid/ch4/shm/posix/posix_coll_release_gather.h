@@ -37,8 +37,13 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_POSIX_check_release_gather(MPIR_Csel_coll_si
 
     /* Check whether comm is an intranode comm */
     MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
-    MPIR_Assert(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY);
-    if (comm_ptr->num_external > 1) {
+    if (!(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY)) {
+        /* Missing hierarchical check. */
+        /* Add an assertion since this is likely due to a negligence. All comm should be
+         * initialized with hierarchical info before exposed to users */
+        MPIR_Assert(0 && "Missing hierarchical info");
+        return false;
+    } else if (comm_ptr->num_external > 1) {
         return false;
     }
 
