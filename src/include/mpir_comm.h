@@ -21,6 +21,12 @@ typedef enum MPIR_Comm_kind_t {
     MPIR_COMM_KIND__INTERCOMM = 1
 } MPIR_Comm_kind_t;
 
+typedef enum MPIR_Subcomm_type {
+    MPIR_SUBCOMM__ARBITRARY,
+    MPIR_SUBCOMM__NODE_LOCAL,
+    MPIR_SUBCOMM__NODE_ROOTS,
+} MPIR_Subcomm_type_e;
+
 /* Communicator info hint */
 #define MPIR_COMM_HINT_TYPE_BOOL 0
 #define MPIR_COMM_HINT_TYPE_INT  1
@@ -397,7 +403,8 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 
 
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs,
-                        int context_offset, MPIR_Comm ** subcomm_out);
+                        int context_offset, MPIR_Comm ** subcomm_out,
+                        MPIR_Subcomm_type_e subcomm_type);
 int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);

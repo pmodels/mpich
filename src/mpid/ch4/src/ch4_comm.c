@@ -710,7 +710,7 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
 
     mpi_errno = MPIR_Subcomm_create(comm, num_external, external_rank, external_procs,
                                     MPIR_CONTEXT_MULTILEADS_OFFSET,
-                                    &MPIDI_COMM(comm, multi_leads_comm));
+                                    &MPIDI_COMM(comm, multi_leads_comm), MPIR_SUBCOMM__ARBITRARY);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
