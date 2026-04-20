@@ -571,6 +571,12 @@ static int check_hierarchy(MPIR_Comm * comm)
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
+    /* set it as no_local */
+    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+    comm->local_rank = 0;
+    comm->num_local = 1;
+    comm->num_external = comm->local_size;
+    comm->external_rank = comm->rank;
   fn_reap:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
