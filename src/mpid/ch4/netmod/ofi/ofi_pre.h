@@ -307,6 +307,7 @@ typedef struct {
     enum MPIDI_OFI_req_kind kind;
     union {
         struct {
+            bool is_genq;
             char *pack_buffer;
         } pack;
         struct {
