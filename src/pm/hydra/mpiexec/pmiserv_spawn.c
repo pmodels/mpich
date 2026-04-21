@@ -9,6 +9,7 @@
 #include "pmiserv.h"
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
+#include "utlist.h"
 
 static struct HYD_pg *spawn_pg = NULL;
 static struct HYD_exec *spawn_exec_list = NULL;
@@ -20,6 +21,8 @@ static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, 
 static HYD_status fill_preput_kvs(struct HYD_pmcd_pmi_pg_scratch *pg_scratch,
                                   int preput_num, struct PMIU_token *infos);
 static HYD_status do_spawn(void);
+static HYD_status dup_node_list_for_spawn_rankmap(struct HYD_node *node_list,
+                                                  struct HYD_node **rankmap_node_list_p);
 
 static char *get_exec_path(const char *execname, const char *path);
 static HYD_status parse_info_hosts(const char *host_str, struct HYD_pg *pg);
@@ -248,6 +251,7 @@ static HYD_status do_spawn(void)
 
     /* Create the proxy list */
     struct HYD_node *node_list;
+    struct HYD_node *rankmap_node_list = NULL;
     if (pg->user_node_list) {
         node_list = pg->user_node_list;
         status = HYDU_merge_user_node_list(pg->user_node_list, &HYD_server_info.node_list);
@@ -255,7 +259,9 @@ static HYD_status do_spawn(void)
     } else {
         node_list = HYD_server_info.node_list;
     }
-    status = HYDU_gen_rankmap(pg->pg_process_count, node_list, &pg->rankmap);
+    status = dup_node_list_for_spawn_rankmap(node_list, &rankmap_node_list);
+    HYDU_ERR_POP(status, "unable to duplicate node list\n");
+    status = HYDU_gen_rankmap(pg->pg_process_count, rankmap_node_list, &pg->rankmap);
     HYDU_ERR_POP(status, "error create rankmap\n");
 
     /* we only need user_node_list to generate rankmap */
@@ -301,10 +307,45 @@ static HYD_status do_spawn(void)
     MPL_free(filtered_proxy_list);
 
   fn_exit:
+    HYDU_free_node_list(rankmap_node_list);
     HYD_STRING_STASH_FREE(proxy_stash);
     HYDU_FUNC_EXIT();
     return status;
   fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status dup_node_list_for_spawn_rankmap(struct HYD_node *node_list,
+                                                  struct HYD_node **rankmap_node_list_p)
+{
+    HYD_status status = HYD_SUCCESS;
+    struct HYD_node *rankmap_node_list = NULL;
+    struct HYD_node *tail = NULL;
+
+    for (struct HYD_node * node = node_list; node; node = node->next) {
+        struct HYD_node *dup_node;
+
+        status = HYDU_alloc_node(&dup_node);
+        HYDU_ERR_POP(status, "unable to allocate node\n");
+
+        dup_node->hostname = node->hostname ? MPL_strdup(node->hostname) : NULL;
+        dup_node->core_count = node->core_count;
+        dup_node->active_processes = 0;
+        dup_node->node_id = node->node_id;
+        dup_node->control_fd = node->control_fd;
+        dup_node->control_fd_refcnt = node->control_fd_refcnt;
+        dup_node->user = node->user ? MPL_strdup(node->user) : NULL;
+        dup_node->local_binding = node->local_binding ? MPL_strdup(node->local_binding) : NULL;
+
+        LL_APPEND(rankmap_node_list, tail, dup_node);
+    }
+
+    *rankmap_node_list_p = rankmap_node_list;
+
+  fn_exit:
+    return status;
+  fn_fail:
+    HYDU_free_node_list(rankmap_node_list);
     goto fn_exit;
 }
 
