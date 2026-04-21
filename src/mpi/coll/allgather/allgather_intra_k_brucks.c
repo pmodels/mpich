@@ -137,16 +137,14 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
 
             /* Receive at the exact location. */
-            mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                   count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
+            char *tmpbuf = (char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent;
+            mpi_errno = MPIC_Irecv(tmpbuf, count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
                                    &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                                     "Phase#%d:, k:%d Recv at:%p for count:%d", i,
-                                                     k, ((char *) tmp_recvbuf +
-                                                         j * recvcount * delta * recvtype_extent),
-                                                     count));
+                                                     "Phase#%d:, k:%d Recv at:%p for count:%ld",
+                                                     i, k, tmpbuf, (long) count));
 
             /* Send from the start of recv till `count` amount of data. */
             mpi_errno =
@@ -155,8 +153,8 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                                     "Phase#%d:, k:%d Send from:%p for count:%d",
-                                                     i, k, tmp_recvbuf, count));
+                                                     "Phase#%d:, k:%d Send from:%p for count:%ld",
+                                                     i, k, tmp_recvbuf, (long) count));
 
         }
         mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
