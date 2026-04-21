@@ -237,9 +237,10 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
          * Put it in the queue to process it later. */
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                         (MPL_DBG_FDEST,
-                         "Expected seqno=%d but got %d (am_type=%d src_rank=%d). "
+                         "Expected seqno=%d but got %d (am_type=%d src_id=%lx). "
                          "Enqueueing it to the queue.\n",
-                         expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->src_rank));
+                         expected_seqno, am_hdr->seqno,
+                         am_hdr->am_type, (unsigned long) am_hdr->src_id));
         mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
