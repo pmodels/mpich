@@ -4,7 +4,7 @@
 #include "mpi_abi_internal.h"
 #include "mpiimpl.h"
 
-#define ABI_IS_BUILTIN(h)  ((intptr_t)(h) < 0x1000)
+#define ABI_IS_BUILTIN(h)  ((uintptr_t)(h) < 0x1000)
 
 #define ABI_DATATYPE_BUILTIN_MASK 0x1ff
 #define ABI_OP_BUILTIN_MASK 0x1f
