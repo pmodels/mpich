@@ -44,8 +44,9 @@ MPIR_Attribute *MPID_Attr_alloc(void)
     MPIR_Attribute *attr = (MPIR_Attribute *) MPIR_Handle_obj_alloc(&MPID_Attr_mem);
     /* attributes don't have refcount semantics, but let's keep valgrind and
      * the debug logging pacified */
-    MPIR_Assert(attr != NULL);
-    MPIR_Object_set_ref(attr, 0);
+    if (attr) {
+        MPIR_Object_set_ref(attr, 0);
+    }
     return attr;
 }
 
