@@ -171,6 +171,8 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
+            if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
             dump_func_abi(func)
 
         abi_file_path = abi_dir + "/io_abi.c"
