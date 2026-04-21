@@ -53,7 +53,7 @@
         }                                                               \
     }
 
-#define MPL_DBG_MAXLINE 256
+#define MPL_DBG_MAXLINE 2048
 #define MPL_DBG_FDEST _s,(size_t)MPL_DBG_MAXLINE
 /*M
   MPL_DBG_MSG_FMT - General debugging output macro
