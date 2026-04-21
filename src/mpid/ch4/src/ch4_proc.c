@@ -333,7 +333,8 @@ void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid)
     t = MPL_malloc(sizeof(MPIDI_upid_hash), MPL_MEM_OTHER);
     t->lpid = lpid;
     t->upid = MPL_malloc(upid_len, MPL_MEM_OTHER);
-    memcpy(t->upid, upid, upid_len);
+    /* the unsigned cast is to suppress the gcc warning when it believes upid_len can take negative values */
+    memcpy(t->upid, upid, (unsigned) upid_len);
     t->upid_len = upid_len;
     HASH_ADD_KEYPTR(hh, upid_hash, t->upid, upid_len, t, MPL_MEM_OTHER);
 
