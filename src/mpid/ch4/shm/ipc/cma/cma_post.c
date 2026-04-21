@@ -16,6 +16,7 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
                         bool need_pack)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
 
     /* local iovs */
     void *pack_buf = NULL;
@@ -23,7 +24,7 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
     struct iovec *dst_iovs;
     MPI_Aint dst_iov_len;
     if (need_pack) {
-        pack_buf = MPL_malloc(src_data_sz, MPL_MEM_OTHER);
+        MPIR_CHKLMEM_MALLOC(pack_buf, src_data_sz);
         dst_iovs = &static_dst_iov;
         dst_iov_len = 1;
         dst_iovs[0].iov_base = pack_buf;
@@ -32,6 +33,7 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
         mpi_errno = get_iovs(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                              MPIDIG_REQUEST(rreq, datatype), -1, &dst_iovs, &dst_iov_len);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_CHKLMEM_REGISTER(dst_iovs);
     }
 
     /* remote iovs */
@@ -54,6 +56,7 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
         mpi_errno = get_iovs((void *) ipc_hdr->ipc_handle.cma.vaddr, ipc_hdr->count, dt->handle,
                              src_data_sz, &src_iovs, &src_iov_len);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_CHKLMEM_REGISTER(src_iovs);
 
         MPIR_Datatype_free(dt);
     }
@@ -63,9 +66,6 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
     mpi_errno = copy_iovs(src_pid, src_data_sz, src_iovs, src_iov_len, dst_iovs, dst_iov_len);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (src_iovs != &static_src_iov) {
-        MPL_free(src_iovs);
-    }
     if (need_pack) {
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(pack_buf, src_data_sz,
@@ -74,12 +74,10 @@ int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint s
                                         &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_unpack_bytes == src_data_sz);
-        MPL_free(pack_buf);
-    } else {
-        MPL_free(dst_iovs);
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -90,7 +88,7 @@ static int get_iovs(void *buf, MPI_Aint count, MPI_Datatype datatype, MPI_Aint d
 {
     int mpi_errno = MPI_SUCCESS;
 
-    struct iovec *iovs;
+    struct iovec *iovs = NULL;
     MPI_Aint len, actual;
 
     mpi_errno = MPIR_Typerep_iov_len(count, datatype, data_sz, &len, &actual);
@@ -108,6 +106,9 @@ static int get_iovs(void *buf, MPI_Aint count, MPI_Datatype datatype, MPI_Aint d
   fn_exit:
     return mpi_errno;
   fn_fail:
+    if (iovs) {
+        MPL_free(iovs);
+    }
     goto fn_exit;
 }
 
