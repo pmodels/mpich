@@ -633,8 +633,25 @@ int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_s
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, src_rank);
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(av, vci_local, nic, vci_remote, nic);
-    MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz,
-                                    dest_addr, match_bits), vci_local, tinject);
+    if (hdr_sz <= MPIDI_OFI_global.max_buffered_send) {
+        MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz,
+                                        dest_addr, match_bits), vci_local, tinject);
+    } else {
+        /* the send_ack semantic is a blocking send since we need complete the hdr buffer */
+        /* Question: there is potential recursive progress issue. Are we concerned? */
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "MPIDI_OFI_send_ack: using blocking send\n");
+
+        MPIDI_OFI_dynamic_process_request_t req;
+        req.done = 0;
+        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+        MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz, NULL,
+                                      dest_addr, match_bits, (void *) &req.context),
+                             vci_local, tsend);
+        do {
+            mpi_errno = MPIDI_OFI_progress_uninlined(vci_local);
+            MPIR_ERR_CHECK(mpi_errno);
+        } while (!req.done);
+    }
   fn_exit:
     return mpi_errno;
   fn_fail:
