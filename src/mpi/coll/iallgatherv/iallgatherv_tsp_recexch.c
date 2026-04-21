@@ -33,8 +33,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
         for (i = 0; i < count; i++)
             send_count += recvcounts[offset + i];
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "data exchange with %d send_offset %d count %d \n", partner,
-                         send_offset, send_count));
+                        (MPL_DBG_FDEST, "data exchange with %d send_offset %ld count %ld\n",
+                         partner, (long) send_offset, (long) send_count));
         /* send my data to partner */
         mpi_errno =
             MPIR_TSP_sched_isend(((char *) recvbuf + send_offset), send_count, recvtype, partner,
@@ -48,8 +48,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
         for (i = 0; i < count; i++)
             recv_count += recvcounts[offset + i];
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "data exchange with %d recv_offset %d count %d \n", partner,
-                         recv_offset, recv_count));
+                        (MPL_DBG_FDEST, "data exchange with %d recv_offset %ld count %ld\n",
+                         partner, (long) recv_offset, (long) recv_count));
         /* recv data from my partner */
         mpi_errno = MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset), recv_count, recvtype,
                                          partner, tag, comm, sched, 0, NULL, &vtx_id);
@@ -150,8 +150,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
             MPIR_ERR_CHECK(mpi_errno);
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d nbr is %d send offset %d count %d depend on %d \n", phase,
-                             nbr, send_offset, count, ((k - 1) * j)));
+                             "phase %d nbr is %d send offset %ld count %ld depend on %d \n",
+                             phase, nbr, (long) send_offset, (long) count, ((k - 1) * j)));
         }
         /* receive from the neighbors */
         for (i = 0; i < k - 1; i++) {
@@ -174,8 +174,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
             nrecvs++;
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d recv from %d recv offset %d cur_count %d recv returns id[%d] %d\n",
-                             phase, nbr, recv_offset, count, j * (k - 1) + i,
+                             "phase %d recv from %d recv offset %ld cur_count %ld recv returns id[%d] %d\n",
+                             phase, nbr, (long) recv_offset, (long) count, j * (k - 1) + i,
                              recv_id[j * (k - 1) + i]));
         }
         if (is_dist_halving == 1)

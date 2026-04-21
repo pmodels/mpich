@@ -99,8 +99,9 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
         child_subtree_size[i] = next_child - current_child;
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%d\n",
-                         i, rank, current_child, next_child, child_subtree_size[i], recv_size));
+                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%ld\n",
+                         i, rank, current_child, next_child, child_subtree_size[i],
+                         (long) recv_size));
         recv_size += child_subtree_size[i];
     }
 
