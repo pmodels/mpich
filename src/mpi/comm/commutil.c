@@ -240,6 +240,8 @@ void MPIR_Comm_hint_init(void)
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_MULTI_NIC_PREF_NIC, "multi_nic_pref_nic", NULL,
                             MPIR_COMM_HINT_TYPE_INT, 0, -1);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_INHERIT_VCI, "inherit_vci", NULL,
+                            MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
 }
 
 /* FIXME :
@@ -769,7 +771,7 @@ static int init_comm_seq(MPIR_Comm * comm)
     /* Every user-level communicator gets a sequence number, which can be
      * used, for example, to hash vci.
      * Builtin-comm, e.g. MPI_COMM_WORLD, always have seq at 0 */
-    if (!HANDLE_IS_BUILTIN(comm->handle)) {
+    if (!HANDLE_IS_BUILTIN(comm->handle) && !comm->hints[MPIR_COMM_HINT_INHERIT_VCI]) {
         static MPL_atomic_int_t vci_seq = MPL_ATOMIC_INT_T_INITIALIZER(0);
         MPL_atomic_fetch_add_int(&vci_seq, 1);
 
@@ -965,6 +967,9 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
 
     if (info) {
         MPII_Comm_set_hints(newcomm_ptr, info, true);
+        if (newcomm_ptr->hints[MPIR_COMM_HINT_INHERIT_VCI]) {
+            newcomm_ptr->seq = comm_ptr->seq;
+        }
     }
 
     newcomm_ptr->vcis_enabled = comm_ptr->vcis_enabled;
