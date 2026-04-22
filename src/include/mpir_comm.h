@@ -40,6 +40,7 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_EXACT_LENGTH,
     MPIR_COMM_HINT_ALLOW_OVERTAKING,
     MPIR_COMM_HINT_STRICT_PCOLL_ORDERING,
+    MPIR_COMM_HINT_INHERIT_VCI, /* new comm use the same seq as parent comm */
     /* device specific hints.
      * Potentially, we can use macros and configure to hide them */
     MPIR_COMM_HINT_EAGER_THRESH,        /* ch3 */
