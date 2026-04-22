@@ -50,24 +50,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_RNDV_send_hdr(void *hdr, int hdr_sz, MPID
     int mpi_errno = MPI_SUCCESS;
 
     /* control message always use nic 0 */
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, 0);
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(av, vci_local, 0, vci_remote, 0);
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(av, vci_local, nic, vci_remote, nic);
     if (hdr_sz <= MPIDI_OFI_global.max_buffered_send) {
         MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                         hdr, hdr_sz, addr, match_bits), vci_local, tinject);
     } else {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    "MPIDI_OFI_RNDV_send_hdr: using blocking send\n");
+                    "MPIDI_OFI_RNDV_send_hdr: using emulated inject.\n");
 
-        MPIDI_OFI_dynamic_process_request_t req;
-        req.done = 0;
-        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz, NULL,
-                                      addr, match_bits, (void *) &req.context), vci_local, tsend);
-        do {
-            mpi_errno = MPIDI_OFI_progress_uninlined(vci_local);
-            MPIR_ERR_CHECK(mpi_errno);
-        } while (!req.done);
+        mpi_errno = MPIDI_OFI_do_emulated_inject(addr, NULL, hdr, hdr_sz,
+                                                 nic, vci_local, match_bits);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
