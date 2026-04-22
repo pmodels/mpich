@@ -6,6 +6,8 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 #include <ucp/api/ucp.h>
+/* for dump_ucx_info() */
+#include <uct/api/uct.h>
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -63,6 +65,8 @@ cvars:
             MPIDIU_upidhash_add(ep_params.address, addrnamelen, lpid); \
         } \
     } while (0)
+
+static void dump_ucx_info(void);
 
 static void request_init_callback(void *request)
 {
@@ -256,6 +260,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
 
     if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("==== UCX netmod Capability ====\n");
+        dump_ucx_info();
         printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
         printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
         printf("tag_bits: %d\n", *tag_bits);
@@ -357,4 +362,59 @@ int MPIDI_UCX_mpi_free_mem(void *ptr)
 void *MPIDI_UCX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
+}
+
+static void dump_ucx_info(void)
+{
+    uct_component_h *components;
+    unsigned num_components;
+    ucs_status_t status;
+
+    status = uct_query_components(&components, &num_components);
+    if (status != UCS_OK) {
+        return;
+    }
+
+    printf("UCT %s\n", UCT_VERNO_STRING);
+    for (unsigned i = 0; i < num_components; ++i) {
+        uct_component_attr_t attr;
+
+        attr.field_mask = UCT_COMPONENT_ATTR_FIELD_MD_RESOURCE_COUNT;
+        status = uct_component_query(components[i], &attr);
+        if (status != UCS_OK || attr.md_resource_count == 0) {
+            continue;
+        }
+
+        attr.md_resources =
+            MPL_malloc(sizeof(*attr.md_resources) * attr.md_resource_count, MPL_MEM_OTHER);
+        attr.field_mask |= UCT_COMPONENT_ATTR_FIELD_MD_RESOURCES;
+
+        uct_md_config_t *md_config;
+        uct_md_config_read(components[i], NULL, NULL, &md_config);
+
+        status = uct_component_query(components[i], &attr);
+        if (status == UCS_OK) {
+            for (unsigned j = 0; j < attr.md_resource_count; ++j) {
+                uct_md_h md;
+                uct_md_open(components[i], attr.md_resources[j].md_name, md_config, &md);
+
+                uct_tl_resource_desc_t *tl_resources;
+                unsigned num_tl_resources;
+
+                uct_md_query_tl_resources(md, &tl_resources, &num_tl_resources);
+
+                for (unsigned k = 0; k < num_tl_resources; ++k) {
+                    printf("  Transport: %-8s, Device: %s\n",
+                           tl_resources[k].tl_name, tl_resources[k].dev_name);
+                }
+
+                uct_release_tl_resource_list(tl_resources);
+                uct_md_close(md);
+            }
+        }
+        uct_config_release(md_config);
+        MPL_free(attr.md_resources);
+    }
+
+    uct_release_component_list(components);
 }
