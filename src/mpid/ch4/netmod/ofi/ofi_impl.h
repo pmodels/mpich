@@ -892,4 +892,53 @@ MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_typ
     }
 }
 
+/* emulated inject.
+ * * If msg_hdrp is not NULL, it is a am header, match_bits is ignored.
+ * * If msg_hdrp is NULL, it is a tagged send.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
+                                                          const MPIDI_OFI_am_header_t * msg_hdrp,
+                                                          const void *am_hdr, size_t am_hdr_sz,
+                                                          int nic, int vci, uint64_t match_bits)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq;
+    char *ibuf;
+    size_t len;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
+
+    MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, vci, 1);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+
+    if (msg_hdrp) {
+        len = am_hdr_sz + sizeof(*msg_hdrp);
+        ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
+        MPIR_Assert(ibuf);
+        memcpy(ibuf, msg_hdrp, sizeof(*msg_hdrp));
+        memcpy(ibuf + sizeof(*msg_hdrp), am_hdr, am_hdr_sz);
+    } else {
+        len = am_hdr_sz;
+        ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
+        MPIR_Assert(ibuf);
+        memcpy(ibuf, am_hdr, am_hdr_sz);
+    }
+
+    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
+    MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
+    MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus += 1;
+
+    if (msg_hdrp) {
+        MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, ibuf, len, NULL,
+                                        addr, &(MPIDI_OFI_REQUEST(sreq, context))), vci, send);
+    } else {
+        MPIDI_OFI_CALL_RETRY_AM(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, ibuf, len, NULL,
+                                         addr, match_bits, &(MPIDI_OFI_REQUEST(sreq, context))),
+                                vci, send);
+    }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */
