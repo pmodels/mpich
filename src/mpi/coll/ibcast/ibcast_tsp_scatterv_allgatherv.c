@@ -131,8 +131,9 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%d",
-                         i, rank, current_child, next_child, child_subtree_size[i], recv_size));
+                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%ld",
+                         i, rank, current_child, next_child, child_subtree_size[i],
+                         (long) recv_size));
         recv_size += child_subtree_size[i];
     }
     if (my_tree.parent != -1)

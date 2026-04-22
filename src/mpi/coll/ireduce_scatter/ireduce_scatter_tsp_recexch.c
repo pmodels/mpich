@@ -80,8 +80,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                 send_cnt += recvcounts[offset + j];
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d sending to %d send_offset %d send_count %d", phase, dst,
-                             send_offset, send_cnt));
+                             "phase %d sending to %d send_offset %ld send_count %ld",
+                             phase, dst, (long) send_offset, (long) send_cnt));
             mpi_errno =
                 MPIR_TSP_sched_isend((char *) tmp_results + send_offset, send_cnt,
                                      datatype, dst, tag, comm, sched, nvtcs, vtcs, &send_id);
@@ -97,8 +97,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                 recv_cnt += recvcounts[offset + j];
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d recving from %d recv_offset %d recv_count %d", phase, dst,
-                             recv_offset, recv_cnt));
+                             "phase %d recving from %d recv_offset %ld recv_count %ld",
+                             phase, dst, (long) recv_offset, (long) recv_cnt));
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + recv_offset, recv_cnt,
                                      datatype, dst, tag, comm, sched, nvtcs, vtcs, &recv_id);
