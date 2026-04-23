@@ -57,14 +57,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int *made_progre
         switch (msg_hdr->am_type) {
             case MPIDI_POSIX_AM_TYPE__HDR:
             case MPIDI_POSIX_AM_TYPE__SHORT:
-                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, payload, payload_left,
-                                                                   attr, NULL);
+                mpi_errno =
+                    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, payload,
+                                                                       payload_left, attr, NULL);
+                MPIR_ERR_CHECK(mpi_errno);
+
                 MPIDI_POSIX_eager_recv_commit(&transaction);
                 goto fn_exit;
             case MPIDI_POSIX_AM_TYPE__PIPELINE:
-                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, payload_left,
-                                                                   attr | MPIDIG_AM_ATTR__IS_ASYNC,
-                                                                   &rreq);
+                mpi_errno =
+                    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, payload_left,
+                                                                       attr |
+                                                                       MPIDIG_AM_ATTR__IS_ASYNC,
+                                                                       &rreq);
+                MPIR_ERR_CHECK(mpi_errno);
+
                 /* prepare for asynchronous transfer */
                 MPIDIG_recv_setup(rreq);
 
@@ -80,7 +87,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int *made_progre
     int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
     if (is_done) {
         MPIDI_POSIX_global.per_vci[vci].active_rreq[transaction.src_local_rank] = NULL;
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIDI_POSIX_eager_recv_commit(&transaction);
@@ -88,6 +96,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int *made_progre
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int *made_progress)
