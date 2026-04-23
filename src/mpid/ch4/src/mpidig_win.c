@@ -282,9 +282,18 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     memset(&win->dev.am, 0, sizeof(MPIDIG_win_t));
 
+    MPIR_Info *tmp_info;
+    mpi_errno = MPIR_Info_alloc(&tmp_info);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Info_push(tmp_info, "inherit_vci", "true");
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_with_info_impl(comm_ptr, tmp_info, &win_comm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Info_free_impl(tmp_info);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_WIN(win, targets) = targets;
