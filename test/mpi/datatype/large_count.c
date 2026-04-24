@@ -39,7 +39,7 @@ static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count e
     elements = elements_x = count = 0xfeedface;
     /* can't use legacy "set" for large element counts */
     if (expected <= INT_MAX) {
-        MPI_Status_set_elements(&status, type, 1);
+        MPI_Status_set_elements(&status, type, expected);
         MPI_Get_elements(&status, type, &elements);
         MPI_Get_elements_x(&status, type, &elements_x);
         MPI_Get_count(&status, type, &count);
@@ -49,7 +49,7 @@ static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count e
     }
 
     elements = elements_x = count = 0xfeedface;
-    MPI_Status_set_elements_x(&status, type, 1);
+    MPI_Status_set_elements_x(&status, type, expected);
     MPI_Get_elements(&status, type, &elements);
     MPI_Get_elements_x(&status, type, &elements_x);
     MPI_Get_count(&status, type, &count);
@@ -63,7 +63,7 @@ static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count e
 
 #if MTEST_HAVE_MIN_MPI_VERSION(4,0)
     elements = elements_x = count = 0xfeedface;
-    MPI_Status_set_elements_c(&status, type, 1);
+    MPI_Status_set_elements_c(&status, type, expected);
     MPI_Get_elements(&status, type, &elements);
     MPI_Get_elements_c(&status, type, &elements_x);
     MPI_Get_count(&status, type, &count);
