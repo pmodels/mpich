@@ -46,6 +46,11 @@
 #define MPIR_TYPE_ALT_COMPLEX     0x060000      /* e.g. 2-byte Bfloat, 16-byte C long double */
 #define MPIR_TYPE_FORTRAN_LOGICAL 0x070000      /* Fortran logical may need conversions at op */
 
+#define MPIR_BASIC_TYPE_IS_SIGNED(datatype) (((datatype) & 0x070000) == MPIR_TYPE_SIGNED)
+#define MPIR_BASIC_TYPE_IS_UNSIGNED(datatype) (((datatype) & 0x070000) == MPIR_TYPE_UNSIGNED)
+#define MPIR_BASIC_TYPE_IS_FLOAT(datatype) (((datatype) & 0x070000) == MPIR_TYPE_FLOAT || ((datatype) & 0x070000) == MPIR_TYPE_ALT_FLOAT)
+#define MPIR_BASIC_TYPE_IS_COMPLEX(datatype) (((datatype) & 0x070000) == MPIR_TYPE_COMPLEX || ((datatype) & 0x070000) == MPIR_TYPE_ALT_COMPLEX)
+
 #define MPIR_FIXED0             ((MPI_Datatype)0x4c800000)      /* 0-size, internally equivalent to MPI_DATATYPE_NULL */
 #define MPIR_FIXED8             ((MPI_Datatype)0x4c800100)
 #define MPIR_FIXED16            ((MPI_Datatype)0x4c800200)
@@ -457,6 +462,15 @@ void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, i
          break;                                                         \
                                                                         \
     }                                                                   \
+} while (0)
+
+/* Use at binding-layer validation, before MPIR_DATATYPE_REPLACE_BUILTIN */
+#define MPIR_Datatype_get_size_at_binding(a,size_) do { \
+    if (HANDLE_IS_BUILTIN(a) && ((a) & 0xff)) { \
+        size_ = MPIR_Datatype_get_basic_size(MPIR_Internal_types[(a) & 0xff].internal_type); \
+    } else { \
+        MPIR_Datatype_get_size_macro(a, size_); \
+    } \
 } while (0)
 
 #define MPIR_Datatype_get_extent_macro(a,extent_) do {                  \
