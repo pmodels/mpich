@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     MPI_Datatype four_ints = MPI_DATATYPE_NULL;
     MPI_Datatype imx4i = MPI_DATATYPE_NULL;
     MPI_Datatype imx4i_rsz = MPI_DATATYPE_NULL;
+    MPI_Datatype four_struct = MPI_DATATYPE_NULL;
     MPI_Status status;
 
     MTest_Init(&argc, &argv);
@@ -135,6 +136,17 @@ int main(int argc, char *argv[])
     MPI_Type_create_resized(imx4i, /*lb= */ INT_MAX, /*extent= */ -1024, &imx4i_rsz);
     MPI_Type_commit(&imx4i_rsz);
 
+    /* four_struct: a struct with four elements */
+    int blklens[4] = { 1, 1, 1, 1 };
+    MPI_Aint displs[4] = { 0, 8, 16, 24 };
+    MPI_Datatype types[4] = { MPI_CHAR, MPI_INT, MPI_DOUBLE, MPI_SHORT };
+    MPI_Type_create_struct(4, blklens, displs, types, &four_struct);
+    MPI_Type_commit(&four_struct);
+
+    MPI_Aint four_struct_extent = displs[3] + sizeof(double);
+    MPI_Aint four_struct_true_extent = displs[3] + sizeof(short);
+    MPI_Aint four_struct_size = sizeof(char) + sizeof(int) + sizeof(double) + sizeof(short);
+
     /* MPI_Type_size */
     MPI_Type_size(imax_contig, &size);
     check(size == INT_MAX);
@@ -144,6 +156,8 @@ int main(int argc, char *argv[])
     check(size == MPI_UNDEFINED);       /* should overflow an int */
     MPI_Type_size(imx4i_rsz, &size);
     check(size == MPI_UNDEFINED);       /* should overflow an int */
+    MPI_Type_size(four_struct, &size);
+    check(size == four_struct_size);
 
     /* MPI_Type_size_x */
     MPI_Type_size_x(imax_contig, &size_x);
@@ -154,6 +168,8 @@ int main(int argc, char *argv[])
     check(size_x == 4LL * sizeof(int) * (INT_MAX / 2)); /* should overflow an int */
     MPI_Type_size_x(imx4i_rsz, &size_x);
     check(size_x == 4LL * sizeof(int) * (INT_MAX / 2)); /* should overflow an int */
+    MPI_Type_size_x(four_struct, &size_x);
+    check(size_x == four_struct_size);
 
     /* MPI_Type_get_extent */
     MPI_Type_get_extent(imax_contig, &lb, &extent);
@@ -172,6 +188,9 @@ int main(int argc, char *argv[])
     MPI_Type_get_extent(imx4i_rsz, &lb, &extent);
     check(lb == INT_MAX);
     check(extent == -1024);
+    MPI_Type_get_extent(four_struct, &lb, &extent);
+    check(lb == 0);
+    check(extent == four_struct_extent);
 
     /* MPI_Type_get_extent_x */
     MPI_Type_get_extent_x(imax_contig, &lb_x, &extent_x);
@@ -186,6 +205,9 @@ int main(int argc, char *argv[])
     MPI_Type_get_extent_x(imx4i_rsz, &lb_x, &extent_x);
     check(lb_x == INT_MAX);
     check(extent_x == -1024);
+    MPI_Type_get_extent_x(four_struct, &lb_x, &extent_x);
+    check(lb_x == 0);
+    check(extent_x == four_struct_extent);
 
     /* MPI_Type_get_true_extent */
     MPI_Type_get_true_extent(imax_contig, &lb, &extent);
@@ -206,6 +228,9 @@ int main(int argc, char *argv[])
         check(extent == MPI_UNDEFINED);
     else
         check(extent == imx4i_true_extent);
+    MPI_Type_get_true_extent(four_struct, &lb, &extent);
+    check(lb == 0);
+    check(extent == four_struct_true_extent);
 
     /* MPI_Type_get_true_extent_x */
     MPI_Type_get_true_extent_x(imax_contig, &lb_x, &extent_x);
@@ -220,6 +245,9 @@ int main(int argc, char *argv[])
     MPI_Type_get_true_extent_x(imx4i_rsz, &lb_x, &extent_x);
     check(lb_x == 0);
     check(extent_x == imx4i_true_extent);
+    MPI_Type_get_true_extent_x(four_struct, &lb_x, &extent_x);
+    check(lb_x == 0);
+    check(extent == four_struct_true_extent);
 
 
     /* MPI_{Status_set_elements,Get_elements}{,_x} */
@@ -246,6 +274,7 @@ int main(int argc, char *argv[])
     check_set_elements(status, four_ints, 4);
     check_set_elements(status, imx4i, 4LL * (INT_MAX / 2));
     check_set_elements(status, imx4i_rsz, 4LL * (INT_MAX / 2));
+    check_set_elements(status, four_struct, 4);
 
   epilogue:
     if (imax_contig != MPI_DATATYPE_NULL)
@@ -256,6 +285,8 @@ int main(int argc, char *argv[])
         MPI_Type_free(&imx4i);
     if (imx4i_rsz != MPI_DATATYPE_NULL)
         MPI_Type_free(&imx4i_rsz);
+    if (four_struct != MPI_DATATYPE_NULL)
+        MPI_Type_free(&four_struct);
 
     MTest_Finalize(errs);
 
