@@ -168,6 +168,19 @@ static void comm_tests(MPI_Comm comm)
     }
 }
 
+static double normal(int n, int i)
+{
+    /* probability of Normal distribution assuming n spans [-3, 3]. */
+    double range = 6.0;
+    double dx = range / n;
+    /* shift i by 0.5 to center the data, divide by n to normalize the range to [0,1], then shift and re-range */
+    double x = ((i + 0.5) / n - 0.5) * range;
+    /* Gaussian formula */
+    double p = (1.0 / sqrt(6.28)) * exp(-x * x / 2.0);
+    /* approximate the integral */
+    return p * dx;
+}
+
 static double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time)
 {
     int i, j;
@@ -201,17 +214,11 @@ static double run_test(long long msg_size, MPI_Comm comm, test_t test_type, doub
             if (tmp > MAX_BUF)
                 return MTestReturnValue(errs);
         } else if (test_type == BELL_CURVE) {
-            for (j = 0; j < i; j++) {
-                if (i - 1 + j >= comm_size)
-                    continue;
-                tmp = msg_size * comm_size / (log(comm_size) * i);
-                recvcounts[i - 1 + j] = (int) tmp;
-                displs[i - 1 + j] = 0;
-
-                /* If the maximum message size is too large, don't run */
-                if (tmp > MAX_BUF)
-                    return MTestReturnValue(errs);
+            tmp = (int) (msg_size * comm_size * normal(comm_size, i));
+            if (displs[i] + tmp > MAX_BUF) {
+                tmp = MAX_BUF - displs[i];
             }
+            recvcounts[i] = tmp;
         }
 
         if (i < comm_size - 1)
