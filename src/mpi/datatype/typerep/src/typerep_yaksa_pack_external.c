@@ -160,7 +160,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
         ext_type_size /= 2;
     }
 
-    if (basic_type == MPI_LONG_DOUBLE || basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
+    MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
+    if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
         PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
     } else if (basic_type_size == ext_type_size) {
@@ -258,7 +259,8 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
         ext_type_size /= 2;
     }
 
-    if (basic_type == MPI_LONG_DOUBLE || basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
+    MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
+    if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
         UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
     } else if (basic_type_size == ext_type_size) {
