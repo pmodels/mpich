@@ -697,10 +697,14 @@ int MPIDI_OFI_init_local(int *tag_bits)
         if (MPIR_Process.rank == 0) {
             fprintf(stdout, "====== Rank to NIC assignment ========\n");
         }
+        /* prevent messages from different ranks get interleaved. */
+        fflush(stdout);
+        MPIR_pmi_barrier();
         fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
                 MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
+        fflush(stdout);
+        MPIR_pmi_barrier();
     }
-    fflush(stdout);
 
     /* Finally open the fabric */
     MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
