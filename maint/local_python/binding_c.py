@@ -2885,7 +2885,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
 
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPI_Aint %stype_size;" % b)
-            G.out.append("    MPIR_Datatype_get_size_macro(%stype, %stype_size);" % (b, b))
+            G.out.append("    MPIR_Datatype_get_size_at_binding(%stype, %stype_size);" % (b, b))
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(%s, %s, mpi_errno);" % (buf, buf2))
             G.out.append("}")
         else:

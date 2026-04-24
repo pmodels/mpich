@@ -464,6 +464,15 @@ void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, i
     }                                                                   \
 } while (0)
 
+/* Use at binding-layer validation, before MPIR_DATATYPE_REPLACE_BUILTIN */
+#define MPIR_Datatype_get_size_at_binding(a,size_) do { \
+    if (HANDLE_IS_BUILTIN(a) && ((a) & 0xff)) { \
+        size_ = MPIR_Datatype_get_basic_size(MPIR_Internal_types[(a) & 0xff].internal_type); \
+    } else { \
+        MPIR_Datatype_get_size_macro(a, size_); \
+    } \
+} while (0)
+
 #define MPIR_Datatype_get_extent_macro(a,extent_) do {                  \
     void *ptr;                                                          \
     switch (HANDLE_GET_KIND(a)) {                                       \
