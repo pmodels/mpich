@@ -134,20 +134,168 @@ int MPIR_Pack_external_size_impl(const char *datarep,
     return MPI_SUCCESS;
 }
 
+/* utility function for MPIR_Status_set_elements_x_impl.
+ * Recursively count the total number of bytes from a given number of elements, where
+ * we assume the datatype does not contain a single element type.
+ */
+static MPI_Count MPIR_Type_get_element_bytes(MPI_Count * elements_p,
+                                             MPI_Count count, MPI_Datatype datatype)
+{
+    if (HANDLE_IS_BUILTIN(datatype)) {
+        MPI_Count element_size = MPIR_Datatype_get_basic_size(datatype);
+        if (*elements_p > count) {
+            *elements_p -= count;
+            return count * element_size;
+        } else {
+            MPI_Count nbytes = (*elements_p) * element_size;
+            *elements_p = 0;
+            return nbytes;
+        }
+    }
+
+    MPIR_Datatype *datatype_ptr;
+    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+
+    if (datatype_ptr->builtin_element_size != -1) {
+        MPI_Count element_size = datatype_ptr->builtin_element_size;
+        count *= (datatype_ptr->size / element_size);
+        if (*elements_p > count) {
+            *elements_p -= count;
+            return count * element_size;
+        } else {
+            MPI_Count nbytes = (*elements_p) * element_size;
+            *elements_p = 0;
+            return nbytes;
+        }
+    }
+
+    /* let's peel the datatype layer by layer */
+    int *ints;
+    MPI_Aint *aints;
+    MPI_Aint *counts;
+    MPI_Datatype *types;
+
+    MPIR_Datatype_contents *cp = datatype_ptr->contents;
+    MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
+    MPIR_Assert(ints && aints && counts && types);
+
+    switch (datatype_ptr->contents->combiner) {
+        case MPI_COMBINER_NAMED:
+        case MPI_COMBINER_DUP:
+        case MPI_COMBINER_RESIZED:
+            return MPIR_Type_get_element_bytes(elements_p, count, *types);
+        case MPI_COMBINER_CONTIGUOUS:
+        case MPI_COMBINER_VECTOR:
+        case MPI_COMBINER_HVECTOR:
+        case MPI_COMBINER_SUBARRAY:
+            if (cp->nr_counts == 0) {
+                return MPIR_Type_get_element_bytes(elements_p, count * ints[0], *types);
+            } else {
+                return MPIR_Type_get_element_bytes(elements_p, count * counts[0], *types);
+            }
+        case MPI_COMBINER_INDEXED_BLOCK:
+        case MPI_COMBINER_HINDEXED_BLOCK:
+            if (cp->nr_counts == 0) {
+                return MPIR_Type_get_element_bytes(elements_p, count * ints[0] * ints[1], *types);
+            } else {
+                return MPIR_Type_get_element_bytes(elements_p, count * counts[0] * counts[1],
+                                                   *types);
+            }
+        case MPI_COMBINER_INDEXED:
+        case MPI_COMBINER_HINDEXED:
+            {
+                MPI_Aint typecount = 0; /* total number of subtypes */
+                if (cp->nr_counts == 0) {
+                    for (int i = 0; i < ints[0]; i++) {
+                        typecount += ints[i + 1];
+                    }
+                } else {
+                    for (MPI_Aint i = 0; i < counts[0]; i++) {
+                        typecount += counts[i + 1];
+                    }
+                }
+                return MPIR_Type_get_element_bytes(elements_p, count * typecount, *types);
+            }
+        case MPI_COMBINER_STRUCT:
+            if (cp->nr_counts == 0) {
+                MPI_Count nbytes = 0;
+                for (MPI_Count j = 0; j < count; j++) {
+                    for (int i = 0; i < ints[0]; i++) {
+                        /* skip zero-count elements of the struct */
+                        if (ints[i + 1] == 0)
+                            continue;
+
+                        nbytes += MPIR_Type_get_element_bytes(elements_p, ints[i + 1], types[i]);
+                        if (*elements_p == 0) {
+                            return nbytes;
+                        }
+                    }
+                }
+                return nbytes;
+            } else {
+                MPI_Count nbytes = 0;
+                for (MPI_Count j = 0; j < count; j++) {
+                    for (MPI_Count i = 0; i < counts[0]; i++) {
+                        /* skip zero-count elements of the struct */
+                        if (counts[i + 1] == 0)
+                            continue;
+
+                        nbytes += MPIR_Type_get_element_bytes(elements_p, counts[i + 1], types[i]);
+                        if (*elements_p == 0) {
+                            return nbytes;
+                        }
+                    }
+                }
+                return nbytes;
+            }
+        case MPI_COMBINER_DARRAY:
+        case MPI_COMBINER_F90_REAL:
+        case MPI_COMBINER_F90_COMPLEX:
+        case MPI_COMBINER_F90_INTEGER:
+#ifndef BUILD_MPI_ABI
+        case MPI_COMBINER_HVECTOR_INTEGER:
+        case MPI_COMBINER_HINDEXED_INTEGER:
+        case MPI_COMBINER_STRUCT_INTEGER:
+#endif
+        default:
+            /* --BEGIN ERROR HANDLING-- */
+            MPIR_Assert(0);
+            return 0;
+            /* --END ERROR HANDLING-- */
+    }
+}
+
 int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Count size_x;
+    MPI_Count nbytes;
 
-    MPIR_Datatype_get_size_macro(datatype, size_x);
+    if (HANDLE_IS_BUILTIN(datatype)) {
+        nbytes = count * MPIR_Datatype_get_basic_size(datatype);
+    } else {
+        MPIR_Datatype *datatype_ptr;
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+        if (datatype_ptr->builtin_element_size != -1) {
+            nbytes = count * datatype_ptr->builtin_element_size;
+        } else {
+            if (datatype_ptr->size == 0) {
+                nbytes = 0;
+            } else {
+                MPI_Count orig_count = count;
+                nbytes = MPIR_Type_get_element_bytes(&count, 1, datatype);
+                /* it'll be so much easier if we store datatype_ptr->nr_elements */
+                if (count > 0) {
+                    MPI_Count nr_elements = orig_count - count;
+                    nbytes *= (orig_count / nr_elements);
 
-    /* overflow check, should probably be a real error check? */
-    if (count != 0) {
-        MPIR_Assert(size_x >= 0 && count > 0);
-        MPIR_Assert(count * size_x < MPIR_COUNT_MAX);
+                    MPI_Count remain = orig_count % nr_elements;
+                    nbytes += MPIR_Type_get_element_bytes(&remain, 1, datatype);
+                }
+            }
+        }
     }
 
-    MPIR_STATUS_SET_COUNT(*status, size_x * count);
+    MPIR_STATUS_SET_COUNT(*status, nbytes);
 
     return mpi_errno;
 }
