@@ -648,13 +648,13 @@ AC_ARG_WITH([daos], [AS_HELP_STRING([--with-daos=path], [Specify path to the dao
 AC_ARG_WITH([aio-lite], [AS_HELP_STRING([--with-aio-lite=path], [Specify path to the aio-lite library])])
 
 # options passed to libfabric configure
-AC_ARG_ENABLE([psm2], [AS_HELP_STRING([--disable-verbs], [disable libfabric psm2 provider])])
-AC_ARG_ENABLE([psm3], [AS_HELP_STRING([--disable-verbs], [disable libfabric psm3 provider])])
-AC_ARG_ENABLE([sockets], [AS_HELP_STRING([--disable-verbs], [disable libfabric sockets provider])])
+AC_ARG_ENABLE([psm2], [AS_HELP_STRING([--disable-psm2], [disable libfabric psm2 provider])])
+AC_ARG_ENABLE([psm3], [AS_HELP_STRING([--disable-psm3], [disable libfabric psm3 provider])])
+AC_ARG_ENABLE([sockets], [AS_HELP_STRING([--disable-sockets], [disable libfabric sockets provider])])
 AC_ARG_ENABLE([verbs], [AS_HELP_STRING([--disable-verbs], [disable libfabric verbs provider])])
-AC_ARG_ENABLE([efa], [AS_HELP_STRING([--disable-verbs], [disable libfabric efa provider])])
-AC_ARG_ENABLE([cxi], [AS_HELP_STRING([--disable-verbs], [disable libfabric cxi provider])])
-AC_ARG_ENABLE([opx], [AS_HELP_STRING([--disable-verbs], [disable libfabric opx provider])])
+AC_ARG_ENABLE([efa], [AS_HELP_STRING([--disable-efa], [disable libfabric efa provider])])
+AC_ARG_ENABLE([cxi], [AS_HELP_STRING([--disable-cxi], [disable libfabric cxi provider])])
+AC_ARG_ENABLE([opx], [AS_HELP_STRING([--disable-opx], [disable libfabric opx provider])])
 
 # options passed to hwloc configure
 AC_ARG_ENABLE([libxml2], [AS_HELP_STRING([--disable-libxml2], [force hwloc to use embedded xml parser])])
