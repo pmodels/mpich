@@ -6,8 +6,6 @@
 #ifndef MPIDPOST_H_INCLUDED
 #define MPIDPOST_H_INCLUDED
 
-#include "mpid_coll.h"
-
 /* FIXME: mpidpost.h is included by mpiimpl.h .  However, mpiimpl.h should 
    refer only to the ADI3 prototypes and should never include prototypes 
    specific to any particular device.  Factor the include files to maintain
@@ -276,6 +274,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitsome(int incount, MPIR_Request * request_p
                                            MPI_Status array_of_statuses[])
 {
     return MPIR_Waitsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
 }
 
 #endif /* MPIDPOST_H_INCLUDED */
