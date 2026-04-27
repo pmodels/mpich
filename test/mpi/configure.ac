@@ -143,8 +143,23 @@ AC_SUBST(RUNTESTS_OPTS)
 AC_ARG_ENABLE(cxx,
         [AS_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
+# --enable-io controls whether MPI I/O tests are built.
+# --enable-romio is accepted as an alias for --enable-io.
+# Record whether each option was explicitly supplied so the alias can be
+# forwarded only when --enable-io was not given.
+AC_ARG_ENABLE(io,
+        [AS_HELP_STRING([--enable-io],[Enable MPI I/O tests])],
+        [io_explicit=yes],
+        [io_explicit=no])
 AC_ARG_ENABLE(romio,
-        [AS_HELP_STRING([--enable-romio],[Enable MPI I/O tests])])
+        [AS_HELP_STRING([--enable-romio],[Alias for --enable-io])],
+        [romio_explicit=yes],
+        [romio_explicit=no])
+# If only --enable-romio/--disable-romio was provided, forward its value
+# to enable_io. An explicit --enable-io setting always takes precedence.
+if test "$io_explicit" = "no" -a "$romio_explicit" = "yes" ; then
+    enable_io=$enable_romio
+fi
 
 AC_ARG_ENABLE(namepub,
         [AS_HELP_STRING([--enable-namepub],
@@ -489,10 +504,10 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             enable_threadcomm=no
         fi
 
-        # disable-romio
-        if test "$enable_romio" != "no" ; then
+        # disable-io / disable-romio
+        if test "$enable_io" != "no" ; then
             if grep 'disable-romio\|enable-romio=no' conftest.output > /dev/null ; then
-                enable_romio=no
+                enable_io=no
             fi
         fi
 
@@ -1633,7 +1648,7 @@ LT_INIT()
 
 # IO
 iodir="#"
-if test "$enable_romio" != no -a "$mpi_io_works" = yes ; then
+if test "$enable_io" != no -a "$mpi_io_works" = yes ; then
     iodir=io
 
     dnl for io/async.c
