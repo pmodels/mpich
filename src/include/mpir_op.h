@@ -78,7 +78,7 @@ typedef enum MPIR_Op_kind {
   Collective-DS
   S*/
 typedef union MPIR_User_function {
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
     void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
     void (*c_large_function) (const void *, void *, const MPI_Count *, const MPI_Datatype *);
     void (*c_x_function) (void *, void *, MPI_Count, MPI_Datatype, void *);

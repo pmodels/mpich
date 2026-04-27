@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 static int unweighted_dummy = 0x46618;
 static int weights_empty_dummy = 0x022284;
 /* cannot ==NULL, would be ambiguous */
@@ -17,7 +17,7 @@ int *const MPI_WEIGHTS_EMPTY = &weights_empty_dummy;
 static int MPIR_Topology_keyval = MPI_KEYVAL_INVALID;
 
 /* Local functions */
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 static int MPIR_Topology_copy_fn(MPI_Comm, int, void *, void *, void *, int *);
 static int MPIR_Topology_delete_fn(MPI_Comm, int, void *, void *);
 #else
@@ -228,7 +228,7 @@ static int MPIR_Topology_delete_internal(void *attr_val)
     return MPI_SUCCESS;
 }
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
                                  int keyval ATTRIBUTE((unused)),
                                  void *extra_data ATTRIBUTE((unused)),

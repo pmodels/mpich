@@ -9,7 +9,7 @@
 /* Define storage for the ALL_HANDLES constant */
 MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj;
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 MPIR_T_pvar_handle_t *const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
 #define CHECK_PVAR_ALL_HANDLES(handle) do { } while (0)
 #else

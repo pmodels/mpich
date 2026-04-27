@@ -191,7 +191,7 @@ static void ull_maxloc_op(void *invec, void *inoutvec, int *len)
     }
 }
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
 {
     ull_maxloc_op(invec, inoutvec, len);
