@@ -119,7 +119,7 @@ static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node)
     proxy->exec_launch_info = NULL;
 
     proxy->proxy_process_count = 0;
-    proxy->filler_processes = 0;
+    proxy->filler_processes = node->core_count - node->active_processes;
 
     proxy->pid = NULL;
     proxy->exit_status = NULL;
