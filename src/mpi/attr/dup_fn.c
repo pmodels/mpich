@@ -31,7 +31,7 @@ int MPIR_Dup_fn(MPI_Comm comm ATTRIBUTE((unused)),
     return attr_dup_fn(attr_in, attr_out, flag);
 }
 
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
 int MPIR_Comm_dup_fn(ABI_Comm comm, int keyval, void *extra_state,
                      void *attr_in, void *attr_out, int *flag)
 {

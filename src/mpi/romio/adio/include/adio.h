@@ -62,7 +62,7 @@
 #define ROMIOCONF_H_INCLUDED
 #endif
 
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
 #include "romio_abi_internal.h"
 #else
 #include "mpi.h"
@@ -264,7 +264,7 @@ typedef struct {
 
 
 /* access modes */
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #define ADIO_CREATE              1
 #define ADIO_RDONLY              2
 #define ADIO_WRONLY              4
