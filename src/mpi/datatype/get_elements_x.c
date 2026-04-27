@@ -223,7 +223,7 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
             case MPI_COMBINER_F90_REAL:
             case MPI_COMBINER_F90_COMPLEX:
             case MPI_COMBINER_F90_INTEGER:
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
             case MPI_COMBINER_HVECTOR_INTEGER:
             case MPI_COMBINER_HINDEXED_INTEGER:
             case MPI_COMBINER_STRUCT_INTEGER:

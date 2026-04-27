@@ -56,7 +56,7 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
 }
 
 #ifdef HAVE_ROMIO
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #include "mpir_ext.h"
 
 static int ext_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
@@ -76,7 +76,7 @@ static int ext_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI
     return ret;
 }
 
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 #endif /* HAVE_ROMIO */
 
 static int split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,

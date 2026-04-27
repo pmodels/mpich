@@ -16,7 +16,7 @@ MPIR_Process_t MPIR_Process = {
 
 MPIR_Thread_info_t MPIR_ThreadInfo;
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to
    their Fortran values (MPI only requires that they be valid between

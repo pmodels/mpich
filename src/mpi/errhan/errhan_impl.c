@@ -4,7 +4,7 @@
  */
 
 #include "mpiimpl.h"
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
 #include "mpi_abi_util.h"
 #endif
 

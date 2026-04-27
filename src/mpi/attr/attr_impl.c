@@ -92,7 +92,7 @@ int MPIR_Comm_create_keyval_x_impl(MPI_Comm_copy_attr_function * comm_copy_attr_
                                    MPIX_Destructor_function * destructor_fn,
                                    int *comm_keyval, void *extra_state)
 {
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
     if (comm_copy_attr_fn == MPI_COMM_NULL_COPY_FN) {
         comm_copy_attr_fn = NULL;
     } else if (comm_copy_attr_fn == MPI_COMM_DUP_FN) {
@@ -112,7 +112,7 @@ int MPIR_Type_create_keyval_x_impl(MPI_Type_copy_attr_function * type_copy_attr_
                                    MPIX_Destructor_function * destructor_fn,
                                    int *type_keyval, void *extra_state)
 {
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
     if (type_copy_attr_fn == MPI_TYPE_NULL_COPY_FN) {
         type_copy_attr_fn = NULL;
     } else if (type_copy_attr_fn == MPI_TYPE_DUP_FN) {
@@ -136,7 +136,7 @@ int MPIR_Win_create_keyval_x_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
                                   MPIX_Destructor_function * destructor_fn,
                                   int *win_keyval, void *extra_state)
 {
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
     if (win_copy_attr_fn == MPI_WIN_NULL_COPY_FN) {
         win_copy_attr_fn = NULL;
     } else if (win_copy_attr_fn == MPI_WIN_DUP_FN) {

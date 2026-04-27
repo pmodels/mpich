@@ -222,7 +222,7 @@ def dump_mpir_io_impl_h(f):
         print("", file=Out)
 
         # io_abi.c doesn't have access to MPICH internal
-        print("#ifdef BUILD_MPI_ABI", file=Out)
+        print("#ifdef MPICH_BUILD_MPI_ABI", file=Out)
         print("#define MPIR_ERR_RECOVERABLE 0", file=Out)
         print("#define MPIR_ERR_FATAL 1", file=Out)
         print("int MPIR_Err_create_code(int, int, const char[], int, int, const char[], const char[], ...);", file=Out)

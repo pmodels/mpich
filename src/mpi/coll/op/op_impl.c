@@ -33,7 +33,7 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
 
     op_ptr->is_commute = commute;
     op_ptr->kind = MPIR_OP_KIND__USER;
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
     op_ptr->function.c_function = (void (*)(const void *, void *,
                                             const int *, const MPI_Datatype *)) user_fn;
 #else
@@ -58,7 +58,7 @@ int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_O
     if (mpi_errno == MPI_SUCCESS) {
         (*p_op_ptr)->is_commute = commute;
         (*p_op_ptr)->kind = MPIR_OP_KIND__USER_LARGE;
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
         (*p_op_ptr)->function.c_large_function = (void (*)(const void *, void *,
                                                            const MPI_Count *,
                                                            const MPI_Datatype *)) user_fn;

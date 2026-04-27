@@ -161,7 +161,7 @@ EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_conve
 endif !BUILD_PROFILING_LIB
 
 if BUILD_ABI_LIB
-abi_cppflags = -DBUILD_MPI_ABI -I$(srcdir)/src/binding/abi
+abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
 if BUILD_PROFILING_LIB
 # dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
 # don't contribute any PMPI symbols.

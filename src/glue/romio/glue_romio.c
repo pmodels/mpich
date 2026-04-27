@@ -9,7 +9,7 @@
 
 #include "mpiimpl.h"
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #include "mpir_ext.h"
 #else
 #include "mpi_abi_util.h"
@@ -218,7 +218,7 @@ static int ext_abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *er
     return MPID_Abort(comm_ptr, mpi_errno, exit_code, error_msg);
 }
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
 {
     return ext_datatype_iscommitted(datatype);

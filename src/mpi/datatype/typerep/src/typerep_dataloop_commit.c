@@ -63,7 +63,7 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                 goto clean_exit;
             }
             break;
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
         case MPI_COMBINER_HVECTOR_INTEGER:
         case MPI_COMBINER_HINDEXED_INTEGER:
         case MPI_COMBINER_STRUCT_INTEGER:

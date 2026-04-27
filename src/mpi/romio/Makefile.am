@@ -101,12 +101,12 @@ endif !BUILD_PROFILING_LIB
 if BUILD_ABI_LIB
 noinst_LTLIBRARIES += libromio_abi.la
 libromio_abi_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
-libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DBUILD_MPI_ABI
+libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_BUILD_MPI_ABI
 
 if BUILD_PROFILING_LIB
 noinst_LTLIBRARIES += libpromio_abi.la
 libpromio_abi_la_SOURCES = $(romio_mpi_sources)
-libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DBUILD_MPI_ABI
+libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DMPICH_BUILD_MPI_ABI
 libpromio_abi_la_LDFLAGS = $(external_ldflags)
 libpromio_abi_la_LIBADD = $(external_libs)
 endif BUILD_PROFILING_LIB

@@ -243,7 +243,7 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
         return c_struct;
     if (combiner == MPI_COMBINER_DUP)
         return c_dup;
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
     if (combiner == MPI_COMBINER_HVECTOR_INTEGER)
         return c_hvector_integer;
     if (combiner == MPI_COMBINER_HINDEXED_INTEGER)

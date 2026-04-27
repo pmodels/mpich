@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #include "mpir_ext.h"
 #define get_file_errhand MPIR_ROMIO_Get_file_errhand
 #define set_file_errhand MPIR_ROMIO_Set_file_errhand
@@ -178,7 +178,7 @@ static int call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
     return mpi_errno;
 }
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 int MPIR_Call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
 {
     return call_file_errhandler(e, errorcode, f);

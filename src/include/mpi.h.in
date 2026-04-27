@@ -19,7 +19,7 @@
 #define MPICH_API_PUBLIC
 #endif
 
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
 /* include adapted version of mpi_abi.h, which -
  *     * defines handle types with ABI_ prefix
  *         - internally we will type convert
@@ -34,10 +34,10 @@
 #include "mpi_abi_internal.h"
 #endif
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #define MPI_VERSION    5
 #define MPI_SUBVERSION 0
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
 #define MPICH_NAME     5
 #define MPICH         1
@@ -286,7 +286,7 @@ typedef int MPI_Session;
    as in src/mpi/romio/include/mpio.h.in  */
 typedef struct ADIOI_FileD *MPI_File;
 /* When building MPI_ABI, directly use ABI MPI_FILE_NULL */
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 #define MPI_FILE_NULL ((MPI_File)0)
 #endif
 
@@ -371,7 +371,7 @@ typedef int MPI_Info;
 #define MPI_WIN_CREATE_FLAVOR 0x66000007
 #define MPI_WIN_MODEL         0x66000009
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
 typedef @MPI_FINT@ MPI_Fint;
@@ -423,7 +423,7 @@ typedef struct {
 extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
 extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NULL() = MPI_DATATYPE_NULL;
@@ -504,7 +504,7 @@ static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI
 #define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
 #define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
 #define MPI_MAX_LIBRARY_VERSION_STRING @MPI_MAX_LIBRARY_VERSION_STRING@
@@ -625,10 +625,10 @@ enum MPIR_Combiner_enum {
 #define MPI_COMM_TYPE_HW_UNGUIDED 3
 #define MPI_COMM_TYPE_RESOURCE_GUIDED 4
 
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 /* MPICH-specific types */
 #define MPIX_COMM_TYPE_NEIGHBORHOOD 5
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0
@@ -766,7 +766,7 @@ enum MPIR_Combiner_enum {
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a
 					   predefined error class */
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
 
 #define MPICH_ERR_LAST_CLASS 81     /* It is also helpful to know the
@@ -815,7 +815,7 @@ enum {
 
 typedef struct MPIR_Async_thing * MPIX_Async_thing;
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* C callback functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
 typedef int (MPI_Comm_copy_attr_function)(MPI_Comm, int, void *, void *,
@@ -860,11 +860,11 @@ typedef void (MPIX_Destructor_function) (void *);
 typedef int (MPI_Grequest_cancel_function)(void *, int);
 typedef int (MPI_Grequest_free_function)(void *);
 typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 typedef int (MPIX_Async_poll_function)(MPIX_Async_thing);
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 
 /* Function type defs */
 typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int,
@@ -895,9 +895,9 @@ typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
 #define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
 #define MPI_CONVERSION_FN_NULL_C ((MPI_Datarep_conversion_function_c *)0)
 
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* types for the MPI_T_ interface */
 struct MPIR_T_enum_s;
 struct MPIR_T_cvar_handle_s;
@@ -1014,12 +1014,12 @@ typedef void (MPI_T_event_cb_function)(MPI_T_event_instance event_instance, MPI_
 typedef void (MPI_T_event_free_cb_function)(MPI_T_event_registration event_registration, MPI_T_cb_safety cb_safety, void *user_data);
 typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_registration event_registration, int source_index, MPI_T_cb_safety cb_safety, void *user_data);
 
-#else  /* BUILD_MPI_ABI */
+#else  /* MPICH_BUILD_MPI_ABI */
 /* FIXME: make it less hacky (fix the implementation) */
 #define MPIR_T_PVAR_CLASS_FIRST MPI_T_PVAR_CLASS_STATE
 #define MPIR_T_PVAR_CLASS_LAST  MPI_T_PVAR_CLASS_GENERIC
 #define MPIR_T_PVAR_CLASS_NUMBER 10
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
 typedef struct {
     void **storage_stack;
@@ -1054,7 +1054,7 @@ typedef struct MPIX_Iov {
  * Normally, we provide prototypes for all MPI routines.  In a few weird
  * cases, we need to suppress the prototypes.
  */
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
 /* We require that the C compiler support prototypes */
 #include <mpi_proto.h>
 
@@ -1107,7 +1107,7 @@ typedef struct MPIX_Iov {
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 #endif
 
-#endif /* BUILD_MPI_ABI */
+#endif /* MPICH_BUILD_MPI_ABI */
 
 #if defined(__cplusplus)
 }

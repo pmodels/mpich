@@ -14,7 +14,7 @@
 /* stdio is needed for vsprintf and vsnprintf */
 #include <stdio.h>
 
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
 #include "mpi_abi_util.h"
 #endif
 
@@ -187,7 +187,7 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
         mpi_errno = errorcode;
         goto fn_exit;
     }
-#ifdef BUILD_MPI_ABI
+#ifdef MPICH_BUILD_MPI_ABI
     void *abi_handle = NULL;
     if (h.kind == MPIR_COMM) {
         abi_handle = ABI_Comm_from_mpi(h.u.handle);
@@ -207,7 +207,7 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
         case MPIR_LANG__C:
             /* We pass a final 0 (for a null pointer) to these routines
              * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
             if (h.kind == MPIR_FILE) {
                 (*errhandler->errfn.C_File_Handler_function) (&h.u.fh, &errorcode);
             } else {
@@ -222,7 +222,7 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
         case MPIR_LANG__X:
             {
                 void *extra_state = errhandler->extra_state;
-#ifndef BUILD_MPI_ABI
+#ifndef MPICH_BUILD_MPI_ABI
                 if (h.kind == MPIR_FILE) {
                     (*errhandler->errfn.X_File_Handler_function) (h.u.fh, errorcode, extra_state);
                 } else {
