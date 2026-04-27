@@ -15,7 +15,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 
     MPIR_FUNC_ENTER;
 
-    if (win_ptr->comm_ptr->node_comm == NULL) {
+    if (!win_ptr->shm_base_addr) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
@@ -47,7 +47,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
     }
     else {
         int local_target_rank = MPIR_Get_intranode_rank(win_ptr->comm_ptr, target_rank);
-        if (local_target_rank >= 0 && win_ptr->shm_base_addrs) {
+        if (local_target_rank >= 0) {
             MPIR_Assert(local_target_rank < win_ptr->comm_ptr->node_comm->local_size);
             *size = win_ptr->basic_info_table[target_rank].size;
             *disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
