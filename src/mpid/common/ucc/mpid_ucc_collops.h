@@ -109,4 +109,24 @@
         MPIDI_COMMON_UCC_CALL_AND_CHECK(ucc_collective_finalize(_req)); \
     } while (0)
 
+#define MPIDI_COMMON_UCC_WRAPPER_ENTER(_collop_name)                    \
+    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, _collop_name);             \
+    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(_collop_name);
+
+#define MPIDI_COMMON_UCC_WRAPPER_EXECUTE(_collop_name, ...)             \
+    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_ ## _collop_name ##       \
+                                    _init(__VA_ARGS__));                \
+    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);                       \
+    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
+
+#define MPIDI_COMMON_UCC_WRAPPER_EXIT(_collop_name, ...)                \
+    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(_collop_name);         \
+    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;                             \
+  fallback:                                                             \
+    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(_collop_name);             \
+    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;                            \
+  disabled:                                                             \
+    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(_collop_name);             \
+    goto fallback;
+
 #endif /*_MPID_UCC_COLLOPS_H_*/

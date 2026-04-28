@@ -96,24 +96,10 @@ int MPIDI_common_ucc_gather(const void *sbuf, MPI_Aint scount, MPI_Datatype sdty
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
     MPIDI_common_ucc_req_t req = { 0 };
 
-    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, gather);
+    MPIDI_COMMON_UCC_WRAPPER_ENTER(gather);
 
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(gather);
+    MPIDI_COMMON_UCC_WRAPPER_EXECUTE(gather, sbuf, scount, sdtype, rbuf, rcount, rdtype, root,
+                                     comm_ptr, &req);
 
-    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_gather_init
-                                    (sbuf, scount, sdtype, rbuf, rcount, rdtype, root,
-                                     comm_ptr, &req));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
-
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(gather);
-
-    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-
-  fallback:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(gather);
-    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;
-  disabled:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(gather);
-    goto fallback;
+    MPIDI_COMMON_UCC_WRAPPER_EXIT(gather);
 }

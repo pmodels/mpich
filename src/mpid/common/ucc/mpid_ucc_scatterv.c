@@ -106,19 +106,10 @@ int MPIDI_common_ucc_scatterv(const void *sbuf, const MPI_Aint scounts[], const 
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
     MPIDI_common_ucc_req_t req = { 0 };
 
-    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, scatterv);
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(scatterv);
-    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_scatterv_init
-                                    (sbuf, scounts, sdispls, sdtype, rbuf,
-                                     rcount, rdtype, root, comm_ptr, &req));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(scatterv);
-    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-  fallback:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(scatterv);
-    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;
-  disabled:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(scatterv);
-    goto fallback;
+    MPIDI_COMMON_UCC_WRAPPER_ENTER(scatterv);
+
+    MPIDI_COMMON_UCC_WRAPPER_EXECUTE(scatterv, sbuf, scounts, sdispls, sdtype, rbuf, rcount, rdtype,
+                                     root, comm_ptr, &req);
+
+    MPIDI_COMMON_UCC_WRAPPER_EXIT(scatterv);
 }
