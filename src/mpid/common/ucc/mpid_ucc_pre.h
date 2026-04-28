@@ -58,6 +58,21 @@ typedef enum {
     MPIDI_COMMON_UCC_RETVAL_FALLBACK = 1,
 } MPIDI_common_ucc_error_t;
 
+/* Functions for an external but fast read access to the two
+ * internal status flags `ucc_enabled` and `ucc_initialized`.
+ */
+extern const int *const MPIDI_common_ucc_priv_ucc_enabled;
+static inline int MPIDI_common_ucc_is_enabled(void)
+{
+    return *MPIDI_common_ucc_priv_ucc_enabled;
+}
+
+extern const int *const MPIDI_common_ucc_priv_ucc_initialized;
+static inline int MPIDI_common_ucc_is_initialized(void)
+{
+    return *MPIDI_common_ucc_priv_ucc_initialized;
+}
+
 /* Macro for ADI3 devices to encapsulate calls to the UCC wrappers for the
  * collective functions. Use is optional, but improves consistency due to
  * the differing return semantics of the UCC wrappers in comparison to the
