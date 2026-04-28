@@ -30,10 +30,22 @@ static int mpidi_ucc_finalize(void *param ATTRIBUTE((unused)))
         goto fn_exit;
     }
 
-    MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC, "finalizing ucc library");
+    if (MPIDI_common_ucc_priv.comm_world_initialized) {
+        MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
+                                 "finalizing ucc for comm_world");
+        MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world);
+        if (MPIR_Comm_is_parent_comm(MPIR_Process.comm_world)) {
+            MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
+                                     "finalizing ucc for comm_world's shadow comms");
+            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_comm);
+            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_roots_comm);
+        }
+    }
 
     MPIR_Progress_hook_deactivate(MPIDI_common_ucc_priv.progress_hook_id);
     MPIR_Progress_hook_deregister(MPIDI_common_ucc_priv.progress_hook_id);
+
+    MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC, "finalizing ucc library");
 
     ucc_context_destroy(MPIDI_common_ucc_priv.ucc_context);
     if (ucc_finalize(MPIDI_common_ucc_priv.ucc_lib) != UCC_OK) {
@@ -70,7 +82,7 @@ int MPIDI_common_ucc_enable(int verbose_level, const char *verbose_level_str, in
     MPIDI_common_ucc_priv.verbose_debug = debug_flag;
 
     if (!MPIDI_common_ucc_priv.ucc_enabled) {
-        MPIR_Add_finalize(mpidi_ucc_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO + 1);
+        MPIR_Add_finalize(mpidi_ucc_finalize, NULL, MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO);
         MPIDI_common_ucc_priv.ucc_enabled = 1;
     }
 
@@ -426,7 +438,7 @@ int MPIDI_common_ucc_comm_destroy_hook(MPIR_Comm * comm_ptr)
     MPIDI_COMMON_UCC_DEBUG(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC,
                            "entering mpidi comm destroy hook");
 
-    if (!MPIDI_common_ucc_priv.ucc_enabled || !MPIDI_common_ucc_priv.ucc_initialized) {
+    if (!MPIDI_common_ucc_priv.ucc_enabled || !MPIDI_common_ucc_priv.ucc_initialized || !comm_ptr) {
         goto fn_exit;
     }
 
@@ -446,6 +458,10 @@ int MPIDI_common_ucc_comm_destroy_hook(MPIR_Comm * comm_ptr)
     if (status != UCC_OK) {
         MPIDI_COMMON_UCC_ERROR("ucc team destroy failed");
         goto fn_fail;
+    }
+
+    if (comm_ptr == MPIR_Process.comm_world) {
+        MPIDI_common_ucc_priv.comm_world_initialized = 0;
     }
 
     comm_ptr->ucc_priv.ucc_initialized = 0;
