@@ -12,6 +12,9 @@
 
 MPIDI_common_ucc_priv_t MPIDI_common_ucc_priv = { 0 };
 
+const int *const MPIDI_common_ucc_priv_ucc_enabled = &MPIDI_common_ucc_priv.ucc_enabled;
+const int *const MPIDI_common_ucc_priv_ucc_initialized = &MPIDI_common_ucc_priv.ucc_initialized;
+
 #define MPIDI_COMMON_UCC_VERBOSE_STRING(STRING) #STRING,
 const char *MPIDI_COMMON_UCC_VERBOSE_LEVEL_TO_STRING[] = {
     MPIDI_COMMON_UCC_VERBOSE_LEVELS(MPIDI_COMMON_UCC_VERBOSE_STRING)
