@@ -116,6 +116,11 @@ extern const char *MPIDI_COMMON_UCC_VERBOSE_LEVEL_TO_STRING[];
 #endif
 
 typedef struct {
+    ucc_coll_req_h ucc_req;
+    MPIR_Request *mpir_req;
+} MPIDI_common_ucc_req_t;
+
+typedef struct {
     int ucc_enabled;            /* flag set during `MPIDI_common_ucc_enable()` to activate the UCC support in general */
     int ucc_initialized;        /* flag set when the UCC library has been initialized successfully */
     int verbose_level;          /* verbosity level of the UCC wrappers; set during `MPIDI_common_ucc_enable()` */

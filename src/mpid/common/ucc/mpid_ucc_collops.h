@@ -74,20 +74,20 @@
         }                                                               \
     } while (0)
 
-#define MPIDI_COMMON_UCC_REQ_INIT(_coll_req, _req, _coll, _comm) do {   \
-        if (_coll_req) {                                                \
+#define MPIDI_COMMON_UCC_REQ_INIT(_req, _coll_args, _comm) do {         \
+        if (_req->mpir_req) {                                           \
             MPIR_Assert(0); /* not yet supported */                     \
-            _coll.mask   |= UCC_COLL_ARGS_FIELD_CB;                     \
-            _coll.cb.cb   = NULL;                                       \
-            _coll.cb.data = (void*)_coll_req;                           \
+            _coll_args.mask   |= UCC_COLL_ARGS_FIELD_CB;                \
+            _coll_args.cb.cb   = NULL;                                  \
+            _coll_args.cb.data = (void*)_req->mpir_req;                 \
         } else {                                                        \
-            _coll.mask  |= UCC_COLL_ARGS_FIELD_FLAGS;                   \
-            _coll.flags |= UCC_COLL_ARGS_HINT_OPTIMIZE_LATENCY;         \
+            _coll_args.mask  |= UCC_COLL_ARGS_FIELD_FLAGS;              \
+            _coll_args.flags |= UCC_COLL_ARGS_HINT_OPTIMIZE_LATENCY;    \
         }                                                               \
-        MPIDI_COMMON_UCC_CALL_AND_CHECK(ucc_collective_init(\
-                              &_coll, _req, _comm->ucc_priv.ucc_team)); \
-        if (_coll_req) {                                                \
-            /* _coll_req->ucc_req = *(_req); TODO*/                     \
+        MPIDI_COMMON_UCC_CALL_AND_CHECK(ucc_collective_init(&_coll_args,\
+                                            &_req->ucc_req,             \
+                                            _comm->ucc_priv.ucc_team)); \
+        if (_req->mpir_req) {                                           \
             MPIR_Assert(0); /* not yet supported */                     \
         }                                                               \
     } while (0)

@@ -10,8 +10,8 @@
 static inline ucc_status_t mpidi_ucc_scatter_init(const void *sbuf, MPI_Aint scount,
                                                   MPI_Datatype sdtype, void *rbuf, MPI_Aint rcount,
                                                   MPI_Datatype rdtype, int root,
-                                                  MPIR_Comm * comm_ptr, ucc_coll_req_h * req,
-                                                  MPIR_Request * coll_req)
+                                                  MPIR_Comm * comm_ptr,
+                                                  MPIDI_common_ucc_req_t * req)
 {
     bool is_inplace = (rbuf == MPI_IN_PLACE);
     int comm_rank = MPIR_Comm_rank(comm_ptr);
@@ -84,7 +84,8 @@ static inline ucc_status_t mpidi_ucc_scatter_init(const void *sbuf, MPI_Aint sco
                                                  mpidi_ucc_dtype_to_str(ucc_rdt), root);
     }
 
-    MPIDI_COMMON_UCC_REQ_INIT(coll_req, req, coll, comm_ptr);
+    MPIDI_COMMON_UCC_REQ_INIT(req, coll, comm_ptr);
+
     return UCC_OK;
   fallback:
     return UCC_ERR_NOT_SUPPORTED;
@@ -94,7 +95,7 @@ int MPIDI_common_ucc_scatter(const void *sbuf, MPI_Aint scount, MPI_Datatype sdt
                              MPI_Aint rcount, MPI_Datatype rdtype, int root, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-    ucc_coll_req_h req;
+    MPIDI_common_ucc_req_t req = { 0 };
 
     MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, scatter);
 
@@ -102,9 +103,9 @@ int MPIDI_common_ucc_scatter(const void *sbuf, MPI_Aint scount, MPI_Datatype sdt
 
     MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_scatter_init
                                     (sbuf, scount, sdtype, rbuf, rcount, rdtype, root,
-                                     comm_ptr, &req, NULL));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req);
+                                     comm_ptr, &req));
+    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
+    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
 
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(scatter);
 
