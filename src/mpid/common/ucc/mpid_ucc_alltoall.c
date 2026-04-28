@@ -79,23 +79,10 @@ int MPIDI_common_ucc_alltoall(const void *sbuf, MPI_Aint scount, MPI_Datatype sd
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
     MPIDI_common_ucc_req_t req = { 0 };
 
-    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, alltoall);
+    MPIDI_COMMON_UCC_WRAPPER_ENTER(alltoall);
 
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(alltoall);
+    MPIDI_COMMON_UCC_WRAPPER_EXECUTE(alltoall, sbuf, scount, sdtype, rbuf, rcount, rdtype, comm_ptr,
+                                     &req);
 
-    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_alltoall_init
-                                    (sbuf, scount, sdtype, rbuf, rcount, rdtype, comm_ptr, &req));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
-
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(alltoall);
-
-    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-
-  fallback:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(alltoall);
-    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;
-  disabled:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(alltoall);
-    goto fallback;
+    MPIDI_COMMON_UCC_WRAPPER_EXIT(alltoall);
 }
