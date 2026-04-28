@@ -24,6 +24,12 @@
 #define MPIDI_COMMON_UCC_COMM_EXCL_COND_DEV (0)
 #endif
 
+/* Is this priority level overwritten by the device? */
+#ifndef MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO
+/* If not, make it a high-priority (pre Finalize) callback: */
+#define MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO (MPIR_FINALIZE_CALLBACK_PRIO + 1)
+#endif
+
 #define MPIDI_COMMON_UCC_OUTPUT_FORMAT "%s: (%s:%d)"
 #define MPIDI_COMMON_UCC_OUTPUT_PARAMS __FILE__, __FUNCTION__, __LINE__
 #define MPIDI_COMMON_UCC_OUTPUT_STRINGIFY(_x) #_x
