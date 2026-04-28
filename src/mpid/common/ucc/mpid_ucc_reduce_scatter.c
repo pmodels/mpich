@@ -85,23 +85,10 @@ int MPIDI_common_ucc_reduce_scatter(const void *sbuf, void *rbuf, const MPI_Aint
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
     MPIDI_common_ucc_req_t req = { 0 };
 
-    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, reduce_scatter);
+    MPIDI_COMMON_UCC_WRAPPER_ENTER(reduce_scatter);
 
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(reduce_scatter);
+    MPIDI_COMMON_UCC_WRAPPER_EXECUTE(reduce_scatter, sbuf, rbuf, rcounts, dtype, op, comm_ptr,
+                                     &req);
 
-    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_reduce_scatter_init
-                                    (sbuf, rbuf, rcounts, dtype, op, comm_ptr, &req));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
-
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(reduce_scatter);
-
-    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-
-  fallback:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(reduce_scatter);
-    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;
-  disabled:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(reduce_scatter);
-    goto fallback;
+    MPIDI_COMMON_UCC_WRAPPER_EXIT(reduce_scatter);
 }
