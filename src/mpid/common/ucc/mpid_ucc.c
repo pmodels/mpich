@@ -157,11 +157,11 @@ int MPIDI_common_ucc_progress(int *made_progress)
 static int mpidi_ucc_setup_lib(void)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-    char str_buf[256];
-    ucc_lib_config_h lib_config;
-    ucc_context_config_h ctx_config;
-    ucc_lib_params_t lib_params;
-    ucc_context_params_t ctx_params;
+    char str_buf[256] = { 0 };
+    ucc_lib_config_h lib_config = { 0 };
+    ucc_context_config_h ctx_config = { 0 };
+    ucc_lib_params_t lib_params = { 0 };
+    ucc_context_params_t ctx_params = { 0 };
 
     ucc_lib_h *lib_ptr = NULL;
     ucc_lib_attr_t *lib_attr_ptr = NULL;
