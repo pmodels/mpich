@@ -11,8 +11,8 @@ static inline ucc_status_t mpidi_ucc_allgatherv_init(const void *sbuf, MPI_Aint 
                                                      MPI_Datatype sdtype, void *rbuf,
                                                      const MPI_Aint rcounts[],
                                                      const MPI_Aint rdispls[], MPI_Datatype rdtype,
-                                                     MPIR_Comm * comm_ptr, ucc_coll_req_h * req,
-                                                     MPIR_Request * coll_req)
+                                                     MPIR_Comm * comm_ptr,
+                                                     MPIDI_common_ucc_req_t * req)
 {
     bool is_inplace = (sbuf == MPI_IN_PLACE);
     int comm_size = MPIR_Comm_size(comm_ptr);
@@ -76,7 +76,8 @@ static inline ucc_status_t mpidi_ucc_allgatherv_init(const void *sbuf, MPI_Aint 
                                                  mpidi_ucc_dtype_to_str(ucc_rdt));
     }
 
-    MPIDI_COMMON_UCC_REQ_INIT(coll_req, req, coll, comm_ptr);
+    MPIDI_COMMON_UCC_REQ_INIT(req, coll, comm_ptr);
+
     return UCC_OK;
   fallback:
     return UCC_ERR_NOT_SUPPORTED;
@@ -87,7 +88,7 @@ int MPIDI_common_ucc_allgatherv(const void *sbuf, MPI_Aint scount, MPI_Datatype 
                                 const MPI_Aint rdispls[], MPI_Datatype rdtype, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-    ucc_coll_req_h req;
+    MPIDI_common_ucc_req_t req = { 0 };
 
     MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, allgatherv);
 
@@ -95,9 +96,9 @@ int MPIDI_common_ucc_allgatherv(const void *sbuf, MPI_Aint scount, MPI_Datatype 
 
     MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_allgatherv_init
                                     (sbuf, scount, sdtype, rbuf, rcounts, rdispls, rdtype,
-                                     comm_ptr, &req, NULL));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req);
+                                     comm_ptr, &req));
+    MPIDI_COMMON_UCC_POST_AND_CHECK(req.ucc_req);
+    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req.ucc_req);
 
     MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(allgatherv);
 
