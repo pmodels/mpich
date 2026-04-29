@@ -12,20 +12,33 @@ static inline ucc_status_t mpidi_ucc_gather_init(const void *sbuf, MPI_Aint scou
                                                  MPI_Datatype rdtype, int root,
                                                  MPIR_Comm * comm_ptr, MPIDI_common_ucc_req_t * req)
 {
-    bool is_inplace = (sbuf == MPI_IN_PLACE);
     int comm_rank = MPIR_Comm_rank(comm_ptr);
     int comm_size = MPIR_Comm_size(comm_ptr);
-
+    bool is_root = (comm_rank == root);
+    bool is_inplace = (sbuf == MPI_IN_PLACE);
     ucc_datatype_t ucc_sdt = MPIDI_COMMON_UCC_DTYPE_NULL;
     ucc_datatype_t ucc_rdt = MPIDI_COMMON_UCC_DTYPE_NULL;
 
-    if (comm_rank == root) {
+    if (is_root) {
         ucc_rdt = mpidi_mpi_dtype_to_ucc_dtype(rdtype);
         if (!is_inplace) {
             ucc_sdt = mpidi_mpi_dtype_to_ucc_dtype(sdtype);
         }
     } else {
         ucc_sdt = mpidi_mpi_dtype_to_ucc_dtype(sdtype);
+    }
+
+    if (ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_S(gather);
+        ucc_sdt =
+            mpidi_ucc_dtype_packing_send(sbuf, scount, 1 /* single send chunk */ , sdtype, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(gather, ucc_sdt);
+    }
+
+    if (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_R(gather);
+        ucc_rdt = mpidi_ucc_dtype_packing_recv_prep(rbuf, rcount, rdtype, comm_size, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(gather, ucc_rdt);
     }
 
     if ((ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) ||
@@ -40,22 +53,21 @@ static inline ucc_status_t mpidi_ucc_gather_init(const void *sbuf, MPI_Aint scou
         .coll_type = UCC_COLL_TYPE_GATHER,
         .root = root,
         .src.info = {
-                     .buffer = (void *) sbuf,
-                     .count = scount,
+                     .buffer = req->sbuf_tmp ? req->sbuf_tmp : (void *) sbuf,
+                     .count = req->scounts_tmp ? req->scounts_tmp[0] : scount,
                      .datatype = ucc_sdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
         ,
         .dst.info = {
-                     .buffer = rbuf,
-                     .count = rcount * comm_size,
+                     .buffer = req->rbuf_tmp ? req->rbuf_tmp : rbuf,
+                     .count = (req->rcounts_tmp ? req->rcounts_tmp[0] : rcount) * comm_size,
                      .datatype = ucc_rdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
     };
 
-    if (comm_rank == root) {
-
+    if (is_root) {
         if (is_inplace) {
 
             coll.mask = UCC_COLL_ARGS_FIELD_FLAGS;
@@ -94,12 +106,15 @@ int MPIDI_common_ucc_gather(const void *sbuf, MPI_Aint scount, MPI_Datatype sdty
                             MPI_Aint rcount, MPI_Datatype rdtype, int root, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
+    int comm_size = MPIR_Comm_size(comm_ptr);
     MPIDI_common_ucc_req_t req = { 0 };
 
     MPIDI_COMMON_UCC_WRAPPER_ENTER(gather);
 
     MPIDI_COMMON_UCC_WRAPPER_EXECUTE(gather, sbuf, scount, sdtype, rbuf, rcount, rdtype, root,
                                      comm_ptr, &req);
+
+    mpidi_ucc_dtype_packing_recv_done(rbuf, rcount, rdtype, comm_size, &req);
 
     MPIDI_COMMON_UCC_WRAPPER_EXIT(gather);
 }
