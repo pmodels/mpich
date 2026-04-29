@@ -67,22 +67,28 @@ static int mpidi_ucc_finalize(void *param ATTRIBUTE((unused)))
     goto fn_exit;
 }
 
-int MPIDI_common_ucc_enable(int verbose_level, const char *verbose_level_str, int debug_flag)
+int MPIDI_common_ucc_enable(MPIDI_common_ucc_config_t * config)
 {
     /* Only initialize the basic flags here, as the actual UCC initialization happens
      * later when `MPIDI_common_ucc_comm_create_hook()` is called for the first time.
      */
 
-    if (verbose_level) {
-        MPIDI_common_ucc_priv.verbose_level = (MPIDI_common_ucc_verbose_levels_t) verbose_level;
-    } else if (verbose_level_str) {
-        MPIDI_COMMON_UCC_VERBOSE_STRING_TO_LEVEL(verbose_level_str,
-                                                 MPIDI_common_ucc_priv.verbose_level);
-    } else {
-        MPIDI_common_ucc_priv.verbose_level = MPIDI_COMMON_UCC_VERBOSE_LEVEL_NONE;
+    if (config) {
+        if (config->verbose_level) {
+            MPIDI_common_ucc_priv.verbose_level =
+                (MPIDI_common_ucc_verbose_levels_t) config->verbose_level;
+        } else if (config->verbose_level_str) {
+            MPIDI_COMMON_UCC_VERBOSE_STRING_TO_LEVEL(config->verbose_level_str,
+                                                     MPIDI_common_ucc_priv.verbose_level);
+        } else {
+            MPIDI_common_ucc_priv.verbose_level = MPIDI_COMMON_UCC_VERBOSE_LEVEL_NONE;
+        }
+        if (config->debug_flag) {
+            MPIDI_common_ucc_priv.debug_flag = 1;
+            /* keep these flags separated for more fine-grained debugging in the future */
+            MPIDI_common_ucc_priv.verbose_debug = 1;
+        }
     }
-
-    MPIDI_common_ucc_priv.verbose_debug = debug_flag;
 
     if (!MPIDI_common_ucc_priv.ucc_enabled) {
         MPIR_Add_finalize(mpidi_ucc_finalize, NULL, MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO);

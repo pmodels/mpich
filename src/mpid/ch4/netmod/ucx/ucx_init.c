@@ -239,9 +239,12 @@ int MPIDI_UCX_init_local(int *tag_bits)
 
 #ifdef HAVE_UCC
     if (MPIR_CVAR_CH4_UCX_ENABLE_UCC) {
-        int verbose_level = atoi(MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL);
-        MPIDI_common_ucc_enable(verbose_level, MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL,
-                                MPIR_CVAR_CH4_UCX_UCC_ENABLE_DEBUG);
+        MPIDI_common_ucc_config_t ucc_config = {
+            .verbose_level = atoi(MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL),
+            .verbose_level_str = MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL,
+            .debug_flag = MPIR_CVAR_CH4_UCX_UCC_ENABLE_DEBUG,
+        };
+        MPIDI_common_ucc_enable(&ucc_config);
     }
 #endif
 

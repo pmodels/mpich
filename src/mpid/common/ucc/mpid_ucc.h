@@ -124,7 +124,8 @@ typedef struct {
     int ucc_enabled;            /* flag set during `MPIDI_common_ucc_enable()` to activate the UCC support in general */
     int ucc_initialized;        /* flag set when the UCC library has been initialized successfully */
     int verbose_level;          /* verbosity level of the UCC wrappers; set during `MPIDI_common_ucc_enable()` */
-    int verbose_debug;          /* flag for activating the very verbose debugging mode; set during `MPIDI_common_ucc_enable()` */
+    int debug_flag;             /* flag for activating the debugging mode; set during `MPIDI_common_ucc_enable()` */
+    int verbose_debug;          /* flag for activating the very verbose debug output in addition to the verbosity levels */
     int progress_hook_id;       /* id as set by `MPIR_Progress_hook_register()` and needed for deregistering it again later */
     int comm_world_initialized; /* flag indicating whether UCC support has been initialized already for MPI_COMM_WORLD */
     ucc_lib_h ucc_lib;          /* handle for the UCC library itself after its initialization */
