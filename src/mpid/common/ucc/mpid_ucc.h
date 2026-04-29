@@ -30,6 +30,13 @@
 #define MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO (MPIR_FINALIZE_CALLBACK_PRIO + 1)
 #endif
 
+/* Is the progress poke function overwritten by the device? */
+#ifndef MPIDI_COMMON_UCC_PROGRESS_POKE_DEV
+/* If not, define how to poke for progress in MPIDI_COMMON_UCC_WAIT_AND_CHECK() */
+#define MPIDI_COMMON_UCC_PROGRESS_POKE_DEV(...)	\
+    MPID_Progress_poke();
+#endif
+
 #define MPIDI_COMMON_UCC_OUTPUT_FORMAT "%s: (%s:%d)"
 #define MPIDI_COMMON_UCC_OUTPUT_PARAMS __FILE__, __FUNCTION__, __LINE__
 #define MPIDI_COMMON_UCC_OUTPUT_STRINGIFY(_x) #_x
