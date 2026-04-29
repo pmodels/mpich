@@ -16,6 +16,7 @@ typedef struct {
                                          * string and that is only checked if `verbosity_level` is set to 0 */
     int debug_flag;             /* flag for activating the debugging mode that yields even more verbose output
                                  * if the `NDEBUG` macro is *not* set */
+    int threaded_flag;          /* flag for requesting thread safety from the UCC library and the wrappers */
 } MPIDI_common_ucc_config_t;
 
 int MPIDI_common_ucc_enable(MPIDI_common_ucc_config_t * config);

@@ -243,6 +243,12 @@ int MPIDI_UCX_init_local(int *tag_bits)
             .verbose_level = atoi(MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL),
             .verbose_level_str = MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL,
             .debug_flag = MPIR_CVAR_CH4_UCX_UCC_ENABLE_DEBUG,
+#ifdef MPICH_IS_THREADED
+            /* Fix me: Instead of setting this at compile time, it would
+             * be better to consider the actual runtime selection (which,
+             * however, is not yet available at this point). */
+            .threaded_flag = 1,
+#endif
         };
         MPIDI_common_ucc_enable(&ucc_config);
     }
