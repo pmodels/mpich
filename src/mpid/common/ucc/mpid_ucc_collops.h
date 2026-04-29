@@ -104,7 +104,7 @@
             }                                                           \
             MPIDI_COMMON_UCC_CALL_AND_CHECK(ucc_context_progress(\
                                    MPIDI_common_ucc_priv.ucc_context)); \
-            MPID_Progress_test(NULL);                                   \
+            MPIDI_COMMON_UCC_PROGRESS_POKE_DEV();                       \
         }                                                               \
         MPIDI_COMMON_UCC_CALL_AND_CHECK(ucc_collective_finalize(_req)); \
     } while (0)
