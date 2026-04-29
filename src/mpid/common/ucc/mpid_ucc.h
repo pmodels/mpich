@@ -131,6 +131,7 @@ typedef struct {
     ucc_lib_h ucc_lib;          /* handle for the UCC library itself after its initialization */
     ucc_lib_attr_t ucc_lib_attr;        /* handle for the attributes used when initializing the UCC library */
     ucc_context_h ucc_context;  /* handle for the single UCC context that we're currently using for all MPI communicators */
+    ucc_thread_mode_t thread_mode;      /* enumeration representing the thread mode to be supported by the UCC library */
 } MPIDI_common_ucc_priv_t;
 
 extern MPIDI_common_ucc_priv_t MPIDI_common_ucc_priv;
