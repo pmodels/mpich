@@ -23,6 +23,18 @@ static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint sc
         ucc_sdt = mpidi_mpi_dtype_to_ucc_dtype(sdtype);
     }
 
+    if (ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_S(alltoall);
+        ucc_sdt = mpidi_ucc_dtype_packing_send(sbuf, scount, comm_size, sdtype, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(alltoall, ucc_sdt);
+    }
+
+    if (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_R(alltoall);
+        ucc_rdt = mpidi_ucc_dtype_packing_recv_prep(rbuf, rcount, rdtype, comm_size, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(alltoall, ucc_rdt);
+    }
+
     if ((ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) ||
         (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED)) {
         MPIDI_COMMON_UCC_VERBOSE_DTYPE_UNSUPPORTED(alltoall);
@@ -34,15 +46,15 @@ static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint sc
         .flags = 0,
         .coll_type = UCC_COLL_TYPE_ALLTOALL,
         .src.info = {
-                     .buffer = (void *) sbuf,
-                     .count = scount * comm_size,
+                     .buffer = req->sbuf_tmp ? req->sbuf_tmp : (void *) sbuf,
+                     .count = (req->scounts_tmp ? req->scounts_tmp[0] : scount) * comm_size,
                      .datatype = ucc_sdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
         ,
         .dst.info = {
-                     .buffer = rbuf,
-                     .count = rcount * comm_size,
+                     .buffer = req->rbuf_tmp ? req->rbuf_tmp : rbuf,
+                     .count = (req->rcounts_tmp ? req->rcounts_tmp[0] : rcount) * comm_size,
                      .datatype = ucc_rdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
@@ -77,12 +89,15 @@ int MPIDI_common_ucc_alltoall(const void *sbuf, MPI_Aint scount, MPI_Datatype sd
                               MPI_Aint rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
+    int comm_size = MPIR_Comm_size(comm_ptr);
     MPIDI_common_ucc_req_t req = { 0 };
 
     MPIDI_COMMON_UCC_WRAPPER_ENTER(alltoall);
 
     MPIDI_COMMON_UCC_WRAPPER_EXECUTE(alltoall, sbuf, scount, sdtype, rbuf, rcount, rdtype, comm_ptr,
                                      &req);
+
+    mpidi_ucc_dtype_packing_recv_done(rbuf, rcount, rdtype, comm_size, &req);
 
     MPIDI_COMMON_UCC_WRAPPER_EXIT(alltoall);
 }

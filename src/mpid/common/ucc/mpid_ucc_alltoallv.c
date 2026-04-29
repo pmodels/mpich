@@ -28,6 +28,19 @@ static inline ucc_status_t mpidi_ucc_alltoallv_init(const void *sbuf, const MPI_
         ucc_sdt = mpidi_mpi_dtype_to_ucc_dtype(sdtype);
     }
 
+    if (ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_S(alltoallv);
+        ucc_sdt = mpidi_ucc_dtype_packing_sendv(sbuf, scounts, sdispls, comm_size, sdtype, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(alltoallv, ucc_sdt);
+    }
+
+    if (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_R(alltoallv);
+        ucc_rdt =
+            mpidi_ucc_dtype_packing_recv_prepv(rbuf, rcounts, rdispls, rdtype, comm_size, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(allgatherv, ucc_rdt);
+    }
+
     if ((ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) ||
         (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED)) {
         MPIDI_COMMON_UCC_VERBOSE_DTYPE_UNSUPPORTED(alltoallv);
@@ -48,17 +61,19 @@ static inline ucc_status_t mpidi_ucc_alltoallv_init(const void *sbuf, const MPI_
         .flags = flags,
         .coll_type = UCC_COLL_TYPE_ALLTOALLV,
         .src.info_v = {
-                       .buffer = (void *) sbuf,
-                       .counts = (ucc_count_t *) scounts,
-                       .displacements = (ucc_aint_t *) sdispls,
+                       .buffer = req->sbuf_tmp ? req->sbuf_tmp : (void *) sbuf,
+                       .counts = (ucc_count_t *) (req->scounts_tmp ? req->scounts_tmp : scounts),
+                       .displacements =
+                       (ucc_aint_t *) (req->sdispls_tmp ? req->sdispls_tmp : sdispls),
                        .datatype = ucc_sdt,
                        .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                        }
         ,
         .dst.info_v = {
-                       .buffer = rbuf,
-                       .counts = (ucc_count_t *) rcounts,
-                       .displacements = (ucc_aint_t *) rdispls,
+                       .buffer = req->rbuf_tmp ? req->rbuf_tmp : rbuf,
+                       .counts = (ucc_count_t *) (req->rcounts_tmp ? req->rcounts_tmp : rcounts),
+                       .displacements =
+                       (ucc_aint_t *) (req->rdispls_tmp ? req->rdispls_tmp : rdispls),
                        .datatype = ucc_rdt,
                        .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                        }
@@ -90,6 +105,7 @@ int MPIDI_common_ucc_alltoallv(const void *sbuf, const MPI_Aint scounts[], const
                                const MPI_Aint rdispls[], MPI_Datatype rdtype, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
+    int comm_size = MPIR_Comm_size(comm_ptr);
     MPIDI_common_ucc_req_t req = { 0 };
 
     MPIDI_COMMON_UCC_WRAPPER_ENTER(alltoallv);
@@ -97,5 +113,8 @@ int MPIDI_common_ucc_alltoallv(const void *sbuf, const MPI_Aint scounts[], const
     MPIDI_COMMON_UCC_WRAPPER_EXECUTE(alltoallv, sbuf, scounts, sdispls, sdtype, rbuf, rcounts,
                                      rdispls, rdtype, comm_ptr, &req);
 
+    mpidi_ucc_dtype_packing_recv_donev(rbuf, rcounts, rdispls, rdtype, comm_size, &req);
+
     MPIDI_COMMON_UCC_WRAPPER_EXIT(alltoallv);
+
 }
