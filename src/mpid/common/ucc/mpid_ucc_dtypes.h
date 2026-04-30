@@ -60,6 +60,7 @@ static inline ucc_datatype_t mpidi_mpi_dtype_to_ucc_dtype(MPI_Datatype datatype)
             case MPI_SIGNED_CHAR:
                 return UCC_DT_INT8;
             case MPI_BYTE:
+            case MPI_PACKED:
             case MPI_UINT8_T:
             case MPI_UNSIGNED_CHAR:
                 return UCC_DT_UINT8;
@@ -109,6 +110,11 @@ static inline ucc_datatype_t mpidi_mpi_dtype_to_ucc_dtype(MPI_Datatype datatype)
                 MPIDI_COMMON_UCC_DTYPE_MAP_FLOAT(long double);
                 break;
         }
+    }
+    if ((datatype == MPIR_BYTE_INTERNAL) || (datatype == MPIR_PACKED_INTERNAL)) {
+        /* This is most probably a call from an internal collective where
+         * the data has already been packed. Treat it like MPI_BYTE. */
+        return UCC_DT_UINT8;
     }
     return MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED;
 }
