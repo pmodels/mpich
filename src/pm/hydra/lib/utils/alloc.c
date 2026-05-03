@@ -393,7 +393,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
 
         int node_id, c;
         node_id = rankmap[rank];
-        printf("* rankmap[%d] = %d\n", rank, node_id);
         c = 1;
         rank++;
         while (c < exec_rem_procs && rank < count && rankmap[rank] == node_id) {
