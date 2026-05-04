@@ -110,8 +110,7 @@ void HYDU_free_node_list(struct HYD_node *node_list)
     }
 }
 
-static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node,
-                       int max_oversubscribe)
+static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node)
 {
     proxy->node = node;
     proxy->pgid = pgid;
@@ -120,11 +119,6 @@ static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node,
     proxy->exec_launch_info = NULL;
 
     proxy->proxy_process_count = 0;
-    if (max_oversubscribe > 0) {
-        proxy->filler_processes = node->core_count * max_oversubscribe - node->active_processes;
-    } else {
-        proxy->filler_processes = 0;
-    }
 
     proxy->pid = NULL;
     proxy->exit_status = NULL;
@@ -289,7 +283,7 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     proxy = MPL_malloc(sizeof(struct HYD_proxy), MPL_MEM_OTHER);
     HYDU_ASSERT(proxy, status);
 
-    init_proxy(proxy, pgid, node, 0);
+    init_proxy(proxy, pgid, node);
 
     proxy->proxy_id = 0;
     proxy->proxy_process_count = 1;
@@ -305,35 +299,10 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     goto fn_exit;
 }
 
-static int get_max_overscribe(struct HYD_node *node_list)
-{
-    int max_oversubscribe = 0;
-    for (struct HYD_node * node = node_list; node; node = node->next) {
-        int c = HYDU_dceil(node->active_processes, node->core_count);
-        if (max_oversubscribe < c) {
-            max_oversubscribe = c;
-        }
-    }
-
-    bool has_spare = false;
-    for (struct HYD_node * node = node_list; node; node = node->next) {
-        if (node->core_count * max_oversubscribe - node->active_processes > 0) {
-            has_spare = true;
-            break;
-        }
-    }
-    if (!has_spare) {
-        max_oversubscribe = 0;
-    }
-
-    /* NOTE: returning 0 means we can skip the filler round */
-    return max_oversubscribe;
-}
-
-HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
-                                  struct HYD_node * node_list, int pgid, int *rankmap,
+HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list,
+                                  struct HYD_node *node_list, int pgid, int *rankmap,
                                   int *min_node_id_p, int *proxy_count_p,
-                                  struct HYD_proxy ** proxy_list_p)
+                                  struct HYD_proxy **proxy_list_p)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
@@ -354,21 +323,11 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
     struct HYD_proxy *proxy_list = MPL_malloc(num_nodes * sizeof(struct HYD_proxy), MPL_MEM_OTHER);
     HYDU_ASSERT(proxy_list, status);
 
-    int count_nonfilled = 0;
-    int max_oversubscribe = get_max_overscribe(node_list);
     for (struct HYD_node * node = node_list; node; node = node->next) {
         int id = node->node_id;
         if (id >= min_node_id && id <= max_node_id) {
             int i_proxy = id - min_node_id;
-            init_proxy(&proxy_list[i_proxy], pgid, node, max_oversubscribe);
-            if (proxy_list[i_proxy].filler_processes > 0) {
-                count_nonfilled++;
-            }
-        }
-    }
-    if (count_nonfilled == 0) {
-        for (int i_proxy = 0; i_proxy < num_nodes; i_proxy++) {
-            proxy_list[i_proxy].filler_processes += proxy_list[i_proxy].node->core_count;
+            init_proxy(&proxy_list[i_proxy], pgid, node);
         }
     }
 
