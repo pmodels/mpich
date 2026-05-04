@@ -302,6 +302,7 @@ struct HYD_exec {
     int exec_len, exec_size;
     char *wdir;
 
+    int start_rank;
     int proc_count;
     struct HYD_env *user_env;
     char *env_prop;

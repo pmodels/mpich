@@ -740,7 +740,7 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
 
 static HYD_status launch_procs(struct pmip_pg *pg)
 {
-    int j, process_id, dummy;
+    int process_id, dummy;
     char *str, *envstr, *list, *pmi_port = NULL;
     struct HYD_string_stash stash;
     struct HYD_env *env, *force_env = NULL;
@@ -773,7 +773,17 @@ static HYD_status launch_procs(struct pmip_pg *pg)
          * PORT. */
         p->pmi_fd = HYD_FD_UNSET;
         p->pmi_fd_active = 0;
-        p->pmi_rank = PMIP_pg_local_to_global_id(pg, i);
+    }
+
+    /* set pmi_rank */
+    {
+        int i = 0;
+        for (exec = pg->exec_list; exec; exec = exec->next) {
+            for (int j = 0; j < exec->proc_count; j++) {
+                pg->downstreams[i].pmi_rank = exec->start_rank + j;
+                i++;
+            }
+        }
     }
 
     if (HYD_pmcd_pmip.user_global.pmi_port) {
@@ -992,7 +1002,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
             }
 
             HYD_STRING_STASH_INIT(stash);
-            for (j = 0; exec->exec[j]; j++)
+            for (int j = 0; exec->exec[j]; j++)
                 HYD_STRING_STASH(stash, MPL_strdup(exec->exec[j]), status);
 
             /* For non rank-0 processes, store the stdin socket in a
