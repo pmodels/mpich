@@ -369,15 +369,7 @@ HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
 static int get_universe_size(struct pmip_downstream *p)
 {
-    int universe_size;
-    if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM) {
-        universe_size = PMIP_pg_from_downstream(p)->global_core_map.global_count;
-    } else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE) {
-        universe_size = -1;
-    } else {
-        universe_size = HYD_pmcd_pmip.user_global.usize;
-    }
-    return universe_size;
+    return HYD_pmcd_pmip.user_global.usize;
 }
 
 HYD_status fn_get_usize(struct pmip_downstream * p, struct PMIU_cmd * pmi)

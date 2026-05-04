@@ -250,8 +250,7 @@ typedef enum {
 } HYD_status;
 
 #define HYD_USIZE_UNSET     (0)
-#define HYD_USIZE_SYSTEM    (-1)
-#define HYD_USIZE_INFINITE  (-2)
+#define HYD_USIZE_INFINITE  (-1)
 
 #define HYD_GPUS_PER_PROC_UNSET   (-1)
 #define HYD_GPUS_PER_PROC_AUTO    (-2)
@@ -381,6 +380,7 @@ struct HYD_user_global {
     int enablex;
     int debug;
     int usize;
+    bool usize_system;
 
     int auto_cleanup;
     int pmi_port;
