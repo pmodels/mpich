@@ -21,8 +21,8 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->memory_alloc_kinds = NULL;
 
     user_global->enablex = -1;
-    user_global->usize = HYD_USIZE_UNSET;
-
+    user_global->usize = 0;
+    user_global->usize_system = false;
     user_global->auto_cleanup = -1;
     user_global->pmi_port = -1;
     user_global->skip_launch_node = -1;
