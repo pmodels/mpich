@@ -334,6 +334,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-appnum"), status);
             HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->appnum), status);
 
+            HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-rank"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->start_rank), status);
+
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-proc-count"), status);
             HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->proc_count), status);
 

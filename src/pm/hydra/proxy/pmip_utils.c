@@ -514,6 +514,19 @@ static HYD_status exec_appnum_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status exec_rank_fn(char *arg, char ***argv)
+{
+    struct HYD_exec *exec = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
+    status = HYDU_set_int(arg, &exec->start_rank, atoi(**argv));
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
@@ -665,6 +678,7 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
+    {"exec-rank", exec_rank_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
