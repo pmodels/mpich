@@ -1066,35 +1066,14 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     goto fn_exit;
 }
 
-/* global_core_map and pmi_id_map */
 static void init_pg_params(struct pmip_pg *pg)
 {
-    pg->global_core_map.local_filler = -1;
-    pg->global_core_map.local_count = -1;
-    pg->global_core_map.global_count = -1;
-    pg->pmi_id_map.filler_start = -1;
-    pg->pmi_id_map.non_filler_start = -1;
-
     pg->global_process_count = -1;
 }
 
 static HYD_status verify_pg_params(struct pmip_pg *pg)
 {
     HYD_status status = HYD_SUCCESS;
-    if (pg->global_core_map.local_filler == -1 ||
-        pg->global_core_map.local_count == -1 || pg->global_core_map.global_count == -1) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "cannot find global core map (%d,%d,%d)\n",
-                            pg->global_core_map.local_filler,
-                            pg->global_core_map.local_count, pg->global_core_map.global_count);
-    }
-
-    if (pg->pmi_id_map.filler_start == -1 || pg->pmi_id_map.non_filler_start == -1) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "cannot find pmi id map (%d,%d)\n",
-                            pg->pmi_id_map.filler_start, pg->pmi_id_map.non_filler_start);
-    }
-
     if (pg->global_process_count == -1) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find global_process_count\n");
     }

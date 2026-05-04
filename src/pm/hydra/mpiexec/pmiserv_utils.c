@@ -177,13 +177,11 @@ static HYD_status add_env_to_exec_stash(struct HYD_string_stash *exec_stash, con
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int inherited_env_count, user_env_count, system_env_count;
-    int total_core_count;
-    int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
     struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    char *mapping = NULL, *map;
-    struct HYD_string_stash stash, exec_stash;
+    char *mapping = NULL;
+    struct HYD_string_stash exec_stash;
     HYD_status status = HYD_SUCCESS;
 
     int mpl_err = MPL_rankmap_array_to_str(pg->rankmap, pg->pg_process_count, &mapping);
@@ -193,30 +191,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     if (strlen(mapping) > PMI_MAXVALLEN) {
         MPL_free(mapping);
         mapping = NULL;
-    }
-
-    /* FIXME: The following code is still assigning ranks according to round-robin PPN.
-     *        For now it works because we don't provide explicit rankmap option. The
-     *        rankmap is always generated from round-robin PPN. The code need be changed
-     *        if we ever offer user custom rankmap.
-     */
-
-    total_core_count = 0;
-    for (int i = 0; i < pg->proxy_count; i++) {
-        total_core_count += pg->proxy_list[i].node->core_count;
-    }
-
-    HYDU_MALLOC_OR_JUMP(filler_pmi_ids, int *, pg->proxy_count * sizeof(int), status);
-    HYDU_MALLOC_OR_JUMP(nonfiller_pmi_ids, int *, pg->proxy_count * sizeof(int), status);
-
-    pmi_id = 0;
-    for (int i = 0; i < pg->proxy_count; i++) {
-        filler_pmi_ids[i] = pmi_id;
-        pmi_id += pg->proxy_list[i].filler_processes;
-    }
-    for (int i = 0; i < pg->proxy_count; i++) {
-        nonfiller_pmi_ids[i] = pmi_id;
-        pmi_id += pg->proxy_list[i].node->core_count;
     }
 
     for (int i = 0; i < pg->proxy_count; i++) {
@@ -240,32 +214,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--hostname"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(proxy->node->hostname), status);
-
-        /* This map has three fields: filler cores on this node,
-         * remaining cores on this node, total cores in the system */
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--global-core-map"), status);
-
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(proxy->filler_processes), status);
-        HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(proxy->node->core_count), status);
-        HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(total_core_count), status);
-        HYD_STRING_SPIT(stash, map, status);
-
-        HYD_STRING_STASH(exec_stash, map, status);
-
-        /* This map has two fields: start PMI ID during the filler
-         * phase, start PMI ID for the remaining phase */
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-id-map"), status);
-
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(filler_pmi_ids[i]), status);
-        HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(nonfiller_pmi_ids[i]), status);
-        HYD_STRING_SPIT(stash, map, status);
-
-        HYD_STRING_STASH(exec_stash, map, status);
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--global-process-count"), status);
         HYD_STRING_STASH(exec_stash, HYDU_int_to_str(pg->pg_process_count), status);
@@ -377,8 +325,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
   fn_exit:
     MPL_free(mapping);
-    MPL_free(filler_pmi_ids);
-    MPL_free(nonfiller_pmi_ids);
     return status;
 
   fn_fail:

@@ -341,9 +341,6 @@ struct HYD_proxy {
 
     int proxy_process_count;
 
-    /* Filler processes that we are adding on this proxy */
-    int filler_processes;
-
     struct HYD_exec *exec_list;
 
     int *pid;
