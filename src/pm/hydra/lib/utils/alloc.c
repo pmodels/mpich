@@ -241,42 +241,31 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
 
 static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy, int num_procs)
 {
-    int i;
-    struct HYD_exec *texec;
     HYD_status status = HYD_SUCCESS;
 
+    struct HYD_exec *texec;
+    status = HYDU_alloc_exec(&texec);
+    HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+
     if (proxy->exec_list == NULL) {
-        status = HYDU_alloc_exec(&proxy->exec_list);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        for (i = 0; exec->exec[i]; i++) {
-            status = HYDU_exec_add_arg(proxy->exec_list, exec->exec[i]);
-            HYDU_ERR_POP(status, "unable to add exec arg\n");
-        }
-
-        proxy->exec_list->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-        proxy->exec_list->proc_count = num_procs;
-        proxy->exec_list->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-        proxy->exec_list->user_env = HYDU_env_list_dup(exec->user_env);
-        proxy->exec_list->appnum = exec->appnum;
+        proxy->exec_list = texec;
     } else {
-        for (texec = proxy->exec_list; texec->next; texec = texec->next);
-        status = HYDU_alloc_exec(&texec->next);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        texec = texec->next;
-
-        for (i = 0; exec->exec[i]; i++) {
-            status = HYDU_exec_add_arg(texec, exec->exec[i]);
-            HYDU_ERR_POP(status, "unable to add exec arg\n");
-        }
-
-        texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-        texec->proc_count = num_procs;
-        texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-        texec->user_env = HYDU_env_list_dup(exec->user_env);
-        texec->appnum = exec->appnum;
+        struct HYD_exec *tmp;
+        for (tmp = proxy->exec_list; tmp->next; tmp = tmp->next);
+        tmp->next = texec;
     }
+
+    for (int i = 0; exec->exec[i]; i++) {
+        status = HYDU_exec_add_arg(texec, exec->exec[i]);
+        HYDU_ERR_POP(status, "unable to add exec arg\n");
+    }
+
+    texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
+    texec->proc_count = num_procs;
+    texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
+    texec->user_env = HYDU_env_list_dup(exec->user_env);
+    texec->appnum = exec->appnum;
+
     proxy->proxy_process_count += num_procs;
     proxy->node->active_processes += num_procs;
 
