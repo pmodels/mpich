@@ -1455,11 +1455,12 @@ static HYD_status usize_fn(char *arg, char ***argv)
     HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.usize != HYD_USIZE_UNSET,
                         HYD_INTERNAL_ERROR, "universe size already set\n");
 
-    if (!strcmp(**argv, "SYSTEM"))
-        HYD_server_info.user_global.usize = HYD_USIZE_SYSTEM;
-    else if (!strcmp(**argv, "INFINITE"))
+    if (!strcmp(**argv, "SYSTEM")) {
+        HYD_server_info.user_global.usize_system = true;
         HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
-    else {
+    } else if (!strcmp(**argv, "INFINITE")) {
+        HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
+    } else {
         HYD_server_info.user_global.usize = atoi(**argv);
         HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.usize <= 0,
                             HYD_INTERNAL_ERROR, "invalid universe size\n");

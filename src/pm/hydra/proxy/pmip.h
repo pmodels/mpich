@@ -83,17 +83,6 @@ struct pmip_pg {
     int num_procs;
     struct pmip_downstream *downstreams;
 
-    struct {
-        int local_filler;
-        int local_count;
-        int global_count;
-    } global_core_map;
-
-    struct {
-        int filler_start;
-        int non_filler_start;
-    } pmi_id_map;
-
     int global_process_count;
     char *pmi_process_mapping;
     char *spawner_kvsname;
@@ -139,9 +128,6 @@ struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream);
 HYD_status PMIP_foreach_pg_do(HYD_status(*callback) (struct pmip_pg * pg));
 HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg *pg, int num_procs);
 struct pmip_pg *PMIP_find_pg(int pgid, int proxy_id);
-
-int PMIP_pg_local_to_global_id(struct pmip_pg *pg, int local_id);
-int PMIP_pg_global_to_local_id(struct pmip_pg *pg, int global_id);
 
 bool PMIP_pg_has_open_stdoe(struct pmip_pg *pg);
 

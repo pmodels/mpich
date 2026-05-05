@@ -132,6 +132,15 @@ int main(int argc, char **argv)
         }
     }
 
+    /* set usize if user request for "SYSTEM" */
+    if (HYD_server_info.user_global.usize_system) {
+        int count = 0;
+        for (node = HYD_server_info.node_list; node; node = node->next) {
+            count += node->core_count;
+        }
+        HYD_server_info.user_global.usize = count;
+    }
+
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
     if (HYD_ui_mpich_info.ppn != -1) {

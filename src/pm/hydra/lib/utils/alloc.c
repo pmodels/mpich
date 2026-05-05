@@ -21,8 +21,8 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->memory_alloc_kinds = NULL;
 
     user_global->enablex = -1;
-    user_global->usize = HYD_USIZE_UNSET;
-
+    user_global->usize = 0;
+    user_global->usize_system = false;
     user_global->auto_cleanup = -1;
     user_global->pmi_port = -1;
     user_global->skip_launch_node = -1;
@@ -110,8 +110,7 @@ void HYDU_free_node_list(struct HYD_node *node_list)
     }
 }
 
-static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node,
-                       int max_oversubscribe)
+static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node)
 {
     proxy->node = node;
     proxy->pgid = pgid;
@@ -120,11 +119,6 @@ static void init_proxy(struct HYD_proxy *proxy, int pgid, struct HYD_node *node,
     proxy->exec_launch_info = NULL;
 
     proxy->proxy_process_count = 0;
-    if (max_oversubscribe > 0) {
-        proxy->filler_processes = node->core_count * max_oversubscribe - node->active_processes;
-    } else {
-        proxy->filler_processes = 0;
-    }
 
     proxy->pid = NULL;
     proxy->exit_status = NULL;
@@ -168,6 +162,7 @@ HYD_status HYDU_alloc_exec(struct HYD_exec **exec)
     (*exec)->exec_len = 0;
     (*exec)->exec_size = 0;
     (*exec)->wdir = NULL;
+    (*exec)->start_rank = -1;
     (*exec)->proc_count = -1;
     (*exec)->env_prop = NULL;
     (*exec)->user_env = NULL;
@@ -239,44 +234,35 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     HYDU_FUNC_EXIT();
 }
 
-static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy, int num_procs)
+static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy,
+                                    int num_procs, int start_rank)
 {
-    int i;
-    struct HYD_exec *texec;
     HYD_status status = HYD_SUCCESS;
 
+    struct HYD_exec *texec;
+    status = HYDU_alloc_exec(&texec);
+    HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+
     if (proxy->exec_list == NULL) {
-        status = HYDU_alloc_exec(&proxy->exec_list);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        for (i = 0; exec->exec[i]; i++) {
-            status = HYDU_exec_add_arg(proxy->exec_list, exec->exec[i]);
-            HYDU_ERR_POP(status, "unable to add exec arg\n");
-        }
-
-        proxy->exec_list->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-        proxy->exec_list->proc_count = num_procs;
-        proxy->exec_list->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-        proxy->exec_list->user_env = HYDU_env_list_dup(exec->user_env);
-        proxy->exec_list->appnum = exec->appnum;
+        proxy->exec_list = texec;
     } else {
-        for (texec = proxy->exec_list; texec->next; texec = texec->next);
-        status = HYDU_alloc_exec(&texec->next);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        texec = texec->next;
-
-        for (i = 0; exec->exec[i]; i++) {
-            status = HYDU_exec_add_arg(texec, exec->exec[i]);
-            HYDU_ERR_POP(status, "unable to add exec arg\n");
-        }
-
-        texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-        texec->proc_count = num_procs;
-        texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-        texec->user_env = HYDU_env_list_dup(exec->user_env);
-        texec->appnum = exec->appnum;
+        struct HYD_exec *tmp;
+        for (tmp = proxy->exec_list; tmp->next; tmp = tmp->next);
+        tmp->next = texec;
     }
+
+    for (int i = 0; exec->exec[i]; i++) {
+        status = HYDU_exec_add_arg(texec, exec->exec[i]);
+        HYDU_ERR_POP(status, "unable to add exec arg\n");
+    }
+
+    texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
+    texec->start_rank = start_rank;
+    texec->proc_count = num_procs;
+    texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
+    texec->user_env = HYDU_env_list_dup(exec->user_env);
+    texec->appnum = exec->appnum;
+
     proxy->proxy_process_count += num_procs;
     proxy->node->active_processes += num_procs;
 
@@ -297,7 +283,7 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     proxy = MPL_malloc(sizeof(struct HYD_proxy), MPL_MEM_OTHER);
     HYDU_ASSERT(proxy, status);
 
-    init_proxy(proxy, pgid, node, 0);
+    init_proxy(proxy, pgid, node);
 
     proxy->proxy_id = 0;
     proxy->proxy_process_count = 1;
@@ -313,35 +299,10 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     goto fn_exit;
 }
 
-static int get_max_overscribe(struct HYD_node *node_list)
-{
-    int max_oversubscribe = 0;
-    for (struct HYD_node * node = node_list; node; node = node->next) {
-        int c = HYDU_dceil(node->active_processes, node->core_count);
-        if (max_oversubscribe < c) {
-            max_oversubscribe = c;
-        }
-    }
-
-    bool has_spare = false;
-    for (struct HYD_node * node = node_list; node; node = node->next) {
-        if (node->core_count * max_oversubscribe - node->active_processes > 0) {
-            has_spare = true;
-            break;
-        }
-    }
-    if (!has_spare) {
-        max_oversubscribe = 0;
-    }
-
-    /* NOTE: returning 0 means we can skip the filler round */
-    return max_oversubscribe;
-}
-
-HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
-                                  struct HYD_node * node_list, int pgid, int *rankmap,
+HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list,
+                                  struct HYD_node *node_list, int pgid, int *rankmap,
                                   int *min_node_id_p, int *proxy_count_p,
-                                  struct HYD_proxy ** proxy_list_p)
+                                  struct HYD_proxy **proxy_list_p)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
@@ -362,21 +323,11 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
     struct HYD_proxy *proxy_list = MPL_malloc(num_nodes * sizeof(struct HYD_proxy), MPL_MEM_OTHER);
     HYDU_ASSERT(proxy_list, status);
 
-    int count_nonfilled = 0;
-    int max_oversubscribe = get_max_overscribe(node_list);
     for (struct HYD_node * node = node_list; node; node = node->next) {
         int id = node->node_id;
         if (id >= min_node_id && id <= max_node_id) {
             int i_proxy = id - min_node_id;
-            init_proxy(&proxy_list[i_proxy], pgid, node, max_oversubscribe);
-            if (proxy_list[i_proxy].filler_processes > 0) {
-                count_nonfilled++;
-            }
-        }
-    }
-    if (count_nonfilled == 0) {
-        for (int i_proxy = 0; i_proxy < num_nodes; i_proxy++) {
-            proxy_list[i_proxy].filler_processes += proxy_list[i_proxy].node->core_count;
+            init_proxy(&proxy_list[i_proxy], pgid, node);
         }
     }
 
@@ -401,7 +352,7 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec * exec_list,
         }
 
         struct HYD_proxy *proxy = proxy_list + (node_id - min_node_id);
-        status = add_exec_to_proxy(exec, proxy, c);
+        status = add_exec_to_proxy(exec, proxy, c, rank - c);
         HYDU_ERR_POP(status, "unable to add executable to proxy\n");
 
         exec_rem_procs -= c;

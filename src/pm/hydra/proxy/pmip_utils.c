@@ -364,70 +364,6 @@ static HYD_status genv_prop_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status global_core_map_fn(char *arg, char ***argv)
-{
-    char *map, *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    /* Split the core map into three different segments */
-    map = MPL_strdup(**argv);
-    HYDU_ASSERT(map, status);
-
-    tmp = strtok(map, ",");
-    HYDU_ASSERT(tmp, status);
-    cur_pg->global_core_map.local_filler = atoi(tmp);
-
-    tmp = strtok(NULL, ",");
-    HYDU_ASSERT(tmp, status);
-    cur_pg->global_core_map.local_count = atoi(tmp);
-
-    tmp = strtok(NULL, ",");
-    HYDU_ASSERT(tmp, status);
-    cur_pg->global_core_map.global_count = atoi(tmp);
-
-    MPL_free(map);
-
-    (*argv)++;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status pmi_id_map_fn(char *arg, char ***argv)
-{
-    char *map, *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_ASSERT(cur_pg, status);
-
-    /* Split the core map into three different segments */
-    map = MPL_strdup(**argv);
-    HYDU_ASSERT(map, status);
-
-    tmp = strtok(map, ",");
-    HYDU_ASSERT(tmp, status);
-    cur_pg->pmi_id_map.filler_start = atoi(tmp);
-
-    tmp = strtok(NULL, ",");
-    HYDU_ASSERT(tmp, status);
-    cur_pg->pmi_id_map.non_filler_start = atoi(tmp);
-
-    MPL_free(map);
-
-    (*argv)++;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status global_process_count_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -508,6 +444,19 @@ static HYD_status exec_appnum_fn(char *arg, char ***argv)
 
     for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
     status = HYDU_set_int(arg, &exec->appnum, atoi(**argv));
+
+    (*argv)++;
+
+    return status;
+}
+
+static HYD_status exec_rank_fn(char *arg, char ***argv)
+{
+    struct HYD_exec *exec = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
+    status = HYDU_set_int(arg, &exec->start_rank, atoi(**argv));
 
     (*argv)++;
 
@@ -656,8 +605,6 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
     {"genv-prop", genv_prop_fn, NULL},
-    {"global-core-map", global_core_map_fn, NULL},
-    {"pmi-id-map", pmi_id_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
     {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
@@ -665,6 +612,7 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
+    {"exec-rank", exec_rank_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
