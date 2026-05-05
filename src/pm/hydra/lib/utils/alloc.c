@@ -144,7 +144,12 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count)
         MPL_free(proxy->pid);
         MPL_free(proxy->exit_status);
 
-        HYDU_free_exec_list(proxy->exec_list);
+        struct HYD_proxy_exec *exec = proxy->exec_list;
+        while (exec) {
+            struct HYD_proxy_exec *cur = exec;
+            exec = cur->next;
+            MPL_free(cur);
+        }
     }
 
     MPL_free(proxy_list);
@@ -239,29 +244,20 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
 {
     HYD_status status = HYD_SUCCESS;
 
-    struct HYD_exec *texec;
-    status = HYDU_alloc_exec(&texec);
-    HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+    struct HYD_proxy_exec *texec;
+    HYDU_MALLOC_OR_JUMP(texec, struct HYD_proxy_exec *, sizeof(struct HYD_proxy_exec), status);
+    texec->exec = exec;
+    texec->rank = start_rank;
+    texec->count = num_procs;
+    texec->next = NULL;
 
     if (proxy->exec_list == NULL) {
         proxy->exec_list = texec;
     } else {
-        struct HYD_exec *tmp;
+        struct HYD_proxy_exec *tmp;
         for (tmp = proxy->exec_list; tmp->next; tmp = tmp->next);
         tmp->next = texec;
     }
-
-    for (int i = 0; exec->exec[i]; i++) {
-        status = HYDU_exec_add_arg(texec, exec->exec[i]);
-        HYDU_ERR_POP(status, "unable to add exec arg\n");
-    }
-
-    texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-    texec->start_rank = start_rank;
-    texec->proc_count = num_procs;
-    texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-    texec->user_env = HYDU_env_list_dup(exec->user_env);
-    texec->appnum = exec->appnum;
 
     proxy->proxy_process_count += num_procs;
     proxy->node->active_processes += num_procs;

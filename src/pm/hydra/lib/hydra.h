@@ -307,8 +307,16 @@ struct HYD_exec {
     char *env_prop;
 
     int appnum;
+    int ref_count;              /* HYD_exec pointer may be held by proxy until HYD_pmcd_pmi_fill_in_exec_launch_info */
 
     struct HYD_exec *next;
+};
+
+struct HYD_proxy_exec {
+    struct HYD_exec *exec;
+    int rank;                   /* starting rank */
+    int count;                  /* consecutive processes for this exec */
+    struct HYD_proxy_exec *next;
 };
 
 /* Information about the node itself */
@@ -341,7 +349,7 @@ struct HYD_proxy {
 
     int proxy_process_count;
 
-    struct HYD_exec *exec_list;
+    struct HYD_proxy_exec *exec_list;
 
     int *pid;
     int *exit_status;

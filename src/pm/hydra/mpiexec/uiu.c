@@ -84,7 +84,6 @@ void HYD_uiu_free_params(void)
 void HYD_uiu_print_params(void)
 {
     struct HYD_env *env;
-    struct HYD_exec *exec;
 
     HYDU_FUNC_ENTER();
 
@@ -132,8 +131,8 @@ void HYD_uiu_print_params(void)
         HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i + 1,
                            proxy->node->hostname, proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "      Exec list: ");
-        for (exec = proxy->exec_list; exec; exec = exec->next)
-            HYDU_dump_noprefix(stdout, "%s (%d processes); ", exec->exec[0], exec->proc_count);
+        for (struct HYD_proxy_exec * exec = proxy->exec_list; exec; exec = exec->next)
+            HYDU_dump_noprefix(stdout, "%s (%d processes); ", exec->exec->exec[0], exec->count);
         HYDU_dump_noprefix(stdout, "\n\n");
     }
 
