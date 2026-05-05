@@ -178,7 +178,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int inherited_env_count, user_env_count, system_env_count;
     struct HYD_env *env;
-    struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *mapping = NULL;
     struct HYD_string_stash exec_stash;
@@ -276,17 +275,18 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYD_STRING_STASH(exec_stash, HYDU_int_to_str(proxy->node->core_count), status);
 
         /* Now pass the local executable information */
-        for (exec = proxy->exec_list; exec; exec = exec->next) {
+        for (struct HYD_proxy_exec * cur = proxy->exec_list; cur; cur = cur->next) {
+            struct HYD_exec *exec = cur->exec;
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec"), status);
 
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-appnum"), status);
             HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->appnum), status);
 
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-rank"), status);
-            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->start_rank), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(cur->rank), status);
 
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-proc-count"), status);
-            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->proc_count), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(cur->count), status);
 
             status = add_env_to_exec_stash(&exec_stash, "--exec-local-env", exec->user_env);
             HYDU_ERR_POP(status, "error adding exec local env\n");
