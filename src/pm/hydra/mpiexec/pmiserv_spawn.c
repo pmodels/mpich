@@ -269,10 +269,11 @@ static HYD_status do_spawn(void)
                                     pg->pgid, pg->rankmap,
                                     &pg->min_node_id, &pg->proxy_count, &pg->proxy_list);
     HYDU_ERR_POP(status, "error creating proxy list\n");
-    HYDU_free_exec_list(exec_list);
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
+
+    HYDU_free_exec_list(exec_list);
 
     struct HYD_proxy **filtered_proxy_list;
     filtered_proxy_list = MPL_malloc(pg->proxy_count * sizeof(struct HYD_proxy *), MPL_MEM_OTHER);

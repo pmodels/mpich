@@ -47,14 +47,14 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
     for (int i_proxy = 0; i_proxy < pg->proxy_count; i_proxy++) {
         struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
         int j = 0;
-        for (struct HYD_exec * exec = proxy->exec_list; exec; exec = exec->next) {
-            for (int i = 0; i < exec->proc_count; i++) {
-                int rank = exec->start_rank + i;
+        for (struct HYD_proxy_exec * exec = proxy->exec_list; exec; exec = exec->next) {
+            for (int i = 0; i < exec->count; i++) {
+                int rank = exec->rank + i;
                 MPIR_proctable[rank].host_name = proxy->node->hostname;
                 MPIR_proctable[rank].pid = proxy->pid[j];
                 HASH_NAME_STR(MPIR_proctable[rank].host_name);
-                if (exec->exec[0]) {
-                    MPIR_proctable[rank].executable_name = exec->exec[0];
+                if (exec->exec->exec[0]) {
+                    MPIR_proctable[rank].executable_name = exec->exec->exec[0];
                     HASH_NAME_STR(MPIR_proctable[rank].executable_name);
                 } else {
                     MPIR_proctable[rank].executable_name = NULL;
