@@ -18,6 +18,7 @@ static void pg_destructor(void *_elt)
     MPL_free(pg->iface_ip_env_name);
     MPL_free(pg->hostname);
     HYDU_free_exec_list(pg->exec_list);
+    HYDU_free_launch_list(pg->launch_list);
 
     struct pmip_kvs *s, *tmp;
     HASH_ITER(hh, pg->kvs, s, tmp) {
