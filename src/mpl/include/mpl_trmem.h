@@ -53,6 +53,7 @@ typedef enum {
     MPL_MEM_COLL,               /* Memory related to collective operations */
     MPL_MEM_LOCAL,              /* Temporary allocation that will be freed after the operation */
     MPL_MEM_USER,               /* User memory allocations */
+    MPL_MEM_HASH,               /* MPL_hash */
     MPL_MEM_OTHER,              /* Other small memory allocations */
     MPL_MAX_MEMORY_CLASS
 } MPL_memory_class;
