@@ -12,6 +12,11 @@
  *    frequent deletion and modification and memory consumption is of concern. All
  *    memory will be released upon final free.
  *
+ *    To use it as set, use MPL_hash_set(hv, s_key, MPL_HASH_KEY), effectively
+ *    store the key as its value, avoiding an extra string storage. Consequently,
+ *    MPL_hash_get will retrieve the stored key string, thus MPL_hash can be used
+ *    as a persistent string storage.
+ *
  *    Compared to uthash.h, the usage interface is cleaner and more intuitive --
  *    hash_new, hash_set, hash_get, hash_has, and hash_free. In comparison, uthash
  *    requires extra data structure, does not manage string memory, and the code is
@@ -57,7 +62,11 @@ void MPL_hash_set(struct MPL_hash *hv, const char *s_key, const char *s_value)
     int k;
 
     k = f_strhash_lookup_left(hv, (unsigned char *) s_key, strlen(s_key));
-    hv->p_val[k] = f_addto_strpool(&hv->pool, s_value, strlen(s_value));
+    if (s_value == MPL_HASH_KEY) {
+        hv->p_val[k] = hv->p_key[k];
+    } else {
+        hv->p_val[k] = f_addto_strpool(&hv->pool, s_value, strlen(s_value));
+    }
 }
 
 char *MPL_hash_get(struct MPL_hash *hv, const char *s_key)
