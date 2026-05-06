@@ -90,6 +90,7 @@ struct pmip_pg {
 
     /* Process segmentation information for this proxy */
     struct HYD_exec *exec_list;
+    struct HYD_proxy_exec *launch_list;
 
     struct pmip_kvs *kvs;
     /* An array of kvs entries (keys) that needs to be pushed to
