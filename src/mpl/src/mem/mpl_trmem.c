@@ -134,6 +134,7 @@ static const char *allocation_class_strings[] = {
     "MPL_MEM_COLL",
     "MPL_MEM_LOCAL",
     "MPL_MEM_USER",
+    "MPL_MEM_HASH",
     "MPL_MEM_OTHER"
 };
 
