@@ -5,6 +5,7 @@
 
 #include "hydra.h"
 #include "debugger.h"
+#include "mpl_hash.h"
 
 struct MPIR_PROCDESC *MPIR_proctable = NULL;
 int MPIR_proctable_size = 0;
@@ -16,6 +17,8 @@ char *MPIR_debug_abort_string = 0;
 
 volatile int MPIR_being_debugged = 0;
 
+static struct MPL_hash *MPIR_debug_str_hash = NULL;
+
 int (*MPIR_breakpointFn) (void) = MPIR_Breakpoint;
 
 int MPIR_Breakpoint(void)
@@ -25,59 +28,53 @@ int MPIR_Breakpoint(void)
 
 HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
 {
-    struct HYD_exec *exec;
-    int i, j, k, np, round;
     HYD_status status = HYD_SUCCESS;
-
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC_OR_JUMP(MPIR_proctable, struct MPIR_PROCDESC *,
                         pg->pg_process_count * sizeof(struct MPIR_PROCDESC), status);
 
-    round = 0;
-    /* We need to allocate the MPIR_proctable in COMM_WORLD rank
-     * order.  We do this in multiple rounds.  In each round, we
-     * allocate the proctable entries for the executables on the proxy
-     * that form a contiguous rank list.  Then we move to the next
-     * proxy.  When we run out of proxies, we go back to the first
-     * proxy and find the next set of contiguous ranks on that
-     * proxy. */
+    /* We need to allocate the MPIR_proctable in COMM_WORLD rank order. */
+    /* We use MPL_hash for duplicating the strings */
+    if (MPIR_debug_str_hash) {
+        MPL_hash_free(MPIR_debug_str_hash);
+    }
+    MPIR_debug_str_hash = MPL_hash_new();
 
-    i = 0;
-    for (int i_proxy = 0;; i_proxy++) {
-        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy % pg->proxy_count];
-        round = i_proxy / pg->proxy_count;
-        j = 0;
-        k = 0;
-        for (exec = proxy->exec_list; exec; exec = exec->next) {
-            for (np = 0; np < exec->proc_count; np++) {
-                if (k + np >= ((round + 1) * proxy->node->core_count))
-                    break;
-                if (k + np < round * proxy->node->core_count)
-                    continue;
-                /* avoid storing multiple copies of the host name */
-                if (i > 0 && strcmp(MPIR_proctable[i - 1].host_name, proxy->node->hostname) == 0)
-                    MPIR_proctable[i].host_name = MPIR_proctable[i - 1].host_name;
-                else
-                    MPIR_proctable[i].host_name = MPL_strdup(proxy->node->hostname);
-                MPIR_proctable[i].pid = proxy->pid[(proxy->node->core_count * round) + j];
-                j++;
+    /* store all name strings in MPIR_debug_str_hash first before exposing the internal string pointers */
+#define HASH_NAME_STR(name) MPL_hash_set(MPIR_debug_str_hash, name, MPL_HASH_KEY)
+
+    for (int i_proxy = 0; i_proxy < pg->proxy_count; i_proxy++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
+        int j = 0;
+        for (struct HYD_exec * exec = proxy->exec_list; exec; exec = exec->next) {
+            for (int i = 0; i < exec->proc_count; i++) {
+                int rank = exec->start_rank + i;
+                MPIR_proctable[rank].host_name = proxy->node->hostname;
+                MPIR_proctable[rank].pid = proxy->pid[j];
+                HASH_NAME_STR(MPIR_proctable[rank].host_name);
                 if (exec->exec[0]) {
-                    /* avoid storing multiple copies of the executable name */
-                    if (i > 0 && strcmp(exec->exec[0], MPIR_proctable[i - 1].executable_name) == 0)
-                        MPIR_proctable[i].executable_name = MPIR_proctable[i - 1].executable_name;
-                    else
-                        MPIR_proctable[i].executable_name = MPL_strdup(exec->exec[0]);
+                    MPIR_proctable[rank].executable_name = exec->exec[0];
+                    HASH_NAME_STR(MPIR_proctable[rank].executable_name);
                 } else {
-                    MPIR_proctable[i].executable_name = NULL;
+                    MPIR_proctable[rank].executable_name = NULL;
                 }
-                i++;
+                j++;
             }
-            k += exec->proc_count;
         }
+    }
+    /* replace the name strings with allocated strings in MPIR_debug_str_hash.
+     * NOTE: MPIR_debug_str_hash should be frozen to avoid a realloc that invalidates the string pointers.
+     */
+#define REPLACE_NAME_STR(name) \
+    if (name) { \
+        name = MPL_hash_get(MPIR_debug_str_hash, name); \
+    }
 
-        if (i >= pg->pg_process_count)
-            break;
+    for (int rank = 0; rank < pg->pg_process_count; rank++) {
+        HYDU_ASSERT(MPIR_proctable[rank].host_name, status);
+        REPLACE_NAME_STR(MPIR_proctable[rank].host_name);
+        REPLACE_NAME_STR(MPIR_proctable[rank].executable_name);
     }
 
     MPIR_proctable_size = pg->pg_process_count;
@@ -94,19 +91,9 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
 
 void HYDT_dbg_free_procdesc(void)
 {
-    int i;
-
-    for (i = 0; i < MPIR_proctable_size; i++) {
-        /* skip over duplicate pointers when freeing */
-        if (MPIR_proctable[i].host_name) {
-            if (i == 0 || MPIR_proctable[i].host_name != MPIR_proctable[i - 1].host_name)
-                MPL_free(MPIR_proctable[i].host_name);
-        }
-        if (MPIR_proctable[i].executable_name) {
-            if (i == 0 ||
-                MPIR_proctable[i].executable_name != MPIR_proctable[i - 1].executable_name)
-                MPL_free(MPIR_proctable[i].executable_name);
-        }
+    if (MPIR_debug_str_hash) {
+        MPL_hash_free(MPIR_debug_str_hash);
+        MPIR_debug_str_hash = NULL;
     }
     MPL_free(MPIR_proctable);
 }
