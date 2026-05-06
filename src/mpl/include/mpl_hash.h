@@ -19,6 +19,8 @@ struct MPL_hash {
     int *p_val;
 };
 
+#define MPL_HASH_KEY  ((const char *) 1)        /* value is the same as key */
+
 struct MPL_hash *MPL_hash_new(void);
 bool MPL_hash_has(struct MPL_hash *hv, const char *s_key);
 void MPL_hash_set(struct MPL_hash *hv, const char *s_key, const char *s_value);
