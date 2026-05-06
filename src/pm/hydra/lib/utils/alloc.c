@@ -143,13 +143,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count)
 
         MPL_free(proxy->pid);
         MPL_free(proxy->exit_status);
-
-        struct HYD_proxy_exec *exec = proxy->exec_list;
-        while (exec) {
-            struct HYD_proxy_exec *cur = exec;
-            exec = cur->next;
-            MPL_free(cur);
-        }
+        HYDU_free_launch_list(proxy->exec_list);
     }
 
     MPL_free(proxy_list);
@@ -167,7 +161,6 @@ HYD_status HYDU_alloc_exec(struct HYD_exec **exec)
     (*exec)->exec_len = 0;
     (*exec)->exec_size = 0;
     (*exec)->wdir = NULL;
-    (*exec)->start_rank = -1;
     (*exec)->proc_count = -1;
     (*exec)->env_prop = NULL;
     (*exec)->user_env = NULL;
@@ -237,6 +230,16 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     }
 
     HYDU_FUNC_EXIT();
+}
+
+void HYDU_free_launch_list(struct HYD_proxy_exec *launch_list)
+{
+    struct HYD_proxy_exec *launch = launch_list;
+    while (launch) {
+        struct HYD_proxy_exec *cur = launch;
+        launch = cur->next;
+        MPL_free(cur);
+    }
 }
 
 static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy,
