@@ -3977,27 +3977,6 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 MPI_STATUS_SIZE=5
 AC_SUBST([MPI_STATUS_SIZE])
 
-if test "$enable_f77" = yes ; then
-    # Check if multiple __attribute__((alias)) is available
-    # This test requires MPI_STATUS_SIZE, and thus must be made after
-    # MPI_STATUS_SIZE is determined
-    if test "$enable_multi_aliases" = "yes" ; then
-        PAC_C_MULTI_ATTR_ALIAS
-        if test "$pac_c_multi_attr_alias" = "yes" ; then
-            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
-            AC_SUBST(CMB_1INT_ALIGNMENT)
-            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
-                                      [32])
-            AC_SUBST(CMB_STATUS_ALIGNMENT)
-            if test "X$CMB_1INT_ALIGNMENT" != "X" \
-                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
-                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                    [Define if multiple __attribute__((alias)) are supported])
-            fi
-        fi
-    fi
-fi
-
 # -----------------------------------------------------------------------------
 # enable_nolocal option may get overwritten by device subconfigure, e.g. with "with_ch4_shmmods=none"
 if test "$enable_nolocal" = "yes" ; then
@@ -4327,8 +4306,7 @@ AC_CONFIG_FILES([Makefile \
           packaging/envmods/mpich.module])
 if test "$enable_f77" = "yes" ; then
     AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
-                     src/binding/fortran/mpif_h/setbotf.f \
-                     src/binding/fortran/mpif_h/setbot.c])
+                     src/binding/fortran/mpif_h/setbotf.f])
 fi
 if test "$enable_f08" = "yes" ; then
     AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \

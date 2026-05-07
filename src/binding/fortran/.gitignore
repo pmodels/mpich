@@ -3,7 +3,6 @@
 /mpif_h/Makefile.sm
 /mpif_h/mpif_bottom.h
 /mpif_h/setbotf.f
-/mpif_h/setbot.c
 /mpif_h/mpif77.conf
 /mpif_h/mpif77
 /mpif_h/fproto.h
