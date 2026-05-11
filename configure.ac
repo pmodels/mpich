@@ -275,16 +275,6 @@ AC_SUBST(MPICH_MPICXX_CXXFLAGS)
 AC_SUBST(MPICH_MPICXX_LDFLAGS)
 AC_SUBST(MPICH_MPICXX_LIBS)
 
-AC_SUBST(MPICH_MPIF77_CPPFLAGS)
-AC_SUBST(MPICH_MPIF77_FFLAGS)
-AC_SUBST(MPICH_MPIF77_LDFLAGS)
-AC_SUBST(MPICH_MPIF77_LIBS)
-
-AC_SUBST(MPICH_MPIFORT_CPPFLAGS)
-AC_SUBST(MPICH_MPIFORT_FCFLAGS)
-AC_SUBST(MPICH_MPIFORT_LDFLAGS)
-AC_SUBST(MPICH_MPIFORT_LIBS)
-
 # Add MPICHLIB_* to the appropriate flags
 AC_ARG_VAR(MPICHLIB_CFLAGS,
 	[extra CFLAGS used in building MPICH libraries])
@@ -303,8 +293,6 @@ AC_ARG_VAR(MPICHLIB_LIBS,
 CFLAGS="$CFLAGS $MPICHLIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICHLIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICHLIB_CXXFLAGS"
-FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
-FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
 # Save LDFLAGS before merging with MPICHLIB_LDFLAGS. The wrapper scripts
 # may need this in case interlibrary dependencies are not supported.
 WRAPPER_DEPENDENCY_LDFLAGS=$LDFLAGS
@@ -738,9 +726,6 @@ if test "$pac_cv_cxx_builds_exe" = "no" ; then
     # clear $CXX if C++ compiler does not work
     CXX=
 fi
-
-AM_CONDITIONAL([INSTALL_MPIF90],[true])
-AM_CONDITIONAL([INSTALL_MPIF77],[true])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -1266,34 +1251,22 @@ IFS="$save_IFS"
 if test "$enable_append_g" = "yes" ; then
     PAC_APPEND_FLAG([-g],[CFLAGS])
     PAC_APPEND_FLAG([-g],[CXXFLAGS])
-    PAC_APPEND_FLAG([-g],[FFLAGS])
-    PAC_APPEND_FLAG([-g],[FCFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_CFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
 fi
 
 if test "$enable_asan" = "yes" ; then
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CXXFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
 fi
 if test "$enable_ubsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=undefined],[CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[FFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
 fi
 if test "$enable_tsan" = "yes" ; then
@@ -1917,42 +1890,12 @@ PAC_PROG_CHECK_INSTALL_WORKS
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
 
-AC_ARG_ENABLE([bash],[AS_HELP_STRING([--disable-bash],[Do not use bash for wrapper scripts (mpicc etc)])],
-              [],[enable_bash=yes])
-AC_PATH_PROG(BASH_SHELL,bash)
-
-bashWorks=no
-if test "$enable_bash" = "yes" ; then
-    # Check for bash to allow more robust shell scripts
-    #
-    # Confirm that bash has working arrays.  We can use this to
-    # build more robust versions of the scripts (particularly the
-    # compilation scripts) by taking advantage of the array features in
-    # bash.
-    if test -x "$BASH_SHELL" ; then
-        changequote(%%,::)dnl
-        cat >>conftest <<EOF
-#! $BASH_SHELL
-A[0]="b"
-A[1]="c"
-rc=1
-if test \${A[1]} != "c" ; then rc=2 ; else rc=0 ; fi
-exit \$rc
-EOF
-        changequote([,])dnl
-        AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
-        chmod +x conftest
-        if ./conftest 2>&1 >/dev/null ; then
-            bashWorks=yes
-        else
-            bashWorks=no
-        fi
-        rm -f conftest*
-        AC_MSG_RESULT($bashWorks)
-    fi
-fi
 dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
-AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
+PAC_CHECK_BASH
+AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$pac_cv_bash_works" = xyes])
+
+# export variables for subconfigure in mpifort
+export BASH_SHELL pac_cv_bash_works
 
 # ----------------------------------------------------------------------------
 # At this point, we've finally settled on the value of PMPILIBNAME.  We
@@ -2956,6 +2899,9 @@ else
 fi
 AC_SUBST(LMPICXXLIBNAME)
 
+# export to src/binding/fortran/configure
+export MPILIBNAME LPMPILIBNAME
+
 # ----------------------------------------------------------------------------
 
 # with MPI_AINT defined, now we can
@@ -3189,17 +3135,11 @@ AC_SUBST(MPICC_ABI_NAME)
 AC_SUBST(MPICXX_NAME)
 AC_SUBST(MPICXX_ABI_NAME)
 AC_SUBST(MPICPP_NAME)
-AC_SUBST(MPIFORT_NAME)
-AC_SUBST(MPIF90_NAME)
-AC_SUBST(MPIF77_NAME)
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpicc_abi", MPICC_ABI_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
 PAC_GET_EXENAME("mpicxx_abi", MPICXX_ABI_NAME)
 PAC_GET_EXENAME("mpic++", MPICPP_NAME)
-PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
-PAC_GET_EXENAME("mpif90", MPIF90_NAME)
-PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 
 dnl
 dnl Generate the Makefiles from Makefile.in
@@ -3303,10 +3243,6 @@ if test "$enable_fortran" = "yes" ; then
 
     AC_MSG_NOTICE([sourcing $main_top_builddir/src/binding/fortran/localdefs])
     . $main_top_builddir/src/binding/fortran/localdefs
-
-    # For now, we build/install mpifort in mpich
-    fc_shlib_conf="src/binding/fortran/fc_shlib.conf"
-    AC_SUBST([fc_shlib_conf])
 fi
 
 # FCEXT used in mpifort.bash.in
@@ -3337,8 +3273,6 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
-	  src/env/mpifort.sh \
-	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi_mpich.h \
           doc/installguide/Makefile \
