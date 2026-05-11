@@ -1181,10 +1181,6 @@
 /init/finalized
 /init/initstat
 /init/library_version
-/init/session
-/init/session_mult_init
-/init/session_psets
-/init/session_self
 /init/timeout
 /init/version
 /io/async
@@ -1528,6 +1524,15 @@
 /rma/wintest
 /rma/wintest_shm
 /rma/win_zero
+/session/session
+/session/session_mult_init
+/session/session_re_init
+/session/session_psets
+/session/session_self
+/session/session_inter
+/session/session_4x4
+/session/session_bsend
+/session/session_local_only
 /spawn/concurrent_spawns
 /spawn/disconnect
 /spawn/disconnect2
