@@ -9,11 +9,39 @@ m4_include([version.m4])
 
 AC_INIT([MPIFORT], MPICH_VERSION_m4, [discuss@mpich.org], [mpifort], [http://www.mpich.org/])
 
+MPICH_VERSION=MPICH_VERSION_m4
+AC_SUBST([MPICH_VERSION])
+
+## Enable creation of libtool-style versioning or no versioning
+AC_ARG_ENABLE(versioning,
+    [AS_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+    [enable_versioning=yes])
+
+if test "$enable_versioning" = "yes" ; then
+    ABIVERSIONFLAGS="-version-info libmpi_so_version_m4"
+else
+    ABIVERSIONFLAGS="-avoid-version"
+fi
+AC_SUBST(ABIVERSIONFLAGS)
+
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
-AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects no-dist no-maintainer-mode])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects no-dist])
 AM_MAINTAINER_MODE([disable])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+PAC_PREFIX_ALL_FLAGS(WRAPPER)
+
+# When build from MPICH, --with-mpi=mpich to build native mpich ABI, --with-mpi=abi to build MPI ABI
+# When build stand-alone, set --with-mpi to path. TODO: check for system mpi.
+AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
+            [Specify the path where MPI is installed.])],,with_mpi=mpich)
+
+mpi_h=
+AC_ARG_VAR([MPILIBNAME], [default: "mpi"])
+AC_ARG_VAR([LPMPILIBNAME], [default: ""])
+AC_SUBST(MPILIBNAME)
+AC_SUBST(LPMPILIBNAME)
 
 AC_CONFIG_HEADERS([mpifort_config.h])
 
@@ -24,14 +52,6 @@ fi
 export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
 
-# When build from MPICH, --with-mpi=mpich to build native mpich ABI, --with-mpi=abi to build MPI ABI
-# When build stand-alone, set --with-mpi to path. TODO: check for system mpi.
-AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
-            [Specify the path where MPI is installed.])],,with_mpi=mpich)
-
-mpi_h=
-mpi_libs=
-AC_SUBST(mpi_libs)
 if test "$FROM_MPICH" = "yes" ; then
     if test "$WITH_MPI" = "mpich" ; then
         # We expect the following vars to be set from parent configure
@@ -45,19 +65,35 @@ if test "$FROM_MPICH" = "yes" ; then
     else
         AC_MSG_ERROR([$FROM_MPICH is set but $WITH_MPI is not set!])
     fi
+    if test -z "$MPILIBNAME" ; then
+        AC_MSG_ERROR([MPICH configure need export MPILIBNAME and LPMPILIBNAME])
+    fi
 else
     if ! test "$with_mpi/include/mpi.h" ; then
         AC_MSG_ERROR([mpi.h not found in $with_mpi/include/])
     fi
     PAC_APPEND_FLAG(-I${with_mpi}/include, [CPPFLAGS])
+    PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
     mpi_h="$with_mpi/include/mpi.h"
 
     if test -e "$with_mpi/lib/libmpi.so" ; then
-        PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
-        mpi_libs="-lmpi"
+        if test -z "$MPILIBNAME" ; then
+            MPILIBNAME="mpi"
+        fi
+        if test -e "$with_mpi/lib/libpmpi.so" ; then
+            LPMPILIBNAME="-lpmpi"
+        fi
     elif test -e "$with_mpi/lib/libmpi_abi.so" ; then
-        PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
-        mpi_libs="-lmpi_abi"
+        if test -z "$MPILIBNAME" ; then
+            MPILIBNAME="mpi_abi"
+        fi
+        if test -e "$with_mpi/lib/libpmpi_abi.so" ; then
+            LPMPILIBNAME="-lpmpi_abi"
+        fi
+    else
+        if test -z "$MPILIBNAME" ; then
+            AC_MSG_ERROR([Please export \$MPILIBNAME and \$LPMPILIBNAME])
+        fi
     fi
 fi
 
@@ -98,6 +134,12 @@ fi
 
 dnl enable_fortran is assumed to be true
 
+# Add MPICHLIB_* to the appropriate flags
+AC_ARG_VAR(MPICHLIB_FFLAGS, [extra FFLAGS used in building MPICH libraries])
+AC_ARG_VAR(MPICHLIB_FCFLAGS, [extra FCFLAGS used in building MPICH libraries])
+FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
+FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
+
 # suppress default "-g -O2" from AC_PROG_FC
 : ${FCFLAGS=""}
 
@@ -116,6 +158,38 @@ fi
 F77=$FC
 FFLAGS=$FCFLAGS
 AC_PROG_F77
+
+AM_PROG_AR
+
+LT_PREREQ([2.2.6])
+LT_INIT()
+
+dnl --enable-g will affect the flags
+AC_ARG_ENABLE(g,
+[  --enable-g=option - Control the level of debugging support. Accepted options:
+        none  - No debugging
+        dbg   - Add compiler flag -g
+        asan  - Add compiler flag -fsanitize=address
+        ubsan - Add compiler flag -fsanitize=undefined
+        yes   - same as "dbg"
+],,enable_g=none)
+
+if test "$enable_g" = "yes"; then
+    enable_g=dbg
+fi
+
+if test "$enable_g" = "dbg" ; then
+    PAC_APPEND_FLAG([-g],[FCFLAGS])
+    PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
+elif test "$enable_g" = "asan" ; then
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
+elif test "$enable_g" = "ubsan" ; then
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=undefined -fno-omit-frame-pointer],[FCFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=undefined -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
+fi
 
 AC_ARG_ENABLE([two-level-namespace],
               [AS_HELP_STRING([--enable-two-level-namespace],
@@ -221,14 +295,10 @@ if test "$enable_f08" = "yes" ; then
     AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
 
-AM_PROG_AR
-
-LT_PREREQ([2.2.6])
-LT_INIT()
-
-# generate fc_shlib.conf, needed by mpifort, used by MPICH
+# generate rpath-related macros, needed by mpifort
 fc_shlib_conf=fc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
+AC_SUBST_FILE([fc_shlib_conf])
 
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)
@@ -1020,7 +1090,34 @@ if test "$skip_gen_bindings" = no ; then
     fi
 fi
 
+AC_SUBST(MPIFORT_NAME)
+AC_SUBST(MPIF90_NAME)
+AC_SUBST(MPIF77_NAME)
+PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
+PAC_GET_EXENAME("mpif90", MPIF90_NAME)
+PAC_GET_EXENAME("mpif77", MPIF77_NAME)
+
+# MPICH_MPIx_FLAGS are used by mpifort and friends.  They are like
+# WRAPPER flags, but these are provided by the user.
+AC_SUBST(MPICH_MPIFORT_CPPFLAGS)
+AC_SUBST(MPICH_MPIFORT_FCFLAGS)
+AC_SUBST(MPICH_MPIFORT_LDFLAGS)
+AC_SUBST(MPICH_MPIFORT_LIBS)
+
+AC_SUBST(MPICH_MPIF77_CPPFLAGS)
+AC_SUBST(MPICH_MPIF77_FCFLAGS)
+AC_SUBST(MPICH_MPIF77_LDFLAGS)
+AC_SUBST(MPICH_MPIF77_LIBS)
+
+AM_CONDITIONAL([INSTALL_MPIF90],[true])
+AM_CONDITIONAL([INSTALL_MPIF77],[true])
+
+PAC_CHECK_BASH
+AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$pac_cv_bash_works" = xyes])
+
 AC_CONFIG_FILES([Makefile \
+                 env/mpifort.sh \
+                 env/mpifort.bash \
                  localdefs])
 
 if test "$enable_f77" = "yes" ; then

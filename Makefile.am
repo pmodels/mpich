@@ -229,8 +229,7 @@ install-exec-hook:
 	    . lib/lib@MPILIBNAME@.la ; \
 	fi ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
-		${DESTDIR}${bindir}/@MPICXX_NAME@ \
-		${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
+		${DESTDIR}${bindir}/@MPICXX_NAME@ ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
@@ -247,21 +246,6 @@ install-exec-hook:
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
 	fi ;
-if INSTALL_MPIF90
-	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
-		if test "@MPIFORT_NAME@" != "@MPIF90_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; \
-		fi ; \
-	fi ;
-endif INSTALL_MPIF90
-if INSTALL_MPIF77
-	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
-		if test "@MPIFORT_NAME@" != "@MPIF77_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; \
-		fi ; \
-	fi ;
-endif INSTALL_MPIF77
-
 
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
