@@ -11,6 +11,7 @@ fi
 if test -n "$MPICH_CONFDB" ; then
     CONFARGS="-I $MPICH_CONFDB -vif"
     mkdir -p confdb
+    cp -v $MPICH_CONFDB/config.rpath confdb/
 else
     if ! test -d confdb ; then
         echo "Missing confdb!"

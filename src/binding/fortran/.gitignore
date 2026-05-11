@@ -26,6 +26,13 @@
 /use_mpi/mpi_constants.f90
 /use_mpi/mpifnoext.h
 
+/use_mpi/mpi.mod-stamp
+/use_mpi/mpi_base.mod-stamp
+/use_mpi/pmpi_base.mod-stamp
+/use_mpi/mpi_constants.mod-stamp
+/use_mpi/mpi_sizeofs.mod-stamp
+/use_mpi_f08/*.stamp
+
 # use_mpi_f08/
 /use_mpi_f08/mpi_f08_compile_constants.f90
 /use_mpi_f08/mpi_f08_compile_constants.f90.in
@@ -42,3 +49,7 @@
 /use_mpi_f08/wrappers_c/f08_cdesc.c
 /use_mpi_f08/wrappers_c/cdesc_proto.h
 
+/env/mpifort
+/env/mpifort.sh
+/env/mpifort.bash
+/env/fc_shlib.conf
