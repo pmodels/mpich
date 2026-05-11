@@ -121,9 +121,6 @@ MPICH_VERSION=MPICH_VERSION_m4
 AC_SUBST([MPICH_VERSION])
 MPICH_RELEASE_DATE="MPICH_RELEASE_DATE_m4"
 AC_SUBST([MPICH_RELEASE_DATE])
-libmpi_so_version="libmpi_so_version_m4"
-AC_SUBST([libmpi_so_version])
-
 
 if test -z "$MPICH_VERSION" ; then
     AC_MSG_ERROR([MPICH_VERSION is empty, check maint/version.m4 for errors])
@@ -182,13 +179,6 @@ AC_ARG_WITH(custom-version-string,
             AS_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
 MPICH_CUSTOM_STRING=$with_custom_version_string
 AC_SUBST(MPICH_CUSTOM_STRING)
-
-# ABIVERSION is the name used by simplemake, so we reassign the
-# libmpi_so_version number to it
-ABIVERSION=${libmpi_so_version}
-export ABIVERSION
-export libmpi_so_version
-AC_SUBST(ABIVERSION)
 
 # Print out the configure options
 CONFIGURE_ARGUMENTS="$ac_configure_args"
@@ -508,11 +498,13 @@ AC_ARG_ENABLE(versioning,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then
-   ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
-   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_verion_m4"
+    if test "$enable_mpi_abi" = "yes" ; then
+        ABIVERSIONFLAGS="-version-info libmpi_abi_so_verion_m4"
+    else
+        ABIVERSIONFLAGS="-version-info libmpi_so_version_m4"
+    fi
 else
    ABIVERSIONFLAGS="-avoid-version"
-   ABI_ABIVERSIONFLAGS="-avoid-version"
 fi
 export ABIVERSIONFLAGS
 AC_SUBST(ABIVERSIONFLAGS)
