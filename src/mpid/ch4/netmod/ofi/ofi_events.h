@@ -46,9 +46,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     MPIR_FUNC_ENTER;
 
     /* free the packing buffers and datatype */
-    if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) &&
-        (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
-        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
+    if (event_id == MPIDI_OFI_EVENT_SEND_PACK) {
+        MPIDI_OFI_free_pack_buffer(sreq);
     } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK)) {
         MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs));
     }
@@ -96,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+        MPIDI_OFI_free_pack_buffer(rreq);
     } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
 #ifdef HAVE_ERROR_CHECKING
         MPI_Count elements;
