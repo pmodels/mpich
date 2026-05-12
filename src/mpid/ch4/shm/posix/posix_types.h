@@ -72,6 +72,11 @@ typedef struct {
     int shm_vci_slab_size;
 } MPIDI_POSIX_global_t;
 
+typedef struct MPIDI_POSIX_rma_req {
+    MPIR_gpu_req yreq;
+    struct MPIDI_POSIX_rma_req *next;
+} MPIDI_POSIX_rma_req_t;
+
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_enqueu(MPIR_gpu_req yreq,
@@ -83,7 +88,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_enqueu(MPIR_gpu_re
 
     req->yreq = yreq;
     req->next = NULL;
-    LL_APPEND(posix_win->outstanding_reqs_head, posix_win->outstanding_reqs_tail, req);
+
+    MPIDI_POSIX_rma_req_t **head_p, **tail_p;
+    head_p = (MPIDI_POSIX_rma_req_t **) & posix_win->outstanding_reqs_head;
+    tail_p = (MPIDI_POSIX_rma_req_t **) & posix_win->outstanding_reqs_tail;
+    LL_APPEND(*head_p, *tail_p, req);
 }
 
 /* Blocking wait until all queued requests are complete.
@@ -92,8 +101,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_flushall(MPIDI_POS
                                                                        posix_win)
 {
     MPIDI_POSIX_rma_req_t *req, *req_tmp;
+
+    MPIDI_POSIX_rma_req_t **head_p, **tail_p;
+    head_p = (MPIDI_POSIX_rma_req_t **) & posix_win->outstanding_reqs_head;
+    tail_p = (MPIDI_POSIX_rma_req_t **) & posix_win->outstanding_reqs_tail;
+
     /* No dependency between requests, thus can safely wait one by one. */
-    LL_FOREACH_SAFE(posix_win->outstanding_reqs_head, req, req_tmp) {
+    LL_FOREACH_SAFE(*head_p, req, req_tmp) {
         int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
 
         if (req->yreq.type == MPIR_TYPEREP_REQUEST) {
@@ -109,7 +123,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_flushall(MPIDI_POS
             MPIR_Assert(req->yreq.type == MPIR_NULL_REQUEST);
         }
 
-        LL_DELETE(posix_win->outstanding_reqs_head, posix_win->outstanding_reqs_tail, req);
+        LL_DELETE(*head_p, *tail_p, req);
         MPL_free(req);
     }
 }

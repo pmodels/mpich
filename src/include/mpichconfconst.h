@@ -64,4 +64,8 @@
 #define MPICH_MPI_STATE__MPIR_INITIALIZED  1
 #define MPICH_MPI_STATE__INITIALIZED       2
 
+/* Possible values for datatype engine */
+#define MPICH_DATATYPE_ENGINE_YAKSA    (1)
+#define MPICH_DATATYPE_ENGINE_DATALOOP (2)
+
 #endif /* MPICHCONFCONST_H_INCLUDED */

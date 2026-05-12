@@ -132,19 +132,15 @@ do { \
     MPIDI_POSIX_eager_recv_completed_hook((request)->dev.ch4.am.shm_am.posix.eager_recv_posted_hook_grank); \
 } while (0)
 
-typedef struct MPIDI_POSIX_rma_req {
-    MPIR_gpu_req yreq;
-    struct MPIDI_POSIX_rma_req *next;
-} MPIDI_POSIX_rma_req_t;
-
 typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
 
     /* Linked list to keep track of outstanding RMA issued via shm.
      * Host-only copy is always blocking, thus this list should contain only
      * GPU-involved operations. */
-    MPIDI_POSIX_rma_req_t *outstanding_reqs_head;
-    MPIDI_POSIX_rma_req_t *outstanding_reqs_tail;
+    /* NOTE: the actual struct and usage are defined in posix_types.h */
+    void *outstanding_reqs_head;
+    void *outstanding_reqs_tail;
 } MPIDI_POSIX_win_t;
 
 /*

@@ -6,8 +6,42 @@
 #ifndef MPIR_TYPEREP_H_INCLUDED
 #define MPIR_TYPEREP_H_INCLUDED
 
-#include <mpi.h>
-#include "typerep_pre.h"
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+#include "yaksa.h"
+typedef struct {
+    yaksa_request_t req;
+    yaksa_info_t info;
+} MPIR_Typerep_req;
+#define MPIR_TYPEREP_REQ_NULL YAKSA_REQUEST__NULL
+#define MPIR_TYPEREP_HANDLE_TYPE yaksa_type_t
+#define MPIR_TYPEREP_HANDLE_NULL YAKSA_TYPE__NULL
+#else
+typedef struct {
+    int req;
+    int info;
+} MPIR_Typerep_req;             /* unused in dataloop */
+#define MPIR_TYPEREP_REQ_NULL 0
+#define MPIR_TYPEREP_HANDLE_TYPE struct MPII_Dataloop *
+#define MPIR_TYPEREP_HANDLE_NULL NULL
+#endif
+
+/* FIXME: bad names. Not gpu-specific, confusing with MPIR_Request.
+ *        It's a general async handle.
+ */
+typedef enum {
+    MPIR_NULL_REQUEST = 0,
+    MPIR_TYPEREP_REQUEST,
+    MPIR_GPU_REQUEST,
+} MPIR_request_type_t;
+
+typedef struct {
+    union {
+        MPIR_Typerep_req y_req;
+        MPL_gpu_request gpu_req;
+    } u;
+    MPIR_request_type_t type;
+} MPIR_gpu_req;
+
 
 void MPIR_Typerep_init(void);
 void MPIR_Typerep_finalize(void);
@@ -102,4 +136,53 @@ int MPIR_Typerep_pack_stream(const void *inbuf, MPI_Aint incount, MPI_Datatype d
 int MPIR_Typerep_unpack_stream(const void *inbuf, MPI_Aint insize,
                                void *outbuf, MPI_Aint outcount, MPI_Datatype datatype,
                                MPI_Aint outoffset, MPI_Aint * actual_unpack_bytes, void *stream);
+
+int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req);
+int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed);
+
+MPL_STATIC_INLINE_PREFIX void MPIR_async_test(MPIR_gpu_req * areq, int *is_done)
+{
+    int err;
+    switch (areq->type) {
+        case MPIR_NULL_REQUEST:
+            /* a dummy, immediately complete */
+            *is_done = 1;
+            break;
+        case MPIR_TYPEREP_REQUEST:
+            MPIR_Typerep_test(areq->u.y_req, is_done);
+            if (*is_done) {
+                areq->type = MPIR_NULL_REQUEST;
+            }
+            break;
+        case MPIR_GPU_REQUEST:
+            err = MPL_gpu_test(&areq->u.gpu_req, is_done);
+            MPIR_Assertp(err == MPL_SUCCESS);
+            if (*is_done) {
+                areq->type = MPIR_NULL_REQUEST;
+            }
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+}
+
+/* declared here due to dependency on MPIR_Typerep_req */
+int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
+int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                    MPIR_Typerep_req * typerep_req);
+int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, void *stream);
+int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                       MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                       MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
+                       MPL_pointer_attr_t * recvattr,
+                       MPL_gpu_engine_type_t enginetype, bool commit);
+int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                        MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                        MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
+                        MPL_pointer_attr_t * recvattr,
+                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req);
+
 #endif /* MPIR_TYPEREP_H_INCLUDED */

@@ -7,7 +7,6 @@
 #define TYPEREP_INTERNAL_H_INCLUDED
 
 #include "mpiimpl.h"
-#include "typerep_pre.h"
 
 int MPII_Typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
                              void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
