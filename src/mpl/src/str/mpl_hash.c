@@ -37,7 +37,7 @@ struct MPL_hash *MPL_hash_new(void)
 {
     struct MPL_hash *hv;
 
-    hv = (struct MPL_hash *) calloc(1, sizeof(struct MPL_hash));
+    hv = (struct MPL_hash *) MPL_calloc(1, sizeof(struct MPL_hash), MPL_MEM_OTHER);
     return hv;
 }
 
@@ -160,7 +160,7 @@ int f_addto_strpool(struct strpool *p_strpool, const char *s, int n)
             tn_avg_str_size = p_strpool->i_pool / p_strpool->i_str + 1;
         }
         p_strpool->pool_size = tn_avg_str_size * p_strpool->n_str + n;
-        p_strpool->pc_pool = realloc(p_strpool->pc_pool, p_strpool->pool_size);
+        p_strpool->pc_pool = MPL_realloc(p_strpool->pc_pool, p_strpool->pool_size, MPL_MEM_OTHER);
     }
     memcpy(p_strpool->pc_pool + p_strpool->i_pool, s, n);
     p_strpool->i_str++;
