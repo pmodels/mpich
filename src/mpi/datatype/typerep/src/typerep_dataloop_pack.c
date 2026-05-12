@@ -5,7 +5,6 @@
 
 #include "mpiimpl.h"
 #include <dataloop.h>
-#include "typerep_pre.h"
 #include "typerep_internal.h"
 
 int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
