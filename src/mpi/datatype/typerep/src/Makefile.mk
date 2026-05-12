@@ -32,5 +32,4 @@ mpi_core_sources += \
 endif !BUILD_YAKSA_ENGINE
 
 noinst_HEADERS += \
-    src/mpi/datatype/typerep/src/typerep_internal.h   \
-    src/mpi/datatype/typerep/src/typerep_pre.h
+    src/mpi/datatype/typerep/src/typerep_internal.h
