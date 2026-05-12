@@ -432,6 +432,15 @@ AC_DEFUN([PAC_COMPILER_SHLIB_FLAGS],[
 AC_REQUIRE_AUX_FILE([config.rpath])
 AC_REQUIRE([AC_CANONICAL_HOST])
 
+AC_ARG_WITH([wrapper-dl-type],[AS_HELP_STRING([--with-wrapper-dl-type],
+    [Dynamic loading model for alternate MPI libraries, used when programs are linked
+     by mpicc compiler wrappers.  This only applies when shared libraries are built.
+     The default is "runpath"; use --with-wrapper-dl-type=rpath to force
+     rpath; use --with-wrapper-dl-type=none to find shared libraries according to the
+     rules for your system (e.g., in LD_LIBRARY_PATH)])],
+     [],[with_wrapper_dl_type=runpath])
+AC_SUBST([with_wrapper_dl_type])
+
 # It appears that the libtool dynamic linking strategy on Darwin is this:
 # 1. Link all shared libs with "-install_name /full/path/to/libfoo.dylib"
 # 2. Don't do anything special when linking programs, since it seems that the
