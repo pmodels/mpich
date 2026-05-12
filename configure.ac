@@ -586,21 +586,6 @@ AC_ARG_ENABLE(multi-aliases,
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
-AC_ARG_WITH([wrapper-dl-type],
-            [AS_HELP_STRING([--with-wrapper-dl-type],
-                            [Dynamic loading model for alternate MPI
-                             libraries, used when programs are linked
-                             by mpicc compiler wrappers.  This only
-                             applies when shared libraries are built.
-                             The default is "runpath"; use
-                             --with-wrapper-dl-type=rpath to force
-                             rpath; use --with-wrapper-dl-type=none to
-                             find shared libraries according to the
-                             rules for your system (e.g., in
-                             LD_LIBRARY_PATH)])],
-              [],[with_wrapper_dl_type=runpath])
-AC_SUBST([with_wrapper_dl_type])
-
 AC_ARG_ENABLE([long-double],
               [AS_HELP_STRING([--disable-long-double],
                               [Pass --disable-long-double to prevent the MPI
