@@ -7,6 +7,7 @@
 #include "mpir_info.h"
 #include "mpi_init.h"
 #include <strings.h>
+#include <dlfcn.h>
 #include "mpir_async_things.h"
 
 /*
@@ -104,6 +105,9 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+/* Used to dlsym MPIX_Init_fortran */
+typedef void (*init_func_t) (void);
 
 /* MPIR_world_model_state tracks so we only init and finalize once in world model */
 MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
@@ -341,6 +345,13 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /* Reset isThreaded to the actual thread level */
 #ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+#endif
+
+#ifdef HAVE_DLOPEN
+    init_func_t func = (init_func_t) dlsym(RTLD_DEFAULT, "MPIX_Init_fortran");
+    if (func) {
+        func();
+    }
 #endif
 
   fn_exit:
