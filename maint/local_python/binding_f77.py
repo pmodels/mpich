@@ -65,8 +65,12 @@ def dump_f77_c_func(func, is_cptr=False):
                 raise Exception("Unhandled: %s - %s, length=%s" % (func['name'], p['name'], p['length']))
         else:
             c_param_list.append("MPI_Fint *" + p['name'])
-            c_arg_list_A.append("(%s) (*%s)" % (c_type, p['name']))
-            c_arg_list_B.append("(%s) (*%s)" % (c_type, p['name']))
+            if c_type in G.handle_conversions:
+                c_arg_list_A.append("%s_fromint(*%s)" % (G.handle_conversions[c_type], p['name']))
+                c_arg_list_B.append("%s_fromint(*%s)" % (G.handle_conversions[c_type], p['name']))
+            else:
+                c_arg_list_A.append("(%s) (*%s)" % (c_type, p['name']))
+                c_arg_list_B.append("(%s) (*%s)" % (c_type, p['name']))
 
     def dump_scalar_out(v, f_type, c_type):
         c_param_list.append("%s *%s" % (f_type, v))
@@ -204,6 +208,14 @@ def dump_f77_c_func(func, is_cptr=False):
     def dump_int_out(v, c_type, is_inout):
         c_param_list.append("MPI_Fint *%s" % v)
 
+        def dump_handle_conversion():
+            c_arg_list_A.append("&%s_i" % v)
+            c_arg_list_B.append("&%s_i" % v)
+            code_list_common.append("%s %s_i;" % (c_type, v))
+            if is_inout:
+                code_list_common.append("%s_i = %s_fromint(*%s);" % (v, G.handle_conversions[c_type], v))
+            end_list_common.append("*%s = %s_toint(%s_i);" % (v, G.handle_conversions[c_type], v))
+
         def dump_FINT_is_INT_pre():
             c_arg_list_A.append("(%s *) %s" % (c_type, v))
 
@@ -215,9 +227,12 @@ def dump_f77_c_func(func, is_cptr=False):
         def dump_FINT_not_INT_post():
             end_list_B.append("*%s = (MPI_Fint) %s_i;" % (v, v))
 
-        dump_FINT_is_INT_pre()
-        dump_FINT_not_INT_pre()
-        dump_FINT_not_INT_post()
+        if c_type in G.handle_conversions:
+            dump_handle_conversion()
+        else:
+            dump_FINT_is_INT_pre()
+            dump_FINT_not_INT_pre()
+            dump_FINT_not_INT_post()
 
     # scalar integer input, but we assume Fortran use the same c_type
     def dump_c_type_in(v, c_type):
@@ -254,6 +269,23 @@ def dump_f77_c_func(func, is_cptr=False):
 
     def dump_array(v, c_type, incount, outcount, is_in=True, is_out=False, has_special=False):
         c_param_list.append("MPI_Fint *%s" % v)
+
+        def dump_handle_conversion():
+            c_arg_list_A.append("%s_i" % v)
+            c_arg_list_B.append("%s_i" % v)
+            code_list_common.append("%s *%s_i;" % (c_type, v))
+
+            code_list_common.append("%s_i = malloc(sizeof(%s) * %s);" % (v, c_type, incount))
+            if is_in:
+                code_list_common.append("for (int i = 0; i < %s; i++) {" % incount)
+                code_list_common.append("    %s_i[i] = %s_fromint(%s[i]);" % (v, G.handle_conversions[c_type], v))
+                code_list_common.append("}")
+
+            if is_out:
+                end_list_common.append("for (int i = 0; i < %s; i++) {" % outcount)
+                end_list_common.append("    %s[i] = %s_toint(%s_i[i]);" % (v, G.handle_conversions[c_type], v))
+                end_list_common.append("}")
+            end_list_common.append("free(%s_i);" % v)
 
         def dump_FINT_is_INT_pre():
             c_arg_list_A.append("(int *) %s" % v)
@@ -330,9 +362,12 @@ def dump_f77_c_func(func, is_cptr=False):
                 code_list.append("DEDENT")
                 code_list.append("}")
 
-        dump_FINT_is_INT_pre()
-        dump_FINT_not_INT_pre()
-        dump_FINT_not_INT_post()
+        if c_type in G.handle_conversions:
+            dump_handle_conversion()
+        else:
+            dump_FINT_is_INT_pre()
+            dump_FINT_not_INT_pre()
+            dump_FINT_not_INT_post()
 
     def dump_array_int_to_aint(v, count):
         c_param_list.append("MPI_Fint *%s" % v)
@@ -405,21 +440,6 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (%s != MPI_F_ARGVS_NULL) {" % v)
         end_list_common.append("    MPIR_fort_free_str_2d_array(%s_i, %s);" % (v, count))
         end_list_common.append("}")
-
-    def dump_file_in(v):
-        c_param_list.append("MPI_Fint *%s" % v)
-        c_arg_list_A.append("MPI_File_f2c(*%s)" % v)
-        c_arg_list_B.append("MPI_File_f2c(*%s)" % v)
-
-    def dump_file_out(v, is_inout):
-        c_param_list.append("MPI_Fint *%s" % v)
-        c_arg_list_A.append("&%s_i" % v)
-        c_arg_list_B.append("&%s_i" % v)
-        if is_inout:
-            code_list_common.append("MPI_File %s_i = MPI_File_f2c(*%s);" % (v, v))
-        else:
-            code_list_common.append("MPI_File %s_i;" % v)
-        end_list_common.append("*%s = MPI_File_c2f(%s_i);" % (v, v))
 
     def dump_logical_in(v):
         c_param_list.append("MPI_Fint *%s" % v)
@@ -521,14 +541,8 @@ def dump_f77_c_func(func, is_cptr=False):
     def dump_mpi_decl_begin(name, param_str, return_type):
         G.out.append("FORT_DLL_SPEC %s FORT_CALL %s(%s) {" % (return_type, name, param_str))
         G.out.append("INDENT")
-        if re.match(r'MPI_File_|MPI_Register_datarep', func['name'], re.IGNORECASE):
-            G.out.append("#ifndef HAVE_ROMIO")
-            G.out.append("*ierr = MPI_ERR_INTERN;")
-            G.out.append("#else")
 
     def dump_mpi_decl_end():
-        if re.match(r'MPI_File_|MPI_Register_datarep', func['name'], re.IGNORECASE):
-            G.out.append("#endif")
         G.out.append("DEDENT")
         G.out.append("}")
 
@@ -670,15 +684,7 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     raise Exception("Not handled: %s - %s" % (func['name'], p['name']))
 
-            elif p['kind'] == "FILE":
-                if p['param_direction'] == 'out':
-                    dump_file_out(p['name'], False)
-                elif p['param_direction'] == 'inout':
-                    dump_file_out(p['name'], True)
-                else:
-                    dump_file_in(p['name'])
             elif p['kind'] == "LOGICAL":
-                
                 if re.match(r'MPI_Cart_sub$', func['name'], re.IGNORECASE):
                     # remain_dims
                     dump_array_in(p['name'], 'int', "maxdims")
@@ -768,7 +774,7 @@ def dump_f77_c_func(func, is_cptr=False):
                 # use MPII_greq_start
                 c_param_list.append("MPI_Fint *%s" % p['name'])
                 c_arg_list_A.append(p['name'])
-            elif p['kind'] in G.handle_mpir_types or c_mapping[p['kind']] == "int":
+            elif p['kind'] in G.handle_mpir_types or p['kind'] == 'FILE' or c_mapping[p['kind']] == "int":
                 c_type = c_mapping[p['kind']]
                 if p['length'] is None:
                     if p['param_direction'] == 'out':
@@ -825,22 +831,33 @@ def dump_f77_c_func(func, is_cptr=False):
         dump_sum(code_list_B, "total_procs", "count", "array_of_maxprocs")
     elif re.match(r'MPI_Cart_(rank|sub)$', func['name'], re.IGNORECASE):
         code_list_B.append("int maxdims;")
-        code_list_B.append("MPI_Cartdim_get((MPI_Comm) (*comm), &maxdims);")
+        code_list_B.append("MPI_Cartdim_get(MPI_Comm_fromint(*comm), &maxdims);")
     elif re.match(r'mpi_i?neighbor_(.*[vw])(_init)?$', func['name'], re.IGNORECASE):
-        code_list_B.append("int indegree, outdegree, weighted;")
-        code_list_B.append("MPI_Dist_graph_neighbors_count((MPI_Comm) (*comm), &indegree, &outdegree, &weighted);")
+        code_list_common.append("int indegree, outdegree, weighted;")
+        code_list_common.append("MPI_Dist_graph_neighbors_count(MPI_Comm_fromint(*comm), &indegree, &outdegree, &weighted);")
     elif re.match(r'mpi_.*(reduce_scatter)', func['name'], re.IGNORECASE):
         code_list_B.append("int comm_size;")
-        code_list_B.append("MPI_Comm_size((MPI_Comm) (*comm), &comm_size);")
-    elif re.match(r'mpi_.*(gatherv|scatterv|alltoall[vw])', func['name'], re.IGNORECASE):
+        code_list_B.append("MPI_Comm_size(MPI_Comm_fromint(*comm), &comm_size);")
+    elif re.match(r'mpi_.*(gatherv|scatterv|alltoallv)', func['name'], re.IGNORECASE):
         code_list_B.append("int is_inter;")
         code_list_B.append("int comm_size;")
-        code_list_B.append("MPI_Comm_test_inter((MPI_Comm) (*comm), &is_inter);")
+        code_list_B.append("MPI_Comm_test_inter(MPI_Comm_fromint(*comm), &is_inter);")
         code_list_B.append("if (is_inter) {")
-        code_list_B.append("    MPI_Comm_remote_size((MPI_Comm) (*comm), &comm_size);")
+        code_list_B.append("    MPI_Comm_remote_size(MPI_Comm_fromint(*comm), &comm_size);")
         code_list_B.append("} else {")
-        code_list_B.append("    MPI_Comm_size((MPI_Comm) (*comm), &comm_size);")
+        code_list_B.append("    MPI_Comm_size(MPI_Comm_fromint(*comm), &comm_size);")
         code_list_B.append("}")
+    elif re.match(r'mpi_.*(alltoallw)', func['name'], re.IGNORECASE):
+        # datatype array always require conversion
+        code_list_common.append("int is_inter;")
+        code_list_common.append("int comm_size;")
+        code_list_common.append("MPI_Comm_test_inter(MPI_Comm_fromint(*comm), &is_inter);")
+        code_list_common.append("if (is_inter) {")
+        code_list_common.append("    MPI_Comm_remote_size(MPI_Comm_fromint(*comm), &comm_size);")
+        code_list_common.append("} else {")
+        code_list_common.append("    MPI_Comm_size(MPI_Comm_fromint(*comm), &comm_size);")
+        code_list_common.append("}")
+
 
     process_func_parameters()
 
