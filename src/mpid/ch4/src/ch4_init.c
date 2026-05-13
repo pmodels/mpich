@@ -594,6 +594,9 @@ int MPID_Init(int requested, int *provided)
     mpi_errno = MPIDU_stream_workq_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_ulfm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Create genq for GPU collectives */
     mpi_errno =
         MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ,
@@ -731,6 +734,9 @@ int MPID_Finalize(void)
     MPIDIU_avt_finalize();
 
     mpi_errno = MPIDU_stream_workq_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_ulfm_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
