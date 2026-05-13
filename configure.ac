@@ -3787,6 +3787,13 @@ fi
 AC_SUBST(LPMPILIBNAME)
 AC_SUBST(LPMPIABILIBNAME)
 
+if test "enable_cxx" = "yes" -a "$enable_mpi_abi" = "no" -a x"$MPICXXLIBNAME" != x"$MPILIBNAME" ; then
+    LMPICXXLIBNAME="-l${MPICXXLIBNAME}"
+else
+    LMPICXXLIBNAME=
+fi
+AC_SUBST(LMPICXXLIBNAME)
+
 # ----------------------------------------------------------------------------
 
 # with MPI_AINT defined, now we can
