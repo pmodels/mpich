@@ -989,6 +989,10 @@ if test "$NEEDSPLIB" = "yes" ; then
     VISIBILITY_CFLAGS=""
 fi
 
+# dlopen and dlsym
+AC_SEARCH_LIBS([dlopen],[dl dld],
+    [AC_DEFINE(HAVE_DLOPEN,1,[Define if dlopen is available])])
+
 # MPL
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL

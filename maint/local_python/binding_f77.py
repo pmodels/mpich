@@ -928,11 +928,8 @@ def dump_f77_c_func(func, is_cptr=False):
         # these are all special functions, e.g. MPI_Wtime, MPI_Wtick, MPI_Aint_add, MPI_Aint_diff
         G.out.append("return %s(%s);" % (c_func_name, ', '.join(c_arg_list_A)))
     else:
-        # If it's MPI_Init etc, run mpirinitf_ at the end so it can call MPI_Abi_set_fortran_info etc.
-        # Otherwise, call it first so common symbols can work.
-        # FIXME: need check name mangling before call mpirinitf_()
-        is_init = re.match(r'(MPI_Init|MPI_Init_thread|MPI_Session_init)', func['name'], re.IGNORECASE)
-        if not is_init:
+        # functions that can be called before MPI_Init are also not depend on mpirinitf_.
+        if not ('skip' in func and RE.search(r'initcheck', func['skip'], re.IGNORECASE)):
             G.out.append("if (MPIR_F_NeedInit) {mpirinitf_();}")
             G.out.append("")
 
@@ -964,9 +961,10 @@ def dump_f77_c_func(func, is_cptr=False):
             G.out.append(l)
 
         # call mpirinitf_ after MPI_Init
+        is_init = re.match(r'(MPI_Init|MPI_Init_thread|MPI_Session_init)$', func['name'], re.IGNORECASE)
         if is_init:
             G.out.append("")
-            G.out.append("mpirinitf_();")
+            G.out.append("if (MPIR_F_NeedInit) {mpirinitf_();}")
 
     dump_mpi_decl_end()
 
