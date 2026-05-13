@@ -243,6 +243,7 @@ export MPICH_RECURSION_CHECK
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
+cxxlibs="@LMPICXXLIBNAME@"
 
 PROFILE_FOO=
 # Handle the case of a profile switch
