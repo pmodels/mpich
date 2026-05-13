@@ -576,7 +576,7 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
         str_val = MPIR_Info_lookup(info, keyname); \
         if (str_val && strcmp(str_val, "true") == 0) { \
             int i = (mpi_type) & 0xff; \
-            MPIR_Internal_types[i].internal_type = mpir_type; \
+            MPIR_Internal_types[i].internal_type = mpir_type | i; \
         } \
     } while (0)
     SET_TYPE_SUPPORTED(MPI_LOGICAL1, "mpi_logical1_supported", MPIR_INT8);
