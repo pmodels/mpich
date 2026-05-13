@@ -366,14 +366,6 @@ typedef char *MPID_FCHAR_T;
 #undef MPI_CONVERSION_FN_NULL
 #endif /* MPI_DUP_FN */
 
-/* A special case to help out when ROMIO is disabled */
-#ifndef HAVE_ROMIO
-#ifndef MPI_File_f2c
-#define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
-#define MPI_File_c2f(a) ((MPI_Fint)(MPI_Aint)(a))
-#endif
-#endif /* HAVE_ROMIO */
-
 enum F77_handle_type {
     F77_COMM,
     F77_GROUP,
