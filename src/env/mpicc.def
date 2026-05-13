@@ -211,6 +211,7 @@ subcode: parse_args
             $call parse_arg_cases
             $(if:cc=cc or cc=cxx)
                 $call parse_delay_libs
+                $call parse_need_fortran
             $call parse_arg_help
             # fc args such as -I*, -D* need be in between the case for *'*|*"*) and *)
             &call parse_other_args_$(sh)
@@ -347,6 +348,12 @@ subcode: parse_args
         &call case, -lcuda|-lcudart|-lze_loader
             delay_libs="$delay_libs $arg"
 
+    subcode: parse_need_fortran
+        $(block:parse_args_init)
+            need_fortran=
+        &call case, -fortran
+            need_fortran="yes"
+
     subcode: show_help
         NC=`echo "$$(CC)" | sed 's%\/% %g' | awk '{print $NF}' -`
         if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -462,6 +469,14 @@ subcode: set_final_vars
 
     mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
     mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
+    $(if:cc=cc or cc=cxx)
+    if test "$need_fortran" = "yes" ; then
+        mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
+        \x23 dlsym won't work with static linking but at least we make it available
+        if test -e "$libdir/libmpifort.a" ; then
+            mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
+        fi
+    fi
 
     $(if:cc=fc)
         $call patch_final_fcflags
