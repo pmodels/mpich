@@ -85,6 +85,20 @@ class MPI_API_Global:
         'STREAM': "MPIR_Stream",
     }
 
+    # C types that have conversion apis, e.g. MPI_Comm_{from,to}int
+    handle_conversions = {
+        'MPI_Comm': "MPI_Comm",
+        'MPI_Group': "MPI_Group",
+        'MPI_Datatype': "MPI_Type",
+        'MPI_Errhandler': "MPI_Errhandler",
+        'MPI_Op': "MPI_Op",
+        'MPI_Info': "MPI_Info",
+        'MPI_Win': "MPI_Win",
+        'MPI_Request': "MPI_Request",
+        'MPI_Session': "MPI_Session",
+        'MPI_File': "MPI_File",
+    }
+
     handle_error_codes = {
         'COMMUNICATOR': "MPI_ERR_COMM",
         'GROUP': "MPI_ERR_GROUP",
