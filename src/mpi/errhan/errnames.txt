@@ -502,6 +502,8 @@ unexpected messages queued.
 #**argnull %s:Invalid null parameter %s
 **commstack:Internal overflow in stack used for MPI_Comm_split
 **timeout:Operation timed out
+**progresstimeout:Progress TIMEOUT. Check MPIR_CVAR_PROGRESS_TIMEOUT setting. Reset it to 0 to disable progress TIMEOUT. 
+**progresstimeout %d:Progress TIMEOUT due to MPIR_CVAR_PROGRESS_TIMEOUT set to %d (seconds). Reset it to 0 to disable progress TIMEOUT.
 **cmaread:process_vm_readv failed
 **cmaread %d:process_vm_readv failed (errno %d)
 **cmadata:process_vm_readv bytes mismatch

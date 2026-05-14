@@ -371,7 +371,8 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
                 DEBUG_PROGREE_HOOK; \
                 progress_timed_out = true; \
             } else if (time_diff > MPIR_CVAR_PROGRESS_TIMEOUT * 2) { \
-                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**progresstimeout", \
+                                     "**progresstimeout %d", MPIR_CVAR_PROGRESS_TIMEOUT); \
             } \
             iter = 0; \
         } \
