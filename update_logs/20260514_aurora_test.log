@@ -1,0 +1,89 @@
+UPDATE aurora_test 5d5ff657e6f83accbf41053cf45c929948a7a7f0 d13d062bae
+
+    current aurora_test HEAD 83fc77fc4d
+
+eead327af5 2026-03-06 mpl/gpu: Move cudalt.sh alongside CUDA codef1a7a7fbd4 2026-03-09 ch4/mpidig: check error return from rndv callbacks
+a96e0f3055 2026-03-09 ch4/coll: missing error check in reduce composition
+40829b531a 2026-03-09 ch4/shm/ipc: return SKIP in MPIDI_IPCI_get_ipc_attr
+af8b728484 2026-03-09 ch4/shm/cma: fix source to device in the CMA path
+44ef36d43b 2026-03-10 ch4: make sure both anysrc_partner is set
+10ee3389d5 2026-03-10 ch4/ofi: missing initialization a field in RNDV read
+9b252ac497 2026-01-27 coll: refactor bcast_intra_circ_graph.c
+16a15ea5e2 2026-01-30 coll: refactor before adding new circ_graph algorithms
+ce29a6328d 2026-02-02 coll/circ_graph: remove extra parameters
+9a5fdd5e86 2026-01-29 coll/circ_graph: store pending request to avoid search
+633dd1c3fa 2026-01-30 coll/circ_graph: refactor request_queue to handle pack/unpack
+9b6b67e031 2026-02-03 coll/circ_graph: allow bcast zero-sized messages
+a63ed47742 2026-01-28 coll: add intra_circ_graph reduce algorithm
+eeb63718b3 2026-01-30 coll: add intra_circ_graph allgather algorithm
+49ecafcb63 2026-02-03 coll/circ_graph: refactor send/recv interface
+f2de822d48 2026-02-04 coll/circ_graph: refactor dependency tracking for reduce
+fdba82caea 2026-02-17 coll/circ_graph: check wait_if_full before issuing
+06b7a16d51 2026-02-06 coll/circ_graph: Add MPIR_cga_init/finalize
+4535288629 2026-02-26 MPID: include genq in ch3
+432f869d9b 2026-02-27 mpid/common: split genq between private and shmem
+39e5cd2afa 2026-03-10 coll/circ_graph: refactor to use genq for pack_buf
+f0405c132a 2026-02-13 coll/circ_graph: always store req_id in pending_blocks
+e72ab712e8 2026-02-13 coll/circ_graph: reverse the block number in reduce
+212c616770 2026-02-16 coll/circ_graph: prepare for nonblocking algorithms
+baaf98c471 2026-03-12 coll/circ_graph: directly track inverse block order
+31a5003d53 2026-03-15 coll/circ_graph: packbuf associated with request or block
+a30659a89c 2026-03-16 mpir/misc: reset request type in MPIR_async_test
+649a702713 2026-03-05 request/debug: define DEBUG_PROGREE_HOOK
+e7af1368f2 2026-03-05 coll/cga: add progress debugging
+bf87d0613e 2026-02-16 coll/circ_graph: add ibcast circ_graph algorithm
+6696401f3e 2026-03-18 autogen: improve messaging when autotools too old
+c2caf5eedf 2026-03-31 romio: Fix missing symbols in ABI build
+c7a355f5a1 2026-03-18 pm: fix a couple of very minor typos
+b11ea9b2af 2026-03-18 mpir/pmi: dynamic world_id for singleton init
+eda6a2b50a 2026-03-19 mpir/pmi: expand world_id docstring to explain singleton init changes
+648bf1fa04 2026-03-19 doc: fix minor typos
+ed486b1ee3 2026-03-19 mpir/pmi: dynamic world_id for PMIx singletons too
+9f7a9415e3 2026-04-20 dbg: add missing snprintf call in MPL_DBG_MSG_FMT
+9191d7db5d 2026-04-20 abi: cast to uintptr_t in ABI_IS_BUILTIN
+a5ebdb06d9 2026-04-20 abi: exclude MPI_File_c2f/f2c from libmpi_abi
+20a2861d91 2026-04-21 dbglog: fix ch4/ofi/ofi_events.c
+b1bf5fabf6 2026-04-21 mpl: increase MPL_DBG_MAXLINE to 2048
+4d2dda8f87 2026-04-21 coll/warnings: Fix misc MPL_DBG_MSG_FMT warnings
+f92409159f 2026-04-20 coll: suppress warnings due to MPIC_Waitall declaration
+74bb3ff837 2026-04-21 ch4/warnings: gcc warns when memcpy takes an int len
+68a3734dc9 2026-04-21 attr/warnings: gcc thinks attr can be NULL
+c00e1b2602 2026-04-20 ch4/cma: use MPIR_CHKLMEM_ macros to fix a memory leak
+a035d479aa 2026-04-21 ch4/ofi: check inject_size before fi_tsend
+c79fa325d7 2026-04-22 ch4/ofi: use emulated_inject instead of blocking send
+2a1eff31da 2026-04-22 ch4/ofi: move MPIDI_OFI_do_emulated_inject
+e93dd286f5 2026-04-22 ch4/comm: add info hint "inherit_vci"
+3087d05898 2026-04-22 ch4: use the same vci when creating windows
+120ada97bd 2026-04-06 ch4/am: Add missing error checking to some callbacks
+4fd79e4ad6 2025-08-07 test/bench: adapt p2p tests to multi-pair tests
+25898e2783 2025-08-12 test/bench: use a single global buffer
+df89d38a26 2025-08-12 test/bench: adjust window in p2p_bw
+132b666bb2 2025-08-12 ch4/self: use MPIR_Localcopy_gpu in SELF_COPY
+e41a341db2 2025-08-12 test/bench: refactor collective latency tests and add allreduce
+30008eb50f 2022-01-07 ch4: revise MPIR_CVAR_CH4_GLOBAL_PROGRESS
+d34e093b8d 2026-04-22 ch4/ucx: dump ucx device info with debug summary
+e0be5691fb 2025-09-20 test/runtests: add MPITEST_IGNORE_OUTPUT
+0e5a556624 2026-04-23 test: fix coll/allgatherv4.c
+a9c1cff604 2026-04-24 ch4/ofi: prevent debug summary messages get interleaved
+2cbecb29e3 2026-04-24 configure: fix help text
+4ae6636a96 2026-04-24 datatype: fix pack_external due to internal types
+b08c945272 2026-04-24 datatype: add macros for checking basic type class
+f52d405abc 2026-04-24 datatype: add a size macro for checking at binding-layer
+7fdf598d5b 2026-04-24 version: bump to 5.1.0a1
+b0a7582929 2026-04-27 ch3/nemesis: consistently check shm_base_addrs
+7afb48bd9f 2026-04-27 abi: rename BUILD_MPI_ABI to MPICH_BUILD_MPI_ABI
+32c433b746 2026-04-27 test/config: rename --enable-romio to --enable-io
+db020845c9 2026-04-27 hydra: filler_processes not set in init_proxy
+44f5271695 2024-01-25 romio: Fix wrong communicator use in ADIOI_GEN_OpenColl
+8e674596f8 2026-04-29 hydra: consistently allocate ranks in spawn
+27806c9926 2026-04-24 datatype: fix MPIR_Status_set_elements_x_impl
+8fa447da68 2026-04-24 test: fix datatype/large_count.c
+d3dd6dd788 2026-04-24 test: add test case for struct in datatype/large_count.c
+2a6b798f0a 2026-05-03 hydra: remove a stray printf
+eb1623427d 2026-05-04 hydra: refactor add_exec_to_proxy
+e4fa97f69d 2026-05-04 hydra: directly pass rank from mpiexec to proxy
+5df077a6ee 2026-05-04 hydra: set usize at mpiexec
+94670b2c79 2026-05-04 hydra: remove code related to proxy filler_processes
+e6e1d1d6fb 2023-09-24 mpl: add mpl_hash
+fd413724e3 2026-05-12 abi: rename BUILD_MPI_ABI to MPICH_BUILD_MPI_ABI
+b6fa1a34b4 2026-05-12 mpl: fix mpl_hash
