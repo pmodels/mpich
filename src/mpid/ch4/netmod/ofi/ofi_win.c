@@ -124,6 +124,8 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     MPIR_FUNC_ENTER;
 
+    load_acc_hint(win);
+
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         if (MPIDIG_WIN(win, info_args).optimized_mr &&
             MPIDIG_WIN(win, info_args).accumulate_ordering == 0) {
@@ -209,8 +211,6 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
-        /* We may still do native atomics with collective attach, let's load acc_hint */
-        load_acc_hint(win);
         goto fn_exit;
     } else {
         /* Do nothing */
@@ -259,8 +259,6 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             MPIDI_OFI_WIN(win).winfo = NULL;
         }
     }
-
-    load_acc_hint(win);
 
   fn_exit:
     MPIR_FUNC_EXIT;
