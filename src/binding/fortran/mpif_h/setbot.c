@@ -70,19 +70,17 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
     MPI_F_ARGVS_NULL = asn;
     MPIR_F_MPI_WEIGHTS_EMPTY = we;
 
+    MPIX_Init_fortran();
+}
+
+void MPIX_Init_fortran(void)
+{
     int mpi_is_initialized = 0;
     MPI_Initialized(&mpi_is_initialized);
     if (!mpi_is_initialized) {
         return;
     }
 
-    MPIX_Init_fortran();
-
-    MPIR_F_NeedInit = 0;
-}
-
-void MPIX_Init_fortran(void)
-{
     int mpi_errno;
     MPI_Info info;
     mpi_errno = MPI_Abi_get_fortran_info(&info);
@@ -178,4 +176,6 @@ void MPIX_Init_fortran(void)
             MPI_Abi_set_fortran_booleans(MPI_LOGICAL_SIZE, (void *) &true_val, (void *) &false_val);
         assert(mpi_errno == MPI_SUCCESS);
     }
+
+    MPIR_F_NeedInit = 0;
 }

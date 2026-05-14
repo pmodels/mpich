@@ -182,6 +182,8 @@ def dump_f08_wrappers_f(func, is_large):
     status_count = ""
     is_alltoallvw = False
 
+    uses['MPIR_Init_fortran'] = 1
+
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
         c_func_name = get_cdesc_name(func, is_large)
@@ -710,6 +712,8 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         ret = 'res'
 
+    G.out.append("call MPIR_Init_fortran()")
+
     if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
         if is_alltoallvw:
             dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
@@ -920,7 +924,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_.*string_(f2c|c2f)', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)
