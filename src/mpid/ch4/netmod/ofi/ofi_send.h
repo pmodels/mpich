@@ -389,8 +389,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
         /* inject path */
         void *pack_buf = NULL;
+#define MPIDI_OFI_LOCAL_PACK_BUF_SIZE 1024
+        char local_pack_buf[MPIDI_OFI_LOCAL_PACK_BUF_SIZE];
+        bool need_free_pack_buf = false;
         if (need_pack) {
-            pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
+            if (data_sz <= MPIDI_OFI_LOCAL_PACK_BUF_SIZE) {
+                pack_buf = local_pack_buf;
+            } else {
+                pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
+                need_free_pack_buf = true;
+            }
             mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
                                            pack_buf, data_sz, MPIR_BYTE_INTERNAL, 0,
                                            MPIR_GPU_ATTR_HOST,
@@ -401,7 +409,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
                                                match_bits, addr,
                                                vci_src, vci_dst, sender_nic, receiver_nic);
-        if (pack_buf) {
+        if (need_free_pack_buf) {
             MPL_free(pack_buf);
         }
 
@@ -464,18 +472,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         void *data = NULL;
         if (need_pack) {
-            void *pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
-            MPIR_ERR_CHKANDJUMP1(pack_buf == NULL, mpi_errno,
-                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
+            mpi_errno = MPIDI_OFI_alloc_pack_buf(sreq, data_sz, vci_src);
+            MPIR_ERR_CHECK(mpi_errno);
 
+            data = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
             mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
-                                           pack_buf, data_sz, MPIR_BYTE_INTERNAL, 0,
+                                           data, data_sz, MPIR_BYTE_INTERNAL, 0,
                                            MPIR_GPU_ATTR_HOST,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
             MPIR_ERR_CHECK(mpi_errno);
-
-            data = pack_buf;
-            MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = pack_buf;
         } else {
             data = MPIR_get_contig_ptr(buf, dt_true_lb);
             MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
