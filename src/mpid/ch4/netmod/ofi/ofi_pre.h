@@ -308,6 +308,7 @@ typedef struct {
     union {
         struct {
             char *pack_buffer;
+            bool use_pipeline_pool;
         } pack;
         struct {
             struct iovec *iovs;
