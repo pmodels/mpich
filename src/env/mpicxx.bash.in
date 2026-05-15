@@ -10,7 +10,7 @@
 # The important terms are:
 #    includedir, libdir - Directories containing an *installed* mpich
 #    prefix, execprefix - Often used to define includedir and libdir
-#    CXX                - C compiler
+#    CXX                - C++ compiler
 #    WRAPPER_CXXFLAGS      - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
 #    WRAPPER_LIBS          - Any special libraries needed in order to link
@@ -66,11 +66,11 @@ Show=
 # default choices.
 # In addition, if there is a file $sysconfdir/mpicxx-$CXXname.conf, 
 # where CXXname is the name of the compiler with all spaces replaced by hyphens
-# (e.g., "CC -64" becomes "CC--64", that file is sources, allowing other
+# (e.g., "cxx -64" becomes "cxx--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
-# Added MPICH_CXX_OLD, MPICH_CXX can be used to prefix CXX
-# with external utility, e.g. setenv MPICH_CXX 'eval linkcache $MPICH_CXX_OLD'
+# Added MPICH_CXX_OLD, MPICH_CXX can be used to prefix CXX with external utility,
+# e.g. setenv MPICH_CXX 'eval linkcache $MPICH_CXX_OLD'
 if [ -n "$MPICH_CXX" ] ; then
     MPICH_CXX_OLD="$CXX"
     CXX="$MPICH_CXX"
@@ -100,11 +100,11 @@ allargs=("$@")
 argno=0
 interlib_deps=yes
 static_mpi=no
-showinfo=""
+show_info=""
 delay_libs=
 mpi_abi=no
 for arg in "$@" ; do
-    # Set addarg to no if this arg should be ignored by the C compiler
+    # Set addarg to no if this arg should be ignored by the C++ compiler
     addarg=yes
     case "$arg" in 
  	# ----------------------------------------------------------------
@@ -125,8 +125,8 @@ for arg in "$@" ; do
     addarg=no
     ;;
     -echo)
-    addarg=no
     set -x
+    addarg=no
     ;;
     -cxx=*)
     CXX=`echo A$arg | sed -e 's/A-cxx=//g'`
@@ -138,27 +138,27 @@ for arg in "$@" ; do
     addarg=no
     ;;
     -show)
-    addarg=no
     Show=echo
+    addarg=no
     ;;
     -show-compile-info)
-    addarg=no
     Show=echo
     show_info=compile
+    addarg=no
     ;;
     -show-link-info)
-    addarg=no
     Show=echo
     show_info=link
+    addarg=no
     ;;
     -config=*)
-    addarg=no
     CXXname=`echo A$arg | sed -e 's/A-config=//g'`
     if [ -s "$sysconfdir/mpicxx-$CXXname.conf" ] ; then
         . "$sysconfdir/mpicxx-$CXXname.conf"
     else
 	echo "Configuration file mpicxx-$CXXname.conf not found"
     fi
+    addarg=no
     ;;
     -compile-info|-compile_info)
     # -compile_info included for backward compatibility
@@ -183,8 +183,8 @@ for arg in "$@" ; do
     # a special case, lib<name>.so or lib<name>.la may be used
     # if the library is in $libdir
     profConf=`echo A$arg | sed -e 's/A-profile=//g'`
-    addarg=no
     # Loading the profConf file is handled below
+    addarg=no
     ;;
     -nativelinking)
     # Internal option to use native compiler for linking without MPI libraries
@@ -243,7 +243,6 @@ export MPICH_RECURSION_CHECK
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
-cxxlibs="@LMPICXXLIBNAME@"
 
 PROFILE_FOO=
 # Handle the case of a profile switch
@@ -284,18 +283,6 @@ else
     mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
 fi
 
-cxxlibs=
-if [ "$mpi_abi" = no ] ; then
-    if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
-        cxxlibs="-l@MPICXXLIBNAME@"
-    fi
-else
-    true # TODO: Implement support for libmpicxx_abi
-    # if [ "@MPICXXABILIBNAME@" != "@MPIABILIBNAME@" ] ; then
-    #     cxxlibs="-l@MPICXXABILIBNAME@"
-    # fi
-fi
-
 # -----------------------------------------------------------------------
 #
 # A temporary statement to invoke the compiler
@@ -315,9 +302,9 @@ elif [ "$show_info" = link ] ; then
         echo ${final_ldflags}
     else
         if [ "$static_mpi" = no ] ; then
-            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir @LMPICXXLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         else
-            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir @LMPICXXLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         fi
     fi
 elif [ "$linking" = yes ] ; then
@@ -326,9 +313,9 @@ elif [ "$linking" = yes ] ; then
         rc=$?
     else
       if [ "$static_mpi" = no ] ; then
-        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir @LMPICXXLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
       else
-        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir @LMPICXXLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
       fi
         rc=$?
     fi
