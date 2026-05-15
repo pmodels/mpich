@@ -289,6 +289,46 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_alloc_pack_buf(MPIR_Request * req, MPI_Aint data_sz, int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *pack_buf = NULL;
+    bool use_pipeline_pool = false;
+    if (data_sz <= MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci].pipeline_pool, &pack_buf);
+    }
+
+    if (pack_buf) {
+        use_pipeline_pool = true;
+    } else {
+        pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(pack_buf == NULL, mpi_errno,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Pack buffer alloc failed.");
+    }
+
+    MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer) = pack_buf;
+    MPIDI_OFI_REQUEST(req, noncontig.pack.use_pipeline_pool) = use_pipeline_pool;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_free_pack_buf(MPIR_Request * req, int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
+        if (MPIDI_OFI_REQUEST(req, noncontig.pack.use_pipeline_pool)) {
+            MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vci[vci].pipeline_pool,
+                                              MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+        } else {
+            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+        }
+    }
+    return mpi_errno;
+}
+
 /* Externs:  see util.c for definition */
 #define MPIDI_OFI_LOCAL_MR_KEY 0
 #define MPIDI_OFI_COLL_MR_KEY 1

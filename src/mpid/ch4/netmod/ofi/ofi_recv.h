@@ -226,10 +226,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) =
-            MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
+        mpi_errno = MPIDI_OFI_alloc_pack_buf(rreq, data_sz, vci_local);
+        MPIR_ERR_CHECK(mpi_errno);
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;

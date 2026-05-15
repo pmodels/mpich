@@ -572,7 +572,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                             MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                             if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
                                 MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
-                                MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+                                MPIDI_OFI_free_pack_buf(req, vci);
                             } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
                                 MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack.iovs));
                             }
