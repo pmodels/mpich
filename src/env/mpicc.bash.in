@@ -69,8 +69,8 @@ Show=
 # (e.g., "cc -64" becomes "cc--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
-# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC
-# with external utility, e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
+# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC with external utility,
+# e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
 if [ -n "$MPICH_CC" ] ; then
     MPICH_CC_OLD="$CC"
     CC="$MPICH_CC"
@@ -96,13 +96,13 @@ fi
 # If these are *not* found, add the library options
 
 linking=yes
-allargs=("$@")
-argno=0
 interlib_deps=yes
 static_mpi=no
-showinfo=""
+show_info=""
 delay_libs=
 mpi_abi=no
+allargs=("$@")
+argno=0
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -125,35 +125,35 @@ for arg in "$@" ; do
     addarg=no
     ;;
     -echo)
-    addarg=no
     set -x
+    addarg=no
     ;;
     -cc=*)
     CC=`echo A$arg | sed -e 's/A-cc=//g'`
     addarg=no
     ;;
     -show)
-    addarg=no
     Show=echo
+    addarg=no
     ;;
     -show-compile-info)
-    addarg=no
     Show=echo
     show_info=compile
+    addarg=no
     ;;
     -show-link-info)
-    addarg=no
     Show=echo
     show_info=link
+    addarg=no
     ;;
     -config=*)
-    addarg=no
     CCname=`echo A$arg | sed -e 's/A-config=//g'`
     if [ -s "$sysconfdir/mpicc-$CCname.conf" ] ; then
         . "$sysconfdir/mpicc-$CCname.conf"
     else
 	echo "Configuration file mpicc-$CCname.conf not found"
     fi
+    addarg=no
     ;;
     -compile-info|-compile_info)
     # -compile_info included for backward compatibility
@@ -178,8 +178,8 @@ for arg in "$@" ; do
     # a special case, lib<name>.so or lib<name>.la may be used
     # if the library is in $libdir
     profConf=`echo A$arg | sed -e 's/A-profile=//g'`
-    addarg=no
     # Loading the profConf file is handled below
+    addarg=no
     ;;
     -nativelinking)
     # Internal option to use native compiler for linking without MPI libraries
