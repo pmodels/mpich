@@ -2407,18 +2407,21 @@ PAC_PROG_CHECK_INSTALL_WORKS
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
 
-#
-# Check for bash to allow more robust shell scripts
+AC_ARG_ENABLE([bash],[AS_HELP_STRING([--disable-bash],[Do not use bash for wrapper scripts (mpicc etc)])],
+              [],[enable_bash=yes])
 AC_PATH_PROG(BASH_SHELL,bash)
-#
-# Confirm that bash has working arrays.  We can use this to
-# build more robust versions of the scripts (particularly the
-# compilation scripts) by taking advantage of the array features in
-# bash.
+
 bashWorks=no
-if test -x "$BASH_SHELL" ; then
-changequote(%%,::)dnl
-    cat >>conftest <<EOF
+if test "$enable_bash" = "yes" ; then
+    # Check for bash to allow more robust shell scripts
+    #
+    # Confirm that bash has working arrays.  We can use this to
+    # build more robust versions of the scripts (particularly the
+    # compilation scripts) by taking advantage of the array features in
+    # bash.
+    if test -x "$BASH_SHELL" ; then
+        changequote(%%,::)dnl
+        cat >>conftest <<EOF
 #! $BASH_SHELL
 A[0]="b"
 A[1]="c"
@@ -2426,16 +2429,17 @@ rc=1
 if test \${A[1]} != "c" ; then rc=2 ; else rc=0 ; fi
 exit \$rc
 EOF
-changequote([,])dnl
-    AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
-    chmod +x conftest
-    if ./conftest 2>&1 >/dev/null ; then
-        bashWorks=yes
-    else
-        bashWorks=no
+        changequote([,])dnl
+        AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
+        chmod +x conftest
+        if ./conftest 2>&1 >/dev/null ; then
+            bashWorks=yes
+        else
+            bashWorks=no
+        fi
+        rm -f conftest*
+        AC_MSG_RESULT($bashWorks)
     fi
-    rm -f conftest*
-    AC_MSG_RESULT($bashWorks)
 fi
 dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
 AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
