@@ -22,6 +22,7 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
 static int datatype_attr_finalize_cb(void *dummy);
 
 #define type_name_entry(x_, g_) { MPI_##x_, MPIR_##x_##_INTERNAL, MPIR_DT_GROUP_##g_, "MPI_" #x_ }
+#define type_name_unset(x_, g_) { MPI_##x_, MPI_DATATYPE_NULL, MPIR_DT_GROUP_##g_, "MPI_" #x_ }
 #define type_name_x(x_, g_) { MPIX_##x_, MPIR_##x_##_INTERNAL, MPIR_DT_GROUP_##g_, "MPIX_" #x_ }
 #define type_name_null {MPI_DATATYPE_NULL, MPI_DATATYPE_NULL, MPIR_DT_GROUP_NULL, NULL}
 
@@ -53,31 +54,31 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     type_name_null,                                       /* 0x17 */
     type_name_entry(SIGNED_CHAR,        C_INTEGER),       /* 0x18 */
     type_name_entry(UNSIGNED_LONG_LONG, C_INTEGER),       /* 0x19 */
-    type_name_entry(CHARACTER,          NULL),            /* 0x1a */
-    type_name_entry(INTEGER,            FORTRAN_INTEGER), /* 0x1b */
-    type_name_entry(REAL,               FLOATING_POINT),  /* 0x1c */
-    type_name_entry(LOGICAL,            LOGICAL),         /* 0x1d */
-    type_name_entry(COMPLEX,            COMPLEX),         /* 0x1e */
-    type_name_entry(DOUBLE_PRECISION,   FLOATING_POINT),  /* 0x1f */
-    type_name_entry(2INTEGER,           NULL),            /* 0x20 */
-    type_name_entry(2REAL,              NULL),            /* 0x21 */
-    type_name_entry(DOUBLE_COMPLEX,     COMPLEX),         /* 0x22 */
-    type_name_entry(2DOUBLE_PRECISION,  NULL),            /* 0x23 */
+    type_name_unset(CHARACTER,          NULL),            /* 0x1a */
+    type_name_unset(INTEGER,            FORTRAN_INTEGER), /* 0x1b */
+    type_name_unset(REAL,               FLOATING_POINT),  /* 0x1c */
+    type_name_unset(LOGICAL,            LOGICAL),         /* 0x1d */
+    type_name_unset(COMPLEX,            COMPLEX),         /* 0x1e */
+    type_name_unset(DOUBLE_PRECISION,   FLOATING_POINT),  /* 0x1f */
+    type_name_unset(2INTEGER,           NULL),            /* 0x20 */
+    type_name_unset(2REAL,              NULL),            /* 0x21 */
+    type_name_unset(DOUBLE_COMPLEX,     COMPLEX),         /* 0x22 */
+    type_name_unset(2DOUBLE_PRECISION,  NULL),            /* 0x23 */
     type_name_null,                                       /* 0x24 */
     type_name_null,                                       /* 0x25 */
-    type_name_entry(REAL2,              FLOATING_POINT),  /* 0x26 */
-    type_name_entry(REAL4,              FLOATING_POINT),  /* 0x27 */
-    type_name_entry(COMPLEX8,           COMPLEX),         /* 0x28 */
-    type_name_entry(REAL8,              FLOATING_POINT),  /* 0x29 */
-    type_name_entry(COMPLEX16,          COMPLEX),         /* 0x2a */
-    type_name_entry(REAL16,             FLOATING_POINT),  /* 0x2b */
-    type_name_entry(COMPLEX32,          COMPLEX),         /* 0x2c */
-    type_name_entry(INTEGER1,           FORTRAN_INTEGER), /* 0x2d */
-    type_name_entry(COMPLEX4,           COMPLEX),         /* 0x2e */
-    type_name_entry(INTEGER2,           FORTRAN_INTEGER), /* 0x2f */
-    type_name_entry(INTEGER4,           FORTRAN_INTEGER), /* 0x30 */
-    type_name_entry(INTEGER8,           FORTRAN_INTEGER), /* 0x31 */
-    type_name_entry(INTEGER16,          FORTRAN_INTEGER), /* 0x32 */
+    type_name_unset(REAL2,              FLOATING_POINT),  /* 0x26 */
+    type_name_unset(REAL4,              FLOATING_POINT),  /* 0x27 */
+    type_name_unset(COMPLEX8,           COMPLEX),         /* 0x28 */
+    type_name_unset(REAL8,              FLOATING_POINT),  /* 0x29 */
+    type_name_unset(COMPLEX16,          COMPLEX),         /* 0x2a */
+    type_name_unset(REAL16,             FLOATING_POINT),  /* 0x2b */
+    type_name_unset(COMPLEX32,          COMPLEX),         /* 0x2c */
+    type_name_unset(INTEGER1,           FORTRAN_INTEGER), /* 0x2d */
+    type_name_unset(COMPLEX4,           COMPLEX),         /* 0x2e */
+    type_name_unset(INTEGER2,           FORTRAN_INTEGER), /* 0x2f */
+    type_name_unset(INTEGER4,           FORTRAN_INTEGER), /* 0x30 */
+    type_name_unset(INTEGER8,           FORTRAN_INTEGER), /* 0x31 */
+    type_name_unset(INTEGER16,          FORTRAN_INTEGER), /* 0x32 */
     type_name_entry(CXX_BOOL,           LOGICAL),         /* 0x33 */
     type_name_entry(CXX_FLOAT_COMPLEX,  COMPLEX),         /* 0x34 */
     type_name_entry(CXX_DOUBLE_COMPLEX, COMPLEX),         /* 0x35 */
@@ -98,11 +99,11 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     type_name_entry(OFFSET,             MULTI),           /* 0x44 */
     type_name_entry(COUNT,              MULTI),           /* 0x45 */
     type_name_x(C_FLOAT16,              FLOATING_POINT),  /* 0x46 */
-    type_name_entry(LOGICAL1,           LOGICAL),         /* 0x47 */
-    type_name_entry(LOGICAL2,           LOGICAL),         /* 0x48 */
-    type_name_entry(LOGICAL4,           LOGICAL),         /* 0x49 */
-    type_name_entry(LOGICAL8,           LOGICAL),         /* 0x4a */
-    type_name_entry(LOGICAL16,          LOGICAL),         /* 0x4b */
+    type_name_unset(LOGICAL1,           LOGICAL),         /* 0x47 */
+    type_name_unset(LOGICAL2,           LOGICAL),         /* 0x48 */
+    type_name_unset(LOGICAL4,           LOGICAL),         /* 0x49 */
+    type_name_unset(LOGICAL8,           LOGICAL),         /* 0x4a */
+    type_name_unset(LOGICAL16,          LOGICAL),         /* 0x4b */
     type_name_x(BFLOAT16,               FLOATING_POINT),  /* 0x4c */
     /* *INDENT-ON* */
 };
@@ -527,33 +528,40 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
     }
 
     const char *str_val;
-#define SET_TYPE_INFO(mpi_type, keyname, mpir_type) \
+#define SET_TYPE_INFO(mpi_type, keyname, mpir_type, multiple) \
     do { \
         str_val = MPIR_Info_lookup(info, keyname); \
         MPIR_ERR_CHKANDJUMP1(!str_val, mpi_errno, MPI_ERR_ABI, "**abi_set_fortran", "**abi_set_fortran %s", (keyname)); \
         int i = (mpi_type) & 0xff; \
-        int typesize = atoi(str_val); \
+        int typesize = atoi(str_val) * (multiple); \
         /* FIXME: sanity check typesize */ \
         MPIR_Internal_types[i].internal_type = MPIR_FIXED0 | (mpir_type) | (typesize << 8) | i; \
     } while (0)
-    SET_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size", MPIR_TYPE_SIGNED);
-    SET_TYPE_INFO(MPI_INTEGER, "mpi_integer_size", MPIR_TYPE_SIGNED);
-    SET_TYPE_INFO(MPI_REAL, "mpi_real_size", MPIR_TYPE_FLOAT);
-    SET_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size", MPIR_TYPE_FLOAT);
+    SET_TYPE_INFO(MPI_CHARACTER, "mpi_character_size", MPIR_TYPE_FIXED, 1);
+    SET_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size", MPIR_TYPE_SIGNED, 1);
+    SET_TYPE_INFO(MPI_INTEGER, "mpi_integer_size", MPIR_TYPE_SIGNED, 1);
+    SET_TYPE_INFO(MPI_REAL, "mpi_real_size", MPIR_TYPE_FLOAT, 1);
+    SET_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size", MPIR_TYPE_FLOAT, 1);
+
+    SET_TYPE_INFO(MPI_COMPLEX, "mpi_real_size", MPIR_TYPE_COMPLEX, 2);
+    SET_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_precision_size", MPIR_TYPE_COMPLEX, 2);
+    SET_TYPE_INFO(MPI_2INTEGER, "mpi_integer_size", MPIR_TYPE_FIXED, 2);
+    SET_TYPE_INFO(MPI_2REAL, "mpi_real_size", MPIR_TYPE_FIXED, 2);
+    SET_TYPE_INFO(MPI_2DOUBLE_PRECISION, "mpi_double_precision_size", MPIR_TYPE_FIXED, 2);
 
 #define SET_TYPE_SUPPORTED(mpi_type, keyname, mpir_type) \
     do { \
         str_val = MPIR_Info_lookup(info, keyname); \
         if (str_val && strcmp(str_val, "true") == 0) { \
             int i = (mpi_type) & 0xff; \
-            MPIR_Internal_types[i].internal_type = mpir_type; \
+            MPIR_Internal_types[i].internal_type = mpir_type | i; \
         } \
     } while (0)
-    SET_TYPE_SUPPORTED(MPI_LOGICAL1, "mpi_logical1_supported", MPIR_INT8);
-    SET_TYPE_SUPPORTED(MPI_LOGICAL2, "mpi_logical2_supported", MPIR_INT16);
-    SET_TYPE_SUPPORTED(MPI_LOGICAL4, "mpi_logical4_supported", MPIR_INT32);
-    SET_TYPE_SUPPORTED(MPI_LOGICAL8, "mpi_logical8_supported", MPIR_INT64);
-    SET_TYPE_SUPPORTED(MPI_LOGICAL16, "mpi_logical16_supported", MPIR_INT128);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL1, "mpi_logical1_supported", MPIR_FORTRAN_LOGICAL8);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL2, "mpi_logical2_supported", MPIR_FORTRAN_LOGICAL16);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL4, "mpi_logical4_supported", MPIR_FORTRAN_LOGICAL32);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL8, "mpi_logical8_supported", MPIR_FORTRAN_LOGICAL64);
+    SET_TYPE_SUPPORTED(MPI_LOGICAL16, "mpi_logical16_supported", MPIR_FORTRAN_LOGICAL128);
     SET_TYPE_SUPPORTED(MPI_INTEGER1, "mpi_integer1_supported", MPIR_INT8);
     SET_TYPE_SUPPORTED(MPI_INTEGER2, "mpi_integer2_supported", MPIR_INT16);
     SET_TYPE_SUPPORTED(MPI_INTEGER4, "mpi_integer4_supported", MPIR_INT32);
@@ -568,6 +576,50 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
     SET_TYPE_SUPPORTED(MPI_COMPLEX16, "mpi_complex16_supported", MPIR_COMPLEX64);
     SET_TYPE_SUPPORTED(MPI_COMPLEX32, "mpi_complex32_supported", MPIR_COMPLEX128);
     SET_TYPE_SUPPORTED(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported", MPIR_COMPLEX64);
+
+    /* setup for MPI_Type_create_F90_{integer,real,complex} */
+    /* NOTE: Assume all the available types are represented with the above infos. Otherwise,
+     *       we will need additional info keys to set all available integer and real models.
+     */
+    /* NOTE: use separate macros for clarity */
+#define ADD_F90_INT(keyname, mpir_type, range) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_int(range, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_INT("mpi_integer1_supported", MPIR_INT8, 2);
+    ADD_F90_INT("mpi_integer2_supported", MPIR_INT16, 4);
+    ADD_F90_INT("mpi_integer4_supported", MPIR_INT32, 9);
+    ADD_F90_INT("mpi_integer8_supported", MPIR_INT64, 18);
+    ADD_F90_INT("mpi_integer16_supported", MPIR_INT128, 38);
+#define ADD_F90_REAL(keyname, mpir_type, digits, exponent) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_real(digits, exponent, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_REAL("mpi_real2_supported", MPIR_FLOAT16, 3, 4);
+    ADD_F90_REAL("mpi_real4_supported", MPIR_FLOAT32, 6, 37);
+    ADD_F90_REAL("mpi_real8_supported", MPIR_FLOAT64, 15, 307);
+    ADD_F90_REAL("mpi_real16_supported", MPIR_FLOAT128, 33, 4931);
+#define ADD_F90_COMPLEX(keyname, mpir_type, digits, exponent) \
+    do { \
+        str_val = MPIR_Info_lookup(info, keyname); \
+        if (str_val && strcmp(str_val, "true") == 0) { \
+            MPIR_add_f90_complex(digits, exponent, mpir_type); \
+        } \
+    } while (0)
+    ADD_F90_COMPLEX("mpi_complex4_supported", MPIR_COMPLEX16, 3, 4);
+    ADD_F90_COMPLEX("mpi_complex8_supported", MPIR_COMPLEX32, 6, 37);
+    ADD_F90_COMPLEX("mpi_complex16_supported", MPIR_COMPLEX64, 15, 307);
+    ADD_F90_COMPLEX("mpi_complex32_supported", MPIR_COMPLEX128, 33, 4931);
+
+    /* In case none of the fixed types are supported, we fallback to support INTEGER, REAL, DOUBLE, COMPLEX */
+    MPIR_check_f90_fallback();
+
 
   fn_exit:
     return mpi_errno;

@@ -14,11 +14,9 @@ def main():
     # currently support -no-real128, -fint-size, -aint-size, -count-size, -cint-size
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    f08_dir = "src/binding/fortran/use_mpi_f08"
-    G.check_write_path("%s/wrappers_f/" % f08_dir)
-    G.check_write_path("%s/wrappers_c/" % f08_dir)
-    func_list = load_C_func_list(binding_dir, True) # suppress noise
+    G.check_write_path("%s/wrappers_f/" % G.f08_dir)
+    G.check_write_path("%s/wrappers_c/" % G.f08_dir)
+    func_list = load_C_func_list(G.binding_dir, True) # suppress noise
 
     # preprocess
     get_real_POLY_kinds()
@@ -47,9 +45,9 @@ def main():
             if func['_need_large']:
                 G.out.append("")
                 dump_f08_wrappers_c(func, True)
-    f = "%s/wrappers_c/f08_cdesc.c" % f08_dir
+    f = "%s/wrappers_c/f08_cdesc.c" % G.f08_dir
     dump_cdesc_c(f, G.out)
-    f = "%s/wrappers_c/cdesc_proto.h" % f08_dir
+    f = "%s/wrappers_c/cdesc_proto.h" % G.f08_dir
     dump_cdesc_proto_h(f, G.decls)
 
     # f08ts.f90
@@ -58,7 +56,7 @@ def main():
         dump_f08_wrappers_f(func, False)
         if func['_need_large']:
             dump_f08_wrappers_f(func, True)
-    f = "%s/wrappers_f/f08ts.f90" % f08_dir
+    f = "%s/wrappers_f/f08ts.f90" % G.f08_dir
     dump_f90_file(f, G.out)
 
     do_profiling = True
@@ -66,7 +64,7 @@ def main():
         temp_out = []
         for l in G.out:
             temp_out.append(re.sub(r'(subroutine|function)\s+(MPIX?)_', r'\1 P\2R_', l, flags=re.IGNORECASE))
-        f = "%s/wrappers_f/pf08ts.f90" % f08_dir
+        f = "%s/wrappers_f/pf08ts.f90" % G.f08_dir
         dump_f90_file(f, temp_out)
         temp_out = None
 
@@ -79,7 +77,7 @@ def main():
             if func['_need_large']:
                 dump_mpi_c_interface_cdesc(func, True)
     dump_interface_module_close("mpi_c_interface_cdesc")
-    f = "%s/mpi_c_interface_cdesc.f90" % f08_dir
+    f = "%s/mpi_c_interface_cdesc.f90" % G.f08_dir
     dump_f90_file(f, G.out)
 
     G.out = []
@@ -90,7 +88,7 @@ def main():
             if func['_need_large']:
                 dump_mpi_c_interface_nobuf(func, True)
     dump_interface_module_close("mpi_c_interface_nobuf")
-    f = "%s/mpi_c_interface_nobuf.f90" % f08_dir
+    f = "%s/mpi_c_interface_nobuf.f90" % G.f08_dir
     dump_f90_file(f, G.out)
 
     # mpi_f08.f90 and pmpi_f08.f90
@@ -127,7 +125,7 @@ def main():
     G.out.append("")
     dump_F_module_close("mpi_f08")
 
-    f = "%s/mpi_f08.f90" % f08_dir
+    f = "%s/mpi_f08.f90" % G.f08_dir
     dump_f90_file(f, G.out)
 
     if do_profiling:
@@ -141,24 +139,21 @@ def main():
                 temp_out.append(RE.m.group(1) + ' P' + RE.m.group(2))
             else:
                 temp_out.append(re.sub(r'(subroutine|function)\s+(MPIX?)_', r'\1 P\2R_', l, flags=re.IGNORECASE))
-        f = "%s/pmpi_f08.f90" % f08_dir
+        f = "%s/pmpi_f08.f90" % G.f08_dir
         dump_f90_file(f, temp_out)
         temp_out = None
 
     # mpi_f08_types.f90
     G.out = []
     dump_mpi_f08_types()
-    f = "%s/mpi_f08_types.f90" % f08_dir
+    f = "%s/mpi_f08_types.f90" % G.f08_dir
     dump_f90_file(f, G.out)
 
-    # .in files has to be generated in the source tree
-    if G.is_autogen():
-        # mpi_f08_compile_constants.f90.in
-        G.mpih_defines = {}
-        load_mpi_h_in("src/include/mpi.h.in")
-        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
-        f = "%s/mpi_f08_compile_constants.f90.in" % f08_dir
-        dump_compile_constants_f90(f)
+    # mpi_f08_compile_constants.f90
+    G.mpih_defines = {}
+    load_mpi_h(G.opts['mpi-h'])
+    f = "%s/mpi_f08_compile_constants.f90" % G.f08_dir
+    dump_compile_constants_f90(f)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

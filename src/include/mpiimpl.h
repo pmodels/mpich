@@ -51,7 +51,7 @@
 #endif
 
 #include "mpl.h"
-#include "mpi.h"
+#include "mpi_mpich.h"
 
 #include <stdio.h>
 #include <stdlib.h>

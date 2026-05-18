@@ -157,6 +157,11 @@ extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
 extern int MPIR_fortran_true;
 extern int MPIR_fortran_false;
 
+int MPIR_add_f90_int(int range, MPI_Datatype dt);
+int MPIR_add_f90_real(int digits, int exponent, MPI_Datatype dt);
+int MPIR_add_f90_complex(int digits, int exponent, MPI_Datatype dt);
+int MPIR_check_f90_fallback(void);
+
 /* Swap input builtin datatype with an equivalent internal type */
 #define MPIR_DATATYPE_REPLACE_BUILTIN(type) \
     do { \

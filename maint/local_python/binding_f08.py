@@ -182,6 +182,8 @@ def dump_f08_wrappers_f(func, is_large):
     status_count = ""
     is_alltoallvw = False
 
+    uses['MPIR_Init_fortran'] = 1
+
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
         c_func_name = get_cdesc_name(func, is_large)
@@ -710,6 +712,8 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         ret = 'res'
 
+    G.out.append("call MPIR_Init_fortran()")
+
     if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
         if is_alltoallvw:
             dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
@@ -920,7 +924,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_.*string_(f2c|c2f)', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)
@@ -1647,12 +1651,29 @@ def dump_compile_constants_f90(f):
 
         print("end module mpi_f08_compile_constants", file=Out)
 
-def load_mpi_h_in(f):
+"""load_mpi_h - loads mpi.h or MPICH's mpi_mpich.h.in
+   use regex, it only works with -
+   * mpi.h from https://github.com/mpi-forum/mpi-abi-stubs
+   * mpi.h from mpich
+"""
+def load_mpi_h(f):
     def hex_to_signed_int(s):
         val = int(s, 16)
         if val >= 0x80000000:
             val = val - 0x100000000
         return val
+
+    def translate_autoconf(name):
+        if name == 'MPI_MAX_PROCESSOR_NAME':
+            return G.opts['max-processor-name']
+        elif name == 'MPI_MAX_LIBRARY_VERSION_STRING':
+            return G.opts['max-version-string']
+        elif name == 'MPI_MAX_ERROR_STRING':
+            return G.opts['max-error-string']
+        elif name == 'BSEND_OVERHEAD':
+            return G.opts['bsend-overhead']
+        else:
+            raise Exception("Unexpected autoconf macro " + name)
 
     # load constants into G.mpih_defines
     with open(f, "r") as In:
@@ -1662,34 +1683,31 @@ def load_mpi_h_in(f):
             if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
                 # direct macros
                 (name, val) = RE.m.group(1, 2)
-                if re.match(r'MPI_FILE_NULL', name):
-                    val = "MPI_File(0)"
-                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
-                    # datatype aliases
-                    val = G.mpih_defines[val]
-                elif re.match(r'\(?\(MPI_Datatype\)\@(MPIR?_\w+)\@\)?', val):
-                    val = "DATATYPE"
-                elif RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
-                    # handle constants
+                if RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
+                    # handle constants - hex
                     (T, V) = RE.m.group(1, 2)
                     val = hex_to_signed_int(V)
                     val = "%s(%d) ! 0x%s" % (T, hex_to_signed_int(V), V)
-                elif RE.match(r'0x([0-9a-fA-F]+)', val):
-                    # direct hex constants (KEYVAL constants)
-                    val = int(RE.m.group(1), 16)
-                    val = str(val) + (" ! 0x%08x" % val)
-                elif RE.match(r'MPI_MAX_', name):
-                    # Fortran string buffer limit need be 1-less
-                    if re.match(r'@\w+@', val):
-                        val += "-1"
-                    else:
-                        val = int(val) - 1
-                elif RE.match(r'\(([-\d]+)\)', val):
-                    # take off the extra parentheses
+                elif RE.match(r'\(+(MPI_\w+)\)(\d+)', val):
+                    # handle constants - decimal
+                    (T, V) = RE.m.group(1, 2)
+                    val = "%s(%s)" % (T, V)
+                elif RE.match(r'@(\w+)@', val):
+                    # MPICH autoconf macros
+                    val = translate_autoconf(RE.m.group(1))
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
+                    # datatype aliases
+                    val = G.mpih_defines[val]
+                elif RE.match(r'\(+MPI_Offset\)\s*(-?\d+)', val):
                     val = RE.m.group(1)
-
+                elif RE.match(r'0x([0-9a-fA-F]+)\s*$', val):
+                    val = hex_to_signed_int(RE.m.group(1))
+                elif re.match(r'^(\d+)\s*$', val):
+                    if re.match(r'MPI_MAX_', name):
+                        # Fortran string buffer limit need be 1-less
+                        val = int(val) - 1
                 G.mpih_defines[name] = val
-            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(\d+)', line):
+            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(-?\d+)', line):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val

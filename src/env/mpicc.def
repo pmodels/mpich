@@ -22,9 +22,11 @@ page: mpicxx.bash.in
     $call mpicc_main, bash, cxx
 
 page: mpifort.sh.in
+    output_dir: ../binding/fortran/env
     $call mpicc_main, sh, fc
 
 page: mpifort.bash.in
+    output_dir: ../binding/fortran/env
     $call mpicc_main, bash, fc
 
 #----------------------------------------
@@ -209,7 +211,7 @@ subcode: parse_args
             $call parse_arg_cases
             $(if:cc=cc or cc=cxx)
                 $call parse_delay_libs
-                $call parse_mpi_abi
+                $call parse_need_fortran
             $call parse_arg_help
             # fc args such as -I*, -D* need be in between the case for *'*|*"*) and *)
             &call parse_other_args_$(sh)
@@ -346,6 +348,12 @@ subcode: parse_args
         &call case, -lcuda|-lcudart|-lze_loader
             delay_libs="$delay_libs $arg"
 
+    subcode: parse_need_fortran
+        $(block:parse_args_init)
+            need_fortran=
+        &call case, -fortran
+            need_fortran="yes"
+
     subcode: show_help
         NC=`echo "$$(CC)" | sed 's%\/% %g' | awk '{print $NF}' -`
         if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -357,12 +365,6 @@ subcode: parse_args
                 echo "    -$(cc)=xxx       - Reset the native compiler to xxx."
             fi
         fi
-
-    subcode: parse_mpi_abi
-        $(block:parse_args_init)
-            mpi_abi=no
-        &call case, -mpi-abi|-mpi_abi
-            mpi_abi=yes
 
     subcode: parse_fc_args
         $(set:addarg=1)
@@ -465,21 +467,16 @@ subcode: set_final_vars
         final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
     fi
 
+    mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
+    mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
     $(if:cc=cc or cc=cxx)
-        if [ "${0%_abi}" != "$0" ] ; then
-            mpi_abi=yes
+    if test "$need_fortran" = "yes" ; then
+        mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
+        \x23 dlsym won't work with static linking but at least we make it available
+        if test -e "$libdir/libmpifort.a" ; then
+            mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
         fi
-        if [ "$mpi_abi" = no ] ; then
-            mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
-            mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
-        else
-            final_cppflags="-DMPI_ABI ${final_cppflags}"
-            mpi_libs_shared="-l@MPIABILIBNAME@ @LPMPIABILIBNAME@"
-            mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
-        fi
-    $(else)
-        mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
-        mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
+    fi
 
     $(if:cc=fc)
         $call patch_final_fcflags
