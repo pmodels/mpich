@@ -12,6 +12,11 @@
  *    frequent deletion and modification and memory consumption is of concern. All
  *    memory will be released upon final free.
  *
+ *    To use it as set, use MPL_hash_set(hv, s_key, MPL_HASH_KEY), effectively
+ *    store the key as its value, avoiding an extra string storage. Consequently,
+ *    MPL_hash_get will retrieve the stored key string, thus MPL_hash can be used
+ *    as a persistent string storage.
+ *
  *    Compared to uthash.h, the usage interface is cleaner and more intuitive --
  *    hash_new, hash_set, hash_get, hash_has, and hash_free. In comparison, uthash
  *    requires extra data structure, does not manage string memory, and the code is
@@ -37,16 +42,19 @@ struct MPL_hash *MPL_hash_new(void)
 {
     struct MPL_hash *hv;
 
-    hv = (struct MPL_hash *) MPL_calloc(1, sizeof(struct MPL_hash), MPL_MEM_OTHER);
+    hv = (struct MPL_hash *) MPL_calloc(1, sizeof(struct MPL_hash), MPL_MEM_HASH);
     return hv;
 }
 
-int MPL_hash_has(struct MPL_hash *hv, const char *s_key)
+bool MPL_hash_has(struct MPL_hash * hv, const char *s_key)
 {
-    int k;
-
-    k = f_strhash_lookup(hv, (unsigned char *) s_key, strlen(s_key));
-    return hv->p_exist[k];
+    if (hv->n_size == 0) {
+        return 0;
+    } else {
+        int k;
+        k = f_strhash_lookup(hv, (unsigned char *) s_key, strlen(s_key));
+        return hv->p_exist[k];
+    }
 }
 
 void MPL_hash_set(struct MPL_hash *hv, const char *s_key, const char *s_value)
@@ -54,7 +62,11 @@ void MPL_hash_set(struct MPL_hash *hv, const char *s_key, const char *s_value)
     int k;
 
     k = f_strhash_lookup_left(hv, (unsigned char *) s_key, strlen(s_key));
-    hv->p_val[k] = f_addto_strpool(&hv->pool, s_value, strlen(s_value));
+    if (s_value == MPL_HASH_KEY) {
+        hv->p_val[k] = hv->p_key[k];
+    } else {
+        hv->p_val[k] = f_addto_strpool(&hv->pool, s_value, strlen(s_value));
+    }
 }
 
 char *MPL_hash_get(struct MPL_hash *hv, const char *s_key)
@@ -135,7 +147,7 @@ int f_strhash_lookup_left(void *hash, unsigned char *key, int keylen)
     k = f_strhash_lookup(h, key, keylen);
     if (!h->p_exist[k]) {
         h->p_key[k] = f_addto_strpool(&h->pool, (char *) key, keylen);
-        h->p_exist[k] = 1;
+        h->p_exist[k] = true;
         h->n_count++;
     }
     return k;
@@ -160,7 +172,7 @@ int f_addto_strpool(struct strpool *p_strpool, const char *s, int n)
             tn_avg_str_size = p_strpool->i_pool / p_strpool->i_str + 1;
         }
         p_strpool->pool_size = tn_avg_str_size * p_strpool->n_str + n;
-        p_strpool->pc_pool = MPL_realloc(p_strpool->pc_pool, p_strpool->pool_size, MPL_MEM_OTHER);
+        p_strpool->pc_pool = MPL_realloc(p_strpool->pc_pool, p_strpool->pool_size, MPL_MEM_HASH);
     }
     memcpy(p_strpool->pc_pool + p_strpool->i_pool, s, n);
     p_strpool->i_str++;
@@ -177,7 +189,7 @@ int f_addto_strpool(struct strpool *p_strpool, const char *s, int n)
 void f_strhash_resize(void *hash, int n_size)
 {
     struct MPL_hash *h = hash;
-    char *tp_exist = h->p_exist;
+    bool *tp_exist = h->p_exist;
     int *tp_key = h->p_key;
     int tn_old_size;
     int *tp_val = h->p_val;
@@ -197,9 +209,9 @@ void f_strhash_resize(void *hash, int n_size)
     tn_old_size = h->n_size;
 
     h->n_size = n_size;
-    h->p_key = (int *) MPL_calloc(n_size, sizeof(int), MPL_MEM_OTHER);
-    h->p_exist = (char *) MPL_calloc(n_size, sizeof(char), MPL_MEM_OTHER);
-    h->p_val = (void *) MPL_calloc(n_size, sizeof(int), MPL_MEM_OTHER);
+    h->p_key = (int *) MPL_calloc(n_size, sizeof(int), MPL_MEM_HASH);
+    h->p_exist = (bool *) MPL_calloc(n_size, sizeof(bool), MPL_MEM_HASH);
+    h->p_val = (void *) MPL_calloc(n_size, sizeof(int), MPL_MEM_HASH);
 
     p_strpool = &h->pool;
     if (tn_old_size > 0) {
@@ -208,7 +220,7 @@ void f_strhash_resize(void *hash, int n_size)
 
                 k = f_strhash_lookup(h, (unsigned char *) STRPOOL_STR(p_strpool, tp_key[i]),
                                      STRPOOL_STRLEN(p_strpool, tp_key[i]));
-                h->p_exist[k] = 1;
+                h->p_exist[k] = true;
                 h->p_key[k] = tp_key[i];
                 h->p_val[k] = tp_val[i];
             }
@@ -226,7 +238,7 @@ void f_resize_strpool_n(struct strpool *p_strpool, int n_size, int n_avg)
     }
     p_strpool->n_str = n_size;
     p_strpool->pn_str =
-        MPL_realloc(p_strpool->pn_str, p_strpool->n_str * sizeof(int), MPL_MEM_OTHER);
+        MPL_realloc(p_strpool->pn_str, p_strpool->n_str * sizeof(int), MPL_MEM_HASH);
 
     if (n_avg == 0) {
         n_avg = 6;
@@ -236,7 +248,7 @@ void f_resize_strpool_n(struct strpool *p_strpool, int n_size, int n_avg)
     }
     if (n_avg * p_strpool->n_str > p_strpool->pool_size) {
         p_strpool->pool_size = n_avg * p_strpool->n_str;
-        p_strpool->pc_pool = MPL_realloc(p_strpool->pc_pool, p_strpool->pool_size, MPL_MEM_OTHER);
+        p_strpool->pc_pool = MPL_realloc(p_strpool->pc_pool, p_strpool->pool_size, MPL_MEM_HASH);
         p_strpool->pc_pool[p_strpool->pool_size - 1] = 0;
     }
 

@@ -143,8 +143,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count)
 
         MPL_free(proxy->pid);
         MPL_free(proxy->exit_status);
-
-        HYDU_free_exec_list(proxy->exec_list);
+        HYDU_free_launch_list(proxy->exec_list);
     }
 
     MPL_free(proxy_list);
@@ -162,7 +161,6 @@ HYD_status HYDU_alloc_exec(struct HYD_exec **exec)
     (*exec)->exec_len = 0;
     (*exec)->exec_size = 0;
     (*exec)->wdir = NULL;
-    (*exec)->start_rank = -1;
     (*exec)->proc_count = -1;
     (*exec)->env_prop = NULL;
     (*exec)->user_env = NULL;
@@ -234,34 +232,35 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     HYDU_FUNC_EXIT();
 }
 
+void HYDU_free_launch_list(struct HYD_proxy_exec *launch_list)
+{
+    struct HYD_proxy_exec *launch = launch_list;
+    while (launch) {
+        struct HYD_proxy_exec *cur = launch;
+        launch = cur->next;
+        MPL_free(cur);
+    }
+}
+
 static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy,
                                     int num_procs, int start_rank)
 {
     HYD_status status = HYD_SUCCESS;
 
-    struct HYD_exec *texec;
-    status = HYDU_alloc_exec(&texec);
-    HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+    struct HYD_proxy_exec *texec;
+    HYDU_MALLOC_OR_JUMP(texec, struct HYD_proxy_exec *, sizeof(struct HYD_proxy_exec), status);
+    texec->exec = exec;
+    texec->rank = start_rank;
+    texec->count = num_procs;
+    texec->next = NULL;
 
     if (proxy->exec_list == NULL) {
         proxy->exec_list = texec;
     } else {
-        struct HYD_exec *tmp;
+        struct HYD_proxy_exec *tmp;
         for (tmp = proxy->exec_list; tmp->next; tmp = tmp->next);
         tmp->next = texec;
     }
-
-    for (int i = 0; exec->exec[i]; i++) {
-        status = HYDU_exec_add_arg(texec, exec->exec[i]);
-        HYDU_ERR_POP(status, "unable to add exec arg\n");
-    }
-
-    texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
-    texec->start_rank = start_rank;
-    texec->proc_count = num_procs;
-    texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
-    texec->user_env = HYDU_env_list_dup(exec->user_env);
-    texec->appnum = exec->appnum;
 
     proxy->proxy_process_count += num_procs;
     proxy->node->active_processes += num_procs;

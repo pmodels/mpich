@@ -744,7 +744,6 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     char *str, *envstr, *list, *pmi_port = NULL;
     struct HYD_string_stash stash;
     struct HYD_env *env, *force_env = NULL;
-    struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
     int pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     HYD_status status = HYD_SUCCESS;
@@ -752,8 +751,8 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     HYDU_FUNC_ENTER();
 
     int num_procs = 0;
-    for (exec = pg->exec_list; exec; exec = exec->next) {
-        num_procs += exec->proc_count;
+    for (struct HYD_proxy_exec * launch = pg->launch_list; launch; launch = launch->next) {
+        num_procs += launch->count;
     }
 
     status = PMIP_pg_alloc_downstreams(pg, num_procs);
@@ -778,9 +777,9 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     /* set pmi_rank */
     {
         int i = 0;
-        for (exec = pg->exec_list; exec; exec = exec->next) {
-            for (int j = 0; j < exec->proc_count; j++) {
-                pg->downstreams[i].pmi_rank = exec->start_rank + j;
+        for (struct HYD_proxy_exec * launch = pg->launch_list; launch; launch = launch->next) {
+            for (int j = 0; j < launch->count; j++) {
+                pg->downstreams[i].pmi_rank = launch->rank + j;
                 i++;
             }
         }
@@ -804,7 +803,8 @@ static HYD_status launch_procs(struct pmip_pg *pg)
 
     /* Spawn the processes */
     process_id = 0;
-    for (exec = pg->exec_list; exec; exec = exec->next) {
+    for (struct HYD_proxy_exec * launch = pg->launch_list; launch; launch = launch->next) {
+        struct HYD_exec *exec = launch->exec;
 
         /* Increasing priority order: (1) global inherited env; (2)
          * global user env; (3) local user env; (4) system env. We
@@ -894,7 +894,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
             allocate_subdev = false;
             n_local_gpus = HYD_pmcd_pmip.user_global.gpus_per_proc;
         }
-        for (int i = 0; i < exec->proc_count; i++) {
+        for (int i = 0; i < launch->count; i++) {
             struct pmip_downstream *p = &pg->downstreams[process_id];
             p->pmi_appnum = exec->appnum;
 
