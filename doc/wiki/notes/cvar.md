@@ -17,7 +17,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         ring               - Force ring algorithm
         brucks             - Force brucks algorithm
 
