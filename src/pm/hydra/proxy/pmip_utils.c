@@ -450,32 +450,6 @@ static HYD_status exec_appnum_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status exec_rank_fn(char *arg, char ***argv)
-{
-    struct HYD_exec *exec = NULL;
-    HYD_status status = HYD_SUCCESS;
-
-    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
-    status = HYDU_set_int(arg, &exec->start_rank, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status exec_proc_count_fn(char *arg, char ***argv)
-{
-    struct HYD_exec *exec = NULL;
-    HYD_status status = HYD_SUCCESS;
-
-    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
-    status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status exec_local_env_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
@@ -568,6 +542,48 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_status launch_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_ASSERT(cur_pg, status);
+
+    struct HYD_proxy_exec *launch = MPL_malloc(sizeof(struct HYD_proxy_exec), MPL_MEM_OTHER);
+    HYDU_ASSERT(launch, status);
+
+    launch->exec = NULL;
+    launch->next = NULL;
+
+    /* arg is a 3-segment integers */
+    int tmp_id;
+    int ret = sscanf(**argv, "%d,%d,%d", &tmp_id, &launch->rank, &launch->count);
+    HYDU_ASSERT(ret == 3, status);
+
+    (*argv)++;
+
+    /* locate exec by tmp_id */
+    for (struct HYD_exec * exec = cur_pg->exec_list; exec && tmp_id >= 0; exec = exec->next) {
+        if (tmp_id == 0) {
+            launch->exec = exec;
+            break;
+        }
+        tmp_id--;
+    }
+    HYDU_ASSERT(launch->exec, status);
+
+    if (cur_pg->launch_list == NULL) {
+        cur_pg->launch_list = launch;
+    } else {
+        struct HYD_proxy_exec *t;
+        for (t = cur_pg->launch_list; t->next; t = t->next);
+        t->next = launch;
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
@@ -612,12 +628,11 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
-    {"exec-rank", exec_rank_fn, NULL},
-    {"exec-proc-count", exec_proc_count_fn, NULL},
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
     {"exec-wdir", exec_wdir_fn, NULL},
     {"exec-args", exec_args_fn, NULL},
+    {"launch", launch_fn, NULL},
     {"\0", NULL, NULL}
 };
 

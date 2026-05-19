@@ -301,14 +301,21 @@ struct HYD_exec {
     int exec_len, exec_size;
     char *wdir;
 
-    int start_rank;
     int proc_count;
     struct HYD_env *user_env;
     char *env_prop;
 
     int appnum;
 
+    int tmp_exec_id;            /* tmp field during HYD_pmcd_pmi_fill_in_exec_launch_info */
     struct HYD_exec *next;
+};
+
+struct HYD_proxy_exec {
+    struct HYD_exec *exec;
+    int rank;                   /* starting rank */
+    int count;                  /* consecutive processes for this exec */
+    struct HYD_proxy_exec *next;
 };
 
 /* Information about the node itself */
@@ -341,7 +348,7 @@ struct HYD_proxy {
 
     int proxy_process_count;
 
-    struct HYD_exec *exec_list;
+    struct HYD_proxy_exec *exec_list;
 
     int *pid;
     int *exit_status;
@@ -480,6 +487,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 HYD_status HYDU_exec_add_arg(struct HYD_exec *exec, const char *arg);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
+void HYDU_free_launch_list(struct HYD_proxy_exec *launch_list);
 HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
                                             int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
