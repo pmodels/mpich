@@ -7,6 +7,7 @@
 #define MPIR_REQUEST_H_INCLUDED
 
 #include "mpir_process.h"
+#include "uthash.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
