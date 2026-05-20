@@ -175,7 +175,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_op.h"
 #include "mpir_topo.h"
 #include "mpir_pt2pt.h"
-#include "mpir_gpu.h"
 
 #include "coll_types.h"
 #include "coll_impl.h"
@@ -191,6 +190,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 /********************* PART 5: DEVICE DEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
+#include "mpir_gpu.h"
 #include "mpir_tags.h"
 #include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
 #include "mpir_stream.h"

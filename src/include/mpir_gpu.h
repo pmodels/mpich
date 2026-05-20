@@ -6,10 +6,6 @@
 #ifndef MPIR_GPU_H_INCLUDED
 #define MPIR_GPU_H_INCLUDED
 
-/* mpidpre.h and mpir_thread.h are needed by mpir_cvars.h */
-#include "mpidpre.h"
-#include "mpir_thread.h"
-#include "mpir_cvars.h"
 #include "mpir_err.h"
 
 /*
@@ -61,6 +57,7 @@ cvars:
 */
 
 extern int MPIR_CVAR_ENABLE_GPU;
+extern int MPIR_CVAR_ENABLE_GPU_REGISTER;
 extern MPL_TLS bool MPIR_disable_gpu;   /* per-thread level locally disable gpu */
 
 /* define a constant for host buffer attribute */
