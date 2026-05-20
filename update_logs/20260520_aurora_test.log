@@ -1,0 +1,16 @@
+UPDATE aurora_test 6d9d0b4cb41997059ac2645f20312d5c4fd7b19e ebb219c581
+
+    current aurora_test HEAD a517e34e25
+
+33e29f53d3 2026-05-14 ch4/progress: improve the error message for progress timeoute810741b4e 2026-05-13 mpicxx: configure to allow mpicxx skip libmpicxx
+5e1da394d0 2026-05-15 env: whitespace changes to mpicc scripts
+7c65481a51 2023-04-01 autogen: generate mpicc scripts from mpicc.def
+3710636a1d 2026-05-15 configure: add --disable-bash option
+863085c650 2026-05-17 env: remove handling of quotes in sh version of scripts
+3bbf526169 2026-05-18 test: xfail asan tests that sporadically timeout
+92d43f6574 2026-05-06 mpl: use MPL_MEM_HASH and bool in mpl_hash
+37ac04ac73 2026-05-05 mpl: allow mpl_hash be used as a string set or store
+25a0c14e97 2026-05-05 hydra: use rank from proxy exec to setup proctable
+4b1b557516 2026-05-05 hydra: define and use HYD_proxy_exec in HYD_proxy
+2655b43dfd 2026-05-06 hydra: separate launch_list from exec_list
+7834b43b29 2026-05-15 ch4/ofi: use pipeline_pool for pack_buffer
