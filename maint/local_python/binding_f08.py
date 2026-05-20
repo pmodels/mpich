@@ -130,15 +130,6 @@ def dump_f08_wrappers_c(func, is_large):
     tlist = split_line_with_break(s, "", 80)
     G.out.extend(tlist)
     G.out.append("{")
-    if re.match(r'MPI_File_', func['name']):
-        if is_large:
-            # File large functions are not there yet
-            G.out.append("    return MPI_ERR_INTERN;")
-            G.out.append("}")
-            return
-        G.out.append("#ifndef HAVE_ROMIO")
-        G.out.append("    return MPI_ERR_INTERN;")
-        G.out.append("#else")
     G.out.append("INDENT");
     G.out.append("int err = MPI_SUCCESS;")
     if re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
@@ -156,8 +147,6 @@ def dump_f08_wrappers_c(func, is_large):
             G.out.append(l)
     G.out.append("return err;")
     G.out.append("DEDENT")
-    if re.match(r'MPI_File_', func['name']):
-        G.out.append("#endif")
     G.out.append("}")
 
 def dump_f08_wrappers_f(func, is_large):
