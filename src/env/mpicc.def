@@ -153,7 +153,7 @@ subcode: set_wrapper_dl_type_flags
     fi
 
 subcode: custom_environment
-    $(if:sh=bash)
+    $(if:sh=sh)
         Show=eval
     $(else)
         Show=
