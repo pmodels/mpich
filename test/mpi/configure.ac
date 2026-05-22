@@ -1845,7 +1845,6 @@ AC_OUTPUT(maint/testmerge \
           f90/Makefile \
           f90/attr/Makefile \
           f90/datatype/Makefile \
-          f90/f90types/Makefile \
           f90/coll/Makefile \
           f90/comm/Makefile \
           f90/topo/Makefile \
