@@ -291,9 +291,11 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
              * jobs do not need to include any of the Info code if no
              * Info-using routines are used */
             objmem->initialized = 1;
-            ptr = MPIR_Handle_direct_init(objmem);
-            if (ptr) {
-                objmem->avail = ptr->next;
+            if (objmem->direct_size > 0) {
+                ptr = MPIR_Handle_direct_init(objmem);
+                if (ptr) {
+                    objmem->avail = ptr->next;
+                }
             }
             /* MPI_Info allocation/deallocation must be always available
              * regardless of MPI initialization and finalization phases from

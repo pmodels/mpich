@@ -353,9 +353,10 @@ extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 extern MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED];
 
+MPIR_Datatype *MPIR_Datatype_alloc_predefined(void);
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
 void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
-int MPIR_Datatype_init_predefined(void);
+int MPIR_Datatype_init_builtin(void);
 int MPIR_Datatype_init_pairtypes(void);
 int MPIR_Datatype_finalize_pairtypes(void);
 int MPIR_Datatype_builtintype_alignment(MPI_Datatype type);
