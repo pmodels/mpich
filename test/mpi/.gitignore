@@ -402,6 +402,7 @@
 /datatype/struct_zero_count
 /datatype/subarray
 /datatype/subarray_pack
+/datatype/createf90types
 /datatype/testlist
 /datatype/tfree
 /datatype/tmatchsize
@@ -970,7 +971,6 @@
 /f90/ext/stamp-Makefile.am
 /f90/ext/testlist
 /f90/ext/testlist.in
-/f90/f90types/createf90types
 /f90/info/
 /f90/info/infocrenvf90
 /f90/info/infocrenvf90.f90
