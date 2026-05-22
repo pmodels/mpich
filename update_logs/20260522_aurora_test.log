@@ -1,0 +1,7 @@
+UPDATE aurora_test ebb219c581 cad3350b0a
+
+    current aurora_test HEAD 6ec4e916ba
+
+072900141e 2026-05-12 include: consolidate typerep_pre.h and mpir_typerep.hc5b445d0de 2026-05-20 include: move mpir_gpu.h as device dependent headers
+f0e90ccc99 2026-05-21 env: fix the accidental use of eval in bash scripts
+68d680882c 2026-05-21 Revert "env: remove handling of quotes in sh version of scripts"
