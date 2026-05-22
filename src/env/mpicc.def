@@ -153,7 +153,7 @@ subcode: set_wrapper_dl_type_flags
     fi
 
 subcode: custom_environment
-    $(if:sh=bash)
+    $(if:sh=sh)
         Show=eval
     $(else)
         Show=
@@ -204,6 +204,8 @@ subcode: parse_args
     for arg in "$@" ; do
         \x23 Set addarg to no if this arg should be ignored by the $(C) compiler
         addarg=yes
+        $(if:sh=sh)
+            qarg=$arg
         case "$arg" in
             $call filter_arg_cases
             $call parse_arg_cases
@@ -310,19 +312,38 @@ subcode: parse_args
 
     subcode: parse_other_args_sh
         $(set:addarg=1)
-        \x23 FIXME: there no safe way of handling arguments that contains spaces or quotes
-        \x23        We hope user either have a shell that support array or they won't use
-        \x23        arguments that contain spaces or quotes.
+        \x23 Other arguments.  We are careful to handle arguments with
+        \x23 quotes (we try to quote all arguments in case they include
+        \x23 any spaces)
+        $(if:cc=cc or cc=cxx)
+            &call case, *\'*
+                qarg="'"`echo $arg | sed -e "s/'/'\"'\"'/g"`"'"
+        $(else)
+            &call case, *\"*
+                qarg="'"$arg"'"
+                $call handle_arg_D
+            &call case, *\'*
+                qarg='\"'"$arg"'\"'
+                $call handle_arg_D
         BLOCK
+        &call case, *
+            qarg="'$arg'"
 
         $(block:parse_args_init)
             allargs=""
         $(block:post_arg_case)
             if [ $addarg = yes ] ; then
-                allargs="$allargs $arg"
+                allargs="$allargs $qarg"
             fi
 
         $(setmacro:allargs=$allargs)
+
+        subcode: handle_arg_D
+            case "$arg" in
+                -D*)
+                    $call append_array, cppflags, $qarg
+                    ;;
+            esac
 
     subcode: parse_other_args_bash
         $(set:addarg=1)
