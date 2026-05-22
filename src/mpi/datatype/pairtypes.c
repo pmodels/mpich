@@ -61,12 +61,9 @@ static int create_pairtype(MPI_Datatype value_type, MPIR_Datatype ** new_dtp)
     MPI_Aint disps[2] = { 0, idx_offset };
     MPI_Datatype types[2] = { value_datatype, MPIR_INT_INTERNAL };
 
-    MPI_Datatype dt;
-    mpi_errno = MPIR_Type_struct(2, blklens, disps, types, &dt);
+    MPIR_Datatype *dptr = MPIR_Datatype_alloc_predefined();
+    mpi_errno = MPIR_Typerep_create_struct(2, blklens, disps, types, dptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Datatype *dptr;
-    MPIR_Datatype_get_ptr(dt, dptr);
 
     /* set contents -
      *     The only named non-builtin datatypes are these pair types.
