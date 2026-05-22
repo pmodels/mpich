@@ -226,7 +226,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPIR_Pset_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Datatype_init_predefined();
+    mpi_errno = MPIR_Datatype_init_builtin();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Async_things_init();
