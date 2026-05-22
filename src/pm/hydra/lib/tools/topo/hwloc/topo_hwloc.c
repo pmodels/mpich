@@ -191,6 +191,7 @@ static struct hwloc_obj_info_table hwloc_obj_info[] = {
     {"machine", HWLOC_OBJ_MACHINE},
     {"socket", HWLOC_OBJ_PACKAGE},
     {"package", HWLOC_OBJ_PACKAGE},
+    {"die", HWLOC_OBJ_DIE},
     {"numa", HWLOC_OBJ_NUMANODE},
     {"numanode", HWLOC_OBJ_NUMANODE},
     {"core", HWLOC_OBJ_CORE},

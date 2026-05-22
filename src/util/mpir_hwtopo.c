@@ -106,6 +106,9 @@ static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
         case MPIR_HWTOPO_TYPE__CPU:
             hwloc_obj_type = HWLOC_OBJ_PACKAGE;
             break;
+        case MPIR_HWTOPO_TYPE__DIE:
+            hwloc_obj_type = HWLOC_OBJ_DIE;
+            break;
         case MPIR_HWTOPO_TYPE__GROUP:
             hwloc_obj_type = HWLOC_OBJ_GROUP;
             break;
@@ -163,6 +166,7 @@ static hwtopo_class_e get_type_class(hwloc_obj_type_t type)
             break;
         case HWLOC_OBJ_MACHINE:
         case HWLOC_OBJ_PACKAGE:
+        case HWLOC_OBJ_DIE:
         case HWLOC_OBJ_CORE:
         case HWLOC_OBJ_PU:
         case HWLOC_OBJ_L1CACHE:
@@ -316,6 +320,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
         {"machine", MPIR_HWTOPO_TYPE__NODE},
         {"socket", MPIR_HWTOPO_TYPE__SOCKET},
         {"package", MPIR_HWTOPO_TYPE__PACKAGE},
+        {"die", MPIR_HWTOPO_TYPE__DIE},
         {"group", MPIR_HWTOPO_TYPE__GROUP},
         {"cpu", MPIR_HWTOPO_TYPE__CPU},
         {"core", MPIR_HWTOPO_TYPE__CORE},
