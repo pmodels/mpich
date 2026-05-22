@@ -40,6 +40,8 @@ darray_pack 1
 darray_pack 9
 darray_pack 72 lock=manyproc
 darray_cyclic 12
+createf90types 1
+createf90types 1 arg=1000
 pairtype_size_extent 1
 simple_commit 1
 simple_size_extent 1

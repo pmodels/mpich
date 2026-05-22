@@ -65,6 +65,7 @@ noinst_PROGRAMS =             \
     struct_zero_count         \
     subarray                  \
     subarray_pack             \
+    createf90types            \
     tfree                     \
     tmatchsize                \
     transpose_pack            \
