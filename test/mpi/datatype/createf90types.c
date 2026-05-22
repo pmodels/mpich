@@ -118,6 +118,9 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
             err = MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
             check_err(MPI_Waitall);
         }
+
+        err = MPI_Reduce_local(buf0, buf1, 1, dtype, MPI_SUM);
+        check_err(MPI_Reduce_local);
     }
 
     return errs;
