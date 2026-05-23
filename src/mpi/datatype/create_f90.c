@@ -219,12 +219,16 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
     type->p = p;
 
     /* Create a contiguous type from one instance of the named type */
-    mpi_errno = MPIR_Type_contiguous(1, old, &type->d);
+    MPIR_Datatype *new_dtp = MPIR_Datatype_alloc_predefined();
+    MPIR_Assert(new_dtp);
+
+    mpi_errno = MPIR_Typerep_create_contig(1, old, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
+
+    type->d = new_dtp->handle;
 
     /* Initialize the contents data */
     {
-        MPIR_Datatype *new_dtp = NULL;
         int vals[2];
         int nvals = 0;
 
@@ -242,7 +246,6 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
                 break;
         }
 
-        MPIR_Datatype_get_ptr(type->d, new_dtp);
         mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, 0,
                                                vals, NULL, NULL, NULL);
         MPIR_ERR_CHECK(mpi_errno);
