@@ -12,10 +12,11 @@
 /* Preallocated datatype objects */
 MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
+static int num_prealloc = 0;
 
+/* NOTE: we are not setting direct pointer to reserve direct datatypes for predefined datatypes */
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
-    sizeof(MPIR_Datatype), MPIR_Datatype_direct,
-    MPIR_DATATYPE_PREALLOC,
+    sizeof(MPIR_Datatype), NULL, 0,
     {0}
 };
 
@@ -107,14 +108,40 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     /* *INDENT-ON* */
 };
 
+MPIR_Datatype *MPIR_Datatype_alloc_predefined(void)
+{
+    if (num_prealloc >= MPIR_DATATYPE_PREALLOC) {
+        MPIR_Assert(0);
+        return NULL;
+    }
+    int idx = num_prealloc;
+    num_prealloc++;
+
+    MPIR_Datatype *new_dtp = &MPIR_Datatype_direct[idx];
+    new_dtp->handle = ((unsigned) HANDLE_KIND_DIRECT << HANDLE_KIND_SHIFT) |
+        (MPIR_DATATYPE << HANDLE_MPI_KIND_SHIFT) | idx;
+    MPIR_Object_set_ref(new_dtp, 1);
+    new_dtp->is_committed = 0;
+    new_dtp->attributes = NULL;
+    new_dtp->name[0] = 0;
+    new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
+    new_dtp->typerep.handle = MPIR_TYPEREP_HANDLE_NULL;
+
+    return new_dtp;
+}
+
 /* Call this routine to associate a MPIR_Datatype with each predefined
    datatype. */
-int MPIR_Datatype_init_predefined(void)
+int MPIR_Datatype_init_builtin(void)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned int i;
     MPIR_Datatype *dptr;
     MPI_Datatype d = MPI_DATATYPE_NULL;
+
+    /* init MPIR_Datatype_alloc_predefined */
+    num_prealloc = 0;
 
     MPIR_Assert(sizeof(MPIR_Internal_types) / sizeof(MPIR_Internal_types[0]) ==
                 MPIR_DATATYPE_N_BUILTIN);
@@ -445,7 +472,10 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr)
         MPIR_Typerep_free(ptr);
     }
     MPL_free(ptr->flattened);
-    MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
+
+    if (HANDLE_GET_KIND(ptr->handle) == HANDLE_KIND_INDIRECT) {
+        MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
+    }
 }
 
 void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz)

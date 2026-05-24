@@ -218,11 +218,8 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #endif
 
 #define MPIR_DATATYPE_N_BUILTIN 77      /* 0x4d - must be in sync with mpi.h.in */
-#ifdef MPID_DATATYPE_PREALLOC
-#define MPIR_DATATYPE_PREALLOC MPID_DATATYPE_PREALLOC
-#else
-#define MPIR_DATATYPE_PREALLOC 8
-#endif
+/* DIRECT datatypes are reserved for predefined datatypes */
+#define MPIR_DATATYPE_PREALLOC 100
 
 #define MPIR_ERRHANDLER_N_BUILTIN 4
 #ifdef MPID_ERRHANDLER_PREALLOC
