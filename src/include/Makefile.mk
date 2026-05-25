@@ -7,7 +7,8 @@
 nodist_include_HEADERS += src/include/mpi.h
 
 if !BUILD_ABI_LIB
-include_HEADERS += src/include/mpi_proto.h
+include_HEADERS += src/include/mpi_proto.h \
+    src/include/mpi_fortran.h
 endif !BUILD_ABI_LIB
 
 # need mpix.h for either ABIs
