@@ -19,6 +19,8 @@ int MPIDI_init_per_vci(int vci);
 int MPIDI_destroy_per_vci(int vci);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
+int MPIDI_ulfm_init(void);
+int MPIDI_ulfm_finalize(void);
 
 /* define CH4_CALL to call netmod or shm API based on is_local */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
