@@ -491,13 +491,14 @@ subcode: set_final_vars
     mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
     mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
     $(if:cc=cc or cc=cxx)
-    if test "$need_fortran" = "yes" ; then
-        mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
-        \x23 dlsym won't work with static linking but at least we make it available
-        if test -e "$libdir/libmpifort.a" ; then
-            mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
+        if test "$need_fortran" = "yes" ; then
+            final_cppflags="${final_cppflags} -DMPICH_ENABLE_FORTRAN"
+            mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
+            \x23 dlsym won't work with static linking but at least we make it available
+            if test -e "$libdir/libmpifort.a" ; then
+                mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
+            fi
         fi
-    fi
 
     $(if:cc=fc)
         $call patch_final_fcflags
