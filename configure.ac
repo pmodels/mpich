@@ -2441,12 +2441,6 @@ else
 fi
 
 # ------------
-# MPI_FINT
-# ------------
-# MPI_FINT is already set
-AC_SUBST(MPI_FINT)
-
-# ------------
 # MPI_AINT
 # ------------
 # Note that aint_size must be used instead of void_p where the desired check
@@ -3117,9 +3111,6 @@ else
 fi
 AC_SUBST(MPI_MAX_ERROR_STRING)
 
-# Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
-MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
-AC_SUBST(MPIU_DLL_SPEC_DEF)
 
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source

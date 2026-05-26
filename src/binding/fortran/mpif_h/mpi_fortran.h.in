@@ -3,19 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifdef MPI_FINT_CTYPE
-typedef MPI_FINT_CTYPE MPI_Fint;
-#else
-typedef int MPI_Fint;
-#endif
+typedef @MPI_FINT@ MPI_Fint;
 
-/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
 /* The annotation MPIU_DLL_SPEC to the extern statements is used
    as a hook for systems that require C extensions to correctly construct
    DLLs, and is defined as an empty string otherwise
  */
+#define MPIU_DLL_SPEC
+
+/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
 
 /* C type for MPI_STATUS in F08.
    The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
@@ -86,3 +84,5 @@ extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 #define PMPI_Session_c2f(session) (MPI_Fint)(session)
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 #endif
+
+void MPIX_Init_fortran(void) MPICH_API_PUBLIC;

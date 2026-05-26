@@ -752,6 +752,9 @@ AC_CHECK_SIZEOF(long long)
 AC_LANG_POP([C])
 
 # Provide the corresponding C types for MPI_INTEGER
+MPI_FINT=
+AC_SUBST(MPI_FINT)
+
 AC_MSG_CHECKING([for C type matching Fortran integer])
 if test "$pac_cv_f77_sizeof_integer" == "$ac_cv_sizeof_int" ; then
     AC_MSG_RESULT([yes])
@@ -1116,14 +1119,13 @@ PAC_CHECK_BASH
 AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$pac_cv_bash_works" = xyes])
 
 AC_CONFIG_FILES([Makefile \
+                 mpif_h/mpi_fortran.h \
+                 mpif_h/setbotf.f \
+                 mpif_h/cmblk.c \
                  env/mpifort.sh \
                  env/mpifort.bash \
                  localdefs])
 
-if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([mpif_h/setbotf.f \
-                     mpif_h/cmblk.c])
-fi
 if test "$enable_f08" = "yes" ; then
     AC_CONFIG_FILES([use_mpi_f08/mpi_c_interface_types.f90])
 fi

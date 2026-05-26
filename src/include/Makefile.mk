@@ -7,8 +7,7 @@
 nodist_include_HEADERS += src/include/mpi.h
 
 if !BUILD_ABI_LIB
-include_HEADERS += src/include/mpi_proto.h \
-    src/include/mpi_fortran.h
+include_HEADERS += src/include/mpi_proto.h
 endif !BUILD_ABI_LIB
 
 ## Internal headers that are created by config.status from a corresponding
