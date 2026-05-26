@@ -731,6 +731,9 @@ AC_CHECK_SIZEOF(long long)
 AC_LANG_POP([C])
 
 # Provide the corresponding C types for MPI_INTEGER
+MPI_FINT=
+AC_SUBST(MPI_FINT)
+
 AC_MSG_CHECKING([for C type matching Fortran integer])
 if test "$pac_cv_f77_sizeof_integer" == "$ac_cv_sizeof_int" ; then
     AC_MSG_RESULT([yes])

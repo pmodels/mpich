@@ -144,8 +144,6 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_CXX(type)
 #endif
 
-@MPIU_DLL_SPEC_DEF@
-
 /* Define some null objects */
 #define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
 #define MPI_OP_NULL        ((MPI_Op)0x18000000)

@@ -13,9 +13,9 @@ mpifort_convenience_libs =
 
 lib_LTLIBRARIES =
 bin_SCRIPTS =
+include_HEADERS =
 noinst_LTLIBRARIES =
 noinst_HEADERS =
-nodist_include_HEADERS =
 CLEANFILES =
 DISTCLEANFILES =
 MAINTAINERCLEANFILES =
