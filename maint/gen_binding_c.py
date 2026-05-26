@@ -106,6 +106,8 @@ def main():
         for func in func_list:
             if 'replace' in func and 'body' not in func:
                 continue
+            elif re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
 
             dump_func(func, do_doc)
             if '_replaces' in func:
@@ -158,6 +160,8 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
+            if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
             dump_func(func, do_doc)
 
         dump_out(G.c_dir + "/io.c")
