@@ -12,6 +12,7 @@ noinst_LTLIBRARIES += lib/libf77_mpi.la
 
 lib_libf77_mpi_la_SOURCES = \
 	mpif_h/fortran_binding.c \
+        mpif_h/f2c_impl.c \
 	mpif_h/user_proxy.c \
 	mpif_h/fdebug.c \
 	mpif_h/setbot.c \
@@ -38,7 +39,9 @@ noinst_HEADERS += \
 	mpif_h/mpi_fortimpl.h
 
 DISTCLEANFILES += mpif_h/mpif.h
-nodist_include_HEADERS += mpif_h/mpif.h
+include_HEADERS += \
+        mpif_h/mpif.h \
+        mpif_h/mpi_fortran.h
 
 
 endif BUILD_F77_BINDING

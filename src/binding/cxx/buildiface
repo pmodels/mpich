@@ -1172,7 +1172,6 @@ print $OUTFD "
 // Typedefs for basic int types
 typedef MPI_Offset Offset;
 typedef MPI_Aint   Aint;
-typedef MPI_Fint   Fint;
 
 // Special internal routine
 void MPIR_CXX_InitDatatypeNames( void );
