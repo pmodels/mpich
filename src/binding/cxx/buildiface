@@ -519,7 +519,7 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 %class_mpi2intra = ( #'Alltoallw' => 0, 
 		     'Exscan' => 0,
 		     # Because Spawn and Spawn_multiple have two different
-		     # signaturs, they are handled as special cases.
+		     # signatures, they are handled as special cases.
 		     'Accept' => 'MPI_Comm',
 		     'Connect' => 'MPI_Comm',
 		     );
@@ -1172,7 +1172,6 @@ print $OUTFD "
 // Typedefs for basic int types
 typedef MPI_Offset Offset;
 typedef MPI_Aint   Aint;
-typedef MPI_Fint   Fint;
 
 // Special internal routine
 void MPIR_CXX_InitDatatypeNames( void );
