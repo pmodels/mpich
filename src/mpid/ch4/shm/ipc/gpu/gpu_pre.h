@@ -22,7 +22,6 @@ typedef struct MPIDI_GPU_ipc_handle {
     uintptr_t len;
     int node_rank;
     uintptr_t offset;
-    int handle_status;
 } MPIDI_GPU_ipc_handle_t;
 
 /* local struct used for query and preparing memory handle */
