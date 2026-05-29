@@ -182,10 +182,10 @@ def dump_Makefile_mk(f):
             else:
                 print("    %s" % f, file=Out)
 
-        n = len(G.doc3_src_txt)
+        n = len(G.doc3_src)
         if n > 0:
-            print("doc3_src_txt += \\", file=Out)
-            for i, f in enumerate(G.doc3_src_txt):
+            print("doc3_src+= \\", file=Out)
+            for i, f in enumerate(G.doc3_src):
                 if i < n - 1:
                     print("    %s \\" % f, file=Out)
                 else:

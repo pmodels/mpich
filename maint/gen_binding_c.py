@@ -57,7 +57,7 @@ def main():
     func_list = [f for f in func_list if f['dir'] != 'io']
 
     # -- Generating code --
-    G.doc3_src_txt = []
+    G.doc3_src = []
     G.poly_aliases = [] # large-count mansrc aliases
     G.need_dump_romio_reference = True
 
@@ -82,7 +82,7 @@ def main():
             with open(f, "w") as Out:
                 for l in manpage_out:
                     print(l.rstrip(), file=Out)
-            G.doc3_src_txt.append(f)
+            G.doc3_src.append(f)
             if func['_has_poly']:
                 G.poly_aliases.append(func['name'])
 
