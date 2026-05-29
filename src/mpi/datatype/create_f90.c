@@ -16,12 +16,12 @@ typedef struct realModel {
 } realModel;
 
 static intModel f90_integer_map[] = {
-    {1, MPIR_INT8},
-    {2, MPIR_INT16},
-    {4, MPIR_INT32},
-    {8, MPIR_INT64},
+    {2, MPIR_INT8},
+    {4, MPIR_INT16},
+    {9, MPIR_INT32},
+    {18, MPIR_INT64},
 #if defined(MPIR_INT128_CTYPE)
-    {16, MPIR_INT128},
+    {38, MPIR_INT128},
 #endif
 };
 
