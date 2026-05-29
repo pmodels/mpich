@@ -33,7 +33,6 @@ dist_noinst_SCRIPTS +=                \
 dist_noinst_DATA +=                        \
     maint/Version                          \
     maint/Version.base.m4                  \
-    maint/docnotes                         \
     maint/errmsgdirs                       \
     maint/gccimpgen.cpp                    \
     maint/local_perl/README                \
