@@ -1342,7 +1342,7 @@ def dump_manpage(func, out):
 
     if Name in G.semantics:
         out.append("== Description")
-        out.append("include::semantics.adoc[tag=%s]" % Name)
+        out.append("include::../semantics.adoc[tag=%s]" % Name)
         out.append("")
 
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
@@ -1353,7 +1353,7 @@ def dump_manpage(func, out):
 
     if 'replace' in func:
         if RE.match(r'\s*(deprecated|removed)', func['replace'], re.IGNORECASE):
-            out.append("include::docnotes.adoc[tag=%s]" % RE.m.group(1).capitalize())
+            out.append("include::../docnotes.adoc[tag=%s]" % RE.m.group(1).capitalize())
         else:
             print("Missing reasons in %s .replace" % func['name'], file=sys.stderr)
 
@@ -1371,7 +1371,7 @@ def dump_manpage(func, out):
         out.append("")
 
     for note in func['_docnotes']:
-        out.append("include::docnotes.adoc[tag=%s]" % note)
+        out.append("include::../docnotes.adoc[tag=%s]" % note)
         if note == "Fortran":
             has = {}
             for p in func['c_parameters']:
@@ -1381,7 +1381,7 @@ def dump_manpage(func, out):
                     else:
                         has['FortranStatus'] = 1
             for k in has:
-                out.append("include::docnotes.adoc[tag=%s]" % k)
+                out.append("include::../docnotes.adoc[tag=%s]" % k)
         out.append("")
 
     if 'notes2' in func:
@@ -1390,11 +1390,11 @@ def dump_manpage(func, out):
         out.append("")
 
     if '_skip_err_codes' not in func:
-        out.append("include::docnotes.adoc[tag=Errors]")
-        out.append("include::docnotes.adoc[tag=MPI_SUCCESS]")
+        out.append("include::../docnotes.adoc[tag=Errors]")
+        out.append("include::../docnotes.adoc[tag=MPI_SUCCESS]")
         for err in sorted (G.err_codes.keys()):
-            out.append("include::docnotes.adoc[tag=%s]" % (err))
-        out.append("include::docnotes.adoc[tag=MPI_ERR_OTHER]")
+            out.append("include::../docnotes.adoc[tag=%s]" % (err))
+        out.append("include::../docnotes.adoc[tag=MPI_ERR_OTHER]")
         out.append("")
     if 'seealso' in func:
         out.append("== See also")
