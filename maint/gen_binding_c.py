@@ -31,7 +31,9 @@ def main():
         mapping = G.MAPS['SMALL_C_KIND_MAP']
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
+    do_doc = False
     if 'output-mansrc' in G.opts:
+        do_doc = True
         G.check_write_path('doc/mansrc/c/mansrc')
         G.hints = collect_info_hint_blocks("src")
         G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
@@ -69,15 +71,18 @@ def main():
         G.mpi_sources.append(file_path)
         G.need_dump_romio_reference = True
 
-    def dump_func(func, manpage_out):
+    def dump_func(func, do_doc):
+        G.err_codes = {}
+        if do_doc:
+            manpage_out = []
+
         # dumps the code to G.out array
         dump_mpi_c(func, False)
         if func['_has_poly']:
             dump_mpi_c(func, True)
 
-        dump_manpage(func, manpage_out)
-
-        if 'output-mansrc' in G.opts:
+        if do_doc:
+            dump_manpage(func, manpage_out)
             f = get_mansrc_file_path(func, 'doc/mansrc/c')
             with open(f, "w") as Out:
                 for l in manpage_out:
@@ -88,7 +93,6 @@ def main():
 
     def dump_func_abi(func):
         func['_is_abi'] = True
-        G.err_codes = {}
         # dumps the code to G.out array
         dump_mpi_c(func, False)
         if func['_has_poly']:
@@ -101,16 +105,13 @@ def main():
         G.out.append("#include \"mpii_fortlogical.h\"")
         G.out.append("")
         for func in func_list:
-            G.err_codes = {}
-            manpage_out = []
-
             if 'replace' in func and 'body' not in func:
                 continue
 
-            dump_func(func, manpage_out)
+            dump_func(func, do_doc)
             if '_replaces' in func:
                 for t_func in func['_replaces']:
-                    dump_func(t_func, manpage_out)
+                    dump_func(t_func, do_doc)
 
             if 'single-source' not in G.opts:
                 # dump individual functions in separate source files
@@ -158,9 +159,7 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
-            G.err_codes = {}
-            manpage_out = []
-            dump_func(func, manpage_out)
+            dump_func(func, do_doc)
 
         dump_out(c_dir + "/io.c")
 
@@ -187,7 +186,7 @@ def main():
     dump_io_funcs()
     dump_io_funcs_abi()
 
-    if 'output-mansrc' in G.opts:
+    if do_doc:
         f = 'doc/mansrc/c' + 'poly_aliases.lst'
         with open(f, "w") as Out:
             for name in G.poly_aliases:
