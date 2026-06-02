@@ -463,12 +463,14 @@ MPI_ERR_LASTCODE         :: Last error code -- always at end
 
 MPI_T_ERR_MEMORY           :: Out of memory
 MPI_T_ERR_NOT_INITIALIZED  :: Interface not initialized
+MPI_T_ERR_NOT_SUPPORTED    :: Requested functionality not supported
 MPI_T_ERR_CANNOT_INIT      :: Interface not in the state to be initialized
 MPI_T_ERR_INVALID_INDEX    :: The index is invalid or has been deleted
 MPI_T_ERR_INVALID_HANDLE   :: The handle is invalid
 MPI_T_ERR_OUT_OF_HANDLES   :: No more handles available
 MPI_T_ERR_OUT_OF_SESSIONS  :: No more sessions available
 MPI_T_ERR_INVALID_SESSION  :: Session argument is not valid
+MPI_T_ERR_INVALID_ITEM     :: The index is invalid or has been deleted
 MPI_T_ERR_CVAR_SET_NOT_NOW :: Cvar cannot be set at this moment
 MPI_T_ERR_CVAR_SET_NEVER   :: Cvar cannot be set until end of execution
 MPI_T_ERR_PVAR_NO_STARTSTOP:: Pvar can''t be started or stopped
@@ -476,3 +478,7 @@ MPI_T_ERR_PVAR_NO_WRITE    :: Pvar can''t be written or reset
 MPI_T_ERR_PVAR_NO_ATOMIC   :: Pvar can''t be R/W atomically
 MPI_T_ERR_INVALID_NAME     :: Name doesn''t match
 MPI_T_ERR_INVALID          :: Invalid use of the interface or bad parameter values(s)
+
+== Error codes for MPIX
+
+MPIX_ERR_STREAM            :: MPIX stream input incorrect

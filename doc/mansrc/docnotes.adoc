@@ -629,6 +629,21 @@ indicates that an attempt was made to call 'MPI_INIT' a second time.
 * MPI_T_ERR_INVALID - Invalid use of the interface or bad parameter values(s).
 // end::MPI_T_ERR_INVALID[]
 
+// tag::MPIX_ERR_STREAM[]
+* MPIX_ERR_STREAM - MPIX stream input incorrect.
+// end::MPIX_ERR_STREAM[]
+
+// tag::MPI_T_ERR_NOT_SUPPORTED[]
+* MPI_T_ERR_NOT_SUPPORTED - Requested functionality not supported.
+// end::MPI_T_ERR_NOT_SUPPORTED[]
+
+// tag::MPI_ERR_ERRHANDLER[]
+* MPI_ERR_ERRHANDLER - Invalid error handler argument called function.
+// end::MPI_ERR_ERRHANDLER[]
+
+// tag::MPI_T_ERR_INVALID_ITEM[]
+* MPI_T_ERR_INVALID_ITEM - Same as MPI_T_ERR_INVALID_INDEX. Index is invalid or has been deleted.
+// end::MPI_T_ERR_INVALID_ITEM[]
 
 // tag::NULL[]
 == Null Handles
