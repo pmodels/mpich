@@ -38,17 +38,24 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     for (int i = 0; i < num_repeat; i++) {
         library_foo_test();
+        if (errs > 0) {
+            break;
+        }
     }
     MPI_Finalize();
 #else
     int rank = library_foo_test();
 #ifdef RE_INIT
+    if (errs > 0) {
+        goto fn_exit;
+    }
     library_foo_test();
 #endif
 #endif
     if (rank == 0 && errs == 0) {
         printf("No Errors\n");
     }
+  fn_exit:
     return MTestReturnValue(errs);
 }
 
@@ -72,14 +79,24 @@ int check_thread_level(char *value)
 int library_foo_test(void)
 {
     int rank, size;
+    int rc;
 
     library_foo_init();
+
+    if (errs > 0) {
+        rank = -1;
+        goto fn_exit;
+    }
 
     MPI_Comm_size(lib_comm, &size);
     MPI_Comm_rank(lib_comm, &rank);
 
     int sum;
-    MPI_Reduce(&rank, &sum, 1, MPI_INT, MPI_SUM, 0, lib_comm);
+    rc = MPI_Reduce(&rank, &sum, 1, MPI_INT, MPI_SUM, 0, lib_comm);
+    if (rc != MPI_SUCCESS) {
+        printf("Error on reduce\n");
+        errs++;
+    }
     if (rank == 0) {
         if (sum != (size - 1) * size / 2) {
             printf("MPI_Reduce: expect %d, got %d\n", (size - 1) * size / 2, sum);
@@ -87,6 +104,7 @@ int library_foo_test(void)
         }
     }
 
+  fn_exit:
     library_foo_finalize();
 
     return rank;
@@ -95,7 +113,6 @@ int library_foo_test(void)
 void library_foo_init(void)
 {
     int rc, flag;
-    int ret = 0;
     const char pset_name[] = "mpi://WORLD";
     const char mt_key[] = "thread_level";
     const char mt_value[] = "MPI_THREAD_MULTIPLE";
@@ -108,6 +125,7 @@ void library_foo_init(void)
     MPI_Info_set(sinfo, mt_key, mt_value);
     rc = MPI_Session_init(sinfo, MPI_ERRORS_RETURN, &lib_shandle);
     if (rc != MPI_SUCCESS) {
+        printf("Error on MPI_Session_init\n");
         errs++;
         goto fn_exit;
     }
@@ -115,6 +133,7 @@ void library_foo_init(void)
     /* check we got thread support level foo library needs */
     rc = MPI_Session_get_info(lib_shandle, &tinfo);
     if (rc != MPI_SUCCESS) {
+        printf("Error on MPI_Session_get_info\n");
         errs++;
         goto fn_exit;
     }
@@ -134,6 +153,7 @@ void library_foo_init(void)
     /* create a group from the WORLD process set */
     rc = MPI_Group_from_session_pset(lib_shandle, pset_name, &wgroup);
     if (rc != MPI_SUCCESS) {
+        printf("Error on MPI_Group_from_session_pset\n");
         errs++;
         goto fn_exit;
     }
@@ -157,26 +177,26 @@ void library_foo_init(void)
     if (tinfo != MPI_INFO_NULL) {
         MPI_Info_free(&tinfo);
     }
-    if (ret != MPI_SUCCESS) {
-        MPI_Session_finalize(&lib_shandle);
-    }
 }
 
 void library_foo_finalize(void)
 {
     int rc;
-
-    rc = MPI_Comm_free(&lib_comm);
-    if (rc != MPI_SUCCESS) {
-        printf("MPI_Comm_free returned %d\n", rc);
-        errs++;
-        return;
+    if (lib_comm != MPI_COMM_NULL) {
+        rc = MPI_Comm_free(&lib_comm);
+        if (rc != MPI_SUCCESS) {
+            printf("MPI_Comm_free returned %d\n", rc);
+            errs++;
+            return;
+        }
     }
 
-    rc = MPI_Session_finalize(&lib_shandle);
-    if (rc != MPI_SUCCESS) {
-        printf("MPI_Session_finalize returned %d\n", rc);
-        errs++;
-        return;
+    if (lib_shandle != MPI_SESSION_NULL) {
+        rc = MPI_Session_finalize(&lib_shandle);
+        if (rc != MPI_SUCCESS) {
+            printf("MPI_Session_finalize returned %d\n", rc);
+            errs++;
+            return;
+        }
     }
 }
