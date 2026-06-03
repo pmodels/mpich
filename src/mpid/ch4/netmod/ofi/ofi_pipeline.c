@@ -311,7 +311,16 @@ static bool send_copy_complete(MPIR_Request * sreq, int chunk_index,
     msg.context = (void *) &(chunk_req->context);
     msg.data = 0;
 
-    uint64_t flags = FI_COMPLETION | FI_MATCH_COMPLETE | FI_DELIVERY_COMPLETE;
+    uint64_t flags = FI_COMPLETION;
+    if (chunk_sz == MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ) {
+        /* request remote match completion to avoid too many unexpected chunks going out.
+         * NOTE: we skip the last chunk because
+         *       1. it's unnecessary
+         *       2. work around a provider issue due to match event arrives later than the
+         *          completion event for small messages
+         */
+        flags |= FI_MATCH_COMPLETE;
+    }
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, flags),
                          p->vci_local, tsendv);
