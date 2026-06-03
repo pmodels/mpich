@@ -32,9 +32,10 @@ def main():
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
     do_doc = False
+    mansrc_dir = 'doc/mansrc/binding'
     if 'output-mansrc' in G.opts:
         do_doc = True
-        G.check_write_path('doc/mansrc/c/mansrc')
+        G.check_write_path(mansrc_dir + '/')
         G.hints = collect_info_hint_blocks("src")
         G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
     else:
@@ -83,7 +84,7 @@ def main():
 
         if do_doc:
             dump_manpage(func, manpage_out)
-            f = get_mansrc_file_path(func, 'doc/mansrc/c')
+            f = get_mansrc_file_path(func, mansrc_dir)
             with open(f, "w") as Out:
                 for l in manpage_out:
                     print(l.rstrip(), file=Out)
@@ -187,7 +188,7 @@ def main():
     dump_io_funcs_abi()
 
     if do_doc:
-        f = 'doc/mansrc/c' + 'poly_aliases.lst'
+        f = mansrc_dir + '/poly_aliases.lst'
         with open(f, "w") as Out:
             for name in G.poly_aliases:
                 print("%s - %s_c" % (name, name), file=Out)
