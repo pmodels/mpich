@@ -13,6 +13,13 @@
  * Model. The pre-defined "mpi://WORLD" process set can be used to first create
  * a local MPI group and then subsequently to create an MPI communicator from
  * this group.
+ *
+ * Different variants of this test:
+ *
+ * MULT_INIT:   Multiple MPI_Session_init/finalize sequences in a row (not nested)
+ * WITH_WORLD:  Have MPI world model initialized prior to the first MPI_Session_init
+ * RE_INIT:     Initialize another session after closing the previous one (only if
+ *              not using MULT_INIT)
  */
 
 int errs = 0;
@@ -32,17 +39,24 @@ int main(int argc, char *argv[])
         /* basic sanity check */
         assert(num_repeat > 0 && num_repeat < 100);
     }
-
+#ifdef WITH_WORLD
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
     for (int i = 0; i < num_repeat; i++) {
+#ifdef WITH_WORLD
         library_foo_test();
+#else
+        rank = library_foo_test();
+#endif
         if (errs > 0) {
             break;
         }
     }
+#ifdef WITH_WORLD
     MPI_Finalize();
+#endif
 #else
     int rank = library_foo_test();
 #ifdef RE_INIT
