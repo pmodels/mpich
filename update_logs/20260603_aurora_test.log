@@ -1,0 +1,13 @@
+UPDATE aurora_test cad3350b0a6b4b8345a452fb556821807f8e3445 e7b0c5ca4f
+
+    current aurora_test HEAD e358bbd4c3
+
+66cd573492 2026-05-22 datatype: create_f90 do not depend on fortran3d5d5ef7e2 2026-05-22 binding/fortran: remove configure for number models
+e72da1bf07 2026-05-22 test: move createf90types to C datatype tests
+a50254b115 2026-05-22 test: add MPI_Reduce_local check
+9d3950e7df 2026-05-22 datatype: fix MPIR_op_dt_check for f90 types
+b2df2dbf10 2026-05-22 datatype: reserve DIRECT datatypes for predefined
+eb68f5870c 2026-05-22 datatype: use DIRECT datatypes in create_f90
+c31cce5f64 2026-05-22 hwloc: add support for HWLOC_OBJ_DIE
+311e618b9e 2026-05-28 ch4/ofi: avoid FI_MATCH_COMPLETE for small messages
+99cc483f93 2026-05-28 datatype: integer_map use range not bytes
