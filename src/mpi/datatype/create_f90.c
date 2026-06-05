@@ -43,6 +43,9 @@ static realModel f90_real_model[] = {
 };
 
 static realModel f90_complex_model[] = {
+#ifdef MPIR_FLOAT16_CTYPE
+    {3, 4, MPIR_COMPLEX16},
+#endif
     {6, 37, MPIR_COMPLEX32},
     {15, 307, MPIR_COMPLEX64},
 #ifdef MPIR_ALT_FLOAT96_CTYPE
