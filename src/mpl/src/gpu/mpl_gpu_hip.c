@@ -226,7 +226,7 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
     hipError_t ret;
-    uint32_t buffer_id;
+    MPL_gpu_buffer_id_t buffer_id;
 
     ret = hipPointerGetAttribute(&buffer_id, HIP_POINTER_ATTRIBUTE_BUFFER_ID, (hipDeviceptr_t) ptr);
     assert(ret == hipSuccess);
