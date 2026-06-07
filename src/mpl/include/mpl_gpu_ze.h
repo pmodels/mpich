@@ -13,12 +13,13 @@ typedef struct {
     ze_device_handle_t device;
 } ze_alloc_attr_t;
 
+typedef uint64_t MPL_gpu_buffer_id_t;
 typedef struct {
     int fds[2];
     uint32_t nfds;
     pid_t pid;
     int dev_id;
-    uint64_t mem_id;
+    MPL_gpu_buffer_id_t mem_id;
 } fd_pid_t;
 
 typedef struct _MPL_gpu_ipc_mem_handle_t {
