@@ -7,9 +7,9 @@
 ! Testing MPI_Info_create_env.
 !
        subroutine test_info ( i1, i2, errs )
-       implicit none
-       include 'mpif.h'
-       integer ierr, i, i1, i2, vl, errs
+       use mpi_f08
+       Type(MPI_Info) i1, i2
+       integer ierr, i, vl, errs
        character*(MPI_MAX_INFO_KEY) value1, value2
        character*(MPI_MAX_INFO_KEY) keys(9)
        logical f1, f2
@@ -50,10 +50,9 @@
        end
 
        program main
-       implicit none
-       include 'mpif.h'
-       integer i1, i2
-       integer ierr, errs
+       use mpi_f08
+       Type(MPI_Info):: i1, i2
+       integer:: ierr, errs
 !
        errs = 0
 

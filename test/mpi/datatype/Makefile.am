@@ -101,3 +101,4 @@ $(top_builddir)/util/libdtypes.la:
 
 sendrecvt2_LDADD = $(LDADD) $(LDADDDATA)
 sendrecvt4_LDADD = $(LDADD) $(LDADDDATA)
+typename_LDFLAGS = -fortran

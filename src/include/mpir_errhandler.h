@@ -37,7 +37,6 @@ typedef union errhandler_fn {
     MPIX_File_errhandler_function_x *X_File_Handler_function;
     MPIX_Win_errhandler_function_x *X_Win_Handler_function;
     MPIX_Session_errhandler_function_x *X_Session_Handler_function;
-    void (*F77_Handler_function) (MPI_Fint *, MPI_Fint *);
 } errhandler_fn;
 
 /*S

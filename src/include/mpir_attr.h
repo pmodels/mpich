@@ -35,11 +35,6 @@ MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
                        int keyval, void *extra_state, void *attrib, void **attrib_copy, int *flag);
 
 typedef struct copy_function {
-    int (*C_CopyFunction) (int, int, void *, void *, void *, int *);
-    void (*F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
-                              MPI_Fint *, MPI_Fint *, MPI_Fint *);
-    void (*F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
-                              MPI_Aint *, MPI_Fint *, MPI_Fint *);
     /* The generic lang-independent user_function and proxy will
      * replace the lang dependent copy funcs above
      * Currently the lang-indpendent funcs are used only for keyvals
@@ -73,9 +68,6 @@ MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
                          int handle, int keyval, void *attrib, void *extra_state);
 
 typedef struct delete_function {
-    int (*C_DeleteFunction) (int, int, void *, void *);
-    void (*F77_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *);
-    void (*F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
     /* The generic lang-independent user_function and proxy will
      * replace the lang dependent copy funcs above
      * Currently the lang-indpendent funcs are used only for keyvals

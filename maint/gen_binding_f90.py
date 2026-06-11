@@ -13,10 +13,8 @@ import os
 def main():
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    f90_dir = "src/binding/fortran/use_mpi"
-    G.check_write_path("%s/" % f90_dir)
-    func_list = load_C_func_list(binding_dir, True) # suppress noise
+    G.check_write_path("%s/" % G.f90_dir)
+    func_list = load_C_func_list(G.binding_dir, True) # suppress noise
     func_list.extend(get_f77_dummy_func_list())
 
     def has_cptr(func):
@@ -45,7 +43,7 @@ def main():
         G.out.append("")
     dump_F_module_close("mpi_base")
 
-    f = "%s/mpi_base.f90" % f90_dir
+    f = "%s/mpi_base.f90" % G.f90_dir
     dump_f90_file(f, G.out)
 
     # pmpi_base.f90
@@ -67,7 +65,7 @@ def main():
         G.out.append("")
     dump_F_module_close("pmpi_base")
 
-    f = "%s/pmpi_base.f90" % f90_dir
+    f = "%s/pmpi_base.f90" % G.f90_dir
     dump_f90_file(f, G.out)
 
     # mpi_constants.f90
@@ -76,7 +74,7 @@ def main():
     dump_f90_constants()
     dump_F_module_close("mpi_constants")
 
-    f = "%s/mpi_constants.f90" % f90_dir
+    f = "%s/mpi_constants.f90" % G.f90_dir
     dump_f90_file(f, G.out)
 
     # mpi_sizeofs.f90
@@ -85,7 +83,7 @@ def main():
     dump_f90_sizeofs()
     dump_F_module_close("mpi_sizeofs")
 
-    f = "%s/mpi_sizeofs.f90" % f90_dir
+    f = "%s/mpi_sizeofs.f90" % G.f90_dir
     dump_f90_file(f, G.out)
 
 # ---------------------------------------------------------
