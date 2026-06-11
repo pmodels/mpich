@@ -318,7 +318,10 @@ int MPIR_Cart_sub_impl(MPIR_Comm * comm_ptr, const int remain_dims[], MPIR_Comm 
     if (all_false) {
         /* ndims=0, or all entries in remain_dims are false.
          * MPI 2.1 says return a 0D Cartesian topology. */
-        mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, p_newcomm_ptr);
+        /* Use comm_self instead of comm_ptr since MPI_Cart_sub is a split + topology
+         * FIXME: the sub comms should inherit from the parent comm, such as hints.
+         */
+        mpi_errno = MPIR_Cart_create_impl(MPIR_Process.comm_self, 0, NULL, NULL, 0, p_newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Determine the number of remaining dimensions */
