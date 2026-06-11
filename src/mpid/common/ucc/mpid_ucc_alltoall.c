@@ -10,7 +10,7 @@
 static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint scount,
                                                    MPI_Datatype sdtype, void *rbuf, MPI_Aint rcount,
                                                    MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
-                                                   ucc_coll_req_h * req, MPIR_Request * coll_req)
+                                                   MPIDI_common_ucc_req_t * req)
 {
     bool is_inplace = (sbuf == MPI_IN_PLACE);
     int comm_size = MPIR_Comm_size(comm_ptr);
@@ -21,6 +21,18 @@ static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint sc
     ucc_rdt = mpidi_mpi_dtype_to_ucc_dtype(rdtype);
     if (!is_inplace) {
         ucc_sdt = mpidi_mpi_dtype_to_ucc_dtype(sdtype);
+    }
+
+    if (ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_S(alltoall);
+        ucc_sdt = mpidi_ucc_dtype_packing_send(sbuf, scount, comm_size, sdtype, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(alltoall, ucc_sdt);
+    }
+
+    if (ucc_rdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) {
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_TRY_R(alltoall);
+        ucc_rdt = mpidi_ucc_dtype_packing_recv_prep(rbuf, rcount, rdtype, comm_size, req);
+        MPIDI_COMMON_UCC_VERBOSE_DTYPE_PACKING_RES(alltoall, ucc_rdt);
     }
 
     if ((ucc_sdt == MPIDI_COMMON_UCC_DTYPE_UNSUPPORTED) ||
@@ -34,15 +46,15 @@ static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint sc
         .flags = 0,
         .coll_type = UCC_COLL_TYPE_ALLTOALL,
         .src.info = {
-                     .buffer = (void *) sbuf,
-                     .count = scount * comm_size,
+                     .buffer = req->sbuf_tmp ? req->sbuf_tmp : (void *) sbuf,
+                     .count = (req->scounts_tmp ? req->scounts_tmp[0] : scount) * comm_size,
                      .datatype = ucc_sdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
         ,
         .dst.info = {
-                     .buffer = rbuf,
-                     .count = rcount * comm_size,
+                     .buffer = req->rbuf_tmp ? req->rbuf_tmp : rbuf,
+                     .count = (req->rcounts_tmp ? req->rcounts_tmp[0] : rcount) * comm_size,
                      .datatype = ucc_rdt,
                      .mem_type = UCC_MEMORY_TYPE_UNKNOWN,
                      }
@@ -66,7 +78,8 @@ static inline ucc_status_t mpidi_ucc_alltoall_init(const void *sbuf, MPI_Aint sc
                                                  rcount, mpidi_ucc_dtype_to_str(ucc_rdt));
     }
 
-    MPIDI_COMMON_UCC_REQ_INIT(coll_req, req, coll, comm_ptr);
+    MPIDI_COMMON_UCC_REQ_INIT(req, coll, comm_ptr);
+
     return UCC_OK;
   fallback:
     return UCC_ERR_NOT_SUPPORTED;
@@ -76,26 +89,15 @@ int MPIDI_common_ucc_alltoall(const void *sbuf, MPI_Aint scount, MPI_Datatype sd
                               MPI_Aint rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-    ucc_coll_req_h req;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+    MPIDI_common_ucc_req_t req = { 0 };
 
-    MPIDI_COMMON_UCC_CHECK_ENABLED(comm_ptr, alltoall);
+    MPIDI_COMMON_UCC_WRAPPER_ENTER(alltoall);
 
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_TRY_TO_RUN(alltoall);
+    MPIDI_COMMON_UCC_WRAPPER_EXECUTE(alltoall, sbuf, scount, sdtype, rbuf, rcount, rdtype, comm_ptr,
+                                     &req);
 
-    MPIDI_COMMON_UCC_CALL_AND_CHECK(mpidi_ucc_alltoall_init
-                                    (sbuf, scount, sdtype, rbuf, rcount, rdtype,
-                                     comm_ptr, &req, NULL));
-    MPIDI_COMMON_UCC_POST_AND_CHECK(req);
-    MPIDI_COMMON_UCC_WAIT_AND_CHECK(req);
+    mpidi_ucc_dtype_packing_recv_done(rbuf, rcount, rdtype, comm_size, &req);
 
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DONE_SUCCESS(alltoall);
-
-    return MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-
-  fallback:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_FALLBACK(alltoall);
-    return MPIDI_COMMON_UCC_RETVAL_FALLBACK;
-  disabled:
-    MPIDI_COMMON_UCC_VERBOSE_COLLOP_DISABLED(alltoall);
-    goto fallback;
+    MPIDI_COMMON_UCC_WRAPPER_EXIT(alltoall);
 }
