@@ -43,6 +43,9 @@ static realModel f90_real_model[] = {
 };
 
 static realModel f90_complex_model[] = {
+#ifdef MPIR_FLOAT16_CTYPE
+    {3, 4, MPIR_COMPLEX16},
+#endif
     {6, 37, MPIR_COMPLEX32},
     {15, 307, MPIR_COMPLEX64},
 #ifdef MPIR_ALT_FLOAT96_CTYPE
@@ -128,8 +131,8 @@ int MPIR_Type_create_f90_complex_impl(int precision, int range, MPI_Datatype * n
     MPI_Datatype basetype = MPI_DATATYPE_NULL;
     int num = sizeof(f90_complex_model) / sizeof(f90_complex_model[0]);
     for (int i = 0; i < num; i++) {
-        if (f90_real_model[i].digits >= precision && f90_real_model[i].exponent >= range) {
-            basetype = f90_real_model[i].basetype;
+        if (f90_complex_model[i].digits >= precision && f90_complex_model[i].exponent >= range) {
+            basetype = f90_complex_model[i].basetype;
             break;
         }
     }
