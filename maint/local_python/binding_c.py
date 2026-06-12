@@ -1074,7 +1074,11 @@ def dump_abi_wrappers(func, is_large):
                         pre_filters.append("} else if (recvtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                 pre_filters.append("if (%s > 0) {" % array_size)
-                pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                if array_size == "max_datatypes":
+                    # zero the output array so we know whether it is filled at output
+                    pre_filters.append("    %s = MPL_calloc(sizeof(MPI_%s), %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                else:
+                    pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
                 pre_filters.append("}")
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                     pre_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
@@ -1092,6 +1096,12 @@ def dump_abi_wrappers(func, is_large):
                         post_filters.append("for (int i = 0; i < *outcount; i++) {")
                         post_filters.append("    int idx = array_of_indices[i];")
                         post_filters.append("    %s_abi[idx] = ABI_%s_from_mpi(%s[idx]);" % (name, array_type, name))
+                        post_filters.append("}")
+                    elif array_size == "max_datatypes":
+                        post_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
+                        post_filters.append("    if (%s[i]) {" % name)
+                        post_filters.append("        %s_abi[i] = ABI_%s_from_mpi(%s[i]);" % (name, array_type, name))
+                        post_filters.append("    }")
                         post_filters.append("}")
                     else:
                         post_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
