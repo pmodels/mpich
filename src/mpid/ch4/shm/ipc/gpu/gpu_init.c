@@ -7,31 +7,6 @@
 #include "gpu_post.h"
 #include "gpu_types.h"
 
-static void ipc_handle_free_hook(void *dptr)
-{
-    int mpl_err ATTRIBUTE((unused));
-    MPL_pointer_attr_t gpu_attr;
-
-    MPIR_FUNC_ENTER;
-
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
-        struct MPIDI_GPUI_handle_cache_entry *entry;
-
-        HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &dptr, entry);
-        if (entry) {
-            HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
-            MPL_free(entry);
-
-            MPIR_GPU_query_pointer_attr(dptr, &gpu_attr);
-            mpl_err = MPL_gpu_ipc_handle_destroy(dptr, &gpu_attr);
-            MPIR_Assert(mpl_err == MPL_SUCCESS);
-        }
-    }
-
-    MPIR_FUNC_EXIT;
-    return;
-}
-
 int MPIDI_GPU_init_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,7 +23,6 @@ int MPIDI_GPU_init_local(void)
                             "**gpu_get_dev_count");
 
         MPIDI_GPUI_global.local_device_count = device_count;
-        MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
         MPIDI_GPUI_global.initialized = 1;
     }
@@ -94,22 +68,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
                                         "**gpu_ipc_handle_unmap");
                 }
             }
-            MPL_free(entry);
-        }
-    }
-
-    {
-        struct MPIDI_GPUI_handle_cache_entry *entry, *tmp;
-        HASH_ITER(hh, MPIDI_GPUI_global.ipc_handle_cache, entry, tmp) {
-            MPL_pointer_attr_t gpu_attr;
-            int mpl_err;
-
-            MPIR_GPU_query_pointer_attr(entry->base_addr, &gpu_attr);
-            mpl_err = MPL_gpu_ipc_handle_destroy(entry->base_addr, &gpu_attr);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**gpu_ipc_handle_destroy");
-
-            HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
             MPL_free(entry);
         }
     }
