@@ -2599,12 +2599,11 @@ export nameserv_name
 AM_CONDITIONAL([BUILD_NAMEPUB_FILE],[test "X$nameserv_name" = "Xfile"])
 AM_CONDITIONAL([BUILD_NAMEPUB_PMI],[test "X$nameserv_name" = "Xpmi"])
 
-# In case the documentation targets are used, find doctext and attempt to
-# find the source for the doctext LaTeX style files.  Use "false" if
-# doctext is not found
-AC_PATH_PROG(DOCTEXT,doctext,false)
-export DOCTEXT
-AC_SUBST(DOCTEXT)
+# In case the documentation targets are used, find asciidoctor.
+# Use "false" if asciidoctor is not found
+AC_PATH_PROG(ASCIIDOC,asciidoctor,false)
+export ASCIIDOC
+AC_SUBST(ASCIIDOC)
 
 # ----------------------------------------------------------------------------
 # Check for C compiler characteristics

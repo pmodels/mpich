@@ -31,11 +31,16 @@ def main():
         mapping = G.MAPS['SMALL_C_KIND_MAP']
         G.mpi_declares.append(get_declare_function(func, False, "proto"))
 
+    do_doc = False
+    mansrc_dir = 'doc/mansrc/binding'
     if 'output-mansrc' in G.opts:
-        G.check_write_path(c_dir + '/mansrc/')
+        do_doc = True
+        G.check_write_path(mansrc_dir + '/')
         G.hints = collect_info_hint_blocks("src")
+        G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
     else:
         G.hints = None
+        G.semantics = {}
 
     # -- prescan the functions and set internal attributes
     for func in func_list:
@@ -55,7 +60,7 @@ def main():
     func_list = [f for f in func_list if f['dir'] != 'io']
 
     # -- Generating code --
-    G.doc3_src_txt = []
+    G.doc3_src = []
     G.poly_aliases = [] # large-count mansrc aliases
     G.need_dump_romio_reference = True
 
@@ -67,26 +72,28 @@ def main():
         G.mpi_sources.append(file_path)
         G.need_dump_romio_reference = True
 
-    def dump_func(func, manpage_out):
+    def dump_func(func, do_doc):
+        G.err_codes = {}
+        if do_doc:
+            manpage_out = []
+
         # dumps the code to G.out array
         dump_mpi_c(func, False)
         if func['_has_poly']:
             dump_mpi_c(func, True)
 
-        dump_manpage(func, manpage_out)
-
-        if 'output-mansrc' in G.opts:
-            f = get_mansrc_file_path(func, c_dir + '/mansrc')
+        if do_doc:
+            dump_manpage(func, manpage_out)
+            f = get_mansrc_file_path(func, mansrc_dir)
             with open(f, "w") as Out:
                 for l in manpage_out:
                     print(l.rstrip(), file=Out)
-            G.doc3_src_txt.append(f)
+            G.doc3_src.append(f)
             if func['_has_poly']:
                 G.poly_aliases.append(func['name'])
 
     def dump_func_abi(func):
         func['_is_abi'] = True
-        G.err_codes = {}
         # dumps the code to G.out array
         dump_mpi_c(func, False)
         if func['_has_poly']:
@@ -99,16 +106,13 @@ def main():
         G.out.append("#include \"mpii_fortlogical.h\"")
         G.out.append("")
         for func in func_list:
-            G.err_codes = {}
-            manpage_out = []
-
             if 'replace' in func and 'body' not in func:
                 continue
 
-            dump_func(func, manpage_out)
+            dump_func(func, do_doc)
             if '_replaces' in func:
                 for t_func in func['_replaces']:
-                    dump_func(t_func, manpage_out)
+                    dump_func(t_func, do_doc)
 
             if 'single-source' not in G.opts:
                 # dump individual functions in separate source files
@@ -156,9 +160,7 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
-            G.err_codes = {}
-            manpage_out = []
-            dump_func(func, manpage_out)
+            dump_func(func, do_doc)
 
         dump_out(c_dir + "/io.c")
 
@@ -185,8 +187,8 @@ def main():
     dump_io_funcs()
     dump_io_funcs_abi()
 
-    if 'output-mansrc' in G.opts:
-        f = c_dir + '/mansrc/' + 'poly_aliases.lst'
+    if do_doc:
+        f = mansrc_dir + '/poly_aliases.lst'
         with open(f, "w") as Out:
             for name in G.poly_aliases:
                 print("%s - %s_c" % (name, name), file=Out)
@@ -202,6 +204,15 @@ def main():
     dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
     dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")
+
+def collect_mansrc_semantics(filepath):
+    semantics = {}
+
+    with open(filepath, 'r') as f:
+        for line in f:
+            if RE.match(r'\/\/ *tag::(\w+)\[\]', line):
+                semantics[RE.m.group(1)] = 1
+    return semantics
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

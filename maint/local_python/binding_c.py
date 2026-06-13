@@ -127,10 +127,10 @@ def get_mansrc_file_path(func, root_dir):
     file_path = None
     dir_path = root_dir
     if 'file' in func:
-        file_path = dir_path + '/' + func['file'] + ".txt"
+        file_path = dir_path + '/' + func['file'] + ".adoc"
     elif RE.match(r'(MPI(X|_T)?_\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
-        file_path = dir_path + '/' + name.lower() + ".txt"
+        file_path = dir_path + '/' + name.lower() + ".adoc"
     else:
         raise Exception("Error in function name pattern: %s\n" % func['name'])
 
@@ -182,10 +182,10 @@ def dump_Makefile_mk(f):
             else:
                 print("    %s" % f, file=Out)
 
-        n = len(G.doc3_src_txt)
+        n = len(G.doc3_src)
         if n > 0:
-            print("doc3_src_txt += \\", file=Out)
-            for i, f in enumerate(G.doc3_src_txt):
+            print("doc3_src+= \\", file=Out)
+            for i, f in enumerate(G.doc3_src):
                 if i < n - 1:
                     print("    %s \\" % f, file=Out)
                 else:
@@ -1295,27 +1295,37 @@ def dump_manpage(func, out):
         if l > 0:
             out.append('  ' + ' '.join(words[i0:]))
     # ----
+    Name = get_function_name(func, False)
+
     if not func['desc']:
         # place holder to make the man page render
         func['desc'] = "[short description]"
-    out.append("/*D")
-    out.append("   %s - %s" % (get_function_name(func, False), func['desc']))
+    out.append("= %s(3)" % Name)
+    out.append(":doctype: manpage")
+    out.append(":man manual: Library Function Manual")
+    out.append(":man source: MPICH") # TODO: add version
+    out.append("")
+    out.append("== Name")
+    out.append("%s - %s" % (Name, func['desc']))
     out.append("")
 
     # Synopsis
-    out.append("Synopsis:")
+    out.append("== Synopsis")
     func_decl = get_declare_function(func, False)
     tlist = split_line_with_break(func_decl, '', 80)
-    out.append(".vb")
+    out.append("[source,C]")
+    out.append("----")
     out.extend(tlist)
-    out.append(".ve")
+    out.append("----")
+    out.append("")
     if func['_has_poly']:
         func_decl = get_declare_function(func, True)
         tlist = split_line_with_break(func_decl, '', 80)
-        out.append(".vb")
+        out.append("[source,C]")
+        out.append("----")
         out.extend(tlist)
-        out.append(".ve")
-    out.append("")
+        out.append("----")
+        out.append("")
 
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
@@ -1340,6 +1350,11 @@ def dump_manpage(func, out):
     dump_manpage_list(inout_list, "Input/Output Parameters", out)
     dump_manpage_list(output_list, "Output Parameters", out)
 
+    if Name in G.semantics:
+        out.append("== Description")
+        out.append("include::../semantics.adoc[tag=%s]" % Name)
+        out.append("")
+
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
     if 'notes' in func:
         for l in func['notes']:
@@ -1348,25 +1363,25 @@ def dump_manpage(func, out):
 
     if 'replace' in func:
         if RE.match(r'\s*(deprecated|removed)', func['replace'], re.IGNORECASE):
-            out.append(".N %s" % RE.m.group(1).capitalize())
+            out.append("include::../docnotes.adoc[tag=%s]" % RE.m.group(1).capitalize())
         else:
             print("Missing reasons in %s .replace" % func['name'], file=sys.stderr)
 
         if RE.search(r'with\s+(\w+)', func['replace']):
-            out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
+            out.append("The replacement for this routine is '%s'." % RE.m.group(1))
         out.append("")
 
     # document info keys
     if G.hints and func['name'] in G.hints:
         print("Got info hints in %s" % func['name'])
-        out.append("Info hints:")
+        out.append("== Info hints")
         for a in G.hints[func['name']]:
-            out.append(". %s - %s, default = %s." % (a['name'], a['type'], a['default']))
+            out.append("_%s_:: %s, default = %s." % (a['name'], a['type'], a['default']))
             dump_description(a['description'])
         out.append("")
 
     for note in func['_docnotes']:
-        out.append(".N %s" % note)
+        out.append("include::../docnotes.adoc[tag=%s]" % note)
         if note == "Fortran":
             has = {}
             for p in func['c_parameters']:
@@ -1376,7 +1391,7 @@ def dump_manpage(func, out):
                     else:
                         has['FortranStatus'] = 1
             for k in has:
-                out.append(".N %s" % k)
+                out.append("include::../docnotes.adoc[tag=%s]" % k)
         out.append("")
 
     if 'notes2' in func:
@@ -1385,33 +1400,23 @@ def dump_manpage(func, out):
         out.append("")
 
     if '_skip_err_codes' not in func:
-        out.append(".N Errors")
-        out.append(".N MPI_SUCCESS")
+        out.append("include::../docnotes.adoc[tag=Errors]")
+        out.append("include::../docnotes.adoc[tag=MPI_SUCCESS]")
         for err in sorted (G.err_codes.keys()):
-            out.append(".N %s" % (err))
-        out.append(".N MPI_ERR_OTHER")
+            out.append("include::../docnotes.adoc[tag=%s]" % (err))
+        out.append("include::../docnotes.adoc[tag=MPI_ERR_OTHER]")
         out.append("")
     if 'seealso' in func:
-        out.append(".seealso: %s" % func['seealso'])
-    out.append("D*/")
-    out.append("")
+        out.append("== See also")
+        out.append(re.sub(r'(MPI\w+)', r'*\1*(3)', func['seealso']))
 
 def dump_manpage_list(list, header, out):
     count = len(list)
     if count == 0:
         return
-    out.append("%s:" % header)
-    if count == 1:
-        p = list[0]
-        out.append(". %s - %s" % (p['name'], p['desc']))
-    else:
-        for i, p in enumerate(list):
-            lead = "."
-            if i == 0:
-                lead = "+"
-            elif i == count - 1:
-                lead = "-"
-            out.append("%s %s - %s" % (lead, p['name'], p['desc']))
+    out.append("== %s" % header)
+    for i, p in enumerate(list):
+        out.append("_%s_:: %s" % (p['name'], p['desc']))
     out.append("")
 
 def get_function_internal_prototype(func_decl):
