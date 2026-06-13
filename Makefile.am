@@ -127,6 +127,7 @@ mpi_abi_sources =
 mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
+mpi_abi_core_sources =
 mpifort_convenience_libs = @mpl_lib@
 
 lib_LTLIBRARIES =
@@ -168,7 +169,7 @@ if BUILD_PROFILING_LIB
 # dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
 # don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
-lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
+lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources) $(mpi_abi_core_sources)
 lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
 lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
 lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
@@ -186,7 +187,7 @@ lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la
 else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
-lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
+lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources) $(mpi_abi_core_sources)
 lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
 lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
