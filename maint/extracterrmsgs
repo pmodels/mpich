@@ -47,6 +47,7 @@ foreach my $k ("envvarparse", "cvar_val"){
 
 # Check for special args
 my $mpi_h = "src/include/mpi.h.in";
+my $mpi_abi_h = "src/binding/abi/mpi_abi.h";
 my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
 my @files = ();
 my %skipFiles = ();
@@ -137,6 +138,20 @@ if (open In, $mpi_h) {
     die "Unable to read $mpi_h\n";
 }
 
+# Load mpi_abi.h for ABI error class constants
+my %abi_h_constants;
+$abi_h_constants{"MPI_SUCCESS"} = 0;
+if (open In, $mpi_abi_h) {
+    while (<In>) {
+        if (/^\s+(MPI_ERR_\w+)\s*=\s*(\d+)/) {
+            $abi_h_constants{$1} = $2;
+        }
+    }
+    close In;
+} else {
+    die "Unable to read $mpi_abi_h\n";
+}
+
 my $max_err_class = $mpi_h_constants{MPICH_ERR_LAST_MPIX};
 if (!$max_err_class) {
     die "Failed to load MPICH_ERR_LAST_MPIX from $mpi_h\n";
@@ -161,15 +176,20 @@ foreach my $sourcefile (@errnameFiles) {
 
 # Load baseerrnames.txt
 my @class_msgs;
+my @abi_class_msgs;
 if (open In, $baseerrnames_txt) {
     while (<In>) {
         if (/^(MPI\w+)\s+(\*\*\w+)/) {
             my ($name, $shortmsg) = ($1, $2, $3);
             my $id = $mpi_h_constants{$name};
+            my $abi_id = $abi_h_constants{$name};
             if (defined $id) {
                 $generic_msgs{$shortmsg}++;
                 $generic_loc{$shortmsg} = ":baseerrnames.txt";
                 $class_msgs[$id] = $shortmsg;
+                if (defined $abi_id) {
+                    $abi_class_msgs[$abi_id] = $shortmsg;
+                }
             } else {
                 die "error class $name not found in mpi.h\n";
             }
@@ -348,18 +368,40 @@ sub CreateErrMsgMapping {
     print $OUTFD "};\n";
 
     my $maxval = $max_err_class + 1;
-    print $OUTFD "static int class_to_index[] = {\n    ";
+    print $OUTFD "static int class_to_index[] = {\n";
+    print $OUTFD "#ifndef MPICH_BUILD_MPI_ABI\n";
     for (my $i=0; $i<=$max_err_class; $i++) {
         my $idx = $short_to_num{$class_msgs[$i]};
         if (!$idx) {
             # 0 is the "**UNKNOWN" entry
             $idx = 0;
         }
+        print $OUTFD "    " if $i % 10 == 0;
         print $OUTFD "$idx";
 	print $OUTFD "," if ($i < $max_err_class);
-	print $OUTFD "\n    " if !(($i + 1) % 10);
+	print $OUTFD "\n" if !(($i + 1) % 10);
     }
-    print $OUTFD "\n};\n";
+    print $OUTFD "\n";
+    print $OUTFD "#else  /* MPICH_BUILD_MPI_ABI */\n";
+    # NOTE: $abi_class_msgs[$i] should be defined for all standard MPI_ERR_XXX,
+    #       but use $class_msgs[$i] for MPIX_ERR_XXX.
+    for (my $i=0; $i<=$max_err_class; $i++) {
+        my $idx = $short_to_num{$class_msgs[$i]};
+        if (defined $abi_class_msgs[$i]) {
+            $idx = $short_to_num{$abi_class_msgs[$i]};
+        }
+        if (!$idx) {
+            # 0 is the "**UNKNOWN" entry
+            $idx = 0;
+        }
+        print $OUTFD "    " if $i % 10 == 0;
+        print $OUTFD "$idx";
+	print $OUTFD "," if ($i < $max_err_class);
+	print $OUTFD "\n" if !(($i + 1) % 10);
+    }
+    print $OUTFD "\n";
+    print $OUTFD "#endif /* MPICH_BUILD_MPI_ABI */\n";
+    print $OUTFD "};\n";
 }
 #
 # Add a call to test this message for the error message.
