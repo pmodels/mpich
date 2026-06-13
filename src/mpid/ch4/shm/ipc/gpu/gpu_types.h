@@ -8,21 +8,22 @@
 
 #include "uthash.h"
 
+#define MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES 100
+
 struct MPIDI_GPUI_map_cache_entry {
-    UT_hash_handle hh;
-    struct map_key {
-        int remote_rank;
-        const void *remote_addr;
-    } key;
+    int remote_rank;
+    const void *remote_addr;
     MPL_gpu_buffer_id_t remote_buffer_id;
     uintptr_t len;
+    unsigned long long usage;
     const void *mapped_addrs[]; /* array of base addresses indexed by device id */
 };
 
 typedef struct {
     int local_device_count;
     int initialized;
-    struct MPIDI_GPUI_map_cache_entry *ipc_map_cache;
+    unsigned long long ipc_map_cache_usage_counter;
+    struct MPIDI_GPUI_map_cache_entry *ipc_map_cache[MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES];
 } MPIDI_GPUI_global_t;
 
 extern MPIDI_GPUI_global_t MPIDI_GPUI_global;
