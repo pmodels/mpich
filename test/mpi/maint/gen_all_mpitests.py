@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 import os
@@ -17,8 +17,8 @@ alltests_attrs = {}
 
 copyright_mk = [
         "##",
-        "## Copyright (C) by Argonne National Laboratory",
-        "##     See COPYRIGHT in top-level directory",
+        "## Copyright 2026 Argonne National Laboratory",
+        "## SPDX-License-Identifier: Apache-2.0",
         "##",
         "## This file is generated. Do not edit.",
         "##"
@@ -26,8 +26,8 @@ copyright_mk = [
 
 copyright_c = [
         "/*",
-        " * Copyright (C) by Argonne National Laboratory",
-        " *     See COPYRIGHT in top-level directory",
+        " * Copyright 2026 Argonne National Laboratory",
+        " * SPDX-License-Identifier: Apache-2.0",
         " */",
         ""
         "/* This file is generated. Do not edit. */",

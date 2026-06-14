@@ -1,7 +1,7 @@
 [#] start of __file__
 #
-# Copyright (C) by Argonne National Laboratory
-#     See COPYRIGHT in top-level directory
+# Copyright 2026 Argonne National Laboratory
+# SPDX-License-Identifier: Apache-2.0
 #
 # This file contains versioning information for MPICH's configure process.
 # This was previously (as "maint/Version") a bit of shell code that was sourced

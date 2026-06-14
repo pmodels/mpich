@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 noinst_HEADERS += src/mpid/ch4/shm/ipc/gpu/gpu_pre.h       \

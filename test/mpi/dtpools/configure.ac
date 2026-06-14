@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 AC_PREREQ([2.69])
@@ -9,8 +9,8 @@ AC_CONFIG_SRCDIR([include/dtpools.h])
 
 AC_CONFIG_HEADERS([dtpoolsconf.h])
 AH_TOP([/*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 #ifndef DTPOOLSCONF_H_INCLUDED
 #define DTPOOLSCONF_H_INCLUDED

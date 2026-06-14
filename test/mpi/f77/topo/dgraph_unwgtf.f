@@ -1,6 +1,6 @@
 C
-C Copyright (C) by Argonne National Laboratory
-C     See COPYRIGHT in top-level directory
+C Copyright 2026 Argonne National Laboratory
+C SPDX-License-Identifier: Apache-2.0
 C
 
 C     This program is Fortran version of dgraph_unwgt.c
