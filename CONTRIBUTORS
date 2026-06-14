@@ -1,0 +1,91 @@
+MPICH Contributors
+==================
+
+MPICH is developed primarily at Argonne National Laboratory, operated by
+UChicago Argonne, LLC. The organizations and individuals below have also
+contributed code to MPICH. This list is incomplete; the complete record of
+authorship is the git commit history.
+
+This list is informational only. It does not indicate whether an
+organization currently has a Contributor License Agreement with MPICH,
+or which of its employees that agreement covers. New contributors should
+confirm their CLA status with the MPICH maintainers.
+
+
+Organizations
+-------------
+
+* Acondistec GmbH
+* Amazon Technologies, Inc.
+* Argonne National Laboratory
+* Barcelona Supercomputing Center (BSC)
+* Cray Inc.
+* DataDirect Networks, Inc. (DDN)
+* Dolphin Interconnect Solutions Inc.
+* Fermi Research Alliance, LLC (Fermilab)
+* Hewlett Packard Enterprise Company
+* Institut Polytechnique de Bordeaux
+* Intel Corporation
+* International Business Machines Corporation (IBM)
+* Lawrence Livermore National Security, LLC (LLNL)
+* Mellanox Technologies
+* Metere Consulting, LLC
+* Microsoft Corporation
+* Myricom, Inc.
+* National Technology & Engineering Solutions of Sandia, LLC (Sandia National Laboratories)
+* NEC Corporation
+* NVIDIA
+* Oak Ridge National Laboratory
+* ParTec AG (formerly ParTec Cluster Competence Center GmbH)
+* Quobyte Inc.
+* Research Organization for Information Science & Technology (RIST)
+* RIKEN Advanced Institute for Computational Science
+* RIKEN Center for Computational Science
+* SchedMD LLC
+* Silicon Graphics International Corp. (SGI)
+* Sun Microsystems, Lustre group
+* SUSE Software Solutions Ireland Ltd
+* University of British Columbia
+* University of Illinois at Urbana-Champaign
+* University of Tokyo, Information Technology Center
+
+
+Individuals
+-----------
+
+* Allen, Mark
+* Bretaudeau, Anthony
+* Brito Gadeschi, Gonzalo
+* Carroll, Bryan
+* Corbin, Gregor
+* Dalcin, Lisandro Daniel
+* Friese, Philipp
+* Giordano, Mose
+* Goswami, Rohit
+* Gunn Healey, Lucas Alexander
+* Hiraga, Kohei
+* Hrybenko, Dmytro
+* Jędrzejewski-Szmek, Zbigniew
+* Jolivet, Pierre
+* Kao, Johnny
+* Karbownik, Anna
+* Khartikova, Anastasia
+* Kitor, Benjamin William
+* Kumbhar, Pramod
+* Le, Cristian
+* Lee, Sunwoo
+* Liao, Wei-keng
+* Meridiani, Angelo
+* Nobre, Nuno Miguel Machado
+* Piccione, Andrea
+* Rabenseifner, Rolf
+* Ragan-Kelley, Benjamin
+* Reum, Yorick
+* Schnetter, Erik
+* Shineman, Nathaniel
+* Simberg, Mikael
+* Wang, Hanming
+* Wang, Shiyang
+* Yan, Jiakun
+* Zhang, Guangyao
+* Zhao, Shuwei
