@@ -36,14 +36,24 @@ int main(int argc, char *argv[])
             printf("cart sub to size 0 did not give self\n");
         }
         MPI_Comm_free(&newcomm);
-    } else if (newcomm != MPI_COMM_NULL) {
-        errs++;
-        printf("cart sub to size 0 did not give null\n");
     }
+    /* Previously an MPICH developer argue that all other ranks should
+     * return MPI_COMM_NULL and implemented this way. Open MPI argues
+     * that other ranks should also return a self-equivalent comm since
+     * MPI_Cart_sub is a split + zero-dimensional topology. I (hzhou)
+     * kinda agree with the latter but couldn't care less. If application
+     * ask for zero-dimensional topology, it must be unexpected and they
+     * should fix their code!
+     *
+     * I am removing that part of test so we don't have to spend time debating
+     * useless points.
+     */
 
     /* Free the new communicator so that storage leak tests will
      * be happy */
-    MPI_Comm_free(&comm);
+    if (comm != MPI_COMM_NULL) {
+        MPI_Comm_free(&comm);
+    }
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
