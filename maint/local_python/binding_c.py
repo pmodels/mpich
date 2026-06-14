@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 from local_python import MPI_API_Global as G
@@ -869,8 +869,8 @@ def process_func_parameters(func):
 
 def dump_copy_right():
     G.out.append("/*")
-    G.out.append(" * Copyright (C) by Argonne National Laboratory")
-    G.out.append(" *     See COPYRIGHT in top-level directory")
+    G.out.append(" * Copyright 2026 Argonne National Laboratory")
+    G.out.append(" * SPDX-License-Identifier: Apache-2.0")
     G.out.append(" */")
     G.out.append("")
 

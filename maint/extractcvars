@@ -1,7 +1,7 @@
 #! /usr/bin/env perl
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # Parse C or header files to search for MPI_T control variable
@@ -132,8 +132,8 @@ open(OUTPUT_README, '>', $readme_file);
 my $hdr_guard = Header2InclGuard($header_file);
 print OUTPUT_H <<EOT;
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* Automatically generated
@@ -221,8 +221,8 @@ close(OUTPUT_H);
 # Step 5.2: Dump the C file.
 print OUTPUT_C <<EOT;
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 /* automatically generated
  *   by:   $0
@@ -451,8 +451,8 @@ close(OUTPUT_C);
 #===============================================================
 #Step 5.3 Dump the readme file
 print OUTPUT_README <<EOT;
-Copyright (C) by Argonne National Laboratory
-    See COPYRIGHT in top-level directory
+Copyright 2026 Argonne National Laboratory
+SPDX-License-Identifier: Apache-2.0
 
 Automatically generated
   by:   $0

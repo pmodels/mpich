@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # Prebuild modules into modules.tar.gz. Copy the tarball to a fresh git cloned repository,

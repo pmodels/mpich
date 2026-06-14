@@ -1,7 +1,7 @@
 <?xml version='1.0' ?>
 <!--
-    Copyright (C) by Argonne National Laboratory
-        See COPYRIGHT in top-level directory
+    Copyright 2026 Argonne National Laboratory
+    SPDX-License-Identifier: Apache-2.0
   -->
 <!-- <xsl:stylesheet  xmlns:xsl="http://www.w3.org/TR/WD-xsl"> -->
 <xsl:stylesheet  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
