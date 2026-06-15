@@ -58,18 +58,12 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     MPIR_FUNC_ENTER;
 
     {
-        for (int e = 0; e < MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES; e++) {
-            struct MPIDI_GPUI_map_cache_entry *entry = MPIDI_GPUI_global.ipc_map_cache[e];
-            if (entry) {
-                for (int i = 0; i < MPIDI_GPUI_global.local_device_count; i++) {
-                    if (entry->mapped_addrs[i]) {
-                        int mpl_err = MPL_gpu_ipc_handle_unmap((void *) entry->mapped_addrs[i]);
-                        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                            "**gpu_ipc_handle_unmap");
-                    }
-                }
-                MPL_free(entry);
-                MPIDI_GPUI_global.ipc_map_cache[e] = NULL;
+        for (int i = 0; i < MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES; i++) {
+            struct MPIDI_GPUI_map_cache_entry *entry = &MPIDI_GPUI_global.ipc_map_cache[i];
+            if (entry->mapped_addr) {
+                int mpl_err = MPL_gpu_ipc_handle_unmap((void *) entry->mapped_addr);
+                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**gpu_ipc_handle_unmap");
             }
         }
     }

@@ -15,15 +15,16 @@ struct MPIDI_GPUI_map_cache_entry {
     const void *remote_addr;
     MPL_gpu_buffer_id_t remote_buffer_id;
     uintptr_t len;
+    int device_id;
     unsigned long long usage;
-    const void *mapped_addrs[]; /* array of base addresses indexed by device id */
+    const void *mapped_addr;
 };
 
 typedef struct {
     int local_device_count;
     int initialized;
     unsigned long long ipc_map_cache_usage_counter;
-    struct MPIDI_GPUI_map_cache_entry *ipc_map_cache[MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES];
+    struct MPIDI_GPUI_map_cache_entry ipc_map_cache[MPIDI_CH4_IPC_GPU_MAX_CACHE_ENTRIES];
 } MPIDI_GPUI_global_t;
 
 extern MPIDI_GPUI_global_t MPIDI_GPUI_global;
