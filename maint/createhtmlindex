@@ -68,7 +68,7 @@ print OUTFD "<H2>MPI Routines</H2>$eol";
 &AddDirectoryContents( "www", "www3" );
 
 print OUTFD "<H2>MPI Constants</H2>$eol";
-&AddDirectoryConstants( "www", "www3/Constants.html" );
+&AddDirectoryConstants( "www", "www3/mpiconsts.html" );
 
 &AddTrailer( );
 
@@ -93,7 +93,7 @@ print OUTFD "<H2>MPI Routines</H2>$eol";
 &AddDirectoryContents( "www/www3", "." );
 
 print OUTFD "<H2>MPI Constants</H2>$eol";
-&AddDirectoryConstants( "www/www3", "Constants.html" );
+&AddDirectoryConstants( "www/www3", "mpiconsts.html" );
 
 &AddTrailer( );
 close( OUTFD );
@@ -126,8 +126,10 @@ sub AddDirectoryConstants {
     my %links;
     open In, "$rootdir/$file" or die "Can't open $rootdir/$file\n";
     while (<In>) {
-        if (/<a name="(.+?)"><\/a>/) {
-            $links{$1} = "$file#$1";
+        if (/<dt class="hdlist1">(\w+)\s*<\/dt>/) {
+            print "dt: $1\n";
+            # TODO: add id reference
+            $links{$1} = "$file";
         }
     }
     MakeHTMLTable(\%links);
