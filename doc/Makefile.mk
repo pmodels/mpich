@@ -4,7 +4,7 @@
 ##
 
 DOC_SUBDIRS += doc/mansrc doc/userguide doc/installguide
-doc3_src_txt += doc/mansrc/mpiconsts.txt
+doc3_src += doc/mansrc/mpiconsts.adoc
 
 userdocs:
 	for dir in $(DOC_SUBDIRS) ; do \
