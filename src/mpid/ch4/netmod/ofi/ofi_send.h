@@ -352,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     }
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_init &&
-        (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
+        (data_sz <= MPIDI_OFI_global.max_buffered_send) && !need_mr) {
         do_inject = true;
     }
 
@@ -386,7 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_am &&
-        (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
+        (data_sz <= MPIDI_OFI_global.max_buffered_send) && !need_mr) {
         /* inject path */
         void *pack_buf = NULL;
 #define MPIDI_OFI_LOCAL_PACK_BUF_SIZE 1024
