@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     int n_psets, psetlen, rc;
     int valuelen;
     int flag = 0;
+    int rank;
     char *info_val = NULL;
     char *pset_name = NULL;
     char **all_pset_names;
@@ -95,6 +96,10 @@ int main(int argc, char *argv[])
             errs++;
         }
 
+        if (strcmp("mpi://WORLD", all_pset_names[i]) == 0) {
+            MPI_Group_rank(pgroup, &rank);
+        }
+
         free(all_pset_names[i]);
         MPI_Group_free(&pgroup);
         MPI_Info_free(&sinfo);
@@ -111,10 +116,12 @@ int main(int argc, char *argv[])
         errs++;
     }
 
-    if (errs == 0) {
-        printf("No Errors\n");
-    } else {
-        printf("%d Errors\n", errs);
+    if (rank == 0) {
+        if (errs == 0) {
+            printf("No Errors\n");
+        } else {
+            printf("%d Errors\n", errs);
+        }
     }
     return MTestReturnValue(errs);
 }

@@ -534,6 +534,12 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    if (group_ptr == MPIR_Group_empty) {
+        /* For empty group return MPI_COMM_NULL */
+        *p_newcom_ptr = NULL;
+        goto fn_exit;
+    }
+
     int tag = get_tag_from_stringtag(stringtag);
 
 #ifdef MPID_SESSION_USE_WORLD
