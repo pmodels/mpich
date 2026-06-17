@@ -468,6 +468,9 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
             goto fn_exit;
         } else {
             /* Error or Fall-thru */
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nosupport");
+            }
         }
     }
 
