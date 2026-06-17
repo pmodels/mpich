@@ -12,6 +12,8 @@ session_psets 1
 session_psets 4
 session_self 1
 session_self 4
+session_self_with_world 1
+session_self_with_world 4
 session_inter 5
 session_4x4 16
 session_bsend 2
