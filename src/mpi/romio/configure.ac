@@ -1230,24 +1230,15 @@ elif test $FROM_MPICH = yes ; then
    MPICH_HOME=`dirname $MPICH_HOME`
    MPICH_HOME=`dirname $MPICH_HOME`
    if test -z "$MPI_BIN_DIR" ; then MPI_BIN_DIR=$MPICH_HOME/bin ; fi
-   # No special compiler script.
-   # BUT we need the include paths
-   # CC="$CC -I${use_top_srcdir}/src/include -I${top_build_dir}/src/include"
-   # TEST_CC="$CC"
-   # MPI_LIB="$LIBNAME"
-   # To allow ROMIO to work with the LIBTOOL scripts, we want to
-   # work directly with the CC, not the mpicc, compiler.
-   # Note that in the "FROM_MPICH" case, the CPPFLAGS and INCLUDES are already
-   # properly set
-   #CC=${top_build_dir}/bin/mpicc
-   #
-   # set the compilers to the ones in MPICH bin directory (main_top_builddir/bin)
-   TEST_CC='$(bindir)/mpicc'
+   # Run the tests against the uninstalled MPICH build tree.  Use the
+   # configured C compiler and let libtool resolve the dependencies recorded
+   # in the top-level MPI library, rather than using an installed wrapper.
+   TEST_CC="$CC"
+   TEST_LIBNAME="${main_top_builddir}/lib/lib${MPILIBNAME}.la"
    MPI_H_INCLUDE="-I${main_top_builddir}/src/include -I${main_top_srcdir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""
-   TEST_LIBNAME=""
-   MPIRUN='${bindir}/mpiexec'
+   MPIRUN=""
    #
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
