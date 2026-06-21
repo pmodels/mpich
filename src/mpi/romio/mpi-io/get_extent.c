@@ -7,7 +7,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_get_type_extent = PMPI_File_get_type_extent
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_get_type_extent MPI_File_get_type_extent
@@ -19,7 +19,7 @@ int MPI_File_get_type_extent(MPI_File fh, MPI_Datatype datatype, MPI_Aint * exte
     __attribute__ ((weak, alias("PMPI_File_get_type_extent")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_get_type_extent_c = PMPI_File_get_type_extent_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_get_type_extent_c MPI_File_get_type_extent_c

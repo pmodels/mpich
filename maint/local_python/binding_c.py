@@ -1250,7 +1250,7 @@ def dump_abi_wrappers(func, is_large):
 def dump_profiling(func):
     func_name = get_function_name(func, func['_is_large'])
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
-    G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
+    G.out.append("#if defined(HAVE_PRAGMA_WEAK_ALIAS)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_PRAGMA_HP_SEC_DEF)")
     G.out.append("#pragma _HP_SECONDARY_DEF P%s  %s" % (func_name, func_name))

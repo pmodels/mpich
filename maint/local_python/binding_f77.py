@@ -1118,7 +1118,7 @@ def dump_profiling(name, param_str, return_type, is_cptr):
 
         for i in range(len(names)):
             G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
-            if have_pragma == "HAVE_PRAGMA_WEAK":
+            if have_pragma == "HAVE_PRAGMA_WEAK_ALIAS":
                 dump_mpi_decl(names[i], param_str)
                 G.profile_out.append("#pragma weak %s = %s" % (names[i], pnames[i]))
             elif have_pragma == "HAVE_PRAGMA_HP_SEC_DEF":
@@ -1211,13 +1211,13 @@ def dump_profiling(name, param_str, return_type, is_cptr):
     G.profile_out.append("#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)")
     dump_multiple_pragma_weak(False)
     G.profile_out.append("")
-    dump_elif_pragma_weak("HAVE_PRAGMA_WEAK")
+    dump_elif_pragma_weak("HAVE_PRAGMA_WEAK_ALIAS")
     dump_elif_pragma_weak("HAVE_PRAGMA_HP_SEC_DEF")
     dump_elif_pragma_weak("HAVE_PRAGMA_CRI_DUP")
     G.profile_out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
     dump_weak_attribute(False)
     G.profile_out.append("")
-    G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK, HAVE_WEAK_ATTRIBUTE */")
+    G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK_ALIAS, HAVE_WEAK_ATTRIBUTE */")
     G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS && !USE_ONLY_MPI_NAMES */")
     G.profile_out.append("")
 
@@ -1229,7 +1229,7 @@ def dump_profiling(name, param_str, return_type, is_cptr):
     G.profile_out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
     dump_weak_attribute(True)
     G.profile_out.append("")
-    G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK, HAVE_WEAK_ATTRIBUTE */")
+    G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK_ALIAS, HAVE_WEAK_ATTRIBUTE */")
     G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS && USE_ONLY_MPI_NAMES */")
     G.profile_out.append("")
 

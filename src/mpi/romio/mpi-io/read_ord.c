@@ -9,7 +9,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_read_ordered = PMPI_File_read_ordered
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_read_ordered MPI_File_read_ordered
@@ -22,7 +22,7 @@ int MPI_File_read_ordered(MPI_File fh, void *buf, int count, MPI_Datatype dataty
     __attribute__ ((weak, alias("PMPI_File_read_ordered")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_read_ordered_c = PMPI_File_read_ordered_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_read_ordered_c MPI_File_read_ordered_c

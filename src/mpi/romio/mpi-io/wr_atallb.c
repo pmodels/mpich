@@ -9,7 +9,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_write_at_all_begin = PMPI_File_write_at_all_begin
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_write_at_all_begin MPI_File_write_at_all_begin
@@ -22,7 +22,7 @@ int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf,
     __attribute__ ((weak, alias("PMPI_File_write_at_all_begin")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_write_at_all_begin_c = PMPI_File_write_at_all_begin_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_write_at_all_begin_c MPI_File_write_at_all_begin_c
