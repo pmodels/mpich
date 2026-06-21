@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_seek_shared as PMPI_File_seek_shared
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
     __attribute__ ((weak, alias("PMPI_File_seek_shared")));
 #endif

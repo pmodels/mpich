@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_c2f as PMPI_File_c2f
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 MPI_Fint MPI_File_c2f(MPI_File fh) __attribute__ ((weak, alias("PMPI_File_c2f")));
 #endif
 
