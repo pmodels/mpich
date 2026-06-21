@@ -199,7 +199,8 @@ dnl
 dnl Output Effect:
 dnl Defines one of the following if a weak symbol pragma is found:
 dnl.vb
-dnl    HAVE_PRAGMA_WEAK - #pragma weak
+dnl    HAVE_PRAGMA_WEAK_ALIAS - #pragma weak Foo = PFoo
+dnl    HAVE_PRAGMA_WEAK - #pragma weak Foo
 dnl    HAVE_PRAGMA_HP_SEC_DEF - #pragma _HP_SECONDARY_DEF
 dnl    HAVE_PRAGMA_CRI_DUP  - #pragma _CRI duplicate x as y
 dnl.ve
@@ -307,7 +308,7 @@ dnl
 ])
 if test "$pac_cv_prog_c_weak_symbols" != "no" ; then
     case "$pac_cv_prog_c_weak_symbols" in
-        "pragma weak") AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
+        "pragma weak") AC_DEFINE(HAVE_PRAGMA_WEAK_ALIAS,1,[Supports weak pragma])
         ;;
         "pragma _HP")  AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
         ;;

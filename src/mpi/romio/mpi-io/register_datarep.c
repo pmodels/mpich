@@ -8,7 +8,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_Register_datarep = PMPI_Register_datarep
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_Register_datarep MPI_Register_datarep
@@ -22,7 +22,7 @@ int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function * 
     __attribute__ ((weak, alias("PMPI_Register_datarep")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_Register_datarep_c = PMPI_Register_datarep_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_Register_datarep_c MPI_Register_datarep_c
