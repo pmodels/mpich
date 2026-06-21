@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_iread_all as PMPI_File_iread_all
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                        MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_all")));
@@ -29,7 +29,7 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_iread_all_c as PMPI_File_iread_all_c
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
                          MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_all_c")));

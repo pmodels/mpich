@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_read_at_all_end as PMPI_File_read_at_all_end
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_read_at_all_end(MPI_File fh, void *buf, MPI_Status * status)
     __attribute__ ((weak, alias("PMPI_File_read_at_all_end")));
 #endif

@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_delete as PMPI_File_delete
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_delete(const char *filename, MPI_Info info)
     __attribute__ ((weak, alias("PMPI_File_delete")));
 #endif

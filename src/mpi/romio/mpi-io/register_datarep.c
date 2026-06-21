@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Register_datarep as PMPI_Register_datarep
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function * read_conversion_fn,
                          MPI_Datarep_conversion_function * write_conversion_fn,
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
@@ -29,7 +29,7 @@ int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function * 
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Register_datarep_c as PMPI_Register_datarep_c
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_Register_datarep_c(const char *datarep,
                            MPI_Datarep_conversion_function_c * read_conversion_fn,
                            MPI_Datarep_conversion_function_c * write_conversion_fn,

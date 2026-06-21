@@ -1256,7 +1256,7 @@ def dump_profiling(func):
     G.out.append("#pragma _HP_SECONDARY_DEF P%s  %s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_PRAGMA_CRI_DUP)")
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
-    G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
+    G.out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
     kind = None
     if "_is_abi" in func:
         kind = "abi"

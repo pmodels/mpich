@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_get_position as PMPI_File_get_position
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_get_position(MPI_File fh, MPI_Offset * offset)
     __attribute__ ((weak, alias("PMPI_File_get_position")));
 #endif
