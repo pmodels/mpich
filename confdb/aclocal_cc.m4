@@ -326,25 +326,13 @@ int Weak_Fn_B(int a) { return a+1;}
 int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
             ])], [pac_cv_prog_c_weak_symbols="attr weak"])
     fi
-
-
-    if test -n "$pac_cv_prog_c_weak_symbols" ; then
-        case "$pac_cv_prog_c_weak_symbols" in
-            "pragma weak") AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
-            ;;
-            "pragma weak alias") AC_DEFINE(HAVE_PRAGMA_WEAK_ALIAS,1,[Supports weak alias pragma])
-            ;;
-            "attr weak") AC_DEFINE(HAVE_ATTR_WEAK,1,[Supports weak attribute])
-            ;;
-            "attr weak alias") AC_DEFINE(HAVE_ATTR_WEAK_ALIAS,1,[Supports weak alias attribute])
-            ;;
-            "pragma _HP")  AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
-            ;;
-            "pragma _CRI") AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
-            ;;
-        esac
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        pac_cv_prog_c_weak_symbols=no
     fi
+    ]) dnl AC_CACHE_CHECK
 
+    AC_CACHE_CHECK([for multiple weak symbol alias support], pac_cv_prog_c_mult_weak_symbols,[
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" ; then
         PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
             extern int PFoo(int);
@@ -360,16 +348,45 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
             int main() {
             return PFoo(0) + PFoo_(1) + pfoo_(2);}
         ]])], [
-            AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined])
+            pac_cv_prog_c_mult_weak_symbols="pragma weak"
         ])
+    else
+        pac_cv_prog_c_mult_weak_symbols=no
+    fi
+    ]) dnl AC_CACHE_CHECK
+
+    case "$pac_cv_prog_c_weak_symbols" in
+        "no")
+            ;;
+        "pragma weak")
+            AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
+            ;;
+        "pragma weak alias")
+            AC_DEFINE(HAVE_PRAGMA_WEAK_ALIAS,1,[Supports weak alias pragma])
+            ;;
+        "attr weak")
+            AC_DEFINE(HAVE_ATTR_WEAK,1,[Supports weak attribute])
+            ;;
+        "attr weak alias")
+            AC_DEFINE(HAVE_ATTR_WEAK_ALIAS,1,[Supports weak alias attribute])
+            ;;
+        "pragma _HP")
+            AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
+            ;;
+        "pragma _CRI")
+            AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
+            ;;
+    esac
+
+    if test "$pac_cv_prog_c_mult_weak_symbols" != "no" ; then
+        AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined])
     fi
 
-    if test -z "$pac_cv_prog_c_weak_symbols" ; then
+    if test "$pac_cv_prog_c_weak_symbols" = "no" ; then
         ifelse([$2],,:,[$2])
     else
         ifelse([$1],,:,[$1])
     fi
-    ]) dnl AC_CACHE_CHECK
 ])
 
 #
