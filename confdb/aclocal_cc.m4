@@ -345,6 +345,25 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
         esac
     fi
 
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" ; then
+        PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
+            extern int PFoo(int);
+            extern int PFoo_(int);
+            extern int pfoo_(int);
+            #pragma weak PFoo = Foo
+            #pragma weak PFoo_ = Foo
+            #pragma weak pfoo_ = Foo
+            int Foo(int);
+            int Foo(a) { return a; }
+        ]])],[AC_LANG_SOURCE([[
+            extern int PFoo(int), PFoo_(int), pfoo_(int);
+            int main() {
+            return PFoo(0) + PFoo_(1) + pfoo_(2);}
+        ]])], [
+            AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined])
+        ])
+    fi
+
     if test -z "$pac_cv_prog_c_weak_symbols" ; then
         ifelse([$2],,:,[$2])
     else
@@ -372,41 +391,6 @@ AC_MSG_RESULT($notbroken)
 if test "$notbroken" = "no" ; then
     AC_MSG_ERROR([installation or configuration problem: C compiler does not
 correctly set error code when a fatal error occurs])
-fi
-])
-
-dnl/*D 
-dnl PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS - Test whether C and the
-dnl linker allow multiple weak symbols.
-dnl
-dnl Synopsis
-dnl PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(action-if-true,action-if-false)
-dnl
-dnl 
-dnl D*/
-AC_DEFUN([PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS],[
-AC_CACHE_CHECK([for multiple weak symbol support], pac_cv_prog_c_multiple_weak_symbols,[
-    # Test for multiple weak symbol support...
-    PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
-        extern int PFoo(int);
-        extern int PFoo_(int);
-        extern int pfoo_(int);
-        #pragma weak PFoo = Foo
-        #pragma weak PFoo_ = Foo
-        #pragma weak pfoo_ = Foo
-        int Foo(int);
-        int Foo(a) { return a; }
-    ]])],[AC_LANG_SOURCE([[
-        extern int PFoo(int), PFoo_(int), pfoo_(int);
-        int main() {
-        return PFoo(0) + PFoo_(1) + pfoo_(2);}
-    ]])],
-    [pac_cv_prog_c_multiple_weak_symbols="yes"])
-])
-if test "$pac_cv_prog_c_multiple_weak_symbols" = "yes" ; then
-    ifelse([$1],,:,[$1])
-else
-    ifelse([$2],,:,[$2])
 fi
 ])
 

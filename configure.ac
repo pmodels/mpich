@@ -1036,10 +1036,6 @@ fi
 NEEDSPLIB=yes
 if test $enable_weak_symbols = "yes" ; then
     NEEDSPLIB=no
-    # Check for the ability to support multiple weak symbols
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
-       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
-    fi
 fi
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
 
