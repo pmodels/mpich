@@ -19,7 +19,7 @@ lib_libf77_mpi_la_SOURCES = \
 
 lib_libf77_mpi_la_CPPFLAGS = $(f77_cppflags)
 
-if BUILD_PROFILING_LIB
+if BUILD_LIBF77_PMPI
 mpifort_convenience_libs += lib/libf77_pmpi.la
 noinst_LTLIBRARIES += lib/libf77_pmpi.la
 
@@ -30,7 +30,7 @@ lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags) -DF77_USE_PMPI
 
 # build "mpi_xxx_" f77 public functions
 lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
-endif BUILD_PROFILING_LIB
+endif BUILD_LIBF77_PMPI
 
 noinst_HEADERS += \
 	src/binding/fortran/mpif_h/fortran_profile.h \

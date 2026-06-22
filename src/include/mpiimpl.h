@@ -97,14 +97,6 @@ int usleep(useconds_t usec);
 #define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
 #endif
 
-/* This allows us to keep names local to a single file when we can use
-   weak symbols */
-#ifdef  USE_WEAK_SYMBOLS
-#define PMPI_LOCAL static
-#else
-#define PMPI_LOCAL
-#endif
-
 /* Fix for universal endianness added in autoconf 2.62 */
 #ifdef WORDS_UNIVERSAL_ENDIAN
 #if defined(__BIG_ENDIAN__)

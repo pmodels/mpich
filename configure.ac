@@ -1028,24 +1028,28 @@ if test "$enable_extended_context_bits" = "yes" ; then
     AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
-# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
-# and -lp$MPILIBNAME.
-NEEDSPLIB=yes
 if test $enable_weak_symbols = yes ; then
     # Turn off weak symbols if they aren't available
     PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
 fi
+
+NEEDSPLIB=yes
 if test $enable_weak_symbols = "yes" ; then
-    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
     NEEDSPLIB=no
     # Check for the ability to support multiple weak symbols
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
        PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
     fi
 fi
-export NEEDSPLIB
-
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+
+NEEDS_F77_PLIB=yes
+if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" -o "$pac_cv_prog_c_weak_symbols" = "attr weak alias" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDS_F77_PLIB=no
+fi
+AM_CONDITIONAL([BUILD_LIBF77_PMPI], [test "$NEEDS_F77_PLIB" = "yes"])
+
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)
 # disable visibility if building profiling library

@@ -23,10 +23,6 @@ MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_GREQ_C
 static int MPIR_Grequest_registered_finalizer = 0;
 static MPIR_Grequest_class *MPIR_Grequest_class_list = NULL;
 
-/* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
-   static; this macro expands into "static" if weak symbols are supported and
-   into nothing otherwise. */
 static int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
