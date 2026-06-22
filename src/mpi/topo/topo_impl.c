@@ -448,9 +448,6 @@ int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr,
     goto fn_exit;
 }
 
-/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
- * correctly handle weak symbols and the profiling interface */
-
 int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, int *outdegree,
                                          int *weighted)
 {
