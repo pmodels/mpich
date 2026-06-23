@@ -7,7 +7,7 @@
 
 #include "mpi_fortimpl.h"
 
-#if defined(HAVE_PRAGMA_WEAK) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
 void mpir_is_bottom_(void *a, int *ierr);
 void mpir_is_in_place_(void *a, int *ierr);
 /* FIXME probably MPI_WEIGHTS_EMPTY needs support somewhere in this file */

@@ -7,14 +7,14 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_set_view = PMPI_File_set_view
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_set_view MPI_File_set_view
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_set_view as PMPI_File_set_view
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype,
                       const char *datarep, MPI_Info info)
     __attribute__ ((weak, alias("PMPI_File_set_view")));

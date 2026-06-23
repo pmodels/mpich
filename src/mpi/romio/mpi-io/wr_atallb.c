@@ -9,27 +9,27 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_write_at_all_begin = PMPI_File_write_at_all_begin
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_write_at_all_begin MPI_File_write_at_all_begin
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_write_at_all_begin as PMPI_File_write_at_all_begin
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                                 MPI_Datatype datatype)
     __attribute__ ((weak, alias("PMPI_File_write_at_all_begin")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_write_at_all_begin_c = PMPI_File_write_at_all_begin_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_write_at_all_begin_c MPI_File_write_at_all_begin_c
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_write_at_all_begin_c as PMPI_File_write_at_all_begin_c
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_write_at_all_begin_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
                                   MPI_Datatype datatype)
     __attribute__ ((weak, alias("PMPI_File_write_at_all_begin_c")));

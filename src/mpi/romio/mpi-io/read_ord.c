@@ -9,27 +9,27 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_read_ordered = PMPI_File_read_ordered
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_read_ordered MPI_File_read_ordered
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_read_ordered as PMPI_File_read_ordered
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_read_ordered(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                           MPI_Status * status)
     __attribute__ ((weak, alias("PMPI_File_read_ordered")));
 #endif
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPI_File_read_ordered_c = PMPI_File_read_ordered_c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPI_File_read_ordered_c MPI_File_read_ordered_c
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_read_ordered_c as PMPI_File_read_ordered_c
 /* end of weak pragmas */
-#elif defined(HAVE_WEAK_ATTRIBUTE)
+#elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_read_ordered_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
                             MPI_Status * status)
     __attribute__ ((weak, alias("PMPI_File_read_ordered_c")));
