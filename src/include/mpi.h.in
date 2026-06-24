@@ -5,6 +5,7 @@
 
 #ifdef MPI_ABI
 #include "mpi_abi.h"
+#include "mpix.h"
 #else
 
 /* @configure_input@ */
@@ -328,12 +329,6 @@ typedef int MPI_Request;
 
 /* MPI message objects for Mprobe and related functions */
 typedef int MPI_Message;
-
-/* Generalized requests extensions */
-typedef int MPIX_Grequest_class;
-
-/* MPI stream objects */
-typedef int MPIX_Stream;
 
 /* for info */
 typedef int MPI_Info;
@@ -789,11 +784,6 @@ enum MPIR_Combiner_enum {
 
 /* End of MPI's error classes */
 
-/* GPU extensions */
-#define MPIX_GPU_SUPPORT_CUDA  (0)
-#define MPIX_GPU_SUPPORT_ZE    (1)
-#define MPIX_GPU_SUPPORT_HIP   (2)
-
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
 #define MPIIMPL_HAVE_MPI_INFO 1
@@ -805,15 +795,6 @@ enum MPIR_Combiner_enum {
 #define MPIIMPL_HAVE_MPI_GREQUEST 1
 #define MPIIMPL_HAVE_STATUS_SET_BYTES 1
 #define MPIIMPL_HAVE_STATUS_SET_INFO 1
-
-/* MPIX Async extensions */
-/* poll_fn return following states. */
-enum {
-    MPIX_ASYNC_NOPROGRESS = 0,
-    MPIX_ASYNC_DONE = 1,
-};
-
-typedef struct MPIR_Async_thing * MPIX_Async_thing;
 
 #ifndef MPICH_BUILD_MPI_ABI
 /* C callback functions */
@@ -832,11 +813,6 @@ typedef void (MPI_Comm_errhandler_function)(MPI_Comm *, int *, ...);
 typedef void (MPI_File_errhandler_function)(MPI_File *, int *, ...);
 typedef void (MPI_Win_errhandler_function)(MPI_Win *, int *, ...);
 typedef void (MPI_Session_errhandler_function)(MPI_Session *, int *, ...);
-/* the _x callbacks accepts scalar inputs and an additional "void *" extra_state */
-typedef void (MPIX_Comm_errhandler_function_x)(MPI_Comm, int, void *);
-typedef void (MPIX_File_errhandler_function_x)(MPI_File, int, void *);
-typedef void (MPIX_Win_errhandler_function_x)(MPI_Win, int, void *);
-typedef void (MPIX_Session_errhandler_function_x)(MPI_Session, int, void *);
 /* names that were added in MPI-2.0 and deprecated in MPI-2.2 */
 typedef MPI_Comm_errhandler_function MPI_Comm_errhandler_fn;
 typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
@@ -850,20 +826,12 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 /* User combination function */
 typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
 typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
-/* the _x callbacks accepts scalar inputs and an additional "void *" extra_state */
-typedef void (MPIX_User_function_x) ( void *, void *, MPI_Count, MPI_Datatype, void *);
-
-/* User destructor */
-typedef void (MPIX_Destructor_function) (void *);
 
 /* Typedefs for generalized requests */
 typedef int (MPI_Grequest_cancel_function)(void *, int);
 typedef int (MPI_Grequest_free_function)(void *);
 typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 #endif /* MPICH_BUILD_MPI_ABI */
-typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
-typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
-typedef int (MPIX_Async_poll_function)(MPIX_Async_thing);
 #ifndef MPICH_BUILD_MPI_ABI
 
 /* Function type defs */
@@ -1044,18 +1012,13 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 */
 /* --Insert Additional Definitions Here-- */
 
-/* same as struct iovec, provided to avoid header dependency */
-typedef struct MPIX_Iov {
-    void *iov_base;
-    MPI_Aint iov_len;
-} MPIX_Iov;
-
 /*
  * Normally, we provide prototypes for all MPI routines.  In a few weird
  * cases, we need to suppress the prototypes.
  */
 #ifndef MPICH_BUILD_MPI_ABI
 /* We require that the C compiler support prototypes */
+#include <mpix.h>
 #include <mpi_proto.h>
 
 /* The f2c and c2f APIs exist as real functions, but these macros allows

@@ -24,6 +24,7 @@ class RE:
 
 def main():
     load_mpi_abi_h("src/binding/abi/mpi_abi.h")
+    load_mpi_abi_h("src/include/mpix.h")
     dump_mpi_abi_internal_h("src/binding/abi/mpi_abi_internal.h")
     dump_io_abi_internal_h("src/binding/abi/io_abi_internal.h")
     dump_romio_abi_internal_h("src/mpi/romio/include/romio_abi_internal.h")
@@ -31,17 +32,19 @@ def main():
 
 def load_mpi_abi_h(mpi_abi_h):
     with open(mpi_abi_h, "r") as In:
-        G.abi_h_lines = In.readlines()
+        for line in In:
+            if RE.search(r'(MPI_ABI|MPIX)_H_INCLUDED', line):
+                # skip the include guard, harmless
+                pass
+            else:
+                G.abi_h_lines.append(line)
 
 def dump_mpi_abi_internal_h(mpi_abi_internal_h):
     define_constants = {}
     def gen_mpi_abi_internal_h(out):
         re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
-            if RE.search(r'MPI_ABI_H_INCLUDED', line):
-                # skip the include guard, harmless
-                pass
-            elif RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
+            if RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
                 # no need to rename status fields
                 out.append(line.rstrip())
             elif RE.match(r'\s*(int|MPI_Fint) .*(reserved|internal)\[(\d+)\];', line):
@@ -144,7 +147,7 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
         out.append("#endif")
         out.append("")
 
-    def add_mpix_grequest(out):
+    def add_mpio_request(out):
         out.append("#define MPIO_Request MPI_Request")
         out.append("#define MPIO_USES_MPI_REQUEST")
         out.append("#define MPIO_Wait MPI_Wait")
@@ -152,30 +155,6 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
         out.append("#define PMPIO_Wait PMPI_Wait")
         out.append("#define PMPIO_Test PMPI_Test")
         out.append("#define MPIO_REQUEST_DEFINED")
-        out.append("")
-        # they are not in the header, but they are in c_binding_abi.c
-        out.append("typedef int MPIX_Grequest_class;")
-        out.append("typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);")
-        out.append("typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);")
-        out.append("int MPIX_Grequest_start(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn, MPI_Grequest_cancel_function *cancel_fn, MPIX_Grequest_poll_function *poll_fn, MPIX_Grequest_wait_function *wait_fn, void *extra_state, MPI_Request *request);")
-        out.append("int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn, MPI_Grequest_cancel_function *cancel_fn, MPIX_Grequest_poll_function *poll_fn, MPIX_Grequest_wait_function *wait_fn, MPIX_Grequest_class *greq_class);")
-        out.append("int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state, MPI_Request *request);")
-        out.append("int PMPIX_Grequest_start(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn, MPI_Grequest_cancel_function *cancel_fn, MPIX_Grequest_poll_function *poll_fn, MPIX_Grequest_wait_function *wait_fn, void *extra_state, MPI_Request *request);")
-        out.append("int PMPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn, MPI_Grequest_cancel_function *cancel_fn, MPIX_Grequest_poll_function *poll_fn, MPIX_Grequest_wait_function *wait_fn, MPIX_Grequest_class *greq_class);")
-        out.append("int PMPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state, MPI_Request *request);")
-        out.append("")
-
-    def add_mpix_iov(out):
-        out.append("typedef struct MPIX_Iov {")
-        out.append("    void *iov_base;")
-        out.append("    MPI_Aint iov_len;")
-        out.append("} MPIX_Iov;")
-        out.append("")
-        out.append("int MPIX_Type_iov_len(MPI_Datatype datatype, MPI_Count max_iov_bytes, MPI_Count *iov_len, MPI_Count *actual_iov_bytes);")
-        out.append("int MPIX_Type_iov(MPI_Datatype datatype, MPI_Count iov_offset, MPIX_Iov *iov, MPI_Count max_iov_len, MPI_Count *actual_iov_len);")
-        out.append("int PMPIX_Type_iov_len(MPI_Datatype datatype, MPI_Count max_iov_bytes, MPI_Count *iov_len, MPI_Count *actual_iov_bytes);")
-        out.append("int PMPIX_Type_iov(MPI_Datatype datatype, MPI_Count iov_offset, MPIX_Iov *iov, MPI_Count max_iov_len, MPI_Count *actual_iov_len);")
-        out.append("")
 
     def add_other(out):
         out.append("#define MPICH")  # ref. mpi-io/mpich_fileutil.c
@@ -185,8 +164,7 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
     output_lines = []
     add_romio_visibility(output_lines)
     gen_romio_abi_internal_h(output_lines)
-    add_mpix_grequest(output_lines)
-    add_mpix_iov(output_lines)
+    add_mpio_request(output_lines)
     add_other(output_lines)
 
     print(" --> [%s]" % romio_abi_internal_h)
