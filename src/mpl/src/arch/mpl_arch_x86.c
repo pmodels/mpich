@@ -6,6 +6,10 @@
 #include "mpl.h"
 #include "mpl_base.h"
 
+#ifdef __APPLE__
+#undef MPL_HAVE_BUILTIN_CPU_SUPPORTS
+#endif
+
 uint64_t mpl_arch_features = MPL_ARCH_FLAG__UNKNOWN;
 
 #ifndef MPL_HAVE_BUILTIN_CPU_SUPPORTS
