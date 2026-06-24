@@ -11,6 +11,12 @@
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
 
+#ifndef MPICH
+#define MPIX_C_FLOAT16    ((MPI_Datatype)0x000002f0)
+#define MPIX_BFLOAT16     ((MPI_Datatype)0x000002f1)
+#define MPIX_EQUAL        ((MPI_Op)0x0000003e)
+#endif
+
 /* Generalized requests extensions */
 typedef int MPIX_Grequest_class;
 /* MPI stream objects */

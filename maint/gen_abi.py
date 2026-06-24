@@ -54,7 +54,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    %s count_lo;" % T)
                 out.append("    %s count_hi_and_cancelled;" % T)
                 out.append("    %s reserved[%d];" % (T, n - 2))
-            elif RE.match(r'#define\s+(MPI_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
+            elif RE.match(r'#define\s+(MPIX?_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
                 (name, T, val) = RE.m.group(1,2,3)
                 if T == "MPI_File":
                     # Both ROMIO and ABI use pointers, thus we can directly replace constants
@@ -67,7 +67,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                     idx = int(val, 0) & G.op_mask
                     G.abi_ops[idx] = name
                 # replace param prefix
-                out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
+                out.append(re.sub(r'\bMPIX?_', 'ABI_', line.rstrip()))
             elif RE.match(r'#define MPI_(LONG_LONG|C_COMPLEX)', line):
                 # datatype aliases
                 out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
