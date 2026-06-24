@@ -777,7 +777,7 @@ either gcc or icc, the above support will be enabled by configure.  At
 the time of this writing, pgcc does not seem to have this multiple
 aliases of common symbols, so configure will detect the deficiency and
 disable the feature automatically.  The tested Fortran compilers
-include GNU Fortran compilers (gfortan), Intel Fortran compiler
+include GNU Fortran compilers (gfortran), Intel Fortran compiler
 (ifort), Portland Group Fortran compilers (pgfortran), Absoft Fortran
 compilers (af90), and IBM XL fortran compiler (xlf).  What this means
 is that if mpich is built by gcc/gfortran, the resulting mpich library

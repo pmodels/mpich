@@ -15,5 +15,8 @@ testing: mpi/Makefile
 	export XMLFILE && export XMLCONTINUE && \
 	cd commands && $(MAKE) testing)
 
-mpi/Makefile:
-	cd mpi && ./autogen.sh && ./configure --with-mpi=${prefix}
+mpi/Makefile: mpi/configure
+	cd mpi && ./configure --with-mpi=${prefix}
+
+mpi/configure:
+	cd .. && ./autogen.sh -do=test

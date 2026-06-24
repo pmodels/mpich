@@ -265,7 +265,7 @@ sync_external () {
 # ./autogen.sh -do=hydra if *only* build hydra
 fn_hydra() {
     echo "####################################"
-    echo "## Prepareing src/pm/hydra        ##"
+    echo "## Preparing src/pm/hydra         ##"
     echo "####################################"
     cp -pPR maint/version.m4 src/pm/hydra/version.m4
 
@@ -286,7 +286,7 @@ fn_hydra() {
 # ./autogen.sh -do=pmi if *only* build libpmi
 fn_pmi() {
     echo "####################################"
-    echo "## Prepareing src/pmi             ##"
+    echo "## Preparing src/pmi              ##"
     echo "####################################"
     cp -pPR maint/version.m4 src/pmi/version.m4
 
@@ -300,7 +300,7 @@ fn_pmi() {
 # ./autogen.sh -do=test if *only* build testsuite
 fn_test() {
     echo "####################################"
-    echo "## Prepareing test/mpi            ##"
+    echo "## Preparing test/mpi             ##"
     echo "####################################"
     cp -pPR maint/version.m4 test/mpi/version.m4
 
