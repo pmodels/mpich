@@ -903,6 +903,9 @@ AC_ARG_VAR([PMPIABILIBNAME],[can be used to override the name of the MPI profili
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
 AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 MPILIBNAME=${MPILIBNAME:-"mpi"}
+# ROMIO is configured as a subdirectory and needs the resolved library name
+# when building its legacy tests against the top-level build tree.
+export MPILIBNAME
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then
    PMPILIBNAME_set=yes
@@ -1558,6 +1561,25 @@ fi
 # pm_name is the *primary* pm
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
+
+# Legacy ROMIO tests run before the configured installation prefix is
+# populated.  Use the primary process manager built in this tree instead of
+# the future $(bindir)/mpiexec path.
+case "$pm_name" in
+  hydra)
+    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
+    ;;
+  gforker)
+    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
+    ;;
+  remshell)
+    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
+    ;;
+  *)
+    ROMIO_TEST_MPIEXEC=""
+    ;;
+esac
+AC_SUBST(ROMIO_TEST_MPIEXEC)
 
 dnl
 dnl gforker and remshell does not use separate configure. 
