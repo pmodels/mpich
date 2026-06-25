@@ -670,6 +670,11 @@ AC_CANONICAL_TARGET
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 AC_PROG_CC
+
+# Modern autoconf aggressively probe gnu std support and will append (e.g.) -std=gnu23 to $CC
+# Since $CC will be used in mpicc and we don't want to force the gnu behavior on to user, let's strip it.
+CC=$(echo "$CC" | sed 's/ -std=[^ ]*//g')
+
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP
