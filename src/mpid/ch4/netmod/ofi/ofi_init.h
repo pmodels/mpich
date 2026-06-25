@@ -20,7 +20,8 @@ int MPIDI_OFI_init_hints(struct fi_info *hints);
 void MPIDI_OFI_set_auto_progress(struct fi_info *hints);
 
 /* set settings based on provider-set */
-void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name);
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name,
+                             struct fi_info *prov);
 
 /* whether prov matches settings, return a score */
 int MPIDI_OFI_match_provider(struct fi_info *prov,

@@ -263,10 +263,18 @@ void MPIDI_OFI_set_auto_progress(struct fi_info *hints)
 #define UPDATE_SETTING_BY_CAP(cap, CVAR) \
     p_settings->cap = (CVAR != -1) ? CVAR : prov_caps->cap
 
-void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name)
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name,
+                             struct fi_info *prov)
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
+    if (prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT && prov) {
+        /* update some default settings based on capabilities provided by the provider */
+        prov_caps->enable_mr_virt_address = (prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR) ? 1 : 0;
+        prov_caps->enable_mr_prov_key = (prov->domain_attr->mr_mode & FI_MR_PROV_KEY) ? 1 : 0;
+        prov_caps->enable_mr_allocated = (prov->domain_attr->mr_mode & FI_MR_ALLOCATED) ? 1 : 0;
+        prov_caps->enable_mr_hmem = (prov->domain_attr->mr_mode & FI_MR_HMEM) ? 1 : 0;
+    }
 
     memset(p_settings, 0, sizeof(MPIDI_OFI_capabilities_t));
 
