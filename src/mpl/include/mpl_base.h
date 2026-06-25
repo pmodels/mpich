@@ -154,5 +154,6 @@ typedef bool _Bool;
 
 #define MPL_ROUND_UP_ALIGN(a, alignment) (((a) + ((alignment) - 1)) & (~((alignment) - 1)))
 #define MPL_ROUND_DOWN_ALIGN(a, alignment) ((a) & (~((alignment) - 1)))
+#define MPL_CHECK_ALIGN(a, alignment) ((a) % (alignment) == 0)
 
 #endif /* MPL_BASE_H_INCLUDED */

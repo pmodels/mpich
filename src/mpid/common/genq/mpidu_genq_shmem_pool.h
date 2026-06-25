@@ -65,4 +65,18 @@ static inline int MPIDU_genq_shmem_pool_cell_free(MPIDU_genq_shmem_pool_t pool, 
     return rc;
 }
 
+static inline uint64_t MPIDU_genq_shmem_pool_cell_to_handle(void *cell)
+{
+    MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
+    return (uint64_t) cell_h->handle;
+}
+
+static inline char *MPIDU_genq_shmem_pool_handle_to_cell(MPIDU_genq_shmem_pool_t pool,
+                                                         uint64_t handle)
+{
+    MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
+    MPIDU_genqi_shmem_cell_header_s *cell_h = HANDLE_TO_HEADER(pool_obj, handle);
+    return HEADER_TO_CELL(cell_h);
+}
+
 #endif /* ifndef MPIDU_GENQ_SHMEM_POOL_H_INCLUDED */
