@@ -59,6 +59,8 @@ enum {
 
     MPIDIG_COMM_ABORT,
 
+    MPIDI_ULFM_PROBE,
+
     MPIDI_IPC_ACK,
     MPIDI_IPC_WRITE,
 
