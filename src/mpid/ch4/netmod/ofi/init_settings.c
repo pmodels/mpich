@@ -270,10 +270,21 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
     if (prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT && prov) {
         /* update some default settings based on capabilities provided by the provider */
-        prov_caps->enable_mr_virt_address = (prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR) ? 1 : 0;
-        prov_caps->enable_mr_prov_key = (prov->domain_attr->mr_mode & FI_MR_PROV_KEY) ? 1 : 0;
-        prov_caps->enable_mr_allocated = (prov->domain_attr->mr_mode & FI_MR_ALLOCATED) ? 1 : 0;
-        prov_caps->enable_mr_hmem = (prov->domain_attr->mr_mode & FI_MR_HMEM) ? 1 : 0;
+        if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
+#ifdef FI_MR_VIRT_ADDR
+            prov_caps->enable_mr_virt_address =
+                (prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR) ? 1 : 0;
+            prov_caps->enable_mr_prov_key = (prov->domain_attr->mr_mode & FI_MR_PROV_KEY) ? 1 : 0;
+            prov_caps->enable_mr_allocated = (prov->domain_attr->mr_mode & FI_MR_ALLOCATED) ? 1 : 0;
+            prov_caps->enable_mr_hmem = (prov->domain_attr->mr_mode & FI_MR_HMEM) ? 1 : 0;
+#endif
+        } else {
+            if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
+                prov_caps->enable_mr_virt_address = 1;
+                prov_caps->enable_mr_prov_key = 1;
+                prov_caps->enable_mr_allocated = 1;
+            }
+        }
     }
 
     memset(p_settings, 0, sizeof(MPIDI_OFI_capabilities_t));
