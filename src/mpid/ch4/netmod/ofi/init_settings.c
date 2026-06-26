@@ -174,9 +174,9 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
         hints->domain_attr->mr_mode |= FI_MR_ENDPOINT;
 #endif
     } else {
-        /* In old versions FI_MR_BASIC is equivallent to set
+        /* In old versions FI_MR_BASIC is equivalent to set
          * FI_MR_VIRT_ADDR, FI_MR_PROV_KEY, and FI_MR_ALLOCATED on.
-         * FI_MR_SCALABLE is equivallent to all bits off in newer versions.
+         * FI_MR_SCALABLE is equivalent to all bits off in newer versions.
          */
         MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_PROV_KEY);
         MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_ALLOCATED);
@@ -263,10 +263,29 @@ void MPIDI_OFI_set_auto_progress(struct fi_info *hints)
 #define UPDATE_SETTING_BY_CAP(cap, CVAR) \
     p_settings->cap = (CVAR != -1) ? CVAR : prov_caps->cap
 
-void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name)
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name,
+                             struct fi_info *prov)
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
+    if (prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT && prov) {
+        /* update some default settings based on capabilities provided by the provider */
+        if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
+#ifdef FI_MR_VIRT_ADDR
+            prov_caps->enable_mr_virt_address =
+                (prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR) ? 1 : 0;
+            prov_caps->enable_mr_prov_key = (prov->domain_attr->mr_mode & FI_MR_PROV_KEY) ? 1 : 0;
+            prov_caps->enable_mr_allocated = (prov->domain_attr->mr_mode & FI_MR_ALLOCATED) ? 1 : 0;
+            prov_caps->enable_mr_hmem = (prov->domain_attr->mr_mode & FI_MR_HMEM) ? 1 : 0;
+#endif
+        } else {
+            if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
+                prov_caps->enable_mr_virt_address = 1;
+                prov_caps->enable_mr_prov_key = 1;
+                prov_caps->enable_mr_allocated = 1;
+            }
+        }
+    }
 
     memset(p_settings, 0, sizeof(MPIDI_OFI_capabilities_t));
 
@@ -387,7 +406,7 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
                            prov->domain_attr->max_ep_tx_ctx > 1 &&
                            (prov->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
     /* NOTE: As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated.
-     * FI_MR_BASIC is equivallent to FI_MR_VIRT_ADDR|FI_MR_ALLOCATED|FI_MR_PROV_KEY */
+     * FI_MR_BASIC is equivalent to FI_MR_VIRT_ADDR|FI_MR_ALLOCATED|FI_MR_PROV_KEY */
 #if FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION) < FI_VERSION(1, 5)
     UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_virt_address,
                                   prov->domain_attr->mr_mode & (FI_MR_VIRT_ADDR | FI_MR_BASIC));
