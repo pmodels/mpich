@@ -112,6 +112,12 @@ static int find_provider(struct fi_info **prov_out)
                 "instead\n");
     }
 
+    /* if we do runtime detection, initialize global settings.{major,minor}_version from CVARs */
+#ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
+    MPIDI_OFI_MAJOR_VERSION = MPIR_CVAR_CH4_OFI_MAJOR_VERSION;
+    MPIDI_OFI_MINOR_VERSION = MPIR_CVAR_CH4_OFI_MINOR_VERSION;
+#endif
+
     int required_version = MPIDI_OFI_get_required_version();
     if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         printf("Required minimum FI_VERSION: %x, current version: %x\n", required_version,
