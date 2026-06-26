@@ -736,7 +736,7 @@ EOF
 
 fn_check_bash_find_patch_xargs() {
     echo_n "Checking for bash... "
-    if test "`which bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
+    if test "`command -v bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
         echo "done"
     else
         echo "bash not found" ;
