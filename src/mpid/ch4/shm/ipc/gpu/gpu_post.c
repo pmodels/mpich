@@ -123,13 +123,22 @@ cvars:
         * Cache invalidate: send AM to each mapped rank to unmap.
  */
 
+#include "uthash.h"
+
+struct MPIDI_GPUI_handle_cache_entry {
+    UT_hash_handle hh;
+    const void *base_addr;
+    MPL_gpu_ipc_mem_handle_t handle;
+};
+
+static struct MPIDI_GPUI_handle_cache_entry *ipc_handle_cache;
 
 static int ipc_track_cache_search(const void *addr, MPL_gpu_ipc_mem_handle_t * handle_out,
                                   bool * found)
 {
     struct MPIDI_GPUI_handle_cache_entry *entry;
 
-    HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &addr, entry);
+    HASH_FIND_PTR(ipc_handle_cache, &addr, entry);
     if (entry) {
         MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle HIT for %p", addr);
         *handle_out = entry->handle;
@@ -153,7 +162,7 @@ static int ipc_track_cache_insert(const void *addr, MPL_gpu_ipc_mem_handle_t han
     MPIR_ERR_CHKANDJUMP(!entry, mpi_errno, MPI_ERR_OTHER, "**nomem");
     entry->base_addr = addr;
     entry->handle = handle;
-    HASH_ADD_PTR(MPIDI_GPUI_global.ipc_handle_cache, base_addr, entry, MPL_MEM_SHM);
+    HASH_ADD_PTR(ipc_handle_cache, base_addr, entry, MPL_MEM_SHM);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -169,13 +178,57 @@ static int ipc_track_cache_remove(const void *addr)
 
     MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "removing STALE gpu ipc handle for %p", addr);
 
-    HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &addr, entry);
+    HASH_FIND_PTR(ipc_handle_cache, &addr, entry);
     if (entry) {
-        HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
+        HASH_DEL(ipc_handle_cache, entry);
         MPL_free(entry);
     }
 
     return mpi_errno;
+}
+
+void MPIDI_GPU_handle_free_hook(void *dptr)
+{
+    /* We don't use free hooks for now. If it is in use, this should remove the cache entry and
+     * send unmap AM to all cached remote ranks. */
+    struct MPIDI_GPUI_handle_cache_entry *entry;
+
+    HASH_FIND_PTR(ipc_handle_cache, &dptr, entry);
+    if (entry) {
+        HASH_DEL(ipc_handle_cache, entry);
+        MPL_free(entry);
+
+        MPL_pointer_attr_t gpu_attr;
+        MPIR_GPU_query_pointer_attr(dptr, &gpu_attr);
+        int mpl_err;
+        mpl_err = MPL_gpu_ipc_handle_destroy(dptr, &gpu_attr);
+        MPIR_Assert(mpl_err == MPL_SUCCESS);
+    }
+    return;
+}
+
+int MPIDI_GPU_ipc_cache_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct MPIDI_GPUI_handle_cache_entry *entry, *tmp;
+    HASH_ITER(hh, ipc_handle_cache, entry, tmp) {
+        MPL_pointer_attr_t gpu_attr;
+        int mpl_err;
+
+        MPIR_GPU_query_pointer_attr(entry->base_addr, &gpu_attr);
+        mpl_err = MPL_gpu_ipc_handle_destroy(entry->base_addr, &gpu_attr);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_destroy");
+
+        HASH_DEL(ipc_handle_cache, entry);
+        MPL_free(entry);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
