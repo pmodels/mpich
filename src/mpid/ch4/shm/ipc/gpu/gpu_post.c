@@ -123,6 +123,23 @@ cvars:
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 
+/* IPC GPU handle/map caching:
+ *   * NVIDIA CUDA sender side handle creation is cheap, but receive side mapping is expensive.
+         * if we don't unmap freed handles, new handle may overlap the address, and new map will fail.
+     * Intel ZE handle is actually file handles. They are bound to the allocation.
+         * there won't be stale handle or map issue, since the memory won't be freed if one is active.
+         * But unlimited active entries will cause apparent memory leak to the users and eventually
+           exhaust the memory.
+
+    * Having two independent caching for both sender-side handles and receiver-side mapping is a mess.
+      When both side cache drift, we either create stale address issue or inefficient memory horading.
+    * Solution: only cache on the sender side, but the cache need store the remote mapped address as well.
+        * Cache miss: IPC send handle, receiver map, tell sender its mapped address via AM.
+        * Cache hit: IPC send mapped address directly.
+        * Cache invalidate: send AM to each mapped rank to unmap.
+ */
+
+
 static int ipc_track_cache_search(const void *addr, MPL_gpu_ipc_mem_handle_t * handle_out,
                                   bool * found)
 {
