@@ -18,17 +18,16 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
     }
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    /* cleanup any GPU resources created as part of the IPC */
+    if (MPIDI_SHM_REQUEST(hdr->req_ptr, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
+        mpi_errno = MPIDI_GPU_ipc_handle_complete(hdr->req_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#endif
 
     if (hdr->req_ptr->kind == MPIR_REQUEST_KIND__SEND) {
         MPIR_Request *sreq = hdr->req_ptr;
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
-        /* cleanup any GPU resources created as part of the IPC */
-        if (MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
-            mpi_errno = MPIDI_GPU_send_complete(sreq);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-#endif
-
         MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
         mpi_errno = MPID_Request_complete(sreq);
         MPIR_ERR_CHECK(mpi_errno);
@@ -74,6 +73,101 @@ int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* If the IPC handle/map are cached, target will notify sender mapped address */
+int MPIDI_IPC_mapaddr_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPIDI_IPC_mapaddr_t *hdr = am_hdr;
+    /* only for gpu, for now */
+    MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
+    mpi_errno = MPIDI_GPU_ipc_cache_map_addr(hdr->base_addr, hdr->mapped_addr, hdr->rank);
+#endif
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* If the IPC handle/map are cached, sender will notify target when to unmap */
+int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPIDI_IPC_unmap_t *hdr = am_hdr;
+    /* only for gpu, for now */
+    MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
+    mpi_errno = MPIDI_GPU_ipc_cache_unmap(hdr->mapped_addr);
+#endif
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Maintain a single cache at origin (sender) side and use AM to synchronize with target.
+ * Note: until we decide to use per-vci cache, use vci 0. That means:
+ *   * in case vci != 0, we need also lock vci 0 before we update cache.
+ */
+
+/* Receiver tells sender: "I mapped your base_addr at mapped_addr" */
+int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
+                           int ipc_type, void *base_addr, void *mapped_addr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(ipc_type == MPIDI_IPCI_TYPE__GPU);
+
+    MPIDI_IPC_mapaddr_t am_hdr;
+    am_hdr.ipc_type = ipc_type;
+    am_hdr.rank = MPIR_Process.local_rank;
+    am_hdr.base_addr = base_addr;
+    am_hdr.mapped_addr = mapped_addr;
+
+    CH4_CALL(am_send_hdr(rank, comm, MPIDI_IPC_MAPADDR,
+                         &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Sender tells target: "Please unmap this address" */
+int MPIDI_IPC_send_unmap(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
+                         int ipc_type, void *mapped_addr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(ipc_type == MPIDI_IPCI_TYPE__GPU);
+
+    MPIDI_IPC_unmap_t am_hdr;
+    am_hdr.ipc_type = ipc_type;
+    am_hdr.mapped_addr = mapped_addr;
+
+    CH4_CALL(am_send_hdr(rank, comm, MPIDI_IPC_UNMAP,
+                         &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -134,7 +228,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     MPIDIG_REQUEST(rreq, u.ipc.src_dt_ptr) = NULL;
 
     bool need_pack = false;
-    if (ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__GPU) {
+    if (ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__GPU && ipc_hdr->ipc_type != MPIDI_IPCI_TYPE__DIRECT) {
         void *buf = MPIDIG_REQUEST(rreq, buffer);
         MPI_Aint count = MPIDIG_REQUEST(rreq, count);
         MPI_Datatype datatype = MPIDIG_REQUEST(rreq, datatype);
@@ -279,6 +373,10 @@ int MPIDI_IPC_complete(MPIR_Request * req, MPIDI_IPCI_type_t ipc_type)
     if (MPIDIG_REQUEST(req, u.ipc.src_dt_ptr)) {
         MPIR_Datatype_free(MPIDIG_REQUEST(req, u.ipc.src_dt_ptr));
     }
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    mpi_errno = MPIDI_GPU_ipc_map_complete(req);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     /* send/recv complete */
     if (req->kind == MPIR_REQUEST_KIND__RECV) {

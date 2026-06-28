@@ -33,6 +33,14 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
 int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req);
+int MPIDI_IPC_mapaddr_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                    uint32_t attr, MPIR_Request ** req);
+int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                  uint32_t attr, MPIR_Request ** req);
+int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
+                           int ipc_type, void *base_addr, void *mapped_addr);
+int MPIDI_IPC_send_unmap(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
+                         int ipc_type, void *mapped_addr);
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_has_ipc(void)
 {
@@ -156,7 +164,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_prepare_ipc_hdr(MPIDI_IPCI_ipc_attr_t * 
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
-            MPIDI_GPU_fill_ipc_handle(ipc_attr, &(ipc_hdr->ipc_handle), req);
+            MPIDI_GPU_fill_ipc_handle_cache(ipc_attr, &(ipc_hdr->ipc_handle), req);
+            /* ipc_attr->ipc_type may have been changed to DIRECT */
+            ipc_hdr->ipc_type = ipc_attr->ipc_type;
             break;
 #endif
         default:
