@@ -15,7 +15,9 @@ typedef enum MPIDI_IPCI_type {
     MPIDI_IPCI_TYPE__SKIP,
     MPIDI_IPCI_TYPE__XPMEM,
     MPIDI_IPCI_TYPE__CMA,
-    MPIDI_IPCI_TYPE__GPU
+    MPIDI_IPCI_TYPE__GPU,
+    /* use DIRECT when sender caches the mapped address */
+    MPIDI_IPCI_TYPE__DIRECT
 } MPIDI_IPCI_type_t;
 
 typedef struct {
