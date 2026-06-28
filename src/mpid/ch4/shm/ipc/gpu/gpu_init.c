@@ -7,28 +7,6 @@
 #include "gpu_post.h"
 #include "gpu_types.h"
 
-static void ipc_handle_free_hook(void *dptr)
-{
-    int mpl_err ATTRIBUTE((unused));
-    MPIR_FUNC_ENTER;
-
-    {
-        struct MPIDI_GPUI_handle_cache_entry *entry;
-
-        HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &dptr, entry);
-        if (entry) {
-            HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
-            MPL_free(entry);
-
-            mpl_err = MPL_gpu_ipc_handle_destroy(dptr);
-            MPIR_Assert(mpl_err == MPL_SUCCESS);
-        }
-    }
-
-    MPIR_FUNC_EXIT;
-    return;
-}
-
 int MPIDI_GPU_init_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -45,7 +23,7 @@ int MPIDI_GPU_init_local(void)
                             "**gpu_get_dev_count");
 
         MPIDI_GPUI_global.local_device_count = device_count;
-        MPL_gpu_free_hook_register(ipc_handle_free_hook);
+        MPL_gpu_free_hook_register(MPIDI_GPU_handle_free_hook);
 
         MPIDI_GPUI_global.initialized = 1;
     }
@@ -80,19 +58,8 @@ int MPIDI_GPU_mpi_finalize_hook(void)
 
     MPIR_FUNC_ENTER;
 
-    {
-        struct MPIDI_GPUI_handle_cache_entry *entry, *tmp;
-        HASH_ITER(hh, MPIDI_GPUI_global.ipc_handle_cache, entry, tmp) {
-            int mpl_err;
-
-            mpl_err = MPL_gpu_ipc_handle_destroy(entry->base_addr);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**gpu_ipc_handle_destroy");
-
-            HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
-            MPL_free(entry);
-        }
-    }
+    mpi_errno = MPIDI_GPU_ipc_cache_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
