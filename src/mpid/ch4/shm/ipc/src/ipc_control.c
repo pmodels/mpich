@@ -65,7 +65,7 @@ int MPIDI_IPC_write_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = NULL;
     }
     /* ipc write only for gpu, for now */
-    MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
+    MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU || hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT);
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     void *ipc_hdr = hdr + 1;
     mpi_errno = MPIDI_GPU_write_data_async(ipc_hdr, sreq);
@@ -178,6 +178,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
+        case MPIDI_IPCI_TYPE__DIRECT:
             is_async_copy = true;
             mpi_errno = MPIDI_GPU_copy_data_async(ipc_hdr, rreq, src_data_sz);
             MPIR_ERR_CHECK(mpi_errno);
