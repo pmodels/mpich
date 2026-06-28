@@ -3937,7 +3937,7 @@ fi
 # CCLs
 have_ccl=no
 
-if test $GPU_SUPPORT = "CUDA" ; then
+if test "$GPU_SUPPORT" = "CUDA" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
     if test "$pac_have_nccl" = "yes" ; then
         have_ccl=yes
@@ -3945,7 +3945,7 @@ if test $GPU_SUPPORT = "CUDA" ; then
     fi
 fi
 
-if test $GPU_SUPPORT = "HIP" ; then
+if test "$GPU_SUPPORT" = "HIP" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([rccl], [rccl/rccl.h], [rccl], [ncclCommInitAll],, [-D__HIP_PLATFORM_AMD__])
     if test "$pac_have_rccl" = "yes" ; then
         have_ccl=yes
