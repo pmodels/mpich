@@ -550,43 +550,6 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
     goto fn_exit;
 }
 
-/* src pointer is a GPU pointer with received IPC handle
- * dest pointer is a local pointer
- * contig type only */
-int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vaddr,
-                              MPI_Aint src_data_sz, MPI_Datatype datatype)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int mpl_err = MPL_SUCCESS;
-    void *src_buf_host;
-    MPL_pointer_attr_t gpu_attr;
-    MPI_Aint true_lb, true_extent;
-
-    MPIR_FUNC_ENTER;
-
-    /* find out local device id */
-    MPIR_GPU_query_pointer_attr(dest_vaddr, &gpu_attr);
-    int dev_id = MPL_gpu_get_dev_id_from_attr(&gpu_attr);
-    int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_handle.gpu.global_dev_id, dev_id, datatype);
-
-    /* mmap remote buffer */
-    mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, map_dev, &src_buf_host, 1);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    dest_vaddr = (void *) ((char *) dest_vaddr + true_lb);
-
-    mpl_err = MPL_gpu_fast_memcpy(src_buf_host, NULL, dest_vaddr, &gpu_attr, src_data_sz);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gpu_fast_memcpy");
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* nonblocking IPCI_copy_data via MPIX_Async */
 struct gpu_ipc_async {
     MPIR_Request *req;
