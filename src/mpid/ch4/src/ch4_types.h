@@ -294,10 +294,6 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
 
     MPIDI_CH4_configurations_t settings;
-    void *csel_root;
-    const char *csel_source;
-    void *csel_root_gpu;
-    const char *csel_source_gpu;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_SHM_Global_t shm;
@@ -305,7 +301,6 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_NM_Global_t nm;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_global;
-extern char MPIDI_coll_generic_json[];
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;

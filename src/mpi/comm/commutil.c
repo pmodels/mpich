@@ -318,7 +318,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
-    comm_p->csel_comm = NULL;
 
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
@@ -574,6 +573,12 @@ static int check_hierarchy(MPIR_Comm * comm)
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
+    /* set it as no_local */
+    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+    comm->local_rank = 0;
+    comm->num_local = 1;
+    comm->num_external = comm->local_size;
+    comm->external_rank = comm->rank;
   fn_reap:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
@@ -584,7 +589,8 @@ static int check_hierarchy(MPIR_Comm * comm)
  * * never have hierarchical info (i.e. flat)
  */
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
-                        int context_offset, MPIR_Comm ** subcomm_out)
+                        int context_offset, MPIR_Comm ** subcomm_out,
+                        MPIR_Subcomm_type_e subcomm_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *subcomm;
@@ -605,6 +611,20 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     subcomm->rank = sub_rank;
     subcomm->local_size = sub_size;
     subcomm->remote_size = sub_size;
+
+    if (subcomm_type == MPIR_SUBCOMM__NODE_LOCAL) {
+        subcomm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+        subcomm->local_rank = sub_rank;
+        subcomm->num_local = sub_size;
+        subcomm->external_rank = 0;
+        subcomm->num_external = 1;
+    } else if (subcomm_type == MPIR_SUBCOMM__NODE_ROOTS) {
+        subcomm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+        subcomm->local_rank = 0;
+        subcomm->num_local = 1;
+        subcomm->external_rank = sub_rank;
+        subcomm->num_external = sub_size;
+    }
 
     /* construct local_group */
     MPIR_Group *parent_group = comm->local_group;
@@ -686,7 +706,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         mpi_errno = MPIR_Subcomm_create(comm, comm->num_local, comm->local_rank,
                                         local_procs, MPIR_CONTEXT_INTRANODE_OFFSET,
-                                        &comm->node_comm);
+                                        &comm->node_comm, MPIR_SUBCOMM__NODE_LOCAL);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -712,7 +732,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         mpi_errno = MPIR_Subcomm_create(comm, comm->num_external, comm->external_rank,
                                         external_procs, MPIR_CONTEXT_INTERNODE_OFFSET,
-                                        &comm->node_roots_comm);
+                                        &comm->node_roots_comm, MPIR_SUBCOMM__NODE_ROOTS);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
