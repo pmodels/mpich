@@ -404,7 +404,7 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                 mpi_errno = ipc_track_cache_remove(pbase);
                 MPIR_ERR_CHECK(mpi_errno);
 
-                mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &ipc_attr->u.gpu.gpu_attr);
+                mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
                 MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                     "**gpu_ipc_handle_destroy");
             }
@@ -741,7 +741,7 @@ int MPIDI_GPU_send_complete(MPIR_Request * sreq)
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
         void *pbase = MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.bounds_base);
         MPL_pointer_attr_t *gpu_attr = &MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.gpu_attr);
-        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase, gpu_attr);
+        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_destroy");
     }

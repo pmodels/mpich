@@ -1365,39 +1365,6 @@ static void MPL_event_pool_destroy(void)
     }
 }
 
-/* remove stale cache entry associated with ptr,
- * mem_id, local_dev_id are ptr's real property */
-static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local_dev_id)
-{
-    int status, mpl_err = MPL_SUCCESS;
-
-    if (physical_device_states != NULL) {
-        /* drmfd */
-        MPL_ze_gem_hash_entry_t *entry = NULL;
-        HASH_FIND_PTR(gem_hash, &ptr, entry);
-        if (entry) {
-            /* close GEM handle */
-            for (int i = 0; i < entry->nhandles; i++) {
-                status =
-                    close_handle(physical_device_states[entry->shared_dev_id].fd,
-                                 entry->handles[i]);
-                if (status) {
-                    break;
-                }
-            }
-
-            HASH_DEL(gem_hash, entry);
-            MPL_free(entry);
-        }
-    }
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
 /* given a local device pointer, create an IPC handle */
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * ipc_handle)
@@ -1433,18 +1400,31 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 }
 
 /* ptr must be a local device pointer and base address */
-int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
     int mpl_err = MPL_SUCCESS;
     int dev_id;
     uint64_t mem_id;
 
-    mem_id = gpu_attr->device_attr.prop.id;
-    dev_id = device_to_dev_id(gpu_attr->device);
-    if (dev_id == -1) {
-        goto fn_fail;
+    if (physical_device_states != NULL) {
+        /* drmfd */
+        MPL_ze_gem_hash_entry_t *entry = NULL;
+        HASH_FIND_PTR(gem_hash, &ptr, entry);
+        if (entry) {
+            /* close GEM handle */
+            for (int i = 0; i < entry->nhandles; i++) {
+                status =
+                    close_handle(physical_device_states[entry->shared_dev_id].fd,
+                                 entry->handles[i]);
+                if (status) {
+                    break;
+                }
+            }
+
+            HASH_DEL(gem_hash, entry);
+            MPL_free(entry);
+        }
     }
-    mpl_err = remove_stale_sender_cache(ptr, mem_id, dev_id);
 
   fn_exit:
     return mpl_err;
@@ -2392,31 +2372,6 @@ void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
 #endif
 }
 
-/* zeMemFree hook function */
-void MPL_ze_ipc_remove_cache_handle(void *dptr)
-{
-    int mpl_err = MPL_SUCCESS;
-    MPL_pointer_attr_t attr;
-
-    mpl_err = MPL_gpu_query_pointer_attr(dptr, &attr);
-
-    if (attr.type == MPL_GPU_POINTER_DEV) {
-        void *pbase = NULL;
-        uintptr_t len;
-        mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-        mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &attr);
-    }
-
-  fn_exit:
-    return;
-  fn_fail:
-    fprintf(stderr, "Error > failed to complete MPL_ze_ipc_remove_cache_handle\n");
-    goto fn_exit;
-}
-
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
@@ -2455,7 +2410,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             if (entry &&
                 (entry->mem_id != mem_id ||
                  physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id)) {
-                mpl_err = remove_stale_sender_cache(ptr, mem_id, local_dev_id);
+                mpl_err = MPL_gpu_ipc_handle_destroy(ptr);
                 if (mpl_err != MPL_SUCCESS) {
                     goto fn_fail;
                 }
