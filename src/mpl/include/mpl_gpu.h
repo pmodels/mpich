@@ -75,8 +75,6 @@ typedef struct {
     /* Output */
     bool enable_ipc;
     MPL_gpu_ipc_handle_type_t ipc_handle_type;
-    /* Input/Output */
-    bool specialized_cache;
 } MPL_gpu_info_t;
 
 extern MPL_gpu_info_t MPL_gpu_info;
