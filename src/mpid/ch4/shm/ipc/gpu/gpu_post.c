@@ -9,7 +9,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE
       category    : CH4
       type        : enum
-      default     : specialized
+      default     : generic
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -19,7 +19,6 @@ cvars:
         the generic cache mechanism. Users can optionally force the generic cache mechanism or
         disable ipc caching entirely.
         generic - use the cache mechanism in the generic layer
-        specialized - use the cache mechanism in a gpu-specific mpl layer (if applicable)
         disabled - disable caching completely
 
     - name        : MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
