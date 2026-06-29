@@ -675,7 +675,8 @@ AC_PROG_CC
 
 # Modern autoconf aggressively probe gnu std support and will append (e.g.) -std=gnu23 to $CC
 # Since $CC will be used in mpicc and we don't want to force the gnu behavior on to user, let's strip it.
-CC=$(echo "$CC" | sed 's/ -std=[^ ]*//g')
+# NOTE: brackets are autoconf quotes, thus reqires quote protection.
+CC=$(echo "$CC" | sed 's/ -std=[[^ ]]*//g')
 
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
