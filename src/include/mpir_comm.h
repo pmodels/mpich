@@ -126,7 +126,7 @@ struct MPIR_Comm {
     const char *stringtag;      /* A string tag used to support multi-threaded MPI_Comm_create_from_group */
     struct MPIR_CCLcomm *cclcomm;       /* Not NULL only if CCL subcommunication is enabled */
 
-    /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
+    /* -- unset unless (attr & MPIR_COMM_ATTR__HIERARCHY) -- */
     int hierarchy_flags;        /* bit flags for hierarchy characteristics. See bit definitions below. */
     int local_rank;
     int num_local;
@@ -344,7 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
 {
-    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
     if (comm->internode_table) {
         return comm->internode_table[r];
     } else {
@@ -355,7 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
 {
-    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
     if (comm->intranode_table) {
         return comm->intranode_table[r];
     } else {
