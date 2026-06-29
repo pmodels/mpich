@@ -10,8 +10,6 @@
 static void ipc_handle_free_hook(void *dptr)
 {
     int mpl_err ATTRIBUTE((unused));
-    MPL_pointer_attr_t gpu_attr;
-
     MPIR_FUNC_ENTER;
 
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
@@ -22,8 +20,7 @@ static void ipc_handle_free_hook(void *dptr)
             HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
             MPL_free(entry);
 
-            MPIR_GPU_query_pointer_attr(dptr, &gpu_attr);
-            mpl_err = MPL_gpu_ipc_handle_destroy(dptr, &gpu_attr);
+            mpl_err = MPL_gpu_ipc_handle_destroy(dptr);
             MPIR_Assert(mpl_err == MPL_SUCCESS);
         }
     }
@@ -101,11 +98,9 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     {
         struct MPIDI_GPUI_handle_cache_entry *entry, *tmp;
         HASH_ITER(hh, MPIDI_GPUI_global.ipc_handle_cache, entry, tmp) {
-            MPL_pointer_attr_t gpu_attr;
             int mpl_err;
 
-            MPIR_GPU_query_pointer_attr(entry->base_addr, &gpu_attr);
-            mpl_err = MPL_gpu_ipc_handle_destroy(entry->base_addr, &gpu_attr);
+            mpl_err = MPL_gpu_ipc_handle_destroy(entry->base_addr);
             MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**gpu_ipc_handle_destroy");
 
