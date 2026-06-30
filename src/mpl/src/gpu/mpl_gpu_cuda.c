@@ -138,13 +138,15 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
-    cudaError_t ret;
 
+    cudaError_t ret;
     ret = cudaIpcGetMemHandle(&ipc_handle->handle, (void *) ptr);
     CUDA_ERR_CHECK(ret);
 
-    ret = cuPointerGetAttribute(&ipc_handle->id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
-    CUDA_ERR_CHECK(ret);
+    CUresult curet;
+    curet =
+        cuPointerGetAttribute(&ipc_handle->id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
+    CU_ERR_CHECK(curet);
 
   fn_exit:
     return mpl_err;
@@ -189,17 +191,6 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
   fn_fail:
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
-}
-
-bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
-{
-    CUresult ret;
-    unsigned long long buffer_id;
-
-    ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
-    assert(ret == cudaSuccess);
-
-    return buffer_id == handle->id;
 }
 
 int MPL_gpu_malloc_host(void **ptr, size_t size)

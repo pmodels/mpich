@@ -223,17 +223,6 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     goto fn_exit;
 }
 
-bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
-{
-    hipError_t ret;
-    uint32_t buffer_id;
-
-    ret = hipPointerGetAttribute(&buffer_id, HIP_POINTER_ATTRIBUTE_BUFFER_ID, (hipDeviceptr_t) ptr);
-    assert(ret == hipSuccess);
-
-    return buffer_id == handle->id;
-}
-
 int MPL_gpu_malloc_host(void **ptr, size_t size)
 {
     int mpl_err = MPL_SUCCESS;
