@@ -87,7 +87,6 @@ typedef union MPIR_User_function {
     void (*c_large_function) (const void *, void *, const MPI_Count *, const ABI_Datatype *);
     void (*c_x_function) (void *, void *, MPI_Count, ABI_Datatype, void *);
 #endif
-    void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g.,
    (*c_function)(const void restrict * , void restrict *, ...)? */

@@ -14,10 +14,7 @@ def main():
     # currently support: -single-source
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    c_dir = "src/binding/c"
-    abi_dir = "src/binding/abi"
-    func_list = load_C_func_list(binding_dir)
+    func_list = load_C_func_list(G.binding_dir)
 
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
@@ -108,6 +105,8 @@ def main():
         for func in func_list:
             if 'replace' in func and 'body' not in func:
                 continue
+            elif re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
 
             dump_func(func, do_doc)
             if '_replaces' in func:
@@ -116,14 +115,14 @@ def main():
 
             if 'single-source' not in G.opts:
                 # dump individual functions in separate source files
-                dump_out(get_func_file_path(func, c_dir))
+                dump_out(get_func_file_path(func, G.c_dir))
                 G.out = []
                 G.out.append("#include \"mpiimpl.h\"")
                 G.out.append("")
 
         if 'single-source' in G.opts:
             # otherwise, dump all functions in binding.c
-            dump_out(c_dir + "/c_binding.c")
+            dump_out(G.c_dir + "/c_binding.c")
 
     def dump_c_binding_abi():
         G.out = []
@@ -149,7 +148,7 @@ def main():
                 for t_func in func['_replaces']:
                     dump_func_abi(t_func)
 
-        abi_file_path = abi_dir + "/c_binding_abi.c"
+        abi_file_path = G.abi_dir + "/c_binding_abi.c"
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
 
@@ -160,9 +159,11 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
+            if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
             dump_func(func, do_doc)
 
-        dump_out(c_dir + "/io.c")
+        dump_out(G.c_dir + "/io.c")
 
     def dump_io_funcs_abi():
         G.out = []
@@ -177,7 +178,7 @@ def main():
                 continue
             dump_func_abi(func)
 
-        abi_file_path = abi_dir + "/io_abi.c"
+        abi_file_path = G.abi_dir + "/io_abi.c"
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
 
@@ -197,10 +198,10 @@ def main():
     G.check_write_path("src/include")
     G.check_write_path("src/mpi_t")
     G.check_write_path("src/include/mpi_proto.h")
-    dump_Makefile_mk("%s/Makefile.mk" % c_dir)
+    dump_Makefile_mk("%s/Makefile.mk" % G.c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_mpir_io_impl_h("src/include/mpir_io_impl.h")
-    dump_errnames_txt("%s/errnames.txt" % c_dir)
+    dump_errnames_txt("%s/errnames.txt" % G.c_dir)
     dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
     dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")

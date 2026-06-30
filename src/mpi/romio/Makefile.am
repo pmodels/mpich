@@ -13,6 +13,7 @@
 ACLOCAL_AMFLAGS = -I confdb
 
 # empty variable initializations so that later code can append (+=)
+noinst_LTLIBRARIES =
 include_HEADERS = 
 nodist_include_HEADERS =
 noinst_HEADERS = 
@@ -68,9 +69,25 @@ include adio/Makefile.mk
 EXTRA_DIST += autogen.sh
 
 if BUILD_ROMIO_EMBEDDED
+if BUILD_ABI_LIB
+noinst_LTLIBRARIES += libromio_abi.la
+libromio_abi_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DBUILD_MPI_ABI
+
+if BUILD_PROFILING_LIB
+noinst_LTLIBRARIES += libpromio_abi.la
+libpromio_abi_la_SOURCES = $(romio_mpi_sources)
+libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DBUILD_MPI_ABI
+libpromio_abi_la_LDFLAGS = $(external_ldflags)
+libpromio_abi_la_LIBADD = $(external_libs)
+endif BUILD_PROFILING_LIB
+libromio_abi_la_LDFLAGS = $(external_ldflags)
+libromio_abi_la_LIBADD = $(external_libs)
+
+else !BUILD_ABI_LIB
 # Build a libtool convenience library that the enclosing MPI implementation can
 # use by adding it to the right _LIBADD variable.
-noinst_LTLIBRARIES = libromio.la
+noinst_LTLIBRARIES += libromio.la
 libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
 
 ## NOTE: ROMIO's old build system builds a bunch of _foo.o objects that contain
@@ -97,21 +114,7 @@ libromio_la_LDFLAGS = $(external_ldflags)
 libromio_la_LIBADD = $(external_libs)
 endif !BUILD_PROFILING_LIB
 
-if BUILD_ABI_LIB
-noinst_LTLIBRARIES += libromio_abi.la
-libromio_abi_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
-libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_BUILD_MPI_ABI
-
-if BUILD_PROFILING_LIB
-noinst_LTLIBRARIES += libpromio_abi.la
-libpromio_abi_la_SOURCES = $(romio_mpi_sources)
-libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DMPICH_BUILD_MPI_ABI
-libpromio_abi_la_LDFLAGS = $(external_ldflags)
-libpromio_abi_la_LIBADD = $(external_libs)
-endif BUILD_PROFILING_LIB
-libromio_abi_la_LDFLAGS = $(external_ldflags)
-libromio_abi_la_LIBADD = $(external_libs)
-endif BUILD_ABI_LIB
+endif !BUILD_ABI_LIB
 
 # ---------------------------
 else !BUILD_ROMIO_EMBEDDED

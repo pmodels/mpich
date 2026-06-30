@@ -3,11 +3,6 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifdef MPI_ABI
-#include "mpi_abi.h"
-#include "mpix.h"
-#else
-
 /* @configure_input@ */
 #ifndef MPI_INCLUDED
 #define MPI_INCLUDED
@@ -148,8 +143,6 @@ extern "C" {
 #else
 #  define MPICH_ATTR_TYPE_TAG_CXX(type)
 #endif
-
-@MPIU_DLL_SPEC_DEF@
 
 /* Define some null objects */
 #define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
@@ -369,7 +362,6 @@ typedef int MPI_Info;
 #ifndef MPICH_BUILD_MPI_ABI
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
 typedef @MPI_COUNT@ MPI_Count;
 
 /* Let ROMIO know that MPI_Offset is already defined */
@@ -388,35 +380,6 @@ typedef struct MPI_Status {
     int MPI_TAG;
     int MPI_ERROR;
 } MPI_Status;
-
-/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used
-   as a hook for systems that require C extensions to correctly construct
-   DLLs, and is defined as an empty string otherwise
- */
-
-/* C type for MPI_STATUS in F08.
-   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
- */
-typedef struct {
-    MPI_Fint count_lo;
-    MPI_Fint count_hi_and_cancelled;
-    MPI_Fint MPI_SOURCE;
-    MPI_Fint MPI_TAG;
-    MPI_Fint MPI_ERROR;
-} MPI_F08_status;
-
-/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
-#define MPI_F_STATUS_SIZE 5
-#define MPI_F_SOURCE 2
-#define MPI_F_TAG 3
-#define MPI_F_ERROR 4
-
-/* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
 #endif /* MPICH_BUILD_MPI_ABI */
 
@@ -1021,53 +984,9 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #include <mpix.h>
 #include <mpi_proto.h>
 
-/* The f2c and c2f APIs exist as real functions, but these macros allows
- * for backward MPICH ABI compatibility.
- */
-/* exclude these macros from MPICH internal */
-#ifndef MPICHCONF_H_INCLUDED
-#define MPI_Comm_c2f(comm) (MPI_Fint)(comm)
-#define MPI_Comm_f2c(comm) (MPI_Comm)(comm)
-#define MPI_Type_c2f(datatype) (MPI_Fint)(datatype)
-#define MPI_Type_f2c(datatype) (MPI_Datatype)(datatype)
-#define MPI_Group_c2f(group) (MPI_Fint)(group)
-#define MPI_Group_f2c(group) (MPI_Group)(group)
-#define MPI_Info_c2f(info) (MPI_Fint)(info)
-#define MPI_Info_f2c(info) (MPI_Info)(info)
-#define MPI_Request_f2c(request) (MPI_Request)(request)
-#define MPI_Request_c2f(request) (MPI_Fint)(request)
-#define MPI_Op_c2f(op) (MPI_Fint)(op)
-#define MPI_Op_f2c(op) (MPI_Op)(op)
-#define MPI_Errhandler_c2f(errhandler) (MPI_Fint)(errhandler)
-#define MPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
-#define MPI_Win_c2f(win)   (MPI_Fint)(win)
-#define MPI_Win_f2c(win)   (MPI_Win)(win)
-#define MPI_Message_c2f(msg) ((MPI_Fint)(msg))
-#define MPI_Message_f2c(msg) ((MPI_Message)(msg))
-#define MPI_Session_c2f(session) (MPI_Fint)(session)
-#define MPI_Session_f2c(session) (MPI_Session)(session)
-
-/* PMPI versions of the handle transfer functions.  See section 4.17 */
-#define PMPI_Comm_c2f(comm) (MPI_Fint)(comm)
-#define PMPI_Comm_f2c(comm) (MPI_Comm)(comm)
-#define PMPI_Type_c2f(datatype) (MPI_Fint)(datatype)
-#define PMPI_Type_f2c(datatype) (MPI_Datatype)(datatype)
-#define PMPI_Group_c2f(group) (MPI_Fint)(group)
-#define PMPI_Group_f2c(group) (MPI_Group)(group)
-#define PMPI_Info_c2f(info) (MPI_Fint)(info)
-#define PMPI_Info_f2c(info) (MPI_Info)(info)
-#define PMPI_Request_f2c(request) (MPI_Request)(request)
-#define PMPI_Request_c2f(request) (MPI_Fint)(request)
-#define PMPI_Op_c2f(op) (MPI_Fint)(op)
-#define PMPI_Op_f2c(op) (MPI_Op)(op)
-#define PMPI_Errhandler_c2f(errhandler) (MPI_Fint)(errhandler)
-#define PMPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
-#define PMPI_Win_c2f(win)   (MPI_Fint)(win)
-#define PMPI_Win_f2c(win)   (MPI_Win)(win)
-#define PMPI_Message_c2f(msg) ((MPI_Fint)(msg))
-#define PMPI_Message_f2c(msg) ((MPI_Message)(msg))
-#define PMPI_Session_c2f(session) (MPI_Fint)(session)
-#define PMPI_Session_f2c(session) (MPI_Session)(session)
+/* include fortran inter-op header if needed */
+#ifdef MPICH_ENABLE_FORTRAN
+#include <mpi_fortran.h>
 #endif
 
 #endif /* MPICH_BUILD_MPI_ABI */
@@ -1091,4 +1010,3 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #endif
 
 #endif  /* MPI_INCLUDED */
-#endif  /* MPI_ABI */
