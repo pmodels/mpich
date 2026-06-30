@@ -6,7 +6,7 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 cvars:
-    - name        : MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
+    - name        : MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
       category    : CH4
       type        : int
       default     : 16
@@ -14,22 +14,9 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        The maximum number of entries to hold per device in the cache containing IPC mapped buffers.
-        When an entry is evicted, the corresponding IPC handle is closed. This value is relevant
-        only when MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE=limited.
-
-    - name        : MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
-      category    : CH4
-      type        : enum
-      default     : limited
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        The behavior of the cache containing IPC mapped buffers.
-        unlimited - don't restrict the cache size
-        limited - limit the cache size based on MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
-        disabled - don't cache mapped IPC buffers
+        The maximum number of entries to hold in the cache containing IPC mapped buffers.
+        When an entry is evicted, the corresponding IPC handle is closed. If MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
+        is 0, IPC handle caching is disabled.
 
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
@@ -123,7 +110,7 @@ cvars:
         * Cache invalidate: send AM to each mapped rank to unmap.
  */
 
-#define IPC_HANDLE_CACHE_MAX 64
+#define IPC_HANDLE_CACHE_MAX 1024
 
 struct map_entry {
     int remote_rank;
@@ -288,7 +275,7 @@ static int ipc_track_cache_check_limit(struct am_context am_ctx)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES, IPC_HANDLE_CACHE_MAX);
+    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
     if (ipc_handle_cache_count >= cache_limit) {
         /* find LRU slot */
         int min_idx = -1;
@@ -320,7 +307,7 @@ static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
     mpi_errno = ipc_track_cache_check_limit(am_ctx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES, IPC_HANDLE_CACHE_MAX);
+    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
     if (ipc_handle_cache_count < cache_limit) {
         struct handle_cache_entry *entry = &ipc_handle_cache[ipc_handle_cache_count];
         memset(entry, 0, sizeof(*entry));
