@@ -119,6 +119,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr);
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
+MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr);
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr);
 
 int MPL_gpu_malloc_host(void **ptr, size_t size);
