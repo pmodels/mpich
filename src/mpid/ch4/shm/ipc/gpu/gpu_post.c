@@ -135,11 +135,12 @@ struct handle_cache_entry {
 /* We may need send AM messages as we evict cache entries. Wrap the message context in a struct to
    keep the interface clean */
 struct am_context {
+    MPIR_Comm *comm;
     int local_vci;
     int remote_vci;
 };
 
-static struct am_context default_am_ctx = { 0, 0 };
+static struct am_context default_am_ctx = { NULL, 0, 0 };
 
 static struct handle_cache_entry ipc_handle_cache[IPC_HANDLE_CACHE_MAX];
 static int ipc_handle_cache_count = 0;
@@ -171,7 +172,12 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
             mpi_errno = MPIDI_IPC_send_unmap(MPIR_Process.comm_world, entry->maps[i].remote_rank,
                                              am_ctx.local_vci, am_ctx.remote_vci,
                                              MPIDI_IPCI_TYPE__GPU, entry->maps[i].mapped_addr);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (am_ctx.comm == NULL) {
+                /* ignore the error in case the remote process already exit */
+                mpi_errno = MPI_SUCCESS;
+            } else {
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
     }
 
@@ -493,7 +499,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     MPI_Aint len = ipc_attr->u.gpu.bounds_len;
     int remote_rank = ipc_attr->u.gpu.remote_rank;
     struct am_context ctx =
-        { MPIDIG_REQUEST(req, req->local_vci), MPIDIG_REQUEST(req, req->remote_vci) };
+        { req->comm, MPIDIG_REQUEST(req, req->local_vci), MPIDIG_REQUEST(req, req->remote_vci) };
 
     struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, ctx);
     if (entry) {
