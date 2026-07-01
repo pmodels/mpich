@@ -79,6 +79,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vci)
     MPIDI_OFI_WIN(win).syncQ = NULL;
     MPIDI_OFI_WIN(win).progress_counter = 1;
 
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
+        MPIDI_OFI_mr_queue_t *elt, *tmp;
+        LL_FOREACH_SAFE(MPIDI_OFI_WIN(win).pending_mr_queue.head, elt, tmp) {
+            if (elt->mr) {
+                MPIDI_OFI_mr_complete(elt->mr, true);
+                LL_DELETE(MPIDI_OFI_WIN(win).pending_mr_queue.head,
+                          MPIDI_OFI_WIN(win).pending_mr_queue.tail, elt);
+                MPL_free(elt);
+            }
+        }
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

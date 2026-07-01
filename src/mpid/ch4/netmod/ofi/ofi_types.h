@@ -442,13 +442,6 @@ typedef struct {
                                  * This is typically the socket above the NIC */
 } MPIDI_OFI_nic_info_t;
 
-/* Queue for storing the memory registration handles */
-typedef struct MPIDI_GPU_RDMA_queue_t {
-    void *mr;
-    struct MPIDI_GPU_RDMA_queue_t *next;
-    struct MPIDI_GPU_RDMA_queue_t *prev;
-} MPIDI_GPU_RDMA_queue_t;
-
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 #define MPIDI_OFI_DT_MAX 30     /* must >= FI_DATATYPE_LAST */
@@ -496,9 +489,6 @@ typedef struct {
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_MAX][MPIDI_OFI_OP_MAX];
-
-    /* Registration list for GPU RDMA */
-    MPIDI_GPU_RDMA_queue_t *gdr_mrs;
 
     /* stores the maximum of last recently used optimized memory region key */
     uint64_t global_max_optimized_mr_key;

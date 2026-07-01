@@ -882,20 +882,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
     }
 
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
-        MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
-        DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
-            if (queue_mr->mr) {
-                struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
-                if (mr != NULL) {
-                    MPIDI_OFI_CALL(fi_close(&mr->fid), mr_unreg);
-                }
-
-                DL_DELETE(MPIDI_OFI_global.gdr_mrs, queue_mr);
-                MPL_free(queue_mr);
-            }
-        }
-    }
+    mpi_errno = MPIDI_OFI_mr_cache_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Tearing down endpoints in reverse order they were created */
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
