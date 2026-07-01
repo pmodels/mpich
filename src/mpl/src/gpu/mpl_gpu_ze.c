@@ -182,44 +182,9 @@ typedef struct {
     UT_hash_handle hh;
 } MPL_ze_ipc_handle_entry_t;
 
-typedef struct {
-    uint64_t remote_mem_id;
-    int remote_dev_id;
-    pid_t remote_pid;
-} MPL_ze_mapped_buffer_lookup_t;
-
-typedef struct {
-    MPL_ze_mapped_buffer_lookup_t key;
-    void *ipc_buf;
-    void *mapped_ptr;
-    size_t mapped_size;
-    int fds[2];
-    int nfds;
-    UT_hash_handle hh;
-} MPL_ze_mapped_buffer_entry_t;
 
 static MPL_ze_gem_hash_entry_t *gem_hash = NULL;
-static MPL_ze_ipc_handle_entry_t **ipc_cache_tracked = NULL;
-static MPL_ze_mapped_buffer_entry_t **ipc_cache_mapped = NULL;
-static MPL_ze_mapped_buffer_entry_t **ipc_cache_removal = NULL;
-static MPL_ze_mapped_buffer_entry_t **mmap_cache_removal = NULL;
 
-/* LRU replacement structures for ipc_cache_mapped (i.e. recv side) */
-typedef struct MPL_ze_ipc_lru_mapped_entry_t {
-    void *ipc_buf;
-    struct MPL_ze_ipc_lru_mapped_entry_t *next, *prev;
-} MPL_ze_ipc_lru_mapped_entry_t;
-
-typedef struct {
-    void *ipc_buf;              /* key */
-    MPL_ze_ipc_lru_mapped_entry_t *entry;       /* entry in dl ipc_lru_order_head */
-    UT_hash_handle hh;
-} MPL_ze_ipc_lru_map_t;
-
-static MPL_ze_ipc_lru_map_t **ipc_lru_map = NULL;
-static MPL_ze_ipc_lru_mapped_entry_t **ipc_lru_mapped_order_head = NULL;
-static MPL_ze_ipc_lru_mapped_entry_t **ipc_lru_mapped_order_tail = NULL;
-static int *ipc_curr_mapped_entries = NULL;
 static int *ipc_max_entries = NULL;
 
 /* For pidfd */
@@ -269,8 +234,6 @@ static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int gpu_mem_hook_init(void);
-static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
-static int update_lru_mapped_order(void *ipc_buf, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
 static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
@@ -609,90 +572,6 @@ int MPL_gpu_init(int debug_summary)
 
     memset(ipc_max_entries, 0, local_ze_device_count * sizeof(int));
 
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        ipc_cache_tracked =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_handle_entry_t *), MPL_MEM_OTHER);
-        if (ipc_cache_tracked == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_cache_mapped =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_mapped_buffer_entry_t *),
-                       MPL_MEM_OTHER);
-        if (ipc_cache_mapped == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_cache_removal =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_mapped_buffer_entry_t *),
-                       MPL_MEM_OTHER);
-        if (ipc_cache_removal == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        mmap_cache_removal =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_mapped_buffer_entry_t *),
-                       MPL_MEM_OTHER);
-        if (mmap_cache_removal == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_lru_map =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_map_t *), MPL_MEM_OTHER);
-        if (ipc_lru_map == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_lru_mapped_order_head =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *),
-                       MPL_MEM_OTHER);
-        if (ipc_lru_mapped_order_head == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_lru_mapped_order_tail =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *),
-                       MPL_MEM_OTHER);
-        if (ipc_lru_mapped_order_tail == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        ipc_curr_mapped_entries = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
-        if (ipc_curr_mapped_entries == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        /* Set the max size for the opened IPC handles cache */
-        max_cache_entries = MPL_gpu_info.max_cache_entries;
-
-        if (max_cache_entries == -1)
-            max_cache_entries = INT_MAX;
-
-        for (int i = 0; i < local_ze_device_count; ++i) {
-            ipc_cache_tracked[i] = NULL;
-            ipc_cache_mapped[i] = NULL;
-            ipc_cache_removal[i] = NULL;
-            mmap_cache_removal[i] = NULL;
-            ipc_lru_map[i] = NULL;
-            ipc_lru_mapped_order_head[i] = NULL;
-            ipc_lru_mapped_order_tail[i] = NULL;
-            ipc_curr_mapped_entries[i] = 0;
-            ipc_max_entries[i] = max_cache_entries;
-        }
-
-        MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
-    } else {
-        MPL_gpu_info.specialized_cache = false;
-    }
-
     /* Initialize gpu engine mapping */
     engine_conversion = (int *) MPL_malloc(sizeof(int) * MPL_GPU_ENGINE_NUM_TYPES, MPL_MEM_OTHER);
     engine_conversion[MPL_GPU_ENGINE_TYPE_COMPUTE] = 0; // Compute engine
@@ -917,74 +796,6 @@ static int munmapFunction(int nfds, void *ptr, size_t size)
     return mpl_err;
   fn_fail:
     mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
-/*
-    cache utility functions for MPL_ze_ipc_handle_entry_t:
-    used to cache local device pointer's ipc handle and mmap'ed pointer.
-    mapped pointers can be from a remote IPC handle
-*/
-
-static inline int free_ipc_handle_cache(MPL_ze_ipc_handle_entry_t * cache_entry)
-{
-    int mpl_err = MPL_SUCCESS;
-    int ret = ZE_RESULT_SUCCESS;
-
-    if (cache_entry->mapped_ptr) {
-        munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr, cache_entry->mapped_size);
-        if (!cache_entry->handle_cached) {
-            /* free the ipc handle itself */
-            if (cache_entry->nfds == 1) {
-                ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[0]);
-                ZE_ERR_CHECK(ret);
-            } else {
-                /* FIXME: in implicit scaling mode, L0 lacks an extension function to free two handles */
-            }
-        }
-    }
-
-    if (cache_entry->handle_cached) {
-        if (cache_entry->nfds == 1) {
-            ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[0]);
-            ZE_ERR_CHECK(ret);
-        } else {
-            /* FIXME: in implicit scaling mode, L0 lacks an extension function to free two handles */
-        }
-    }
-
-    cache_entry->mapped_ptr = NULL;
-    cache_entry->handle_cached = false;
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    fprintf(stderr, "free_ipc_handle_cache failed with ze error: %x\n", ret);
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
-static inline int new_ipc_handle_cache(MPL_ze_ipc_handle_entry_t ** entry, int mem_id)
-{
-    int mpl_err = MPL_SUCCESS;
-    MPL_ze_ipc_handle_entry_t *cache_entry;
-
-    cache_entry =
-        (MPL_ze_ipc_handle_entry_t *) MPL_malloc(sizeof(MPL_ze_ipc_handle_entry_t), MPL_MEM_OTHER);
-    if (cache_entry == NULL) {
-        mpl_err = MPL_ERR_GPU_NOMEM;
-        goto fn_fail;
-    }
-
-    memset(cache_entry, 0, sizeof(MPL_ze_ipc_handle_entry_t));
-    cache_entry->mem_id = mem_id;
-    cache_entry->handle_cached = false;
-    *entry = cache_entry;
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    *entry = NULL;
     goto fn_exit;
 }
 
@@ -1380,65 +1191,6 @@ int MPL_gpu_finalize(void)
 {
     int i, j, k;
 
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        for (i = 0; i < local_ze_device_count; ++i) {
-            if (ipc_cache_removal[i]) {
-                MPL_ze_mapped_buffer_entry_t *entry = NULL, *tmp = NULL;
-                HASH_ITER(hh, ipc_cache_removal[i], entry, tmp) {
-                    remove_ipc_handle_entry(entry, i);
-                }
-            }
-
-            if (mmap_cache_removal[i]) {
-                MPL_ze_mapped_buffer_entry_t *entry = NULL, *tmp = NULL;
-                HASH_ITER(hh, mmap_cache_removal[i], entry, tmp) {
-                    MPL_ze_mmap_handle_unmap(entry->mapped_ptr, i);
-                }
-            }
-        }
-
-        for (i = 0; i < local_ze_device_count; ++i) {
-            if (ipc_cache_tracked[i]) {
-                MPL_ze_ipc_handle_entry_t *entry = NULL, *tmp = NULL;
-                HASH_ITER(hh, ipc_cache_tracked[i], entry, tmp) {
-                    free_ipc_handle_cache(entry);
-                    HASH_DELETE(hh, ipc_cache_tracked[i], entry);
-                    MPL_free(entry);
-                }
-            }
-
-            /* Cleanup the lru entries - the ipc handles are already closed */
-            MPL_ze_ipc_lru_map_t *lru_mapped_entry = NULL, *lru_mapped_tmp = NULL;
-            HASH_ITER(hh, ipc_lru_map[i], lru_mapped_entry, lru_mapped_tmp) {
-                HASH_DELETE(hh, ipc_lru_map[i], lru_mapped_entry);
-                MPL_free(lru_mapped_entry);
-            }
-
-            MPL_ze_ipc_lru_mapped_entry_t *lru_dl_mapped_entry = NULL, *lru_dl_mapped_tmp = NULL;
-            DL_FOREACH_SAFE(ipc_lru_mapped_order_head[i], lru_dl_mapped_entry, lru_dl_mapped_tmp) {
-                DL_DELETE(ipc_lru_mapped_order_head[i], lru_dl_mapped_entry);
-                MPL_free(lru_dl_mapped_entry);
-            }
-        }
-
-        {
-            MPL_ze_mem_id_entry_t *entry = NULL, *tmp = NULL;
-            HASH_ITER(hh, mem_id_cache, entry, tmp) {
-                HASH_DELETE(hh, mem_id_cache, entry);
-                MPL_free(entry);
-            }
-        }
-
-        MPL_free(ipc_cache_tracked);
-        MPL_free(ipc_cache_removal);
-        MPL_free(mmap_cache_removal);
-        MPL_free(ipc_cache_mapped);
-        MPL_free(ipc_lru_map);
-        MPL_free(ipc_lru_mapped_order_head);
-        MPL_free(ipc_lru_mapped_order_tail);
-        MPL_free(ipc_curr_mapped_entries);
-    }
-
     MPL_free(ipc_max_entries);
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
@@ -1613,105 +1365,46 @@ static void MPL_event_pool_destroy(void)
     }
 }
 
-static int update_lru_mapped_order(void *ipc_buf, int dev_id)
+/* given a local device pointer, create an IPC handle */
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
+                              MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
-    MPL_ze_ipc_lru_mapped_entry_t *new_tail = NULL;
-    MPL_ze_ipc_lru_map_t *map_entry = NULL;
-    MPL_ze_ipc_lru_mapped_entry_t **head = &ipc_lru_mapped_order_head[dev_id];
-    MPL_ze_ipc_lru_mapped_entry_t **tail = &ipc_lru_mapped_order_tail[dev_id];
+    int local_dev_id = -1;
+    MPL_ze_mem_id_entry_t *memid_entry = NULL;
+    uint64_t mem_id = 0;
+    void *pbase = NULL;
+    uintptr_t len;
 
-    if (ipc_max_entries[dev_id] == 0)
-        goto fn_exit;
+    local_dev_id = device_to_dev_id(ptr_attr->device);
+    if (local_dev_id == -1) {
+        goto fn_fail;
+    }
 
-    /* Find the existing entry */
-    HASH_FIND_PTR(ipc_lru_map[dev_id], &ipc_buf, map_entry);
+    mpl_err = MPL_gpu_get_buffer_bounds(ptr, &pbase, &len);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
+    }
 
-    if (map_entry) {
-        /* If it's already the head, don't do anything */
-        if (map_entry->entry == *head)
-            goto fn_exit;
-
-        /* Remove it from the list */
-        DL_DELETE(*head, map_entry->entry);
-
-        /* Check if the tail needs updating */
-        if (map_entry->entry == *tail) {
-            *tail = map_entry->entry->prev;
-        }
-
-        /* Prepend to the list */
-        DL_PREPEND(*head, map_entry->entry);
-    } else {
-        /* Allocate a new entry */
-        MPL_ze_ipc_lru_mapped_entry_t *entry =
-            (MPL_ze_ipc_lru_mapped_entry_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_mapped_entry_t),
-                                                         MPL_MEM_OTHER);
-        if (entry == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        entry->ipc_buf = ipc_buf;
-
-        /* Prepend to the list */
-        DL_PREPEND(*head, entry);
-        ipc_curr_mapped_entries[dev_id] += 1;
-
-        /* Set the tail for the first entry */
-        if (*tail == NULL) {
-            *tail = *head;
-        }
-
-        /* Add to the map for constant access during reorder */
-        map_entry =
-            (MPL_ze_ipc_lru_map_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_map_t), MPL_MEM_OTHER);
-        if (map_entry == NULL) {
-            mpl_err = MPL_ERR_GPU_NOMEM;
-            goto fn_fail;
-        }
-
-        map_entry->ipc_buf = ipc_buf;
-        map_entry->entry = entry;
-
-        HASH_ADD_PTR(ipc_lru_map[dev_id], ipc_buf, map_entry, MPL_MEM_OTHER);
-
-        /* Check if cache size is over the limit */
-        if (ipc_curr_mapped_entries[dev_id] > ipc_max_entries[dev_id]) {
-            map_entry = NULL;
-            new_tail = (*tail)->prev;
-
-            /* Remove last entry from list */
-            DL_DELETE(*head, *tail);
-
-            /* Delete entry from the hash table */
-            HASH_FIND_PTR(ipc_lru_map[dev_id], &(*tail)->ipc_buf, map_entry);
-            assert(map_entry != NULL);
-            HASH_DELETE(hh, ipc_lru_map[dev_id], map_entry);
-            MPL_free(map_entry);
-
-            /* Close IPC handle for removed entry */
-            MPL_gpu_ipc_handle_unmap((*tail)->ipc_buf);
-            MPL_free(*tail);
-
-            /* Set the new tail */
-            *tail = new_tail;
-
-            ipc_curr_mapped_entries[dev_id] -= 1;
-        }
+    MPL_DBG_MSG_P(MPL_DBG_GPU_ZE, VERBOSE, "cached gpu ipc handle MISS for %p", pbase);
+    mpl_err = MPL_ze_ipc_handle_create(pbase, ptr_attr, local_dev_id, true, ipc_handle);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
     }
 
   fn_exit:
     return mpl_err;
   fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
 
-/* remove stale cache entry associated with ptr,
- * mem_id, local_dev_id are ptr's real property */
-static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local_dev_id)
+/* ptr must be a local device pointer and base address */
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
-    int status, mpl_err = MPL_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
+    int dev_id;
+    uint64_t mem_id;
 
     if (physical_device_states != NULL) {
         /* drmfd */
@@ -1733,147 +1426,6 @@ static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local
         }
     }
 
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
-        MPL_ze_mem_id_entry_t *memid_entry = NULL;
-
-        if (local_dev_id == -1) {
-            goto fn_fail;
-        }
-
-        HASH_FIND(hh, mem_id_cache, &ptr, sizeof(void *), memid_entry);
-        if (memid_entry) {
-            HASH_DELETE(hh, mem_id_cache, memid_entry);
-
-            HASH_FIND(hh, ipc_cache_tracked[memid_entry->dev_id], &mem_id, sizeof(uint64_t),
-                      cache_entry);
-            if (cache_entry) {
-                MPL_DBG_MSG_P(MPL_DBG_GPU_ZE, VERBOSE, "removing STALE gpu ipc handle for %p", ptr);
-                /* call putIpcHandle only if this ptr is still valid */
-                if (memid_entry->mem_id == mem_id && memid_entry->dev_id == local_dev_id) {
-                    free_ipc_handle_cache(cache_entry);
-                }
-                HASH_DELETE(hh, ipc_cache_tracked[memid_entry->dev_id], cache_entry);
-                MPL_free(cache_entry);
-            }
-            MPL_free(memid_entry);
-        }
-    }
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
-/* given a local device pointer, create an IPC handle */
-int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
-                              MPL_gpu_ipc_mem_handle_t * ipc_handle)
-{
-    int mpl_err = MPL_SUCCESS;
-    int local_dev_id = -1;
-    MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
-    MPL_ze_mem_id_entry_t *memid_entry = NULL;
-    uint64_t mem_id = 0;
-    void *pbase = NULL;
-    uintptr_t len;
-
-    local_dev_id = device_to_dev_id(ptr_attr->device);
-    if (local_dev_id == -1) {
-        goto fn_fail;
-    }
-
-    mpl_err = MPL_gpu_get_buffer_bounds(ptr, &pbase, &len);
-    if (mpl_err != MPL_SUCCESS) {
-        goto fn_fail;
-    }
-
-    /* First check if a removal from the cache is needed */
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        mem_id = ptr_attr->prop.id;
-        HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
-
-        if (memid_entry && (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id)) {
-            mpl_err = remove_stale_sender_cache(ptr, mem_id, local_dev_id);
-            if (mpl_err != MPL_SUCCESS) {
-                goto fn_fail;
-            }
-            memid_entry = NULL;
-        }
-
-        /* Check if ipc_handle is already cached */
-        HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
-    }
-
-    if (cache_entry && cache_entry->handle_cached) {
-        MPL_DBG_MSG_P(MPL_DBG_GPU_ZE, VERBOSE, "cached gpu ipc handle HIT for %p", pbase);
-        memcpy(ipc_handle, &cache_entry->ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
-    } else {
-        MPL_DBG_MSG_P(MPL_DBG_GPU_ZE, VERBOSE, "cached gpu ipc handle MISS for %p", pbase);
-        mpl_err = MPL_ze_ipc_handle_create(pbase, ptr_attr, local_dev_id, true, ipc_handle);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-
-        if (likely(MPL_gpu_info.specialized_cache)) {
-            MPL_DBG_MSG_P(MPL_DBG_GPU_ZE, VERBOSE, "caching NEW gpu ipc handle for %p", pbase);
-            if (cache_entry) {
-                /* In the case where there was an entry, but no ipc handle yet */
-                cache_entry->handle_cached = true;
-                memcpy(&cache_entry->ipc_handle, ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
-            } else {
-                /* Insert into the cache */
-                mpl_err = new_ipc_handle_cache(&cache_entry, mem_id);
-                if (mpl_err != MPL_SUCCESS) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-
-                cache_entry->handle_cached = true;
-                memcpy(&cache_entry->ipc_handle, ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
-                cache_entry->nfds = ipc_handle->data.nfds;
-                HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
-                         MPL_MEM_OTHER);
-            }
-
-            if (memid_entry == NULL) {
-                memid_entry = (MPL_ze_mem_id_entry_t *) MPL_malloc(sizeof(MPL_ze_mem_id_entry_t),
-                                                                   MPL_MEM_OTHER);
-                if (memid_entry == NULL) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-                memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
-                memid_entry->ptr = pbase;
-                memid_entry->mem_id = mem_id;
-                memid_entry->dev_id = local_dev_id;
-                HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
-            }
-        }
-    }
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
-/* ptr must be a local device pointer and base address */
-int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
-{
-    int mpl_err = MPL_SUCCESS;
-    int dev_id;
-    uint64_t mem_id;
-
-    mem_id = gpu_attr->device_attr.prop.id;
-    dev_id = device_to_dev_id(gpu_attr->device);
-    if (dev_id == -1) {
-        goto fn_fail;
-    }
-    mpl_err = remove_stale_sender_cache(ptr, mem_id, dev_id);
-
   fn_exit:
     return mpl_err;
   fn_fail:
@@ -1884,140 +1436,20 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
-    MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
-    MPL_ze_mapped_buffer_entry_t *removal_entry = NULL;
-    MPL_ze_mapped_buffer_lookup_t lookup_entry;
     unsigned keylen = 0;
     int fds[2] = { -1 };
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
 
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        /* Check if ipc-mapped buffer is already cached */
-        lookup_entry.remote_mem_id = h.mem_id;
-        lookup_entry.remote_dev_id = h.dev_id;
-        lookup_entry.remote_pid = h.pid;
-
-        keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
-
-        HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
-    }
-
-    if (cache_entry && cache_entry->ipc_buf) {
-        *ptr = cache_entry->ipc_buf;
-    } else {
-        if (cache_entry) {
-            /* If a cache entry exists, then MPL_ze_ipc_handle_map was already called previously
-             * (inside MPL_ze_ipc_handle_mmap_host). Make sure to reuse the fds from that call
-             * instead of creating new ones */
-            for (int i = 0; i < cache_entry->nfds; ++i) {
-                fds[i] = cache_entry->fds[i];
-            }
-        }
-
-        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, &fds, ptr);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-
-        if (likely(MPL_gpu_info.specialized_cache)) {
-            if (cache_entry) {
-                cache_entry->ipc_buf = *ptr;
-
-                removal_entry = (MPL_ze_mapped_buffer_entry_t *)
-                    MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t), MPL_MEM_OTHER);
-                if (removal_entry == NULL) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-                memcpy(removal_entry, cache_entry, sizeof(MPL_ze_mapped_buffer_entry_t));
-                removal_entry->mapped_ptr = NULL;
-
-                HASH_ADD(hh, ipc_cache_removal[dev_id], ipc_buf, sizeof(void *), removal_entry,
-                         MPL_MEM_OTHER);
-            } else {
-                /* Insert into the cache */
-                cache_entry = (MPL_ze_mapped_buffer_entry_t *)
-                    MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t), MPL_MEM_OTHER);
-                if (cache_entry == NULL) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-                memset(cache_entry, 0, sizeof(MPL_ze_mapped_buffer_entry_t));
-                cache_entry->key = lookup_entry;
-                cache_entry->ipc_buf = *ptr;
-                cache_entry->nfds = h.nfds;
-
-                /* Store the fds created from MPL_ze_ipc_handle_map for closing later */
-                for (int i = 0; i < cache_entry->nfds; i++)
-                    cache_entry->fds[i] = fds[i];
-
-                removal_entry = (MPL_ze_mapped_buffer_entry_t *)
-                    MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t), MPL_MEM_OTHER);
-                if (removal_entry == NULL) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-                memcpy(removal_entry, cache_entry, sizeof(MPL_ze_mapped_buffer_entry_t));
-
-                HASH_ADD(hh, ipc_cache_mapped[dev_id], key, keylen, cache_entry, MPL_MEM_OTHER);
-                HASH_ADD(hh, ipc_cache_removal[dev_id], ipc_buf, sizeof(void *), removal_entry,
-                         MPL_MEM_OTHER);
-            }
-        }
-    }
-
-    if (likely(MPL_gpu_info.specialized_cache && MPL_gpu_info.max_cache_entries != -1)) {
-        update_lru_mapped_order(*ptr, dev_id);
-    }
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* free a cache entry in mmap_cache_removal in finalize stage */
-int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id)
-{
-    int mpl_err = MPL_SUCCESS;
-    unsigned keylen;
-    MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
-    MPL_ze_mapped_buffer_lookup_t lookup_entry;
-
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        HASH_FIND(hh, mmap_cache_removal[dev_id], &ptr, sizeof(void *), cache_entry);
-        if (cache_entry != NULL) {
-            lookup_entry = cache_entry->key;
-            keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
-
-            HASH_DEL(mmap_cache_removal[dev_id], cache_entry);
-            MPL_free(cache_entry);
-            cache_entry = NULL;
-
-            HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry, keylen, cache_entry);
-
-            /* since ipc_cache_removal is removed first, only mapped_ptr
-             * need to be considered */
-            if (cache_entry != NULL) {
-                if (cache_entry->mapped_ptr) {
-                    munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr,
-                                   cache_entry->mapped_size);
-                }
-                HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
-                MPL_free(cache_entry);
-                cache_entry = NULL;
-            }
-        }
-    } else {
+    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, &fds, ptr);
+    if (mpl_err != MPL_SUCCESS) {
         goto fn_fail;
     }
 
   fn_exit:
     return mpl_err;
   fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
 
@@ -2028,8 +1460,6 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     unsigned keylen;
     ze_result_t ret;
     ze_device_handle_t device = NULL;
-    MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
-    MPL_ze_mapped_buffer_lookup_t lookup_entry;
 
     ze_memory_allocation_properties_t ptr_attr = {
         .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
@@ -2041,44 +1471,6 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 
     ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
     ZE_ERR_CHECK(ret);
-
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        dev_id = device_to_dev_id(device);
-        if (dev_id == -1) {
-            goto fn_fail;
-        }
-
-        /* Remove from the caches */
-        HASH_FIND(hh, ipc_cache_removal[dev_id], &ptr, sizeof(void *), cache_entry);
-
-        if (cache_entry != NULL) {
-            lookup_entry = cache_entry->key;
-            keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
-
-            HASH_DEL(ipc_cache_removal[dev_id], cache_entry);
-            MPL_free(cache_entry);
-            cache_entry = NULL;
-
-            HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen,
-                      cache_entry);
-
-            if (cache_entry != NULL) {
-                if (cache_entry->mapped_ptr) {
-                    munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr,
-                                   cache_entry->mapped_size);
-                }
-                for (int i = 0; i < cache_entry->nfds; ++i) {
-                    close(cache_entry->fds[i]);
-                }
-                if (cache_entry->ipc_buf != ptr) {
-                    goto fn_fail;
-                }
-                HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
-                MPL_free(cache_entry);
-                cache_entry = NULL;
-            }
-        }
-    }
 
     /* Unmap the buffer */
     ret = zeMemCloseIpcHandle(ze_context, ptr);
@@ -2107,46 +1499,6 @@ bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
     assert(ret == ZE_RESULT_SUCCESS);
 
     return handle->data.mem_id == ptr_attr.id;
-}
-
-/* at finalize, to free a cache entry in ipc_cache_removal cache */
-static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id)
-{
-    int mpl_err = MPL_SUCCESS;
-    ze_result_t ret;
-    unsigned keylen;
-    MPL_ze_mapped_buffer_lookup_t lookup_entry;
-
-    lookup_entry = cache_entry->key;
-    keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
-
-    HASH_DEL(ipc_cache_removal[dev_id], cache_entry);
-    MPL_free(cache_entry);
-    cache_entry = NULL;
-
-    HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
-
-    if (cache_entry != NULL) {
-        if (cache_entry->ipc_buf) {
-            ret = zeMemCloseIpcHandle(ze_context, cache_entry->ipc_buf);
-            ZE_ERR_CHECK(ret);
-        }
-        if (cache_entry->mapped_ptr) {
-            munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr, cache_entry->mapped_size);
-        }
-        for (int i = 0; i < cache_entry->nfds; ++i) {
-            close(cache_entry->fds[i]);
-        }
-        HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
-        MPL_free(cache_entry);
-        cache_entry = NULL;
-    }
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
@@ -3020,31 +2372,6 @@ void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
 #endif
 }
 
-/* zeMemFree hook function */
-void MPL_ze_ipc_remove_cache_handle(void *dptr)
-{
-    int mpl_err = MPL_SUCCESS;
-    MPL_pointer_attr_t attr;
-
-    mpl_err = MPL_gpu_query_pointer_attr(dptr, &attr);
-
-    if (attr.type == MPL_GPU_POINTER_DEV) {
-        void *pbase = NULL;
-        uintptr_t len;
-        mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-        mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &attr);
-    }
-
-  fn_exit:
-    return;
-  fn_fail:
-    fprintf(stderr, "Error > failed to complete MPL_ze_ipc_remove_cache_handle\n");
-    goto fn_exit;
-}
-
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
@@ -3083,7 +2410,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             if (entry &&
                 (entry->mem_id != mem_id ||
                  physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id)) {
-                mpl_err = remove_stale_sender_cache(ptr, mem_id, local_dev_id);
+                mpl_err = MPL_gpu_ipc_handle_destroy(ptr);
                 if (mpl_err != MPL_SUCCESS) {
                     goto fn_fail;
                 }
@@ -3244,82 +2571,12 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
     int mpl_err = MPL_SUCCESS;
     int fds[2] = { -1 };
     unsigned keylen;
-    MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
-    MPL_ze_mapped_buffer_entry_t *removal_entry = NULL;
-    MPL_ze_mapped_buffer_lookup_t lookup_entry;
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
 
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        /* Check if ipc-mapped buffer is already cached */
-        memset(&lookup_entry, 0, sizeof(MPL_ze_mapped_buffer_lookup_t));
-        lookup_entry.remote_mem_id = h.mem_id;
-        lookup_entry.remote_dev_id = h.dev_id;
-        lookup_entry.remote_pid = h.pid;
-
-        keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
-
-        HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
-    }
-
-    *ptr = NULL;
-    if (cache_entry) {
-        if (cache_entry->mapped_ptr) {
-            *ptr = cache_entry->mapped_ptr;
-        }
-
-        /* If a cache entry exists, then MPL_ze_ipc_handle_map was already called previously
-         * (inside MPL_gpu_ipc_handle_map). Make sure to reuse the fds from that call instead of
-         * creating new ones */
-        for (int i = 0; i < h.nfds; ++i) {
-            fds[i] = cache_entry->fds[i];
-        }
-    } else {
-        if (likely(MPL_gpu_info.specialized_cache)) {
-            /* Insert into the cache */
-            cache_entry =
-                (MPL_ze_mapped_buffer_entry_t *) MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t),
-                                                            MPL_MEM_OTHER);
-            if (cache_entry == NULL) {
-                mpl_err = MPL_ERR_GPU_NOMEM;
-                goto fn_fail;
-            }
-            memset(cache_entry, 0, sizeof(MPL_ze_mapped_buffer_entry_t));
-            cache_entry->key = lookup_entry;
-            HASH_ADD(hh, ipc_cache_mapped[dev_id], key, keylen, cache_entry, MPL_MEM_OTHER);
-        }
-    }
-
-    if (*ptr == NULL) {
-        mpl_err =
-            MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-
-        if (likely(MPL_gpu_info.specialized_cache)) {
-            cache_entry->mapped_ptr = *ptr;
-            cache_entry->mapped_size = size;
-            cache_entry->nfds = h.nfds;
-
-            /* Store the fds created from MPL_ze_ipc_handle_map for closing later */
-            for (int i = 0; i < h.nfds; i++)
-                cache_entry->fds[i] = fds[i];
-
-            removal_entry =
-                (MPL_ze_mapped_buffer_entry_t *) MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t),
-                                                            MPL_MEM_OTHER);
-            if (removal_entry == NULL) {
-                mpl_err = MPL_ERR_GPU_NOMEM;
-                goto fn_fail;
-            }
-            memcpy(removal_entry, cache_entry, sizeof(MPL_ze_mapped_buffer_entry_t));
-
-            HASH_ADD(hh, mmap_cache_removal[dev_id], mapped_ptr, sizeof(void *), removal_entry,
-                     MPL_MEM_OTHER);
-        }
-    }
+    mpl_err =
+        MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
 
   fn_exit:
     return mpl_err;
@@ -3338,7 +2595,6 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     uint32_t nfds;
     uint64_t mem_id, offset, len;
     void *pbase, *base;
-    MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
     MPL_ze_mem_id_entry_t *memid_entry = NULL;
 
     ret = zeMemGetAddressRange(ze_context, dptr, &pbase, &len);
@@ -3352,106 +2608,29 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
         goto fn_fail;
     }
 
-    /* First check if a removal from the cache is needed */
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
-
-        if (memid_entry && (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id)) {
-            HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &memid_entry->mem_id, sizeof(uint64_t),
-                      cache_entry);
-            if (cache_entry) {
-                free_ipc_handle_cache(cache_entry);
-                HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
-                MPL_free(cache_entry);
-                cache_entry = NULL;
-            }
-
-            HASH_DELETE(hh, mem_id_cache, memid_entry);
-            MPL_free(memid_entry);
-            memid_entry = NULL;
+    /* Only create an IPC handle in case one doesn't already exist */
+    nfds = 0;   /* must be initialized to 0 */
+    if (zexMemGetIpcHandles) {
+        ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
+        ZE_ERR_CHECK(ret);
+        if (nfds) {
+            assert(nfds <= 2);
+            ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
         }
+    }
+    if (!nfds) {
+        ret = zeMemGetIpcHandle(ze_context, pbase, &ze_ipc_handle[0]);
+        nfds = 1;
+    }
+    ZE_ERR_CHECK(ret);
 
-        /* Search cache for mapped base address */
-        HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
+    for (int i = 0; i < nfds; i++) {
+        memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
     }
 
-    if (cache_entry && cache_entry->mapped_ptr) {
-        base = cache_entry->mapped_ptr;
-    } else {
-        if (cache_entry) {
-            nfds = cache_entry->nfds;
-
-            for (int i = 0; i < nfds; i++)
-                memcpy(&fds[i], &cache_entry->ipc_handle.ipc_handles[i], sizeof(int));
-        } else {
-            /* Only create an IPC handle in case one doesn't already exist */
-            nfds = 0;   /* must be initialized to 0 */
-            if (zexMemGetIpcHandles) {
-                ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
-                ZE_ERR_CHECK(ret);
-                if (nfds) {
-                    assert(nfds <= 2);
-                    ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
-                }
-            }
-            if (!nfds) {
-                ret = zeMemGetIpcHandle(ze_context, pbase, &ze_ipc_handle[0]);
-                nfds = 1;
-            }
-            ZE_ERR_CHECK(ret);
-
-            for (int i = 0; i < nfds; i++)
-                memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
-        }
-
-        mpl_err = mmapFunction(nfds, fds, len, &base);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-
-        if (likely(MPL_gpu_info.specialized_cache)) {
-            if (cache_entry) {
-                /* This could have been cached already, but via the ipc path */
-                cache_entry->mapped_ptr = base;
-                cache_entry->mapped_size = len;
-                cache_entry->nfds = nfds;
-                for (int i = 0; i < nfds; i++)
-                    cache_entry->fds[i] = fds[i];
-            } else {
-                /* Insert into the cache */
-                mpl_err = new_ipc_handle_cache(&cache_entry, mem_id);
-                if (mpl_err != MPL_SUCCESS) {
-                    goto fn_fail;
-                }
-                cache_entry->mapped_ptr = base;
-                cache_entry->mapped_size = len;
-                cache_entry->nfds = nfds;
-                for (int i = 0; i < nfds; i++)
-                    cache_entry->fds[i] = fds[i];
-                /* store only the basic ze_ipc_handle info, missing the
-                 * fd_pid_t data as shareable IPC handle */
-                for (int i = 0; i < nfds; i++) {
-                    memcpy(&cache_entry->ipc_handle.ipc_handles[i], &ze_ipc_handle[i],
-                           sizeof(ze_ipc_mem_handle_t));
-                }
-                HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
-                         MPL_MEM_OTHER);
-            }
-
-            if (memid_entry == NULL) {
-                memid_entry = (MPL_ze_mem_id_entry_t *) MPL_malloc(sizeof(MPL_ze_mem_id_entry_t),
-                                                                   MPL_MEM_OTHER);
-                if (memid_entry == NULL) {
-                    mpl_err = MPL_ERR_GPU_NOMEM;
-                    goto fn_fail;
-                }
-                memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
-                memid_entry->ptr = pbase;
-                memid_entry->mem_id = mem_id;
-                memid_entry->dev_id = local_dev_id;
-                HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
-            }
-        }
+    mpl_err = mmapFunction(nfds, fds, len, &base);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
     }
 
     *mmaped_ptr = (char *) base + offset;

@@ -16,6 +16,8 @@ typedef union MPIDI_IPCI_ipc_handle {
     MPIDI_XPMEM_ipc_handle_t xpmem;
     MPIDI_CMA_ipc_handle_t cma;
     MPIDI_GPU_ipc_handle_t gpu;
+    /* ipc_type is MPIDI_IPCI_TYPE__DIRECT */
+    void *direct;
 } MPIDI_IPCI_ipc_handle_t;
 
 typedef struct MPIDI_IPCI_ipc_attr {
@@ -47,6 +49,18 @@ typedef struct MPIDI_IPC_write {
     MPIR_Request *sreq;
     MPIR_Request *rreq;
 } MPIDI_IPC_write_t;
+
+typedef struct MPIDI_IPC_mapaddr {
+    MPIDI_IPCI_type_t ipc_type;
+    int rank;                   /* use target MPIR_Process.local_rank */
+    void *base_addr;
+    void *mapped_addr;
+} MPIDI_IPC_mapaddr_t;
+
+typedef struct MPIDI_IPC_unmap {
+    MPIDI_IPCI_type_t ipc_type;
+    void *mapped_addr;
+} MPIDI_IPC_unmap_t;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;

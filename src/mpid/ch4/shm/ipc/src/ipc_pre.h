@@ -15,14 +15,14 @@ typedef enum MPIDI_IPCI_type {
     MPIDI_IPCI_TYPE__SKIP,
     MPIDI_IPCI_TYPE__XPMEM,
     MPIDI_IPCI_TYPE__CMA,
-    MPIDI_IPCI_TYPE__GPU
+    MPIDI_IPCI_TYPE__GPU,
+    /* use DIRECT when sender caches the mapped address */
+    MPIDI_IPCI_TYPE__DIRECT
 } MPIDI_IPCI_type_t;
 
 typedef struct {
     MPIDI_IPCI_type_t ipc_type;
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    MPIDI_GPU_ipc_attr_t gpu_attr;
-#endif
+    void *base_addr;            /* if set, remove the handle at request completion */
 } MPIDI_IPC_am_request_t;
 
 #endif /* IPC_PRE_H_INCLUDED */

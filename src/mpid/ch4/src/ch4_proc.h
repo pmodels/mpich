@@ -63,6 +63,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_get_grank(int rank, MPIR_Comm * comm)
 {
+    if (comm == NULL) {
+        /* This allows active messages to work in Init/Finalize or Sessions
+         * when world_comm is NULL.
+         */
+        return rank;
+    }
+
     MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, rank);
     if (MPIR_LPID_WORLD_INDEX(lpid) == 0) {
         return (int) lpid;

@@ -185,7 +185,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
     return MPL_SUCCESS;
 }
@@ -334,7 +334,6 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.debug_summary = debug_summary;
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE;
-    MPL_gpu_info.specialized_cache = false;
 
     char *visible_devices = getenv("HIP_VISIBLE_DEVICES");
     if (visible_devices) {
