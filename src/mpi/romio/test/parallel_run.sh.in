@@ -1,7 +1,8 @@
 #!/bin/sh
 #
-# Copyright (C) 2018, Northwestern University
-# See COPYRIGHT notice in top-level directory.
+# Copyright 2026 Argonne National Laboratory
+# Copyright 2018 Northwestern University
+# SPDX-License-Identifier: Apache-2.0
 #
 
 # Exit immediately if a command exits with a non-zero status.

@@ -1,5 +1,8 @@
 ! -*- f90 -*-
 !
+! Copyright 2026 Argonne National Laboratory
+! SPDX-License-Identifier: Apache-2.0
+!
 ! Copyright (c) 2004-2006 The Trustees of Indiana University and Indiana
 !                         University Research and Technology
 !                         Corporation.  All rights reserved.
@@ -8,10 +11,6 @@
 ! Copyright (c) 2006-2012 Cisco Systems, Inc.  All rights reserved.
 ! Copyright (c) 2009-2012 Los Alamos National Security, LLC.
 !                         All rights reserved.
-!  (C) 2014 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory
-!
-! $COPYRIGHT$
 !
 ! Sample MPI "hello world" application using the MPI-3 mpi_f08 module.
 !

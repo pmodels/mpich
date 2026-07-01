@@ -1,6 +1,6 @@
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* A basic test of all 17 nonblocking collective operations specified by the

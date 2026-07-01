@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # nodist_ b/c these are created by config.status and should not be distributed

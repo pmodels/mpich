@@ -1,6 +1,6 @@
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 /* This test borrows some ideas from a test provided by Rolf
  * Rabenseifner (HLRS), but is a rewrite of the primary logic to make

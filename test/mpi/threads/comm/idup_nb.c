@@ -1,6 +1,6 @@
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* This test tests the overlapping of MPI_Comm_idup with other nonblocking calls
