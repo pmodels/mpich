@@ -11,6 +11,7 @@
 #include "ofi_types.h"
 #include "mpidch4r.h"
 #include "ch4_impl.h"
+#include "utlist.h"
 
 extern unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
 extern unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
@@ -60,6 +61,11 @@ ATTRIBUTE((unused));
 
 int MPIDI_OFI_progress_uninlined(int vci);
 int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
+
+int MPIDI_OFI_register_memory_and_bind(char *buf, size_t data_sz, MPL_pointer_attr_t * attr,
+                                       int ctx_idx, struct fid_mr **mr);
+int MPIDI_OFI_mr_complete(struct fid_mr *mr, bool keep_cache);
+int MPIDI_OFI_mr_cache_finalize(void);
 
 /*
  * Helper routines and macros for request completion
@@ -796,38 +802,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory_and_bind(char *send_buf, size_t data_sz,
-                                                                MPL_pointer_attr_t * attr,
-                                                                int ctx_idx, struct fid_mr **mr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIDI_OFI_register_memory(send_buf, data_sz, attr, ctx_idx, 0, mr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (*mr != NULL) {
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], *mr,
-                                      MPIDI_OFI_global.ctx[ctx_idx].ep, NULL);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* Cache the mrs for closing during Finalize() */
-        struct MPIDI_GPU_RDMA_queue_t *new_mr =
-            MPL_malloc(sizeof(struct MPIDI_GPU_RDMA_queue_t), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP1(new_mr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "GPU RDMA MR alloc");
-        new_mr->mr = *mr;
-        DL_APPEND(MPIDI_OFI_global.gdr_mrs, new_mr);
-    }
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_register_am_bufs(void)
 {
     if (!MPIDI_OFI_global.am_bufs_registered) {
@@ -853,6 +827,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, siz
                                                          MPL_pointer_attr_t * attr, MPIR_Win * win,
                                                          int nic, void **desc)
 {
+    int mpi_errno = MPI_SUCCESS;
     struct fid_mr *mr = NULL;
     MPL_pointer_attr_t attr_tmp;
 
@@ -864,11 +839,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, siz
         attr = &attr_tmp;
     }
     if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM && MPL_gpu_attr_is_strict_dev(attr)) {
-        MPIDI_OFI_register_memory_and_bind((char *) buffer, size, attr, ctx_idx, &mr);
+        mpi_errno = MPIDI_OFI_register_memory_and_bind((char *) buffer, size, attr, ctx_idx, &mr);
+        MPIR_Assert(mpi_errno == MPI_SUCCESS);
         if (mr != NULL) {
             *desc = fi_mr_desc(mr);
+            MPIDI_OFI_mr_queue_t *elt = MPL_malloc(sizeof(MPIDI_OFI_mr_queue_t), MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP(!elt, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+            elt->mr = mr;
+            LL_APPEND(MPIDI_OFI_WIN(win).pending_mr_queue.head,
+                      MPIDI_OFI_WIN(win).pending_mr_queue.tail, elt);
         }
     }
+
+    return;
+  fn_fail:
+    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 }
 
 #undef CQ_S_LIST

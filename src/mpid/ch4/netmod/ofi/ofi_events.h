@@ -53,6 +53,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
         MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs));
     }
 
+    if (MPIDI_OFI_REQUEST(sreq, mr)) {
+        mpi_errno = MPIDI_OFI_mr_complete(MPIDI_OFI_REQUEST(sreq, mr), true);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     if (MPIDI_OFI_REQUEST(sreq, am_req)) {
         MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
         int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
@@ -108,6 +113,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         }
 #endif
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
+    }
+
+    if (MPIDI_OFI_REQUEST(rreq, mr)) {
+        mpi_errno = MPIDI_OFI_mr_complete(MPIDI_OFI_REQUEST(rreq, mr), true);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {

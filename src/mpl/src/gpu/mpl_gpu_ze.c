@@ -2091,6 +2091,24 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     goto fn_exit;
 }
 
+MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr)
+{
+    ze_result_t ret;
+    ze_device_handle_t device = NULL;
+    ze_memory_allocation_properties_t ptr_attr = {
+        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+        .pNext = NULL,
+        .type = 0,
+        .id = 0,
+        .pageSize = 0,
+    };
+
+    ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
+    assert(ret == ZE_RESULT_SUCCESS);
+
+    return ptr_attr.id;
+}
+
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
     ze_result_t ret;

@@ -162,6 +162,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, vci_remote) = vci_remote;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
+    MPIDI_OFI_REQUEST(rreq, mr) = NULL;
+
     if (rreq->comm == NULL) {
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
@@ -200,6 +202,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_register_memory_and_bind(recv_buf, data_sz, &attr, ctx_idx, &mr);
         if (mr != NULL) {
             desc = fi_mr_desc(mr);
+            MPIDI_OFI_REQUEST(rreq, mr) = mr;
         }
     }
 

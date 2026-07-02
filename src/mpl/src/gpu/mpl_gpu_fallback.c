@@ -150,6 +150,11 @@ int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
     return -1;
 }
 
+MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr)
+{
+    return 0;
+}
+
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
 {
     return false;
