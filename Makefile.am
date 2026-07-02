@@ -54,9 +54,6 @@ external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi
 external_ldflags = @RPATHS@
 external_libs = @WRAPPER_LIBS@
 
-ROMIO_TEST_MPIEXEC = @ROMIO_TEST_MPIEXEC@
-export ROMIO_TEST_MPIEXEC
-
 # convenience libs that do not depend on MPI
 pmpi_convenience_libs = @mpl_lib@ @hwloc_lib@ @json_lib@ @yaksa_lib@ @pmi_lib@
 
