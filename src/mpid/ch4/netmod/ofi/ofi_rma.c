@@ -114,7 +114,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
 
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
-        msg.desc = desc;
+        msg.desc = &desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
