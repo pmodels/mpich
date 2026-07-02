@@ -12,14 +12,15 @@ set -e
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
-# MPICH exports ROMIO_TEST_MPIEXEC from the top-level Makefile.  It points
-# to the process manager built in this tree rather than the launcher that will
-# later be installed in $(bindir).
-mpirun="${ROMIO_TEST_MPIEXEC:-@MPIRUN@}"
+mpirun="@MPIRUN@"
 
 if test -z "$mpirun" ; then
-    echo "SKIP: no usable MPI launcher in the build tree" >&2
-    exit 77
+    if test -n "$MPIEXEC"; then
+        mpirun="$MPIEXEC"
+    else
+        echo "SKIP: mpi launcher not defined. Define MPIEXEC and rerun the test." >&2
+        exit 77
+    fi
 fi
 
 # valgrind_opt="libtool --mode=execute valgrind --quiet --leak-check=full"

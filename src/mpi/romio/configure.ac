@@ -1238,7 +1238,7 @@ elif test $FROM_MPICH = yes ; then
    MPI_H_INCLUDE="-I${main_top_builddir}/src/include -I${main_top_srcdir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""
-   MPIRUN=""
+   MPIRUN="$TEST_MPIEXEC"
    #
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
