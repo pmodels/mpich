@@ -1412,16 +1412,6 @@ if test "$with_cross" != "no" ; then
     fi
 fi
 
-# This goes here because we need the top_srcdir
-if test "$enable_romio" = "yes" ; then
-    AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
-
-    m4_define([romio_embedded_dir], [src/mpi/romio])
-    PAC_CONFIG_ROMIO
-fi
-AC_SUBST(ROMIO_VERSION)
-
-AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
 # if the device is already built)
@@ -1570,24 +1560,22 @@ fi
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
 
-# Legacy ROMIO tests run before the configured installation prefix is
-# populated.  Use the primary process manager built in this tree instead of
-# the future $(bindir)/mpiexec path.
+# export TEST_MPIEXEC so subdirs (ROMIO) can run pre-install tests
 case "$pm_name" in
   hydra)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
     ;;
   gforker)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
     ;;
   remshell)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
     ;;
   *)
-    ROMIO_TEST_MPIEXEC=""
+    TEST_MPIEXEC=
     ;;
 esac
-AC_SUBST(ROMIO_TEST_MPIEXEC)
+export TEST_MPIEXEC
 
 dnl
 dnl gforker and remshell does not use separate configure. 
@@ -1688,6 +1676,17 @@ fi
 if test "$enable_pmix" = "yes"; then
     AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
 fi
+
+# -----------------------------------
+if test "$enable_romio" = "yes" ; then
+    AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
+
+    m4_define([romio_embedded_dir], [src/mpi/romio])
+    PAC_CONFIG_ROMIO
+fi
+AC_SUBST(ROMIO_VERSION)
+
+AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 
 # ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the
