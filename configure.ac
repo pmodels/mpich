@@ -1440,41 +1440,6 @@ if test "$with_cross" != "no" ; then
     fi
 fi
 
-# This goes here because we need the top_srcdir
-if test "$enable_romio" = "yes" ; then
-   if test -d $use_top_srcdir/src/mpi/romio ; then
-       AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
-
-       # make it possible to "#include" mpio.h at build time
-       #
-       # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accommodate current mpicc limitations.  See
-       # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
-
-       # Set environment variables that the romio configure expects
-       export use_top_srcdir
-       top_build_dir=`pwd`
-       export top_build_dir
-       # if there is no $top_build_dir/lib, romio puts lib in wrong place
-       # This test used -e under Linux, but not all test programs understand
-       # -e
-       if test ! -d lib ; then mkdir lib ; fi
-       # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
-       ROMIO_VERSION='#define ROMIO_VERSION 126'
-
-       romio_subdir_args=""
-       if test "$enable_mpi_abi" = "yes" ; then
-           romio_subdir_args="--enable-mpi-abi"
-       fi
-       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
-   else
-       AC_MSG_WARN([ROMIO src directory is not available])
-   fi
-fi
-AC_SUBST(ROMIO_VERSION)
-
-AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
 # if the device is already built)
@@ -1623,24 +1588,22 @@ fi
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
 
-# Legacy ROMIO tests run before the configured installation prefix is
-# populated.  Use the primary process manager built in this tree instead of
-# the future $(bindir)/mpiexec path.
+# export TEST_MPIEXEC so subdirs (ROMIO) can run pre-install tests
 case "$pm_name" in
   hydra)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
     ;;
   gforker)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
     ;;
   remshell)
-    ROMIO_TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
     ;;
   *)
-    ROMIO_TEST_MPIEXEC=""
+    TEST_MPIEXEC=
     ;;
 esac
-AC_SUBST(ROMIO_TEST_MPIEXEC)
+export TEST_MPIEXEC
 
 dnl
 dnl gforker and remshell does not use separate configure. 
@@ -1761,6 +1724,43 @@ fi
 if test "$enable_pmix" = "yes"; then
     AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
 fi
+
+# -----------------------------------
+# This goes here because we need the top_srcdir
+if test "$enable_romio" = "yes" ; then
+   if test -d $use_top_srcdir/src/mpi/romio ; then
+       AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
+
+       # make it possible to "#include" mpio.h at build time
+       #
+       # This ought to be sufficient, but there is also a symlink setup in
+       # src/include to accommodate current mpicc limitations.  See
+       # src/mpi/Makefile.mk for more info.
+       PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+
+       # Set environment variables that the romio configure expects
+       export use_top_srcdir
+       top_build_dir=`pwd`
+       export top_build_dir
+       # if there is no $top_build_dir/lib, romio puts lib in wrong place
+       # This test used -e under Linux, but not all test programs understand
+       # -e
+       if test ! -d lib ; then mkdir lib ; fi
+       # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
+       ROMIO_VERSION='#define ROMIO_VERSION 126'
+
+       romio_subdir_args=""
+       if test "$enable_mpi_abi" = "yes" ; then
+           romio_subdir_args="--enable-mpi-abi"
+       fi
+       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
+   else
+       AC_MSG_WARN([ROMIO src directory is not available])
+   fi
+fi
+AC_SUBST(ROMIO_VERSION)
+
+AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 
 # ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the
