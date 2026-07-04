@@ -504,13 +504,15 @@ AC_ARG_ENABLE(versioning,
 
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
-   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_verion_m4"
+   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
 else
    ABIVERSIONFLAGS="-avoid-version"
    ABI_ABIVERSIONFLAGS="-avoid-version"
 fi
 export ABIVERSIONFLAGS
 AC_SUBST(ABIVERSIONFLAGS)
+export ABI_ABIVERSIONFLAGS
+AC_SUBST(ABI_ABIVERSIONFLAGS)
 
 
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
