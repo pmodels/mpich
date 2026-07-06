@@ -1342,6 +1342,12 @@ def dump_manpage(func, out):
 
     if Name in G.semantics:
         out.append("== Description")
+        out.append(".Description generated with AI")
+        out.append("[%collapsible]")
+        out.append("====")
+        out.append("The following description section was generated using Argonne's AI Argo from MPI-5.0. It should not be used as a definitive source until human verified.")
+        out.append("====")
+        out.append("")
         out.append("include::../semantics.adoc[tag=%s]" % Name)
         out.append("")
 
