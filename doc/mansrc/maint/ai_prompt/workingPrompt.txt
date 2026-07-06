@@ -1,0 +1,27 @@
+The task is three part, do not write unless explicitly instructed to:
+1. Read through provided material
+2. Estabilish description rules based on FUNTCTION's traits
+3. Write a description following those rules
+4. Output to file in asciidoc form
+Below are specifics on how to acomplish each. 
+
+1. Material is in 'doc/mansrc/maint/FUNCTION_Extracted.txt', read with focus on FUNCTION's semantics
+
+2. The following is a list of traits of complex functions;
+- uses more than one communicator
+- involves more than one process
+- is more than a parameter checker and wrapper for the underlying MPID function
+- has threading/concurrency behavior
+- is collective
+- is nonlocal
+If FUNCTION has 0-2 traits get a <=4 sentence description, 3-4 traits a <=6 sentence description, and 5-6 traits a <=8 sentence description. Do not; explain the parameters, give the function signature, extrapolate resources to complete checklist items, nor use run-on sentences. 
+
+3. Write a short summary sentence. On a new line write the following checklist items as one paragraph. Only include list items in the paragraph if they are stated in the reference file, if not exclude them silently.
+- when the function returns, only mention locality if nonlocal
+- parameter wildcard, no-ops, or values that cause errors
+- thread/concurrency
+- overtaking/non-overtaking
+- collective behavior
+- advice to users for building their own programs, do not use opinionated language such as 'prefer' or 'should' instead use 'may' or 'are recommended'
+
+4. Output description in asciidoc format, with function names bolded and parameters monospaced, to 'doc/mansrc/semantics.adoc' bracketed by '//tag::FUNCTION[]' and '//end::FUNCTION[]'
