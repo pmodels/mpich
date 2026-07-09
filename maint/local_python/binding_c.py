@@ -1425,7 +1425,10 @@ def dump_manpage(func, out):
         out.append("")
     if 'seealso' in func:
         out.append("== See also")
-        out.append(re.sub(r'(MPI\w+)', r'*\1*(3)', func['seealso']))
+        outString = ""
+        adjList = re.compile(r'(MPI\w+)').findall(func['seealso'])
+        for adj in adjList: outString += "link:"+adj.lower()+".html[*"+adj+"*(3)]"
+        out.append(outString)
 
 def dump_manpage_list(list, header, out):
     count = len(list)
