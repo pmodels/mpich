@@ -1,0 +1,17 @@
+Use grep to find all uses of FUNCTION in 'src', read through all uses. Convert uses to a concise documentation style semantic description for FUNCTION. The following is a list of traits of complex functions;
+- uses more than one communicator
+- involves more than one process
+- is more than a parameter checker and wrapper for the underlying MPID function
+- has threading/concurrency behavior
+- is collective
+- is nonlocal
+If FUNCTION has 0-2 traits get a <=6 sentence description, 3-4 traits a <=8 sentence description, and 5-6 traits a <=10 sentence description. During any of the following description do not; explain the parameters or their ranges, give the function signature, explain MPI_SUCCESS return, nor use run-on sentences.
+Write a short summary sentence. On a new line write the following checklist items as one paragraph while continuing to follow the above rules and sentence limits. Only include list items if function has them if not exclude them silently.
+- when the function returns
+- wildcard, MPI constants, or values that cause errors
+- thread/concurrency
+- overtaking/non-overtaking
+- collective behavior
+Output description to 'doc/mansrc/semantics.adoc' in Asciidoc format, with first usage of FUNCTION bolded, parameters monospaced, bracketed by '//tag::FUNCTION[]' and '//end::FUNCTION[]'
+
+Double check that written description is within the sentance limit, follows formatting rules, and has all included list items. 
