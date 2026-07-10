@@ -114,6 +114,7 @@ int MPIR_build_locality(void)
     MPIR_Process.node_local_map = node_local_map;
     MPIR_Process.local_size = local_size;
     MPIR_Process.local_rank = local_rank;
+    MPIR_Process.package_rank = local_rank;     /* default; refined later by POSIX init */
 
     return MPI_SUCCESS;
 }

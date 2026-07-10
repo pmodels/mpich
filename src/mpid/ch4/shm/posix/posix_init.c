@@ -73,6 +73,7 @@ static int choose_posix_eager(void);
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
 static void init_topo_info(void);
+static void compute_package_rank(void);
 static int posix_coll_init(void);
 static int posix_coll_finalize(void);
 
@@ -86,6 +87,44 @@ static void host_free(void *ptr)
     MPL_free(ptr);
 }
 
+/* Compute rank's index among local procs on same NUMA node.
+ * This is needed for distributing NUMA-local resources (e.g., NICs) evenly
+ * across ranks sharing a NUMA node. Falls back to local_rank if NUMA topology
+ * is unavailable or shared memory allocation fails. */
+static void compute_package_rank(void)
+{
+    MPIR_Process.package_rank = MPIR_Process.local_rank;
+
+    if (MPIR_Process.local_size <= 1 || MPIDI_POSIX_global.topo.numa_id < 0) {
+        return;
+    }
+
+    int local_size = MPIR_Process.local_size;
+    size_t shm_size = local_size * sizeof(int);
+    char shm_name[128];
+    snprintf(shm_name, sizeof(shm_name), "/mpich_numa_%x_%d",
+             MPIR_Process.world_id, MPIR_Process.node_map[MPIR_Process.rank]);
+
+    bool is_root;
+    int *numa_ids = (int *) MPL_initshm_open(shm_name, shm_size, &is_root);
+    if (!numa_ids) {
+        return;
+    }
+
+    numa_ids[MPIR_Process.local_rank] = MPIDI_POSIX_global.topo.numa_id;
+    MPIR_pmi_barrier_local();
+
+    int package_rank = 0;
+    for (int i = 0; i < MPIR_Process.local_rank; i++) {
+        if (numa_ids[i] == MPIDI_POSIX_global.topo.numa_id) {
+            package_rank++;
+        }
+    }
+    MPIR_Process.package_rank = package_rank;
+
+    MPIR_pmi_barrier_local();
+    MPL_initshm_free(shm_name, numa_ids, shm_size, true);
+}
 
 static int choose_posix_eager(void)
 {
@@ -214,6 +253,8 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE) {
         init_topo_info();
     }
+
+    compute_package_rank();
 
     choose_posix_eager();
 

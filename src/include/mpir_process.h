@@ -28,6 +28,7 @@ typedef struct MPIR_Process_t {
     int size;
     int local_rank;
     int local_size;
+    int package_rank;           /* rank's index among local procs on same NUMA node/package */
     int num_nodes;
     int *node_map;              /* int[size], maps rank to node_id */
     int *node_local_map;        /* int[local_size], maps local_id to rank of local proc */
