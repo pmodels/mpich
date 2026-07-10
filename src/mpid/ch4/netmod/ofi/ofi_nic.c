@@ -45,6 +45,17 @@ static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
     return MPIR_hwtopo_get_obj_by_name(info->domain_attr->name);
 }
 
+/* Return the HostBridge ancestor of the NIC (finer-grained than socket) */
+static MPIR_hwtopo_gid_t get_nic_bridge(struct fi_info *info)
+{
+    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+        return MPIR_hwtopo_get_dev_bridge_by_pci(pci.domain_id, pci.bus_id, pci.device_id,
+                                                 pci.function_id);
+    }
+    return MPIR_hwtopo_get_obj_by_name(info->domain_attr->name);
+}
+
 /* Return true if the NIC is bound to the same socket as calling process */
 static bool is_nic_close(struct fi_info *info)
 {
@@ -248,6 +259,90 @@ static int compare_nics_snc4(const void *nic1, const void *nic2)
     return compare_nic_names(&(i1->nic), &(i2->nic));
 }
 
+/* Interleave close NICs across HostBridges so that consecutive indices
+ * alternate between bridges rather than being grouped by bridge.
+ * This spreads PCIe bandwidth when ranks are assigned sequentially via
+ * package_rank % num_close_nics.
+ *
+ * For example, if close NICs are [A0, A1, A2, A3, B0, B1, B2, B3] grouped
+ * by bridge after sort, this reorders them to [A0, B0, A1, B1, A2, B2, A3, B3].
+ *
+ * Conceptually treats close NICs as a tree:
+ *   root -> bridge_0 -> [nic_0, nic_1, ...]
+ *        -> bridge_1 -> [nic_4, nic_5, ...]
+ * and reads breadth-first across bridges at each depth level.
+ */
+static void interleave_nics_by_bridge(MPIDI_OFI_nic_info_t * nics, int num_close_nics)
+{
+    /* Discover distinct bridges, and map NIC-to-distinct bridge index */
+    MPIR_hwtopo_gid_t bridges[MPIDI_OFI_MAX_NICS];
+    int nic_bridge_idx[MPIDI_OFI_MAX_NICS];
+    int num_bridges = 0;
+
+    for (int i = 0; i < num_close_nics; i++) {
+        MPIR_hwtopo_gid_t bridge = get_nic_bridge(nics[i].nic);
+        int idx = -1;
+        for (int b = 0; b < num_bridges; b++) {
+            if (bridges[b] == bridge) {
+                idx = b;
+                break;
+            }
+        }
+        if (idx < 0) {
+            idx = num_bridges;
+            bridges[num_bridges++] = bridge;
+        }
+        nic_bridge_idx[i] = idx;
+    }
+
+    if (num_bridges <= 1 || num_close_nics <= num_bridges) {
+        return;
+    }
+
+    /* Group close NICs by bridge into a flat array using group offsets */
+    int group_size[MPIDI_OFI_MAX_NICS] = { 0 };
+    int group_start[MPIDI_OFI_MAX_NICS];
+
+    for (int i = 0; i < num_close_nics; i++) {
+        group_size[nic_bridge_idx[i]]++;
+    }
+
+    group_start[0] = 0;
+    for (int b = 1; b < num_bridges; b++) {
+        group_start[b] = group_start[b - 1] + group_size[b - 1];
+    }
+
+    MPIDI_OFI_nic_info_t *grouped =
+        MPL_malloc(num_close_nics * sizeof(MPIDI_OFI_nic_info_t), MPL_MEM_OTHER);
+    if (!grouped) {
+        return;
+    }
+
+    int pos[MPIDI_OFI_MAX_NICS] = { 0 };
+    for (int i = 0; i < num_close_nics; i++) {
+        int b = nic_bridge_idx[i];
+        grouped[group_start[b] + pos[b]++] = nics[i];
+    }
+
+    /* Read out breadth-first: one NIC from each bridge per round */
+    int max_depth = 0;
+    for (int b = 0; b < num_bridges; b++) {
+        if (group_size[b] > max_depth)
+            max_depth = group_size[b];
+    }
+
+    int dest = 0;
+    for (int depth = 0; depth < max_depth; depth++) {
+        for (int b = 0; b < num_bridges; b++) {
+            if (depth < group_size[b]) {
+                nics[dest++] = grouped[group_start[b] + depth];
+            }
+        }
+    }
+
+    MPL_free(grouped);
+}
+
 /* TODO: Now that multiple NICs are detected, sort them based on preferred-ness,
  * closeness and count of other processes using the NIC. */
 static int setup_multi_nic(int nic_count)
@@ -255,7 +350,6 @@ static int setup_multi_nic(int nic_count)
     int mpi_errno = MPI_SUCCESS;
     MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS] = { 0 };
     int num_parents = 0;
-    int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
     MPIR_CHKLMEM_DECL();
 
@@ -399,10 +493,11 @@ static int setup_multi_nic(int nic_count)
             qsort(nics, nic_count, sizeof(nics[0]), compare_nics);
         }
 
-        /* Because we cannot communicate with the other local processes to avoid collisions with the
-         * same NICs, just shift NICs that have multiple close NICs around according to their local
-         * rank. This will likely give the same result as long as processes have been bound properly. */
-        int old_idx = (num_close_nics == 0) ? 0 : local_rank % num_close_nics;
+        /* Distribute ranks across close NICs using package_rank (rank's index among
+         * local procs on the same NUMA/package). This ensures even distribution regardless
+         * of whether ranks are placed sequentially or interleaved across NUMA nodes. */
+        interleave_nics_by_bridge(nics, num_close_nics);
+        int old_idx = (num_close_nics == 0) ? 0 : MPIR_Process.package_rank % num_close_nics;
 
         if (old_idx != 0) {
             MPIDI_OFI_nic_info_t *old_nics;
