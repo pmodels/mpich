@@ -5,6 +5,7 @@ MPIX_Op_create_x:
     extra_state: EXTRA_STATE, [extra state]
     op: OPERATION, direction=out, [operation]
     .desc: Creates a user-defined reduction op with an extra_state
+    .docnotes: MPIX
 /*
     Notes on MPIX_User_function_x:
     The calling list for the user function type is
@@ -25,6 +26,7 @@ MPIX_Comm_create_errhandler_x:
     extra_state: EXTRA_STATE, [extra state]
     errhandler: ERRHANDLER, direction=out
     .desc: Creates an MPI-style communicator errorhandler with an extra_state
+    .docnotes: MPIX
 
 MPIX_Win_create_errhandler_x:
     comm_errhandler_fn_x: FUNCTION, func_type=MPIX_Win_errhandler_function_x, [user defined error handling procedure with extra_state]
@@ -32,6 +34,7 @@ MPIX_Win_create_errhandler_x:
     extra_state: EXTRA_STATE, [extra state]
     errhandler: ERRHANDLER, direction=out
     .desc: Creates an MPI-style window errorhandler with an extra_state
+    .docnotes: MPIX
 
 MPIX_File_create_errhandler_x:
     comm_errhandler_fn_x: FUNCTION, func_type=MPIX_File_errhandler_function_x, [user defined error handling procedure with extra_state]
@@ -39,6 +42,7 @@ MPIX_File_create_errhandler_x:
     extra_state: EXTRA_STATE, [extra state]
     errhandler: ERRHANDLER, direction=out
     .desc: Creates an MPI-style file errorhandler with an extra_state
+    .docnotes: MPIX
 
 MPIX_Session_create_errhandler_x:
     comm_errhandler_fn_x: FUNCTION, func_type=MPIX_Session_errhandler_function_x, [user defined error handling procedure with extra_state]
@@ -46,6 +50,7 @@ MPIX_Session_create_errhandler_x:
     extra_state: EXTRA_STATE, [extra state]
     errhandler: ERRHANDLER, direction=out
     .desc: Creates an MPI-style session errorhandler with an extra_state
+    .docnotes: MPIX
 
 MPIX_Comm_create_keyval_x:
     comm_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Comm_copy_attr_function, [copy callback function for comm_keyval]
@@ -53,6 +58,7 @@ MPIX_Comm_create_keyval_x:
     destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
     comm_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
+    .docnotes: MPIX
 
 MPIX_Type_create_keyval_x:
     type_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Type_copy_attr_function, [copy callback function for type_keyval]
@@ -60,6 +66,7 @@ MPIX_Type_create_keyval_x:
     destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
     type_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
+    .docnotes: MPIX
 
 MPIX_Win_create_keyval_x:
     win_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Win_copy_attr_function, [copy callback function for win_keyval]
@@ -67,36 +74,43 @@ MPIX_Win_create_keyval_x:
     destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when keyval is freed]
     win_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
+    .docnotes: MPIX
 
 MPIX_Comm_get_attr_as_fortran:
     comm: COMMUNICATOR, [communicator to which the attribute is attached]
     comm_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
     flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+    .docnotes: MPIX
 
 MPIX_Comm_set_attr_as_fortran:
     comm: COMMUNICATOR, direction=in, [communicator to which attribute will be attached]
     comm_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
+    .docnotes: MPIX
 
 MPIX_Type_get_attr_as_fortran:
     datatype: DATATYPE, [datatype to which the attribute is attached]
     type_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
     flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+    .docnotes: MPIX
 
 MPIX_Type_set_attr_as_fortran:
     datatype: DATATYPE, direction=in, [datatype to which attribute will be attached]
     type_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
+    .docnotes: MPIX
 
 MPIX_Win_get_attr_as_fortran:
     win: WINDOW, [window to which the attribute is attached]
     win_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
     flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+    .docnotes: MPIX
 
 MPIX_Win_set_attr_as_fortran:
     win: WINDOW, direction=in, [window to which attribute will be attached]
     win_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
+    .docnotes: MPIX

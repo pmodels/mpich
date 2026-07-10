@@ -189,6 +189,7 @@ MPIX_Comm_test_threadcomm:
     flag: LOGICAL, direction=out, [true if comm is an inter-communicator]
     .desc: Tests to see if a comm is a threadcomm
     .skip: global_cs
+    .docnotes: MPIX
 
 MPI_Intercomm_create_from_groups:
     .desc: Create an intercommuncator from local and remote groups
@@ -317,6 +318,7 @@ MPIX_Comm_revoke:
     comm: COMMUNICATOR, [communicator to revoke]
     .desc: Prevent a communicator from being used in the future
     .extra: ignore_revoked_comm
+    .docnotes: MPIX
 /*
     Notes:
     This function notifies all MPI processes in the groups (local and remote) associated with the communicator comm that this communicator is revoked. The revocation of a communicator by any MPIprocess completes non-local MPI operations on comm at all MPI processes by raising an error of class MPI_ERR_REVOKED (with the exception of MPIX_Comm_shrink, MPIX_Comm_agree). This function is not collective and therefore does not have a matching call on remote MPI processes. All non-failed MPIprocesses belonging to comm will be notified of the revocation despite failures.
@@ -335,6 +337,7 @@ MPIX_Comm_shrink:
     newcomm: COMMUNICATOR, direction=out, [new communicator]
     .desc: Creates a new communitor from an existing communicator while excluding failed processes
     .extra: ignore_revoked_comm
+    .docnotes: MPIX
 /*
     Notes:
     This collective operation creates a new intra- or intercommunicator newcomm from the intra- or intercommunicator comm, respectively, by excluding the group of failed MPI processes as agreed upon during the operation. The groups of newcomm must include everyMPIprocess that returns from MPIX_Comm_shrink, and it must exclude every MPI process whose failure caused an operation on comm to raise an MPI error of class MPI_ERR_PROC_FAILED or MPI_ERR_PROC_FAILED_PENDING at a member of the groups of newcomm, before that member initiated MPIX_Comm_shrink. This call is semantically equivalent to an MPI_Comm_split operation that would succeed despite failures, where members of the groups of newcomm participate with the same color and a key equal to their rank incomm.
@@ -348,6 +351,7 @@ MPIX_Comm_failure_ack:
     .desc: Acknowledge the current group of failed processes
     .extra: ignore_revoked_comm
     .impl: mpid
+    .docnotes: MPIX
 /*
     Notes:
     This local operation gives the users a way to acknowledge all locally notified failures on comm. After the call, unmatched MPI_ANY_SOURCE receive operations that would haveraised an error of class MPI_ERR_PROC_FAILED_PENDING due to MPI process failure proceed without further raising errors due to those acknowledged failures. Also after this call, MPIX_Comm_agree will not raise an error of class MPI_ERR_PROC_FAILED due to those acknowledged failures.
@@ -359,6 +363,7 @@ MPIX_Comm_failure_get_acked:
     .desc: Get the group of acknowledged failures.
     .extra: ignore_revoked_comm
     .impl: mpid
+    .docnotes: MPIX
 /*
     Notes:
     This local operation returns the group failedgrp of processes, from the communicatorcomm, that have been locally acknowledged as failed by preceding calls to MPIX_Comm_failure_ack. The failedgrp can be empty, that is, equal to MPI_GROUP_EMPTY.
@@ -369,6 +374,7 @@ MPIX_Comm_agree:
     flag: LOGICAL, direction=out, [new communicator]
     .desc: Performs agreement operation on comm
     .extra: ignore_revoked_comm
+    .docnotes: MPIX
 /*
     Notes:
     The purpose of this collective communication is to agree on the integer value flag and on the group of failed processes in comm.
@@ -384,6 +390,7 @@ MPIX_Comm_get_failed:
     comm: COMMUNICATOR, [communicator]
     failedgrp: GROUP, direction=out, [group of failed processes]
     .desc: This local operation returns the group of processes that are locally known to have failed.
+    .docnotes: MPIX
 /*
     Notes:
     The returned failedgrp can be empty, that is, equal to MPI_GROUP_EMPTY.

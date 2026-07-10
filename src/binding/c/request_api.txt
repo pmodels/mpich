@@ -43,6 +43,7 @@ MPIX_Grequest_start:
     request: REQUEST, direction=out, [generalized request]
     .file: grequest_start_x
     .desc: Create and return a user-defined extended request
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr = NULL;
     mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
@@ -61,12 +62,14 @@ MPIX_Grequest_class_create:
     poll_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_poll_function, [callback function invoked when request completion is tested]
     wait_fn: FUNCTION_SMALL, func_type=MPIX_Grequest_wait_function, [callback function invoked when request is waited on]
     greq_class: GREQUEST_CLASS, direction=out, [generalized request class]
+    .docnotes: MPIX
 
 MPIX_Grequest_class_allocate:
     greq_class: GREQUEST_CLASS, [generalized request class]
     extra_state: EXTRA_STATE, [extra state]
     request: REQUEST, direction=out, [generalized request]
     .desc: Create and return a user-defined extended request based on a generalized request class
+    .docnotes: MPIX
 
 MPI_Request_free:
     .desc: Frees a communication request object
@@ -541,6 +544,7 @@ MPIX_Request_is_complete:
     .return: LOGICAL
     request: REQUEST, direction=in, pointer=False
     .impl: direct
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr;
     MPIR_Request_get_ptr(request, request_ptr);

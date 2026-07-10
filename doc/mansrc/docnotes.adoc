@@ -163,6 +163,15 @@ failed nor completed.
 
 
 -----------------------------------------------------------------------------
+MPIX Explination
+//tag::MPIX[]
+== MPIX Function
+This routine is part of the MPIX extention to the MPI standard. It may become
+part of the standard in the future, in which its signature will change to the 
+MPI prefix.
+//end::MPIX[]
+
+-----------------------------------------------------------------------------
 Deprecated routines (see 2.6.1)
 // tag::Deprecated[]
 == Deprecated Function

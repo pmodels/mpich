@@ -100,3 +100,4 @@ MPIX_Info_set_hex:
     key: STRING, constant=True, [key]
     value: BUFFER, constant=True, [value]
     value_size: INFO_VALUE_LENGTH, [size of value]
+    .docnotes: MPIX

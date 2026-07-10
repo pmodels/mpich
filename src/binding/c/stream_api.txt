@@ -4,16 +4,19 @@ MPIX_Stream_create:
     .desc: Create a new stream object
     info: INFO, [info argument]
     stream: STREAM, direction=out, [stream object created]
+    .docnotes: MPIX
 
 MPIX_Stream_free:
     .desc: Free a stream object
     stream: STREAM, direction=inout, [stream object]
+    .docnotes: MPIX
 
 MPIX_Stream_comm_create:
     .desc: Create a new communicator with local stream attached
     comm: COMMUNICATOR, [communicator]
     stream: STREAM, [stream object]
     newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+    .docnotes: MPIX
 
 MPIX_Stream_comm_create_multiplex:
     .desc: Create a new communicator with multiple local streams attached
@@ -21,25 +24,30 @@ MPIX_Stream_comm_create_multiplex:
     count: ARRAY_LENGTH_NNI, [list length]
     array_of_streams: STREAM, length=count, [stream object array]
     newcomm: COMMUNICATOR, direction=out, [new stream-associated communicator]
+    .docnotes: MPIX
 
 MPIX_Comm_get_stream:
     .desc: Get the stream object that is attached to the communicator
     comm: COMMUNICATOR, [communicator]
     idx: INDEX
     stream: STREAM, direction=out, [stream object]
+    .docnotes: MPIX
 
 MPIX_Stream_progress:
     stream: STREAM, [stream object]
     .desc: Invoke progress on the given stream
     .impl: mpid
+    .docnotes: MPIX
 
 MPIX_Start_progress_thread:
     .desc: Start a progress thread that will poll progress on the given stream
     stream: STREAM, [stream object]
+    .docnotes: MPIX
 
 MPIX_Stop_progress_thread:
     .desc: Stop the progress thread that polls progress on the given stream
     stream: STREAM, [stream object]
+    .docnotes: MPIX
 
 MPIX_Stream_send:
     .desc: Send message from a specific local stream to a specific destination stream
@@ -51,6 +59,7 @@ MPIX_Stream_send:
     comm: COMMUNICATOR
     source_stream_index: INDEX
     dest_stream_index: INDEX
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -82,6 +91,7 @@ MPIX_Stream_isend:
     source_stream_index: INDEX
     dest_stream_index: INDEX
     request: REQUEST, direction=out
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -114,6 +124,7 @@ MPIX_Stream_recv:
     source_stream_index: INDEX
     dest_stream_index: INDEX
     status: STATUS, direction=out
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -146,6 +157,7 @@ MPIX_Stream_irecv:
     source_stream_index: INDEX
     dest_stream_index: INDEX
     request: REQUEST, direction=out
+    .docnotes: MPIX
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -171,6 +183,7 @@ MPIX_Send_enqueue:
     comm: COMMUNICATOR
     .impl: mpid
     .decl: MPIR_Send_enqueue_impl
+    .docnotes: MPIX
 
 MPIX_Recv_enqueue:
     .desc: Enqueue a receive operation to a GPU stream that is associated with the local stream
@@ -183,6 +196,7 @@ MPIX_Recv_enqueue:
     status: STATUS, direction=out
     .impl: mpid
     .decl: MPIR_Recv_enqueue_impl
+    .docnotes: MPIX
 
 MPIX_Isend_enqueue:
     .desc: Enqueue a nonblocking send operation to a GPU stream that is associated with the local stream
@@ -195,6 +209,7 @@ MPIX_Isend_enqueue:
     request: REQUEST, direction=out
     .impl: mpid
     .decl: MPIR_Isend_enqueue_impl
+    .docnotes: MPIX
 
 MPIX_Irecv_enqueue:
     .desc: Enqueue a nonblocking receive operation to a GPU stream that is associated with the local stream
@@ -207,6 +222,7 @@ MPIX_Irecv_enqueue:
     request: REQUEST, direction=out
     .impl: mpid
     .decl: MPIR_Irecv_enqueue_impl
+    .docnotes: MPIX
 
 MPIX_Wait_enqueue:
     .desc: Enqueue a wait operation to a GPU stream that is associated with the local stream
@@ -214,6 +230,7 @@ MPIX_Wait_enqueue:
     status: STATUS, direction=out
     .impl: mpid
     .decl: MPIR_Wait_enqueue_impl
+    .docnotes: MPIX
 
 MPIX_Waitall_enqueue:
     .desc: Enqueue a waitall operation to a GPU stream that is associated with the local stream
@@ -222,6 +239,7 @@ MPIX_Waitall_enqueue:
     array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
     .impl: mpid
     .decl: MPIR_Waitall_enqueue_impl
+    .docnotes: MPIX
 { -- error_check -- array_of_statuses
     if (count > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
@@ -236,3 +254,4 @@ MPIX_Allreduce_enqueue:
     datatype: DATATYPE, [data type of elements of send buffer]
     op: OPERATION, [operation]
     comm: COMMUNICATOR, [communicator]
+    .docnotes: MPIX

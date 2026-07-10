@@ -546,6 +546,7 @@ MPIX_Type_iov_len:
     iov_len: DISPLACEMENT_COUNT, direction=out, [number of iovs within max_iov_bytes]
     actual_iov_bytes: DISPLACEMENT_COUNT, direction=out, [actual number of bytes in the iovs]
     .desc: Return the number of contiguous segments within max_iov_bytes
+    .docnotes: MPIX
 {
     MPI_Aint max_iov_bytes_i, iov_len_i, actual_iov_bytes_i;
 
@@ -570,6 +571,7 @@ MPIX_Type_iov:
     max_iov_len: DISPLACEMENT_COUNT, [capacity for the segments array]
     actual_iov_len: DISPLACEMENT_COUNT, direction=out, [actual number of segments in output]
     .desc: Return contiguous segments starting from an iov offset
+    .docnotes: MPIX
 {
     MPI_Aint iov_offset_i, max_iov_len_i, actual_iov_len_i;
 

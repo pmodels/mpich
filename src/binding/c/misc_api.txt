@@ -139,11 +139,13 @@ MPIX_GPU_query_support:
     is_supported: LOGICAL, direction=out, [true if gpu of given type is supported, false otherwise.]
     .desc: Returns whether the specific type of GPU is supported
     .skip: global_cs, validate-GPU_TYPE
+    .docnotes: MPIX
 
 MPIX_Query_cuda_support:
     .desc: Returns whether CUDA is supported
     .impl: direct
     .skip: global_cs, Errors
+    .docnotes: MPIX
 {
     int is_supported = 0;
     int mpi_errno ATTRIBUTE((unused));
@@ -158,6 +160,7 @@ MPIX_Query_ze_support:
     .desc: Returns whether ZE (Intel GPU) is supported
     .impl: direct
     .skip: global_cs, Errors
+    .docnotes: MPIX
 {
     int is_supported = 0;
     int mpi_errno ATTRIBUTE((unused));
@@ -172,6 +175,7 @@ MPIX_Query_hip_support:
     .desc: Returns whether HIP (AMD GPU) is supported
     .impl: direct
     .skip: global_cs, Errors
+    .docnotes: MPIX
 {
     int is_supported = 0;
     int mpi_errno ATTRIBUTE((unused));

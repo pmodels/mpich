@@ -4,6 +4,7 @@ MPIX_Async_start:
     poll_fn: FUNCTION, func_type=MPIX_Async_poll_function, [user defined poll function for progressing async things]
     extra_state: EXTRA_STATE, [extra state for callback function]
     stream: STREAM, [stream object]
+    .docnotes: MPIX
 {
     mpi_errno = MPIR_Async_things_add(poll_fn, extra_state, stream_ptr);
     if (mpi_errno) goto fn_fail;
@@ -14,6 +15,7 @@ MPIX_Async_get_state:
     async_thing: ASYNC_THING, [opaque pointer for async thing]
     .impl: direct
     .skip: validate-ASYNC_THING
+    .docnotes: MPIX
 {
     return MPIR_Async_thing_get_state(async_thing);
 }
@@ -24,6 +26,7 @@ MPIX_Async_spawn:
     extra_state: EXTRA_STATE, [extra state for callback function]
     stream: STREAM, [stream object]
     .skip: validate-ASYNC_THING
+    .docnotes: MPIX
 {
     mpi_errno = MPIR_Async_thing_spawn(async_thing, poll_fn, extra_state, stream_ptr);
     if (mpi_errno) goto fn_fail;
