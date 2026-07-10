@@ -6,3 +6,522 @@ Use the following format to specify semantics or notes for an MPI Function
 Describe semantics for MPI_Func_name.
 // end:: MPI_Func_name[]
 
+//tag::MPIX_Async_start[]
+*MPIX_Async_start* registers a user-defined poll function with the MPI progress engine for asynchronous progression.
+The registered `poll_fn` is invoked during MPI progress calls.
+If `stream` is provided, the poll function is associated with that stream's VCI; otherwise it uses a default progress context.
+This function is local and does not involve communication with other processes.
+
+The `poll_fn` callback must return `MPIX_ASYNC_DONE` to signal completion and be removed, or `MPIX_ASYNC_NOPROGRESS` to continue being polled.
+The function uses internal mutex locking to ensure thread-safe registration across concurrent callers.
+//end::MPIX_Async_start[]
+
+//tag::MPIX_Async_get_state[]
+*MPIX_Async_get_state* retrieves the user-defined state pointer associated with an asynchronous progress entry.
+This function is intended to be called from within a poll function callback to access the `extra_state` that was registered via `MPIX_Async_start` or `MPIX_Async_spawn`.
+The function is local and does not involve communication with other processes.
+//end::MPIX_Async_get_state[]
+
+//tag::MPIX_Async_spawn[]
+*MPIX_Async_spawn* creates a new asynchronous progress entry from within an existing poll function callback.
+The spawned entry is queued for future polling rather than being immediately added to the active progress list.
+This function is local and does not involve communication with other processes.
+
+The spawned `poll_fn` must return `MPIX_ASYNC_DONE` when complete or `MPIX_ASYNC_NOPROGRESS` to continue being polled.
+Spawned entries inherit thread-safe handling through the parent entry's progress context.
+//end::MPIX_Async_spawn[]
+
+//tag::MPIX_Op_create_x[]
+*MPIX_Op_create_x* creates a user-defined reduction operation with extended callback support.
+The user function receives `len` and `datatype` as scalar values and an `extra_state` pointer passed through from creation.
+An optional `destructor_fn` is invoked when the operation is freed to release the `extra_state`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Op_create_x[]
+
+//tag::MPIX_Comm_create_errhandler_x[]
+*MPIX_Comm_create_errhandler_x* creates a user-defined communicator error handler with extended callback support.
+The user-supplied error handler function receives an `extra_state` pointer passed through from creation.
+An optional `destructor_fn` is invoked when the error handler is freed to release the `extra_state`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Comm_create_errhandler_x[]
+
+//tag::MPIX_Win_create_errhandler_x[]
+*MPIX_Win_create_errhandler_x* creates a user-defined window error handler with extended callback support.
+The user-supplied error handler function receives an `extra_state` pointer passed through from creation.
+An optional `destructor_fn` is invoked when the error handler is freed to release the `extra_state`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Win_create_errhandler_x[]
+
+//tag::MPIX_File_create_errhandler_x[]
+*MPIX_File_create_errhandler_x* creates a user-defined file error handler with extended callback support.
+The user-supplied error handler function receives an `extra_state` pointer passed through from creation.
+An optional `destructor_fn` is invoked when the error handler is freed to release the `extra_state`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_File_create_errhandler_x[]
+
+//tag::MPIX_Session_create_errhandler_x[]
+*MPIX_Session_create_errhandler_x* creates a user-defined session error handler with extended callback support.
+The user-supplied error handler function receives an `extra_state` pointer passed through from creation.
+An optional `destructor_fn` is invoked when the error handler is freed to release the `extra_state`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Session_create_errhandler_x[]
+
+//tag::MPIX_Comm_create_keyval_x[]
+*MPIX_Comm_create_keyval_x* creates an attribute key for communicators with extended callback support.
+The `comm_copy_attr_fn` callback is invoked when an attribute is copied via communicator duplication.
+The `comm_delete_attr_fn` callback is invoked when an attribute is deleted from a communicator.
+An optional `destructor_fn` is invoked with `extra_state` when the keyval is freed and its reference count reaches zero.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Comm_create_keyval_x[]
+
+//tag::MPIX_Type_create_keyval_x[]
+*MPIX_Type_create_keyval_x* creates an attribute key for MPI datatypes with extended callback support.
+The `type_copy_attr_fn` callback is invoked when an attribute is copied via datatype duplication.
+The `type_delete_attr_fn` callback is invoked when an attribute is deleted from a datatype.
+An optional `destructor_fn` is invoked with `extra_state` when the keyval is freed and its reference count reaches zero.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Type_create_keyval_x[]
+
+//tag::MPIX_Win_create_keyval_x[]
+*MPIX_Win_create_keyval_x* creates an attribute key for MPI windows with extended callback support.
+The `win_copy_attr_fn` callback is invoked when an attribute is copied via window duplication.
+The `win_delete_attr_fn` callback is invoked when an attribute is deleted from a window.
+An optional `destructor_fn` is invoked with `extra_state` when the keyval is freed and its reference count reaches zero.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Win_create_keyval_x[]
+
+//tag::MPIX_Comm_get_attr_as_fortran[]
+*MPIX_Comm_get_attr_as_fortran* retrieves a communicator attribute value using Fortran-style semantics.
+For built-in attributes, the value is returned as a scalar integer cast to a pointer rather than a pointer to the value.
+For user-defined attributes, if the attribute was set via a Fortran binding, the stored integer value is returned directly.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Comm_get_attr_as_fortran[]
+
+//tag::MPIX_Comm_set_attr_as_fortran[]
+*MPIX_Comm_set_attr_as_fortran* attaches an attribute to a communicator using Fortran-style semantics.
+The attribute value is stored as a scalar integer cast to a pointer, enabling interoperability with Fortran bindings.
+If an attribute with the same key exists, the associated delete callback is invoked before replacement.
+A new attribute is allocated and added to the front of the communicator's attribute list when no matching key is found.
+This function is local and does not involve communication with other processes.
+
+When threadcomm is enabled, attributes are stored in thread-local storage associated with the communicator.
+//end::MPIX_Comm_set_attr_as_fortran[]
+
+//tag::MPIX_Type_get_attr_as_fortran[]
+*MPIX_Type_get_attr_as_fortran* retrieves a datatype attribute value using Fortran-style semantics.
+For user-defined attributes, if the attribute was set via a Fortran binding, the stored integer value is returned directly.
+If the attribute was set via a C binding, a pointer to the internal storage is returned instead.
+The `flag` output indicates whether an attribute is associated with the specified key.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Type_get_attr_as_fortran[]
+
+//tag::MPIX_Type_set_attr_as_fortran[]
+*MPIX_Type_set_attr_as_fortran* attaches an attribute to a datatype using Fortran-style semantics.
+The attribute value is stored as a scalar integer cast to a pointer, enabling interoperability with Fortran bindings.
+If an attribute with the same key exists, the associated delete callback is invoked before replacement.
+A new attribute is allocated and inserted into the datatype's attribute list when no matching key is found.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Type_set_attr_as_fortran[]
+
+//tag::MPIX_Win_get_attr_as_fortran[]
+*MPIX_Win_get_attr_as_fortran* retrieves a window attribute value using Fortran-style semantics.
+For built-in attributes such as `MPI_WIN_SIZE`, `MPI_WIN_DISP_UNIT`, `MPI_WIN_CREATE_FLAVOR`, and `MPI_WIN_MODEL`, the value is returned as a scalar integer cast to a pointer rather than a pointer to the value.
+For user-defined attributes, if the attribute was set via a Fortran binding, the stored integer value is returned directly.
+The `flag` output indicates whether an attribute is associated with the specified key.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Win_get_attr_as_fortran[]
+
+//tag::MPIX_Win_set_attr_as_fortran[]
+*MPIX_Win_set_attr_as_fortran* attaches an attribute to a window using Fortran-style semantics.
+The attribute value is stored as a scalar integer cast to a pointer, enabling interoperability with Fortran bindings.
+If an attribute with the same key exists, the associated delete callback is invoked before replacement.
+A new attribute is allocated and inserted into the window's attribute list when no matching key is found.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Win_set_attr_as_fortran[]
+
+//tag::MPIX_Comm_test_threadcomm[]
+*MPIX_Comm_test_threadcomm* tests whether a communicator is a threadcomm.
+The `flag` output is set to true if `comm` was created via `MPIX_Threadcomm_init` and has an associated threadcomm structure.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Comm_test_threadcomm[]
+
+//tag::MPIX_Comm_revoke[]
+*MPIX_Comm_revoke* prevents a communicator from being used for future non-local MPI operations.
+This function notifies all MPI processes in the local and remote groups associated with `comm` that the communicator is revoked.
+The revocation completes non-local MPI operations on `comm` at all processes by raising an error of class `MPI_ERR_REVOKED`, with the exception of `MPIX_Comm_shrink` and `MPIX_Comm_agree`.
+This function is not collective and does not require a matching call on remote processes.
+All non-failed processes belonging to `comm` will be notified of the revocation despite failures.
+
+Once revoked at a process, all subsequent non-local operations on `comm` complete locally by raising `MPI_ERR_REVOKED`.
+//end::MPIX_Comm_revoke[]
+
+//tag::MPIX_Comm_shrink[]
+*MPIX_Comm_shrink* creates a new communicator by excluding failed MPI processes from an existing communicator.
+This collective operation agrees upon the set of failed processes during execution and creates either an intra- or intercommunicator accordingly.
+The resulting communicator includes every process that returns from the operation and excludes every process whose failure caused `MPI_ERR_PROC_FAILED` or `MPI_ERR_PROC_FAILED_PENDING` errors before initiation.
+The operation is semantically equivalent to `MPI_Comm_split` where participating processes use the same color and their rank in `comm` as the key.
+The implementation uses internal allreduce operations to achieve consensus on failures and may retry multiple times if new failures occur.
+
+This function never raises `MPI_ERR_PROC_FAILED` or `MPI_ERR_REVOKED` errors and maintains defined semantics when `comm` is revoked or contains failed processes.
+This operation is collective and nonlocal; all non-failed processes must participate for successful completion.
+//end::MPIX_Comm_shrink[]
+
+//tag::MPIX_Comm_failure_ack[]
+*MPIX_Comm_failure_ack* acknowledges all locally notified process failures on a communicator.
+This local operation enables `MPI_ANY_SOURCE` receive operations to proceed without raising `MPI_ERR_PROC_FAILED_PENDING` for acknowledged failures.
+After acknowledgment, subsequent calls to `MPIX_Comm_agree` will not raise `MPI_ERR_PROC_FAILED` for the acknowledged processes.
+The function updates the internal marker tracking the last known failed process and re-enables any-source matching on `comm`.
+//end::MPIX_Comm_failure_ack[]
+
+//tag::MPIX_Comm_failure_get_acked[]
+*MPIX_Comm_failure_get_acked* retrieves the group of failed processes that have been locally acknowledged on a communicator.
+This local operation returns in `failedgrp` the processes from `comm` that were acknowledged by preceding calls to `MPIX_Comm_failure_ack`.
+The returned group may be `MPI_GROUP_EMPTY` if no failures have been acknowledged.
+This function is used in conjunction with `MPIX_Comm_agree` to determine which failures are already known before performing agreement operations.
+//end::MPIX_Comm_failure_get_acked[]
+
+//tag::MPIX_Comm_agree[]
+*MPIX_Comm_agree* performs a fault-tolerant collective agreement operation over all non-failed processes in a communicator.
+On completion, all participating processes set `flag` to the bitwise AND of all contributed input values.
+For intercommunicators, the result is computed over values from the remote group.
+When a process fails before contributing, its value is excluded from the computation.
+The operation internally gathers the globally known failed processes and performs consensus using allreduce.
+This operation continues to function on revoked communicators where most other collective operations would fail.
+
+The function raises `MPI_ERR_PROC_FAILED` consistently at all processes when unacknowledged failures are detected; prior acknowledgment via `MPIX_Comm_failure_ack` suppresses this error.
+This operation is collective and nonlocal; all non-failed processes must participate for successful completion.
+//end::MPIX_Comm_agree[]
+
+//tag::MPIX_Comm_get_failed[]
+*MPIX_Comm_get_failed* returns the group of processes locally known to have failed on a communicator.
+This local operation queries PMI for dead processes and returns their intersection with `comm` in `failedgrp`.
+The returned group may be `MPI_GROUP_EMPTY` if no failures are locally known.
+Failed processes maintain consistent ordering across calls; for any two groups obtained from this function at the same process with the same `comm`, the smaller group is a prefix of the larger group.
+//end::MPIX_Comm_get_failed[]
+
+//tag::MPIX_Type_iov_len[]
+*MPIX_Type_iov_len* computes the number of contiguous memory segments needed to represent an MPI datatype within a specified byte limit.
+This function queries the datatype's internal representation to determine how many I/O vector entries fit within `max_iov_bytes`.
+The actual byte coverage is returned separately to indicate the precise portion of the datatype covered.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Type_iov_len[]
+
+//tag::MPIX_Type_iov[]
+*MPIX_Type_iov* returns contiguous memory segments representing the layout of an MPI datatype as an array of I/O vectors.
+The function populates the `iov` array with base addresses and lengths for each contiguous region in the datatype.
+Callers can skip an initial number of segments using `iov_offset` to retrieve segments incrementally.
+The actual number of segments written is returned in `actual_iov_len`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Type_iov[]
+
+//tag::MPIX_Info_set_hex[]
+*MPIX_Info_set_hex* stores arbitrary binary data in an MPI info object by encoding the value as a hexadecimal string.
+The binary data referenced by `value` is converted to a hex representation and associated with the specified `key`.
+If the key already exists, its value is replaced with the new encoded data.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Info_set_hex[]
+
+//tag::MPIX_GPU_query_support[]
+*MPIX_GPU_query_support* queries whether the MPI implementation supports a specific GPU type.
+The function checks the runtime GPU configuration and sets `is_supported` to indicate availability.
+Supported GPU types include CUDA, Intel Level Zero (ZE), and AMD HIP.
+This function is local and does not involve communication with other processes.
+
+An invalid `gpu_type` argument causes an error.
+//end::MPIX_GPU_query_support[]
+
+//tag::MPIX_Query_cuda_support[]
+*MPIX_Query_cuda_support* queries whether the MPI implementation supports CUDA GPU operations.
+The function returns a non-zero value if CUDA support is available and zero otherwise.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Query_cuda_support[]
+
+//tag::MPIX_Query_ze_support[]
+*MPIX_Query_ze_support* queries whether the MPI implementation supports Intel Level Zero (ZE) GPU operations.
+The function returns a non-zero value if ZE support is available and zero otherwise.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Query_ze_support[]
+
+//tag::MPIX_Query_hip_support[]
+*MPIX_Query_hip_support* queries whether the MPI implementation supports AMD HIP GPU operations.
+The function returns a non-zero value if HIP support is available and zero otherwise.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Query_hip_support[]
+
+//tag::MPIX_Grequest_start[]
+*MPIX_Grequest_start* creates a user-defined extended generalized request with additional callback support for polling and waiting.
+This function extends the standard `MPI_Grequest_start` by accepting `poll_fn` and `wait_fn` callbacks that are invoked during test and wait operations respectively.
+The `poll_fn` callback is called when request completion is tested, allowing user-defined progress.
+The `wait_fn` callback is called when the request is waited on, enabling custom blocking behavior.
+This function is local and does not involve communication with other processes.
+
+This routine is not thread-safe when using fine-grained threading.
+//end::MPIX_Grequest_start[]
+
+//tag::MPIX_Grequest_class_create[]
+*MPIX_Grequest_class_create* creates a reusable generalized request class by registering callback functions for query, free, cancel, poll, and wait operations.
+The class handle returned in `greq_class` can be passed to `MPIX_Grequest_class_allocate` to create multiple request instances that share the same callbacks.
+Internally, the function allocates a class object and maintains a linked list of all created classes for cleanup at MPI finalization.
+This function is local and does not involve communication with other processes.
+
+This routine is not thread-safe when using fine-grained threading.
+//end::MPIX_Grequest_class_create[]
+
+//tag::MPIX_Grequest_class_allocate[]
+*MPIX_Grequest_class_allocate* creates a generalized request instance from a previously created generalized request class.
+The returned request inherits the query, free, cancel, poll, and wait callbacks registered with `greq_class`.
+The `extra_state` pointer is passed to these callbacks when they are invoked.
+This function is local and does not involve communication with other processes.
+
+This routine is not thread-safe when using fine-grained threading.
+//end::MPIX_Grequest_class_allocate[]
+
+//tag::MPIX_Request_is_complete[]
+*MPIX_Request_is_complete* tests whether the communication associated with `request` has completed.
+This function returns true if the request has finished or if `request` is `MPI_REQUEST_NULL`.
+This function is local and does not involve communication with other processes.
+
+The completion check uses atomic operations for thread-safe access to the request's internal completion counter.
+//end::MPIX_Request_is_complete[]
+
+//tag::MPIX_Stream_create[]
+*MPIX_Stream_create* creates a stream object for associating communication with a dedicated virtual communication interface (VCI).
+The `info` argument specifies the stream type; for GPU streams, the `type` and `value` keys must be set with the GPU stream handle.
+This function is local and does not involve communication with other processes.
+The created stream can be attached to a communicator via `MPIX_Stream_comm_create` or `MPIX_Stream_comm_create_multiplex`.
+
+Each general stream receives a unique VCI, while GPU streams share a single VCI for thread-safe progress.
+//end::MPIX_Stream_create[]
+
+//tag::MPIX_Stream_free[]
+*MPIX_Stream_free* releases a stream object and deallocates its associated resources.
+The function decrements the stream's reference count and frees the object only when no references remain.
+If the stream is still in use by a communicator, general streams raise an error while GPU streams allow deferred cleanup.
+This function is local and does not involve communication with other processes.
+
+The function sets `stream` to `MPIX_STREAM_NULL` upon successful completion.
+//end::MPIX_Stream_free[]
+
+//tag::MPIX_Stream_comm_create[]
+*MPIX_Stream_comm_create* creates a new communicator with a stream attached for concurrent communication progress.
+The function duplicates `comm` and associates the local `stream` with the resulting `newcomm`.
+A VCI table is constructed via an internal allgather to track each process's stream VCI.
+If `stream` is `MPIX_STREAM_NULL`, the default VCI of zero is used for that process.
+The new communicator inherits attributes from `comm` and holds a reference to `stream`.
+Subsequent point-to-point operations on `newcomm` use stream-indexed VCIs for thread-safe message matching.
+
+This operation is collective and nonlocal; all processes in `comm` must participate.
+//end::MPIX_Stream_comm_create[]
+
+//tag::MPIX_Stream_comm_create_multiplex[]
+*MPIX_Stream_comm_create_multiplex* creates a new communicator with multiple streams attached for concurrent communication progress.
+The function duplicates `comm` and associates the local `array_of_streams` with the resulting `newcomm`.
+If `count` is zero, the function uses `MPIX_STREAM_NULL` as a single default stream.
+A displacement table is constructed via internal allgather operations to track each process's stream count and VCIs.
+The new communicator is marked as a multiplex stream communicator, enabling stream-indexed point-to-point operations.
+Each attached stream receives an incremented reference count.
+Subsequent operations on `newcomm` use stream indices to select VCIs for thread-safe message matching.
+
+This operation is collective and nonlocal; all processes in `comm` must participate.
+//end::MPIX_Stream_comm_create_multiplex[]
+
+//tag::MPIX_Stream_progress[]
+*MPIX_Stream_progress* invokes progress on the specified stream to advance pending communication operations.
+When `stream` is `MPIX_STREAM_NULL`, general progress is made across all VCIs.
+For GPU streams, the function progresses enqueued work queue operations and completes pending wait list items.
+The function tests progress on the VCI associated with the stream.
+This function is local and does not involve communication with other processes.
+
+In lockless threading mode, network progress proceeds without VCI locking.
+//end::MPIX_Stream_progress[]
+
+//tag::MPIX_Comm_get_stream[]
+*MPIX_Comm_get_stream* retrieves the stream object attached to a communicator at a specified index.
+For single-stream communicators, only `idx` zero returns a valid stream.
+For multiplex-stream communicators, `idx` selects among the local streams attached during communicator creation.
+If `idx` is out of range or the communicator has no attached streams, `stream` is set to `MPIX_STREAM_NULL`.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Comm_get_stream[]
+
+//tag::MPIX_Start_progress_thread[]
+*MPIX_Start_progress_thread* starts a dedicated progress thread that polls for communication progress on the specified stream.
+The progress thread runs asynchronously and invokes stream progress until stopped via `MPIX_Stop_progress_thread`.
+If `stream` is `MPIX_STREAM_NULL`, general progress is made across all VCIs.
+This function is local and does not involve communication with other processes.
+
+The progress thread uses internal mutex locking to coordinate with concurrent MPI operations.
+Thread affinity can be configured via the `MPIR_CVAR_PROGRESS_THREAD_AFFINITY` environment variable.
+//end::MPIX_Start_progress_thread[]
+
+//tag::MPIX_Stop_progress_thread[]
+*MPIX_Stop_progress_thread* stops a dedicated progress thread that was started via `MPIX_Start_progress_thread` on the specified stream.
+The function signals the progress thread to exit and blocks until the thread terminates.
+If no progress thread is running on the specified `stream`, the function returns immediately.
+This function is local and does not involve communication with other processes.
+
+The function uses atomic operations to coordinate thread termination.
+//end::MPIX_Stop_progress_thread[]
+
+//tag::MPIX_Stream_isend[]
+*MPIX_Stream_isend* initiates a nonblocking send from a specific local stream to a specific destination stream.
+The function requires a multiplex stream communicator created via `MPIX_Stream_comm_create_multiplex`.
+Stream indices select the source and destination VCIs for thread-safe message matching.
+The function returns immediately after initiating the send and provides a `request` handle to track completion.
+This operation is nonlocal and requires a matching receive at the destination process.
+
+An error is raised if `comm` is not a multiplex stream communicator or if `source_stream_index` or `dest_stream_index` are out of range.
+Messages sent using the same streams and communicator are non-overtaking with respect to each other.
+//end::MPIX_Stream_isend[]
+
+//tag::MPIX_Stream_send[]
+*MPIX_Stream_send* performs a blocking point-to-point send from a specific local stream to a specific destination stream.
+The function requires a multiplex stream communicator created via `MPIX_Stream_comm_create_multiplex`.
+Stream indices select the source and destination VCIs for thread-safe message matching.
+The send completes locally only after the message has been buffered or received by the destination.
+This operation is nonlocal and requires a matching receive at the destination process.
+
+An error is raised if `comm` is not a multiplex stream communicator or if stream indices are out of range.
+//end::MPIX_Stream_send[]
+
+//tag::MPIX_Stream_recv[]
+*MPIX_Stream_recv* performs a blocking point-to-point receive from a specific source stream to a specific local stream.
+The function requires a multiplex stream communicator created via `MPIX_Stream_comm_create_multiplex`.
+Stream indices select the source and destination VCIs for thread-safe message matching.
+The receive blocks until a matching message arrives from the source process.
+This operation is nonlocal and requires a matching send from the source process.
+
+The `source` may be `MPI_ANY_SOURCE` and `tag` may be `MPI_ANY_TAG` to receive from any sender or with any tag.
+An error is raised if `comm` is not a multiplex stream communicator or if `source_stream_index` or `dest_stream_index` are out of range.
+Messages received using the same streams and communicator are non-overtaking with respect to each other.
+//end::MPIX_Stream_recv[]
+
+//tag::MPIX_Stream_irecv[]
+*MPIX_Stream_irecv* initiates a nonblocking receive from a specific source stream to a specific local stream.
+The function requires a multiplex stream communicator created via `MPIX_Stream_comm_create_multiplex`.
+Stream indices select the source and destination VCIs for thread-safe message matching.
+The function returns immediately after initiating the receive and provides a `request` handle to track completion.
+This operation is nonlocal and requires a matching send from the source process.
+
+The `source` may be `MPI_ANY_SOURCE` and `tag` may be `MPI_ANY_TAG` to receive from any sender or with any tag.
+An error is raised if `comm` is not a multiplex stream communicator or if `source_stream_index` or `dest_stream_index` are out of range.
+Messages received using the same streams and communicator are non-overtaking with respect to each other.
+//end::MPIX_Stream_irecv[]
+
+//tag::MPIX_Send_enqueue[]
+*MPIX_Send_enqueue* enqueues a blocking send operation to the GPU stream associated with `comm`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the MPI send is initiated via a host callback.
+If the buffer resides in GPU memory, data is packed into a host buffer before sending.
+The communicator must have an attached GPU stream created via `MPIX_Stream_create`.
+This operation is nonlocal and requires a matching receive at the destination process.
+
+Progress on enqueued operations occurs via `MPIX_Stream_progress` or a dedicated progress thread started with `MPIX_Start_progress_thread`.
+Messages sent via the same stream and communicator are non-overtaking with respect to each other.
+//end::MPIX_Send_enqueue[]
+
+//tag::MPIX_Recv_enqueue[]
+*MPIX_Recv_enqueue* enqueues a blocking receive operation to the GPU stream associated with `comm`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the MPI receive is initiated via a host callback.
+If the buffer resides in GPU memory, data is received into a host staging buffer and then unpacked to the device.
+The communicator must have an attached GPU stream created via `MPIX_Stream_create`.
+This operation is nonlocal and requires a matching send from the source process.
+Progress on enqueued operations occurs via `MPIX_Stream_progress` or a dedicated progress thread started with `MPIX_Start_progress_thread`.
+
+The `source` may be `MPI_ANY_SOURCE` and `tag` may be `MPI_ANY_TAG` to receive from any sender or with any tag.
+Messages received via the same stream and communicator are non-overtaking with respect to each other.
+//end::MPIX_Recv_enqueue[]
+
+//tag::MPIX_Isend_enqueue[]
+*MPIX_Isend_enqueue* enqueues a nonblocking send operation to the GPU stream associated with `comm`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the MPI send is initiated via a host callback.
+If the buffer resides in GPU memory, data is packed into a host buffer before sending.
+The communicator must have an attached GPU stream created via `MPIX_Stream_create`.
+The function returns immediately after enqueuing and provides a `request` handle to track completion.
+This operation is nonlocal and requires a matching receive at the destination process.
+
+Progress on enqueued operations occurs via `MPIX_Stream_progress` or a dedicated progress thread started with `MPIX_Start_progress_thread`.
+Messages sent via the same stream and communicator are non-overtaking with respect to each other.
+//end::MPIX_Isend_enqueue[]
+
+//tag::MPIX_Irecv_enqueue[]
+*MPIX_Irecv_enqueue* enqueues a nonblocking receive operation to the GPU stream associated with `comm`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the MPI receive is initiated via a host callback.
+If the buffer resides in GPU memory, data is received into a host staging buffer and then unpacked to the device.
+The communicator must have an attached GPU stream created via `MPIX_Stream_create`.
+The function returns immediately after enqueuing and provides a `request` handle to track completion.
+This operation is nonlocal and requires a matching send from the source process.
+
+The `source` may be `MPI_ANY_SOURCE` and `tag` may be `MPI_ANY_TAG` to receive from any sender or with any tag.
+Messages received via the same stream and communicator are non-overtaking with respect to each other.
+//end::MPIX_Irecv_enqueue[]
+
+//tag::MPIX_Wait_enqueue[]
+*MPIX_Wait_enqueue* enqueues a wait operation to the GPU stream associated with `request`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the underlying MPI wait is performed via a host callback.
+For receive requests, data is unpacked from any host staging buffer to GPU memory after the wait completes.
+This function is local and does not involve communication with other processes.
+
+Progress on enqueued operations occurs via `MPIX_Stream_progress` or a dedicated progress thread.
+Operations enqueued to the same GPU stream complete in order.
+//end::MPIX_Wait_enqueue[]
+
+//tag::MPIX_Waitall_enqueue[]
+*MPIX_Waitall_enqueue* enqueues a wait-all operation to the GPU stream associated with the requests.
+All requests in `array_of_requests` must be enqueue requests created via enqueue operations on the same GPU stream.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the underlying MPI wait-all is performed via a host callback.
+For receive requests, data is unpacked from any host staging buffer to GPU memory after completion.
+The input requests are set to `MPI_REQUEST_NULL` as ownership transfers to the enqueued operation.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Waitall_enqueue[]
+
+//tag::MPIX_Allreduce_enqueue[]
+*MPIX_Allreduce_enqueue* enqueues an allreduce operation to the GPU stream associated with `comm`.
+The operation is deferred until GPU execution reaches the enqueued work item, at which point the MPI allreduce is initiated via a host callback.
+If `sendbuf` or `recvbuf` reside in GPU memory, data is staged through host buffers before and after the collective operation.
+The communicator must have an attached GPU stream created via `MPIX_Stream_create`.
+Non-contiguous datatypes require thread-local storage support; otherwise an error is raised.
+Progress on enqueued operations occurs via `MPIX_Stream_progress` or a dedicated progress thread started with `MPIX_Start_progress_thread`.
+
+This operation is collective and nonlocal; all processes in `comm` must participate.
+Operations enqueued to the same GPU stream complete in order.
+//end::MPIX_Allreduce_enqueue[]
+
+//tag::MPIX_Threadcomm_init[]
+*MPIX_Threadcomm_init* creates a persistent thread communicator from an existing communicator for use in multithreaded parallel regions.
+The function duplicates `comm` and attaches a threadcomm structure that maps multiple threads per process to unique ranks within the new communicator.
+Thread counts from all processes are gathered via an internal collective operation to construct a global rank offset table.
+The function allocates thread-local storage structures, atomic barrier counters, and transport-specific message queues or mailboxes for inter-thread communication.
+If initialized without `MPI_THREAD_MULTIPLE`, the function records this state and adjusts threading settings during subsequent `MPIX_Threadcomm_start` calls.
+The resulting communicator must be activated inside a thread parallel region via `MPIX_Threadcomm_start` before use.
+
+This operation is collective and nonlocal; all processes in `comm` must participate.
+Threads within the same process communicate via lock-free queues; threads across processes use standard MPI point-to-point with encoded thread identifiers.
+//end::MPIX_Threadcomm_init[]
+
+//tag::MPIX_Threadcomm_free[]
+*MPIX_Threadcomm_free* deallocates a persistent thread communicator and releases all associated resources.
+This function must be called outside of thread parallel regions after all threads have finished using the communicator via `MPIX_Threadcomm_finish`.
+For derived threadcomms created via duplication, the function internally finishes the threadcomm and synchronizes via atomic counters to ensure all threads have exited before cleanup.
+The function frees transport-specific resources including message queues, mailboxes, cell pools, and rank offset tables.
+This function is local and does not involve communication with other processes.
+//end::MPIX_Threadcomm_free[]
+
+//tag::MPIX_Threadcomm_start[]
+*MPIX_Threadcomm_start* activates a thread communicator for use within a thread parallel region.
+Each thread within the process must call this function to synchronize activation via an internal thread barrier.
+The function enables thread-safe MPI operations by setting global threading state if MPI was initialized without `MPI_THREAD_MULTIPLE`.
+Thread-local storage is allocated after the barrier to associate each calling thread with a unique thread identifier.
+This function is local and does not involve communication with other processes.
+
+All participating threads must call this function; the last arriving thread triggers global state changes before any thread exits the barrier.
+//end::MPIX_Threadcomm_start[]
+
+//tag::MPIX_Threadcomm_finish[]
+*MPIX_Threadcomm_finish* deactivates a thread communicator at the end of a thread parallel region.
+Each thread within the process must call this function to synchronize deactivation via an internal thread barrier.
+The function frees thread-local attributes by invoking registered delete callbacks and removes thread-local storage.
+If MPI was initialized without `MPI_THREAD_MULTIPLE`, the function restores the original single-threaded state after all threads arrive.
+This function is local and does not involve communication with other processes.
+
+All participating threads must call this function; the last arriving thread triggers global state restoration before any thread exits the barrier.
+//end::MPIX_Threadcomm_finish[]
+
