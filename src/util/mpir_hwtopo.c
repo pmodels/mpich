@@ -756,3 +756,35 @@ int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func)
 #endif
     return myIndex;
 }
+
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_bridge_by_pci(int domain, int bus, int dev, int func)
+{
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
+    if (!bindset_is_valid)
+        return gid;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t obj = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    if (!obj) {
+        return gid;
+    }
+    /* Walk up through IO objects to find the host bridge */
+    while (obj->parent) {
+        obj = obj->parent;
+        if (obj->type == HWLOC_OBJ_BRIDGE &&
+            obj->attr->bridge.upstream_type == HWLOC_OBJ_BRIDGE_HOST) {
+            gid = HWTOPO_GET_GID(get_type_class(obj->type), obj->depth, obj->logical_index);
+            return gid;
+        }
+        /* Stop if we've left the IO tree */
+        if (!hwloc_obj_type_is_io(obj->type)) {
+            break;
+        }
+    }
+    /* Fallback: return the first non-IO ancestor (socket) */
+    obj = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    hwloc_obj_t first_non_io = hwloc_get_non_io_ancestor_obj(hwloc_topology, obj);
+    gid = HWTOPO_GET_GID(get_type_class(first_non_io->type), first_non_io->depth,
+                         first_non_io->logical_index);
+#endif
+    return gid;
+}

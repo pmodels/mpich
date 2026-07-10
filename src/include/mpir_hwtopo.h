@@ -170,4 +170,13 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid);
  * Return the local index of my nic in my first non io ancestor.
  */
 int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func);
+
+/*
+ * Return the global id of the host bridge above the PCI device.
+ * This provides a finer-grained grouping than get_dev_parent_by_pci (which
+ * returns the socket). Used to distinguish NICs on different PCIe root
+ * complexes within the same socket.
+ */
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_bridge_by_pci(int domain, int bus, int dev, int func);
+
 #endif /* MPIR_HWTOPO_H_INCLUDED */
