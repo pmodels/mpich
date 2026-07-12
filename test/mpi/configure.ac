@@ -19,7 +19,7 @@ dnl AC_INIT(include/mpitest.h)
 m4_include([version.m4])
 AC_INIT([mpich-testsuite],
         MPICH_VERSION_m4,
-        [discuss@mpich.org],
+        [discuss@lists.mpich.org],
         [mpich-testsuite],
         [http://www.mpich.org/])
 

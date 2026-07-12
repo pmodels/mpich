@@ -13,7 +13,7 @@ m4_include([version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([ROMIO],
         MPICH_VERSION_m4,
-        [discuss@mpich.org],
+        [discuss@lists.mpich.org],
         [romio],
         [http://www.mpich.org/])
 

@@ -4,7 +4,7 @@
 ##
 
 AC_PREREQ([2.69])
-AC_INIT([dtpools], [0.0], [discuss@mpich.org])
+AC_INIT([dtpools], [0.0], [discuss@lists.mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
 
 AC_CONFIG_HEADERS([dtpoolsconf.h])
