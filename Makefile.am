@@ -217,13 +217,7 @@ endif BUILD_CXX_BINDING
 SUBDIRS += . examples
 DIST_SUBDIRS += . examples test
 
-EXTRA_DIST += README CHANGES COPYRIGHT README.envvar
-
-# README.vin is tricky, we don't actually distribute it when we use release.pl,
-# but we do need to distribute it in order for ./autogen.sh to work
-# correctly on a distribution tarball.  For now we distribute it when we "make
-# dist".
-EXTRA_DIST += README.vin
+EXTRA_DIST += CHANGES COPYRIGHT README.envvar
 
 testing:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )

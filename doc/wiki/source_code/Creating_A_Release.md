@@ -46,7 +46,7 @@ Check all tests. This includes
     accidentally linked in place of stable libraries.
   - Update the `CHANGES` file. You can find the commits that went in by
     going through the git log information.
-  - Update the `README.vin` if necessary.
+  - Update the `README.md` if necessary.
 
 ## Create a final tarball for the release using the release.pl script
 

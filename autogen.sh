@@ -403,30 +403,11 @@ fn_maint_version() {
     # build a substitute maint/Version script now that we store the single copy of
     # this information in an m4 file for autoconf's benefit
     echo_n "Generating a helper maint/Version... "
-    if $autom4te -l M4sugar maint/Version.base.m4 > maint/Version ; then
+    if $autom4te -l M4sugar maint/Version.base.m4 > Version ; then
         echo "done"
     else
         echo "error"
-        error "unable to correctly generate maint/Version shell helper"
-    fi
-}
-
-fn_update_README() {
-    if test ! -f ./maint/Version ; then
-        fn_maint_version
-    fi
-
-    echo_n "Updating the README... "
-
-    # import MPICH_VERSION and LIBFABRIC_VERSION
-    . ./maint/Version
-
-    if [ -f README.vin ] ; then
-        sed -e "s/%VERSION%/${MPICH_VERSION}/g" -e "s/%LIBFABRIC_VERSION%/${LIBFABRIC_VERSION}/g" README.vin > README
-        echo "done"
-    else
-        echo "error"
-        error "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
+        error "unable to correctly generate Version."
     fi
 }
 
@@ -929,11 +910,6 @@ fn_copy_confdb_etc
 ## Building maint/Version
 ########################################################################
 fn_maint_version
-
-########################################################################
-## Building the README
-########################################################################
-fn_update_README
 
 set -e
 
