@@ -18,7 +18,6 @@ nodist_include_HEADERS =
 noinst_HEADERS = 
 AM_CFLAGS = @VISIBILITY_CFLAGS@
 AM_CPPFLAGS =
-EXTRA_DIST =
 SUFFIXES = 
 
 external_subdirs = @mpl_srcdir@
@@ -58,14 +57,11 @@ endif
 # ------------------------------------------------------------------------
 
 SUBDIRS = $(external_subdirs) . test
-DIST_SUBDIRS = test test-internal $(external_dist_subdirs)
 
 # for the sake of parallel make and avoiding an excessive number of convenience
 # libs, we use a subdir automake fragment strategy
 include mpi-io/Makefile.mk
 include adio/Makefile.mk
-
-EXTRA_DIST += autogen.sh
 
 if BUILD_ROMIO_EMBEDDED
 # Build a libtool convenience library that the enclosing MPI implementation can

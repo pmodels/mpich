@@ -49,4 +49,3 @@ wrapper_doc_src = src/env/mpicc.txt \
                   src/env/mpicxx.txt \
                   src/env/mpifort.txt
 doc1_src += $(wrapper_doc_src)
-EXTRA_DIST += $(wrapper_doc_src)

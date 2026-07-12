@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = typecntsx typenamex typemiscx packsizex
 

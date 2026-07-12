@@ -6,8 +6,6 @@
 include $(top_srcdir)/Makefile_single.mtest
 include Makefile_mpitests.mk
 
-EXTRA_DIST = testlist.in
-
 ## for all programs that are just built from the single corresponding source
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly

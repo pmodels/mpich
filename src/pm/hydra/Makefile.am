@@ -15,7 +15,6 @@ internal_libs = libhydra.la
 bin_PROGRAMS =
 noinst_HEADERS =
 DISTCLEANFILES =
-EXTRA_DIST =
 SUFFIXES =
 doc1_src = \
     mansrc/mpiexec.adoc \
@@ -26,8 +25,6 @@ doc1_src = \
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
 AM_CFLAGS =
-
-EXTRA_DIST += autogen.sh
 
 noinst_LTLIBRARIES = libhydra.la
 libhydra_la_SOURCES =
@@ -43,8 +40,6 @@ endif
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
-# see note in MPICH Makefile.am about our usage of DIST_SUBDIRS
-DIST_SUBDIRS = ${external_dist_subdirs}
 
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun

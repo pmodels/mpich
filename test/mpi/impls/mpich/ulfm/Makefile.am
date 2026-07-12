@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_single.mtest
 
-EXTRA_DIST = testlist
 
 noinst_PROGRAMS = \
     get_failed

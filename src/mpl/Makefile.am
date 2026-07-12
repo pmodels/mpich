@@ -67,8 +67,4 @@ coverage:
 	done
 # --------------------------------------------------------------------------
 
-# files that automake doesn't know about by default that should be included in
-# the distribution
-EXTRA_DIST = VERSION
-
 DISTCLEANFILES = _configs.sed include/mplconfig.h

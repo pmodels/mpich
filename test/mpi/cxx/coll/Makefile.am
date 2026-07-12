@@ -5,8 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist
-
 noinst_PROGRAMS = \
     arcomplex     \
     uallredx      \

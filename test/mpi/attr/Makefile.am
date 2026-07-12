@@ -33,7 +33,5 @@ noinst_PROGRAMS =      \
     keyval_double_free_win  \
     fkeyvaltype
 
-EXTRA_DIST = testlist.in
-
 fkeyvaltype_CPPFLAGS = $(AM_CPPFLAGS)
 fkeyvaltype_SOURCES = fkeyvaltype.c

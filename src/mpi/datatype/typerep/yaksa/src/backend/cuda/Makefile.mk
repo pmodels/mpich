@@ -3,8 +3,6 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-EXTRA_DIST += $(top_srcdir)/src/backend/cuda/cudalt.sh
-
 if BUILD_CUDA_BACKEND
 include $(top_srcdir)/src/backend/cuda/include/Makefile.mk
 include $(top_srcdir)/src/backend/cuda/hooks/Makefile.mk
