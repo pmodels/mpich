@@ -102,7 +102,7 @@ m4_include([maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPICH],
         MPICH_VERSION_m4,
-        [discuss@mpich.org],
+        [discuss@lists.mpich.org],
         [mpich],
         [http://www.mpich.org/])
 
@@ -675,7 +675,7 @@ AC_PROG_CC
 
 # Modern autoconf aggressively probe gnu std support and will append (e.g.) -std=gnu23 to $CC
 # Since $CC will be used in mpicc and we don't want to force the gnu behavior on to user, let's strip it.
-# NOTE: brackets are autoconf quotes, thus reqires quote protection.
+# NOTE: brackets are autoconf quotes, thus requires quote protection.
 CC=$(echo "$CC" | sed 's/ -std=[[^ ]]*//g')
 
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"

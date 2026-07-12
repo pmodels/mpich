@@ -32,9 +32,9 @@ Git repos:
 If you find any problems, please create
 [a GitHub issue](https://github.com/pmodels/mpich/issues)
 or send us a bug report
-([Argobots discussion ML](mailto:discuss@argobots.org)
+([Argobots discussion ML](mailto:discuss@lists.argobots.org)
 or
-[MPICH discussion ML](mailto:discuss@mpich.org)).
+[MPICH discussion ML](mailto:discuss@lists.mpich.org)).
 
 ### Build Argobots
 

@@ -46,9 +46,6 @@ Check all tests. This includes
     accidentally linked in place of stable libraries.
   - Update the `CHANGES` file. You can find the commits that went in by
     going through the git log information.
-      - Before committing `CHANGES`, it is recommended to send
-        `CHANGES`, at least, to core@mpich.org in order to make sure
-        everything is clear.
   - Update the `README.vin` if necessary.
 
 ## Create a final tarball for the release using the release.pl script
@@ -238,4 +235,4 @@ At the moment, this is just Homebrew. To do this, you need to:
   - In the repo directory, run `brew bump-formula-pr --version <version> mpich`
     - This makes the changes and opens the PR for you
 
-## Send out the release announcement to announce@mpich.org and party\! Yay\!
+## Send out the release announcement to announce@lists.mpich.org and party\! Yay\!

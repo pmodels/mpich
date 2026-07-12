@@ -71,7 +71,7 @@ to due to end of life of the mediawiki at ANL.
 | read-only clone URL (via http)         | <http://github.com/pmodels/mpich> |
 
 **IF YOU CANNOT ACCESS THE GITHUB REPO BUT THINK YOU SHOULD BE ABLE TO,
-CONTACT devel@mpich.org SO THAT WE CAN ADD YOU AS A COLLABORATOR**
+CONTACT devel@lists.lists.mpich.org SO THAT WE CAN ADD YOU AS A COLLABORATOR**
 
 #### Local Environment Setup
 
@@ -120,7 +120,7 @@ git clone --origin mpich git@github.com:pmodels/mpich --recursive
 
 If you do not have access to the writeable repository but think you
 should (because you are a core MPICH developer or collaborator), contact
-<devel@mpich.org> for access.
+<devel@lists.mpich.org> for access.
 
 Other users can clone the repository using:
 
@@ -602,7 +602,7 @@ git push mpich-dev foobar:foobar
 At the current moment we do not have any easy way to list all of the
 available repositories unless you have permissions to view the
 `gitolite-admin.git` repository. If you think you should have access to
-a particular development branch, contact devel@mpich.org or the specific
+a particular development branch, contact devel@lists.mpich.org or the specific
 MPICH core developer with whom you are working. You can list the
 repositories to which you already have access by running:
 

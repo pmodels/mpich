@@ -373,9 +373,9 @@ The distribution has been tested by us on a variety of machines in our environme
 
 1. First see the [Frequently Asked Questions (FAQ) page](https://github.com/pmodels/mpich/blob/main/doc/wiki/faq/Frequently_Asked_Questions.md) to see if the problem you are facing has a simple solution. Many common problems and their solutions are listed here.
 
-2. If you cannot find an answer on the FAQ page, look through previous email threads on the [discuss@mpich.org mailing list archive](https://lists.mpich.org/mailman/listinfo/discuss). It is likely someone else had a similar problem, which has already been resolved before.
+2. If you cannot find an answer on the FAQ page, look through previous email threads on the [discuss@lists.mpich.org mailing list archive](https://lists.mpich.org/mailman/listinfo/discuss). It is likely someone else had a similar problem, which has already been resolved before.
 
-3. If neither of the above steps work, please send an email to discuss@mpich.org. You need to [subscribe to this list](https://lists.mpich.org/mailman/listinfo/discuss) before sending an email.
+3. If neither of the above steps work, please send an email to discuss@lists.mpich.org. You need to [subscribe to this list](https://lists.mpich.org/mailman/listinfo/discuss) before sending an email.
 
 Your email should contain the following files. **ONCE AGAIN, PLEASE COMPRESS BEFORE SENDING, AS THE FILES CAN BE LARGE.** Note that, depending on which step the build failed, some of the files might not exist.
 
@@ -546,7 +546,7 @@ This works irrespective of which MPI implementation your application was compile
 }
 
 @article{10.1177/10943420241263544,
-    author = {Heroux, Michael and Zhou, Hui and Raffenetti, Ken and Guo, Yanfei and Gillis, Thomas and Latham, Robert and Thakur, Rajeev},
+    author = {Zhou, Hui and Raffenetti, Ken and Guo, Yanfei and Gillis, Thomas and Latham, Robert and Thakur, Rajeev},
     title = {Designing and prototyping extensions to the Message Passing Interface in MPICH},
     year = {2024},
     issue_date = {Sep 2024},
