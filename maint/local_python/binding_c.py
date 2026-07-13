@@ -130,7 +130,7 @@ def get_mansrc_file_path(func, root_dir):
         file_path = dir_path + '/' + func['file'] + ".adoc"
     elif RE.match(r'(MPI(X|_T)?_\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
-        file_path = dir_path + '/' + name.lower() + ".adoc"
+        file_path = dir_path + '/' + name + ".adoc"
     else:
         raise Exception("Error in function name pattern: %s\n" % func['name'])
 
