@@ -17,9 +17,7 @@ nodist_noinst_HEADERS =
 BUILT_SOURCES =
 bin_PROGRAMS =
 bin_SCRIPTS =
-dist_noinst_SCRIPTS = autogen.sh
 noinst_DATA =
-dist_noinst_DATA =
 noinst_HEADERS =
 noinst_LIBRARIES =
 noinst_LTLIBRARIES =
@@ -123,7 +121,6 @@ mpifort_convenience_libs = @mpl_lib@
 lib_LTLIBRARIES =
 
 # include our subdir automake fragments
-include maint/Makefile.mk
 include src/Makefile.mk
 
 if BUILD_PROFILING_LIB

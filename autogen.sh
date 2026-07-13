@@ -400,9 +400,7 @@ fn_getcvars() {
 
 fn_maint_version() {
     set_autotools
-    # build a substitute maint/Version script now that we store the single copy of
-    # this information in an m4 file for autoconf's benefit
-    echo_n "Generating a helper maint/Version... "
+    echo_n "Generating top-level Version... "
     if $autom4te -l M4sugar maint/Version.base.m4 > Version ; then
         echo "done"
     else
@@ -907,7 +905,7 @@ set_externals
 fn_copy_confdb_etc
 
 ########################################################################
-## Building maint/Version
+## Building Version
 ########################################################################
 fn_maint_version
 
