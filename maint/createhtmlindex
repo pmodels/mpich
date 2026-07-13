@@ -127,7 +127,6 @@ sub AddDirectoryConstants {
     open In, "$rootdir/$file" or die "Can't open $rootdir/$file\n";
     while (<In>) {
         if (/<dt class="hdlist1">(\w+)\s*<\/dt>/) {
-            print "dt: $1\n";
             # TODO: add id reference
             $links{$1} = "$file";
         }
