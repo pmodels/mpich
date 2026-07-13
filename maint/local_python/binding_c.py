@@ -1374,8 +1374,7 @@ def dump_manpage(func, out):
 
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
     if 'notes' in func:
-        for l in func['notes']:
-            out.append(l)
+        out.extend(func['notes'])
         out.append("")
 
     if 'replace' in func:
@@ -1409,11 +1408,11 @@ def dump_manpage(func, out):
                         has['FortranStatus'] = 1
             for k in has:
                 out.append("include::../docnotes.adoc[tag=%s]" % k)
-        out.append("")
 
-    if 'notes2' in func:
-        for l in func['notes2']:
-            out.append(l)
+        # add custom notes from doc/mansrc/funcnotes.txt
+        if 'notes-' + note in func:
+            out.extend(func['notes-' + note])
+
         out.append("")
 
     if '_skip_err_codes' not in func:

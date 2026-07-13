@@ -19,10 +19,6 @@ MPI_Cart_create:
     .desc: Makes a new communicator to which topology information has been attached
     .extra: errtest_comm_intra
     .impl: topo_fns->cartCreate
-/*
-    Algorithm:
-    We ignore 'reorder' info currently.
-*/
 { -- error_check -- dims, periods
     if (ndims > 0) {
         MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
@@ -58,12 +54,6 @@ MPI_Cart_rank:
     .desc: Determines process rank in communicator given Cartesian location
     .skip: global_cs
     .extra: ignore_revoked_comm
-/*
-    Notes:
-     Out-of-range coordinates are erroneous for non-periodic dimensions.
-     Versions of MPICH before 1.2.2 returned 'MPI_PROC_NULL' for the rank in this
-     case.
-*/
 { -- error_check -- coords
     MPIR_Topology *cart_ptr = MPIR_Topology_get(comm_ptr);
     MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
@@ -87,11 +77,6 @@ MPI_Cart_shift:
     .desc: Returns the shifted source and destination ranks, given a shift direction and amount
     .skip: global_cs
     .extra: ignore_revoked_comm
-/*
-    Notes:
-    The 'direction' argument is in the range '[0,n-1]' for an n-dimensional
-    Cartesian mesh.
-*/
 { -- error_check -- disp
 }
 
@@ -215,14 +200,6 @@ MPI_Graph_create:
     .desc: Makes a new communicator to which topology information
     .extra: errtest_comm_intra
     .impl: topo_fns->graphCreate
-/*
-    Notes:
-    Each process must provide a description of the entire graph, not just the
-    neighbors of the calling process.
-    
-    Algorithm:
-    We ignore the 'reorder' info currently.
-*/
 { -- error_check -- nnodes, indx, edges
     int comm_size = comm_old_ptr->remote_size;
 

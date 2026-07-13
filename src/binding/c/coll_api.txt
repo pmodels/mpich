@@ -3,25 +3,6 @@
 MPI_Allgather:
     .desc: Gathers data from all tasks and distribute the combined data to all tasks
     .extra: threadcomm
-/*
-    Notes:
-     The MPI standard (1.0 and 1.1) says that
-    .n
-    .n
-     The jth block of data sent from  each process is received by every process
-     and placed in the jth block of the buffer 'recvbuf'.
-    .n
-    .n
-     This is misleading; a better description is
-    .n
-    .n
-     The block of data sent from the jth process is received by every
-     process and placed in the jth block of the buffer 'recvbuf'.
-    .n
-    .n
-     This text was suggested by Rajeev Thakur and has been adopted as a
-     clarification by the MPI Forum.
-*/
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if ((sendcount == 0 && sendbuf != MPI_IN_PLACE) || recvcount == 0) {
@@ -36,26 +17,6 @@ MPI_Allgather_init:
 MPI_Allgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks
     .extra: threadcomm
-/*
-    Notes:
-     The MPI standard (1.0 and 1.1) says that
-    .n
-    .n
-     The jth block of data sent from
-     each process is received by every process and placed in the jth block of the
-     buffer 'recvbuf'.
-    .n
-    .n
-     This is misleading; a better description is
-    .n
-    .n
-     The block of data sent from the jth process is received by every
-     process and placed in the jth block of the buffer 'recvbuf'.
-    .n
-    .n
-     This text was suggested by Rajeev Thakur, and has been adopted as a
-     clarification to the MPI standard by the MPI-Forum.
-*/
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
@@ -117,12 +78,6 @@ MPI_Alltoallw_init:
 MPI_Barrier:
     .desc: Blocks until all processes in the communicator have reached this routine.
     .extra: threadcomm
-/*
-    Notes:
-    Blocks the caller until all processes in the communicator have called it;
-    that is, the call returns at any process only after all members of the
-    communicator have entered the call.
-*/
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         goto fn_exit;
@@ -148,12 +103,6 @@ MPI_Exscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes
     .docnotes: collops
     .extra: errtest_comm_intra, threadcomm
-/*
-    Notes:
-      'MPI_Exscan' is like 'MPI_Scan', except that the contribution from the
-       calling process is not included in the result at the calling process
-       (it is contributed to the subsequent processes, of course).
-*/
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
         goto fn_exit;
@@ -243,17 +192,6 @@ MPI_Ialltoallw:
 
 MPI_Ibarrier:
     .desc: Notifies the process that it has reached the barrier and returns immediately
-/*
-    Notes:
-    MPI_Ibarrier is a nonblocking version of MPI_barrier. By calling MPI_Ibarrier,
-    a process notifies that it has reached the barrier. The call returns
-    immediately, independent of whether other processes have called MPI_Ibarrier.
-    The usual barrier semantics are enforced at the corresponding completion
-    operation (test or wait), which in the intra-communicator case will complete
-    only after all other processes in the communicator have called MPI_Ibarrier. In
-    the intercommunicator case, it will complete when all processes in the remote
-    group have called MPI_Ibarrier.
-*/
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
@@ -382,10 +320,6 @@ MPI_Iscatterv:
 
 MPI_Neighbor_allgather:
     .desc: Gathers data from all neighboring processes and distribute the combined data to all neighboring processes
-/*
-    Notes:
-    In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
-*/
 
 MPI_Neighbor_allgather_init:
     .desc: Create a persistent request for neighbor_allgather.
@@ -399,10 +333,6 @@ MPI_Neighbor_allgatherv_init:
 
 MPI_Neighbor_alltoall:
     .desc: Sends and Receivs data from all neighboring processes
-/*
-    Notes:
-    In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than MPI_NEIGHBOR_ALLGATHER in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
-*/
 
 MPI_Neighbor_alltoall_init:
     .desc: Create a persistent request for neighbor_alltoall.

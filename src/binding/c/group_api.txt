@@ -6,20 +6,10 @@ MPI_Group_compare:
 MPI_Group_difference:
     .desc: Makes a group from the difference of two groups
     .seealso: MPI_Group_free
-/*
-    Notes:
-    The generated group contains the members of 'group1' that are not in 'group2'.
-*/
 
 MPI_Group_excl:
     .desc: Produces a group by reordering an existing group and taking only unlisted members
     .seealso: MPI_Group_free
-/*
-    Note:
-    The MPI standard requires that each of the ranks to excluded must be
-    a valid rank in the group and all elements must be distinct or the
-    function is erroneous.
-*/
 { -- error_check --
     if (group_ptr) {
         mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);
@@ -59,11 +49,6 @@ MPI_Group_incl:
 MPI_Group_intersection:
     .desc: Produces a group as the intersection of two existing groups
     .seealso: MPI_Group_free
-/*
-    Notes:
-    The output group contains those processes that are in both 'group1' and
-    'group2'.
-*/
 
 MPI_Group_range_excl:
     .desc: Produces a group by excluding ranges of processes from an existing group
@@ -101,10 +86,6 @@ MPI_Group_size:
 
 MPI_Group_translate_ranks:
     .desc: Translates the ranks of processes in one group to those in another group
-/*
-    As a special case (see the MPI-2 errata), if the input rank is
-    'MPI_PROC_NULL', 'MPI_PROC_NULL' is given as the output rank.
-*/
 { -- error_check --
     if (group1_ptr) {
 	/* Check that the rank entries are valid */

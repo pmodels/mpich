@@ -3,30 +3,9 @@
 MPI_Comm_get_parent:
     .desc: Return the parent communicator for this process
     .skip: global_cs
-/*
-    Notes:
-    If a process was started with 'MPI_Comm_spawn' or 'MPI_Comm_spawn_multiple',
-    'MPI_Comm_get_parent' returns the parent intercommunicator of the current
-    process. This parent intercommunicator is created implicitly inside of
-    'MPI_Init' and is the same intercommunicator returned by 'MPI_Comm_spawn'
-    in the parents.
-
-    If the process was not spawned, 'MPI_Comm_get_parent' returns
-    'MPI_COMM_NULL'.
-
-    After the parent communicator is freed or disconnected, 'MPI_Comm_get_parent'
-    returns 'MPI_COMM_NULL'.
-*/
 
 MPI_Comm_join:
     .desc: Create a communicator by joining two processes connected by a socket
-/*
-    Notes:
-    The socket must be quiescent before 'MPI_COMM_JOIN' is called and after
-    'MPI_COMM_JOIN' returns. More specifically, on entry to 'MPI_COMM_JOIN', a
-    read on the socket will not read any data that was written to the socket
-    before the remote process called 'MPI_COMM_JOIN'.
-*/
 
 MPI_Comm_spawn:
     .desc: Spawn up to maxprocs instances of a single MPI application
@@ -84,19 +63,6 @@ MPI_Comm_spawn_multiple:
 
 MPI_Open_port:
     .desc: Establish an address that can be used to establish connections between groups of MPI processes
-/*
-    Notes:
-    MPI copies a system-supplied port name into 'port_name'. 'port_name' identifies
-    the newly opened port and can be used by a client to contact the server.
-    The maximum size string that may be supplied by the system is
-    'MPI_MAX_PORT_NAME'.
-
-     Reserved Info Key Values:
-    + ip_port - Value contains IP port number at which to establish a port.
-    - ip_address - Value contains IP address at which to establish a port.
-     If the address is not a valid IP address of the host on which the
-     'MPI_OPEN_PORT' call is made, the results are undefined.
-*/
 
 MPI_Close_port:
     .desc: close port
@@ -121,29 +87,12 @@ MPI_Comm_disconnect:
     .desc: Disconnect from a communicator
     .seealso: MPI_Comm_connect, MPI_Comm_join
     .extra: ignore_revoked_comm
-/*
-    Notes:
-    This routine waits for all pending communication to complete, then frees the
-    communicator and sets 'comm' to 'MPI_COMM_NULL'.  It may not be called
-    with 'MPI_COMM_WORLD' or 'MPI_COMM_SELF'.
-*/
 
 MPI_Lookup_name:
     .desc: Lookup a port given a service name
-/*
-    Notes:
-    If the 'service_name' is found, MPI copies the associated value into
-    'port_name'.  The maximum size string that may be supplied by the system is
-    'MPI_MAX_PORT_NAME'.
-*/
 
 MPI_Publish_name:
     .desc: Publish a service name for use with MPI_Comm_connect
-/*
-    Notes:
-    The maximum size string that may be supplied for 'port_name' is
-    'MPI_MAX_PORT_NAME'.
-*/
 
 MPI_Unpublish_name:
     .desc: Unpublish a service name published with MPI_Publish_name

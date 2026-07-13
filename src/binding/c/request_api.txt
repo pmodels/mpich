@@ -3,21 +3,6 @@
 MPI_Cancel:
     .desc: Cancels a communication request
     .docnotes: NULL
-/*
-    Notes:
-    The primary expected use of 'MPI_Cancel' is in multi-buffering
-    schemes, where speculative 'MPI_Irecvs' are made.  When the computation
-    completes, some of these receive requests may remain; using 'MPI_Cancel' allows
-    the user to cancel these unsatisfied requests.
-
-    Cancelling a send operation is much more difficult, in large part because the
-    send will usually be at least partially complete (the information on the tag,
-    size, and source are usually sent immediately to the destination).
-    Users are
-    advised that cancelling a send, while a local operation (as defined by the MPI
-    standard), is likely to be expensive (usually generating one or more internal
-    messages).
-*/
 
 MPI_Grequest_complete:
     .desc: Notify MPI that a user-defined request is complete
@@ -71,29 +56,9 @@ MPIX_Grequest_class_allocate:
 MPI_Request_free:
     .desc: Frees a communication request object
     .seealso: MPI_Isend, MPI_Irecv, MPI_Issend, MPI_Ibsend, MPI_Irsend, MPI_Recv_init, MPI_Send_init, MPI_Ssend_init, MPI_Rsend_init, MPI_Wait, MPI_Test, MPI_Waitall, MPI_Waitany, MPI_Waitsome, MPI_Testall, MPI_Testany, MPI_Testsome
-/*
-    Notes:
-
-    This routine is normally used to free inactive persistent requests created with
-    either 'MPI_Recv_init' or 'MPI_Send_init' and friends.  It `is` also
-    permissible to free an active request.  However, once freed, the request can no
-    longer be used in a wait or test routine (e.g., 'MPI_Wait') to determine
-    completion.
-
-    This routine may also be used to free a non-persistent requests such as those
-    created with 'MPI_Irecv' or 'MPI_Isend' and friends.  Like active persistent
-    requests, once freed, the request can no longer be used with test/wait routines
-    to determine completion.
-*/
 
 MPI_Request_get_status:
     .desc: Nondestructive test for the completion of a Request
-/*
-    Notes:
-    Unlike 'MPI_Test', 'MPI_Request_get_status' does not deallocate or
-    deactivate the request.  A call to one of the test/wait routines or
-    'MPI_Request_free' should be made to release the request object.
-*/
 { -- early_return --
     if (request == MPI_REQUEST_NULL || !MPIR_Request_is_active(request_ptr)) {
         *flag = 1;
@@ -153,14 +118,6 @@ MPI_Start:
 MPI_Startall:
     .desc: Starts a collection of persistent requests
     .impl: mpid
-/*
-    Notes:
-    Unlike 'MPI_Waitall', 'MPI_Startall' does not provide a mechanism for
-    returning multiple errors nor pinpointing the request(s) involved.
-    Furthermore, the behavior of 'MPI_Startall' after an error occurs is not
-    defined by the MPI standard.  If well-defined error reporting and behavior
-    are required, multiple calls to 'MPI_Start' should be used instead.
-*/
 
 MPI_Status_get_error:
     .desc: Get MPI_ERROR field from the status
@@ -254,23 +211,6 @@ MPI_Testall:
     .desc: Tests for the completion of all previously initiated requests
     .docnotes: waitstatus
     .error: MPI_ERR_IN_STATUS
-/*
-    Notes:
-      'flag' is true only if all requests have completed.  Otherwise, flag is
-      false and neither the 'array_of_requests' nor the 'array_of_statuses' is
-      modified.
-
-    If one or more of the requests completes with an error, 'MPI_ERR_IN_STATUS' is
-    returned.  An error value will be present is elements of 'array_of_statuses'
-    associated with the requests.  Likewise, the 'MPI_ERROR' field in the status
-    elements associated with requests that have successfully completed will be
-    'MPI_SUCCESS'.  Finally, those requests that have not completed will have a
-    value of 'MPI_ERR_PENDING'.
-
-    While it is possible to list a request handle more than once in the
-    'array_of_requests', such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-*/
 {
     mpi_errno = MPIR_Testall(count, request_ptrs, flag, array_of_statuses);
     if (*flag) {
@@ -307,13 +247,6 @@ MPI_Testall:
 MPI_Testany:
     .desc: Tests for completion of any previdously initiated requests
     .docnotes: waitstatus
-/*
-    Notes:
-
-    While it is possible to list a request handle more than once in the
-    'array_of_requests', such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-*/
 {
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Testany(count, request_ptrs, indx, flag, status);
@@ -333,13 +266,6 @@ MPI_Testany:
 MPI_Testsome:
     .desc: Tests for some given requests to complete
     .docnotes: waitstatus
-/*
-    Notes:
-
-    While it is possible to list a request handle more than once in the
-    'array_of_requests', such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-*/
 { -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
@@ -403,20 +329,6 @@ MPI_Waitall:
     .desc: Waits for all given MPI Requests to complete
     .docnotes: waitstatus
     .error: MPI_ERR_IN_STATUS
-/*
-    Notes:
-
-    If one or more of the requests completes with an error, 'MPI_ERR_IN_STATUS' is
-    returned.  An error value will be present is elements of 'array_of_statuses'
-    associated with the requests.  Likewise, the 'MPI_ERROR' field in the status
-    elements associated with requests that have successfully completed will be
-    'MPI_SUCCESS'.  Finally, those requests that have not completed will have a
-    value of 'MPI_ERR_PENDING'.
-
-    While it is possible to list a request handle more than once in the
-    array_of_requests, such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-*/
 {
     mpi_errno = MPIR_Waitall(count, request_ptrs, array_of_statuses);
     for (int i = 0; i < count; i++) {
@@ -451,15 +363,6 @@ MPI_Waitall:
 MPI_Waitany:
     .desc: Waits for any specified MPI Request to complete
     .docnotes: waitstatus
-/*
-    Notes:
-    If all of the requests are 'MPI_REQUEST_NULL', then 'indx' is returned as
-    'MPI_UNDEFINED', and 'status' is returned as an empty status.
-
-    While it is possible to list a request handle more than once in the
-    array_of_requests, such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-*/
 {
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Waitany(count, request_ptrs, indx, status);
@@ -478,30 +381,7 @@ MPI_Waitany:
 
 MPI_Waitsome:
     .desc: Waits for some given MPI Requests to complete
-/*
-    Notes:
-    The array of indices are in the range '0' to 'incount - 1' for C and
-    in the range '1' to 'incount' for Fortran.
-
-    Null requests are ignored; if all requests are null, then the routine
-    returns with 'outcount' set to 'MPI_UNDEFINED'.
-
-    While it is possible to list a request handle more than once in the
-    array_of_requests, such an action is considered erroneous and may cause the
-    program to unexecpectedly terminate or produce incorrect results.
-
-    'MPI_Waitsome' provides an interface much like the Unix 'select' or 'poll'
-    calls and, in a high qualilty implementation, indicates all of the requests
-    that have completed when 'MPI_Waitsome' is called.
-    However, 'MPI_Waitsome' only guarantees that at least one
-    request has completed; there is no guarantee that `all` completed requests
-    will be returned, or that the entries in 'array_of_indices' will be in
-    increasing order. Also, requests that are completed while 'MPI_Waitsome' is
-    executing may or may not be returned, depending on the timing of the
-    completion of the message.
-
-    .N waitstatus
-*/
+    .docnotes: waitstatus
 { -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);

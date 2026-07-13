@@ -38,6 +38,7 @@ def main():
         G.check_write_path(mansrc_dir + '/')
         G.hints = collect_info_hint_blocks("src")
         G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
+        collect_function_notes("doc/mansrc/funcnotes.txt")
     else:
         G.hints = None
         G.semantics = {}
@@ -213,6 +214,25 @@ def collect_mansrc_semantics(filepath):
             if RE.match(r'\/\/ *tag::(\w+)\[\]', line):
                 semantics[RE.m.group(1)] = 1
     return semantics
+
+def collect_function_notes(filepath):
+    func = None
+    notes = None
+    with open(filepath, 'r') as f:
+        for line in f:
+            if RE.match(r'(MPIX*_\w+):', line):
+                func = G.FUNCS[RE.m.group(1).lower()]
+                if not func:
+                    raise Exception("Unknown function %s in %s" % (RE.m.group(1), filepath))
+                if 'notes' in func:
+                    raise Exception("Duplicated notes in %s" % func['name'])
+                notes = []
+                func['notes'] = notes
+            elif RE.match(r'\s+\/\/ *tag:(\w+)\s*$', line):
+                notes = []
+                func['notes-' + RE.m.group(1)] = notes
+            else:
+                notes.append(line[4:])
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
