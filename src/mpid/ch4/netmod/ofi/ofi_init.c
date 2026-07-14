@@ -650,6 +650,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_vci_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_OFI_global.num_vcis = 1;
+
     /* A way to tell which av is empty */
     MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
 
@@ -667,90 +669,116 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* WB TODO - I assume that after this function is done, there will be an array of providers in
-     * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
-     * generate the addresses in the business card exchange. */
-    struct fi_info *prov = NULL;
-    mpi_errno = MPIDI_OFI_find_provider(&prov);
-    MPIR_ERR_CHECK(mpi_errno);
+    bool is_comm_world = (comm == MPIR_Process.comm_world);
 
-    /* init multi-nic and populates MPIDI_OFI_global.prov_use[] */
-    mpi_errno = MPIDI_OFI_init_multi_nic(prov);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (!fabric_initialized) {
+        /* -------------------------------- */
+        /* Set up the libfabric provider(s) */
+        /* -------------------------------- */
+        struct fi_info *prov = NULL;
+        mpi_errno = MPIDI_OFI_find_provider(&prov);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_OFI_find_provider_cleanup();
+        mpi_errno = MPIDI_OFI_fill_prov_use(prov);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        MPIDI_OFI_find_provider_cleanup();
+
+        /* find close nics and prepare {num_nics, close_nic_map} */
+    }
+
+    /* collectively order nics if we are in the world model */
+    bool all_need_init = false;
+    if (is_comm_world) {
+        /* NOTE: we can't skip the collective based on `fabric_initialized` */
+        /* TODO: run collective and decide all_need_init (as well as num_nics, close_nic_map) */
+    }
+
+    if (!fabric_initialized) {
+        if (all_need_init) {
+            /* order nics based on allgathered global info */
+            mpi_errno = MPIDI_OFI_order_multi_nic_global();
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* order nics based on local rank */
+            mpi_errno = MPIDI_OFI_order_multi_nic_local();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+    if (!fabric_initialized) {
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
-        int num_ctx_per_nic = 1;
+            /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
+            int num_ctx_per_nic = 1;
 #else
-        /* the actual needed number of vcis is not known yet. Use the CVAR. */
-        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
+            /* the actual needed number of vcis is not known yet. Use the CVAR. */
+            int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
 #endif
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-            /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
-            MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
-            MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+            int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
+                                      MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
+            num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+            for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+                /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
+                MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
+                MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+            }
         }
-    }
 
-    mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        dump_global_settings();
-    }
-
-    if (MPIR_CVAR_DEBUG_SUMMARY >= 2) {
-        if (MPIR_Process.rank == 0) {
-            fprintf(stdout, "====== Rank to NIC assignment ========\n");
+        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+            dump_global_settings();
         }
-        /* prevent messages from different ranks get interleaved. */
-        fflush(stdout);
-        MPIR_pmi_barrier();
-        fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
-                MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
-        fflush(stdout);
-        MPIR_pmi_barrier();
+
+        if (MPIR_CVAR_DEBUG_SUMMARY >= 2 && is_comm_world) {
+            if (MPIR_Process.rank == 0) {
+                fprintf(stdout, "====== Rank to NIC assignment ========\n");
+            }
+            /* prevent messages from different ranks get interleaved. */
+            fflush(stdout);
+            MPIR_pmi_barrier();
+            fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
+                    MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
+            fflush(stdout);
+            MPIR_pmi_barrier();
+        }
+
+        /* Finally open the fabric */
+        MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
+                                 &MPIDI_OFI_global.fabric, NULL), fabric);
+
+        /* ------------------------------------------------------------------------ */
+        /* Create transport level communication contexts.                           */
+        /* ------------------------------------------------------------------------ */
+
+        /* Creating the context for vci 0 and nic 0.
+         * This code maybe moved to a later stage */
+        mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        char *addrname[FI_NAME_MAX];
+        size_t addrnamelen = FI_NAME_MAX;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen),
+                       getname);
+
+        MPIR_Lpid lpid = MPIR_Process.rank;
+        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname, 1,
+                                    &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
+        MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+        MPIDI_OFI_global.lpid0 = lpid;
+        MPIDI_OFI_global.addrnamelen = addrnamelen;
+
+        /* index datatypes for RMA atomics. */
+        MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
+
+        /* make sure ch4 pack buffer pool has sufficient cell size */
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
+
+        MPIDI_OFI_init_per_vci(0);
     }
-
-    /* Finally open the fabric */
-    MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
-                             &MPIDI_OFI_global.fabric, NULL), fabric);
-
-    /* ------------------------------------------------------------------------ */
-    /* Create transport level communication contexts.                           */
-    /* ------------------------------------------------------------------------ */
-
-    /* Creating the context for vci 0 and nic 0.
-     * This code maybe moved to a later stage */
-    mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    char *addrname[FI_NAME_MAX];
-    size_t addrnamelen = FI_NAME_MAX;
-    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen), getname);
-
-    MPIR_Lpid lpid = MPIR_Process.rank;
-    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname, 1,
-                                &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
-    MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
-    MPIDI_OFI_global.lpid0 = lpid;
-    MPIDI_OFI_global.addrnamelen = addrnamelen;
-
-    /* index datatypes for RMA atomics. */
-    MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
-
-    /* make sure ch4 pack buffer pool has sufficient cell size */
-    MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
-
-    MPIDI_OFI_global.num_vcis = 1;
-    MPIDI_OFI_init_per_vci(0);
 
     fabric_initialized = true;
 

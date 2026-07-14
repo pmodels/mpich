@@ -435,9 +435,6 @@ typedef struct {
     struct fi_info *nic;
     int id;                     /* Unique NIC ID, consistent across intranode ranks */
     int close;                  /* Boolean whether nic is close in terms of affinity */
-    int prefer;                 /* Preference to order (lower is more preferred) */
-    int count;                  /* Count of ranks which have this NIC as their preferred NIC */
-    int num_close_ranks;        /* number of ranks which are close to this NIC */
     MPIR_hwtopo_gid_t parent;   /* Parent topology item of NIC which has affinity mask.
                                  * This is typically the socket above the NIC */
 } MPIDI_OFI_nic_info_t;
@@ -457,6 +454,7 @@ typedef struct {
     /* OFI objects */
     int avtid;
     int num_nics_available;
+    int num_close_nics;
     struct fi_info *prov_use[MPIDI_OFI_MAX_NICS];
     MPIDI_OFI_nic_info_t nic_info[MPIDI_OFI_MAX_NICS];
     struct fid_fabric *fabric;
