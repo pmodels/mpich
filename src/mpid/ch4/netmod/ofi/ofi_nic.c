@@ -23,103 +23,39 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* ---------------------------------- */
+/* Forward declarations for static    */
+/* functions called from public APIs  */
+/* ---------------------------------- */
+
+static bool match_prov_addr(struct fi_info *prov, const char *hostname);
+static int compare_nic_names(const void *info1, const void *info2);
+static int order_multi_nic_by_pref(int pref);
 #ifdef HAVE_LIBFABRIC_NIC
-/* Sometime the provider may report "null" pci info (looking at you: opx) */
-static bool is_nic_pci_valid(struct fi_info *info)
+static bool is_nic_pci_valid(struct fi_info *info);
+static int set_nic_info(void);
+#endif
+
+/* ================================== */
+/* Public MPIDI_OFI functions         */
+/* ================================== */
+
+/* -- NIC status ------------------------------------------------ */
+
+bool MPIDI_OFI_nic_is_up(struct fi_info *prov)
 {
-    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
-        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
-        return (pci.domain_id > 0 || pci.bus_id > 0 || pci.device_id > 0 || pci.function_id > 0);
+#ifdef HAVE_LIBFABRIC_NIC
+    /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
+     * information so we need to skip those. */
+    if (prov->nic != NULL && prov->nic->link_attr->state == FI_LINK_DOWN) {
+        return false;
     }
-    return false;
+#endif
+
+    return true;
 }
 
-/* Return the parent object (typically socket) of the NIC */
-static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
-{
-    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
-        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
-        return MPIR_hwtopo_get_dev_parent_by_pci(pci.domain_id, pci.bus_id, pci.device_id,
-                                                 pci.function_id);
-    }
-    return MPIR_hwtopo_get_obj_by_name(info->domain_attr->name);
-}
-
-/* Return true if the NIC is bound to the same socket as calling process */
-static bool is_nic_close(struct fi_info *info)
-{
-    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
-        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
-        return MPIR_hwtopo_is_dev_close_by_pci(pci.domain_id, pci.bus_id, pci.device_id,
-                                               pci.function_id);
-    }
-    return MPIR_hwtopo_is_dev_close_by_name(info->domain_attr->name);
-}
-
-/* Return true if the NIC is close to the group of the calling process */
-static bool is_nic_close_snc4(const MPIDI_OFI_nic_info_t * nic_info, int num_parents)
-{
-    int nic_socket_gid = MPIR_hwtopo_get_parent_socket(nic_info->parent);
-    int rank_socket_gid = MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_get_first_pu_group());
-
-    /* In SNC4 mode, when there are 4 groups that have nics, it means that there are 4
-     * other adjacent groups with no nics. This leads to each set of 2 groups having 2 nics
-     * such that, the first group has no nics and the second group has 2 nics.
-     * The correct assignment strategy is such the 2 nics of the second group is considered
-     * close to the ranks on both the groups.*/
-    if (num_parents == 4) {
-        /* Check that the parent socket of the rank and the nic is the same */
-        if (nic_socket_gid == rank_socket_gid) {
-            int nic_group_lid = MPIR_hwtopo_get_lid(nic_info->parent);
-            int rank_group_lid = MPIR_hwtopo_get_lid(MPIR_hwtopo_get_first_pu_group());
-            if (nic_group_lid == rank_group_lid || nic_group_lid - rank_group_lid == 1) {
-                struct fi_info *info = (struct fi_info *) (nic_info->nic);
-                if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
-                    struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
-
-                    int nic_lid = MPIR_hwtopo_get_pci_network_lid(pci.domain_id,
-                                                                  pci.bus_id,
-                                                                  pci.device_id,
-                                                                  pci.function_id);
-
-                    /* Map 1st nic of the group to the previous group */
-                    if (nic_lid == 0 && nic_group_lid - rank_group_lid == 1)
-                        return 1;
-                    /* Map 2nd nic of the group to the current group */
-                    else if (nic_lid == 1 && nic_group_lid == rank_group_lid)
-                        return 1;
-                }
-            }
-        }
-    } else {
-        /* On using a different configuration than having 4 num_parents, simply
-         * compare parent socket of the nic and the rank */
-        if (nic_socket_gid == rank_socket_gid)
-            return 1;
-    }
-    return 0;
-}
-
-/* Comparison function for NIC names. Used in qsort() */
-static int compare_nic_names(const void *info1, const void *info2)
-{
-    const struct fi_info **n1 = (const struct fi_info **) info1;
-    const struct fi_info **n2 = (const struct fi_info **) info2;
-    return strcmp((*n1)->domain_attr->name, (*n2)->domain_attr->name);
-}
-
-/* Comparison function for NICs. This function is used in qsort(). */
-static int compare_nics(const void *nic1, const void *nic2)
-{
-    const MPIDI_OFI_nic_info_t *i1 = (const MPIDI_OFI_nic_info_t *) nic1;
-    const MPIDI_OFI_nic_info_t *i2 = (const MPIDI_OFI_nic_info_t *) nic2;
-    if (i1->close && !i2->close)
-        return -1;
-    else if (i2->close && !i1->close)
-        return 1;
-    return compare_nic_names(&(i1->nic), &(i2->nic));
-}
-
+#ifdef HAVE_LIBFABRIC_NIC
 /* Determine if NIC has already been included in others */
 bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** others,
                                 int nic_count)
@@ -141,10 +77,7 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** o
 }
 #endif
 
-static bool match_prov_addr(struct fi_info *prov, const char *hostname);
-#ifdef HAVE_LIBFABRIC_NIC
-static int set_nic_info(void);
-#endif
+/* -- NIC initialization ---------------------------------------- */
 
 int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
 {
@@ -278,6 +211,87 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
     goto fn_exit;
 }
 
+/* -- NIC ordering ---------------------------------------------- */
+
+int MPIDI_OFI_order_multi_nic_local(void)
+{
+    /* TODO: pass comm and use comm->local_rank */
+    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
+
+    return order_multi_nic_by_pref(pref);
+}
+
+int MPIDI_OFI_order_multi_nic_global(void)
+{
+    /* TODO: pass comm, use comm->local_rank, and globally determine pref */
+    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
+
+    return order_multi_nic_by_pref(pref);
+}
+
+/* ================================== */
+/* Static internal functions          */
+/* ================================== */
+
+/* -- Provider matching ----------------------------------------- */
+
+static bool match_prov_addr(struct fi_info *prov, const char *hostname)
+{
+    bool match = false;
+
+    if (!hostname) {
+        goto fn_exit;
+    }
+
+    char addr_buf[500];
+    switch (prov->addr_format) {
+        case FI_SOCKADDR_IN:
+            inet_ntop(AF_INET, &((struct sockaddr_in *) prov->src_addr)->sin_addr, addr_buf, 500);
+            match = (strcmp(hostname, addr_buf) == 0);
+            break;
+        case FI_SOCKADDR_IN6:
+            inet_ntop(AF_INET6, &((struct sockaddr_in6 *) prov->src_addr)->sin6_addr,
+                      addr_buf, 500);
+            match = (strcmp(hostname, addr_buf) == 0);
+            break;
+        case FI_SOCKADDR_IB:
+            break;
+        case FI_ADDR_PSMX:
+            break;
+        case FI_ADDR_GNI:
+            break;
+        case FI_ADDR_STR:
+            match = (strcmp(hostname, (char *) prov->src_addr) == 0);
+            break;
+        default:
+            break;
+    }
+  fn_exit:
+    return match;
+}
+
+/* -- NIC comparison and ordering ------------------------------- */
+
+/* Comparison function for NIC names. Used in qsort() */
+static int compare_nic_names(const void *info1, const void *info2)
+{
+    const struct fi_info **n1 = (const struct fi_info **) info1;
+    const struct fi_info **n2 = (const struct fi_info **) info2;
+    return strcmp((*n1)->domain_attr->name, (*n2)->domain_attr->name);
+}
+
+/* Comparison function for NICs. This function is used in qsort(). */
+static int compare_nics(const void *nic1, const void *nic2)
+{
+    const MPIDI_OFI_nic_info_t *i1 = (const MPIDI_OFI_nic_info_t *) nic1;
+    const MPIDI_OFI_nic_info_t *i2 = (const MPIDI_OFI_nic_info_t *) nic2;
+    if (i1->close && !i2->close)
+        return -1;
+    else if (i2->close && !i1->close)
+        return 1;
+    return compare_nic_names(&(i1->nic), &(i2->nic));
+}
+
 static int order_multi_nic_by_pref(int pref)
 {
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
@@ -309,24 +323,85 @@ static int order_multi_nic_by_pref(int pref)
     return MPI_SUCCESS;
 }
 
-int MPIDI_OFI_order_multi_nic_local(void)
-{
-    /* TODO: pass comm and use comm->local_rank */
-    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
-
-    return order_multi_nic_by_pref(pref);
-}
-
-int MPIDI_OFI_order_multi_nic_global(void)
-{
-    /* TODO: pass comm, use comm->local_rank, and globally determine pref */
-    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
-
-    return order_multi_nic_by_pref(pref);
-}
-
+/* -- NIC closeness detection ----------------------------------- */
 
 #ifdef HAVE_LIBFABRIC_NIC
+/* Sometime the provider may report "null" pci info (looking at you: opx) */
+static bool is_nic_pci_valid(struct fi_info *info)
+{
+    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+        return (pci.domain_id > 0 || pci.bus_id > 0 || pci.device_id > 0 || pci.function_id > 0);
+    }
+    return false;
+}
+
+/* Return the parent object (typically socket) of the NIC */
+static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
+{
+    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+        return MPIR_hwtopo_get_dev_parent_by_pci(pci.domain_id, pci.bus_id, pci.device_id,
+                                                 pci.function_id);
+    }
+    return MPIR_hwtopo_get_obj_by_name(info->domain_attr->name);
+}
+
+/* Return true if the NIC is bound to the same socket as calling process */
+static bool is_nic_close(struct fi_info *info)
+{
+    if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+        struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+        return MPIR_hwtopo_is_dev_close_by_pci(pci.domain_id, pci.bus_id, pci.device_id,
+                                               pci.function_id);
+    }
+    return MPIR_hwtopo_is_dev_close_by_name(info->domain_attr->name);
+}
+
+/* Return true if the NIC is close to the group of the calling process */
+static bool is_nic_close_snc4(const MPIDI_OFI_nic_info_t * nic_info, int num_parents)
+{
+    int nic_socket_gid = MPIR_hwtopo_get_parent_socket(nic_info->parent);
+    int rank_socket_gid = MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_get_first_pu_group());
+
+    /* In SNC4 mode, when there are 4 groups that have nics, it means that there are 4
+     * other adjacent groups with no nics. This leads to each set of 2 groups having 2 nics
+     * such that, the first group has no nics and the second group has 2 nics.
+     * The correct assignment strategy is such the 2 nics of the second group is considered
+     * close to the ranks on both the groups.*/
+    if (num_parents == 4) {
+        /* Check that the parent socket of the rank and the nic is the same */
+        if (nic_socket_gid == rank_socket_gid) {
+            int nic_group_lid = MPIR_hwtopo_get_lid(nic_info->parent);
+            int rank_group_lid = MPIR_hwtopo_get_lid(MPIR_hwtopo_get_first_pu_group());
+            if (nic_group_lid == rank_group_lid || nic_group_lid - rank_group_lid == 1) {
+                struct fi_info *info = (struct fi_info *) (nic_info->nic);
+                if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+                    struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+
+                    int nic_lid = MPIR_hwtopo_get_pci_network_lid(pci.domain_id,
+                                                                  pci.bus_id,
+                                                                  pci.device_id,
+                                                                  pci.function_id);
+
+                    /* Map 1st nic of the group to the previous group */
+                    if (nic_lid == 0 && nic_group_lid - rank_group_lid == 1)
+                        return 1;
+                    /* Map 2nd nic of the group to the current group */
+                    else if (nic_lid == 1 && nic_group_lid == rank_group_lid)
+                        return 1;
+                }
+            }
+        }
+    } else {
+        /* On using a different configuration than having 4 num_parents, simply
+         * compare parent socket of the nic and the rank */
+        if (nic_socket_gid == rank_socket_gid)
+            return 1;
+    }
+    return 0;
+}
+
 static bool get_is_snc4_with_cxi_nics(void)
 {
     int num_numa_nodes = MPIR_hwtopo_get_num_numa_nodes();
@@ -382,51 +457,3 @@ static int set_nic_info(void)
 }
 
 #endif
-
-bool MPIDI_OFI_nic_is_up(struct fi_info * prov)
-{
-#ifdef HAVE_LIBFABRIC_NIC
-    /* Make sure the NIC returned by OFI is not down. Some providers don't include NIC
-     * information so we need to skip those. */
-    if (prov->nic != NULL && prov->nic->link_attr->state == FI_LINK_DOWN) {
-        return false;
-    }
-#endif
-
-    return true;
-}
-
-static bool match_prov_addr(struct fi_info *prov, const char *hostname)
-{
-    bool match = false;
-
-    if (!hostname) {
-        goto fn_exit;
-    }
-
-    char addr_buf[500];
-    switch (prov->addr_format) {
-        case FI_SOCKADDR_IN:
-            inet_ntop(AF_INET, &((struct sockaddr_in *) prov->src_addr)->sin_addr, addr_buf, 500);
-            match = (strcmp(hostname, addr_buf) == 0);
-            break;
-        case FI_SOCKADDR_IN6:
-            inet_ntop(AF_INET6, &((struct sockaddr_in6 *) prov->src_addr)->sin6_addr,
-                      addr_buf, 500);
-            match = (strcmp(hostname, addr_buf) == 0);
-            break;
-        case FI_SOCKADDR_IB:
-            break;
-        case FI_ADDR_PSMX:
-            break;
-        case FI_ADDR_GNI:
-            break;
-        case FI_ADDR_STR:
-            match = (strcmp(hostname, (char *) prov->src_addr) == 0);
-            break;
-        default:
-            break;
-    }
-  fn_exit:
-    return match;
-}
