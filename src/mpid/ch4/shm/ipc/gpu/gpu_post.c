@@ -638,7 +638,13 @@ static int gpu_ipc_async_start(MPIR_Request * req, MPIR_gpu_req * req_p,
         p->yreq.type = MPIR_NULL_REQUEST;
     }
 
+    /* Release VCI lock before adding to async list to avoid lock ordering
+     * inversion with async_things_mutex (see deadlock: VCI_LOCK -> async_things_mutex
+     * here vs async_things_mutex -> VCI_LOCK in gpu_ipc_async_poll). */
+    int vci = MPIDIG_REQUEST(req, req->local_vci);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p, NULL);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     return mpi_errno;
 }
