@@ -22,7 +22,6 @@ typedef struct MPIDI_GPU_ipc_handle {
 
 /* local struct used for query and preparing memory handle */
 typedef struct MPIDI_GPU_ipc_attr {
-    int remote_rank;            /* global rank or MPI_PROC_NULL */
     MPL_pointer_attr_t gpu_attr;
     const void *vaddr;
     void *bounds_base;

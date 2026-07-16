@@ -8,6 +8,35 @@
 #include "ipc_types.h"
 #include "ipc_p2p.h"
 
+/* NOTE: MPIDI_IPC_hdr defined in ipc_types.h */
+
+/* used in MPIDI_IPC_do_cts, MPIDI_IPC_rndv_cb and MPIDI_IPC_write_target_msg_cb */
+typedef struct MPIDI_IPC_write {
+    MPIDI_IPCI_type_t ipc_type;
+    MPIR_Request *sreq;
+    MPIR_Request *rreq;
+} MPIDI_IPC_write_t;
+
+/* used in MPIDI_IPC_complete and MPIDI_IPC_ack_target_msg_cb */
+typedef struct MPIDI_IPC_ack {
+    MPIDI_IPCI_type_t ipc_type;
+    MPIR_Request *req_ptr;
+} MPIDI_IPC_ack_t;
+
+/* used in MPIDI_IPC_send_mapaddr and MPIDI_IPC_mapaddr_target_msg_cb */
+typedef struct MPIDI_IPC_mapaddr {
+    MPIDI_IPCI_type_t ipc_type;
+    int mapped_lrank;           /* The node-local rank for the mapped address */
+    void *base_addr;
+    void *mapped_addr;
+} MPIDI_IPC_mapaddr_t;
+
+/* used in MPIDI_IPC_send_unmap and MPIDI_IPC_unmap_target_msg_cb */
+typedef struct MPIDI_IPC_unmap {
+    MPIDI_IPCI_type_t ipc_type;
+    void *mapped_addr;
+} MPIDI_IPC_unmap_t;
+
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req)
 {
@@ -90,7 +119,7 @@ int MPIDI_IPC_mapaddr_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIDI_IPC_mapaddr_t *hdr = am_hdr;
     /* only for gpu, for now */
     MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
-    mpi_errno = MPIDI_GPU_ipc_cache_map_addr(hdr->base_addr, hdr->mapped_addr, hdr->rank);
+    mpi_errno = MPIDI_GPU_ipc_cache_map_addr(hdr->base_addr, hdr->mapped_addr, hdr->mapped_lrank);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -138,7 +167,7 @@ int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote
 
     MPIDI_IPC_mapaddr_t am_hdr;
     am_hdr.ipc_type = ipc_type;
-    am_hdr.rank = MPIR_Process.local_rank;
+    am_hdr.mapped_lrank = MPIR_Process.local_rank;
     am_hdr.base_addr = base_addr;
     am_hdr.mapped_addr = mapped_addr;
 
@@ -179,16 +208,19 @@ static int reply_ipc_write(MPIDI_IPCI_ipc_attr_t * ipc_attr, MPI_Aint count, MPI
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int peer_rank = MPIDIG_REQUEST(rreq, u.ipc.peer_rank);
+    /* In case we manage cache for remote processes (e.g. GPU), pass in remote_lrank */
+    int remote_lrank = MPIDI_SHM_global.local_ranks[MPIDIU_get_grank(peer_rank, rreq->comm)];
+
     void *hdr = NULL;
     MPI_Aint hdr_sz;
-    mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype,
-                                           sizeof(MPIDI_IPC_write_t), rreq, &hdr, &hdr_sz);
+    mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype, sizeof(MPIDI_IPC_write_t),
+                                           rreq, remote_lrank, &hdr, &hdr_sz);
     MPIDI_IPC_write_t *am_hdr = hdr;
     am_hdr->ipc_type = ipc_attr->ipc_type;
     am_hdr->sreq = MPIDIG_REQUEST(rreq, u.ipc.peer_req);
     am_hdr->rreq = rreq;
 
-    int peer_rank = MPIDIG_REQUEST(rreq, u.ipc.peer_rank);
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
     CH4_CALL(am_send_hdr(peer_rank, rreq->comm, MPIDI_IPC_WRITE,
@@ -237,7 +269,6 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
         /* check if we should do recv-side ipc */
         MPIDI_IPCI_ipc_attr_t ipc_attr;
         mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype,
-                                            MPIDIG_REQUEST(rreq, u.ipc.peer_rank), rreq->comm,
                                             sizeof(MPIDI_IPC_write_t), &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
         if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
@@ -317,9 +348,7 @@ int MPIDI_IPC_do_cts(MPIR_Request * rreq)
     MPI_Datatype datatype = MPIDIG_REQUEST(rreq, datatype);
 
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype,
-                                        rreq->comm->rank, rreq->comm,
-                                        sizeof(MPIDI_IPC_write_t), &ipc_attr);
+    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, sizeof(MPIDI_IPC_write_t), &ipc_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {

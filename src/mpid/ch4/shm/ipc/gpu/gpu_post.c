@@ -114,7 +114,7 @@ cvars:
 #define IPC_STATIC_MAPS_SIZE 1
 
 struct map_entry {
-    int remote_rank;
+    int remote_lrank;
     void *mapped_addr;
 };
 
@@ -172,7 +172,7 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
         struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
             entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            int grank = MPIR_Process.node_local_map[maps[i].remote_rank];
+            int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
             mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
                                              am_ctx.local_vci, am_ctx.remote_vci,
                                              MPIDI_IPCI_TYPE__GPU, maps[i].mapped_addr);
@@ -250,7 +250,7 @@ static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_A
     return found;
 }
 
-static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int rank)
+static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int lrank)
 {
     for (int i = 0; i < ipc_handle_cache_count; i++) {
         struct handle_cache_entry *entry = &ipc_handle_cache[i];
@@ -277,7 +277,7 @@ static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int 
                 MPIR_Assert(entry->maps);
                 maps = entry->maps;
             }
-            maps[entry->num_maps].remote_rank = rank;
+            maps[entry->num_maps].remote_lrank = lrank;
             maps[entry->num_maps].mapped_addr = (void *) map_addr;
             entry->num_maps++;
 
@@ -377,7 +377,7 @@ int MPIDI_GPU_ipc_cache_finalize(void)
 }
 
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                           int remote_rank, MPIR_Comm * comm, MPIDI_IPCI_ipc_attr_t * ipc_attr)
+                           MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -447,11 +447,6 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     }
 
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
-    if (remote_rank != MPI_PROC_NULL) {
-        remote_rank = MPIDI_SHM_global.local_ranks[MPIDIU_get_grank(remote_rank, comm)];
-    }
-
-    ipc_attr->u.gpu.remote_rank = remote_rank;
     /* ipc.attr->u.gpu.gpu_attr is already set */
     ipc_attr->u.gpu.vaddr = mem_addr;
     ipc_attr->u.gpu.bounds_base = bounds_base;
@@ -502,14 +497,14 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
  * ipc_attr->ipc_type is overwritten to MPIDI_IPCI_TYPE__DIRECT and ipc_handle is set
  * to the mapped address. */
 int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                                    MPIDI_IPCI_ipc_handle_t * ipc_handle, MPIR_Request * req)
+                                    MPIDI_IPCI_ipc_handle_t * ipc_handle,
+                                    MPIR_Request * req, int remote_lrank)
 {
     int mpi_errno = MPI_SUCCESS;
     bool is_cached = true;
 
     void *pbase = ipc_attr->u.gpu.bounds_base;
     MPI_Aint len = ipc_attr->u.gpu.bounds_len;
-    int remote_rank = ipc_attr->u.gpu.remote_rank;
     struct am_context ctx =
         { req->comm, MPIDIG_REQUEST(req, req->local_vci), MPIDIG_REQUEST(req, req->remote_vci) };
 
@@ -519,7 +514,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
         struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
             entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            if (maps[i].remote_rank == remote_rank) {
+            if (maps[i].remote_lrank == remote_lrank) {
                 uintptr_t offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
                 ipc_handle->direct = (void *) ((uintptr_t) maps[i].mapped_addr + offset);
