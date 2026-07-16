@@ -1435,13 +1435,8 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
-    unsigned keylen = 0;
-    int fds[2] = { -1 };
 
-    fd_pid_t h;
-    h = mpl_ipc_handle->data;
-
-    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, &fds, ptr);
+    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, ptr);
     if (mpl_err != MPL_SUCCESS) {
         goto fn_fail;
     }
@@ -2496,57 +2491,52 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 }
 
 int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
-                          int dev_id, int is_mmap, size_t size, int (*_fds)[2], void **ptr)
+                          int dev_id, int is_mmap, size_t size, void **ptr)
 {
-    /* The fds created below need to be stored for closing later. Normally they should be closed
-     * immediately, but instead need to remain open in case they are ever needed for mmapping to
-     * the host (i.e. via mmapFunction)
-     */
-
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
     int status;
     uint32_t nfds;
+    int fds[2];
+    bool need_close_fds = true;
     MPL_gpu_device_handle_t dev_handle;
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
     nfds = h.nfds;
-    int *fds = *_fds;
 
-    /* Only do the conversion if it wasn't previously done */
-    if (fds[0] == -1) {
-        if (physical_device_states != NULL) {
-            /* convert GEM handle to fd */
+    if (physical_device_states != NULL) {
+        /* convert GEM handle to fd */
+        for (int i = 0; i < nfds; i++) {
+            status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
+            if (status) {
+                goto fn_fail;
+            }
+        }
+    } else {
+        /* pidfd_getfd */
+        if (h.pid != mypid) {
+            int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+            if (pid_fd == -1) {
+                printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
+                       h.dev_id);
+            }
+            assert(pid_fd != -1);
             for (int i = 0; i < nfds; i++) {
-                status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
-                if (status) {
+                fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
+                if (fds[i] == -1) {
+                    printf("Error> pidfd_getfd is not implemented!");
+                    mpl_err = MPL_ERR_GPU_INTERNAL;
                     goto fn_fail;
                 }
             }
+            close(pid_fd);
         } else {
-            /* pidfd_getfd */
-            if (h.pid != mypid) {
-                int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
-                if (pid_fd == -1) {
-                    printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
-                           h.dev_id);
-                }
-                assert(pid_fd != -1);
-                for (int i = 0; i < nfds; i++) {
-                    fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
-                    if (fds[i] == -1) {
-                        printf("Error> pidfd_getfd is not implemented!");
-                        mpl_err = MPL_ERR_GPU_INTERNAL;
-                        goto fn_fail;
-                    }
-                }
-                close(pid_fd);
-            } else {
-                for (int i = 0; i < nfds; i++) {
-                    fds[i] = h.fds[i];
-                }
+            /* mapping buffer from the same process, use the handle fds directly */
+            for (int i = 0; i < nfds; i++) {
+                fds[i] = h.fds[i];
             }
+            need_close_fds = false;
         }
     }
 
@@ -2575,6 +2565,16 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
         ZE_ERR_CHECK(ret);
     }
 
+    /* Close fds since they are no longer needed after mmap or zeMemOpenIpcHandle.
+     * Only close fds that were newly created (via handle_to_fd or pidfd_getfd),
+     * not ones borrowed from the same process. */
+    if (need_close_fds) {
+        for (int i = 0; i < nfds; i++) {
+            close(fds[i]);
+            fds[i] = -1;
+        }
+    }
+
   fn_exit:
     return mpl_err;
   fn_fail:
@@ -2585,20 +2585,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
 int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
                                 int dev_id, size_t size, void **ptr)
 {
-    int mpl_err = MPL_SUCCESS;
-    int fds[2] = { -1 };
-    unsigned keylen;
-
-    fd_pid_t h;
-    h = mpl_ipc_handle->data;
-
-    mpl_err =
-        MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    goto fn_exit;
+    return MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, ptr);
 }
 
 /* this function takes a local device pointer and mmap to host */
