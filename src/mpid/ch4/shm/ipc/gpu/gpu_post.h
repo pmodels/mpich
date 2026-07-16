@@ -11,11 +11,12 @@
 void MPIDI_GPU_handle_free_hook(void *dptr);
 int MPIDI_GPU_ipc_cache_finalize(void);
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                           int rank, MPIR_Comm * comm, MPIDI_IPCI_ipc_attr_t * ipc_attr);
+                           MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                               MPIDI_IPCI_ipc_handle_t * ipc_handle);
 int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                                    MPIDI_IPCI_ipc_handle_t * ipc_handle, MPIR_Request * req);
+                                    MPIDI_IPCI_ipc_handle_t * ipc_handle,
+                                    MPIR_Request * req, int remote_lrank);
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype);
 int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **pbase_out,
                                   bool do_mmap);

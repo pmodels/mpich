@@ -57,7 +57,6 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_has_ipc(void)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint count,
                                                      MPI_Datatype datatype,
-                                                     int remote_rank, MPIR_Comm * comm,
                                                      int msg_hdr_sz,
                                                      MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
@@ -77,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint c
         }
     }
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, remote_rank, comm, ipc_attr);
+    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, ipc_attr);
     MPIR_ERR_CHECK(mpi_errno);
     if (ipc_attr->ipc_type == MPIDI_IPCI_TYPE__SKIP) {
         /* GPU IPC is not supported but it is still a device memory,
@@ -112,6 +111,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint c
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_prepare_ipc_hdr(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                                         MPI_Aint count, MPI_Datatype datatype,
                                                         int msg_hdr_sz, MPIR_Request * req,
+                                                        int remote_lrank,
                                                         void **hdr_out, MPI_Aint * hdr_sz_out)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -161,7 +161,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_prepare_ipc_hdr(MPIDI_IPCI_ipc_attr_t * 
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
-            MPIDI_GPU_fill_ipc_handle_cache(ipc_attr, &(ipc_hdr->ipc_handle), req);
+            MPIR_Assert(remote_lrank >= 0);     /* in case MPIR_PROC_NULL leaked to here */
+            MPIDI_GPU_fill_ipc_handle_cache(ipc_attr, &(ipc_hdr->ipc_handle), req, remote_lrank);
             /* ipc_attr->ipc_type may have been changed to DIRECT */
             ipc_hdr->ipc_type = ipc_attr->ipc_type;
             break;
@@ -212,8 +213,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr->ipc_type;
 
     /* Allocate am_hdr and fill ipc_hdr */
+    /* In case we manage cache for remote processes (e.g. GPU), pass in remote_lrank */
+    int remote_lrank = MPIDI_SHM_global.local_ranks[MPIDIU_get_grank(rank, comm)];
     mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype, sizeof(MPIDIG_hdr_t),
-                                           sreq, &hdr, &hdr_sz);
+                                           sreq, remote_lrank, &hdr, &hdr_sz);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Fill am_hdr */
