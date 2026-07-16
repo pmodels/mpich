@@ -82,7 +82,7 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
     void *mem_addr = MPIR_get_contig_ptr(buf, true_lb);
 
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, MPI_PROC_NULL, comm, &ipc_attr);
+    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, &ipc_attr);
 
     MPIDI_IPCI_ipc_handle_t *ipc_handles;
     ipc_handles = MPL_malloc(sizeof(MPIDI_IPCI_ipc_handle_t) * comm_size, MPL_MEM_COLL);
