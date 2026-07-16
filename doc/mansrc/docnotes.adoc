@@ -163,6 +163,15 @@ failed nor completed.
 
 
 -----------------------------------------------------------------------------
+MPIX Explanation
+//tag::MPIX[]
+== MPIX Function
+This routine is part of the MPIX extension to the MPI standard. It may become
+part of the standard in the future, in which its signature will change to the 
+MPI prefix.
+//end::MPIX[]
+
+-----------------------------------------------------------------------------
 Deprecated routines (see 2.6.1)
 // tag::Deprecated[]
 == Deprecated Function
@@ -394,17 +403,17 @@ indicates that an attempt was made to call 'MPI_INIT' a second time.
 
 
 // tag::MPI_ERR_INFO_VALUE[]
-* MPI_ERR_INFO_VALUE - Invalid or null value string for info
+* MPI_ERR_INFO_VALUE - Invalid or null value string for info.
 // end::MPI_ERR_INFO_VALUE[]
 
 
 // tag::MPI_ERR_INFO_NOKEY[] 
-* MPI_ERR_INFO_NOKEY - 
+* MPI_ERR_INFO_NOKEY - Invalid key passed to MPI_INFO_DELETE.
 // end::MPI_ERR_INFO_NOKEY []
 
 
 // tag::MPI_ERR_NAME[]
-* MPI_ERR_NAME - 
+* MPI_ERR_NAME -  Invalid service name passed to MPI_LOOKUP_NAME.
 // end::MPI_ERR_NAME[]
 
 
@@ -465,22 +474,22 @@ indicates that an attempt was made to call 'MPI_INIT' a second time.
 
 
 // tag::MPI_ERR_RMA_SYNC[]
-* MPI_ERR_RMA_SYNC -
+* MPI_ERR_RMA_SYNC - Wrong synchronization of RMA calls
 // end::MPI_ERR_RMA_SYNC[]
 
 
 // tag::MPI_ERR_SIZE[]
-* MPI_ERR_SIZE - 
+* MPI_ERR_SIZE -  Invalid size argument
 // end::MPI_ERR_SIZE[]
 
 
 // tag::MPI_ERR_DISP[]
-* MPI_ERR_DISP - 
+* MPI_ERR_DISP - Invalid displacement argument
 // end::MPI_ERR_DISP[]
 
 
 // tag::MPI_ERR_ASSERT[]
-* MPI_ERR_ASSERT - 
+* MPI_ERR_ASSERT -  Invalid assertion argument
 // end::MPI_ERR_ASSERT[]
 
 
@@ -491,62 +500,65 @@ indicates that an attempt was made to call 'MPI_INIT' a second time.
 
 
 // tag::MPI_ERR_ACCESS[]
-* MPI_ERR_ACCESS -
+* MPI_ERR_ACCESS -Permission denied
 // end::MPI_ERR_ACCESS[]
 
 
 // tag::MPI_ERR_AMODE[]
-* MPI_ERR_AMODE - 
+* MPI_ERR_AMODE - Error related to the amode passed to MPI_FILE_OPEN
 // end::MPI_ERR_AMODE[]
 
 
 // tag::MPI_ERR_BAD_FILE[]
-* MPI_ERR_BAD_FILE - 
+* MPI_ERR_BAD_FILE - Invalid file name(e.g., path name too long)
 // end::MPI_ERR_BAD_FILE[]
 
 
 // tag::MPI_ERR_FILE_EXISTS[]
-* MPI_ERR_FILE_EXISTS - 
+* MPI_ERR_FILE_EXISTS - File exists
 // end::MPI_ERR_FILE_EXISTS[]
 
 
 // tag::MPI_ERR_FILE_IN_USE[]
-* MPI_ERR_FILE_IN_USE - 
+* MPI_ERR_FILE_IN_USE - File operation could not be completed, as the
+file is currently open by some process
 // end::MPI_ERR_FILE_IN_USE[]
 
 
 // tag::MPI_ERR_NO_SPACE[]
-* MPI_ERR_NO_SPACE - 
+* MPI_ERR_NO_SPACE - Not enough space
 // end::MPI_ERR_NO_SPACE[]
 
 
 // tag::MPI_ERR_NO_SUCH_FILE[]
-* MPI_ERR_NO_SUCH_FILE - 
+* MPI_ERR_NO_SUCH_FILE - File does not exist
 // end::MPI_ERR_NO_SUCH_FILE[]
 
 
 // tag::MPI_ERR_IO[]
-* MPI_ERR_IO - 
+* MPI_ERR_IO - Other I/O error
 // end::MPI_ERR_IO[]
 
 
 // tag::MPI_ERR_READ_ONLY[]
-* MPI_ERR_READ_ONLY - 
+* MPI_ERR_READ_ONLY - Read-only file or file system
 // end::MPI_ERR_READ_ONLY[]
 
 
 // tag::MPI_ERR_CONVERSION[]
-* MPI_ERR_CONVERSION - 
+* MPI_ERR_CONVERSION -  An error occurred in a user supplied data conversion function.
 // end::MPI_ERR_CONVERSION[]
 
 
 // tag::MPI_ERR_DUP_DATAREP[]
-* MPI_ERR_DUP_DATAREP - 
+* MPI_ERR_DUP_DATAREP - Conversion functions could not be registered 
+because a data representation identifier that was already defined was 
+passed to MPI_REGISTER_DATAREP.
 // end::MPI_ERR_DUP_DATAREP[]
 
 
 // tag::MPI_ERR_UNSUPPORTED_DATAREP[]
-* MPI_ERR_UNSUPPORTED_DATAREP - 
+* MPI_ERR_UNSUPPORTED_DATAREP - Unsupported datarep passed to MPI_FILE_SET_VIEW.
 // end::MPI_ERR_UNSUPPORTED_DATAREP[]
 
 
@@ -628,6 +640,23 @@ indicates that an attempt was made to call 'MPI_INIT' a second time.
 // tag::MPI_T_ERR_INVALID[]
 * MPI_T_ERR_INVALID - Invalid use of the interface or bad parameter values(s).
 // end::MPI_T_ERR_INVALID[]
+
+// tag::MPI_T_ERR_INVALID_ITEM[]
+MPI_T_ERR_INVALID_ITEM  - The source index is invalid.
+// end::MPI_T_ERR_INVALID_ITEM[]
+
+// tag::MPI_T_ERR_NOT_SUPPORTED[]
+* MPI_T_ERR_NOT_SUPPORTED - Requested functionality not supported.
+// end::MPI_T_ERR_NOT_SUPPORTED[]
+
+// tag::MPI_ERR_ERRHANDLER[]
+* MPI_ERR_ERRHANDLER - Invalid error handler argument.
+// end::MPI_ERR_ERRHANDLER[]
+
+// tag::MPIX_ERR_STREAM[]
+* MPIX_ERR_STREAM - MPIX stream object has failed.
+// end::MPIX_ERR_STREAM[]
+
 
 
 // tag::NULL[]
