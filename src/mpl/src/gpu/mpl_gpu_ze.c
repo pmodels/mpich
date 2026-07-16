@@ -36,6 +36,34 @@ MPL_dbg_class MPL_DBG_GPU_ZE;
 /* Latest Level-zero Specification:
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
+
+/* == IPC Memory Mapping ==
+ * There are two mechanisms for transporting the DMA-buf fd between processes:
+ *
+ * 1. DRM fd (shared_fd / physical_device_states path):
+ *    When processes share the same DRM device fd (e.g. via MPICH's shared
+ *    device fd infrastructure), the origin converts the DMA-buf fd to a
+ *    GEM handle (DRM_IOCTL_PRIME_FD_TO_HANDLE). GEM handles are scoped to
+ *    the DRM fd, so they are valid in any process sharing that fd. The remote
+ *    converts the GEM handle back to a DMA-buf fd (DRM_IOCTL_PRIME_HANDLE_TO_FD)
+ *    and passes it to zeMemOpenIpcHandle.
+ *
+ * 2. pidfd (fallback path):
+ *    When DRM fd sharing is not available, the origin sends its raw DMA-buf fd
+ *    plus its pid. The remote uses pidfd_open + pidfd_getfd to duplicate the fd
+ *    from the origin's process into its own fd table.
+ */
+
+/* == Implicit Scaling (multi-tile) ==
+ *
+ * On multi-tile Intel GPUs, a single device memory allocation may be striped
+ * across two tiles. In this case, the Level Zero extended APIs
+ * (zexMemGetIpcHandles / zexMemOpenIpcHandles) return two IPC handles (nfds=2),
+ * one per tile. The mmap path uses split_size() to compute per-tile sizes and
+ * maps each tile's fd into a contiguous virtual range via MAP_FIXED. For
+ * single-tile devices, nfds=1 and the standard single-handle APIs are used.
+ */
+
 ze_context_handle_t ze_context;
 ze_driver_handle_t ze_driver_handle;
 /* ze_devices_handle contains all devices and subdevices. Indices [0, device_count) are
