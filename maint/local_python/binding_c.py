@@ -94,6 +94,8 @@ def dump_mpi_c(func, is_large=False):
         skip_wrappers = True
     elif 'replace' in func and 'body' not in func:
         pass
+    elif "impl" in func and func["impl"] == "skip":
+        pass
     else:
         dump_function_internal(func, kind="normal")
     G.out.append("")
@@ -927,7 +929,10 @@ def dump_qmpi_wrappers(func, is_large):
     func_decl = get_declare_function(func, is_large)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
-    static_call = get_static_call_internal(func, is_large)
+    if "impl" in func and func["impl"] == "skip":
+        static_call = "MPI_SUCCESS"
+    else:
+        static_call = get_static_call_internal(func, is_large)
 
     G.out.append("#ifdef ENABLE_QMPI")
     G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
@@ -936,6 +941,7 @@ def dump_qmpi_wrappers(func, is_large):
     if func_name == "MPI_Pcontrol":
         G.out.append("    va_list varargs;")
         G.out.append("    va_start(varargs, level);")
+        G.out.append("    va_end(varargs);")
         G.out.append("")
     G.out.append("    return " + static_call + ";")
     G.out.append("}")
@@ -964,7 +970,13 @@ def dump_qmpi_wrappers(func, is_large):
     G.out.append("")
     dump_line_with_break("    fn_ptr = (Q%s_t *) MPIR_QMPI_first_fn_ptrs[%s_T];" % (func_name, func_name.upper()))
     G.out.append("")
-    dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
+
+    if func_name == "MPI_Pcontrol":
+        dump_line_with_break("    int ret = (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
+        G.out.append("    va_end(varargs);")
+        G.out.append("    return ret;")
+    else:
+        dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
     G.out.append("}")
     G.out.append("#else /* ENABLE_QMPI */")
 
@@ -973,6 +985,7 @@ def dump_qmpi_wrappers(func, is_large):
     if func_name == "MPI_Pcontrol":
         G.out.append("    va_list varargs;")
         G.out.append("    va_start(varargs, level);")
+        G.out.append("    va_end(varargs);")
         G.out.append("")
     G.out.append("    return " + static_call + ";")
     G.out.append("}")
@@ -1197,7 +1210,10 @@ def dump_abi_wrappers(func, is_large):
         ret = mapping[func['return']]
         ret = re.sub(re_Handle, r'ABI_\1', ret)
 
-    static_call = get_static_call_internal(func, is_large)
+    if 'impl' in func and func['impl'] == "skip":
+        static_call = "MPI_SUCCESS"
+    else:
+        static_call = get_static_call_internal(func, is_large)
 
     s_param = ', '.join(param_list)
     func_decl = "%s %s(%s)" % (ret, func_name, s_param)
@@ -1238,6 +1254,7 @@ def dump_abi_wrappers(func, is_large):
         if func_name == "MPI_Pcontrol":
             G.out.append("va_list varargs;")
             G.out.append("va_start(varargs, level);")
+            G.out.append("va_end(varargs);")
             G.out.append("")
         G.out.append("int ret = " + static_call + ";")
         for l in post_filters:

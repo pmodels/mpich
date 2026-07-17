@@ -49,31 +49,7 @@ MPI_Get_library_version:
 MPI_Pcontrol:
     .desc: Controls profiling
     .skip: initcheck, ThreadSafe, validate-PROFILE_LEVEL, validate-VARARGS
-    .impl: direct
-{
-    int mpi_errno = MPI_SUCCESS;
-    va_list list;
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-    MPIR_FUNC_TERSE_ENTER;
-
-    /* ... body of routine ...  */
-
-    /* This is a dummy routine that does nothing.  It is intended for
-     * use by the user (or a tool) with the profiling interface */
-    /* We include a reference to va_start and va_end to (a) quiet some
-     * compilers that warn when they are not present and (b) show how to
-     * access any optional arguments */
-    va_start(list, level);
-    va_end(list);
-
-    /* ... end of body of routine ... */
-    MPIR_FUNC_TERSE_EXIT;
-    return mpi_errno;
-    /* There should never be any fn_fail case; this suppresses warnings from
-     * compilers that object to unused labels */
-}
+    .impl: skip
 
 MPI_Get_version:
     .desc: Return the version number of MPI
