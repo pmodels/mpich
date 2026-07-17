@@ -1114,7 +1114,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
         }
         max_location_len += 2;  /* add space for the ": " */
         /* print the error stack */
-        while (errcode != MPI_SUCCESS) {
+        while (errcode != MPI_SUCCESS && maxlen > 1) {
             int ring_idx;
             int ring_id;
             int generic_idx;
@@ -1134,21 +1134,22 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
 
             if (ErrorRing[ring_idx].id == ring_id) {
                 int nchrs;
-                snprintf(str, maxlen, "%s", ErrorRing[ring_idx].location);
-                len = (int) strlen(str);
+                len = snprintf(str, maxlen, "%s", ErrorRing[ring_idx].location);
+                if (len >= maxlen)
+                    len = maxlen - 1;
                 maxlen -= len;
                 str += len;
                 nchrs = max_location_len - (int) strlen(ErrorRing[ring_idx].location) - 2;
-                while (nchrs > 0 && maxlen > 0) {
+                while (nchrs > 0 && maxlen > 1) {
                     *str++ = '.';
                     nchrs--;
                     maxlen--;
                 }
-                if (maxlen > 0) {
+                if (maxlen > 1) {
                     *str++ = ':';
                     maxlen--;
                 }
-                if (maxlen > 0) {
+                if (maxlen > 1) {
                     *str++ = ' ';
                     maxlen--;
                 }
@@ -1156,40 +1157,40 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
                 if (MPIR_CVAR_CHOP_ERROR_STACK > 0) {
                     cur_pos = ErrorRing[ring_idx].msg;
                     len = (int) strlen(cur_pos);
-                    if (len == 0 && maxlen > 0) {
+                    if (len == 0 && maxlen > 1) {
                         *str++ = '\n';
                         maxlen--;
                     }
-                    while (len) {
+                    while (len && maxlen > 1) {
+                        int chop_len = MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len;
                         if (len >= MPIR_CVAR_CHOP_ERROR_STACK - max_location_len) {
-                            if (len > maxlen)
+                            if (chop_len + 1 > maxlen)
                                 break;
-                            /* FIXME: Don't use Snprint to append a string ! */
-                            snprintf(str, MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len,
-                                     "%s", cur_pos);
-                            str[MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len] = '\n';
-                            cur_pos += MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len;
-                            str += MPIR_CVAR_CHOP_ERROR_STACK - max_location_len;
-                            maxlen -= MPIR_CVAR_CHOP_ERROR_STACK - max_location_len;
-                            if (maxlen < max_location_len)
+                            snprintf(str, chop_len + 1, "%s", cur_pos);
+                            str[chop_len] = '\n';
+                            cur_pos += chop_len;
+                            str += chop_len + 1;
+                            maxlen -= chop_len + 1;
+                            if (maxlen < max_location_len + 1)
                                 break;
-                            for (i = 0; i < max_location_len; i++) {
-                                snprintf(str, maxlen, " ");
+                            for (i = 0; i < max_location_len && maxlen > 1; i++) {
+                                *str++ = ' ';
                                 maxlen--;
-                                str++;
                             }
                             len = (int) strlen(cur_pos);
                         } else {
-                            snprintf(str, maxlen, "%s\n", cur_pos);
-                            len = (int) strlen(str);
+                            len = snprintf(str, maxlen, "%s\n", cur_pos);
+                            if (len >= maxlen)
+                                len = maxlen - 1;
                             maxlen -= len;
                             str += len;
                             len = 0;
                         }
                     }
                 } else {
-                    snprintf(str, maxlen, "%s\n", ErrorRing[ring_idx].msg);
-                    len = (int) strlen(str);
+                    len = snprintf(str, maxlen, "%s\n", ErrorRing[ring_idx].msg);
+                    if (len >= maxlen)
+                        len = maxlen - 1;
                     maxlen -= len;
                     str += len;
                 }
@@ -1201,7 +1202,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
     }
     error_ring_mutex_unlock();
 
-    if (errcode == MPI_SUCCESS) {
+    if (errcode == MPI_SUCCESS || maxlen <= 1) {
         goto fn_exit;
     }
 
@@ -1220,8 +1221,9 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
             if (!p) {
                 p = "<NULL>";
             }
-            snprintf(str, maxlen, "(unknown)(): %s\n", p);
-            len = (int) strlen(str);
+            len = snprintf(str, maxlen, "(unknown)(): %s\n", p);
+            if (len >= maxlen)
+                len = maxlen - 1;
             maxlen -= len;
             str += len;
             goto fn_exit;
@@ -1234,14 +1236,17 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
         error_class = ERROR_GET_CLASS(errcode);
 
         if (error_class <= MPICH_ERR_LAST_MPIX) {
-            snprintf(str, maxlen, "(unknown)(): %s\n", get_class_msg(ERROR_GET_CLASS(errcode)));
-            len = (int) strlen(str);
+            len =
+                snprintf(str, maxlen, "(unknown)(): %s\n", get_class_msg(ERROR_GET_CLASS(errcode)));
+            if (len >= maxlen)
+                len = maxlen - 1;
             maxlen -= len;
             str += len;
         } else {
             /* FIXME: Not internationalized */
-            snprintf(str, maxlen, "Error code contains an invalid class (%d)\n", error_class);
-            len = (int) strlen(str);
+            len = snprintf(str, maxlen, "Error code contains an invalid class (%d)\n", error_class);
+            if (len >= maxlen)
+                len = maxlen - 1;
             maxlen -= len;
             str += len;
         }
