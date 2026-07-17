@@ -409,7 +409,7 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 /* Maximum number of network interfaces CH4 can support. */
-#define MPIDI_OFI_MAX_NICS 8
+#define MPIDI_OFI_MAX_NICS 128
 
 /* Imagine a dimension of [local_vci][local_nic][rank][vci][nic] -
  * all local endpoints will share the same remote address due to the same insertion order
