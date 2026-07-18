@@ -605,8 +605,8 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
     return map_to_dev_id;
 }
 
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
-                             bool do_mmap)
+int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **pbase_out,
+                                  bool do_mmap)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -627,11 +627,27 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
                             "**gpu_ipc_handle_map");
     }
 
-    *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
-#undef MAPPED_TREE
+    *pbase_out = pbase;
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
+                             bool do_mmap)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *pbase = NULL;
+    mpi_errno = MPIDI_GPU_ipc_handle_map_base(handle, map_dev_id, &pbase, do_mmap);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -655,7 +671,7 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
 }
 
 /* origin process (sender) tell us via AM to unmap, we just unmap */
-int MPIDI_GPU_ipc_cache_unmap(void *mapped_addr)
+int MPIDI_GPU_ipc_handle_unmap_base(void *mapped_addr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -745,10 +761,12 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 #endif
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(req, datatype));
-        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_hdr->ipc_handle.gpu, map_dev, addr_out, do_mmap);
+        void *mapped_base;
+        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev,
+                                                  &mapped_base, do_mmap);
         MPIR_ERR_CHECK(mpi_errno);
 
-        void *mapped_base = (void *) ((uintptr_t) (*addr_out) - ipc_hdr->ipc_handle.gpu.offset);
+        *addr_out = (void *) ((uintptr_t) mapped_base + ipc_hdr->ipc_handle.gpu.offset);
         if (ipc_hdr->ipc_handle.gpu.handle_is_cached) {
             /* notify sender of mapped address so it can use DIRECT path next time */
             mpi_errno = MPIDI_IPC_send_mapaddr(req->comm, MPIDIG_REQUEST(req, u.ipc.peer_rank),
