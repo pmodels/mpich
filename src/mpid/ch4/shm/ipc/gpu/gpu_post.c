@@ -124,6 +124,7 @@ cvars:
  */
 
 #define IPC_HANDLE_CACHE_MAX 64
+#define IPC_STATIC_MAPS_SIZE 1
 
 struct map_entry {
     int remote_rank;
@@ -142,7 +143,7 @@ struct handle_cache_entry {
     int num_maps;
     int max_maps;
     struct map_entry *maps;
-    struct map_entry static_maps[1];
+    struct map_entry static_maps[IPC_STATIC_MAPS_SIZE];
 };
 
 /* We may need send AM messages as we evict cache entries. Wrap the message context in a struct to
@@ -180,16 +181,18 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
     MPL_gpu_ipc_handle_destroy(entry->base_addr);
 
     if (entry->num_maps > 0) {
+        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
+            entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            int grank = MPIR_Process.node_local_map[entry->maps[i].remote_rank];
+            int grank = MPIR_Process.node_local_map[maps[i].remote_rank];
             mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
                                              am_ctx.local_vci, am_ctx.remote_vci,
-                                             MPIDI_IPCI_TYPE__GPU, entry->maps[i].mapped_addr);
+                                             MPIDI_IPCI_TYPE__GPU, maps[i].mapped_addr);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
-    if (entry->num_maps > 1) {
+    if (entry->num_maps > IPC_STATIC_MAPS_SIZE) {
         MPL_free(entry->maps);
     }
 
@@ -217,12 +220,6 @@ static int ipc_track_cache_delete(int idx, struct am_context am_ctx)
         /* shift the entries up to fill the gap */
         memmove(ipc_handle_cache + idx, ipc_handle_cache + idx + 1,
                 (ipc_handle_cache_count - idx) * sizeof(ipc_handle_cache[0]));
-        /* fix up maps pointers that were referencing their own static_maps */
-        for (int i = idx; i < ipc_handle_cache_count; i++) {
-            if (ipc_handle_cache[i].num_maps == 1) {
-                ipc_handle_cache[i].maps = ipc_handle_cache[i].static_maps;
-            }
-        }
     }
 
   fn_exit:
@@ -265,27 +262,32 @@ static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int 
     for (int i = 0; i < ipc_handle_cache_count; i++) {
         struct handle_cache_entry *entry = &ipc_handle_cache[i];
         if (entry->base_addr == addr) {
-            if (entry->num_maps == 0) {
-                entry->maps = entry->static_maps;
-                entry->maps[0].remote_rank = rank;
-                entry->maps[0].mapped_addr = (void *) map_addr;
-                entry->num_maps = 1;
+            struct map_entry *maps;
+            if (entry->num_maps < IPC_STATIC_MAPS_SIZE) {
+                maps = entry->static_maps;
             } else {
-                if (entry->num_maps == 1) {
-                    entry->max_maps = 10;
+                if (entry->num_maps == IPC_STATIC_MAPS_SIZE) {
+                    /* switch from static maps to dynamic maps */
+                    entry->max_maps = IPC_STATIC_MAPS_SIZE + 10;
                     entry->maps = MPL_malloc(sizeof(entry->maps[0]) * entry->max_maps,
                                              MPL_MEM_OTHER);
-                    entry->maps[0] = entry->static_maps[0];
+                    for (int j = 0; j < entry->num_maps; j++) {
+                        entry->maps[j] = entry->static_maps[j];
+                    }
                 } else if (entry->num_maps == entry->max_maps) {
+                    /* need grow the dynamic maps */
                     entry->max_maps *= 2;
                     entry->maps = MPL_realloc(entry->maps,
                                               sizeof(entry->maps[0]) * entry->max_maps,
                                               MPL_MEM_OTHER);
                 }
-                entry->maps[entry->num_maps].remote_rank = rank;
-                entry->maps[entry->num_maps].mapped_addr = (void *) map_addr;
-                entry->num_maps++;
+                MPIR_Assert(entry->maps);
+                maps = entry->maps;
             }
+            maps[entry->num_maps].remote_rank = rank;
+            maps[entry->num_maps].mapped_addr = (void *) map_addr;
+            entry->num_maps++;
+
             return MPI_SUCCESS;
         }
     }
@@ -521,11 +523,13 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, ctx);
     if (entry) {
         /* check if we have a cached mapped address for the remote rank */
+        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
+            entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            if (entry->maps[i].remote_rank == remote_rank) {
+            if (maps[i].remote_rank == remote_rank) {
                 uintptr_t offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
-                ipc_handle->direct = (void *) ((uintptr_t) entry->maps[i].mapped_addr + offset);
+                ipc_handle->direct = (void *) ((uintptr_t) maps[i].mapped_addr + offset);
                 goto fn_done;
             }
         }
