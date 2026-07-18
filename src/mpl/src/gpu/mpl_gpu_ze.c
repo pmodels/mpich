@@ -230,7 +230,6 @@ typedef struct {
     UT_hash_handle hh;
 } MPL_ze_mem_id_entry_t;
 
-static MPL_ze_mem_id_entry_t *mem_id_cache = NULL;
 
 typedef struct gpu_free_hook {
     void (*free_hook) (void *dptr);
@@ -547,7 +546,7 @@ static int init_device_mappings(affinity_mask_t * mask)
 int MPL_gpu_init(int debug_summary)
 {
     int mpl_err = MPL_SUCCESS;
-    int max_cache_entries = 0;
+
     if (gpu_initialized) {
         goto fn_exit;
     }
@@ -794,7 +793,6 @@ static int mmapFunction(int nfds, int *fds, size_t size, void **ptr)
     goto fn_exit;
 }
 
-/* munmap an implicit scaling buffer */
 static int munmapFunction(int nfds, void *ptr, size_t size)
 {
     int mpl_err = MPL_SUCCESS;
@@ -1399,8 +1397,6 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 {
     int mpl_err = MPL_SUCCESS;
     int local_dev_id = -1;
-    MPL_ze_mem_id_entry_t *memid_entry = NULL;
-    uint64_t mem_id = 0;
     void *pbase = NULL;
     uintptr_t len;
 
@@ -1431,8 +1427,6 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
     int mpl_err = MPL_SUCCESS;
-    int dev_id;
-    uint64_t mem_id;
 
     if (physical_device_states != NULL) {
         /* drmfd */
@@ -1453,11 +1447,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
         }
     }
 
-  fn_exit:
     return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
 }
 
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
@@ -1478,8 +1468,6 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
 int MPL_gpu_ipc_handle_unmap(void *ptr)
 {
     int mpl_err = MPL_SUCCESS;
-    int dev_id;
-    unsigned keylen;
     ze_result_t ret;
     ze_device_handle_t device = NULL;
 
@@ -2625,16 +2613,14 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     ze_ipc_mem_handle_t ze_ipc_handle[2];
     int fds[2], local_dev_id = -1;
     uint32_t nfds;
-    uint64_t mem_id, offset, len;
+    uint64_t offset, len;
     void *pbase, *base;
-    MPL_ze_mem_id_entry_t *memid_entry = NULL;
 
     ret = zeMemGetAddressRange(ze_context, dptr, &pbase, &len);
     ZE_ERR_CHECK(ret);
 
     offset = (char *) dptr - (char *) pbase;
 
-    mem_id = attr->prop.id;
     local_dev_id = device_to_dev_id(device);
     if (local_dev_id == -1) {
         goto fn_fail;
