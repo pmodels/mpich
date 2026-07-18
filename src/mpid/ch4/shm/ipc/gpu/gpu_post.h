@@ -17,11 +17,13 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
 int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                     MPIDI_IPCI_ipc_handle_t * ipc_handle, MPIR_Request * req);
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype);
+int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **pbase_out,
+                                  bool do_mmap);
 int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
                              bool do_mmap);
 int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int do_mmap);
 int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, void *map_addr, int rank);
-int MPIDI_GPU_ipc_cache_unmap(void *mapped_addr);
+int MPIDI_GPU_ipc_handle_unmap_base(void *mapped_addr);
 int MPIDI_GPU_init_local(void);
 int MPIDI_GPU_comm_bootstrap(MPIR_Comm * comm);
 int MPIDI_GPU_mpi_finalize_hook(void);

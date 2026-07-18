@@ -112,7 +112,7 @@ int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDI_IPC_unmap_t *hdr = am_hdr;
     /* only for gpu, for now */
     MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
-    mpi_errno = MPIDI_GPU_ipc_cache_unmap(hdr->mapped_addr);
+    mpi_errno = MPIDI_GPU_ipc_handle_unmap_base(hdr->mapped_addr);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
