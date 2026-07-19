@@ -1,6 +1,6 @@
 /**
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  *
  *   The main purpose of implementing the ADIO interface for Quobyte is to
  *   avoid calling the kernel for I/O operations. Using default MPI, a user

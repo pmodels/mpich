@@ -1,6 +1,6 @@
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * Copyright 2026 Argonne National Laboratory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* This file is used when configured with (MPICH_THREAD_PACKAGE_NAME ==

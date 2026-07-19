@@ -1,6 +1,6 @@
 !
-! Copyright (C) by Argonne National Laboratory
-!     See COPYRIGHT in top-level directory
+! Copyright 2026 Argonne National Laboratory
+! SPDX-License-Identifier: Apache-2.0
 !
 
 ! This program is based on the allpair.f test from the MPICH-1 test

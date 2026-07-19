@@ -1,6 +1,6 @@
 ##
-## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## Copyright 2026 Argonne National Laboratory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # there are no AC_OUTPUT_FILES headers, so builddir is unnecessary
