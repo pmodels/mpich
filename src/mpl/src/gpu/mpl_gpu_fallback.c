@@ -39,13 +39,14 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out, bool is_mmap, size_t len)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr)
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
