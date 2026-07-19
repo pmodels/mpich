@@ -1,4 +1,13 @@
 ===============================================================================
+                               Changes in 5.1-dev
+===============================================================================
+<<<<<<< HEAD
+# Removed MPID collective interfaces. Binding layer call MPIR_Xxx_impl instead of
+  MPIR_Xxx. Use a single json config file. Generate json parsing from
+  coll_algorithms.txt. MPIR_Xxx_impl functions call MPIR_Coll_auto for CSEL
+  selections. 
+
+===============================================================================
                                Changes in 5.0
 ===============================================================================
 # MPI_VERSION/MPI_SUBVERSION updated to 5 and 0. MPICH now supports the MPI 5.0

@@ -10,7 +10,6 @@
 #include "netmod_am_fallback_recv.h"
 #include "netmod_am_fallback_probe.h"
 #include "netmod_am_fallback_rma.h"
-#include "netmod_am_fallback_coll.h"
 #include "netmod_am_fallback_part.h"
 
 #endif /* NETMOD_AM_FALLBACK_H_INCLUDED */

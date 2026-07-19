@@ -9,6 +9,10 @@
 #include <mpi.h>
 #include "release_gather_types.h"
 
+/* define a macro to sigify that we have CH4 POSIX. An example usage is
+ * to macro-guard posix collective algorithms */
+#define MPIDI_CH4_SHM_POSIX 1
+
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     800     /* constrained by MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE */
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
 #define MPIDI_POSIX_MAX_IOV_NUM         (3)     /* am_hdr, [padding], payload */
@@ -28,19 +32,12 @@ typedef enum {
 struct MPIR_Request;
 
 typedef struct {
-    void *csel_root;
-    const char *csel_source;
-    void *csel_root_gpu;
-    const char *csel_source_gpu;
+    /* empty */
 } MPIDI_POSIX_Global_t;
-
-extern char MPIDI_POSIX_coll_generic_json[];
 
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    void *csel_comm;
-    void *csel_comm_gpu;
     MPIDI_POSIX_release_gather_comm_t release_gather, nb_release_gather;
     int nb_bcast_seq_no;        /* Seq number of the release-gather based nonblocking bcast call */
     int nb_reduce_seq_no;       /* Seq number of the release-gather based nonblocking reduce call */

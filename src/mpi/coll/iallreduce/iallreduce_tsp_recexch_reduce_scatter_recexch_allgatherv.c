@@ -37,8 +37,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     void *tmp_recvbuf;
     void **step1_recvbuf = NULL;
     int tag, vtx_id;
-    int allgather_algo_type = MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING;
-    int redscat_algo_type = IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_HALVING;
+    int is_dist_halving = 1;
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
@@ -114,7 +113,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(recvbuf, tmp_recvbuf,
                                                            cnts, displs, datatype, op, extent, tag,
-                                                           comm, k, redscat_algo_type,
+                                                           comm, k, is_dist_halving,
                                                            step2_nphases, step2_nbrs, rank, nranks,
                                                            sink_id, 0, NULL, sched);
 
@@ -123,7 +122,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
         MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(step1_sendto, step2_nphases, step2_nbrs,
                                                        rank, nranks, k, p_of_k, log_pofk, T, &nvtcs,
                                                        &recv_id, tag, recvbuf, extent, cnts, displs,
-                                                       datatype, allgather_algo_type, comm, sched);
+                                                       datatype, is_dist_halving, comm, sched);
 
     }
 

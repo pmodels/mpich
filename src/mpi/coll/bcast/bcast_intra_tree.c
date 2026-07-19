@@ -83,27 +83,6 @@ int MPIR_Bcast_intra_tree(void *buffer,
             int lat_diff_switches = MPIR_CVAR_BCAST_TOPO_DIFF_SWITCHES;
             int lat_same_switches = MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES;
 
-            if (comm_ptr->csel_comm) {
-                MPIR_Csel_coll_sig_s coll_sig = {
-                    .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
-                    .comm_ptr = comm_ptr,
-                    .u.bcast.buffer = buffer,
-                    .u.bcast.count = count,
-                    .u.bcast.datatype = datatype,
-                    .u.bcast.root = root,
-                };
-
-                MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
-                MPIR_Assert(cnt);
-
-                if (cnt->id == MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree) {
-                    overhead = cnt->u.bcast.intra_tree.topo_overhead;
-                    lat_diff_groups = cnt->u.bcast.intra_tree.topo_diff_groups;
-                    lat_diff_switches = cnt->u.bcast.intra_tree.topo_diff_switches;
-                    lat_same_switches = cnt->u.bcast.intra_tree.topo_same_switches;
-                }
-            }
-
             mpi_errno =
                 MPIR_Treealgo_tree_create_topo_wave(comm_ptr, branching_factor, root,
                                                     MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,

@@ -481,6 +481,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     if (mpi_errno != MPI_SUCCESS) {
         MPIDI_POSIX_mpi_release_gather_comm_free(comm_ptr);
         RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
+        /* TODO: set a flag so next time we skip the try */
     }
     return mpi_errno;
   fn_fail:
