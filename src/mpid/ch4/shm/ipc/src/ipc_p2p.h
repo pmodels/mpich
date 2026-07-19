@@ -35,9 +35,9 @@ int MPIDI_IPC_mapaddr_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
 int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                   uint32_t attr, MPIR_Request ** req);
 int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
-                           int ipc_type, void *base_addr, void *mapped_addr);
+                           int ipc_type, void *base_addr, MPL_gpu_map_t map);
 int MPIDI_IPC_send_unmap(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
-                         int ipc_type, void *mapped_addr);
+                         int ipc_type, MPL_gpu_map_t map);
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_has_ipc(void)
 {

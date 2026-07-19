@@ -133,7 +133,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].shm_base_addr = NULL;
         shared_table[i].ipc_mapped_device = -1;
         shared_table[i].ipc_type = ipc_shared_table[i].ipc_type;
-        shared_table[i].global_dev_id = -1;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -146,7 +145,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         MPIDI_XPMEM_ipc_handle_map(ipc_shared_table[i].ipc_handle.xpmem,
                                                    &shared_table[i].shm_base_addr);
                     MPIR_ERR_CHECK(mpi_errno);
-                    shared_table[i].mapped_type = 2;
                     break;
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
@@ -155,30 +153,25 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                      * local GPU device. */
                     {
                         MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
-                        shared_table[i].ipc_handle = handle;
                         int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.u.gpu.gpu_attr);
                         int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
                                                                    MPIR_BYTE_INTERNAL);
-                        int fast_copy = 0;
+                        bool is_mmap = false;
                         if (shared_table[i].size <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
-                            mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                                 map_dev_id,
-                                                                 &shared_table[i].shm_base_addr,
-                                                                 true);
-                            if (mpi_errno == MPI_SUCCESS) {
-                                fast_copy = 1;
-                                shared_table[i].mapped_type = 1;
-                            }
+                            /* map to host address space for fast copy paths */
+                            is_mmap = true;
                         }
-                        if (!fast_copy) {
-                            mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
-                                                                 map_dev_id,
-                                                                 &shared_table[i].shm_base_addr,
-                                                                 false);
-                            MPIR_ERR_CHECK(mpi_errno);
-                            shared_table[i].mapped_type = 0;
-                            shared_table[i].global_dev_id = handle.global_dev_id;
-                        }
+                        mpi_errno =
+                            MPIDI_GPU_ipc_handle_map_base(ipc_shared_table[i].ipc_handle.gpu,
+                                                          map_dev_id, &shared_table[i].map,
+                                                          is_mmap);
+                        MPIR_ERR_CHECK(mpi_errno);
+
+                        void *mapped_base = shared_table[i].map.mapped_addr;
+                        MPI_Aint offset = ipc_shared_table[i].ipc_handle.gpu.offset;
+                        shared_table[i].shm_base_addr = (void *) ((uintptr_t) mapped_base + offset);
+
+                        shared_table[i].global_dev_id = handle.global_dev_id;
                         shared_table[i].ipc_mapped_device = map_dev_id;
                     }
                     break;
@@ -227,9 +220,7 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
         if (i == shm_comm_ptr->rank)
             continue;
         if (shared_table[i].ipc_type == MPIDI_IPCI_TYPE__GPU) {
-            mpi_errno = MPIDI_GPU_ipc_handle_unmap(shared_table[i].shm_base_addr,
-                                                   shared_table[i].ipc_handle,
-                                                   shared_table[i].mapped_type);
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(&shared_table[i].map);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

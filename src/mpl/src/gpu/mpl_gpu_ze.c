@@ -1450,14 +1450,19 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
     return mpl_err;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out, bool is_mmap, size_t len)
 {
     int mpl_err = MPL_SUCCESS;
 
-    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, ptr);
+    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, is_mmap, len,
+                                    &map_out->mapped_addr);
     if (mpl_err != MPL_SUCCESS) {
         goto fn_fail;
     }
+    map_out->attr.is_mmap = is_mmap;
+    map_out->attr.len = len;
+    map_out->attr.nfds = mpl_ipc_handle->data.nfds;
 
   fn_exit:
     return mpl_err;
@@ -1465,26 +1470,31 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr)
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
 {
     int mpl_err = MPL_SUCCESS;
-    ze_result_t ret;
-    ze_device_handle_t device = NULL;
 
-    ze_memory_allocation_properties_t ptr_attr = {
-        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
-        .pNext = NULL,
-        .type = 0,
-        .id = 0,
-        .pageSize = 0,
-    };
+    if (map_ptr->attr.is_mmap) {
+        mpl_err = munmapFunction(map_ptr->attr.nfds, map_ptr->mapped_addr, map_ptr->attr.len);
+    } else {
+        ze_result_t ret;
+        ze_device_handle_t device = NULL;
 
-    ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
-    ZE_ERR_CHECK(ret);
+        ze_memory_allocation_properties_t ptr_attr = {
+            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+            .pNext = NULL,
+            .type = 0,
+            .id = 0,
+            .pageSize = 0,
+        };
 
-    /* Unmap the buffer */
-    ret = zeMemCloseIpcHandle(ze_context, ptr);
-    ZE_ERR_CHECK(ret);
+        ret = zeMemGetAllocProperties(ze_context, map_ptr->mapped_addr, &ptr_attr, &device);
+        ZE_ERR_CHECK(ret);
+
+        /* Unmap the buffer */
+        ret = zeMemCloseIpcHandle(ze_context, map_ptr->mapped_addr);
+        ZE_ERR_CHECK(ret);
+    }
 
   fn_exit:
     return mpl_err;
