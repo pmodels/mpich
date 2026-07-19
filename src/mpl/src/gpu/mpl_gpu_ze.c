@@ -2651,6 +2651,32 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
+int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+    void *pbase;
+    size_t len;
+    uint64_t offset;
+
+    ret = zeMemGetAddressRange(ze_context, dptr, &pbase, &len);
+    ZE_ERR_CHECK(ret);
+
+    offset = (char *) dptr - (char *) pbase;
+    void *base = (char *) mmaped_ptr - offset;
+
+    int r = munmap(base, len);
+    if (r != 0) {
+        goto fn_fail;
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size)
 {
@@ -2658,12 +2684,14 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     char *d = (char *) dest;
     const char *s = (const char *) src;
     size_t n = size;
+    bool src_mmaped = false, dest_mmaped = false;
 
     if (src_attr && src_attr->type == MPL_GPU_POINTER_DEV) {
         mpl_err =
             MPL_ze_mmap_device_pointer(src, &src_attr->device_attr, src_attr->device, (void **) &s);
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
+        src_mmaped = true;
     }
 
     if (dest_attr && dest_attr->type == MPL_GPU_POINTER_DEV) {
@@ -2672,6 +2700,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                                        (void **) &d);
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
+        dest_mmaped = true;
     }
 
     if (MPL_ARCH_HAS_AVX512F) {
@@ -2680,6 +2709,17 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         MPL_Memcpy_stream_dev_avx(d, s, n);
     } else {
         memcpy(d, s, n);
+    }
+
+    if (src_mmaped) {
+        mpl_err = MPL_ze_munmap_device_pointer((void *) s, src);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+    }
+    if (dest_mmaped) {
+        mpl_err = MPL_ze_munmap_device_pointer(d, dest);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
     }
 
     return mpl_err;
