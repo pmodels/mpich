@@ -190,7 +190,9 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out,
+                           bool is_mmap /* unused */ , size_t len /* unused */)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
@@ -198,7 +200,8 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
 
     hipGetDevice(&prev_devid);
     hipSetDevice(dev_id);
-    ret = hipIpcOpenMemHandle(ptr, ipc_handle->handle, hipIpcMemLazyEnablePeerAccess);
+    ret = hipIpcOpenMemHandle(&map_out->mapped_addr, ipc_handle->handle,
+                              hipIpcMemLazyEnablePeerAccess);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
@@ -209,11 +212,11 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr)
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
-    ret = hipIpcCloseMemHandle(ptr);
+    ret = hipIpcCloseMemHandle(map_ptr->mapped_addr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:

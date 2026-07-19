@@ -27,6 +27,12 @@ typedef struct _MPL_gpu_ipc_mem_handle_t {
     fd_pid_t data;
 } MPL_gpu_ipc_mem_handle_t;
 
+typedef struct {
+    bool is_mmap;
+    int nfds;
+    size_t len;
+} MPL_gpu_map_attr;
+
 typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
 

@@ -22,7 +22,10 @@ typedef enum MPIDI_IPCI_type {
 
 typedef struct {
     MPIDI_IPCI_type_t ipc_type;
-    void *base_addr;            /* if set, remove the handle at request completion */
+    union {
+        MPL_gpu_map_t map;
+        void *base_addr;        /* if set, remove the handle at request completion */
+    } u;
 } MPIDI_IPC_am_request_t;
 
 #endif /* IPC_PRE_H_INCLUDED */

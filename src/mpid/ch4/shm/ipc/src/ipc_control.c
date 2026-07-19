@@ -28,13 +28,13 @@ typedef struct MPIDI_IPC_mapaddr {
     MPIDI_IPCI_type_t ipc_type;
     int mapped_lrank;           /* The node-local rank for the mapped address */
     void *base_addr;
-    void *mapped_addr;
+    MPL_gpu_map_t map;
 } MPIDI_IPC_mapaddr_t;
 
 /* used in MPIDI_IPC_send_unmap and MPIDI_IPC_unmap_target_msg_cb */
 typedef struct MPIDI_IPC_unmap {
     MPIDI_IPCI_type_t ipc_type;
-    void *mapped_addr;
+    MPL_gpu_map_t map;
 } MPIDI_IPC_unmap_t;
 
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
@@ -119,7 +119,7 @@ int MPIDI_IPC_mapaddr_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     MPIDI_IPC_mapaddr_t *hdr = am_hdr;
     /* only for gpu, for now */
     MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
-    mpi_errno = MPIDI_GPU_ipc_cache_map_addr(hdr->base_addr, hdr->mapped_addr, hdr->mapped_lrank);
+    mpi_errno = MPIDI_GPU_ipc_cache_map_addr(hdr->base_addr, hdr->map, hdr->mapped_lrank);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -141,7 +141,7 @@ int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDI_IPC_unmap_t *hdr = am_hdr;
     /* only for gpu, for now */
     MPIR_Assert(hdr->ipc_type == MPIDI_IPCI_TYPE__GPU);
-    mpi_errno = MPIDI_GPU_ipc_handle_unmap_base(hdr->mapped_addr);
+    mpi_errno = MPIDI_GPU_ipc_handle_unmap_base(&hdr->map);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -159,7 +159,7 @@ int MPIDI_IPC_unmap_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
 /* Receiver tells sender: "I mapped your base_addr at mapped_addr" */
 int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
-                           int ipc_type, void *base_addr, void *mapped_addr)
+                           int ipc_type, void *base_addr, MPL_gpu_map_t map)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -169,7 +169,7 @@ int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote
     am_hdr.ipc_type = ipc_type;
     am_hdr.mapped_lrank = MPIR_Process.local_rank;
     am_hdr.base_addr = base_addr;
-    am_hdr.mapped_addr = mapped_addr;
+    am_hdr.map = map;
 
     CH4_CALL(am_send_hdr(rank, comm, MPIDI_IPC_MAPADDR,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
@@ -183,7 +183,7 @@ int MPIDI_IPC_send_mapaddr(MPIR_Comm * comm, int rank, int local_vci, int remote
 
 /* Sender tells target: "Please unmap this address" */
 int MPIDI_IPC_send_unmap(MPIR_Comm * comm, int rank, int local_vci, int remote_vci,
-                         int ipc_type, void *mapped_addr)
+                         int ipc_type, MPL_gpu_map_t map)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -191,7 +191,7 @@ int MPIDI_IPC_send_unmap(MPIR_Comm * comm, int rank, int local_vci, int remote_v
 
     MPIDI_IPC_unmap_t am_hdr;
     am_hdr.ipc_type = ipc_type;
-    am_hdr.mapped_addr = mapped_addr;
+    am_hdr.map = map;
 
     CH4_CALL(am_send_hdr(rank, comm, MPIDI_IPC_UNMAP,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
