@@ -20,8 +20,6 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype);
 int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id,
                                   MPL_gpu_map_t * map_out, bool do_mmap);
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
-                             bool do_mmap);
 int MPIDI_GPU_ipc_handle_unmap(MPL_gpu_map_t * map_ptr);
 int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, MPL_gpu_map_t map, int lrank);
 int MPIDI_GPU_ipc_handle_unmap_base(MPL_gpu_map_t * map_ptr);
