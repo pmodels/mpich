@@ -614,25 +614,6 @@ int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id,
     goto fn_exit;
 }
 
-/* FIXME: this is currently only used in posix_coll_gpu_ipc.h. The usage is broken since
-          there is no caching nor unmapping.
- */
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
-                             bool do_mmap)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPL_gpu_map_t map;
-    mpi_errno = MPIDI_GPU_ipc_handle_map_base(handle, map_dev_id, &map, do_mmap);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    *vaddr = (void *) ((uintptr_t) map.mapped_addr + handle.offset);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
 
 /* this is used by noncached paths, e.g. window */
 int MPIDI_GPU_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
