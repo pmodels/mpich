@@ -12,7 +12,6 @@
 #include "posix_types.h"
 #include "posix_eager.h"
 #include "posix_eager_impl.h"
-#include "posix_progress.h"
 
 #define MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci) \
     do { \

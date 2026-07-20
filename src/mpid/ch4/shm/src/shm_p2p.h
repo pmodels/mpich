@@ -6,8 +6,8 @@
 #ifndef SHM_P2P_H_INCLUDED
 #define SHM_P2P_H_INCLUDED
 
-#include "../ipc/src/ipc_send.h"
 #include "../posix/posix_send.h"
+#include "../ipc/src/ipc_send.h"
 #include "../posix/posix_recv.h"
 #include "../posix/posix_probe.h"
 
