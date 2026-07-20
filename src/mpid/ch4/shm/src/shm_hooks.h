@@ -6,8 +6,7 @@
 #ifndef SHM_HOOKS_H_INCLUDED
 #define SHM_HOOKS_H_INCLUDED
 
-#include <shm.h>
-#include "../posix/shm_inline.h"
+#include "../posix/posix_win.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_win_cmpl_hook(MPIR_Win * win)
 {

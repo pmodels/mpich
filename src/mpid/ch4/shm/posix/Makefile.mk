@@ -9,7 +9,6 @@ include $(top_srcdir)/src/mpid/ch4/shm/posix/release_gather/Makefile.mk
 
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
-                  src/mpid/ch4/shm/posix/shm_inline.h      \
                   src/mpid/ch4/shm/posix/posix_noinline.h  \
                   src/mpid/ch4/shm/posix/posix_recv.h      \
                   src/mpid/ch4/shm/posix/posix_rma.h       \

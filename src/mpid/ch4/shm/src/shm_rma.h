@@ -6,8 +6,7 @@
 #ifndef SHM_RMA_H_INCLUDED
 #define SHM_RMA_H_INCLUDED
 
-#include <shm.h>
-#include "../posix/shm_inline.h"
+#include "../posix/posix_rma.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, MPI_Aint origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
