@@ -58,4 +58,11 @@ extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 
 int MPIDI_IPCI_is_repeat_addr(const void *addr);
 
+/* Sub-layer post headers pre-declare functions that cross sub-layer boundaries.
+ * Include them here so any file that depends on IPC types also gets the
+ * full IPC API (types + function declarations). */
+#include "../gpu/gpu_post.h"
+#include "../xpmem/xpmem_post.h"
+#include "../cma/cma_post.h"
+
 #endif /* IPC_TYPES_H_INCLUDED */
