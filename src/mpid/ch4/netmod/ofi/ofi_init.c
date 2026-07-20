@@ -860,106 +860,109 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIR_FUNC_ENTER;
 
-    /* Progress until we drain all inflight RMA send long buffers */
-    /* NOTE: am currently only use vci 0. Need update once that changes */
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        while (MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs > 0) {
-            MPIDI_OFI_PROGRESS(vci);
-        }
-    }
-
-    /* Destroy RMA key allocator */
-    MPIDI_OFI_mr_key_allocator_destroy();
-
-    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send. */
-        mpi_errno = flush_send_queue();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
-        /* skip collective work arounds */
-    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
-               || strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
-               || strcmp("psm3", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* verbs;ofi_rxm provider need barrier to prevent message loss */
-        mpi_errno = MPIR_pmi_barrier();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    /* Progress until we drain all inflight injection emulation requests */
-    /* NOTE: am currently only use vci 0. Need update once that changes */
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        while (MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus > 0) {
-            MPIDI_OFI_PROGRESS(vci);
-        }
-        MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
-    }
-
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
-        MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
-        DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
-            if (queue_mr->mr) {
-                struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
-                if (mr != NULL) {
-                    MPIDI_OFI_CALL(fi_close(&mr->fid), mr_unreg);
-                }
-
-                DL_DELETE(MPIDI_OFI_global.gdr_mrs, queue_mr);
-                MPL_free(queue_mr);
-            }
-        }
-    }
-
-    /* Tearing down endpoints in reverse order they were created */
-    for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
-        for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
-            /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
-             * We intentionally ignore errors to avoid crashing in finalize. Debug builds
-             * will warn about unfreed objects/memory. */
-            (void) destroy_vci_context(vci, nic);
-        }
-    }
-
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
-
-    for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-        fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
-    }
-
-    /* free av entries for multiple vcis and nics */
-    for (i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
-        MPL_free(MPIDI_OFI_AV(av).all_dest);
-        MPIDI_OFI_AV(av).all_dest = NULL;
-    }
-
-    MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
-
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
-    }
-
-    if (MPIDI_OFI_ENABLE_AM) {
+    if (fabric_initialized) {
+        /* Progress until we drain all inflight RMA send long buffers */
+        /* NOTE: am currently only use vci 0. Need update once that changes */
         for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-            while (MPIDI_OFI_global.per_vci[vci].am_unordered_msgs) {
-                MPIDI_OFI_am_unordered_msg_t *uo_msg =
-                    MPIDI_OFI_global.per_vci[vci].am_unordered_msgs;
-                DL_DELETE(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
+            while (MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs > 0) {
+                MPIDI_OFI_PROGRESS(vci);
             }
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker);
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker);
-
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].req_map);
-
-            MPIDI_OFI_unregister_am_bufs();
-            MPL_free(MPIDI_OFI_global.per_vci[vci].am_bufs);
-
-            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool);
-
-            MPIR_Assert(MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head ==
-                        MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail);
-            MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
         }
+
+        const char *prov_name = MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name;
+        if (strcmp("sockets", prov_name) == 0) {
+            /* sockets provider need flush any last lightweight send. */
+            mpi_errno = flush_send_queue();
+            MPIR_ERR_CHECK(mpi_errno);
+        } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+            /* skip collective work arounds */
+        } else if (strcmp("verbs;ofi_rxm", prov_name) == 0 ||
+                   strcmp("psm2", prov_name) == 0 || strcmp("psm3", prov_name) == 0) {
+            /* verbs;ofi_rxm provider need barrier to prevent message loss */
+            mpi_errno = MPIR_pmi_barrier();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        /* Progress until we drain all inflight injection emulation requests */
+        /* NOTE: am currently only use vci 0. Need update once that changes */
+        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+            while (MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus > 0) {
+                MPIDI_OFI_PROGRESS(vci);
+            }
+            MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
+        }
+
+        if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
+            MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
+            DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
+                if (queue_mr->mr) {
+                    struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
+                    if (mr != NULL) {
+                        MPIDI_OFI_CALL(fi_close(&mr->fid), mr_unreg);
+                    }
+
+                    DL_DELETE(MPIDI_OFI_global.gdr_mrs, queue_mr);
+                    MPL_free(queue_mr);
+                }
+            }
+        }
+
+        /* Tearing down endpoints in reverse order they were created */
+        for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
+            for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
+                /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
+                 * We intentionally ignore errors to avoid crashing in finalize. Debug builds
+                 * will warn about unfreed objects/memory. */
+                (void) destroy_vci_context(vci, nic);
+            }
+        }
+
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
+
+        for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+            fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
+        }
+
+        /* free av entries for multiple vcis and nics */
+        for (i = 0; i < MPIR_Process.size; i++) {
+            MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
+            MPL_free(MPIDI_OFI_AV(av).all_dest);
+            MPIDI_OFI_AV(av).all_dest = NULL;
+        }
+
+        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+        }
+
+        if (MPIDI_OFI_ENABLE_AM) {
+            for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+                while (MPIDI_OFI_global.per_vci[vci].am_unordered_msgs) {
+                    MPIDI_OFI_am_unordered_msg_t *uo_msg =
+                        MPIDI_OFI_global.per_vci[vci].am_unordered_msgs;
+                    DL_DELETE(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
+                }
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker);
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker);
+
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].req_map);
+
+                MPIDI_OFI_unregister_am_bufs();
+                MPL_free(MPIDI_OFI_global.per_vci[vci].am_bufs);
+
+                MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool);
+
+                MPIR_Assert(MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head ==
+                            MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail);
+                MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
+            }
+        }
+
+        fabric_initialized = false;
     }
+
+    /* Destroy resources initialized in init_local */
+    MPIDI_OFI_mr_key_allocator_destroy();
+    MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
     int err;
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
