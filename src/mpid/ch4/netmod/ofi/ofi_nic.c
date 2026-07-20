@@ -24,12 +24,29 @@ cvars:
 */
 
 /* ---------------------------------- */
+/* NIC affinity mask type and macros  */
+/* ---------------------------------- */
+
+#define MPIDI_OFI_NIC_MASK_WORD_SIZE 64
+#define MPIDI_OFI_NIC_MASK_WORDS (MPIDI_OFI_MAX_NICS / MPIDI_OFI_NIC_MASK_WORD_SIZE)
+MPL_static_assert(MPIDI_OFI_MAX_NICS % MPIDI_OFI_NIC_MASK_WORD_SIZE == 0,
+                  "MPIDI_OFI_MAX_NICS must be a multiple of MPIDI_OFI_NIC_MASK_WORD_SIZE");
+
+typedef struct {
+    uint64_t bits[MPIDI_OFI_NIC_MASK_WORDS];
+} MPIDI_OFI_nic_mask_t;
+
+#define MPIDI_OFI_NIC_MASK_SET(mask, nic) \
+    ((mask).bits[(nic) / 64] |= (uint64_t) 1 << ((nic) % 64))
+
+/* ---------------------------------- */
 /* Forward declarations for static    */
 /* functions called from public APIs  */
 /* ---------------------------------- */
 
 static bool match_prov_addr(struct fi_info *prov, const char *hostname);
 static int compare_nic_names(const void *info1, const void *info2);
+static int compare_nic_closeness(const void *nic1, const void *nic2);
 static int order_multi_nic_by_pref(int pref);
 #ifdef HAVE_LIBFABRIC_NIC
 static bool is_nic_pci_valid(struct fi_info *info);
@@ -224,11 +241,97 @@ int MPIDI_OFI_order_multi_nic_local(void)
     return order_multi_nic_by_pref(pref);
 }
 
-int MPIDI_OFI_order_multi_nic_global(void)
+/* Exchange NIC affinity masks across node-local ranks and compute a preferred
+ * NIC index that distributes load across sharing sets. Returns the preferred
+ * NIC index into close NICs, or -1 on failure (caller should fall back to local
+ * assignment). */
+static int compute_nic_pref_global(MPIR_Comm * node_comm)
 {
-    /* TODO: pass comm, use comm->local_rank, and globally determine pref */
-    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
+    int mpi_errno = MPI_SUCCESS;
+    int local_rank = node_comm->rank;
+    int local_size = node_comm->local_size;
+    int num_nics = MPIDI_OFI_global.num_nics_available;
+    int num_close = MPIDI_OFI_global.num_close_nics;
+    int pref = -1;
+    MPIDI_OFI_nic_mask_t *all_masks = NULL;
 
+    /* Build local close_mask */
+    MPIDI_OFI_nic_mask_t my_mask;
+    memset(&my_mask, 0, sizeof(my_mask));
+    for (int i = 0; i < num_nics; i++) {
+        if (MPIDI_OFI_global.nic_info[i].close) {
+            MPIDI_OFI_NIC_MASK_SET(my_mask, i);
+        }
+    }
+
+    /* Allgather masks over node_comm */
+    all_masks = MPL_malloc(local_size * sizeof(MPIDI_OFI_nic_mask_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!all_masks, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    memcpy(&all_masks[local_rank], &my_mask, sizeof(my_mask));
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                        all_masks, sizeof(MPIDI_OFI_nic_mask_t),
+                                        MPIR_BYTE_INTERNAL, node_comm, MPIR_COLL_ATTR_SYNC);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDI_OFI_global.fabric_initialized) {
+        goto fn_exit;
+    }
+
+    /* detect overlapping but unequal masks. this would imply a very strange
+     * architecture and equitable distribution of NICs in that case would be
+     * complicated. Warn and fallback to naive rotation. */
+    for (int i = 0; i < local_size; i++) {
+        for (int j = i + 1; j < local_size; j++) {
+            if (memcmp(&all_masks[i], &all_masks[j], sizeof(my_mask)) == 0)
+                continue;
+            for (int w = 0; w < MPIDI_OFI_NIC_MASK_WORDS; w++) {
+                if (all_masks[i].bits[w] & all_masks[j].bits[w]) {
+                    MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                "NIC affinity masks overlap but are not equal; "
+                                "falling back to local_rank assignment");
+                    pref = -1;
+                    goto fn_exit;
+                }
+            }
+        }
+    }
+
+    /* Compute my index within my sharing set (ranks with identical mask) */
+    int my_index_in_set = 0;
+    for (int i = 0; i < local_rank; i++) {
+        if (memcmp(&all_masks[i], &my_mask, sizeof(my_mask)) == 0) {
+            my_index_in_set++;
+        }
+    }
+
+    /* Sort NICs so that close NICs come first */
+    qsort(MPIDI_OFI_global.nic_info, num_nics,
+          sizeof(MPIDI_OFI_global.nic_info[0]), compare_nic_closeness);
+
+    /* Round-robin close NICs across ranks in the same sharing set */
+    pref = my_index_in_set % num_close;
+
+  fn_exit:
+    MPL_free(all_masks);
+    return pref;
+  fn_fail:
+    pref = -1;
+    goto fn_exit;
+}
+
+int MPIDI_OFI_order_multi_nic_global(MPIR_Comm * node_comm)
+{
+    int pref = compute_nic_pref_global(node_comm);
+
+    if (MPIDI_OFI_global.fabric_initialized) {
+        return MPI_SUCCESS;
+    }
+
+    if (pref < 0) {
+        /* Fallback: no global info available or unsupported topology */
+        pref = node_comm->rank % MPIDI_OFI_global.num_close_nics;
+    }
     return order_multi_nic_by_pref(pref);
 }
 
@@ -284,7 +387,7 @@ static int compare_nic_names(const void *info1, const void *info2)
 }
 
 /* Comparison function for NICs. This function is used in qsort(). */
-static int compare_nics(const void *nic1, const void *nic2)
+static int compare_nic_closeness(const void *nic1, const void *nic2)
 {
     const MPIDI_OFI_nic_info_t *i1 = (const MPIDI_OFI_nic_info_t *) nic1;
     const MPIDI_OFI_nic_info_t *i2 = (const MPIDI_OFI_nic_info_t *) nic2;
@@ -300,7 +403,7 @@ static int order_multi_nic_by_pref(int pref)
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
 
     /* 1. move all close nics to the front of the list. */
-    qsort(nics, MPIDI_OFI_global.num_nics_available, sizeof(nics[0]), compare_nics);
+    qsort(nics, MPIDI_OFI_global.num_nics_available, sizeof(nics[0]), compare_nic_closeness);
 
     /* 2. rotate the close nics by pref. */
     if (pref > 0) {

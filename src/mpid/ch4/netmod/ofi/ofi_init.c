@@ -686,25 +686,35 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    bool is_comm_world = (comm == MPIR_Process.comm_world);
+    bool is_comm_world = (comm && comm == MPIR_Process.comm_world);
 
-    /* collectively order nics if we are in the world model */
-    bool all_need_init = false;
+    MPIR_Comm *node_comm = NULL;
     if (is_comm_world) {
-        /* NOTE: we can't skip the collective based on `fabric_initialized` */
-        /* TODO: run collective and decide all_need_init (as well as num_nics, close_nic_map) */
+        node_comm = MPIR_Comm_get_node_comm(comm);
     }
 
-    if (!MPIDI_OFI_global.fabric_initialized) {
-        if (all_need_init) {
-            /* order nics based on allgathered global info */
-            mpi_errno = MPIDI_OFI_order_multi_nic_global();
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            /* order nics based on local rank */
-            mpi_errno = MPIDI_OFI_order_multi_nic_local();
-            MPIR_ERR_CHECK(mpi_errno);
-        }
+    /* We currently conflate is_comm_world with any sense that NIC selection should be
+     * performed cooperatively. If Sessions are not used, this should perform proper NIC
+     * selection across local ranks. If Sessions are used, we fall back to local
+     * selection without cooperation
+     *
+     * TODO: Support cooperative NIC selection when using Sessions. Consider:
+     *  - allreduce fabric_initialized within node_comm; if all ranks need to
+     *  initialize, perform cooperative NIC assignment within node_comm. When creating
+     *  multiple communicators, NIC assignment could be suboptimal
+     *  - shared memory/atomics-based NIC claim table. Optimal NIC assignment,
+     *  non-deterministic.
+     *  - hybrid of the two; claim table used across node_comm initialization to avoid
+     *  suboptimal NIC assignment
+     */
+    if (is_comm_world && node_comm && node_comm->local_size > 1) {
+        /* order nics based on allgathered global info */
+        mpi_errno = MPIDI_OFI_order_multi_nic_global(node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        /* order nics based on local rank */
+        mpi_errno = MPIDI_OFI_order_multi_nic_local();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (!MPIDI_OFI_global.fabric_initialized) {
