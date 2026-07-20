@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "gpu_types.h"
+#include "ipc_noinline.h"       /* MPIDI_FD_comm_bootstrap */
 
 static void ipc_handle_free_hook(void *dptr)
 {

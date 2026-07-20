@@ -4,6 +4,7 @@
  */
 
 #include "mpidimpl.h"
+#include "posix_noinline.h"
 #include "posix_types.h"
 
 int MPIDI_POSIX_comm_set_vcis(MPIR_Comm * comm, int num_vcis)

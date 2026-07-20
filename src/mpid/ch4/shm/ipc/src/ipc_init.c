@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
+#include "ipc_p2p.h"
 
 int MPIDI_IPC_init_local(void)
 {

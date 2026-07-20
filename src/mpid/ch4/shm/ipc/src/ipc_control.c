@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ipc_pre.h"
 #include "ipc_types.h"
+#include "ipc_p2p.h"
 
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req)
