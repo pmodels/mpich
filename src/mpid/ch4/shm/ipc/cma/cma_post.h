@@ -6,7 +6,6 @@
 #define CMA_POST_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ipc_types.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

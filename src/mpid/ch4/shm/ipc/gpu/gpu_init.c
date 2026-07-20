@@ -4,7 +4,6 @@
  */
 
 #include "mpidimpl.h"
-#include "gpu_post.h"
 #include "gpu_types.h"
 
 static void ipc_handle_free_hook(void *dptr)

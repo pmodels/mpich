@@ -6,8 +6,6 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
-#include "../xpmem/xpmem_post.h"
-#include "../gpu/gpu_post.h"
 
 typedef struct win_shared_info {
     uint32_t disp_unit;

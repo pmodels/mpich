@@ -4,7 +4,6 @@
  */
 
 #include "mpidimpl.h"
-#include "cma_post.h"
 #include "mpidu_init_shm.h"
 
 int MPIDI_CMA_init_local(void)

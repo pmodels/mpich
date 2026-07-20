@@ -10,9 +10,6 @@
 #include "mpidimpl.h"
 #include "ipc_pre.h"
 #include "ipc_types.h"
-#include "../xpmem/xpmem_post.h"
-#include "../cma/cma_post.h"
-#include "../gpu/gpu_post.h"
 
 /* Generic IPC protocols for P2P. */
 

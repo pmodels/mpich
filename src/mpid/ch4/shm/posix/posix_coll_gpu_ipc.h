@@ -59,7 +59,6 @@ cvars:
 
 #include "../ipc/src/ipc_types.h"
 #include "../ipc/src/ipc_p2p.h"
-#include "../ipc/gpu/gpu_post.h"
 #include "../../../include/mpir_err.h"
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
