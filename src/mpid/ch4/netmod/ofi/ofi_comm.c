@@ -118,9 +118,13 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if ((comm->attr & MPIR_COMM_ATTR__BOOTSTRAP) && !MPIDI_OFI_global.got_named_av) {
-        mpi_errno = MPIDI_OFI_comm_addr_exchange(comm);
+    if (comm->attr & MPIR_COMM_ATTR__BOOTSTRAP) {
+        mpi_errno = MPIDI_OFI_init_fabric(comm);
         MPIR_ERR_CHECK(mpi_errno);
+        if (!MPIDI_OFI_global.got_named_av) {
+            mpi_errno = MPIDI_OFI_comm_addr_exchange(comm);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     /* no connection for non-dynamic or non-root-rank of intercomm */

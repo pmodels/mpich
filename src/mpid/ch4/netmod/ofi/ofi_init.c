@@ -653,9 +653,19 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* A way to tell which av is empty */
     MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
 
-    /* -------------------------------- */
-    /* Set up the libfabric provider(s) */
-    /* -------------------------------- */
+  fn_exit:
+    *tag_bits = MPIDI_OFI_TAG_BITS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static bool fabric_initialized = false;
+
+/* we delay init fabric until the first comm creation (in MPIDI_OFI_mpi_comm_commit_pre_hook) */
+int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     /* WB TODO - I assume that after this function is done, there will be an array of providers in
      * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
@@ -667,6 +677,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* init multi-nic and populates MPIDI_OFI_global.prov_use[] */
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_OFI_find_provider_cleanup();
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
@@ -740,9 +752,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIDI_OFI_global.num_vcis = 1;
     MPIDI_OFI_init_per_vci(0);
 
+    fabric_initialized = true;
+
   fn_exit:
-    *tag_bits = MPIDI_OFI_TAG_BITS;
-    MPIDI_OFI_find_provider_cleanup();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
