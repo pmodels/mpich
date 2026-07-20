@@ -172,15 +172,21 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
         struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
             entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
-            mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
-                                             am_ctx.local_vci, am_ctx.remote_vci,
-                                             MPIDI_IPCI_TYPE__GPU, maps[i].map);
-            if (am_ctx.comm == NULL) {
-                /* ignore the error in case the remote process already exit */
-                mpi_errno = MPI_SUCCESS;
-            } else {
+            if (maps[i].remote_lrank == MPIR_Process.local_rank) {
+                /* local mmap entry -- just unmap locally, no AM needed */
+                mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i].map);
                 MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
+                mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
+                                                 am_ctx.local_vci, am_ctx.remote_vci,
+                                                 MPIDI_IPCI_TYPE__GPU, maps[i].map);
+                if (am_ctx.comm == NULL) {
+                    /* ignore the error in case the remote process already exit */
+                    mpi_errno = MPI_SUCCESS;
+                } else {
+                    MPIR_ERR_CHECK(mpi_errno);
+                }
             }
         }
     }
@@ -557,6 +563,88 @@ int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, MPL_gpu_map_t map, int lrank)
     return ipc_track_cache_map_addr(base_addr, map, lrank);
 }
 
+/* Cache the local device buffer's mmap. Stores the mapping as a map_entry
+ * with remote_lrank = local_rank in the ipc_handle_cache. On cache hit,
+ * returns the cached mmap pointer. On miss, creates the IPC handle, inserts
+ * into cache, maps it, and returns the new mmap pointer. */
+int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
+                             MPI_Aint data_sz, void **host_ptr_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *host_ptr_out = dev_ptr;    /* default: unchanged */
+
+#ifdef MPL_HAVE_ZE
+    if (attr->type != MPL_GPU_POINTER_DEV) {
+        goto fn_exit;
+    }
+    if (data_sz > MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
+        goto fn_exit;
+    }
+
+    void *pbase;
+    uintptr_t len;
+    int mpl_err = MPL_gpu_get_buffer_bounds(dev_ptr, &pbase, &len);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
+
+    uintptr_t offset = (uintptr_t) dev_ptr - (uintptr_t) pbase;
+    int local_rank = MPIR_Process.local_rank;
+
+    struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, default_am_ctx);
+    if (entry) {
+        /* search maps for local rank entry */
+        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
+            entry->maps : entry->static_maps;
+        for (int i = 0; i < entry->num_maps; i++) {
+            if (maps[i].remote_lrank == local_rank) {
+                *host_ptr_out = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
+                attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+                goto fn_exit;
+            }
+        }
+    } else {
+        /* cache miss: create IPC handle and insert */
+        MPL_gpu_ipc_mem_handle_t handle;
+        mpl_err = MPL_gpu_ipc_handle_create(pbase, &attr->device_attr, &handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_create");
+
+        bool inserted;
+        mpi_errno = ipc_track_cache_insert(pbase, len, handle, default_am_ctx, &inserted);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (!inserted) {
+            MPL_gpu_ipc_handle_destroy(pbase);
+            goto fn_exit;
+        }
+
+        entry = ipc_track_cache_search(pbase, len, default_am_ctx);
+        MPIR_Assert(entry);
+    }
+
+    /* map the local device buffer to host via mmap */
+    int dev_id = MPL_gpu_get_dev_id_from_attr(attr);
+    MPIDI_GPU_ipc_handle_t gpu_handle;
+    memset(&gpu_handle, 0, sizeof(gpu_handle));
+    gpu_handle.ipc_handle = entry->handle;
+    gpu_handle.len = entry->len;
+
+    MPL_gpu_map_t map;
+    mpi_errno = MPIDI_GPU_ipc_handle_map_base(gpu_handle, dev_id, &map, true /* do_mmap */);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    ipc_track_cache_map_addr(pbase, map, local_rank);
+
+    *host_ptr_out = (void *) ((uintptr_t) map.mapped_addr + offset);
+    attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
 {
     int map_to_dev_id = -1;
@@ -778,11 +866,16 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_A
     }
     MPIDIG_REQUEST(req, u.ipc.src_dt_ptr) = src_dt_ptr;
 
+    /* try to use cached local mmap for fast_memcpy */
+    void *local_buf = MPIDIG_REQUEST(req, buffer);
+    mpi_errno = MPIDI_GPU_ipc_local_mmap(local_buf, &attr, src_data_sz, &local_buf);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine =
         MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
-                                    MPIDIG_REQUEST(req, buffer), MPIDIG_REQUEST(req, count),
+                                    local_buf, MPIDIG_REQUEST(req, count),
                                     MPIDIG_REQUEST(req, datatype), 0, &attr, engine, true, &yreq);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -833,6 +926,10 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
         /* remember the flattened type so we can free it later */
         MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = dt_ptr;
     }
+
+    /* try to use cached local mmap for fast_memcpy */
+    mpi_errno = MPIDI_GPU_ipc_local_mmap(src_buf, &attr, src_data_sz, &src_buf);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* copy */
     MPIR_gpu_req yreq;
