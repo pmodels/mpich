@@ -1,4 +1,4 @@
-name: ci
+name: mpi4py
 
 on:  # yamllint disable-line rule:truthy
   push:
@@ -6,21 +6,13 @@ on:  # yamllint disable-line rule:truthy
       - "main"
       - "[0-9]+.[0-9]+.x"
   pull_request:
+    types:
+      - labeled
+      - synchronize
     branches:
       - "main"
       - "[0-9]+.[0-9]+.x"
   workflow_dispatch:
-    inputs:
-      Linux:
-        description: 'Linux'
-        required: true
-        type: boolean
-        default: true
-      macOS:
-        description: 'macOS'
-        required: true
-        type: boolean
-        default: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,21 +22,28 @@ permissions:
   contents: read
 
 jobs:
+  cond-mpi4py:
+    runs-on: ubuntu-slim
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'test-mpi4py') }}
+    steps:
+      - run: true
 
-  Linux:
-    if: |-
-      ${{ case(
-        github.event_name == 'workflow_call' ||
-        github.event_name == 'workflow_dispatch',
-        inputs.Linux,
-        true
-      ) }}
+  result-mpi4py:
+    runs-on: ubuntu-slim
+    needs: test-mpi4py
+    steps:
+      - run: test "${{ needs.test-mpi4py.result }}" = "success"
+
+  test-mpi4py:
+    needs: cond-mpi4py
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - aarch64
-          - x86_64
+        os-arch:
+          - Linux-aarch64
+          - Linux-x86_64
+          - macOS-arm64
+          - macOS-x86_64
         device:
           - ch4:ucx
           - ch4:ofi
@@ -53,35 +52,13 @@ jobs:
         pm:
           - hydra
           - gforker
+        exclude:
+          - os-arch: macOS-arm64
+            device: ch4:ucx
+          - os-arch: macOS-x86_64
+            device: ch4:ucx
     uses: ./.github/workflows/ci-workflow.yml
     with:
-      runs-on: Linux-${{ matrix.arch }}
-      device:  ${{ matrix.device }}
-      pm:      ${{ matrix.pm     }}
-
-  macOS:
-    if: |-
-      ${{ case(
-        github.event_name == 'workflow_call' ||
-        github.event_name == 'workflow_dispatch',
-        inputs.macOS,
-        true
-      ) }}
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - arm64
-          - x86_64
-        device:
-          - ch4:ofi
-          - ch3:nemesis
-          - ch3:sock
-        pm:
-          - hydra
-          - gforker
-    uses: ./.github/workflows/ci-workflow.yml
-    with:
-      runs-on: macOS-${{ matrix.arch }}
+      runs-on: ${{ matrix.os-arch }}
       device:  ${{ matrix.device }}
       pm:      ${{ matrix.pm     }}
