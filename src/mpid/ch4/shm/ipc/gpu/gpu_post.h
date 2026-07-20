@@ -23,6 +23,8 @@ int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id,
 int MPIDI_GPU_ipc_handle_unmap(MPL_gpu_map_t * map_ptr);
 int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, MPL_gpu_map_t map, int lrank);
 int MPIDI_GPU_ipc_handle_unmap_base(MPL_gpu_map_t * map_ptr);
+int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
+                             MPI_Aint data_sz, void **host_ptr_out);
 int MPIDI_GPU_init_local(void);
 int MPIDI_GPU_comm_bootstrap(MPIR_Comm * comm);
 int MPIDI_GPU_mpi_finalize_hook(void);
