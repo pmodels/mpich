@@ -241,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     /* small contiguous messages */
     /* skip fi_inject path for GPU messages because this path can be
      * very slow */
-    if (origin_contig && target_contig &&
+    if (!sigreq && origin_contig && target_contig &&
         (origin_bytes <= MPIDI_OFI_global.max_buffered_write && !MPL_gpu_attr_is_dev(&attr))) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         MPIDI_OFI_win_cntr_incr(win);
@@ -255,11 +255,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
+    if (sigreq) {
+        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
+    }
+
     /* large contiguous messages */
     if (origin_contig && target_contig) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         if (sigreq) {
-            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = FI_DELIVERY_COMPLETE;
@@ -314,6 +317,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
                                target_count, target_datatype, target_mr, win, addr, sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
+    }
+
+    /* native path not taken, free early-created sigreq before am_fallback */
+    if (sigreq) {
+        MPIR_Request_free(*sigreq);
+        *sigreq = NULL;
     }
 
   am_fallback:
@@ -430,11 +439,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     if (unlikely(!target_mr_found))
         goto am_fallback;
 
+    if (sigreq) {
+        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
+    }
+
     /* contiguous messages */
     if (origin_contig && target_contig) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         if (sigreq) {
-            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = 0;
@@ -491,6 +503,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
                                target_count, target_datatype, target_mr, win, addr, sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
+    }
+
+    /* native path not taken, free early-created sigreq before am_fallback */
+    if (sigreq) {
+        MPIR_Request_free(*sigreq);
+        *sigreq = NULL;
     }
 
   am_fallback:
