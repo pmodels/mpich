@@ -119,10 +119,13 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
         MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
 
         MPIDI_OFI_global.num_nics_available = 1;
+        MPIDI_OFI_global.num_nics = 1;
         MPIDI_OFI_global.nic_info[0].nic = MPIDI_OFI_global.prov_use[0];
         MPIDI_OFI_global.nic_info[0].id = 0;
         MPIDI_OFI_global.nic_info[0].close = 1;
     } else {
+        MPIDI_OFI_global.num_nics_available = nic_count;
+
         /* nic_count >= 1 */
         /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
         qsort(MPIDI_OFI_global.prov_use, nic_count, sizeof(struct fi_info *), compare_nic_names);
@@ -138,7 +141,7 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
             /* default single nic (will selelct closest nic if nic_count > 1) */
             num_nics = 1;
         }
-        MPIDI_OFI_global.num_nics_available = num_nics;
+        MPIDI_OFI_global.num_nics = num_nics;
 
         for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
             MPIDI_OFI_global.nic_info[i].nic = MPIDI_OFI_global.prov_use[i];
