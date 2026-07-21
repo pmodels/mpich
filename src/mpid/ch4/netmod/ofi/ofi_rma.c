@@ -89,7 +89,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
     if (sigreq) {
-        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
     } else {
         flags = FI_DELIVERY_COMPLETE;
