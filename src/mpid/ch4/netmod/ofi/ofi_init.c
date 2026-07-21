@@ -655,6 +655,25 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* A way to tell which av is empty */
     MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
 
+    /* -------------------------------- */
+    /* Set up the libfabric provider(s) */
+    /* -------------------------------- */
+    struct fi_info *prov = NULL;
+    mpi_errno = MPIDI_OFI_find_provider(&prov);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_OFI_fill_prov_use(prov);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_OFI_find_provider_cleanup();
+
+    mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        dump_global_settings();
+    }
+
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
     return mpi_errno;
@@ -670,22 +689,6 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     bool is_comm_world = (comm == MPIR_Process.comm_world);
-
-    if (!fabric_initialized) {
-        /* -------------------------------- */
-        /* Set up the libfabric provider(s) */
-        /* -------------------------------- */
-        struct fi_info *prov = NULL;
-        mpi_errno = MPIDI_OFI_find_provider(&prov);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIDI_OFI_fill_prov_use(prov);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIDI_OFI_find_provider_cleanup();
-
-        /* find close nics and prepare {num_nics, close_nic_map} */
-    }
 
     /* collectively order nics if we are in the world model */
     bool all_need_init = false;
@@ -723,13 +726,6 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
                 MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
                 MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
             }
-        }
-
-        mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-            dump_global_settings();
         }
 
         if (MPIR_CVAR_DEBUG_SUMMARY >= 2 && is_comm_world) {
@@ -947,10 +943,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
-        for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-            fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
-        }
-
         /* free av entries for multiple vcis and nics */
         for (i = 0; i < MPIR_Process.size; i++) {
             MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
@@ -986,6 +978,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         }
 
         fabric_initialized = false;
+    }
+
+    for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+        fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
     }
 
     /* Destroy resources initialized in init_local */
