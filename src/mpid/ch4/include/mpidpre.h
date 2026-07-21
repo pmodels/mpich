@@ -95,7 +95,6 @@ typedef enum {
 #define MPIDIG_REQ_RTS            (0x1 << 7)
 #define MPIDIG_REQ_IN_PROGRESS    (0x1 << 8)
 
-#define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
 
 typedef struct MPIDIG_rreq_t {
