@@ -134,6 +134,7 @@ noinst_PROGRAMS =          \
     flush                  \
     win_shared_put_flush_get          \
     reqops                 \
+    rputget                \
     req_example            \
     req_example_shm        \
     pscw_ordering          \
