@@ -243,6 +243,9 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         req->next = MPIDI_OFI_WIN(win).syncQ;
         MPIDI_OFI_WIN(win).syncQ = req;
         MPL_free(req->noncontig.put.target.iov);
+        /* complete sigreq */
+        MPIDI_OFI_sigreq_complete(req->sigreq);
+
     }
 
   fn_exit:
@@ -329,6 +332,9 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         req->next = MPIDI_OFI_WIN(win).syncQ;
         MPIDI_OFI_WIN(win).syncQ = req;
         MPL_free(req->noncontig.get.target.iov);
+
+        /* complete sigreq */
+        MPIDI_OFI_sigreq_complete(req->sigreq);
     }
 
   fn_exit:
