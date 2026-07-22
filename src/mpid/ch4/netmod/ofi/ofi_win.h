@@ -71,9 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vci)
     r = MPIDI_OFI_WIN(win).syncQ;
     while (r) {
         MPIDI_OFI_win_request_t *next = r->next;
-        MPIR_Request **sigreq = r->sigreq;
         MPIDI_OFI_win_request_complete(r);
-        MPIDI_OFI_sigreq_complete(sigreq);
         r = next;
     }
     MPIDI_OFI_WIN(win).syncQ = NULL;

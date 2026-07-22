@@ -305,6 +305,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_count, target_datatype, target_mr, win, addr,
                                     MPIDI_OFI_PUT, sigreq);
+        MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
     }
@@ -315,6 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         mpi_errno =
             MPIDI_OFI_pack_put(origin_addr, origin_count, origin_datatype, target_rank,
                                target_count, target_datatype, target_mr, win, addr, sigreq);
+        /* complete sigreq after issuing the last chunk in issue_packed_put */
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
     }
@@ -491,6 +493,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_count, target_datatype, target_mr, win, addr,
                                     MPIDI_OFI_GET, sigreq);
+        MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
     }
@@ -501,6 +504,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         mpi_errno =
             MPIDI_OFI_pack_get(origin_addr, origin_count, origin_datatype, target_rank,
                                target_count, target_datatype, target_mr, win, addr, sigreq);
+        /* complete sigreq after issuing the last chunk in issue_packed_get */
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
         goto fn_exit;
     }
