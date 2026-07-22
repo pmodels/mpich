@@ -118,6 +118,7 @@ get_accumulate_short 4
 get_accumulate_short_derived 4
 flush 4
 reqops 4
+rputget 2
 req_example 4
 req_example_shm 4
 rput_local_comp 2
