@@ -184,6 +184,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+#ifdef NEEDS_STRICT_ALIGNMENT
+    if (am_hdr_sz % MAX_ALIGNMENT) {
+        am_hdr_sz += (MAX_ALIGNMENT - am_hdr_sz % MAX_ALIGNMENT);
+    }
+#endif
 
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         int vci = MPIDI_Request_get_vci(sreq);
@@ -393,19 +398,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPI_Aint seg_sz = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t) - am_hdr_sz;
     seg_sz = MPL_MIN(seg_sz, MPIDIG_am_send_async_get_data_sz_left(sreq));
     MPIR_Assert(seg_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
-
-    /* make seg_sz a multiple of the datatype extent. */
-    MPI_Aint elem_sz = 0;
-    if (HANDLE_IS_BUILTIN(datatype)) {
-        elem_sz = MPIR_Datatype_get_basic_size(datatype);
-    } else {
-        MPIR_Datatype *dtp;
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        elem_sz = dtp->builtin_element_size;
-    }
-    if (elem_sz) {
-        seg_sz -= (seg_sz % elem_sz);
-    }
 
     msg_hdr = (MPIDI_OFI_am_header_t *) send_req->msg_hdr;
     msg_hdr->handler_id = handler_id;
