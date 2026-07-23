@@ -645,7 +645,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
         send_req->msg_hdr = pack_buffer;
         send_req->am_hdr = (char *) pack_buffer + sizeof(MPIDI_OFI_am_header_t);
         if (offset == 0) {
-            send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
+            send_req->am_data = (char *) send_req->am_hdr + MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
         } else {
             send_req->am_data = (char *) send_req->am_hdr;
         }
