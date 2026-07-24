@@ -28,12 +28,6 @@ jobs:
     steps:
       - run: true
 
-  result-mpi4py:
-    runs-on: ubuntu-slim
-    needs: test-mpi4py
-    steps:
-      - run: test "${{ needs.test-mpi4py.result }}" = "success"
-
   test-mpi4py:
     needs: cond-mpi4py
     strategy:
