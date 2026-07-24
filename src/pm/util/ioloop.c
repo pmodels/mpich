@@ -22,8 +22,8 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
+#ifdef HAVE_POLL_H
+#include <poll.h>
 #endif
 #ifdef HAVE_TIME_H
 #include <time.h>
@@ -136,40 +136,43 @@ Input Parameters:
 @*/
 int MPIE_IOLoop(int timeoutSeconds)
 {
-    int i, maxfd, fd, nfds, rc = 0, rc2;
-    fd_set readfds, writefds;
+    int i, fd, nfds, npollfds, rc = 0, rc2;
     int (*handler) (int, int, void *);
-    struct timeval tv;
+    struct pollfd pollfds[MAXFD];
+    int pollfd_to_fd[MAXFD];    /* map pollfd index back to fd */
 
     /* Loop on the fds, with the timeout */
     TimeoutInit(timeoutSeconds);
     while (1) {
-        tv.tv_sec = TimeoutGetRemaining();
-        tv.tv_usec = 0;
-        /* Determine the active FDs */
-        FD_ZERO(&readfds);
-        FD_ZERO(&writefds);
-        /* maxfd is the maximum active fd */
-        maxfd = -1;
+        int timeout_ms;
+        int time_left = TimeoutGetRemaining();
+        if (time_left >= 1000000)
+            timeout_ms = -1;    /* no timeout */
+        else
+            timeout_ms = time_left * 1000;
+
+        /* Build the pollfd array from registered handlers */
+        npollfds = 0;
         for (i = 0; i <= maxFD; i++) {
             if (handlesByFD[i].handler) {
-                fd = handlesByFD[i].fd;
-                if (handlesByFD[i].rdwr & IO_READ) {
-                    FD_SET(fd, &readfds);
-                    maxfd = i;
-                }
-                if (handlesByFD[i].rdwr & IO_WRITE) {
-                    FD_SET(fd, &writefds);
-                    maxfd = i;
+                short events = 0;
+                if (handlesByFD[i].rdwr & IO_READ)
+                    events |= POLLIN;
+                if (handlesByFD[i].rdwr & IO_WRITE)
+                    events |= POLLOUT;
+                if (events) {
+                    pollfds[npollfds].fd = handlesByFD[i].fd;
+                    pollfds[npollfds].events = events;
+                    pollfds[npollfds].revents = 0;
+                    pollfd_to_fd[npollfds] = handlesByFD[i].fd;
+                    npollfds++;
                 }
             }
         }
-        if (maxfd < 0)
+        if (npollfds == 0)
             break;
 
-        /* DBG_PRINTF(("Calling select with readfds = %x writefds = %x\n", */
-        /*          *(int *)&readfds, *(int*)&writefds)); */
-        MPIE_SYSCALL(nfds, select, (maxfd + 1, &readfds, &writefds, 0, &tv));
+        MPIE_SYSCALL(nfds, poll, (pollfds, npollfds, timeout_ms));
         if (nfds < 0 && (errno == EINTR || errno == 0)) {
             /* Continuing through EINTR */
             /* We allow errno == 0 as a synonym for EINTR.  We've seen this
@@ -182,44 +185,44 @@ int MPIE_IOLoop(int timeoutSeconds)
             /* FIXME: an EINTR may also mean that a process has exited
              * (SIGCHILD).  If all processes have exited, we may want to
              * exit */
-            DBG_PRINTF(("errno = EINTR in select\n"));
+            DBG_PRINTF(("errno = EINTR in poll\n"));
             continue;
         }
         if (nfds < 0) {
             /* Serious error */
-            MPL_internal_sys_error_printf("select", errno, 0);
+            MPL_internal_sys_error_printf("poll", errno, 0);
             break;
         }
         if (nfds == 0) {
-            /* Timeout from select */
-            DBG_PRINTF(("Timeout in select\n"));
+            /* Timeout from poll */
+            DBG_PRINTF(("Timeout in poll\n"));
             return IOLOOP_TIMEOUT;
         }
         /* nfds > 0 */
         DBG_PRINTF(("Found some fds to process (n = %d)\n", nfds));
-        for (fd = 0; fd <= maxfd; fd++) {
-            if (FD_ISSET(fd, &writefds)) {
+        for (i = 0; i < npollfds; i++) {
+            if (pollfds[i].revents == 0)
+                continue;
+            fd = pollfd_to_fd[i];
+            if (pollfds[i].revents & (POLLOUT | POLLERR | POLLHUP)) {
                 handler = handlesByFD[fd].handler;
                 if (handler) {
                     rc = (*handler) (fd, IO_WRITE, handlesByFD[fd].extra_data);
                 }
                 if (rc == 1) {
-                    /* EOF? */
                     MPIE_SYSCALL(rc2, close, (fd));
                     handlesByFD[fd].rdwr = 0;
-                    FD_CLR(fd, &writefds);
+                    continue;
                 }
             }
-            if (FD_ISSET(fd, &readfds)) {
+            if (pollfds[i].revents & (POLLIN | POLLERR | POLLHUP)) {
                 handler = handlesByFD[fd].handler;
                 if (handler) {
                     rc = (*handler) (fd, IO_READ, handlesByFD[fd].extra_data);
                 }
                 if (rc == 1) {
-                    /* EOF? */
                     MPIE_SYSCALL(rc2, close, (fd));
                     handlesByFD[fd].rdwr = 0;
-                    FD_CLR(fd, &readfds);
                 }
             }
         }
