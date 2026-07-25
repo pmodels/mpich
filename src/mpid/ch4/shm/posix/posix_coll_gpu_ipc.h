@@ -82,7 +82,7 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
     void *mem_addr = MPIR_get_contig_ptr(buf, true_lb);
 
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, MPI_PROC_NULL, comm, &ipc_attr);
+    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, &ipc_attr);
 
     MPIDI_IPCI_ipc_handle_t *ipc_handles;
     ipc_handles = MPL_malloc(sizeof(MPIDI_IPCI_ipc_handle_t) * comm_size, MPL_MEM_COLL);
@@ -91,7 +91,7 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
     MPIDI_IPCI_ipc_handle_t my_ipc_handle;
     memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
     if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
-        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle, NULL);
+        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         my_ipc_handle.gpu.global_dev_id = -1;
@@ -152,13 +152,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
 
     if (my_rank != root) {
         /* map root's ipc_handle to remote_buf */
-        void *remote_buf = NULL;
+        MPL_gpu_map_t map;
         bool do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
         int dev_id = ipc_handles[my_rank].gpu.local_dev_id;
         int root_dev =
             MPIDI_GPU_ipc_get_map_dev(ipc_handles[root].gpu.global_dev_id, dev_id, datatype);
-        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handles[root].gpu, root_dev, &remote_buf, do_mmap);
+        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_handles[root].gpu, root_dev, &map, do_mmap);
         MPIR_ERR_CHECK(mpi_errno);
+        void *remote_buf = (void *) ((uintptr_t) map.mapped_addr + ipc_handles[root].gpu.offset);
 
         /* get engine type */
         MPL_gpu_engine_type_t engine_type =
@@ -175,6 +176,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
             mpi_errno = MPL_gpu_test(&req, &completed);
             MPIR_ERR_CHECK(mpi_errno);
         }
+
+        /* unmap */
+        mpi_errno = MPIDI_GPU_ipc_handle_unmap(&map);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_free(ipc_handles);
@@ -231,14 +236,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
+    MPL_gpu_map_t *maps = NULL;
     MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
+    MPIR_CHKLMEM_MALLOC(maps, sizeof(MPL_gpu_map_t) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
                 MPIDI_GPU_ipc_get_map_dev(ipc_handles[i].gpu.global_dev_id, dev_id, sendtype);
             mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handles[i].gpu, remote_dev, &(remote_bufs[i]), false);
+                MPIDI_GPU_ipc_handle_map_base(ipc_handles[i].gpu, remote_dev, &maps[i], false);
             MPIR_ERR_CHECK(mpi_errno);
+            remote_bufs[i] = (void *) ((uintptr_t) maps[i].mapped_addr + ipc_handles[i].gpu.offset);
         } else {
             remote_bufs[i] = send_mem_addr;
         }
@@ -263,6 +271,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
         int completed = 0;
         while (!completed) {
             mpi_errno = MPL_gpu_test(&reqs[i], &completed);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+    /* unmap */
+    for (int i = 0; i < comm_size; i++) {
+        if (i != my_rank) {
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -323,14 +338,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
+    MPL_gpu_map_t *maps = NULL;
     MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
+    MPIR_CHKLMEM_MALLOC(maps, sizeof(MPL_gpu_map_t) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
                 MPIDI_GPU_ipc_get_map_dev(ipc_handles[i].gpu.global_dev_id, dev_id, sendtype);
             mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handles[i].gpu, remote_dev, &(remote_bufs[i]), false);
+                MPIDI_GPU_ipc_handle_map_base(ipc_handles[i].gpu, remote_dev, &maps[i], false);
             MPIR_ERR_CHECK(mpi_errno);
+            remote_bufs[i] = (void *) ((uintptr_t) maps[i].mapped_addr + ipc_handles[i].gpu.offset);
         } else {
             remote_bufs[i] = send_mem_addr;
         }
@@ -355,6 +373,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
         int completed = 0;
         while (!completed) {
             mpi_errno = MPL_gpu_test(&reqs[i], &completed);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+    /* unmap */
+    for (int i = 0; i < comm_size; i++) {
+        if (i != my_rank) {
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -417,14 +442,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
+    MPL_gpu_map_t *maps = NULL;
     MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
+    MPIR_CHKLMEM_MALLOC(maps, sizeof(MPL_gpu_map_t) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
                 MPIDI_GPU_ipc_get_map_dev(ipc_handles[i].gpu.global_dev_id, dev_id, sendtype);
             mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handles[i].gpu, remote_dev, &(remote_bufs[i]), false);
+                MPIDI_GPU_ipc_handle_map_base(ipc_handles[i].gpu, remote_dev, &maps[i], false);
             MPIR_ERR_CHECK(mpi_errno);
+            remote_bufs[i] = (void *) ((uintptr_t) maps[i].mapped_addr + ipc_handles[i].gpu.offset);
         } else {
             remote_bufs[i] = send_mem_addr;
         }
@@ -452,6 +480,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
         int completed = 0;
         while (!completed) {
             mpi_errno = MPL_gpu_test(&reqs[i], &completed);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+    /* unmap */
+    for (int i = 0; i < comm_size; i++) {
+        if (i != my_rank) {
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

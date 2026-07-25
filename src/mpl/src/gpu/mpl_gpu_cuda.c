@@ -153,12 +153,14 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out,
+                           bool is_mmap /* unused */ , size_t len /* unused */)
 {
     int mpl_err = MPL_SUCCESS;
     cudaError_t ret;
@@ -166,7 +168,8 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
 
     cudaGetDevice(&prev_devid);
     cudaSetDevice(dev_id);
-    ret = cudaIpcOpenMemHandle(ptr, ipc_handle->handle, cudaIpcMemLazyEnablePeerAccess);
+    ret = cudaIpcOpenMemHandle(&map_out->mapped_addr, ipc_handle->handle,
+                               cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
@@ -177,11 +180,11 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr)
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
 {
     int mpl_err = MPL_SUCCESS;
     cudaError_t ret;
-    ret = cudaIpcCloseMemHandle(ptr);
+    ret = cudaIpcCloseMemHandle(map_ptr->mapped_addr);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
@@ -327,7 +330,6 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.debug_summary = debug_summary;
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE;
-    MPL_gpu_info.specialized_cache = false;
 
     char *visible_devices;
     visible_devices = getenv("CUDA_VISIBLE_DEVICES");
