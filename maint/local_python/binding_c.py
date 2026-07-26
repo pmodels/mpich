@@ -2589,10 +2589,16 @@ def dump_validation(func, t):
         elif kind == "USERBUFFER-reduce":
             G.err_codes['MPI_ERR_OP'] = 1
             dump_validate_userbuffer_reduce(func, p[0], p[1], p[2], p[3], p[4])
-        elif kind == "USERBUFFER-neighbor":
-            dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
         elif kind.startswith("USERBUFFER-neighbor"):
-            dump_validate_userbuffer_neighbor_vw(func, kind, p[0], p[1], p[3], p[2])
+            SEND = "SEND"
+            if RE.search(r'recv', p[0]):
+                SEND = "RECV"
+            # note: for simplicity, we ignore the count argument and always check against MPI_IN_PLACE
+            G.out.append("MPIR_ERRTEST_%sBUF_INPLACE(%s, %s, mpi_errno);" % (SEND, p[0], 1))
+            if kind == "USERBUFFER-neighbor":
+                dump_validate_userbuffer_simple(func, p[0], p[1], p[2])
+            else:
+                dump_validate_userbuffer_neighbor_vw(func, kind, p[0], p[1], p[3], p[2])
         elif RE.search(r'-[vw]$', kind):
             dump_validate_userbuffer_coll(func, kind, p[0], p[1], p[3], p[2])
         else:
