@@ -440,6 +440,7 @@ PMI_API_PUBLIC int PMI_Abort(int exit_code, const char error_msg[])
 
     pmi_errno = PMIU_cmd_send(PMI_fd, &pmicmd);
 
+    PMIU_Exit(exit_code);
     return pmi_errno;
 }
 
