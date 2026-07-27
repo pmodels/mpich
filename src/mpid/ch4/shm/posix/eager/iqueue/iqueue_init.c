@@ -31,6 +31,35 @@ cvars:
       description : >-
         Size of each cell.
 
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_NUM_CELLS
+      category    : CH4
+      type        : int
+      default     : 64
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The number of cells in each ring buffer.
+
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_CELL_SIZE
+      category    : CH4
+      type        : int
+      default     : 320
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of each cell of ring buffer.
+
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Control if ring buffers are enabled.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -45,6 +74,7 @@ static int init_transport(void *slab, int vci_src, int vci_dst)
 
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
     transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
+    transport->qp = NULL;
 
     if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE) {
         int queue_types[2] = {
@@ -75,6 +105,35 @@ static int init_transport(void *slab, int vci_src, int vci_dst)
                                             MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+        int buf_idx_base = MPIR_Process.local_rank;
+        int rb_size = MPIDI_POSIX_eager_iqueue_rb_size(MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_CELL_SIZE,
+                                                       MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_NUM_CELLS);
+        char *qp_base = (char *) slab + MPIDI_POSIX_eager_iqueue_global.qp_offset;
+
+        transport->qp = MPL_malloc(sizeof(MPIDI_POSIX_eager_iqueue_qp_t *)
+                                   * MPIR_Process.local_size, MPL_MEM_SHM);
+        MPIR_Assert(transport->qp);
+
+        for (int peer_rank = 0; peer_rank < MPIR_Process.local_size; peer_rank++) {
+            if (peer_rank == MPIR_Process.local_rank) {
+                transport->qp[peer_rank] = NULL;
+                continue;
+            }
+            int send_idx = MPIR_Process.local_rank * MPIR_Process.local_size + peer_rank;
+            int recv_idx = peer_rank * MPIR_Process.local_size + MPIR_Process.local_rank;
+            char *send_slab = qp_base + send_idx * rb_size;
+            char *recv_slab = qp_base + recv_idx * rb_size;
+            MPIDI_POSIX_eager_iqueue_qp_t *qp =
+                MPIDI_POSIX_eager_iqueue_qp_init(send_slab, recv_slab,
+                                                 MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_CELL_SIZE,
+                                                 MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_NUM_CELLS,
+                                                 peer_rank);
+            qp->cell_pool = transport->cell_pool;
+            transport->qp[peer_rank] = qp;
+        }
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -93,9 +152,21 @@ int MPIDI_POSIX_iqueue_shm_size(int local_size)
             MPIDU_genq_shmem_pool_size(cell_size, num_cells, local_size, num_free_queue);
         int terminal_size = local_size * sizeof(MPIDU_genq_shmem_queue_u);
 
-        int slab_size = pool_size + terminal_size;
+        int slab_size = MPL_ROUND_UP_ALIGN(pool_size + terminal_size, sysconf(_SC_PAGESIZE));
 
         MPIDI_POSIX_eager_iqueue_global.terminal_offset = pool_size;
+
+        if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+            int qp_cell_size = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_CELL_SIZE;
+            int qp_num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_NUM_CELLS;
+
+            int total_qp_size = MPIDI_POSIX_eager_iqueue_qp_size(qp_cell_size, qp_num_cells)
+                * local_size * local_size;
+
+            MPIDI_POSIX_eager_iqueue_global.qp_offset = slab_size;
+            slab_size += total_qp_size;
+        }
+
         MPIDI_POSIX_eager_iqueue_global.slab_size = slab_size;
     }
 
@@ -184,6 +255,13 @@ int MPIDI_POSIX_iqueue_finalize(void)
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_POSIX_eager_iqueue_global.root_slab = NULL;
+
+        if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+            for (int i = 0; i < MPIR_Process.local_size; i++) {
+                MPIDI_POSIX_eager_iqueue_qp_free(&transport->qp[i]);
+            }
+            MPL_free(transport->qp);
+        }
     }
 
     if (MPIDI_POSIX_eager_iqueue_global.all_vci_slab) {
@@ -198,6 +276,13 @@ int MPIDI_POSIX_iqueue_finalize(void)
 
                 mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
                 MPIR_ERR_CHECK(mpi_errno);
+
+                if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+                    for (int i = 0; i < MPIR_Process.local_size; i++) {
+                        MPIDI_POSIX_eager_iqueue_qp_free(&transport->qp[i]);
+                    }
+                    MPL_free(transport->qp);
+                }
             }
         }
 
