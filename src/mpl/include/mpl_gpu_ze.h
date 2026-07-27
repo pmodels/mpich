@@ -13,12 +13,13 @@ typedef struct {
     ze_device_handle_t device;
 } ze_alloc_attr_t;
 
+typedef uint64_t MPL_gpu_buffer_id_t;
 typedef struct {
     int fds[2];
     uint32_t nfds;
     pid_t pid;
     int dev_id;
-    uint64_t mem_id;
+    MPL_gpu_buffer_id_t mem_id;
 } fd_pid_t;
 
 typedef struct _MPL_gpu_ipc_mem_handle_t {
@@ -59,7 +60,6 @@ typedef volatile int MPL_gpu_event_t;
 /* ZE specific function */
 int MPL_ze_init_device_fds(int *num_fds, int *device_fds, int *bdfs);
 void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs);
-void MPL_ze_ipc_remove_cache_handle(void *dptr);
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * ipc_handle);
 int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int is_shared_handle, int dev_id,

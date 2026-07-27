@@ -200,6 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *data, MPI_Aint da
         MPIDI_OFI_register_memory_and_bind((void *) data, data_sz, &attr, ctx_idx, &mr);
         if (mr != NULL) {
             desc = fi_mr_desc(mr);
+            MPIDI_OFI_REQUEST(sreq, mr) = mr;
         }
     }
 
@@ -238,6 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     MPIR_FUNC_ENTER;
 
     MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
+    MPIDI_OFI_REQUEST(*request, mr) = NULL;
     MPIDI_OFI_REQUEST(*request, am_req) = NULL;
 
     MPIR_Request *sreq = *request;
@@ -419,6 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         /* new pipeline send */
         MPIR_Request *sreq;
         MPIDI_OFI_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND, vci_src);
+        MPIDI_OFI_REQUEST(sreq, mr) = NULL;
         *request = sreq;
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
@@ -456,6 +459,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     } else {
         /* normal path */
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
+        MPIDI_OFI_REQUEST(*request, mr) = NULL;
         MPIDI_OFI_REQUEST(*request, am_req) = NULL;
         MPIR_Request *sreq = *request;
 

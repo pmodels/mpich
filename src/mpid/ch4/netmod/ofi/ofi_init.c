@@ -650,41 +650,22 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_vci_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_OFI_global.num_vcis = 1;
+
     /* A way to tell which av is empty */
     MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
 
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */
     /* -------------------------------- */
-
-    /* WB TODO - I assume that after this function is done, there will be an array of providers in
-     * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
-     * generate the addresses in the business card exchange. */
     struct fi_info *prov = NULL;
     mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* init multi-nic and populates MPIDI_OFI_global.prov_use[] */
-    mpi_errno = MPIDI_OFI_init_multi_nic(prov);
+    mpi_errno = MPIDI_OFI_fill_prov_use(prov);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
-        int num_ctx_per_nic = 1;
-#else
-        /* the actual needed number of vcis is not known yet. Use the CVAR. */
-        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
-#endif
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-            /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
-            MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
-            MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
-        }
-    }
+    MPIDI_OFI_find_provider_cleanup();
 
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
     MPIR_ERR_CHECK(mpi_errno);
@@ -693,56 +674,111 @@ int MPIDI_OFI_init_local(int *tag_bits)
         dump_global_settings();
     }
 
-    if (MPIR_CVAR_DEBUG_SUMMARY >= 2) {
-        if (MPIR_Process.rank == 0) {
-            fprintf(stdout, "====== Rank to NIC assignment ========\n");
-        }
-        /* prevent messages from different ranks get interleaved. */
-        fflush(stdout);
-        MPIR_pmi_barrier();
-        fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
-                MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
-        fflush(stdout);
-        MPIR_pmi_barrier();
-    }
-
-    /* Finally open the fabric */
-    MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
-                             &MPIDI_OFI_global.fabric, NULL), fabric);
-
-    /* ------------------------------------------------------------------------ */
-    /* Create transport level communication contexts.                           */
-    /* ------------------------------------------------------------------------ */
-
-    /* Creating the context for vci 0 and nic 0.
-     * This code maybe moved to a later stage */
-    mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    char *addrname[FI_NAME_MAX];
-    size_t addrnamelen = FI_NAME_MAX;
-    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen), getname);
-
-    MPIR_Lpid lpid = MPIR_Process.rank;
-    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname, 1,
-                                &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
-    MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
-    MPIDI_OFI_global.lpid0 = lpid;
-    MPIDI_OFI_global.addrnamelen = addrnamelen;
-
-    /* index datatypes for RMA atomics. */
-    MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
-
-    /* make sure ch4 pack buffer pool has sufficient cell size */
-    MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
-
-    MPIDI_OFI_global.num_vcis = 1;
-    MPIDI_OFI_init_per_vci(0);
-
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
-    MPIDI_OFI_find_provider_cleanup();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static bool fabric_initialized = false;
+
+/* we delay init fabric until the first comm creation (in MPIDI_OFI_mpi_comm_commit_pre_hook) */
+int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    bool is_comm_world = (comm == MPIR_Process.comm_world);
+
+    /* collectively order nics if we are in the world model */
+    bool all_need_init = false;
+    if (is_comm_world) {
+        /* NOTE: we can't skip the collective based on `fabric_initialized` */
+        /* TODO: run collective and decide all_need_init (as well as num_nics, close_nic_map) */
+    }
+
+    if (!fabric_initialized) {
+        if (all_need_init) {
+            /* order nics based on allgathered global info */
+            mpi_errno = MPIDI_OFI_order_multi_nic_global();
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* order nics based on local rank */
+            mpi_errno = MPIDI_OFI_order_multi_nic_local();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+    if (!fabric_initialized) {
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+            /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
+            int num_ctx_per_nic = 1;
+#else
+            /* the actual needed number of vcis is not known yet. Use the CVAR. */
+            int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
+#endif
+            int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
+                                      MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
+            num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+            for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+                /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
+                MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
+                MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+            }
+        }
+
+        if (MPIR_CVAR_DEBUG_SUMMARY >= 2 && is_comm_world) {
+            if (MPIR_Process.rank == 0) {
+                fprintf(stdout, "====== Rank to NIC assignment ========\n");
+            }
+            /* prevent messages from different ranks get interleaved. */
+            fflush(stdout);
+            MPIR_pmi_barrier();
+            fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
+                    MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
+            fflush(stdout);
+            MPIR_pmi_barrier();
+        }
+
+        /* Finally open the fabric */
+        MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
+                                 &MPIDI_OFI_global.fabric, NULL), fabric);
+
+        /* ------------------------------------------------------------------------ */
+        /* Create transport level communication contexts.                           */
+        /* ------------------------------------------------------------------------ */
+
+        /* Creating the context for vci 0 and nic 0.
+         * This code maybe moved to a later stage */
+        mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        char *addrname[FI_NAME_MAX];
+        size_t addrnamelen = FI_NAME_MAX;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen),
+                       getname);
+
+        MPIR_Lpid lpid = MPIR_Process.rank;
+        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname, 1,
+                                    &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
+        MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+        MPIDI_OFI_global.lpid0 = lpid;
+        MPIDI_OFI_global.addrnamelen = addrnamelen;
+
+        /* index datatypes for RMA atomics. */
+        MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
+
+        /* make sure ch4 pack buffer pool has sufficient cell size */
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
+
+        MPIDI_OFI_init_per_vci(0);
+    }
+
+    fabric_initialized = true;
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -848,106 +884,97 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIR_FUNC_ENTER;
 
-    /* Progress until we drain all inflight RMA send long buffers */
-    /* NOTE: am currently only use vci 0. Need update once that changes */
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        while (MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs > 0) {
-            MPIDI_OFI_PROGRESS(vci);
-        }
-    }
-
-    /* Destroy RMA key allocator */
-    MPIDI_OFI_mr_key_allocator_destroy();
-
-    if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send. */
-        mpi_errno = flush_send_queue();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
-        /* skip collective work arounds */
-    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
-               || strcmp("psm2", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
-               || strcmp("psm3", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* verbs;ofi_rxm provider need barrier to prevent message loss */
-        mpi_errno = MPIR_pmi_barrier();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    /* Progress until we drain all inflight injection emulation requests */
-    /* NOTE: am currently only use vci 0. Need update once that changes */
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        while (MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus > 0) {
-            MPIDI_OFI_PROGRESS(vci);
-        }
-        MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
-    }
-
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
-        MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
-        DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
-            if (queue_mr->mr) {
-                struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
-                if (mr != NULL) {
-                    MPIDI_OFI_CALL(fi_close(&mr->fid), mr_unreg);
-                }
-
-                DL_DELETE(MPIDI_OFI_global.gdr_mrs, queue_mr);
-                MPL_free(queue_mr);
+    if (fabric_initialized) {
+        /* Progress until we drain all inflight RMA send long buffers */
+        /* NOTE: am currently only use vci 0. Need update once that changes */
+        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+            while (MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs > 0) {
+                MPIDI_OFI_PROGRESS(vci);
             }
         }
-    }
 
-    /* Tearing down endpoints in reverse order they were created */
-    for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
-        for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
-            /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
-             * We intentionally ignore errors to avoid crashing in finalize. Debug builds
-             * will warn about unfreed objects/memory. */
-            (void) destroy_vci_context(vci, nic);
+        const char *prov_name = MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name;
+        if (strcmp("sockets", prov_name) == 0) {
+            /* sockets provider need flush any last lightweight send. */
+            mpi_errno = flush_send_queue();
+            MPIR_ERR_CHECK(mpi_errno);
+        } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+            /* skip collective work arounds */
+        } else if (strcmp("verbs;ofi_rxm", prov_name) == 0 ||
+                   strcmp("psm2", prov_name) == 0 || strcmp("psm3", prov_name) == 0) {
+            /* verbs;ofi_rxm provider need barrier to prevent message loss */
+            mpi_errno = MPIR_pmi_barrier();
+            MPIR_ERR_CHECK(mpi_errno);
         }
-    }
 
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
+        /* Progress until we drain all inflight injection emulation requests */
+        /* NOTE: am currently only use vci 0. Need update once that changes */
+        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+            while (MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus > 0) {
+                MPIDI_OFI_PROGRESS(vci);
+            }
+            MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
+        }
+
+        mpi_errno = MPIDI_OFI_mr_cache_finalize();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Tearing down endpoints in reverse order they were created */
+        for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
+            for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
+                /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
+                 * We intentionally ignore errors to avoid crashing in finalize. Debug builds
+                 * will warn about unfreed objects/memory. */
+                (void) destroy_vci_context(vci, nic);
+            }
+        }
+
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
+
+        /* free av entries for multiple vcis and nics */
+        for (i = 0; i < MPIR_Process.size; i++) {
+            MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
+            MPL_free(MPIDI_OFI_AV(av).all_dest);
+            MPIDI_OFI_AV(av).all_dest = NULL;
+        }
+
+        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
+        }
+
+        if (MPIDI_OFI_ENABLE_AM) {
+            for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
+                while (MPIDI_OFI_global.per_vci[vci].am_unordered_msgs) {
+                    MPIDI_OFI_am_unordered_msg_t *uo_msg =
+                        MPIDI_OFI_global.per_vci[vci].am_unordered_msgs;
+                    DL_DELETE(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
+                }
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker);
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker);
+
+                MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].req_map);
+
+                MPIDI_OFI_unregister_am_bufs();
+                MPL_free(MPIDI_OFI_global.per_vci[vci].am_bufs);
+
+                MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool);
+
+                MPIR_Assert(MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head ==
+                            MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail);
+                MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
+            }
+        }
+
+        fabric_initialized = false;
+    }
 
     for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
         fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
     }
 
-    /* free av entries for multiple vcis and nics */
-    for (i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
-        MPL_free(MPIDI_OFI_AV(av).all_dest);
-        MPIDI_OFI_AV(av).all_dest = NULL;
-    }
-
+    /* Destroy resources initialized in init_local */
+    MPIDI_OFI_mr_key_allocator_destroy();
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
-
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].pipeline_pool);
-    }
-
-    if (MPIDI_OFI_ENABLE_AM) {
-        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-            while (MPIDI_OFI_global.per_vci[vci].am_unordered_msgs) {
-                MPIDI_OFI_am_unordered_msg_t *uo_msg =
-                    MPIDI_OFI_global.per_vci[vci].am_unordered_msgs;
-                DL_DELETE(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
-            }
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker);
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker);
-
-            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].req_map);
-
-            MPIDI_OFI_unregister_am_bufs();
-            MPL_free(MPIDI_OFI_global.per_vci[vci].am_bufs);
-
-            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool);
-
-            MPIR_Assert(MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head ==
-                        MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail);
-            MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
-        }
-    }
 
     int err;
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);

@@ -314,6 +314,7 @@ typedef struct {
             struct iovec *iovs;
         } nopack;
     } noncontig;
+    struct fid_mr *mr;
     union {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
@@ -359,6 +360,12 @@ typedef struct {
     uintptr_t base;
 } MPIDI_OFI_win_targetinfo_t;
 
+/* Queue for storing pending memory registration handles, to be cleared at epoch synch */
+typedef struct MPIDI_OFI_mr_queue_t {
+    void *mr;
+    struct MPIDI_OFI_mr_queue_t *next;
+} MPIDI_OFI_mr_queue_t;
+
 typedef struct {
     struct fid_mr *mr;
     uint64_t mr_key;
@@ -382,6 +389,10 @@ typedef struct {
     struct MPIDI_OFI_win_request *syncQ;
     struct MPIDI_OFI_win_request *deferredQ;
     MPIDI_OFI_win_targetinfo_t *winfo;
+    struct {
+        MPIDI_OFI_mr_queue_t *head;
+        MPIDI_OFI_mr_queue_t *tail;
+    } pending_mr_queue;
 
     MPL_gavl_tree_t *dwin_target_mrs;   /* MR key and address pairs registered to remote processes.
                                          * One AVL tree per process. */
@@ -398,7 +409,7 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 /* Maximum number of network interfaces CH4 can support. */
-#define MPIDI_OFI_MAX_NICS 8
+#define MPIDI_OFI_MAX_NICS 128
 
 /* Imagine a dimension of [local_vci][local_nic][rank][vci][nic] -
  * all local endpoints will share the same remote address due to the same insertion order
