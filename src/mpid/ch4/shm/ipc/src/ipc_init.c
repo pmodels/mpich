@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
+#include "ipc_p2p.h"
 
 int MPIDI_IPC_init_local(void)
 {
@@ -19,6 +20,8 @@ int MPIDI_IPC_init_local(void)
     MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC_IPC, &MPIDI_IPC_do_cts);
     MPIDIG_am_reg_cb(MPIDI_IPC_ACK, NULL, &MPIDI_IPC_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDI_IPC_WRITE, NULL, &MPIDI_IPC_write_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDI_IPC_MAPADDR, NULL, &MPIDI_IPC_mapaddr_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDI_IPC_UNMAP, NULL, &MPIDI_IPC_unmap_target_msg_cb);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     mpi_errno = MPIDI_XPMEM_init_local();

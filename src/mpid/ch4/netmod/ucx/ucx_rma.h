@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
                                               MPI_Aint target_disp,
                                               MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
+                                              MPIDI_winattr_t winattr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int target_contig, origin_contig;
@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
         mpi_errno =
             MPIDI_UCX_contig_put(MPIR_get_contig_ptr(origin_addr, origin_true_lb), origin_bytes,
                                  target_rank, target_disp, target_true_lb, win, addr,
-                                 reqptr, vci, vci_target);
+                                 sigreq, vci, vci_target);
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     } else if (target_contig) {
         int vci = MPIDI_WIN(win, am_vci);
@@ -233,11 +233,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
         MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         mpi_errno = MPIDI_UCX_noncontig_put(origin_addr, origin_count, origin_datatype, target_rank,
                                             target_bytes, target_disp, target_true_lb, win, addr,
-                                            reqptr, vci, vci_target);
+                                            sigreq, vci, vci_target);
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     } else {
-        mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win);
+        if (sigreq) {
+            mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype,
+                                        target_rank, target_disp, target_count, target_datatype,
+                                        win, sigreq);
+        } else {
+            mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_disp, target_count, target_datatype, win);
+        }
     }
 
   fn_exit:
@@ -254,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
                                               MPI_Aint target_disp,
                                               MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
+                                              MPIDI_winattr_t winattr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int origin_contig, target_contig;
@@ -288,12 +294,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
         MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         mpi_errno =
             MPIDI_UCX_contig_get(MPIR_get_contig_ptr(origin_addr, origin_true_lb), origin_bytes,
-                                 target_rank, target_disp, target_true_lb, win, addr, reqptr, vci,
+                                 target_rank, target_disp, target_true_lb, win, addr, sigreq, vci,
                                  vci_target);
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     } else {
-        mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                   target_disp, target_count, target_datatype, win);
+        if (sigreq) {
+            mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype,
+                                        target_rank, target_disp, target_count, target_datatype,
+                                        win, sigreq);
+        } else {
+            mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_disp, target_count, target_datatype, win);
+        }
     }
 
   fn_exit:

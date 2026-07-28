@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_single.mtest
 
-EXTRA_DIST = testlist.in
 
 AM_DEFAULT_SOURCE_EXT = .c
 

@@ -6,8 +6,7 @@
 #ifndef SHM_PART_H_INCLUDED
 #define SHM_PART_H_INCLUDED
 
-#include <shm.h>
-#include "../posix/shm_inline.h"
+#include "../posix/posix_part.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_part_start(MPIR_Request * request)
 {

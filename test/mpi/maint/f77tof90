@@ -265,7 +265,6 @@ sub ConvertMakefile {
     my ($indir, $outdir, $filename) = @_;
     %excludePrograms = ();
     my $saw_maintainercleanfiles = 0;
-    my $saw_extra_dist = 0;
 
     open( INF, "<$indir/$filename" ) || die "Cannot open $indir/$filename\n";
     open( OUTF, ">$outdir/$filename.new" ) || die "Cannot open $outdir/$filename.new\n";
@@ -275,10 +274,6 @@ sub ConvertMakefile {
         if (not m/^\s*#/ and m/MAINTAINERCLEANFILES/) {
             $saw_maintainercleanfiles = 1;
         }
-        if (not m/^\s*#/ and m/EXTRA_DIST/) {
-            $saw_extra_dist = 1;
-        }
-
         # First, check for sources that are not present.  These
 	# may be derived files (see f77/io for an example).  For now,
 	# we'll skip these unless they are explicitly expected to not be present
@@ -376,10 +371,6 @@ sub ConvertMakefile {
     if ($saw_maintainercleanfiles) {
         $mcf_plus = '+';
     }
-    my $ed_plus = '';
-    if ($saw_extra_dist) {
-        $ed_plus = '+';
-    }
 
     my $testlist_ap = '';
     if (-f "${outdir}/testlist.ap") {
@@ -406,7 +397,6 @@ if MAINTAINER_MODE
 \t( cd \$(top_srcdir) && ./maint/f77tof90 ${indir} ${outdir} Makefile.am Makefile.ap )
 
 MAINTAINERCLEANFILES ${mcf_plus}= Makefile.am-stamp
-EXTRA_DIST ${ed_plus}= Makefile.am-stamp ${testlist_ap} ${makefile_ap}
 
 endif MAINTAINER_MODE
 

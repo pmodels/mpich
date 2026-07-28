@@ -6,9 +6,8 @@
 #ifndef SHM_AM_H_INCLUDED
 #define SHM_AM_H_INCLUDED
 
-#include <shm.h>
-#include "../posix/shm_inline.h"
-#include "../ipc/src/shm_inline.h"
+#include "../posix/posix_am.h"
+#include "../posix/posix_request.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
                                                    int handler_id,

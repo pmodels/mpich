@@ -34,7 +34,7 @@ while (<In>) {
 close In;
 
 # large count routines
-my $poly_aliases_lst = "$srcdir/src/binding/c/mansrc/poly_aliases.lst";
+my $poly_aliases_lst = "$srcdir/doc/mansrc/binding/poly_aliases.lst";
 open In, $poly_aliases_lst or die "Failed to open $poly_aliases_lst\n";
 while (<In>) {
     # e.g. MPI_Recv - MPI_Recv_c

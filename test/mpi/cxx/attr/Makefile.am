@@ -5,8 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist.in
-
 noinst_PROGRAMS = attrtx attricx baseattrcommx fkeyvalcommx fkeyvaltypex
 ## the following entries were disabled in the simplemake version:
 ##noinst_PROGRAMS += attrerrx attrerrcommx attrerrtypex attrorderx attrordercommx \

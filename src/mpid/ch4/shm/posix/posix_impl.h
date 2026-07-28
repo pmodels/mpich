@@ -12,7 +12,16 @@
 #include "posix_types.h"
 #include "posix_eager.h"
 #include "posix_eager_impl.h"
-#include "posix_progress.h"
+
+/* Active message only need local vci since all messages go to the same per-vci queue */
+#define MPIDI_POSIX_RECV_VSI(vci_) \
+    do { \
+        int vci_src_tmp; \
+        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vci_src_tmp, vci_); \
+        if (vci_src_tmp == 0 && vci_ == 0) { \
+            vci_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+        } \
+    } while (0)
 
 #define MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci) \
     do { \

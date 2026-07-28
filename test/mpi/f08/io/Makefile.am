@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_f08.mtest
 
-EXTRA_DIST = testlist.in
 
 # avoid having to write many "foo_SOURCES = foo.f90" lines
 AM_DEFAULT_SOURCE_EXT = .f90
@@ -81,8 +80,6 @@ generated_io_sources = \
     writeordbef90.f90      \
     writeordf90.f90        \
     writeshf90.f90
-
-EXTRA_DIST += ioharness.defn ioharness.tlt
 
 # a parallel-safe scheme to generate the tests, see the automake-1.11.1 manual,
 # section 27.9 "Handling Tools That Produce Multiple Outputs" for an explanation

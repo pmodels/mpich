@@ -265,7 +265,7 @@ sync_external () {
 # ./autogen.sh -do=hydra if *only* build hydra
 fn_hydra() {
     echo "####################################"
-    echo "## Prepareing src/pm/hydra        ##"
+    echo "## Preparing src/pm/hydra         ##"
     echo "####################################"
     cp -pPR maint/version.m4 src/pm/hydra/version.m4
 
@@ -286,7 +286,7 @@ fn_hydra() {
 # ./autogen.sh -do=pmi if *only* build libpmi
 fn_pmi() {
     echo "####################################"
-    echo "## Prepareing src/pmi             ##"
+    echo "## Preparing src/pmi              ##"
     echo "####################################"
     cp -pPR maint/version.m4 src/pmi/version.m4
 
@@ -300,7 +300,7 @@ fn_pmi() {
 # ./autogen.sh -do=test if *only* build testsuite
 fn_test() {
     echo "####################################"
-    echo "## Prepareing test/mpi            ##"
+    echo "## Preparing test/mpi             ##"
     echo "####################################"
     cp -pPR maint/version.m4 test/mpi/version.m4
 
@@ -400,33 +400,12 @@ fn_getcvars() {
 
 fn_maint_version() {
     set_autotools
-    # build a substitute maint/Version script now that we store the single copy of
-    # this information in an m4 file for autoconf's benefit
-    echo_n "Generating a helper maint/Version... "
-    if $autom4te -l M4sugar maint/Version.base.m4 > maint/Version ; then
+    echo_n "Generating top-level Version... "
+    if $autom4te -l M4sugar maint/Version.base.m4 > Version ; then
         echo "done"
     else
         echo "error"
-        error "unable to correctly generate maint/Version shell helper"
-    fi
-}
-
-fn_update_README() {
-    if test ! -f ./maint/Version ; then
-        fn_maint_version
-    fi
-
-    echo_n "Updating the README... "
-
-    # import MPICH_VERSION and LIBFABRIC_VERSION
-    . ./maint/Version
-
-    if [ -f README.vin ] ; then
-        sed -e "s/%VERSION%/${MPICH_VERSION}/g" -e "s/%LIBFABRIC_VERSION%/${LIBFABRIC_VERSION}/g" README.vin > README
-        echo "done"
-    else
-        echo "error"
-        error "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
+        error "unable to correctly generate Version."
     fi
 }
 
@@ -736,7 +715,7 @@ EOF
 
 fn_check_bash_find_patch_xargs() {
     echo_n "Checking for bash... "
-    if test "`which bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
+    if test "`command -v bash 2>&1 > /dev/null ; echo $?`" = "0" ;then
         echo "done"
     else
         echo "bash not found" ;
@@ -926,14 +905,9 @@ set_externals
 fn_copy_confdb_etc
 
 ########################################################################
-## Building maint/Version
+## Building Version
 ########################################################################
 fn_maint_version
-
-########################################################################
-## Building the README
-########################################################################
-fn_update_README
 
 set -e
 

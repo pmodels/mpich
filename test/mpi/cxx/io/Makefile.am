@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist
 
 # avoid having to write many "foo_SOURCES = foo.cxx" lines
 AM_DEFAULT_SOURCE_EXT = .cxx
@@ -95,8 +94,6 @@ generated_io_sources =   \
     writeordbenosx.cxx   \
     writeshnosx.cxx      \
     writeatallbenosx.cxx
-
-EXTRA_DIST += ioharness.defn ioharness.tlt
 
 # clean up after the test programs
 clean-local:

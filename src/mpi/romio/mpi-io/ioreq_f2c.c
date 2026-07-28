@@ -7,7 +7,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPIO_Request_f2c = PMPIO_Request_f2c
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPIO_Request_f2c MPIO_Request_f2c

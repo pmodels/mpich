@@ -94,6 +94,8 @@ def dump_mpi_c(func, is_large=False):
         skip_wrappers = True
     elif 'replace' in func and 'body' not in func:
         pass
+    elif "impl" in func and func["impl"] == "skip":
+        pass
     else:
         dump_function_internal(func, kind="normal")
     G.out.append("")
@@ -127,10 +129,10 @@ def get_mansrc_file_path(func, root_dir):
     file_path = None
     dir_path = root_dir
     if 'file' in func:
-        file_path = dir_path + '/' + func['file'] + ".txt"
+        file_path = dir_path + '/' + func['file'] + ".adoc"
     elif RE.match(r'(MPI(X|_T)?_\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
-        file_path = dir_path + '/' + name.lower() + ".txt"
+        file_path = dir_path + '/' + name + ".adoc"
     else:
         raise Exception("Error in function name pattern: %s\n" % func['name'])
 
@@ -182,10 +184,10 @@ def dump_Makefile_mk(f):
             else:
                 print("    %s" % f, file=Out)
 
-        n = len(G.doc3_src_txt)
+        n = len(G.doc3_src)
         if n > 0:
-            print("doc3_src_txt += \\", file=Out)
-            for i, f in enumerate(G.doc3_src_txt):
+            print("doc3_src+= \\", file=Out)
+            for i, f in enumerate(G.doc3_src):
                 if i < n - 1:
                     print("    %s \\" % f, file=Out)
                 else:
@@ -505,6 +507,8 @@ def check_func_directives(func):
         if RE.search(r'(NotThreadSafe)', func['docnotes']):
             func['_skip_global_cs'] = 1
 
+    if func['name'].startswith("MPIX_"):
+        func['_docnotes'].append('MPIX')
     if not '_skip_ThreadSafe' in func:
         func['_docnotes'].append('ThreadSafe')
     if not '_skip_Fortran' in func:
@@ -925,7 +929,10 @@ def dump_qmpi_wrappers(func, is_large):
     func_decl = get_declare_function(func, is_large)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
-    static_call = get_static_call_internal(func, is_large)
+    if "impl" in func and func["impl"] == "skip":
+        static_call = "MPI_SUCCESS"
+    else:
+        static_call = get_static_call_internal(func, is_large)
 
     G.out.append("#ifdef ENABLE_QMPI")
     G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
@@ -934,6 +941,7 @@ def dump_qmpi_wrappers(func, is_large):
     if func_name == "MPI_Pcontrol":
         G.out.append("    va_list varargs;")
         G.out.append("    va_start(varargs, level);")
+        G.out.append("    va_end(varargs);")
         G.out.append("")
     G.out.append("    return " + static_call + ";")
     G.out.append("}")
@@ -962,7 +970,13 @@ def dump_qmpi_wrappers(func, is_large):
     G.out.append("")
     dump_line_with_break("    fn_ptr = (Q%s_t *) MPIR_QMPI_first_fn_ptrs[%s_T];" % (func_name, func_name.upper()))
     G.out.append("")
-    dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
+
+    if func_name == "MPI_Pcontrol":
+        dump_line_with_break("    int ret = (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
+        G.out.append("    va_end(varargs);")
+        G.out.append("    return ret;")
+    else:
+        dump_line_with_break("    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[%s_T]%s);" % (func_name.upper(), parameters));
     G.out.append("}")
     G.out.append("#else /* ENABLE_QMPI */")
 
@@ -971,6 +985,7 @@ def dump_qmpi_wrappers(func, is_large):
     if func_name == "MPI_Pcontrol":
         G.out.append("    va_list varargs;")
         G.out.append("    va_start(varargs, level);")
+        G.out.append("    va_end(varargs);")
         G.out.append("")
     G.out.append("    return " + static_call + ";")
     G.out.append("}")
@@ -1074,7 +1089,11 @@ def dump_abi_wrappers(func, is_large):
                         pre_filters.append("} else if (recvtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                 pre_filters.append("if (%s > 0) {" % array_size)
-                pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                if array_size == "max_datatypes":
+                    # zero the output array so we know whether it is filled at output
+                    pre_filters.append("    %s = MPL_calloc(sizeof(MPI_%s), %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                else:
+                    pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
                 pre_filters.append("}")
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                     pre_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
@@ -1092,6 +1111,12 @@ def dump_abi_wrappers(func, is_large):
                         post_filters.append("for (int i = 0; i < *outcount; i++) {")
                         post_filters.append("    int idx = array_of_indices[i];")
                         post_filters.append("    %s_abi[idx] = ABI_%s_from_mpi(%s[idx]);" % (name, array_type, name))
+                        post_filters.append("}")
+                    elif array_size == "max_datatypes":
+                        post_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
+                        post_filters.append("    if (%s[i]) {" % name)
+                        post_filters.append("        %s_abi[i] = ABI_%s_from_mpi(%s[i]);" % (name, array_type, name))
+                        post_filters.append("    }")
                         post_filters.append("}")
                     else:
                         post_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
@@ -1185,7 +1210,10 @@ def dump_abi_wrappers(func, is_large):
         ret = mapping[func['return']]
         ret = re.sub(re_Handle, r'ABI_\1', ret)
 
-    static_call = get_static_call_internal(func, is_large)
+    if 'impl' in func and func['impl'] == "skip":
+        static_call = "MPI_SUCCESS"
+    else:
+        static_call = get_static_call_internal(func, is_large)
 
     s_param = ', '.join(param_list)
     func_decl = "%s %s(%s)" % (ret, func_name, s_param)
@@ -1226,6 +1254,7 @@ def dump_abi_wrappers(func, is_large):
         if func_name == "MPI_Pcontrol":
             G.out.append("va_list varargs;")
             G.out.append("va_start(varargs, level);")
+            G.out.append("va_end(varargs);")
             G.out.append("")
         G.out.append("int ret = " + static_call + ";")
         for l in post_filters:
@@ -1239,19 +1268,36 @@ def dump_abi_wrappers(func, is_large):
 
 def dump_profiling(func):
     func_name = get_function_name(func, func['_is_large'])
+    kind = None
+    if "_is_abi" in func:
+        kind = "abi"
+    decl = get_declare_function(func, func['_is_large'], kind)
+    args = get_function_args(func)
+
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
-    G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
+    # prefer weak symbols with alias
+    G.out.append("#if defined(HAVE_PRAGMA_WEAK_ALIAS)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_PRAGMA_HP_SEC_DEF)")
     G.out.append("#pragma _HP_SECONDARY_DEF P%s  %s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_PRAGMA_CRI_DUP)")
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
-    G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
-    kind = None
-    if "_is_abi" in func:
-        kind = "abi"
-    s = get_declare_function(func, func['_is_large'], kind)
-    dump_line_with_break(s, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
+    G.out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
+    dump_line_with_break(decl, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
+    # has weak symbols but not alias
+    G.out.append("#elif defined(HAVE_PRAGMA_WEAK) || defined(HAVE_ATTR_WEAK)")
+    G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
+    G.out.append("#pragma weak %s" % (func_name))
+    G.out.append("#elif defined(HAVE_ATTR_WEAK)")
+    dump_line_with_break(decl, " __attribute__ ((weak));")
+    G.out.append("#endif  /* weak without alias */")
+    # define MPI function that simply call PMPI
+    G.out.append("%s {" % (decl))
+    if func_name == "MPI_Pcontrol":
+        G.out.append("    return MPI_SUCCESS;")
+    else:
+        G.out.append("    return P%s(%s);" % (func_name, args))
+    G.out.append("}")
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
 
@@ -1285,27 +1331,37 @@ def dump_manpage(func, out):
         if l > 0:
             out.append('  ' + ' '.join(words[i0:]))
     # ----
+    Name = get_function_name(func, False)
+
     if not func['desc']:
         # place holder to make the man page render
         func['desc'] = "[short description]"
-    out.append("/*D")
-    out.append("   %s - %s" % (get_function_name(func, False), func['desc']))
+    out.append("= %s(3)" % Name)
+    out.append(":doctype: manpage")
+    out.append(":man manual: Library Function Manual")
+    out.append(":man source: MPICH") # TODO: add version
+    out.append("")
+    out.append("== Name")
+    out.append("%s - %s" % (Name, func['desc']))
     out.append("")
 
     # Synopsis
-    out.append("Synopsis:")
+    out.append("== Synopsis")
     func_decl = get_declare_function(func, False)
     tlist = split_line_with_break(func_decl, '', 80)
-    out.append(".vb")
+    out.append("[source,C]")
+    out.append("----")
     out.extend(tlist)
-    out.append(".ve")
+    out.append("----")
+    out.append("")
     if func['_has_poly']:
         func_decl = get_declare_function(func, True)
         tlist = split_line_with_break(func_decl, '', 80)
-        out.append(".vb")
+        out.append("[source,C]")
+        out.append("----")
         out.extend(tlist)
-        out.append(".ve")
-    out.append("")
+        out.append("----")
+        out.append("")
 
     lis_map = G.MAPS['LIS_KIND_MAP']
     for p in func['c_parameters']:
@@ -1330,33 +1386,37 @@ def dump_manpage(func, out):
     dump_manpage_list(inout_list, "Input/Output Parameters", out)
     dump_manpage_list(output_list, "Output Parameters", out)
 
+    if Name in G.semantics:
+        out.append("== Description")
+        out.append("include::../semantics.adoc[tag=%s]" % Name)
+        out.append("")
+
     # Add the custom notes (specified in e.g. pt2pt_api.txt) as is.
     if 'notes' in func:
-        for l in func['notes']:
-            out.append(l)
+        out.extend(func['notes'])
         out.append("")
 
     if 'replace' in func:
         if RE.match(r'\s*(deprecated|removed)', func['replace'], re.IGNORECASE):
-            out.append(".N %s" % RE.m.group(1).capitalize())
+            out.append("include::../docnotes.adoc[tag=%s]" % RE.m.group(1).capitalize())
         else:
             print("Missing reasons in %s .replace" % func['name'], file=sys.stderr)
 
         if RE.search(r'with\s+(\w+)', func['replace']):
-            out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
+            out.append("The replacement for this routine is '%s'." % RE.m.group(1))
         out.append("")
 
     # document info keys
     if G.hints and func['name'] in G.hints:
         print("Got info hints in %s" % func['name'])
-        out.append("Info hints:")
+        out.append("== Info hints")
         for a in G.hints[func['name']]:
-            out.append(". %s - %s, default = %s." % (a['name'], a['type'], a['default']))
+            out.append("_%s_:: %s, default = %s." % (a['name'], a['type'], a['default']))
             dump_description(a['description'])
         out.append("")
 
     for note in func['_docnotes']:
-        out.append(".N %s" % note)
+        out.append("include::../docnotes.adoc[tag=%s]" % note)
         if note == "Fortran":
             has = {}
             for p in func['c_parameters']:
@@ -1366,42 +1426,35 @@ def dump_manpage(func, out):
                     else:
                         has['FortranStatus'] = 1
             for k in has:
-                out.append(".N %s" % k)
-        out.append("")
+                out.append("include::../docnotes.adoc[tag=%s]" % k)
 
-    if 'notes2' in func:
-        for l in func['notes2']:
-            out.append(l)
+        # add custom notes from doc/mansrc/funcnotes.txt
+        if 'notes-' + note in func:
+            out.extend(func['notes-' + note])
+
         out.append("")
 
     if '_skip_err_codes' not in func:
-        out.append(".N Errors")
-        out.append(".N MPI_SUCCESS")
+        out.append("include::../docnotes.adoc[tag=Errors]")
+        out.append("include::../docnotes.adoc[tag=MPI_SUCCESS]")
         for err in sorted (G.err_codes.keys()):
-            out.append(".N %s" % (err))
-        out.append(".N MPI_ERR_OTHER")
+            out.append("include::../docnotes.adoc[tag=%s]" % (err))
+        out.append("include::../docnotes.adoc[tag=MPI_ERR_OTHER]")
         out.append("")
     if 'seealso' in func:
-        out.append(".seealso: %s" % func['seealso'])
-    out.append("D*/")
-    out.append("")
+        out.append("== See also")
+        outString = ""
+        adjList = re.compile(r'(MPI\w+)').findall(func['seealso'])
+        for adj in adjList: outString += "link:"+adj+".html[*"+adj+"*(3)] "
+        out.append(outString)
 
 def dump_manpage_list(list, header, out):
     count = len(list)
     if count == 0:
         return
-    out.append("%s:" % header)
-    if count == 1:
-        p = list[0]
-        out.append(". %s - %s" % (p['name'], p['desc']))
-    else:
-        for i, p in enumerate(list):
-            lead = "."
-            if i == 0:
-                lead = "+"
-            elif i == count - 1:
-                lead = "-"
-            out.append("%s %s - %s" % (lead, p['name'], p['desc']))
+    out.append("== %s" % header)
+    for i, p in enumerate(list):
+        out.append("_%s_:: %s" % (p['name'], p['desc']))
     out.append("")
 
 def get_function_internal_prototype(func_decl):

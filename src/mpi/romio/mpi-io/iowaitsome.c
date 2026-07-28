@@ -7,7 +7,7 @@
 
 #ifdef HAVE_WEAK_SYMBOLS
 
-#if defined(HAVE_PRAGMA_WEAK)
+#if defined(HAVE_PRAGMA_WEAK_ALIAS)
 #pragma weak MPIO_Waitsome = PMPIO_Waitsome
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
 #pragma _HP_SECONDARY_DEF PMPIO_Waitsome MPIO_Waitsome

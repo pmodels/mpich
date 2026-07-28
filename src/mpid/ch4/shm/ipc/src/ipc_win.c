@@ -6,8 +6,6 @@
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
 #include "ipc_types.h"
-#include "../xpmem/xpmem_post.h"
-#include "../gpu/gpu_post.h"
 
 typedef struct win_shared_info {
     uint32_t disp_unit;
@@ -48,8 +46,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         /* FIXME: the rank should be remote rank for tracking caching, not local rank
          *        Here we can skip the tracking, e.g. just use MPI_PROC_NULL
          */
-        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPIR_BYTE_INTERNAL,
-                                           MPI_PROC_NULL, shm_comm_ptr, &ipc_attr);
+        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPIR_BYTE_INTERNAL, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
         if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
             ipc_attr.ipc_type = MPIDI_IPCI_TYPE__NONE;
@@ -98,7 +95,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
-            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE), NULL);
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE));
             break;
 #endif
         default:

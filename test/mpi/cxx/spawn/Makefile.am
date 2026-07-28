@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist
 
 # avoid having to write many "foo_SOURCES = foo.cxx" lines
 AM_DEFAULT_SOURCE_EXT = .cxx

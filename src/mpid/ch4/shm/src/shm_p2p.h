@@ -6,9 +6,10 @@
 #ifndef SHM_P2P_H_INCLUDED
 #define SHM_P2P_H_INCLUDED
 
-#include <shm.h>
-#include "../ipc/src/shm_inline.h"
-#include "../posix/shm_inline.h"
+#include "../posix/posix_send.h"
+#include "../ipc/src/ipc_send.h"
+#include "../posix/posix_recv.h"
+#include "../posix/posix_probe.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,

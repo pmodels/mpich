@@ -2,8 +2,8 @@
  * Copyright (C) by Argonne National Laboratory
  *     See COPYRIGHT in top-level directory
  */
+#include "mpidimpl.h"
 #include "xpmem_seg.h"
-#include "xpmem_post.h"
 
 int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t handle, void **vaddr)
 {

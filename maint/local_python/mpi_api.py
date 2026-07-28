@@ -166,16 +166,6 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     stage = "FUNC-body"
                     if 'body' not in cur_func:
                         cur_func['body'] = []
-                elif RE.match(r'\/\*', line):
-                    # man page notes
-                    stage = "FUNC-notes"
-                    # 'notes' and 'notes2' goes before and after auto-generated notes
-                    if RE.match(r'\/\*\s*-+\s*notes-2\s*-+', line):
-                        cur_func['notes2'] = []
-                    elif 'notes' not in cur_func:
-                        cur_func['notes'] = []
-                    else:
-                        cur_func['notes2'] = []
             elif stage == "FUNC-body":
                 if RE.match(r'}', line):
                     stage = "FUNC"
@@ -188,15 +178,6 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                 else:
                     line = re.sub(r'^    ', '', line)
                     cur_func[stage].append(line)
-            elif stage == "FUNC-notes":
-                if RE.match(r'\*\/', line):
-                    stage = "FUNC"
-                else:
-                    line = re.sub(r'^    ', '', line)
-                    if 'notes2' in cur_func:
-                        cur_func['notes2'].append(line)
-                    else:
-                        cur_func['notes'].append(line)
 
 def parse_param_attributes(p):
     """Parse the parameter attribute string and populate common fields"""

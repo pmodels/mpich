@@ -159,7 +159,7 @@ if (!$has_doctext || !$has_latex) {
 }
 print("\n");
 
-## NOTE: Different autotools versions may result in accidental ABI chanages.
+## NOTE: Different autotools versions may result in accidental ABI changes.
 ## For flexibility, we no longer enforce the check for specific versions of
 ## autoconf and libtool. We do require a minimum version of automake so tarballs
 ## contain up-to-date config.guess files. Always double check using the ABI
@@ -247,7 +247,7 @@ print("done\n");
 # Remove unnecessary files
 print("===> Removing unnecessary files in the main codebase... ");
 chdir($expdir);
-run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt");
+run_cmd("rm -rf maint/config.log maint/config.status unusederr.txt");
 run_cmd("find . -name autom4te.cache -o -name __pycache__ | xargs rm -rf");
 print("done\n");
 

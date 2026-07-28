@@ -199,9 +199,12 @@ dnl
 dnl Output Effect:
 dnl Defines one of the following if a weak symbol pragma is found:
 dnl.vb
-dnl    HAVE_PRAGMA_WEAK - #pragma weak
+dnl    HAVE_PRAGMA_WEAK       - #pragma weak Foo
+dnl    HAVE_PRAGMA_WEAK_ALIAS - #pragma weak Foo = PFoo
+dnl    HAVE_ATTR_WEAK         - __attribute__ ((weak))
+dnl    HAVE_ATTR_WEAK_ALIAS   - __attribute__ ((weak, alias("PFoo")))
 dnl    HAVE_PRAGMA_HP_SEC_DEF - #pragma _HP_SECONDARY_DEF
-dnl    HAVE_PRAGMA_CRI_DUP  - #pragma _CRI duplicate x as y
+dnl    HAVE_PRAGMA_CRI_DUP    - #pragma _CRI duplicate x as y
 dnl.ve
 dnl May also define
 dnl.vb
@@ -215,128 +218,175 @@ dnl weak symbols, not weak aliases
 dnl 
 dnl D*/
 AC_DEFUN([PAC_PROG_C_WEAK_SYMBOLS],[
-pragma_extra_message=""
-AC_CACHE_CHECK([for type of weak symbol alias support], pac_cv_prog_c_weak_symbols,[
-# Test for weak symbol support...
-# We can't put # in the message because it causes autoconf to generate
-# incorrect code
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    extern int PFoo(int);
-    #pragma weak PFoo = Foo
-    int Foo(int a) { return a; }
-]],[[
-    return PFoo(1);
-]])],has_pragma_weak=yes)
-#
-# Some systems (Linux ia64 and ecc, for example), support weak symbols
-# only within a single object file!  This tests that case.
-# Note that there is an extern int PFoo declaration before the
-# pragma.  Some compilers require this in order to make the weak symbol
-# externally visible.  
-if test "$has_pragma_weak" = yes ; then
+    pragma_extra_message=""
+    AC_CACHE_CHECK([for type of weak symbol alias support], pac_cv_prog_c_weak_symbols,[
+    dnl -------------------------------------
     PAC_COMPLINK_IFELSE([
         AC_LANG_SOURCE([
-extern int PFoo(int);
-#pragma weak PFoo = Foo
-int Foo(int);
-int Foo(int a) { return a; }
-        ])
-    ],[
+int Weak_Fn_A(int); int Fn_A(int);
+int Weak_Fn_B(int); int Fn_B(int);
+#pragma weak Weak_Fn_A = Fn_A
+#pragma weak Weak_Fn_B = Fn_B
+int Fn_A(int a) { return a; }
+int Fn_B(int a) { return a; }
+        ])],[
         AC_LANG_SOURCE([
-extern int PFoo(int);
-int main(int argc, char **argv) {
-return PFoo(0);}
-        ])
-    ],[
+int Weak_Fn_A(int);
+int Weak_Fn_B(int);
+int Weak_Fn_B(int a) { return a+1;}
+int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
+        ])], [pac_cv_prog_c_weak_symbols="pragma weak alias"])
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+            int PFoo(int);
+            #pragma _HP_SECONDARY_DEF Foo  PFoo
+            int Foo(int a) { return a; }
+        ]],[[
+            return PFoo(1);
+        ]])],pac_cv_prog_c_weak_symbols="pragma _HP_SECONDARY_DEF")
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+            int PFoo(int);
+            #pragma _CRI duplicate PFoo as Foo
+            int Foo(int a) { return a; }
+        ]],[[
+            return PFoo(1);
+        ]])],pac_cv_prog_c_weak_symbols="pragma _CRI duplicate x as y")
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        PAC_COMPLINK_IFELSE(
+            [AC_LANG_SOURCE([[
+                int Foo(int a);
+                int PFoo(int) __attribute__ ((weak,alias("Foo")));
+                int Foo(int a) { return a; }
+            ]])],
+            [AC_LANG_PROGRAM([[
+                int PFoo(int);
+            ]],[[
+                return PFoo(1);
+            ]])],
+            pac_cv_prog_c_weak_symbols="attribute alias")
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        PAC_COMPLINK_IFELSE(
+            [AC_LANG_SOURCE([[
+                int Foo(int a);
+                int PFoo(int) __attribute__ ((weak,alias("Foo")));
+                int Foo(int a) { return a; }
+            ]])],
+            [AC_LANG_PROGRAM([[
+                int PFoo(int);
+            ]],[[
+                return PFoo(1);
+            ]])],
+            pac_cv_prog_c_weak_symbols="attr weak alias")
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
         PAC_COMPLINK_IFELSE([
             AC_LANG_SOURCE([
-extern int PFoo(int);
-#pragma weak PFoo = Foo
-int Foo(int);
-int Foo(int a) { return a; }
-            ])
-        ],[
+int Weak_Fn_A(int); int Fn_A(int);
+int Weak_Fn_B(int); int Fn_B(int);
+#pragma weak Weak_Fn_A
+#pragma weak Weak_Fn_B
+int Fn_A(int a) { return a; }
+int Fn_B(int a) { return a; }
+int Weak_Fn_A(int a) { return a; }
+int Weak_Fn_B(int a) { return a; }
+            ])],[
             AC_LANG_SOURCE([
-extern int Foo(int);
-int PFoo(int a) { return a+1;}
-int main(int argc, char **argv) {
-return Foo(0);}
-            ])
-        ],[
-            pac_cv_prog_c_weak_symbols="pragma weak"
-        ],[
-            has_pragma_weak=0
-            pragma_extra_message="pragma weak accepted but does not work (probably creates two non-weak entries)"
-        ])
-    ],[
-        has_pragma_weak=0
-        pragma_extra_message="pragma weak accepted but does not work (probably creates two non-weak entries)"
-    ])
-fi
-dnl
-if test -z "$pac_cv_prog_c_weak_symbols" ; then 
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-        extern int PFoo(int);
-        #pragma _HP_SECONDARY_DEF Foo  PFoo
-        int Foo(int a) { return a; }
-    ]],[[
-        return PFoo(1);
-    ]])],pac_cv_prog_c_weak_symbols="pragma _HP_SECONDARY_DEF")
-fi
-dnl
-if test -z "$pac_cv_prog_c_weak_symbols" ; then
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-        extern int PFoo(int);
-        #pragma _CRI duplicate PFoo as Foo
-        int Foo(int a) { return a; }
-    ]],[[
-        return PFoo(1);
-    ]])],pac_cv_prog_c_weak_symbols="pragma _CRI duplicate x as y")
-fi
-dnl
-if test -z "$pac_cv_prog_c_weak_symbols" ; then
-    pac_cv_prog_c_weak_symbols="no"
-fi
-dnl
-dnl If there is an extra explanatory message, echo it now so that it
-dnl doesn't interfere with the cache result value
-if test -n "$pragma_extra_message" ; then
-    echo $pragma_extra_message
-fi
-dnl
-])
-if test "$pac_cv_prog_c_weak_symbols" != "no" ; then
-    case "$pac_cv_prog_c_weak_symbols" in
-        "pragma weak") AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
-        ;;
-        "pragma _HP")  AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
-        ;;
-        "pragma _CRI") AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
-        ;;
-    esac
-fi
-AC_CACHE_CHECK([whether __attribute__ ((weak,alias(...))) allowed], pac_cv_attr_weak_alias,[
-    PAC_COMPLINK_IFELSE(
-	[AC_LANG_SOURCE([[
-	    int PFoo(int) __attribute__ ((weak,alias("Foo")));
-	    int Foo(int a) { return a; }
-	]])],
-	[AC_LANG_PROGRAM([[
-		int PFoo(int);
-	]],[[
-		return PFoo(1);
-	]])],
-	pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)
-])
+int Weak_Fn_A(int);
+int Weak_Fn_B(int);
+int Weak_Fn_B(int a) { return a+1;}
+int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
+            ])], [pac_cv_prog_c_weak_symbols="pragma weak"])
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        PAC_COMPLINK_IFELSE([
+            AC_LANG_SOURCE([
+int Weak_Fn_A(int); int Fn_A(int);
+int Weak_Fn_B(int); int Fn_B(int);
+int Weak_Fn_A(int) __attribute__ ((weak));
+int Weak_Fn_B(int) __attribute__ ((weak));
+int Fn_A(int a) { return a; }
+int Fn_B(int a) { return a; }
+int Weak_Fn_A(int a) { return a; }
+int Weak_Fn_B(int a) { return a; }
+            ])],[
+            AC_LANG_SOURCE([
+int Weak_Fn_A(int);
+int Weak_Fn_B(int);
+int Weak_Fn_B(int a) { return a+1;}
+int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
+            ])], [pac_cv_prog_c_weak_symbols="attr weak"])
+    fi
+    dnl -------------------------------------
+    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
+        pac_cv_prog_c_weak_symbols=no
+    fi
+    ]) dnl AC_CACHE_CHECK
 
-if test "$pac_cv_attr_weak_alias" = "yes" ; then
-    AC_DEFINE(HAVE_WEAK_ATTRIBUTE,1,[Attribute style weak pragma])
-fi
-if test "$pac_cv_prog_c_weak_symbols" = "no" -a "$pac_cv_attr_weak_alias" = "no" ; then
-    ifelse([$2],,:,[$2])
-else
-    ifelse([$1],,:,[$1])
-fi
+    AC_CACHE_CHECK([for multiple weak symbol alias support], pac_cv_prog_c_mult_weak_symbols,[
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" ; then
+        PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
+            extern int PFoo(int);
+            extern int PFoo_(int);
+            extern int pfoo_(int);
+            #pragma weak PFoo = Foo
+            #pragma weak PFoo_ = Foo
+            #pragma weak pfoo_ = Foo
+            int Foo(int);
+            int Foo(a) { return a; }
+        ]])],[AC_LANG_SOURCE([[
+            extern int PFoo(int), PFoo_(int), pfoo_(int);
+            int main() {
+            return PFoo(0) + PFoo_(1) + pfoo_(2);}
+        ]])], [
+            pac_cv_prog_c_mult_weak_symbols="pragma weak"
+        ])
+    else
+        pac_cv_prog_c_mult_weak_symbols=no
+    fi
+    ]) dnl AC_CACHE_CHECK
+
+    case "$pac_cv_prog_c_weak_symbols" in
+        "no")
+            ;;
+        "pragma weak")
+            AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
+            ;;
+        "pragma weak alias")
+            AC_DEFINE(HAVE_PRAGMA_WEAK_ALIAS,1,[Supports weak alias pragma])
+            ;;
+        "attr weak")
+            AC_DEFINE(HAVE_ATTR_WEAK,1,[Supports weak attribute])
+            ;;
+        "attr weak alias")
+            AC_DEFINE(HAVE_ATTR_WEAK_ALIAS,1,[Supports weak alias attribute])
+            ;;
+        "pragma _HP")
+            AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
+            ;;
+        "pragma _CRI")
+            AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
+            ;;
+    esac
+
+    if test "$pac_cv_prog_c_mult_weak_symbols" != "no" ; then
+        AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined])
+    fi
+
+    if test "$pac_cv_prog_c_weak_symbols" = "no" ; then
+        ifelse([$2],,:,[$2])
+    else
+        ifelse([$1],,:,[$1])
+    fi
 ])
 
 #
@@ -358,41 +408,6 @@ AC_MSG_RESULT($notbroken)
 if test "$notbroken" = "no" ; then
     AC_MSG_ERROR([installation or configuration problem: C compiler does not
 correctly set error code when a fatal error occurs])
-fi
-])
-
-dnl/*D 
-dnl PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS - Test whether C and the
-dnl linker allow multiple weak symbols.
-dnl
-dnl Synopsis
-dnl PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(action-if-true,action-if-false)
-dnl
-dnl 
-dnl D*/
-AC_DEFUN([PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS],[
-AC_CACHE_CHECK([for multiple weak symbol support], pac_cv_prog_c_multiple_weak_symbols,[
-    # Test for multiple weak symbol support...
-    PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
-        extern int PFoo(int);
-        extern int PFoo_(int);
-        extern int pfoo_(int);
-        #pragma weak PFoo = Foo
-        #pragma weak PFoo_ = Foo
-        #pragma weak pfoo_ = Foo
-        int Foo(int);
-        int Foo(a) { return a; }
-    ]])],[AC_LANG_SOURCE([[
-        extern int PFoo(int), PFoo_(int), pfoo_(int);
-        int main() {
-        return PFoo(0) + PFoo_(1) + pfoo_(2);}
-    ]])],
-    [pac_cv_prog_c_multiple_weak_symbols="yes"])
-])
-if test "$pac_cv_prog_c_multiple_weak_symbols" = "yes" ; then
-    ifelse([$1],,:,[$1])
-else
-    ifelse([$2],,:,[$2])
 fi
 ])
 

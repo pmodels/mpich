@@ -20,8 +20,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
     AC_SUBST([mpl_includedir])
     AC_SUBST([mpl_lib])
     # Controls whether we recurse into the MPL dir when running "dist" rules like
-    # "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-    # superset of SUBDIRS, but we don't want to double-distclean and similar.
+    # "make distclean".
     mpl_dist_srcdir=""
     AC_SUBST(mpl_dist_srcdir)
 

@@ -1,0 +1,8 @@
+= MPI Function Semantics
+When we generate man pages, the description section will be looked up from this file.
+Use the following format to specify semantics or notes for an MPI Function
+
+// tag:: MPI_Func_name[]
+Describe semantics for MPI_Func_name.
+// end:: MPI_Func_name[]
+

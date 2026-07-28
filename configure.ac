@@ -102,7 +102,7 @@ m4_include([maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPICH],
         MPICH_VERSION_m4,
-        [discuss@mpich.org],
+        [discuss@lists.mpich.org],
         [mpich],
         [http://www.mpich.org/])
 
@@ -504,13 +504,15 @@ AC_ARG_ENABLE(versioning,
 
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
-   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_verion_m4"
+   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
 else
    ABIVERSIONFLAGS="-avoid-version"
    ABI_ABIVERSIONFLAGS="-avoid-version"
 fi
 export ABIVERSIONFLAGS
 AC_SUBST(ABIVERSIONFLAGS)
+export ABI_ABIVERSIONFLAGS
+AC_SUBST(ABI_ABIVERSIONFLAGS)
 
 
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
@@ -670,6 +672,12 @@ AC_CANONICAL_TARGET
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 AC_PROG_CC
+
+# Modern autoconf aggressively probe gnu std support and will append (e.g.) -std=gnu23 to $CC
+# Since $CC will be used in mpicc and we don't want to force the gnu behavior on to user, let's strip it.
+# NOTE: brackets are autoconf quotes, thus requires quote protection.
+CC=$(echo "$CC" | sed 's/ -std=[[^ ]]*//g')
+
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP
@@ -903,6 +911,9 @@ AC_ARG_VAR([PMPIABILIBNAME],[can be used to override the name of the MPI profili
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
 AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 MPILIBNAME=${MPILIBNAME:-"mpi"}
+# ROMIO is configured as a subdirectory and needs the resolved library name
+# when building its legacy tests against the top-level build tree.
+export MPILIBNAME
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then
    PMPILIBNAME_set=yes
@@ -1028,24 +1039,24 @@ if test "$enable_extended_context_bits" = "yes" ; then
     AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
-# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
-# and -lp$MPILIBNAME.
-NEEDSPLIB=yes
 if test $enable_weak_symbols = yes ; then
     # Turn off weak symbols if they aren't available
     PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
 fi
-if test $enable_weak_symbols = "yes" ; then
-    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
-    NEEDSPLIB=no
-    # Check for the ability to support multiple weak symbols
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
-       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
-    fi
-fi
-export NEEDSPLIB
 
+NEEDSPLIB=yes
+if test $enable_weak_symbols = "yes" ; then
+    NEEDSPLIB=no
+fi
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+
+NEEDS_F77_PLIB=yes
+if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" -o "$pac_cv_prog_c_weak_symbols" = "attr weak alias" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDS_F77_PLIB=no
+fi
+AM_CONDITIONAL([BUILD_LIBF77_PMPI], [test "$NEEDS_F77_PLIB" = "yes"])
+
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)
 # disable visibility if building profiling library
@@ -1401,16 +1412,6 @@ if test "$with_cross" != "no" ; then
     fi
 fi
 
-# This goes here because we need the top_srcdir
-if test "$enable_romio" = "yes" ; then
-    AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
-
-    m4_define([romio_embedded_dir], [src/mpi/romio])
-    PAC_CONFIG_ROMIO
-fi
-AC_SUBST(ROMIO_VERSION)
-
-AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
 # if the device is already built)
@@ -1559,6 +1560,23 @@ fi
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
 
+# export TEST_MPIEXEC so subdirs (ROMIO) can run pre-install tests
+case "$pm_name" in
+  hydra)
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/hydra/mpiexec.hydra"
+    ;;
+  gforker)
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/gforker/mpiexec"
+    ;;
+  remshell)
+    TEST_MPIEXEC="${main_top_builddir}/src/pm/remshell/mpiexec"
+    ;;
+  *)
+    TEST_MPIEXEC=
+    ;;
+esac
+export TEST_MPIEXEC
+
 dnl
 dnl gforker and remshell does not use separate configure. 
 dnl
@@ -1658,6 +1676,17 @@ fi
 if test "$enable_pmix" = "yes"; then
     AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
 fi
+
+# -----------------------------------
+if test "$enable_romio" = "yes" ; then
+    AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
+
+    m4_define([romio_embedded_dir], [src/mpi/romio])
+    PAC_CONFIG_ROMIO
+fi
+AC_SUBST(ROMIO_VERSION)
+
+AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 
 # ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the
@@ -2599,12 +2628,11 @@ export nameserv_name
 AM_CONDITIONAL([BUILD_NAMEPUB_FILE],[test "X$nameserv_name" = "Xfile"])
 AM_CONDITIONAL([BUILD_NAMEPUB_PMI],[test "X$nameserv_name" = "Xpmi"])
 
-# In case the documentation targets are used, find doctext and attempt to
-# find the source for the doctext LaTeX style files.  Use "false" if
-# doctext is not found
-AC_PATH_PROG(DOCTEXT,doctext,false)
-export DOCTEXT
-AC_SUBST(DOCTEXT)
+# In case the documentation targets are used, find asciidoctor.
+# Use "false" if asciidoctor is not found
+AC_PATH_PROG(ASCIIDOC,asciidoctor,false)
+export ASCIIDOC
+AC_SUBST(ASCIIDOC)
 
 # ----------------------------------------------------------------------------
 # Check for C compiler characteristics
@@ -3716,7 +3744,7 @@ AM_CONDITIONAL([INSTALL_DOCS],[test "X$enable_doc" = "Xyes"])
 # Grrr.  OS/X fails the test for sys/uio.h because uio *requires* sys/types.h
 # to compile.  Thus, we'll make that a separate test
 # stddef.h is sometimes needed for types like wchar_t
-AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h string.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h sys/param.h)
+AC_CHECK_HEADERS(stdlib.h stdarg.h sys/types.h string.h inttypes.h limits.h stddef.h errno.h sys/socket.h sys/time.h unistd.h endian.h assert.h sys/param.h poll.h)
 AC_CACHE_CHECK([for sys/uio.h],ac_cv_header_sys_uio_h,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
         #include <sys/types.h>
@@ -3911,7 +3939,7 @@ fi
 # CCLs
 have_ccl=no
 
-if test $GPU_SUPPORT = "CUDA" ; then
+if test "$GPU_SUPPORT" = "CUDA" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
     if test "$pac_have_nccl" = "yes" ; then
         have_ccl=yes
@@ -3919,7 +3947,7 @@ if test $GPU_SUPPORT = "CUDA" ; then
     fi
 fi
 
-if test $GPU_SUPPORT = "HIP" ; then
+if test "$GPU_SUPPORT" = "HIP" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([rccl], [rccl/rccl.h], [rccl], [ncclCommInitAll],, [-D__HIP_PLATFORM_AMD__])
     if test "$pac_have_rccl" = "yes" ; then
         have_ccl=yes

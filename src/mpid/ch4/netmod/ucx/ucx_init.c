@@ -98,6 +98,17 @@ int MPIDI_UCX_init_worker(int vci)
                                            MPIDI_UCX_AM_HANDLER_ID,
                                            &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
     MPIDI_UCX_CHK_STATUS(ucx_status);
+
+    if (vci == 0) {
+        ucp_worker_attr_t attr;
+        memset(&attr, 0, sizeof(attr));
+        attr.field_mask = UCP_WORKER_ATTR_FIELD_MAX_AM_HEADER;
+
+        ucx_status = ucp_worker_query(MPIDI_UCX_global.ctx[vci].worker, &attr);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+
+        MPIDI_UCX_global.max_am_header = attr.max_am_header;
+    }
 #ifdef HAVE_UCP_AM_NBX
     ucp_am_handler_param_t param = {
         .field_mask = UCP_AM_HANDLER_PARAM_FIELD_ID | UCP_AM_HANDLER_PARAM_FIELD_CB,
@@ -239,9 +250,18 @@ int MPIDI_UCX_init_local(int *tag_bits)
 
 #ifdef HAVE_UCC
     if (MPIR_CVAR_CH4_UCX_ENABLE_UCC) {
-        int verbose_level = atoi(MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL);
-        MPIDI_common_ucc_enable(verbose_level, MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL,
-                                MPIR_CVAR_CH4_UCX_UCC_ENABLE_DEBUG);
+        MPIDI_common_ucc_config_t ucc_config = {
+            .verbose_level = atoi(MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL),
+            .verbose_level_str = MPIR_CVAR_CH4_UCX_UCC_VERBOSITY_LEVEL,
+            .debug_flag = MPIR_CVAR_CH4_UCX_UCC_ENABLE_DEBUG,
+#ifdef MPICH_IS_THREADED
+            /* Fix me: Instead of setting this at compile time, it would
+             * be better to consider the actual runtime selection (which,
+             * however, is not yet available at this point). */
+            .threaded_flag = 1,
+#endif
+        };
+        MPIDI_common_ucc_enable(&ucc_config);
     }
 #endif
 
@@ -263,6 +283,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
         dump_ucx_info();
         printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
         printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
+        printf("MPIDI_UCX_MAX_AM_EAGER_SZ: %d\n", MPIDI_UCX_global.max_am_header);
         printf("tag_bits: %d\n", *tag_bits);
         printf("===============================\n");
     }

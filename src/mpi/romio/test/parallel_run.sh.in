@@ -14,6 +14,15 @@ exec_prefix=@exec_prefix@
 bindir=@bindir@
 mpirun="@MPIRUN@"
 
+if test -z "$mpirun" ; then
+    if test -n "$MPIEXEC"; then
+        mpirun="$MPIEXEC"
+    else
+        echo "SKIP: mpi launcher not defined. Define MPIEXEC and rerun the test." >&2
+        exit 77
+    fi
+fi
+
 # valgrind_opt="libtool --mode=execute valgrind --quiet --leak-check=full"
 
 exe_name=`basename $1`

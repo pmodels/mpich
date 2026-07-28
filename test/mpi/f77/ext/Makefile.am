@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_f77.mtest
 
-EXTRA_DIST = testlist.in
 
 # allocmemf is an "extra" program because it requires a Fortran extension
 EXTRA_PROGRAMS = allocmemf

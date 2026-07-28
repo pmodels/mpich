@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_threads.mtest
 
-EXTRA_DIST = testlist
 
 noinst_PROGRAMS = threads threaded_sr alltoall sendselfth greq_wait greq_test \
                   multisend multisend2 multisend3 multisend4 ibsend \

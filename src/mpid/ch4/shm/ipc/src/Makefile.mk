@@ -5,8 +5,7 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/ipc/src
 
-noinst_HEADERS += src/mpid/ch4/shm/ipc/src/shm_inline.h    \
-                  src/mpid/ch4/shm/ipc/src/ipc_noinline.h  \
+noinst_HEADERS += src/mpid/ch4/shm/ipc/src/ipc_noinline.h  \
                   src/mpid/ch4/shm/ipc/src/ipc_send.h      \
                   src/mpid/ch4/shm/ipc/src/ipc_p2p.h       \
                   src/mpid/ch4/shm/ipc/src/ipc_types.h     \

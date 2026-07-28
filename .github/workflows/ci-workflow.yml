@@ -1,0 +1,319 @@
+name: ci-workflow
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "OS & Architecture"
+        default: 'Linux-x86_64'
+        required: false
+        type: string
+      device:
+        description: "MPICH Device"
+        default: 'ch4:ofi'
+        required: false
+        type: string
+      pm:
+        description: "MPICH Process Manager"
+        default: 'hydra:gforker'
+        required: false
+        type: string
+      mpi4py-git:
+        description: 'mpi4py git'
+        default:  mpi4py/mpi4py
+        required: false
+        type: string
+      mpi4py-ref:
+        description: 'mpi4py ref'
+        default:  ''
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        description: "OS & Architecture"
+        default: 'Linux-x86_64'
+        required: false
+        type: choice
+        options:
+          - Linux-aarch64
+          - Linux-x86_64
+          - macOS-arm64
+          - macOS-x86_64
+      device:
+        description: "MPICH Device"
+        default: 'ch4:ofi'
+        required: false
+        type: choice
+        options:
+          - ch4:ucx,ofi
+          - ch4:ofi,ucx
+          - ch4:ucx
+          - ch4:ofi
+          - ch3:nemesis
+          - ch3:sock
+      pm:
+        description: "MPICH Process Manager"
+        default: 'hydra:gforker'
+        required: false
+        type: choice
+        options:
+          - hydra:gforker
+          - hydra
+          - gforker
+      mpi4py-git:
+        description: 'mpi4py git'
+        default:  mpi4py/mpi4py
+        required: false
+        type: string
+      mpi4py-ref:
+        description: 'mpi4py ref'
+        default: ''
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    # https://github.com/actions/runner-images#available-images
+    runs-on: &github-runner-label |-
+      ${{ case(
+        inputs.runs-on == 'Linux-aarch64', 'ubuntu-24.04-arm',
+        inputs.runs-on == 'Linux-x86_64',  'ubuntu-24.04',
+        inputs.runs-on == 'macOS-arm64',   'macos-26',
+        inputs.runs-on == 'macOS-x86_64',  'macos-26-intel',
+        inputs.runs-on || 'ubuntu-latest'
+      ) }}
+    outputs:
+      build-tag: ${{ steps.setup.outputs.build-tag }}
+    timeout-minutes: 60
+
+    steps:
+
+    - id: setup
+      name: Setup
+      run: |
+        # setup
+        # build tag to name artifacts
+        system=${{ runner.os }}-$(uname -m)
+        device=$(echo ${{ inputs.device }} | tr ':,' '_')
+        pm=$(echo ${{ inputs.pm }} | tr ':,' '_')
+        echo build-tag="$device-$pm-$system" >> "$GITHUB_OUTPUT"
+        # number of active cores
+        case $(uname) in
+        Linux)  nproc=$(nproc) ;;
+        Darwin) nproc=$(sysctl -n hw.activecpu) ;;
+        esac
+        echo nproc=${nproc:-1} >> "$GITHUB_OUTPUT"
+
+    - if: ${{ runner.os == 'Linux' }}
+      name: Setup Linux
+      run: |
+        # setup Linux
+        true
+
+    - if: ${{ runner.os == 'macOS' }}
+      name: Setup macOS
+      run: |
+        # setup macOS
+        brew untap aws/tap &>/dev/null || true
+        # set MACOSX_DEPLOYMENT_TARGET
+        echo MACOSX_DEPLOYMENT_TARGET=11.0 >> "$GITHUB_ENV"
+        # install autotools
+        brew list autoconf &>/dev/null || brew install autoconf
+        brew list automake &>/dev/null || brew install automake
+        brew list libtool  &>/dev/null || brew install libtool
+        # create gfortran symlink
+        cd $(brew --prefix)/bin
+        gfortran=$(ls gfortran-* | sort | head -n 1)
+        sudo ln -s $gfortran gfortran
+        # show commands
+        command -v autoconf
+        command -v automake
+        command -v glibtool
+        command -v glibtoolize
+        command -v gfortran
+
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Bootstrap
+      run:  ./autogen.sh
+
+    - name: Configure
+      run:  ./configure
+              --prefix=/opt/mpich
+              --with-pm=${{ inputs.pm }}
+              --with-device=${{ inputs.device }}
+              --disable-dependency-tracking
+              --disable-maintainer-mode
+              --disable-doc
+              --enable-g=all
+              --enable-fast=none
+              --enable-mpi-abi
+              --with-mpl=embedded
+              --with-ucx=embedded
+              --with-json=embedded
+              --with-hwloc=embedded
+              --with-yaksa=embedded
+              --with-libfabric=embedded
+              $(test ${{ inputs.pm }} == gforker &&
+                echo --with-namepublisher=file)
+              || (cat config.log; exit 1)
+
+    - name: Build
+      run:  make -j ${{ steps.setup.outputs.nproc }}
+
+    - name: Install
+      run:  sudo make install
+
+    - name: Archive artifact
+      run:  tar -cvpf mpich.tar /opt/mpich
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: mpich-${{ steps.setup.outputs.build-tag }}
+        path: mpich.tar
+        retention-days: 2
+
+    - name: Update PATH
+      run:  echo /opt/mpich/bin >> "$GITHUB_PATH"
+
+    - name: Show MPICH version
+      run:  mpichversion
+
+    - name: Show MPI control vars
+      run:  mpivars
+
+    - name: Show MPICC
+      run:  mpicc -show
+
+    - name: Show MPICXX
+      run:  mpicxx -show
+
+    - name: Show MPIFORT
+      run:  mpifort -show
+
+    - name: Hello, World!
+      run: |
+        cat > helloworld.c << EOF
+        #include <mpi.h>
+        #include <stdio.h>
+
+        int main(int argc, char *argv[])
+        {
+          int size, rank, len;
+          char name[MPI_MAX_PROCESSOR_NAME];
+          MPI_Init(&argc, &argv);
+          MPI_Comm_size(MPI_COMM_WORLD, &size);
+          MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+          MPI_Get_processor_name(name, &len);
+          if (rank != 0) {
+            MPI_Recv(NULL, 0 , MPI_BYTE, rank-1, 0, MPI_COMM_WORLD,
+                     MPI_STATUS_IGNORE);
+          }
+          printf("Hello, World! I am process %d of %d on %s.\n",
+                  rank, size, name);
+          if (rank != size - 1) {
+            MPI_Send(NULL, 0 , MPI_BYTE, rank+1, 0, MPI_COMM_WORLD);
+          }
+          MPI_Finalize();
+          return 0;
+        }
+        EOF
+
+        set +x
+
+        mpicc helloworld.c -o helloworld
+        mpiexec -n 5 ./helloworld
+
+        mpicc_abi helloworld.c -o helloworld_abi
+        mpiexec -n 5 ./helloworld_abi
+
+  test:
+    runs-on: *github-runner-label
+    needs: build
+    timeout-minutes: 60
+
+    steps:
+
+    - name: Checkout mpi4py
+      uses: actions/checkout@v6
+      with:
+        repository: ${{ inputs.mpi4py-git || 'mpi4py/mpi4py' }}
+        ref: ${{ inputs.mpi4py-ref }}
+
+    - name: Download artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: mpich-${{ needs.build.outputs.build-tag }}
+
+    - name: Extract artifact
+      run:  sudo tar -xvpf mpich.tar -C /
+
+    - name: Update PATH
+      run:  echo /opt/mpich/bin >> "$GITHUB_PATH"
+
+    - name: Setup Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: 3
+
+    - name: Install mpi4py
+      run:  python -m pip install .
+      env:
+        CFLAGS: "-O0"
+
+    - name: Install mpi4py test dependencies
+      run:  python -m pip install --group test
+
+    - name: Configure hostname
+      run:  echo 127.0.0.1 `hostname` | sudo tee -a /etc/hosts > /dev/null
+
+    - name: Test mpi4py (singleton)
+      run:  python test/main.py -v
+    - name: Test mpi4py (np=1)
+      run:  mpiexec -n 1 python test/main.py -v
+    - name: Test mpi4py (np=2)
+      run:  mpiexec -n 2 python test/main.py -v -f
+      timeout-minutes: 10
+
+    - if: ${{ !(runner.os == 'macOS' && runner.arch == 'x64') }}
+      name: Test mpi4py (np=3)
+      run:  mpiexec -n 3 python test/main.py -v -f
+      timeout-minutes: 15
+      env:
+        MPIR_CVAR_POLLS_BEFORE_YIELD: 1
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE: true
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT: 1
+
+    - if: ${{ !(runner.os == 'macOS' && runner.arch == 'x64') }}
+      name: Test mpi4py (np=4)
+      run:  mpiexec -n 4 python test/main.py -v -f
+      timeout-minutes: 15
+      env:
+        MPIR_CVAR_POLLS_BEFORE_YIELD: 1
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE: true
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT: 1
+
+    - if: ${{ !(runner.os == 'macOS' && runner.arch == 'x64') }}
+      name: Test mpi4py (np=5)
+      run:  mpiexec -n 5 python test/main.py -v -f
+      timeout-minutes: 15
+      env:
+        MPIR_CVAR_POLLS_BEFORE_YIELD: 1
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE: true
+        MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT: 1
+
+    - name: Test mpi4py.run
+      run:  python demo/test-run/test_run.py -v
+    - name: Test init-fini
+      run:  bash demo/init-fini/run.sh
+    - name: Test check-mpiexec
+      run:  bash demo/check-mpiexec/run.sh

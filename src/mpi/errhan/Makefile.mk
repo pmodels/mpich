@@ -14,10 +14,6 @@ noinst_HEADERS +=             \
 
 errnames_txt_files += src/mpi/errhan/errnames.txt
 
-# FIXME DUPLICATION: this list of files can be (mostly harmlessly) different
-# than the list in maint/errmsgdirs because this list will be assembled
-# conditionally based on configure tests and AM_CONDITIONAL usage
-dist_noinst_DATA += $(errnames_txt_files) src/mpi/errhan/baseerrnames.txt
 noinst_HEADERS += $(top_srcdir)/src/mpi/errhan/defmsg.h
 
 # Only clean/rebuild defmsg.h if maintainer mode rules are enabled (we are

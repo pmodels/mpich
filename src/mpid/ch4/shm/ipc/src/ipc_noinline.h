@@ -6,9 +6,7 @@
 #ifndef IPC_NOINLINE_H_INCLUDED
 #define IPC_NOINLINE_H_INCLUDED
 
-#include "mpidimpl.h"
-#include "../xpmem/xpmem_post.h"
-#include "../gpu/gpu_post.h"
+#include "ipc_types.h"
 
 int MPIDI_IPC_init_local(void);
 int MPIDI_IPC_comm_bootstrap(MPIR_Comm * comm);

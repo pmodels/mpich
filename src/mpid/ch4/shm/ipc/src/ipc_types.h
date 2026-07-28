@@ -16,6 +16,8 @@ typedef union MPIDI_IPCI_ipc_handle {
     MPIDI_XPMEM_ipc_handle_t xpmem;
     MPIDI_CMA_ipc_handle_t cma;
     MPIDI_GPU_ipc_handle_t gpu;
+    /* ipc_type is MPIDI_IPCI_TYPE__DIRECT */
+    void *direct;
 } MPIDI_IPCI_ipc_handle_t;
 
 typedef struct MPIDI_IPCI_ipc_attr {
@@ -37,17 +39,6 @@ typedef struct MPIDI_IPC_rndv_hdr {
     MPI_Aint count;             /* only if it's non-contig */
 } MPIDI_IPC_hdr;
 
-typedef struct MPIDI_IPC_ack {
-    MPIDI_IPCI_type_t ipc_type;
-    MPIR_Request *req_ptr;
-} MPIDI_IPC_ack_t;
-
-typedef struct MPIDI_IPC_write {
-    MPIDI_IPCI_type_t ipc_type;
-    MPIR_Request *sreq;
-    MPIR_Request *rreq;
-} MPIDI_IPC_write_t;
-
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #endif
@@ -57,5 +48,12 @@ extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #define MPIDI_IPCI_REQUEST(req, field)      ((req)->dev.ch4.am.shm_am.ipc.field)
 
 int MPIDI_IPCI_is_repeat_addr(const void *addr);
+
+/* Sub-layer post headers pre-declare functions that cross sub-layer boundaries.
+ * Include them here so any file that depends on IPC types also gets the
+ * full IPC API (types + function declarations). */
+#include "../gpu/gpu_post.h"
+#include "../xpmem/xpmem_post.h"
+#include "../cma/cma_post.h"
 
 #endif /* IPC_TYPES_H_INCLUDED */

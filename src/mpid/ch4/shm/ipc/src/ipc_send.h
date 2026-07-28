@@ -9,8 +9,6 @@
 #include "ch4_impl.h"
 #include "mpidimpl.h"
 #include "ipc_types.h"
-#include "../xpmem/xpmem_post.h"
-#include "../gpu/gpu_post.h"
 #include "ipc_p2p.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint count,
@@ -31,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci_src);
 
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, rank, comm, sizeof(MPIDIG_hdr_t),
-                                        &ipc_attr);
+    mpi_errno = MPIDI_IPCI_get_ipc_attr(buf, count, datatype, sizeof(MPIDIG_hdr_t), &ipc_attr);
 
     if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__SKIP) {
 

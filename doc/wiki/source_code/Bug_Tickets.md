@@ -1,7 +1,7 @@
 # Reporting Bugs
 
 **IMPORTANT NOTE**:  For queries on problems that you are facing with your MPICH
-installation or usage, please send it to the <discuss@mpich.org> mailing
+installation or usage, please send it to the <discuss@lists.mpich.org> mailing
 list. You need to subscribe to this mailing list
 [here](https://lists.mpich.org/mailman/listinfo/discuss) before sending
 an email. If you have found a bug in MPICH and want to report it, then

@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_f77.mtest
 
-EXTRA_DIST = testlist.in
 
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
@@ -96,8 +95,6 @@ generated_io_sources = \
     writeordbef.f      \
     writeordf.f        \
     writeshf.f
-
-EXTRA_DIST += ioharness.defn ioharness.tlt
 
 # a parallel-safe scheme to generate the tests, see the automake-1.11.1 manual,
 # section 27.9 "Handling Tools That Produce Multiple Outputs" for an explanation

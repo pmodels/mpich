@@ -10,6 +10,7 @@ int MPIDI_OFI_get_required_version(void);
 
 int MPIDI_OFI_find_provider(struct fi_info **prov_out);
 void MPIDI_OFI_find_provider_cleanup(void);
+int MPIDI_OFI_init_fabric(MPIR_Comm * comm);
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
 int MPIDI_OFI_vci_init(void);
 
@@ -20,7 +21,8 @@ int MPIDI_OFI_init_hints(struct fi_info *hints);
 void MPIDI_OFI_set_auto_progress(struct fi_info *hints);
 
 /* set settings based on provider-set */
-void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name);
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name,
+                             struct fi_info *prov);
 
 /* whether prov matches settings, return a score */
 int MPIDI_OFI_match_provider(struct fi_info *prov,
@@ -37,6 +39,10 @@ int MPIDI_OFI_create_vci_context(int vci, int nic);
 int MPIDI_OFI_init_per_vci(int vci);
 
 bool MPIDI_OFI_nic_is_up(struct fi_info *prov);
+
+int MPIDI_OFI_fill_prov_use(struct fi_info *prov);
+int MPIDI_OFI_order_multi_nic_local(void);
+int MPIDI_OFI_order_multi_nic_global(void);
 
 int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm);
 

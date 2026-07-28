@@ -3,9 +3,6 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-# ensure that the buildiface script ends up in the release tarball
-EXTRA_DIST += src/binding/cxx/buildiface
-
 if BUILD_CXX_BINDING
 
 mpi_cxx_sources += src/binding/cxx/initcxx.cxx

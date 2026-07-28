@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_threads.mtest
 
-EXTRA_DIST = testlist
 
 noinst_PROGRAMS = \
 	mt_pt2pt_msgrate \

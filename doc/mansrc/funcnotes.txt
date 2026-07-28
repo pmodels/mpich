@@ -1,0 +1,1573 @@
+MPI_Comm_create_keyval:
+    == Notes
+    Key values are global (available for any and all communicators).
+
+    Default copy and delete functions are available.  These are
+
+    * `MPI_COMM_NULL_COPY_FN`   - empty copy function
+    * `MPI_COMM_NULL_DELETE_FN` - empty delete function
+    * `MPI_COMM_DUP_FN`         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    `copy_fn` be written in the same language from which `MPI_Comm_create_keyval`
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+
+MPI_Comm_get_attr:
+    == Notes
+    Attributes must be extracted from the same language as they were inserted
+    in with `MPI_ATTR_PUT`.  The notes for C and Fortran below explain why.
+
+    == Notes for C
+    Even though the `attribute_val` argument is declared as `+void *+`, it is
+    really the address of a void pointer (i.e., a `+void **+`).  Using
+    a `+void *+`, however, is more in keeping with C idiom and allows the
+    pointer to be passed without additional casts.
+
+    // tag:Fortran
+    The `attribute_val` in Fortran is a pointer to a Fortran integer, not
+    a pointer to a `+void *+`.
+
+MPI_Comm_set_attr:
+    == Notes
+    Values of the permanent attributes `MPI_TAG_UB`, `MPI_HOST`, `MPI_IO`,
+    `MPI_WTIME_IS_GLOBAL`, `MPI_UNIVERSE_SIZE`, `MPI_LASTUSEDCODE`, and
+    `MPI_APPNUM` may not be changed.
+
+    The type of the attribute value depends on whether C, C++, or Fortran
+    is being used.
+    In C and C++, an attribute value is a pointer (`+void *+`); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+
+MPI_Type_create_keyval:
+    == Notes
+    Key values are global (available for any and all derived datatypes).
+
+    Default copy and delete functions are available.  These are
+
+    * `MPI_TYPE_NULL_COPY_FN`   - empty copy function
+    * `MPI_TYPE_NULL_DELETE_FN` - empty delete function
+    * `MPI_TYPE_DUP_FN`         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    `copy_fn` be written in the same language from which `MPI_Type_create_keyval`
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+
+MPI_Type_get_attr:
+    == Notes
+    Attributes must be extracted from the same language as they were inserted
+    in with `MPI_ATTR_PUT`.  The notes for C and Fortran below explain why.
+
+    == Notes for C
+    Even though the `attribute_val` argument is declared as `+void *+`, it is
+    really the address of a void pointer (i.e., a `+void **+`).  Using
+    a `+void *+`, however, is more in keeping with C idiom and allows the
+    pointer to be passed without additional casts.
+
+    // tag:Fortran
+    The `attribute_val` in Fortran is a pointer to a Fortran integer, not
+    a pointer to a `+void *+`.
+
+MPI_Type_set_attr:
+    == Notes
+    The type of the attribute value depends on whether C or Fortran is being used.
+    In C, an attribute value is a pointer (`+void *+`); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+
+MPI_Win_create_keyval:
+    == Notes
+    Key values are global (available for any and all communicators).
+
+    Default copy and delete functions are available.  These are
+
+    * `MPI_WIN_NULL_COPY_FN`   - empty copy function
+    * `MPI_WIN_NULL_DELETE_FN` - empty delete function
+    * `MPI_WIN_DUP_FN`         - simple dup function
+
+    There are subtle differences between C and Fortran that require that the
+    `copy_fn` be written in the same language from which `MPI_Win_create_keyval`
+    is called.
+    This should not be a problem for most users; only programmers using both
+    Fortran and C in the same program need to be sure that they follow this rule.
+
+MPI_Win_get_attr:
+    == Notes
+    The following attributes are predefined for all MPI Window objects:
+
+    * `MPI_WIN_BASE` - window base address.
+    * `MPI_WIN_SIZE` - window size, in bytes.
+    * `MPI_WIN_DISP_UNIT` - displacement unit associated with the window.
+
+    Attributes must be extracted from the same language as they were inserted
+    in with `MPI_ATTR_PUT`.  The notes for C and Fortran below explain why.
+
+    == Notes for C
+    Even though the `attribute_val` argument is declared as `+void **+`, it is
+    really the address of a void pointer (i.e., a `+void ***+`).  Using
+    a `+void *+`, however, is more in keeping with C idiom and allows the
+    pointer to be passed without additional casts.
+
+    // tag:Fortran
+    The `attribute_val` in Fortran is a pointer to a Fortran integer, not
+    a pointer to a `+void *+`.
+
+MPI_Win_set_attr:
+    == Notes
+    The type of the attribute value depends on whether C or Fortran is being used.
+    In C, an attribute value is a pointer (`+void *+`); in Fortran, it is an
+    address-sized integer.
+
+    If an attribute is already present, the delete function (specified when the
+    corresponding keyval was created) will be called.
+
+MPIX_Op_create_x:
+    == Notes on MPIX_User_function_x
+    The calling list for the user function type is
+
+    [source, c]
+    ----
+    typedef void (MPIX_User_function_x) (void * a, void * b,
+        MPI_Count len, MPI_Datatype datatype,
+        void *extra_state);
+    ----
+
+    There are a few differences from `MPI_User_function` used in `MPI_Op_create`.
+
+    * It passes len and datatype as scalar input, rather than as addresses.
+    * The len is of MPI_Count, rather than int.
+    * It accepts a void * `extra_state` which is passed from users during `MPIX_Op_create_x`.
+
+MPI_Allgather:
+    == Notes
+    The MPI standard (1.0 and 1.1) says that
+
+    The jth block of data sent from  each process is received by every process
+    and placed in the jth block of the buffer `recvbuf`.
+
+    This is misleading; a better description is
+
+    The block of data sent from the jth process is received by every
+    process and placed in the jth block of the buffer `recvbuf`.
+
+    This text was suggested by Rajeev Thakur and has been adopted as a
+    clarification by the MPI Forum.
+
+MPI_Allgatherv:
+    == Notes
+    The MPI standard (1.0 and 1.1) says that
+
+    The jth block of data sent from
+    each process is received by every process and placed in the jth block of the
+    buffer `recvbuf`.
+
+    This is misleading; a better description is
+
+    The block of data sent from the jth process is received by every
+    process and placed in the jth block of the buffer `recvbuf`.
+
+    This text was suggested by Rajeev Thakur, and has been adopted as a
+    clarification to the MPI standard by the MPI-Forum.
+
+MPI_Barrier:
+    == Notes
+    Blocks the caller until all processes in the communicator have called it;
+    that is, the call returns at any process only after all members of the
+    communicator have entered the call.
+
+MPI_Exscan:
+    == Notes
+    `MPI_Exscan` is like `MPI_Scan`, except that the contribution from the
+    calling process is not included in the result at the calling process
+    (it is contributed to the subsequent processes, of course).
+
+MPI_Ibarrier:
+    == Notes
+    `MPI_Ibarrier` is a nonblocking version of MPI_barrier. By calling `MPI_Ibarrier`,
+    a process notifies that it has reached the barrier. The call returns
+    immediately, independent of whether other processes have called `MPI_Ibarrier`.
+    The usual barrier semantics are enforced at the corresponding completion
+    operation (test or wait), which in the intra-communicator case will complete
+    only after all other processes in the communicator have called `MPI_Ibarrier`. In
+    the intercommunicator case, it will complete when all processes in the remote
+    group have called `MPI_Ibarrier`.
+
+MPI_Neighbor_allgather:
+    == Notes
+    In this function, each process i gathers data items from each process j if an edge (j,i) exists in the topology graph, and each process i sends the same data items to all processes j where an edge (i,j) exists. The send buffer is sent to each neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+
+MPI_Neighbor_alltoall:
+    == Notes
+    In this function, each process i receives data items from each process j if an edge (j,i) exists in the topology graph or Cartesian topology.  Similarly, each process i sends data items to all processes j where an edge (i,j) exists. This call is more general than `MPI_NEIGHBOR_ALLGATHER` in that different data items can be sent to each neighbor. The k-th block in send buffer is sent to the k-th neighboring process and the l-th block in the receive buffer is received from the l-th neighbor.
+
+MPI_Comm_compare:
+    // tag:ThreadSafe
+    (To perform the communicator comparisons, this routine may need to
+    allocate some memory.  Memory allocation is not interrupt-safe, and hence
+    this routine is only thread-safe.)
+
+MPI_Comm_dup:
+    == Notes
+    This routine is used to create a new communicator that has a new
+    communication context but contains the same group of processes as
+    the input communicator.  Since all MPI communication is performed
+    within a communicator (specifies as the group of processes _plus_
+    the context), this routine provides an effective way to create a
+    private communicator for use by a software module or library.  In
+    particular, no library routine should use `MPI_COMM_WORLD` as the
+    communicator; instead, a duplicate of a user-specified communicator
+    should always be used.  For more information, see Using MPI, 2nd
+    edition.
+
+    Because this routine essentially produces a copy of a communicator,
+    it also copies any attributes that have been defined on the input
+    communicator, using the attribute copy function specified by the
+    `copy_function` argument to `MPI_Keyval_create`.  This is
+    particularly useful for (a) attributes that describe some property
+    of the group associated with the communicator, such as its
+    interconnection topology and (b) communicators that are given back
+    to the user; the attributes in this case can track subsequent
+    `MPI_Comm_dup` operations on this communicator.
+
+MPI_Comm_dup_with_info:
+    == Notes
+    `MPI_Comm_dup_with_info` behaves exactly as `MPI_Comm_dup` except that
+    the info hints associated with the communicator comm are not
+    duplicated in newcomm.  The hints provided by the argument info are
+    associated with the output communicator newcomm instead.
+
+MPI_Comm_free:
+    == Notes
+    This routine _frees_ a communicator.  Because the communicator may still
+    be in use by other MPI routines, the actual communicator storage will not
+    be freed until all references to this communicator are removed.  For most
+    users, the effect of this routine is the same as if it was in fact freed
+    at this time of this call.
+
+    == Null Handles
+    The MPI 1.1 specification, in the section on opaque objects, explicitly
+    disallows freeing a null communicator.  The text from the standard is:
+
+    ____
+    A null handle argument is an erroneous IN argument in MPI calls, unless an
+    exception is explicitly stated in the text that defines the function. Such
+    exception is allowed for handles to request objects in Wait and Test calls
+    (sections Communication Completion and Multiple Completions). Otherwise, a
+    null handle can only be passed to a function that allocates a new object and
+    returns a reference to it in the handle.
+    ____
+
+MPI_Comm_remote_group:
+    == Notes
+    The user is responsible for freeing the group when it is no longer needed.
+
+MPI_Comm_set_info:
+    == Notes
+    The call is collective on the group of `comm`. The info object may be different
+    on each process, but any info entries that an implementation requires to be
+    the same on all processes must appear with the same value in each process'
+    info object. 
+
+MPI_Comm_split:
+    == Notes
+    The `color` must be non-negative or `MPI_UNDEFINED`.
+
+    == Algorithm
+
+    ----
+    1. Use `MPI_Allgather` to get the color and key from each process
+    2. Count the number of processes with the same color; create a
+        communicator with that many processes.  If this process has
+        'MPI_UNDEFINED' as the color, create a process with a single member.
+    3. Use key to order the ranks
+    ----
+
+MPI_Comm_split_type:
+    == Notes
+    The `split_type` must be non-negative or `MPI_UNDEFINED`.
+
+MPI_Intercomm_create:
+    == Notes
+    `peer_comm` is significant only for the process designated the
+    `local_leader` in the `local_comm`.
+
+    The MPI 1.1 Standard contains two mutually exclusive comments on the
+    input intercommunicators.  One says that their respective groups must be
+    disjoint; the other that the leaders can be the same process.  After
+    some discussion by the MPI Forum, it has been decided that the groups must
+    be disjoint.  Note that the _reason_ given for this in the standard is
+    _not_ the reason for this choice; rather, the _other_ operations on
+    intercommunicators (like `MPI_Intercomm_merge`) do not make sense if the
+    groups are not disjoint.
+
+MPI_Intercomm_merge:
+    == Notes
+    While all processes may provide the same value for the `high` parameter,
+    this requires the MPI implementation to determine which group of
+    processes should be ranked first.
+
+    == Algorithm
+
+    ----
+    1. Allocate contexts
+    2. Local and remote group leaders swap high values
+    3. Determine the high value.
+    4. Merge the two groups and make the intra-communicator
+    ----
+
+
+MPIX_Comm_revoke:
+    == Notes
+    This function notifies all MPI processes in the groups (local and remote) associated with the communicator `comm` that this communicator is revoked. The revocation of a communicator by any MPI process completes non-local MPI operations on `comm` at all MPI processes by raising an error of class `MPI_ERR_REVOKED` (with the exception of `MPIX_Comm_shrink`, `MPIX_Comm_agree`). This function is not collective and therefore does not have a matching call on remote MPI processes. All non-failed MPI processes belonging to `comm` will be notified of the revocation despite failures.
+
+    A communicator is revoked at a given MPI process either when `MPIX_Comm_revoke` is locally called on it, or when any MPI operation on `comm` raises an error of class `MPI_ERR_REVOKED` at that process. Once a communicator has been revoked at an MPI process, all subsequent non-local operations on that communicator (with thesame exceptions as above), are considered local and must complete by raising an error of class `MPI_ERR_REVOKED` at that MPI process.
+
+MPIX_Comm_shrink:
+    == Notes
+    This collective operation creates a new intra- or intercommunicator `newcomm` from the intra- or intercommunicator comm, respectively, by excluding the group of failed MPI processes as agreed upon during the operation. The groups of `newcomm` must include every MPI process that returns from `MPIX_Comm_shrink`, and it must exclude every MPI process whose failure caused an operation on `comm` to raise an MPI error of class `MPI_ERR_PROC_FAILED` or `MPI_ERR_PROC_FAILED_PENDING` at a member of the groups of `newcomm`, before that member initiated `MPIX_Comm_shrink`. This call is semantically equivalent to an `MPI_Comm_split` operation that would succeed despite failures, where members of the groups of `newcomm` participate with the same color and a key equal to their rank incomm.
+
+    This function never raises an error of class `MPI_ERR_PROC_FAILED` or `MPI_ERR_REVOKED`. The defined semantics of `MPIX_Comm_shrink` are maintained when `comm` is revoked, or when the group of `comm` contains failed MPI processes
+
+MPIX_Comm_failure_ack:
+    == Notes
+    This local operation gives the users a way to acknowledge all locally notified failures on `comm`. After the call, unmatched `MPI_ANY_SOURCE` receive operations that would have raised an error of class `MPI_ERR_PROC_FAILED_PENDING` due to MPI process failure proceed without further raising errors due to those acknowledged failures. Also after this call, `MPIX_Comm_agree` will not raise an error of class `MPI_ERR_PROC_FAILED` due to those acknowledged failures.
+
+MPIX_Comm_failure_get_acked:
+    == Notes
+    This local operation returns the group `failedgrp` of processes, from the communicator `comm`, that have been locally acknowledged as failed by preceding calls to `MPIX_Comm_failure_ack`. The `failedgrp` can be empty, that is, equal to `MPI_GROUP_EMPTY`.
+
+MPIX_Comm_agree:
+    == Notes
+    The purpose of this collective communication is to agree on the integer value flag and on the group of failed processes in `comm`.
+
+    On completion, all non-failed MPI processes have agreed to set the output integer value of `flag` to the result of a bitwise AND operation over the contributed input values of `flag`. If `comm` is an intercommunicator, the value of `flag` is a bitwise AND operation over the values contributed by the remote group.
+
+    When an MPI process fails before contributing to the operation, the `flag` is computed ignoring its contribution, and `MPIX_Comm_agree` raises an error of class `MPI_ERR_PROC_FAILED`. However, if all MPI processes have acknowledged this failure priorto the call to `MPIX_Comm_agree`, using `MPIX_Comm_failure_ack`, the error related to this failure is not raised. When an error of class `MPI_ERR_PROC_FAILED` is raised, it is consistently raised at all MPI processes, in both the local and remote groups (if applicable).
+
+    After `MPIX_Comm_agree` raised an error of class `MPI_ERR_PROC_FAILED`, a subsequent call to `MPIX_Comm_failure_ack` on `comm` acknowledges the failure of every MPI process that didn't contribute to the computation offlag.
+
+MPIX_Comm_get_failed:
+    == Notes
+    The returned `failedgrp` can be empty, that is, equal to `MPI_GROUP_EMPTY`.
+
+    For any two groups obtained from calls to this routine at the same MPI process with the same `comm`, the smaller group is a prefix of the larger group, that is, the same failed process will have the same rank in the returned `failedgrp`.
+
+MPI_Type_create_f90_integer:
+    == Notes
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets `newtype` to `MPI_DATATYPE_NULL` and
+    returns an error of class `MPI_ERR_ARG`.
+
+MPI_Type_create_f90_real:
+    == Notes
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets `newtype` to `MPI_DATATYPE_NULL` and
+    returns an error of class `MPI_ERR_ARG`.
+
+MPI_Type_create_f90_complex:
+    == Notes
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets `newtype` to `MPI_DATATYPE_NULL` and
+    returns an error of class `MPI_ERR_ARG`.
+
+MPI_Get_address:
+    == Notes
+    This routine is provided for both the Fortran and C programmers.
+    On many systems, the address returned by this routine will be the same
+    as produced by the C `&` operator, but this is not required in C and
+    may not be true of systems with word- rather than byte-oriented
+    instructions or systems with segmented address spaces.
+
+    // tag:Fortran
+    In Fortran, the integer type is always signed.  This can cause problems
+    on systems where the address fits into a four byte unsigned integer but
+    the value is larger than the largest signed integer.  For example, a system
+    with more than 2 GBytes of memory may have addresses that do not fit within
+    a four byte signed integer.  Unfortunately, there is no easy solution to
+    this problem, as there is no Fortran datatype that can be used here (using
+    a longer integer type will cause other problems, as well as surprising
+    users when the size of the integer type is larger that the size of a pointer
+    in C).  In this case, it is recommended that you use C to manipulate
+    addresses.
+
+MPI_Get_count:
+    == Notes
+    If the size of the `datatype` is zero, this routine will return a count of
+    zero.  If the amount of data in `status` is not an exact multiple of the
+    size of `datatype` (so that `count` would not be integral), a `count` of
+    `MPI_UNDEFINED` is returned instead.
+
+MPI_Get_elements:
+    == Notes
+    If the size of the `datatype` is zero and the amount of data returned as
+    determined by `status` is also zero, this routine will return a count of
+    zero.  This is consistent with a clarification made by the MPI Forum.
+
+MPI_Pack:
+    == Notes (from the specifications)
+    The input value of `position` is the first location in the output buffer to be
+    used for packing.  `position` is incremented by the size of the packed message,
+    and the output value of `position` is the first location in the output buffer
+    following the locations occupied by the packed message.  The `comm` argument is
+    the communicator that will be subsequently used for sending the packed
+    message.
+
+MPI_Pack_size:
+    == Notes
+    The MPI standard document describes this in terms of `MPI_Pack`, but it
+    applies to both `MPI_Pack` and `MPI_Unpack`.  That is, the value `size` is
+    the maximum that is needed by either `MPI_Pack` or `MPI_Unpack`.
+
+MPI_Type_free:
+    == Predefined types
+    The MPI standard states that (in Opaque Objects):
+
+    ____
+    MPI provides certain predefined opaque objects and predefined, static handles
+    to these objects. Such objects may not be destroyed.
+    ____
+
+    Thus, it is an error to free a predefined datatype.  The same section makes
+    it clear that it is an error to free a null datatype.
+
+MPI_Type_create_indexed_block:
+    // tag:Fortran
+    The indices are displacements, and are based on a zero origin.  A common error
+    is to do something like the following
+
+    [source, fortran]
+    ----
+    integer a(100)
+    integer blens(10), indices(10)
+    do i=1,10
+        indices(i) = 1 + (i-1)*10
+    call MPI_TYPE_CREATE_INDEXED_BLOCK(10,1,indices,MPI_INTEGER,newtype,ierr)
+    call MPI_TYPE_COMMIT(newtype,ierr)
+    call MPI_SEND(a,1,newtype,...)
+    ----
+
+    expecting this to send "a(1),a(11),..." because the indices have values
+    "1,11,...".   Because these are _displacements_ from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as indices into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+
+    [source, fortran]
+    ----
+    integer a(0:99)
+    ----
+
+MPI_Type_hindexed:
+    // tag:Fortran
+    The array_of_displacements are displacements, and are based on a zero origin.  A common error
+    is to do something like to following
+
+    [source, fortran]
+    ----
+    integer a(100)
+    integer array_of_blocklengths(10), array_of_displacements(10)
+    do i=1,10
+        array_of_blocklengths(i) = 1
+        array_of_displacements(i) = (1 + (i-1)*10) * sizeofint
+    call MPI_TYPE_HINDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
+    call MPI_TYPE_COMMIT(newtype,ierr)
+    call MPI_SEND(a,1,newtype,...)
+    ----
+
+    expecting this to send "a(1),a(11),..." because the array_of_displacements have values
+    "1,11,...".   Because these are _displacements_ from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as array_of_displacements into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+
+    [source, fortran]
+    ----
+    integer a(0:99)
+    ----
+
+MPI_Type_indexed:
+    // tag:Fortran
+    The array_of_displacements are displacements, and are based on a zero origin.  A common error
+    is to do something like to following
+
+    [source, fortran]
+    ----
+    integer a(100)
+    integer array_of_blocklengths(10), array_of_displacements(10)
+    do i=1,10
+        array_of_blocklengths(i)   = 1
+        array_of_displacements(i) = 1 + (i-1)*10
+    call MPI_TYPE_INDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
+    call MPI_TYPE_COMMIT(newtype,ierr)
+    call MPI_SEND(a,1,newtype,...)
+    ----
+
+    expecting this to send "a(1),a(11),..." because the array_of_displacements have values
+    "1,11,...".   Because these are _displacements_ from the beginning of "a",
+    it actually sends "a(1+1),a(1+11),...".
+    
+    If you wish to consider the displacements as array_of_displacements into a Fortran array,
+    consider declaring the Fortran array with a zero origin
+
+    [source, fortran]
+    ----
+    integer a(0:99)
+    ----
+
+MPI_Type_struct:
+    == Notes
+    If an upperbound is set explicitly by using the MPI datatype `MPI_UB`, the
+    corresponding index must be positive.
+    
+    The MPI standard originally made vague statements about padding and alignment;
+    this was intended to allow the simple definition of structures that could
+    be sent with a `count` greater than one.  For example,
+
+    [source, c]
+    ----
+    struct { int a; char b; } foo;
+    ----
+
+    may have `sizeof(foo) > sizeof(int) + sizeof(char)`; for example,
+    `sizeof(foo) == 2*sizeof(int)`.  The initial version of the MPI standard
+    defined the extent of a datatype as including an _epsilon_ that would have
+    allowed an implementation to make the extent an MPI datatype
+    for this structure equal to `2*sizeof(int)`.
+    However, since different systems might define different paddings, there was
+    much discussion by the MPI Forum about what was the correct value of
+    epsilon, and one suggestion was to define epsilon as zero.
+    This would have been the best thing to do in MPI 1.0, particularly since
+    the `MPI_UB` type allows the user to easily set the end of the structure.
+    Unfortunately, this change did not make it into the final document.
+    Currently, this routine does not add any padding, since the amount of
+    padding needed is determined by the compiler that the user is using to
+    build their code, not the compiler used to construct the MPI library.
+    A later version of MPICH may provide for some natural choices of padding
+    (e.g., multiple of the size of the largest basic member), but users are
+    advised to never depend on this, even with vendor MPI implementations.
+    Instead, if you define a structure datatype and wish to send or receive
+    multiple items, you should explicitly include an `MPI_UB` entry as the
+    last member of the structure.  For example, the following code can be used
+    for the structure foo
+
+    [source, c]
+    ----
+    blen[0] = 1; array_of_displacements[0] = 0; oldtypes[0] = MPI_INT;
+    blen[1] = 1; array_of_displacements[1] = &foo.b - &foo; oldtypes[1] = MPI_CHAR;
+    blen[2] = 1; array_of_displacements[2] = sizeof(foo); oldtypes[2] = MPI_UB;
+    MPI_Type_struct(3, blen, array_of_displacements, oldtypes, &newtype);
+    ----
+
+MPI_Type_match_size:
+    == Notes
+    `typeclass` is one of `MPI_TYPECLASS_REAL`, `MPI_TYPECLASS_INTEGER` and
+    `MPI_TYPECLASS_COMPLEX`, corresponding to the desired typeclass.
+    The function returns an MPI datatype matching a local variable of type
+    `(typeclass, size)`.
+
+MPI_Add_error_string:
+    == Notes
+    The string must be no more than `MPI_MAX_ERROR_STRING` characters long.
+    The length of the string is as defined in the calling language.
+    The length of the string does not include the null terminator in C or C++.
+    Note that the string is `const` even though the MPI standard does not
+    specify it that way.
+
+    According to the MPI-2 standard, it is erroneous to call `MPI_Add_error_string`
+    for an error code or class with a value less than or equal
+    to `MPI_ERR_LASTCODE`.  Thus, you cannot replace the predefined error messages
+    with this routine.
+
+MPI_Error_string:
+    == Notes
+    Error codes are the values return by MPI routines (in C) or in the
+    `ierr` argument (in Fortran).  These can be converted into error classes
+    with the routine `MPI_Error_class`.
+
+MPI_Comm_create_errhandler:
+    == Notes
+    The MPI Standard states that an implementation may make the output value
+    `errhandler` simply the address of the function.  However, the action of
+    `MPI_Errhandler_free` makes this impossible, since it is required to set the
+    value of the argument to `MPI_ERRHANDLER_NULL`.  In addition, the actual
+    error handler must remain until all communicators that use it are
+    freed.
+
+MPI_Comm_get_errhandler:
+    == Note on Implementation
+
+    The MPI Standard was unclear on whether this routine required the user to call
+    `MPI_Errhandler_free` once for each call made to this routine in order to
+    free the error handler.  After some debate, the MPI Forum added an explicit
+    statement that users are required to call `MPI_Errhandler_free` when the
+    return value from this routine is no longer needed.  This behavior is similar
+    to the other MPI routines for getting objects; for example, `MPI_Comm_group`
+    requires that the user call `MPI_Group_free` when the group returned
+    by `MPI_Comm_group` is no longer needed.
+
+MPI_Remove_error_string:
+    == Notes
+    According to the MPI 4.1 standard, it is erroneous to call `MPI_Remove_error_string`
+    for an error code or class with a value less than or equal
+    to `MPI_ERR_LASTCODE`.  Thus, you cannot replace the predefined error messages
+    with this routine.
+
+MPI_Group_difference:
+    == Notes
+    The generated group contains the members of `group1` that are not in `group2`.
+
+MPI_Group_excl:
+    == Note
+    The MPI standard requires that each of the ranks to excluded must be
+    a valid rank in the group and all elements must be distinct or the
+    function is erroneous.
+
+MPI_Group_intersection:
+    == Notes
+    The output group contains those processes that are in both `group1` and
+    `group2`.
+
+MPI_Group_translate_ranks:
+    == Notes
+    As a special case (see the MPI-2 errata), if the input rank is
+    `MPI_PROC_NULL`, `MPI_PROC_NULL` is given as the output rank.
+
+MPI_Info_get:
+    == Deprecated
+   `MPI_Info_get_string` should be used instead of this routine.
+
+MPI_Info_get_valuelen:
+    == Deprecated
+    `MPI_Info_get_string` should be used instead of this routine.
+
+MPI_Info_create_env:
+    == Notes for C
+    `MPI_Info_create_env` accepts NULL as input parameters. Doing so impacts
+    the returned value.
+
+    == Notes for Fortran
+    The Fortran binding for `MPI_Info_create_env` does not take `argc` and `argv`.
+
+    [source, fortran]
+    ----
+    subroutine MPI_INFO_CREATE_ENV(info, ierr)
+    integer info, ierr
+    ----
+
+MPI_Abort:
+    == Notes
+    Terminates all MPI processes associated with the communicator `comm`; in
+    most systems (all to date), terminates _all_ processes.
+
+    == NotThreadSafe
+    Because the `MPI_Abort` routine is intended to ensure that an MPI
+    process (and possibly an entire job), it cannot wait for a thread to
+    release a lock or other mechanism for atomic access.
+
+MPI_Finalize:
+    == Notes
+    All processes must call this routine before exiting.  The number of
+    processes running _after_ this routine is called is undefined;
+    it is best not to perform much more than a `return rc` after calling
+    `MPI_Finalize`.
+
+    == Thread and Signal Safety
+    The MPI standard requires that `MPI_Finalize` be called _only_ by the same
+    thread that initialized MPI with either `MPI_Init` or `MPI_Init_thread`.
+
+MPI_Init:
+    == Notes
+    The MPI standard does not say what a program can do before an `MPI_INIT` or
+    after an `MPI_FINALIZE`.  In the MPICH implementation, you should do
+    as little as possible.  In particular, avoid anything that changes the
+    external state of the program, such as opening files, reading standard
+    input or writing to standard output.
+
+    == Thread Level
+    MPICH by default set thread level to `MPI_THREAD_SINGLE`. This can be changed
+    by setting `MPIR_CVAR_DEFAULT_THREAD_LEVEL`.
+
+    == Thread and Signal Safety
+    This routine must be called by one thread only.  That thread is called
+    the _main thread_ and must be the thread that calls `MPI_Finalize`.
+
+    == Notes for C
+    As of MPI-2, `MPI_Init` will accept NULL as input parameters. Doing so
+    will impact the values stored in `MPI_INFO_ENV`.
+
+    == Notes for Fortran
+    The Fortran binding for `MPI_Init` has only the error return
+
+    [source, fortran]
+    ----
+    subroutine MPI_INIT(ierr)
+    integer ierr
+    ----
+
+MPI_Init_thread:
+    == Command line arguments
+    MPI specifies no command-line arguments but does allow an MPI
+    implementation to make use of them.  See `MPI_INIT` for a description of
+    the command line arguments supported by `MPI_INIT` and `MPI_INIT_THREAD`.
+
+    == Notes
+    The valid values for the level of thread support are:
+
+    * `MPI_THREAD_SINGLE` - Only one thread will execute.
+    * `MPI_THREAD_FUNNELED` - The process may be multi-threaded, but only the main
+    thread will make MPI calls (all MPI calls are funneled to the
+    main thread).
+    * `MPI_THREAD_SERIALIZED` - The process may be multi-threaded, and multiple
+    threads may make MPI calls, but only one at a time: MPI calls are not
+    made concurrently from two distinct threads (all MPI calls are serialized).
+    * `MPI_THREAD_MULTIPLE` - Multiple threads may call MPI, with no restrictions.
+
+    == Notes for Fortran
+    Note that the Fortran binding for this routine does not have the `argc` and
+    `argv` arguments. (`MPI_INIT_THREAD(required, provided, ierror)`)
+
+MPI_Query_thread:
+    == Notes
+    The valid values for the level of thread support are:
+
+    * `MPI_THREAD_SINGLE` - Only one thread will execute.
+    * `MPI_THREAD_FUNNELED` - The process may be multi-threaded, but only the main
+    thread will make MPI calls (all MPI calls are funneled to the
+    main thread).
+    * `MPI_THREAD_SERIALIZED` - The process may be multi-threaded, and multiple
+    threads may make MPI calls, but only one at a time: MPI calls are not
+    made concurrently from two distinct threads (all MPI calls are serialized).
+    * `MPI_THREAD_MULTIPLE` - Multiple threads may call MPI, with no restrictions.
+
+    If `MPI_Init` was called instead of `MPI_Init_thread`, the level of
+    thread support is defined by the implementation.  This routine allows
+    you to find out the provided level.  It is also useful for library
+    routines that discover that MPI has already been initialized and
+    wish to determine what level of thread support is available.
+
+MPI_Session_init:
+    == Info Hints
+    Following keys are supported:
+    
+    * "thread_level" - Set MPI thread level. The default is `MPI_THREAD_MULTIPLE`.
+        Note this is different from the default in `MPI_Init`. MPICH does not support different thread levels in different
+        sessions. The provided thread level will be the one set by the first `MPI_Session_init`, `MPI_Init`, or `MPI_Init_thread`.
+    * "mpi_memory_alloc_kinds" - Set the memory allocation kinds to be used by
+        by the calling MPI process on MPI objects derived from the Session.
+
+MPI_Aint_add:
+    == Notes
+    `MPI_Aint_Add` produces a new MPI_Aint value that is equivalent to the sum of the
+    `base` and `disp` arguments, where `base` represents a base address returned by a call
+    to `MPI_GET_ADDRESS` and `disp` represents a signed integer displacement. The resulting
+    address is valid only at the process that generated `base`, and it must correspond
+    to a location in the same object referenced by `base`. The addition is performed in
+    a manner that results in the correct MPI_Aint representation of the output address,
+    as if the process that originally produced `base` had called
+
+    [source, c]
+    ----
+    MPI_Get_address((char *) base + disp, &result)
+    ----
+
+MPI_Aint_diff:
+    == Notes
+    `MPI_Aint_diff` produces a new MPI_Aint value that is equivalent to the difference
+    between `addr1` and `addr2` arguments, where `addr1` and `addr2` represent addresses
+    returned by calls to `MPI_GET_ADDRESS`. The resulting address is valid only at the
+    process that generated `addr1` and `addr2`, and `addr1` and `addr2` must correspond to
+    locations in the same object in the same process. The difference is calculated
+    in a manner that results the signed difference from `addr1` to `addr2`, as if the
+    process that originally produced the addresses had called
+
+    [source, c]
+    ----
+    (char *) addr1 - (char *) addr2
+    ----
+
+    on the addresses initially passed to `MPI_GET_ADDRESS`.
+
+MPI_Get_processor_name:
+    == Notes
+    The `name` returned should identify a particular piece of hardware;
+    the exact format is implementation defined.  This `name` may or may not
+    be the same as might be returned by `gethostname`, `uname`, or `sysinfo`.
+
+    // tag:Fortran
+    In Fortran, the character argument should be declared as a character string
+    of 'MPI_MAX_PROCESSOR_NAME' rather than an array of dimension
+    'MPI_MAX_PROCESSOR_NAME'.  That is,
+
+    [source, fortran]
+    ----
+    character*(MPI_MAX_PROCESSOR_NAME) name
+    ----
+
+    rather than
+
+    [source, fortran]
+    ----
+    character name(MPI_MAX_PROCESSOR_NAME)
+    ----
+
+    The sizes of MPI strings in Fortran are one less than the sizes of that string in C/C++ because the C/C++ versions provide room for the trailing null character required by C/C++. For example, `MPI_MAX_ERROR_STRING` is mpif.h is one smaller than the same value in mpi.h. See the MPI standard, sections 2.6.2 and 4.12.9. 
+
+MPI_Pcontrol:
+    == Notes
+	This routine provides a common interface for profiling control.  The
+	interpretation of `level` and any other arguments is left to the
+	profiling library.  The intention is that a profiling library will
+	provide a replacement for this routine and define the interpretation
+	of the parameters.
+
+MPI_T_category_changed:
+    == Notes
+    If two subsequent calls to this routine return the same timestamp, it is guaranteed that
+    the category information has not changed between the two calls. If the timestamp retrieved
+    from the second call is higher, then some categories have been added or expanded.
+
+MPI_T_finalize:
+    == Notes
+    This routine may be called as often as the corresponding `MPI_T_init_thread` routine
+    up to the current point of execution. Calling it more times returns a corresponding
+    error code. As long as the number of calls to `MPI_T_finalize` is smaller than the
+    number of calls to `MPI_T_init_thread` up to the current point of execution, the MPI
+    tool information interface remains initialized and calls to its routines are permissible.
+    Further, additional calls to `MPI_T_init_thread` after one or more calls to `MPI_T_finalize`
+    are permissible. Once `MPI_T_finalize` is called the same number of times as the routine
+    `MPI_T_init_thread` up to the current point of execution, the MPI tool information
+    interface is no longer initialized. The interface can be reinitialized by subsequent calls
+    to `MPI_T_init_thread`.
+    
+    At the end of the program execution, unless `MPI_Abort` is called, an application must
+    have called `MPI_T_init_thread` and `MPI_T_finalize` an equal number of times.
+
+MPI_T_init_thread:
+    == Notes
+    The valid values for the level of thread support are:
+
+    * `MPI_THREAD_SINGLE` - Only one thread will execute.
+    * `MPI_THREAD_FUNNELED` - The process may be multi-threaded, but only the main
+      thread will make MPI_T calls (all MPI_T calls are funneled to the
+      main thread).
+    * `MPI_THREAD_SERIALIZED` - The process may be multi-threaded, and multiple
+      threads may make MPI_T calls, but only one at a time: MPI_T calls are not
+      made concurrently from two distinct threads (all MPI_T calls are serialized).
+    * `MPI_THREAD_MULTIPLE` - Multiple threads may call MPI_T, with no restrictions.
+
+MPI_T_pvar_read:
+    == Notes
+    The `MPI_T_pvar_read` call queries the value of the performance variable with the
+    handle `handle` in the session identified by the parameter `session` and stores the result
+    in the buffer identified by the parameter `buf`. The user is responsible to ensure that the
+    buffer is of the appropriate size to hold the entire value of the performance variable
+    (based on the datatype and count returned by the corresponding previous calls to
+    `MPI_T_pvar_get_info` and `MPI_T_pvar_handle_alloc`, respectively).
+    
+    The constant `MPI_T_PVAR_ALL_HANDLES` cannot be used as an argument for the function
+    `MPI_T_pvar_read`.
+
+MPI_T_pvar_reset:
+    == Notes
+    The `MPI_T_pvar_reset` call sets the performance variable with the handle identified
+    by the parameter `handle` to its starting value. If it is not possible
+    to change the variable, the function returns `MPI_T_ERR_PVAR_NO_WRITE`.
+    If the constant `MPI_T_PVAR_ALL_HANDLES` is passed in `handle`, the MPI implementation
+    attempts to reset all variables within the session identified by the parameter `session` for
+    which handles have been allocated. In this case, the routine returns `MPI_SUCCESS` if all
+    variables are reset successfully, otherwise `MPI_T_ERR_PVAR_NO_WRITE` is returned. Readonly
+    variables are ignored when `MPI_T_PVAR_ALL_HANDLES` is specified.
+
+MPI_T_pvar_session_free:
+    == Notes
+    Calls to the MPI tool information interface can no longer be made
+    within the context of a session after it is freed. On a successful
+    return, MPI sets the session identifier to `MPI_T_PVAR_SESSION_NULL`.
+
+MPI_T_pvar_start:
+    == Notes
+    If the constant `MPI_T_PVAR_ALL_HANDLES` is passed in `handle`, the MPI implementation
+    attempts to start all variables within the session identified by the parameter `session` for
+    which handles have been allocated. In this case, the routine returns `MPI_SUCCESS` if all
+    variables are started successfully, otherwise `MPI_T_ERR_PVAR_NO_STARTSTOP` is returned.
+    Continuous variables and variables that are already started are ignored when
+    `MPI_T_PVAR_ALL_HANDLES` is specified.
+
+MPI_T_pvar_stop:
+    == Notes
+    This functions stops the performance variable with the handle identified by the parameter
+    `handle` in the session identified by the parameter `session`.
+    
+    If the constant `MPI_T_PVAR_ALL_HANDLES` is passed in `handle`, the MPI implementation
+    attempts to stop all variables within the session identified by the parameter `session` for
+    which handles have been allocated. In this case, the routine returns `MPI_SUCCESS` if all
+    variables are stopped successfully, otherwise `MPI_T_ERR_PVAR_NO_STARTSTOP` is returned.
+    Continuous variables and variables that are already stopped are ignored when
+    `MPI_T_PVAR_ALL_HANDLES` is specified.
+
+MPI_T_pvar_write:
+    == Notes
+    The `MPI_T_pvar_write` call attempts to write the value of the performance variable
+    with the handle identified by the parameter `handle` in the session identified by the parameter
+    `session`. The value to be written is passed in the buffer identified by the parameter `buf`. The
+    user must ensure that the buffer is of the appropriate size to hold the entire value of the
+    performance variable (based on the datatype and count returned by the corresponding previous
+    calls to `MPI_T_pvar_get_info` and `MPI_T_pvar_handle_alloc`, respectively).
+    
+    The constant `MPI_T_PVAR_ALL_HANDLES` cannot be used as an argument for the function
+    `MPI_T_pvar_write`.
+
+MPI_Op_create:
+    == Notes on the user function
+    For `MPI_Op_create`, the calling list for the user function type is
+
+    [source, c]
+    ----
+    typedef void (MPI_User_function) (void * a, void * b, int * len, MPI_Datatype *);
+    ----
+
+    For `MPI_Op_create_c`, the calling list for the user function type is
+
+    [source, c]
+    ----
+    typedef void (MPI_User_function_c) (void * a, void * b, MPI_Count * len, MPI_Datatype *);
+    ----
+
+    where the operation is `b[i] = a[i] op b[i]`, for `i=0,...,len-1`.  A pointer
+    to the datatype given to the MPI collective computation routine (i.e.,
+    `MPI_Reduce`, `MPI_Allreduce`, `MPI_Scan`, or `MPI_Reduce_scatter`) is also
+    passed to the user-specified routine.
+
+MPI_Bsend:
+    == Notes
+    This send is provided as a convenience function; it allows the user to
+    send messages without worring about where they are buffered (because the
+    user _must_ have provided buffer space with `MPI_Buffer_attach`).
+
+    In deciding how much buffer space to allocate, remember that the buffer space
+    is not available for reuse by subsequent `MPI_Bsend`s unless you are certain
+    that the message
+    has been received (not just that it should have been received).  For example,
+    this code does not allocate enough buffer space
+
+    [source, c]
+    ----
+    MPI_Buffer_attach(b, n*sizeof(double) + MPI_BSEND_OVERHEAD);
+    for (i=0; i<m; i++) {
+        MPI_Bsend(buf, n, MPI_DOUBLE, ...);
+    }
+    ----
+
+    because only enough buffer space is provided for a single send, and the
+    loop may start a second `MPI_Bsend` before the first is done making use of the
+    buffer.
+
+    In C, you can
+    force the messages to be delivered by
+
+    [source, c]
+    ----
+    MPI_Buffer_detach(&b, &n);
+    MPI_Buffer_attach(b, n);
+    ----
+
+    (The `MPI_Buffer_detach` will not complete until all buffered messages are
+    delivered.)
+
+MPI_Buffer_attach:
+    == Notes
+    The size given should be the sum of the sizes of all outstanding Bsends that
+    you intend to have, plus `MPI_BSEND_OVERHEAD` for each Bsend that you do.
+    For the purposes of calculating size, you should use `MPI_Pack_size`.
+    In other words, in the code
+
+    [source, c]
+    ----
+    MPI_Buffer_attach(buffer, size);
+    MPI_Bsend(..., count=20, datatype=type1,  ...);
+    ...
+    MPI_Bsend(..., count=40, datatype=type2, ...);
+    ----
+
+    the value of `size` in the `MPI_Buffer_attach` call should be greater than
+    the value computed by
+
+    [source, c]
+    ----
+    MPI_Pack_size(20, type1, comm, &s1);
+    MPI_Pack_size(40, type2, comm, &s2);
+    size = s1 + s2 + 2 * MPI_BSEND_OVERHEAD;
+    ----
+
+    The `MPI_BSEND_OVERHEAD` gives the maximum amount of space that may be used in
+    the buffer for use by the BSEND routines in using the buffer.  This value
+    is in `mpi.h` (for C) and `mpif.h` (for Fortran).
+
+    == NotThreadSafe
+    Because the buffer for buffered sends (e.g., `MPI_Bsend`) is shared by all
+    threads in a process, the user is responsible for ensuring that only
+    one thread at a time calls this routine or `MPI_Buffer_detach`.
+
+MPI_Buffer_detach:
+    == Notes
+    The reason that `MPI_Buffer_detach` returns the address and size of the
+    buffer being detached is to allow nested libraries to replace and restore
+    the buffer.  For example, consider
+
+    [source, c]
+    ----
+    int size, mysize, idummy;
+    void *ptr, *myptr, *dummy;
+    MPI_Buffer_detach(&ptr, &size);
+    MPI_Buffer_attach(myptr, mysize);
+    ...
+    ... library code ...
+    ...
+    MPI_Buffer_detach(&dummy, &idummy);
+    MPI_Buffer_attach(ptr, size);
+    ----
+
+    This is much like the action of the Unix signal routine and has the same
+    strengths (it is simple) and weaknesses (it only works for nested usages).
+
+    Note that for this approach to work, `MPI_Buffer_detach` must return `MPI_SUCCESS`
+    even when there is no buffer to detach.  In that case, it returns a size of
+    zero.  The MPI 1.1 standard for `MPI_BUFFER_DETACH` contains the text
+
+    ____
+    The statements made in this section describe the behavior of MPI for
+    buffered-mode sends. When no buffer is currently associated, MPI behaves
+    as if a zero-sized buffer is associated with the process.
+    ____
+
+    This could be read as applying only to the various Bsend routines.  This
+    implementation takes the position that this applies to `MPI_BUFFER_DETACH`
+    as well.
+
+    == NotThreadSafe
+    Because the buffer for buffered sends (e.g., `MPI_Bsend`) is shared by all
+    threads in a process, the user is responsible for ensuring that only
+    one thread at a time calls this routine or `MPI_Buffer_attach`.
+
+    == Notes for C
+    Even though the `bufferptr` argument is declared as `+void *+`, it is
+    really the address of a void pointer.  See the rationale in the
+    standard for more details.
+
+    // tag:Fortran
+    The Fortran binding for this routine is different.  Because Fortran
+    does not have pointers, it is impossible to provide a way to use the
+    output of this routine to exchange buffers.  In this case, only the
+    size field is set.
+
+MPI_Recv:
+    == Notes
+    The `count` argument indicates the maximum length of a message; the actual
+    length of the message can be determined with `MPI_Get_count`.
+
+MPI_Send:
+    == Notes
+    This routine may block until the message is received by the destination
+    process.
+
+MPI_Cancel:
+    == Notes
+    The primary expected use of `MPI_Cancel` is in multi-buffering
+    schemes, where speculative `MPI_Irecvs` are made.  When the computation
+    completes, some of these receive requests may remain; using `MPI_Cancel` allows
+    the user to cancel these unsatisfied requests.
+
+    Cancelling a send operation is much more difficult, in large part because the
+    send will usually be at least partially complete (the information on the tag,
+    size, and source are usually sent immediately to the destination).
+    Users are
+    advised that cancelling a send, while a local operation (as defined by the MPI
+    standard), is likely to be expensive (usually generating one or more internal
+    messages).
+
+MPI_Request_free:
+    == Notes
+
+    This routine is normally used to free inactive persistent requests created with
+    either `MPI_Recv_init` or `MPI_Send_init` and friends.  It _is_ also
+    permissible to free an active request.  However, once freed, the request can no
+    longer be used in a wait or test routine (e.g., `MPI_Wait`) to determine
+    completion.
+
+    This routine may also be used to free a non-persistent requests such as those
+    created with `MPI_Irecv` or `MPI_Isend` and friends.  Like active persistent
+    requests, once freed, the request can no longer be used with test/wait routines
+    to determine completion.
+
+MPI_Request_get_status:
+    == Notes
+    Unlike `MPI_Test`, `MPI_Request_get_status` does not deallocate or
+    deactivate the `request`.  A call to one of the test/wait routines or
+    `MPI_Request_free` should be made to release the `request` object.
+
+MPI_Startall:
+    == Notes
+    Unlike `MPI_Waitall`, `MPI_Startall` does not provide a mechanism for
+    returning multiple errors nor pinpointing the request(s) involved.
+    Furthermore, the behavior of `MPI_Startall` after an error occurs is not
+    defined by the MPI standard.  If well-defined error reporting and behavior
+    are required, multiple calls to `MPI_Start` should be used instead.
+
+MPI_Testall:
+    == Notes
+    `flag` is true only if all requests have completed.  Otherwise, `flag` is
+    false and neither the `array_of_requests` nor the `array_of_statuses` is
+    modified.
+
+    If one or more of the requests completes with an error, `MPI_ERR_IN_STATUS` is
+    returned.  An error value will be present is elements of `array_of_statuses`
+    associated with the requests.  Likewise, the `MPI_ERROR` field in the status
+    elements associated with requests that have successfully completed will be
+    `MPI_SUCCESS`.  Finally, those requests that have not completed will have a
+    value of `MPI_ERR_PENDING`.
+
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+MPI_Testany:
+    == Notes
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+MPI_Testsome:
+    == Notes
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+MPI_Waitall:
+    == Notes
+    If one or more of the requests completes with an error, `MPI_ERR_IN_STATUS` is
+    returned.  An error value will be present is elements of `array_of_statuses`
+    associated with the requests.  Likewise, the `MPI_ERROR` field in the status
+    elements associated with requests that have successfully completed will be
+    `MPI_SUCCESS`.  Finally, those requests that have not completed will have a
+    value of `MPI_ERR_PENDING`.
+
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+MPI_Waitany:
+    == Notes
+    If all of the requests are `MPI_REQUEST_NULL`, then `indx` is returned as
+    `MPI_UNDEFINED`, and `status` is returned as an empty status.
+
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+MPI_Waitsome:
+    == Notes
+    The array of indices are in the range `0` to `incount - 1` for C and
+    in the range `1` to `incount` for Fortran.
+
+    Null requests are ignored; if all requests are null, then the routine
+    returns with `outcount` set to `MPI_UNDEFINED`.
+
+    While it is possible to list a request handle more than once in the
+    `array_of_requests`, such an action is considered erroneous and may cause the
+    program to unexecpectedly terminate or produce incorrect results.
+
+    `MPI_Waitsome` provides an interface much like the Unix select or poll
+    calls and, in a high qualilty implementation, indicates all of the requests
+    that have completed when `MPI_Waitsome` is called.
+    However, `MPI_Waitsome` only guarantees that at least one
+    request has completed; there is no guarantee that _all_ completed requests
+    will be returned, or that the entries in `array_of_indices` will be in
+    increasing order. Also, requests that are completed while `MPI_Waitsome` is
+    executing may or may not be returned, depending on the timing of the
+    completion of the message.
+
+MPI_Alloc_mem:
+    == Notes
+    Using this routine from Fortran requires that the Fortran compiler accept
+    a common pointer extension.  See Section 4.11 (Memory Allocation) in the
+    MPI-2 standard for more information and examples.
+
+    Also note that while `baseptr` is a `+void *+` type, this is
+    simply to allow easy use of any pointer object for this parameter.
+    In fact, this argument is really a `+void **+` type, that is, a
+    pointer to a pointer.
+
+MPI_Compare_and_swap:
+    == Notes
+    This operation is atomic with respect to other "accumulate" operations.
+
+    The parameter datatype must belong to one of the following categories of
+    predefined datatypes: C integer, Fortran integer, Logical, Multi-language
+    types, or Byte as specified in Section 5.9.2 on page 176. The origin and result
+    buffers (`origin_addr` and `result_addr`) must be disjoint.
+
+MPI_Fetch_and_op:
+    == Notes
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The generic functionality of `MPI_Get_accumulate` might limit the performance of
+    fetch-and-increment or fetch-and-add calls that might be supported by special
+    hardware operations. `MPI_Fetch_and_op` thus allows for a fast implementation
+    of a commonly used subset of the functionality of `MPI_Get_accumulate`.
+
+    The origin and result buffers (`origin_addr` and `result_addr`) must be disjoint.
+    Any of the predefined operations for `MPI_Reduce`, as well as `MPI_NO_OP` or
+    `MPI_REPLACE`, can be specified as op; user-defined functions cannot be used. The
+    `datatype` argument must be a predefined datatype.
+
+MPI_Get_accumulate:
+    == Notes
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The get and accumulate steps are executed atomically for each basic element in
+    the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+    `MPI_REPLACE` provides fetch-and-set behavior.
+
+    The origin and result buffers (`origin_addr` and `result_addr`) must be disjoint.
+    Each datatype argument must be a predefined datatype or a derived datatype
+    where all basic components are of the same predefined datatype. All datatype
+    arguments must be constructed from the same predefined datatype. The
+    operation op applies to elements of that predefined type. `target_datatype` must
+    not specify overlapping entries, and the target buffer must fit in the target
+    window or in attached memory in a dynamic window.
+
+    Any of the predefined operations for `MPI_Reduce`, as well as `MPI_NO_OP` or
+    `MPI_REPLACE` can be specified as op. User-defined functions cannot be used. A
+    new predefined operation, `MPI_NO_OP`, is defined. It corresponds to the
+    associative function f (a, b) = a; i.e., the current value in the target memory
+    is returned in the result buffer at the origin and no operation is performed on
+    the target buffer. `MPI_NO_OP` can be used only in `MPI_Get_accumulate`,
+    `MPI_Rget_accumulate`, and `MPI_Fetch_and_op`. `MPI_NO_OP` cannot be used in
+    `MPI_Accumulate`, `MPI_Raccumulate`, or collective reduction operations, such as
+    `MPI_Reduce` and others.
+
+MPI_Raccumulate:
+    == Notes
+    The basic components of both the origin and target datatype must be the same
+    predefined datatype (e.g., all `MPI_INT` or all `MPI_DOUBLE_PRECISION`).
+
+MPI_Rget_accumulate:
+    == Notes
+    This operations is atomic with respect to other "accumulate" operations.
+
+    The get and accumulate steps are executed atomically for each basic element in
+    the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+    `MPI_REPLACE` provides fetch-and-set behavior.
+
+    The basic components of both the origin and target datatype must be the same
+    predefined datatype (e.g., all `MPI_INT` or all `MPI_DOUBLE_PRECISION`).
+
+MPI_Win_allocate_shared:
+    == Notes
+    This is a collective call executed by all processes in the group of `comm`. On
+    each process i, it allocates memory of at least `size` bytes that is shared among
+    all processes in `comm`, and returns a pointer to the locally allocated segment
+    in `baseptr` that can be used for load/store accesses on the calling process. The
+    locally allocated memory can be the target of load/store accesses by remote
+    processes; the base pointers for other processes can be queried using the
+    function `MPI_Win_shared_query`.
+
+    The call also returns a window object that can be used by all processes in comm
+    to perform RMA operations. The `size` argument may be different at each process
+    and size = 0 is valid. It is the user's responsibility to ensure that the
+    communicator `comm` represents a group of processes that can create a shared
+    memory segment that can be accessed by all processes in the group. The
+    allocated memory is contiguous across process ranks unless the info key
+    `alloc_shared_noncontig` is specified. Contiguous across process ranks means that
+    the first address in the memory segment of process i is consecutive with the
+    last address in the memory segment of process i - 1. This may enable the user
+    to calculate remote address offsets with local information only.
+
+MPI_Win_create:
+    == Notes
+    The displacement unit argument is provided to facilitate address arithmetic in
+    RMA operations: the target displacement argument of an RMA operation is scaled
+    by the factor `disp_unit` specified by the target process, at window creation.
+
+    The `info` argument provides optimization hints to the runtime about the expected
+    usage pattern of the window. The following info keys are predefined.
+
+    * `no_locks`- If set to true, then the implementation may assume that passive
+        target synchronization (i.e., `MPI_Win_lock`, `MPI_Win_lock_all`) will not be used on
+        the given window. This implies that this window is not used for 3-party
+        communication, and RMA can be implemented with no (less) asynchronous agent
+        activity at this process.
+
+    * `accumulate_ordering` - Controls the ordering of accumulate operations at the
+        target.  The argument string should contain a comma-separated list of the
+        following read/write ordering rules, where e.g. "raw" means read-after-write:
+        "rar,raw,war,waw".
+
+    * `accumulate_ops` - If set to same_op, the implementation will assume that all
+        concurrent accumulate calls to the same target address will use the same
+        operation. If set to `same_op_no_op`, then the implementation will assume that
+        all concurrent accumulate calls to the same target address will use the same
+        operation or `MPI_NO_OP`. This can eliminate the need to protect access for
+        certain operation types where the hardware can guarantee atomicity. The default
+        is `same_op_no_op`.
+
+    * `mpi_accumulate_granularity` - Controls the desired synchronization granularity
+        for accumulate ops. It sets the size of memory range in bytes for which the
+        MPI library should acquire a synchronization primitive to ensure the atomicity
+        of updates. The default is 0 which let the MPI library decides the granularity.
+        When the info hint is set to a positive value, the actual range of synchroniation
+        is round-up to the next size that fits the Datatype used in the accumulate
+        operation (see MPI standard 4.1). All processes in the group of a windows must
+        set to the same value.
+
+MPI_Win_create_dynamic:
+    == Notes
+    Users are cautioned that displacement arithmetic can overflow in variables of
+    type MPI_Aint and result in unexpected values on some platforms. This issue may
+    be addressed in a future version of MPI.
+
+    Memory in this window may not be used as the target of one-sided accesses in
+    this window until it is attached using the function `MPI_Win_attach`. That is, in
+    addition to using `MPI_Win_create_dynamic` to create an MPI window, the user must
+    use `MPI_Win_attach` before any local memory may be the target of an MPI RMA
+    operation. Only memory that is currently accessible may be attached.
+
+MPI_Win_detach:
+    == Notes
+    Memory also becomes detached when the associated dynamic memory window is freed.
+
+MPI_Win_fence:
+    == Notes
+    The `assert` argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the `MPI_Win_fence`
+    operation.  The value zero is always correct.  Other assertion values
+    may be or'ed together.  Assertions that are valid for `MPI_Win_fence` are:
+
+    * `MPI_MODE_NOSTORE` - the local window was not updated by local stores
+      (or local get or receive calls) since last synchronization.
+    * `MPI_MODE_NOPUT` - the local window will not be updated by put or accumulate
+      calls after the fence call, until the ensuing (fence) synchronization.
+    * `MPI_MODE_NOPRECEDE` - the fence does not complete any sequence of locally
+      issued RMA calls. If this assertion is given by any process in the window
+      group, then it must be given by all processes in the group.
+    * `MPI_MODE_NOSUCCEED` - the fence does not start any sequence of locally
+      issued RMA calls. If the assertion is given by any process in the window
+      group, then it must be given by all processes in the group.
+
+MPI_Win_free:
+    == Notes
+    If successfully freed, `win` is set to `MPI_WIN_NULL`.
+    If the user attribute free function returns an error, then do not free the window
+
+
+MPI_Win_get_group:
+    == Notes
+    The `group` is a duplicate of the group from the communicator used to
+    create the MPI window, and should be freed with `MPI_Group_free` when
+    it is no longer needed.  This `group` can be used to form the group of
+    neighbors for the routines `MPI_Win_post` and `MPI_Win_start`.
+
+MPI_Win_get_info:
+    == Notes
+    The info object returned in `info_used` will contain all hints currently active
+    for this window. This set of hints may be greater or smaller than the set of
+    hints specified when the window was created, as the system may not recognize
+    some hints set by the user, and may recognize other hints that the user has not
+    set.
+
+MPI_Win_lock:
+    == Notes
+    The name of this routine is misleading.  In particular, this
+    routine need not block, except when the target process is the calling
+    process.
+
+    Implementations may restrict the use of RMA communication that is
+    synchronized
+    by lock calls to windows in memory allocated by `MPI_Alloc_mem`. Locks can
+    be used portably only in such memory.
+
+    The `assert` argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the `MPI_Win_lock`
+    operation.  The value zero is always correct.  Other assertion values
+    may be or'ed together.  Assertions that are valid for `MPI_Win_lock` are:
+
+    * `MPI_MODE_NOCHECK` - no other process holds, or will attempt to acquire a
+      conflicting lock, while the caller holds the window lock. This is useful
+      when mutual exclusion is achieved by other means, but the coherence
+      operations that may be attached to the lock and unlock calls are still
+      required.
+
+MPI_Win_lock_all:
+    == Notes
+    This call is not collective.
+
+    The `assert` argument is used to indicate special conditions for the fence that
+    an implementation may use to optimize the `MPI_Win_lock_all` operation.  The
+    value zero is always correct.  Other assertion values may be or'ed together.
+    Assertions that are valid for `MPI_Win_lock_all` are:
+
+    * `MPI_MODE_NOCHECK` - No other process holds, or will attempt to acquire a
+      conflicting lock, while the caller holds the window lock. This is useful
+      when mutual exclusion is achieved by other means, but the coherence
+      operations that may be attached to the lock and unlock calls are still
+      required.
+
+    There may be additional overheads associated with using `MPI_Win_lock` and
+    `MPI_Win_lock_all` concurrently on the same window. These overheads could be
+    avoided by specifying the assertion `MPI_MODE_NOCHECK` when possible
+
+MPI_Win_post:
+    == Notes
+    The `assert` argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the `MPI_Win_post`
+    operation.  The value zero is always correct.  Other assertion values
+    may be or'ed together.  Assertions that are valid for `MPI_Win_post` are:
+
+    * `MPI_MODE_NOCHECK` - the matching calls to `MPI_WIN_START` have not yet
+      occurred on any origin processes when the call to `MPI_WIN_POST` is made.
+      The nocheck option can be specified by a post call if and only if it is
+      specified by each matching start call.
+    * `MPI_MODE_NOSTORE` - the local window was not updated by local stores (or
+      local get or receive calls) since last synchronization. This may avoid
+      the need for cache synchronization at the post call.
+    * `MPI_MODE_NOPUT` - the local window will not be updated by put or accumulate
+      calls after the post call, until the ensuing (wait) synchronization. This
+      may avoid the need for cache synchronization at the wait call.
+
+MPI_Win_set_info:
+    == Notes
+    Some info items that an implementation can use when it creates a window cannot
+    easily be changed once the window has been created. Thus, an implementation may
+    ignore hints issued in this call that it would have accepted in a creation
+    call.
+
+MPI_Win_shared_query:
+    == Notes
+    The returned `baseptr` points to the calling process' address space of the
+    shared segment belonging to the target `rank`.
+
+MPI_Win_start:
+    == Notes
+    The `assert` argument is used to indicate special conditions for the
+    fence that an implementation may use to optimize the `MPI_Win_start`
+    operation.  The value zero is always correct.  Other assertion values
+    may be or'ed together.  Assertions that are valid for `MPI_Win_start` are:
+
+    * `MPI_MODE_NOCHECK` - the matching calls to `MPI_WIN_POST` have already
+      completed on all target processes when the call to `MPI_WIN_START` is made.
+      The nocheck option can be specified in a start call if and only if it is
+      specified in each matching post call. This is similar to the optimization
+      of ready-send that may save a handshake when the handshake is implicit in
+      the code. (However, ready-send is matched by a regular receive, whereas
+      both start and post must specify the nocheck option.)
+
+MPI_Win_unlock_all:
+    == Notes
+    This call is not collective.
+
+MPI_Comm_get_parent:
+    == Notes
+    If a process was started with `MPI_Comm_spawn` or `MPI_Comm_spawn_multiple`,
+    `MPI_Comm_get_parent` returns the parent intercommunicator of the current
+    process. This parent intercommunicator is created implicitly inside of
+    `MPI_Init` and is the same intercommunicator returned by `MPI_Comm_spawn`
+    in the parents.
+
+    If the process was not spawned, `MPI_Comm_get_parent` returns
+    `MPI_COMM_NULL`.
+
+    After the parent communicator is freed or disconnected, `MPI_Comm_get_parent`
+    returns `MPI_COMM_NULL`.
+
+MPI_Comm_join:
+    == Notes
+    The socket must be quiescent before `MPI_COMM_JOIN` is called and after
+    `MPI_COMM_JOIN` returns. More specifically, on entry to `MPI_COMM_JOIN`, a
+    read on the socket will not read any data that was written to the socket
+    before the remote process called `MPI_COMM_JOIN`.
+
+MPI_Open_port:
+    == Notes
+    MPI copies a system-supplied port name into `port_name`. `port_name` identifies
+    the newly opened port and can be used by a client to contact the server.
+    The maximum size string that may be supplied by the system is
+    `MPI_MAX_PORT_NAME`.
+
+    == Reserved Info Key Values
+
+    * `ip_port` - Value contains IP port number at which to establish a port.
+    * `ip_address` - Value contains IP address at which to establish a port.
+    If the address is not a valid IP address of the host on which the
+    `MPI_OPEN_PORT` call is made, the results are undefined.
+
+MPI_Comm_disconnect:
+    == Notes
+    This routine waits for all pending communication to complete, then frees the
+    communicator and sets `comm` to `MPI_COMM_NULL`.  It may not be called
+    with `MPI_COMM_WORLD` or `MPI_COMM_SELF`.
+
+MPI_Lookup_name:
+    == Notes
+    If the `service_name` is found, MPI copies the associated value into
+    `port_name`.  The maximum size string that may be supplied by the system is
+    `MPI_MAX_PORT_NAME`.
+
+MPI_Publish_name:
+    == Notes
+    The maximum size string that may be supplied for `port_name` is
+    `MPI_MAX_PORT_NAME`.
+
+MPI_Wtick:
+    == Return value
+    Time in seconds since an arbitrary time in the past.
+
+    == Notes
+    This is intended to be a high-resolution, elapsed (or wall) clock.
+    See `MPI_WTICK` to determine the resolution of `MPI_WTIME`.
+    If the attribute `MPI_WTIME_IS_GLOBAL` is defined and true, then the
+    value is synchronized across all processes in `MPI_COMM_WORLD`.
+
+    == Notes for Fortran
+    This is a function, declared as `DOUBLE PRECISION MPI_WTIME` in Fortran.
+
+MPI_Wtime:
+    == Return value
+    Time in seconds of resolution of `MPI_Wtime`
+
+    == Notes for Fortran
+    This is a function, declared as `DOUBLE PRECISION MPI_WTICK` in Fortran.
+
+
+MPI_Cart_create:
+    == Algorithm
+    We ignore `reorder` info currently.
+
+MPI_Cart_rank:
+    == Notes
+    Out-of-range coordinates are erroneous for non-periodic dimensions.
+    Versions of MPICH before 1.2.2 returned `MPI_PROC_NULL` for the rank in this
+    case.
+
+MPI_Cart_shift:
+    == Notes
+    The `direction` argument is in the range `[0,n-1]` for an n-dimensional
+    Cartesian mesh.
+
+MPI_Graph_create:
+    == Notes
+    Each process must provide a description of the entire graph, not just the
+    neighbors of the calling process.
+    
+    == Algorithm
+    We ignore the `reorder` info currently.
+

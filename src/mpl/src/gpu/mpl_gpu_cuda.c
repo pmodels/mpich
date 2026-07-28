@@ -153,7 +153,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr)
 {
     return MPL_SUCCESS;
 }
@@ -191,10 +191,21 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     goto fn_exit;
 }
 
+MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr)
+{
+    CUresult ret;
+    MPL_gpu_buffer_id_t buffer_id;
+
+    ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
+    assert(ret == cudaSuccess);
+
+    return buffer_id;
+}
+
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
     CUresult ret;
-    unsigned long long buffer_id;
+    MPL_gpu_buffer_id_t buffer_id;
 
     ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
     assert(ret == cudaSuccess);
@@ -316,7 +327,6 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.debug_summary = debug_summary;
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE;
-    MPL_gpu_info.specialized_cache = false;
 
     char *visible_devices;
     visible_devices = getenv("CUDA_VISIBLE_DEVICES");

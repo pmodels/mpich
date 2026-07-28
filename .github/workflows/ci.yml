@@ -1,0 +1,58 @@
+name: mpi4py
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - "main"
+      - "[0-9]+.[0-9]+.x"
+  pull_request:
+    types:
+      - labeled
+      - synchronize
+    branches:
+      - "main"
+      - "[0-9]+.[0-9]+.x"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cond-mpi4py:
+    runs-on: ubuntu-slim
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'test-mpi4py') }}
+    steps:
+      - run: true
+
+  test-mpi4py:
+    needs: cond-mpi4py
+    strategy:
+      fail-fast: false
+      matrix:
+        os-arch:
+          - Linux-aarch64
+          - Linux-x86_64
+          - macOS-arm64
+          - macOS-x86_64
+        device:
+          - ch4:ucx
+          - ch4:ofi
+          - ch3:nemesis
+          - ch3:sock
+        pm:
+          - hydra
+          - gforker
+        exclude:
+          - os-arch: macOS-arm64
+            device: ch4:ucx
+          - os-arch: macOS-x86_64
+            device: ch4:ucx
+    uses: ./.github/workflows/ci-workflow.yml
+    with:
+      runs-on: ${{ matrix.os-arch }}
+      device:  ${{ matrix.device }}
+      pm:      ${{ matrix.pm     }}

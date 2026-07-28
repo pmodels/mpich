@@ -373,9 +373,9 @@ The distribution has been tested by us on a variety of machines in our environme
 
 1. First see the [Frequently Asked Questions (FAQ) page](https://github.com/pmodels/mpich/blob/main/doc/wiki/faq/Frequently_Asked_Questions.md) to see if the problem you are facing has a simple solution. Many common problems and their solutions are listed here.
 
-2. If you cannot find an answer on the FAQ page, look through previous email threads on the [discuss@mpich.org mailing list archive](https://lists.mpich.org/mailman/listinfo/discuss). It is likely someone else had a similar problem, which has already been resolved before.
+2. If you cannot find an answer on the FAQ page, look through previous email threads on the [discuss@lists.mpich.org mailing list archive](https://lists.mpich.org/mailman/listinfo/discuss). It is likely someone else had a similar problem, which has already been resolved before.
 
-3. If neither of the above steps work, please send an email to discuss@mpich.org. You need to [subscribe to this list](https://lists.mpich.org/mailman/listinfo/discuss) before sending an email.
+3. If neither of the above steps work, please send an email to discuss@lists.mpich.org. You need to [subscribe to this list](https://lists.mpich.org/mailman/listinfo/discuss) before sending an email.
 
 Your email should contain the following files. **ONCE AGAIN, PLEASE COMPRESS BEFORE SENDING, AS THE FILES CAN BE LARGE.** Note that, depending on which step the build failed, some of the files might not exist.
 
@@ -482,7 +482,7 @@ If the C compiler that is used to build MPICH libraries supports both multiple w
 
 Since the support of multiple aliases of common symbols is new/experimental, users can disable the feature by using configure option `--disable-multi-aliases` if it causes any undesirable effect, e.g. linker warnings of different sizes of common symbols, MPIFCMB* (the warning should be harmless).
 
-We have only tested this support on a limited set of platforms/compilers.  On linux, if the C compiler that builds MPICH is either gcc or icc, the above support will be enabled by configure.  At the time of this writing, pgcc does not seem to have this multiple aliases of common symbols, so configure will detect the deficiency and disable the feature automatically.  The tested Fortran compilers include GNU Fortran compilers (gfortan), Intel Fortran compiler (ifort), Portland Group Fortran compilers (pgfortran), Absoft Fortran compilers (af90), and IBM XL fortran compiler (xlf).  What this means is that if mpich is built by gcc/gfortran, the resulting mpich library can be used to link a Fortran program compiled/linked by another fortran compiler, say pgf90, say through mpifort -fc=pgf90.  As long as the Fortran program is linked without any errors by one of these compilers, the program shall be running fine.
+We have only tested this support on a limited set of platforms/compilers.  On linux, if the C compiler that builds MPICH is either gcc or icc, the above support will be enabled by configure.  At the time of this writing, pgcc does not seem to have this multiple aliases of common symbols, so configure will detect the deficiency and disable the feature automatically.  The tested Fortran compilers include GNU Fortran compilers (gfortran), Intel Fortran compiler (ifort), Portland Group Fortran compilers (pgfortran), Absoft Fortran compilers (af90), and IBM XL fortran compiler (xlf).  What this means is that if mpich is built by gcc/gfortran, the resulting mpich library can be used to link a Fortran program compiled/linked by another fortran compiler, say pgf90, say through mpifort -fc=pgf90.  As long as the Fortran program is linked without any errors by one of these compilers, the program shall be running fine.
 
 ---
 
@@ -546,7 +546,7 @@ This works irrespective of which MPI implementation your application was compile
 }
 
 @article{10.1177/10943420241263544,
-    author = {Heroux, Michael and Zhou, Hui and Raffenetti, Ken and Guo, Yanfei and Gillis, Thomas and Latham, Robert and Thakur, Rajeev},
+    author = {Zhou, Hui and Raffenetti, Ken and Guo, Yanfei and Gillis, Thomas and Latham, Robert and Thakur, Rajeev},
     title = {Designing and prototyping extensions to the Message Passing Interface in MPICH},
     year = {2024},
     issue_date = {Sep 2024},

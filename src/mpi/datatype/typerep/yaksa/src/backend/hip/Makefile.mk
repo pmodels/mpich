@@ -3,8 +3,6 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-EXTRA_DIST += $(top_srcdir)/src/backend/hip/hiplt.sh
-
 if BUILD_HIP_BACKEND
 include $(top_srcdir)/src/backend/hip/include/Makefile.mk
 include $(top_srcdir)/src/backend/hip/hooks/Makefile.mk

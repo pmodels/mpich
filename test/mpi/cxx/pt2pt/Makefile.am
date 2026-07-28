@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist
 
 noinst_PROGRAMS = bsend1cxx sendrecvx
 

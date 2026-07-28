@@ -17,7 +17,7 @@ OUR_LIBS = @TEST_LIBNAME@ @MPI_LIB@
 
 LDADD = $(OUR_LIBS)
 
-AM_CPPFLAGS = $(ROMIO_INCLUDE)
+AM_CPPFLAGS = $(ROMIO_INCLUDE) @MPI_H_INCLUDE@
 AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include
 AM_CPPFLAGS += -I$(top_builddir)/adio/include -I$(top_srcdir)/adio/include @mpl_includedir@
 AM_CFLAGS = $(USER_CFLAGS)
@@ -38,5 +38,3 @@ TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(builddir)/parallel_run.sh
 SH_LOG_COMPILER =
-
-EXTRA_DIST = romio_hintfile

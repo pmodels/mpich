@@ -6,8 +6,7 @@
 #ifndef SHM_COLL_H_INCLUDED
 #define SHM_COLL_H_INCLUDED
 
-#include <shm.h>
-#include "../posix/shm_inline.h"
+#include "../posix/posix_coll.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, int coll_attr)
 {

@@ -26,6 +26,13 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+enum putget_option {
+    PUTGET_AM,
+    PUTGET_CONTIG,
+    PUTGET_NOPACK,
+    PUTGET_PACKED,
+};
+
 #define MPIDI_OFI_QUERY_ATOMIC_COUNT         0
 #define MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT   1
 #define MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT 2
@@ -241,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     /* small contiguous messages */
     /* skip fi_inject path for GPU messages because this path can be
      * very slow */
-    if (origin_contig && target_contig &&
+    if (!sigreq && origin_contig && target_contig &&
         (origin_bytes <= MPIDI_OFI_global.max_buffered_write && !MPL_gpu_attr_is_dev(&attr))) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         MPIDI_OFI_win_cntr_incr(win);
@@ -255,11 +262,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
-    /* large contiguous messages */
+    enum putget_option opt = PUTGET_AM;
     if (origin_contig && target_contig) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+        opt = PUTGET_CONTIG;
+    } else {
+        MPI_Aint origin_density, target_density;
+        MPIR_Datatype_get_density(origin_datatype, origin_density);
+        MPIR_Datatype_get_density(target_datatype, target_density);
+
+        if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+            target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            opt = PUTGET_NOPACK;
+        } else if (origin_density < MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+                   target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            opt = PUTGET_PACKED;
+        } else {
+            goto am_fallback;
+        }
+    }
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+    if (sigreq) {
+        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
+    }
+
+    /* large contiguous messages */
+    if (opt == PUTGET_CONTIG) {
         if (sigreq) {
-            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = FI_DELIVERY_COMPLETE;
@@ -271,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         if (MPL_gpu_attr_is_strict_dev(&attr))
             MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, &attr, win, nic_target, &desc);
 
-        msg.desc = desc;
+        msg.desc = &desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
@@ -284,38 +313,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         riov.key = target_mr.mr_key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write);
-        /* Complete signal request to inform completion to user. */
+
         MPIDI_OFI_sigreq_complete(sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
+    } else if (opt == PUTGET_NOPACK) {
+        mpi_errno = MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                            target_count, target_datatype, target_mr, win, addr,
+                                            MPIDI_OFI_PUT, sigreq);
+        MPIDI_OFI_sigreq_complete(sigreq);
+    } else if (opt == PUTGET_PACKED) {
+        mpi_errno = MPIDI_OFI_pack_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_count, target_datatype, target_mr, win, addr, sigreq);
+        /* complete sigreq after issuing the last chunk in issue_packed_put */
+    } else {
+        MPIR_Assert(0);
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
-    /* noncontiguous messages */
-    MPI_Aint origin_density, target_density;
-    MPIR_Datatype_get_density(origin_datatype, origin_density);
-    MPIR_Datatype_get_density(target_datatype, target_density);
-
-    if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-        mpi_errno =
-            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_count, target_datatype, target_mr, win, addr,
-                                    MPIDI_OFI_PUT, sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
-    }
-
-    if (origin_density < MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-        mpi_errno =
-            MPIDI_OFI_pack_put(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_count, target_datatype, target_mr, win, addr, sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
-    }
-
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
   am_fallback:
     if (sigreq)
         mpi_errno =
@@ -326,10 +344,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
             MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                            target_count, target_datatype, win);
 
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
@@ -430,11 +444,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     if (unlikely(!target_mr_found))
         goto am_fallback;
 
-    /* contiguous messages */
+    enum putget_option opt = PUTGET_AM;
     if (origin_contig && target_contig) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+        opt = PUTGET_CONTIG;
+    } else {
+        MPI_Aint origin_density, target_density;
+        MPIR_Datatype_get_density(origin_datatype, origin_density);
+        MPIR_Datatype_get_density(target_datatype, target_density);
+
+        if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+            target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            opt = PUTGET_NOPACK;
+        } else if (origin_density < MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+                   target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            opt = PUTGET_PACKED;
+        } else {
+            goto am_fallback;
+        }
+    }
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
+    if (sigreq) {
+        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
+    }
+
+    if (opt == PUTGET_CONTIG) {
         if (sigreq) {
-            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, vci);
             flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = 0;
@@ -448,7 +483,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         if (MPL_gpu_attr_is_strict_dev(&attr))
             MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, NULL, win, nic_target, &desc);
 
-        msg.desc = desc;
+        msg.desc = &desc;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
@@ -463,36 +498,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
+    } else if (opt == PUTGET_NOPACK) {
+        mpi_errno = MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                            target_count, target_datatype, target_mr, win, addr,
+                                            MPIDI_OFI_GET, sigreq);
+        MPIDI_OFI_sigreq_complete(sigreq);
+    } else if (opt == PUTGET_PACKED) {
+        mpi_errno = MPIDI_OFI_pack_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_count, target_datatype, target_mr, win, addr, sigreq);
+        /* complete sigreq after issuing the last chunk in issue_packed_get */
+    } else {
+        MPIR_Assert(0);
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
-    /* noncontiguous messages */
-    MPI_Aint origin_density, target_density;
-    MPIR_Datatype_get_density(origin_datatype, origin_density);
-    MPIR_Datatype_get_density(target_datatype, target_density);
-
-    if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-        mpi_errno =
-            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
-                                    target_count, target_datatype, target_mr, win, addr,
-                                    MPIDI_OFI_GET, sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
-    }
-
-    if (origin_density < MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-        mpi_errno =
-            MPIDI_OFI_pack_get(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_count, target_datatype, target_mr, win, addr, sigreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
-        goto fn_exit;
-    }
-
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
   am_fallback:
     if (sigreq)
         mpi_errno =
@@ -502,11 +526,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         mpi_errno =
             MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                            target_count, target_datatype, win);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
@@ -677,7 +696,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, nic_target, &result_desc);
 
     msg.msg_iov = &originv;
-    msg.desc = desc;
+    msg.desc = &desc;
     msg.iov_count = 1;
     msg.addr = MPIDI_OFI_av_to_phys(av, vci, 0, vci_target, nic_target);
     msg.rma_iov = &targetv;
@@ -803,7 +822,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                    &desc);
 
         msg.msg_iov = &originv;
-        msg.desc = desc;
+        msg.desc = &desc;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.rma_iov = &targetv;
@@ -949,7 +968,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
                                    &result_desc);
 
         msg.msg_iov = &originv;
-        msg.desc = desc;
+        msg.desc = &desc;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.rma_iov = &targetv;

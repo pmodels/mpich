@@ -5,7 +5,6 @@
 
 include $(top_srcdir)/Makefile_single.mtest
 
-EXTRA_DIST = testlist
 
 noinst_PROGRAMS = transp_datatype non_zero_root sendrecvl twovec dtpack \
                   allredtrace commcreatep allredtrace commcreatep timer \

@@ -126,6 +126,8 @@ if test -z "$FROM_MPICH" ; then
     export builddir
 fi
 
+AC_SUBST(top_srcdir)
+
 # MPL
 m4_define([mpl_embedded_dir],[modules/mpl])
 PAC_CONFIG_MPL
@@ -137,7 +139,9 @@ PAC_CONFIG_PMI
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)
-AC_SUBST(top_srcdir)
+
+AC_PATH_PROG([ASCIIDOC],[asciidoctor],,$PATH)
+AC_SUBST(ASCIIDOC)
 
 # support gcov test coverage information
 PAC_ENABLE_COVERAGE

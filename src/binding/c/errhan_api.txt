@@ -8,19 +8,6 @@ MPI_Add_error_code:
 
 MPI_Add_error_string:
     .desc: Associates an error string with an MPI error code or class
-/*
-    Notes:
-    The string must be no more than 'MPI_MAX_ERROR_STRING' characters long.
-    The length of the string is as defined in the calling language.
-    The length of the string does not include the null terminator in C or C++.
-    Note that the string is 'const' even though the MPI standard does not
-    specify it that way.
-
-    According to the MPI-2 standard, it is erroneous to call 'MPI_Add_error_string'
-    for an error code or class with a value less than or equal
-    to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
-    with this routine.
-*/
 
 MPI_Error_class:
     .desc: Converts an error code into an error class
@@ -29,12 +16,6 @@ MPI_Error_class:
 MPI_Error_string:
     .desc: Return a string for a given error code
     .skip: initcheck
-/*
-    Notes:
-    Error codes are the values return by MPI routines (in C) or in the
-    'ierr' argument (in Fortran).  These can be converted into error classes
-    with the routine 'MPI_Error_class'.
-*/
 
 MPI_Errhandler_create:
     comm_errhandler_fn: FUNCTION_SMALL, func_type=MPI_Comm_errhandler_function, [user defined error handling procedure]
@@ -67,32 +48,11 @@ MPI_Comm_call_errhandler:
 
 MPI_Comm_create_errhandler:
     .desc: Create a communicator error handler
-/*
-    Notes:
-    The MPI Standard states that an implementation may make the output value
-    (errhandler) simply the address of the function.  However, the action of
-    'MPI_Errhandler_free' makes this impossible, since it is required to set the
-    value of the argument to 'MPI_ERRHANDLER_NULL'.  In addition, the actual
-    error handler must remain until all communicators that use it are
-    freed.
-*/
 
 MPI_Comm_get_errhandler:
     .desc: Get the error handler attached to a communicator
     .extra: ignore_revoked_comm
     .docnotes: ThreadSafeNoUpdate
-/*
-    Note on Implementation:
-
-    The MPI Standard was unclear on whether this routine required the user to call
-    'MPI_Errhandler_free' once for each call made to this routine in order to
-    free the error handler.  After some debate, the MPI Forum added an explicit
-    statement that users are required to call 'MPI_Errhandler_free' when the
-    return value from this routine is no longer needed.  This behavior is similar
-    to the other MPI routines for getting objects; for example, 'MPI_Comm_group'
-    requires that the user call 'MPI_Group_free' when the group returned
-    by 'MPI_Comm_group' is no longer needed.
-*/
 
 MPI_Comm_set_errhandler:
     .desc: Set the error handler for a communicator
@@ -132,13 +92,6 @@ MPI_Remove_error_code:
 
 MPI_Remove_error_string:
     .desc: Remove the error string associated with an MPI error code or class
-/*
-    Notes:
-    According to the MPI 4.1 standard, it is erroneous to call 'MPI_Remove_error_string'
-    for an error code or class with a value less than or equal
-    to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
-    with this routine.
-*/
 
 MPI_Win_call_errhandler:
     .desc: Call the error handler installed on a window

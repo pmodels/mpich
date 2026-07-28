@@ -12,6 +12,9 @@
 
 MPIDI_common_ucc_priv_t MPIDI_common_ucc_priv = { 0 };
 
+const int *const MPIDI_common_ucc_priv_ucc_enabled = &MPIDI_common_ucc_priv.ucc_enabled;
+const int *const MPIDI_common_ucc_priv_ucc_initialized = &MPIDI_common_ucc_priv.ucc_initialized;
+
 #define MPIDI_COMMON_UCC_VERBOSE_STRING(STRING) #STRING,
 const char *MPIDI_COMMON_UCC_VERBOSE_LEVEL_TO_STRING[] = {
     MPIDI_COMMON_UCC_VERBOSE_LEVELS(MPIDI_COMMON_UCC_VERBOSE_STRING)
@@ -30,10 +33,22 @@ static int mpidi_ucc_finalize(void *param ATTRIBUTE((unused)))
         goto fn_exit;
     }
 
-    MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC, "finalizing ucc library");
+    if (MPIDI_common_ucc_priv.comm_world_initialized) {
+        MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
+                                 "finalizing ucc for comm_world");
+        MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world);
+        if (MPIR_Comm_is_parent_comm(MPIR_Process.comm_world)) {
+            MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
+                                     "finalizing ucc for comm_world's shadow comms");
+            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_comm);
+            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_roots_comm);
+        }
+    }
 
     MPIR_Progress_hook_deactivate(MPIDI_common_ucc_priv.progress_hook_id);
     MPIR_Progress_hook_deregister(MPIDI_common_ucc_priv.progress_hook_id);
+
+    MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC, "finalizing ucc library");
 
     ucc_context_destroy(MPIDI_common_ucc_priv.ucc_context);
     if (ucc_finalize(MPIDI_common_ucc_priv.ucc_lib) != UCC_OK) {
@@ -52,25 +67,36 @@ static int mpidi_ucc_finalize(void *param ATTRIBUTE((unused)))
     goto fn_exit;
 }
 
-int MPIDI_common_ucc_enable(int verbose_level, const char *verbose_level_str, int debug_flag)
+int MPIDI_common_ucc_enable(MPIDI_common_ucc_config_t * config)
 {
     /* Only initialize the basic flags here, as the actual UCC initialization happens
      * later when `MPIDI_common_ucc_comm_create_hook()` is called for the first time.
      */
 
-    if (verbose_level) {
-        MPIDI_common_ucc_priv.verbose_level = (MPIDI_common_ucc_verbose_levels_t) verbose_level;
-    } else if (verbose_level_str) {
-        MPIDI_COMMON_UCC_VERBOSE_STRING_TO_LEVEL(verbose_level_str,
-                                                 MPIDI_common_ucc_priv.verbose_level);
-    } else {
-        MPIDI_common_ucc_priv.verbose_level = MPIDI_COMMON_UCC_VERBOSE_LEVEL_NONE;
+    if (config) {
+        if (config->verbose_level) {
+            MPIDI_common_ucc_priv.verbose_level =
+                (MPIDI_common_ucc_verbose_levels_t) config->verbose_level;
+        } else if (config->verbose_level_str) {
+            MPIDI_COMMON_UCC_VERBOSE_STRING_TO_LEVEL(config->verbose_level_str,
+                                                     MPIDI_common_ucc_priv.verbose_level);
+        } else {
+            MPIDI_common_ucc_priv.verbose_level = MPIDI_COMMON_UCC_VERBOSE_LEVEL_NONE;
+        }
+        if (config->debug_flag) {
+            MPIDI_common_ucc_priv.debug_flag = 1;
+            /* keep these flags separated for more fine-grained debugging in the future */
+            MPIDI_common_ucc_priv.verbose_debug = 1;
+        }
+        if (config->threaded_flag) {
+            MPIDI_common_ucc_priv.thread_mode = UCC_THREAD_MULTIPLE;
+        } else {
+            MPIDI_common_ucc_priv.thread_mode = UCC_THREAD_SINGLE;
+        }
     }
 
-    MPIDI_common_ucc_priv.verbose_debug = debug_flag;
-
     if (!MPIDI_common_ucc_priv.ucc_enabled) {
-        MPIR_Add_finalize(mpidi_ucc_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO + 1);
+        MPIR_Add_finalize(mpidi_ucc_finalize, NULL, MPIDI_COMMON_UCC_FINALIZE_CALLBACK_PRIO);
         MPIDI_common_ucc_priv.ucc_enabled = 1;
     }
 
@@ -157,11 +183,11 @@ int MPIDI_common_ucc_progress(int *made_progress)
 static int mpidi_ucc_setup_lib(void)
 {
     int mpidi_ucc_err = MPIDI_COMMON_UCC_RETVAL_SUCCESS;
-    char str_buf[256];
-    ucc_lib_config_h lib_config;
-    ucc_context_config_h ctx_config;
-    ucc_lib_params_t lib_params;
-    ucc_context_params_t ctx_params;
+    char str_buf[256] = { 0 };
+    ucc_lib_config_h lib_config = { 0 };
+    ucc_context_config_h ctx_config = { 0 };
+    ucc_lib_params_t lib_params = { 0 };
+    ucc_context_params_t ctx_params = { 0 };
 
     ucc_lib_h *lib_ptr = NULL;
     ucc_lib_attr_t *lib_attr_ptr = NULL;
@@ -188,7 +214,8 @@ static int mpidi_ucc_setup_lib(void)
 
 #ifdef MPICH_IS_THREADED
     lib_params_ptr->thread_mode =
-        MPIR_ThreadInfo.isThreaded ? UCC_THREAD_MULTIPLE : UCC_THREAD_SINGLE;
+        MPIR_ThreadInfo.isThreaded ? UCC_THREAD_MULTIPLE : MPIDI_common_ucc_priv.thread_mode;
+    MPIDI_common_ucc_priv.thread_mode = lib_params_ptr->thread_mode;
     lib_params_ptr->mask = UCC_LIB_PARAM_FIELD_THREAD_MODE;
 #else
     lib_params_ptr->mask = 0;
@@ -426,7 +453,7 @@ int MPIDI_common_ucc_comm_destroy_hook(MPIR_Comm * comm_ptr)
     MPIDI_COMMON_UCC_DEBUG(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC,
                            "entering mpidi comm destroy hook");
 
-    if (!MPIDI_common_ucc_priv.ucc_enabled || !MPIDI_common_ucc_priv.ucc_initialized) {
+    if (!MPIDI_common_ucc_priv.ucc_enabled || !MPIDI_common_ucc_priv.ucc_initialized || !comm_ptr) {
         goto fn_exit;
     }
 
@@ -446,6 +473,10 @@ int MPIDI_common_ucc_comm_destroy_hook(MPIR_Comm * comm_ptr)
     if (status != UCC_OK) {
         MPIDI_COMMON_UCC_ERROR("ucc team destroy failed");
         goto fn_fail;
+    }
+
+    if (comm_ptr == MPIR_Process.comm_world) {
+        MPIDI_common_ucc_priv.comm_world_initialized = 0;
     }
 
     comm_ptr->ucc_priv.ucc_initialized = 0;

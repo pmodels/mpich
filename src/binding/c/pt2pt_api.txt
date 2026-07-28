@@ -4,36 +4,6 @@ MPI_Bsend:
     .desc: Basic send with user-provided buffering
     .seealso: MPI_Buffer_attach, MPI_Ibsend, MPI_Bsend_init
     .earlyreturn: pt2pt_proc_null
-/*
-    Notes:
-    This send is provided as a convenience function; it allows the user to
-    send messages without worring about where they are buffered (because the
-    user `must` have provided buffer space with 'MPI_Buffer_attach').
-
-    In deciding how much buffer space to allocate, remember that the buffer space
-    is not available for reuse by subsequent 'MPI_Bsend's unless you are certain
-    that the message
-    has been received (not just that it should have been received).  For example,
-    this code does not allocate enough buffer space
-    .vb
-        MPI_Buffer_attach(b, n*sizeof(double) + MPI_BSEND_OVERHEAD);
-        for (i=0; i<m; i++) {
-            MPI_Bsend(buf, n, MPI_DOUBLE, ...);
-        }
-    .ve
-    because only enough buffer space is provided for a single send, and the
-    loop may start a second 'MPI_Bsend' before the first is done making use of the
-    buffer.
-
-    In C, you can
-    force the messages to be delivered by
-    .vb
-        MPI_Buffer_detach(&b, &n);
-        MPI_Buffer_attach(b, n);
-    .ve
-    (The 'MPI_Buffer_detach' will not complete until all buffered messages are
-    delivered.)
-*/
 {
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno != MPI_SUCCESS)
@@ -59,91 +29,11 @@ MPI_Buffer_attach:
     .desc: Attaches a user-provided buffer for sending
     .skip: ThreadSafe
     .seealso: MPI_Buffer_detach, MPI_Bsend
-/*
-    Notes:
-    The size given should be the sum of the sizes of all outstanding Bsends that
-    you intend to have, plus 'MPI_BSEND_OVERHEAD' for each Bsend that you do.
-    For the purposes of calculating size, you should use 'MPI_Pack_size'.
-    In other words, in the code
-    .vb
-         MPI_Buffer_attach(buffer, size);
-         MPI_Bsend(..., count=20, datatype=type1,  ...);
-         ...
-         MPI_Bsend(..., count=40, datatype=type2, ...);
-    .ve
-    the value of 'size' in the 'MPI_Buffer_attach' call should be greater than
-    the value computed by
-    .vb
-         MPI_Pack_size(20, type1, comm, &s1);
-         MPI_Pack_size(40, type2, comm, &s2);
-         size = s1 + s2 + 2 * MPI_BSEND_OVERHEAD;
-    .ve
-    The 'MPI_BSEND_OVERHEAD' gives the maximum amount of space that may be used in
-    the buffer for use by the BSEND routines in using the buffer.  This value
-    is in 'mpi.h' (for C) and 'mpif.h' (for Fortran).
-
-    .N NotThreadSafe
-    Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
-    threads in a process, the user is responsible for ensuring that only
-    one thread at a time calls this routine or 'MPI_Buffer_detach'.
-*/
 
 MPI_Buffer_detach:
     .desc: Removes an existing buffer (for use in MPI_Bsend etc)
     .skip: ThreadSafe, Fortran
     .seealso: MPI_Buffer_attach
-/*
-    Notes:
-        The reason that 'MPI_Buffer_detach' returns the address and size of the
-    buffer being detached is to allow nested libraries to replace and restore
-    the buffer.  For example, consider
-
-    .vb
-        int size, mysize, idummy;
-        void *ptr, *myptr, *dummy;
-        MPI_Buffer_detach(&ptr, &size);
-        MPI_Buffer_attach(myptr, mysize);
-        ...
-        ... library code ...
-        ...
-        MPI_Buffer_detach(&dummy, &idummy);
-        MPI_Buffer_attach(ptr, size);
-    .ve
-
-    This is much like the action of the Unix signal routine and has the same
-    strengths (it is simple) and weaknesses (it only works for nested usages).
-
-    Note that for this approach to work, MPI_Buffer_detach must return MPI_SUCCESS
-    even when there is no buffer to detach.  In that case, it returns a size of
-    zero.  The MPI 1.1 standard for 'MPI_BUFFER_DETACH' contains the text
-
-    .vb
-       The statements made in this section describe the behavior of MPI for
-       buffered-mode sends. When no buffer is currently associated, MPI behaves
-       as if a zero-sized buffer is associated with the process.
-    .ve
-
-    This could be read as applying only to the various Bsend routines.  This
-    implementation takes the position that this applies to 'MPI_BUFFER_DETACH'
-    as well.
-
-    .N NotThreadSafe
-    Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
-    threads in a process, the user is responsible for ensuring that only
-    one thread at a time calls this routine or 'MPI_Buffer_attach'.
-
-    .N Fortran
-
-        The Fortran binding for this routine is different.  Because Fortran
-        does not have pointers, it is impossible to provide a way to use the
-        output of this routine to exchange buffers.  In this case, only the
-        size field is set.
-
-    Notes for C:
-        Even though the 'bufferptr' argument is declared as 'void *', it is
-        really the address of a void pointer.  See the rationale in the
-        standard for more details.
-*/
 
 MPI_Buffer_flush:
     .desc: block until all messages currently in the globally shared buffer of the calling process have been transmitted
@@ -359,11 +249,6 @@ MPI_Recv:
     .desc: Blocking receive for a message
     .earlyreturn: pt2pt_proc_null
     .extra: threadcomm
-/*
-    Notes:
-    The 'count' argument indicates the maximum length of a message; the actual
-    length of the message can be determined with 'MPI_Get_count'.
-*/
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -438,11 +323,6 @@ MPI_Send:
     .seealso: MPI_Isend, MPI_Bsend
     .earlyreturn: pt2pt_proc_null
     .extra: threadcomm
-/*
-    Notes:
-    This routine may block until the message is received by the destination
-    process.
-*/
 {
     MPIR_Request *request_ptr = NULL;
 
