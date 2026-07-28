@@ -47,6 +47,28 @@ cvars:
       description : >-
         Controls topology-aware communication in POSIX.
 
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_PROGRESS_RECV_LOOPS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls the maximum number of polling on recv queue
+        per progress.
+
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_PROGRESS_SEND_LOOPS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls the maximum number of polling on send queue (for
+        deferred sends) per progress.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
