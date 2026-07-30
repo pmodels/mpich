@@ -1,0 +1,69 @@
+actions:
+  create-archive:
+    - git update-ref refs/heads/packit-build HEAD
+    - >-
+      bash -c './maint/release.pl
+      --git-repo "$PWD"
+      --branch packit-build
+      --version "$PACKIT_PROJECT_VERSION"'
+    - bash -c 'echo "${PACKIT_PROJECT_NAME_VERSION}.tar.gz"'
+
+specfile_path: packaging/rpm/mpich.spec
+upstream_package_name: mpich
+downstream_package_name: mpich
+upstream_tag_template: "v{version}"
+srpm_build_deps:
+  - autoconf
+  - automake
+  - gcc
+  - git
+  - libtool
+  - make
+  - perl
+  - python3
+  - rubygem-asciidoctor
+files_to_sync:
+  - src: packaging/rpm/
+    dest: ./
+    delete: true
+    filters:
+      - "protect .git*"
+      - "protect sources"
+      - "protect changelog"
+  - .packit.yaml
+
+targets:
+  - fedora-latest-x86_64
+  - fedora-latest-aarch64
+  - fedora-latest-ppc64le
+  - fedora-latest-s390x
+  - fedora-development-x86_64
+  - fedora-development-aarch64
+  - fedora-development-ppc64le
+  - fedora-development-s390x
+
+jobs:
+  - &copr_build
+    job: copr_build
+    trigger: release
+    owner: growl
+    project: release
+  - <<: *copr_build
+    trigger: commit
+    branch: main
+    project: devpkgs
+  - job: copr_build
+    trigger: pull_request
+
+#  - job: propose_downstream
+#    trigger: release
+#    dist_git_branches:
+#      - main
+#  - job: koji_build
+#    trigger: commit
+#    dist_git_branches:
+#      - fedora-all
+#  - job: bodhi_update
+#    trigger: commit
+#    dist_git_branches:
+#      - fedora-branched
