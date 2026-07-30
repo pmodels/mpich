@@ -144,7 +144,7 @@ if (!$branch || !$version) {
     usage();
 }
 
-my $has_doctext = check_package("doctext");
+my $has_asciidoctor = check_package("asciidoctor");
 my $has_git = check_package("git");
 my $has_latex = check_package("latex");
 my $has_autoconf = check_package("autoconf");
@@ -152,10 +152,13 @@ my $has_automake = check_package("automake");
 if (!$has_git || !$has_autoconf || !$has_automake) {
     die "\tFATAL: git, autoconf, and automake are required.\n";
 }
-if (!$has_doctext || !$has_latex) {
-    print("\tWARNING: doctext or latex not found. Man pages and documentations\n");
+if (!$has_asciidoctor) {
+    print("\tWARNING: asciidoctor not found. Man pages and HTML documentation\n");
     print("\t         will be skipped in the release package.\n\n");
-    print("\tdoctext is available on http://wgropp.cs.illinois.edu/projects/software/sowing/\n");
+}
+if (!$has_latex) {
+    print("\tWARNING: latex not found. PDF and ROMIO documentation will be\n");
+    print("\t         skipped in the release package.\n\n");
 }
 print("\n");
 
@@ -252,24 +255,33 @@ run_cmd("find . -name autom4te.cache -o -name __pycache__ | xargs rm -rf");
 print("done\n");
 
 # Get docs
-if ($has_doctext and $has_latex) {
+if ($has_asciidoctor || $has_latex) {
     print("===> Creating secondary codebase for the docs... ");
     run_cmd("mkdir ${expdir}-build");
     chdir("${expdir}-build");
     run_cmd("${expdir}/configure --with-device=ch4:stubnm --disable-fortran --disable-cxx");
-    run_cmd("(make mandoc && make htmldoc && make latexdoc)");
     print("done\n");
 
-    print("===> Copying docs over... ");
-    run_cmd("cp -a man ${expdir}");
-    run_cmd("cp -a www ${expdir}");
-    run_cmd("cp -a doc/userguide/user.pdf ${expdir}/doc/userguide");
-    run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
-    print("done\n");
+    if ($has_asciidoctor) {
+        print("===> Creating man pages and HTML documentation... ");
+        run_cmd("make mandoc && make htmldoc");
+        run_cmd("cp -a man ${expdir}");
+        run_cmd("cp -a www ${expdir}");
+        print("done\n");
+    }
 
+    if ($has_latex) {
+        print("===> Creating PDF documentation... ");
+        run_cmd("make latexdoc");
+        run_cmd("cp -a doc/userguide/user.pdf ${expdir}/doc/userguide");
+        run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
+        print("done\n");
+    }
+}
+
+if ($has_latex) {
     print("===> Creating ROMIO docs... ");
-    chdir("${expdir}/src/mpi");
-    chdir("romio/doc");
+    chdir("${expdir}/src/mpi/romio/doc");
     run_cmd("make");
     run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
     print("done\n");
