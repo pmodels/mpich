@@ -1712,7 +1712,7 @@ PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
 # We need variables from $cc_shlib_conf to set `WRAPPER_C_DYNAMIC_LOADING_FLAGS`, which 
-#    is used in `src/packaging/pkgconfig/mpich.pc.in`
+#    is used in `packaging/pkgconfig/mpich.pc.in`
 # However, libtool's $library_names_spec is more than what's given in $cc_shlib_conf, so
 #    we need protect it. 
 # FIXME: potentially, there are more variable collisions. Need better plan.
@@ -2727,7 +2727,7 @@ if test "$MPID_NO_LONG_LONG" != "yes" ; then
 fi
 
 # ----------------------------------------------------------------------------
-AC_CHECK_ALIGNOF([max_align_t],[0],[#include <stddef.h>])
+AC_CHECK_ALIGNOF([max_align_t],[#include <stddef.h>])
 
 if test "$ac_cv_alignof_max_align_t" != "0" ; then
     AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_max_align_t,[Controls byte alignment of structures (for aligning allocated structures)])
@@ -4337,8 +4337,6 @@ AC_CONFIG_FILES([Makefile \
 	  mpich-doxygen \
           src/include/mpir_ext.h \
           src/binding/cxx/mpicxx.h \
-	  src/packaging/pkgconfig/mpich.pc \
-	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
           src/env/mpicc.sh \
 	  src/env/mpicc.bash \
@@ -4351,7 +4349,9 @@ AC_CONFIG_FILES([Makefile \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
-          test/commands/cmdtests])
+          test/commands/cmdtests \
+          packaging/pkgconfig/mpich.pc \
+          packaging/envmods/mpich.module])
 if test "$enable_f77" = "yes" ; then
     AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
                      src/binding/fortran/mpif_h/setbotf.f \

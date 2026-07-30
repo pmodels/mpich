@@ -122,6 +122,7 @@ lib_LTLIBRARIES =
 
 # include our subdir automake fragments
 include src/Makefile.mk
+include packaging/Makefile.mk
 
 if BUILD_PROFILING_LIB
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
