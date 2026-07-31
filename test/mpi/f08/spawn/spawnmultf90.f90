@@ -21,6 +21,7 @@
        character*(30) cmds(2)
        character*(80) argv(64)
        integer argc
+       integer iargc
        integer ierr
        integer can_spawn
 !

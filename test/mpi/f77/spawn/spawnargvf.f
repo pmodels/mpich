@@ -17,6 +17,7 @@ C
         character*(10) inargv(6), outargv(6)
         character*(80)   argv(64)
         integer argc
+        integer iargc
         data inargv /"a", "b=c", "d e", "-pf", " Ss", " " /
         data outargv /"a", "b=c", "d e", "-pf", "Ss", " " /
         integer ierr
