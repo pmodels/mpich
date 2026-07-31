@@ -113,7 +113,15 @@ if test "x$prefix" != "xNONE" && test -d "$prefix"; then
     fi
 fi
 
+m4_include([maint/yaksa_depth.m4])
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+if test -n "$MPICH_YAKSA_DEPTH" ; then
+    if test -n "$CONFIGURE_ARGS_CLEAN" ; then
+        CONFIGURE_ARGS_CLEAN="-yaksa-depth=$MPICH_YAKSA_DEPTH $CONFIGURE_ARGS_CLEAN"
+    else
+        CONFIGURE_ARGS_CLEAN="-yaksa-depth=$MPICH_YAKSA_DEPTH"
+    fi
+fi
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
 # these values come from the m4_include above

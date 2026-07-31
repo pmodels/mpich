@@ -561,6 +561,7 @@ autogen_external() {
         fi
         if test "$_dir" = "src/mpi/datatype/typerep/yaksa" -a -n "$yaksa_depth" ; then
             (cd $_dir && ./autogen.sh --pup-max-nesting=$yaksa_depth) || exit 1
+            echo "MPICH_YAKSA_DEPTH=$yaksa_depth" > "$SRCROOTDIR/maint/yaksa_depth.m4"
         else
             (cd $_dir && ./autogen.sh) || exit 1
         fi
