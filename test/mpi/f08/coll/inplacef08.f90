@@ -9,6 +9,7 @@
 !
        program main
        use mpi_f08
+       implicit none
        integer ierr, errs
        integer root
        TYPE(MPI_Comm) comm

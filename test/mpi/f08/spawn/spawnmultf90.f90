@@ -8,8 +8,8 @@
 ! command-line options.
 !
        program main
-!     declared on the old sparc compilers
        use mpi_f08
+       implicit none
        integer errs, err
        integer rank, size, rsize, wsize, i
        integer np(2)

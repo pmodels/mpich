@@ -6,6 +6,7 @@
 ! Simple info test
        program main
        use mpi_f08
+       implicit none
        type(MPI_Info) i1, i2
        integer i, errs, ierr
        integer valuelen

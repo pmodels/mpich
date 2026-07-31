@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer max_asizev
       parameter (max_asizev=2)
       integer (kind=MPI_ADDRESS_KIND) aint, aintv(max_asizev)

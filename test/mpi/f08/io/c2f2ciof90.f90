@@ -6,6 +6,7 @@
 ! Test just the MPI-IO FILE object
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer wrank
       type(MPI_Group) wgroup

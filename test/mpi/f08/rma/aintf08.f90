@@ -9,6 +9,7 @@
 
 program main
     use mpi_f08
+    implicit none
     integer :: rank, nproc
     integer :: ierr, errs
     integer :: array(0:1023)

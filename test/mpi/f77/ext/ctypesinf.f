@@ -4,6 +4,7 @@ C     See COPYRIGHT in top-level directory
 C
 
       program main
+      implicit none
       include 'mpif.h'
       integer ierr
       integer errs, wrank

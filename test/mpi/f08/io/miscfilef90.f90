@@ -7,6 +7,7 @@
       use mpi_f08
 ! iooffset.h provides a variable "offset" that is of type MPI_Offset
 ! (in Fortran 90, kind=MPI_OFFSET_KIND)
+      implicit none
       integer (kind=MPI_OFFSET_KIND) offset
 
 ! iodisp.h declares disp as an MPI_Offset integer

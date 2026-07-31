@@ -14,6 +14,7 @@
       subroutine msg_check( recv_buf, source, tag, count, status, n, &
       &                      name, errs )
       use mpi_f08
+      implicit none
       integer n, errs
       real    recv_buf(n)
       integer source, tag, count, rank
@@ -59,6 +60,7 @@
 !------------------------------------------------------------------------------
       subroutine rq_check( requests, n, msg )
       use mpi_f08
+      implicit none
       integer n
       type(MPI_Request) requests(n)
       character*(*) msg
@@ -77,6 +79,7 @@
 !
 !------------------------------------------------------------------------------
       subroutine init_test_data(buf,n)
+      implicit none
       integer n
       real buf(n)
       integer i
@@ -92,6 +95,7 @@
 !
 !------------------------------------------------------------------------------
       subroutine clear_test_data(buf, n)
+      implicit none
       integer n
       real buf(n)
       integer i
@@ -108,6 +112,7 @@
 !
 !------------------------------------------------------------------------------
       subroutine verify_test_data( buf, count, n, name, errs )
+      implicit none
       integer n, errs
       real buf(n)
       character *(*) name
@@ -138,6 +143,7 @@
 !    compiler.
 !
       subroutine dummyRef( a, n, ie )
+      implicit none
       integer n, ie
       real    a(n)
 ! This condition will never be true, but the compile won't know that

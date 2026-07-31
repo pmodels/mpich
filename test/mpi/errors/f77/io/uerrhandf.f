@@ -99,6 +99,7 @@ C NOTE: ierr may be MPI_SUCCESS but handler should be invoked
       end
 C
       subroutine comm_errh_fn( comm, ec )
+      implicit none
       integer comm, ec
       common /ec/ iseen
       integer iseen(3)
@@ -109,6 +110,7 @@ C
       end
 C
       subroutine win_errh_fn( win, ec )
+      implicit none
       integer win, ec
       common /ec/ iseen
       integer iseen(3)
@@ -118,6 +120,7 @@ C
 C
       end
       subroutine file_errh_fn( fh, ec )
+      implicit none
       integer fh, ec
       common /ec/ iseen
       integer iseen(3)

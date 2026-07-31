@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
@@ -119,6 +120,7 @@
       subroutine mycopyfn( oldcomm, keyval, extrastate, valin, valout, &
       &                     flag, ierr )
       use mpi_f08
+      implicit none
       type(MPI_Comm) oldcomm
       integer keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
@@ -141,6 +143,7 @@
 !
       subroutine mydelfn( comm, keyval, val, extrastate, ierr )
       use mpi_f08
+      implicit none
       type(MPI_Comm) comm
       integer keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val

@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer i, rlen, ln
       TYPE(MPI_Comm) comm(4)

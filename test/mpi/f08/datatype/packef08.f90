@@ -7,6 +7,7 @@
 
        program main
        use mpi_f08
+       implicit none
        integer ierr, errs
        integer inbuf(10), ioutbuf(10), inbuf2(10), ioutbuf2(10)
        integer i, insize, rsize, csize, insize2

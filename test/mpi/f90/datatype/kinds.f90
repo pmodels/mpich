@@ -8,6 +8,7 @@
 !
   program main
   use mpi
+  implicit none
   integer (kind=MPI_ADDRESS_KIND) aint, taint
   integer (kind=MPI_OFFSET_KIND) oint, toint
   integer (kind=MPI_INTEGER_KIND) iint, tiint

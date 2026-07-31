@@ -8,6 +8,7 @@
       program main
 !     Test support for MPI_STATUS_IGNORE and MPI_STATUSES_IGNORE
       use mpi_f08
+      implicit none
       integer nreqs
       parameter (nreqs = 100)
       TYPE(MPI_Request) reqs(nreqs)

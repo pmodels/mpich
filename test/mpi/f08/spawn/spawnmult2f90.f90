@@ -9,6 +9,7 @@
 !
        program main
        use mpi_f08
+       implicit none
        integer (kind=MPI_ADDRESS_KIND) aint
 
        integer errs, err

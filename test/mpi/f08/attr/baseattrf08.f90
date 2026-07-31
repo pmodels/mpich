@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer value, commsize
       logical flag
       integer ierr, errs
