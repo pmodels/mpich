@@ -1,6 +1,6 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
-Version:        4.2.2
+Version:        0.0.0
 Release:        %autorelease
 License:        mpich2
 URL:            https://www.mpich.org/
@@ -10,14 +10,8 @@ Source1:        mpich.macros
 Source3:        mpich.pth.py3
 
 Patch:          0001-pkgconf-remove-optimization-and-link-flags-from-pkgc.patch
-Patch:          0002-pkgconf-also-drop-rpath-flags-from-pkgconf-file.patch
-Patch:          0003-Drop-build-flags-e.g.-specs.-and-lto-from-mpi-wrappe.patch
-Patch:          0004-Make-mpich.module-useful.patch
-# TODO: submit ^ upstream
-
-Patch:          mpich-configure-max_align_t.patch
-Patch:          mpich-aclocal_cc-implicit-int.patch
-Patch:          mpich-json-configure-__thread.patch
+Patch:          0002-Drop-build-flags-e.g.-specs.-and-lto-from-mpi-wrappe.patch
+Patch:          0003-Make-mpich.module-useful.patch
 
 BuildRequires:  make
 BuildRequires:  autoconf
@@ -191,7 +185,7 @@ sed -r 's|%{_bindir}|%{_libdir}/%{name}/bin|;
         s|@ARCH@|%{_arch}|;
         s|@fortranmoddir@|%{_fmoddir}|;
      ' \
-     <src/packaging/envmods/mpich.module \
+     <packaging/envmods/mpich.module \
      >%{buildroot}%{_datadir}/modulefiles/mpi/%{name}-%{_arch}
 
 mkdir -p %{buildroot}%{_sysconfdir}/profile.d
@@ -234,7 +228,8 @@ make check VERBOSE=1 \
 
 %files
 %license COPYRIGHT
-%doc CHANGES README README.envvar RELEASE_NOTES
+%config(noreplace) %{_sysconfdir}/mpixxx_opts.conf
+%doc CHANGES README.md README.envvar
 %dir %{_libdir}/%{name}
 %dir %{_libdir}/%{name}/lib
 %dir %{_libdir}/%{name}/bin
