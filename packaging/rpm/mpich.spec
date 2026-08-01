@@ -1,3 +1,5 @@
+%global somajor 12
+
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        0.0.0
@@ -236,7 +238,7 @@ make check VERBOSE=1 \
 %dir %{_libdir}/%{name}/lib/cmake
 %dir %{_libdir}/%{name}/include
 %dir %{_fmoddir}/mpich
-%{_libdir}/%{name}/lib/*.so.*
+%{_libdir}/%{name}/lib/*.so.%{somajor}{,.*}
 %{_libdir}/%{name}/bin/hydra*
 %{_libdir}/%{name}/bin/mpichversion
 %{_libdir}/%{name}/bin/mpiexec*
