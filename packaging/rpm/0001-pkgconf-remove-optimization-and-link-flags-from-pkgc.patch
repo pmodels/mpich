@@ -17,20 +17,20 @@ WRAPPER_CFLAGS = -O2 -flto=auto -ffat-lto-objects -fexceptions -g -grecord-gcc-s
 None of those are appropriate to be exported to dependent projects.
 For https://fedoraproject.org/wiki/Changes/Package_information_on_ELF_objects.
 ---
- src/packaging/pkgconfig/mpich.pc.in | 10 +++++-----
+ packaging/pkgconfig/mpich.pc.in | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/src/packaging/pkgconfig/mpich.pc.in b/src/packaging/pkgconfig/mpich.pc.in
+diff --git a/packaging/pkgconfig/mpich.pc.in b/packaging/pkgconfig/mpich.pc.in
 index e905ff2e20..ff6dc35807 100644
---- a/src/packaging/pkgconfig/mpich.pc.in
-+++ b/src/packaging/pkgconfig/mpich.pc.in
+--- a/packaging/pkgconfig/mpich.pc.in
++++ b/packaging/pkgconfig/mpich.pc.in
 @@ -9,12 +9,12 @@ Description: High Performance and portable MPI
  Version: @MPICH_VERSION@
  URL: http://www.mcs.anl.gov/research/projects/mpich
  Requires:
 -Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} -l@MPILIBNAME@ @LPMPILIBNAME@ @WRAPPER_LIBS@
 -Cflags: @WRAPPER_CPPFLAGS@ @WRAPPER_CFLAGS@ -I${includedir}
-+Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ -L${libdir} -l@MPILIBNAME@ @LPMPILIBNAME@
++Libs: -L${libdir} -l@MPILIBNAME@ @LPMPILIBNAME@
 +Cflags: @WRAPPER_CPPFLAGS@ -I${includedir}
  
  # pkg-config does not understand Cxxflags, etc. So we allow users to
