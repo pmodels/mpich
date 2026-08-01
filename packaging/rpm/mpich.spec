@@ -238,7 +238,9 @@ make check VERBOSE=1 \
 %dir %{_libdir}/%{name}/lib/cmake
 %dir %{_libdir}/%{name}/include
 %dir %{_fmoddir}/mpich
-%{_libdir}/%{name}/lib/*.so.%{somajor}{,.*}
+%{_libdir}/%{name}/lib/libmpi.so.%{somajor}{,.*}
+%{_libdir}/%{name}/lib/libmpicxx.so.%{somajor}{,.*}
+%{_libdir}/%{name}/lib/libmpifort.so.%{somajor}{,.*}
 %{_libdir}/%{name}/bin/hydra*
 %{_libdir}/%{name}/bin/mpichversion
 %{_libdir}/%{name}/bin/mpiexec*
@@ -255,7 +257,15 @@ make check VERBOSE=1 \
 %{_includedir}/%{name}-%{_arch}/
 %{_libdir}/%{name}/lib/pkgconfig/
 %{_libdir}/%{name}/lib/cmake/
-%{_libdir}/%{name}/lib/*.so
+%{_libdir}/%{name}/lib/libmpi.so
+%{_libdir}/%{name}/lib/libmpicxx.so
+%{_libdir}/%{name}/lib/libmpifort.so
+%{_libdir}/%{name}/lib/libmpich.so
+%{_libdir}/%{name}/lib/libmpichcxx.so
+%{_libdir}/%{name}/lib/libmpichf90.so
+%{_libdir}/%{name}/lib/libfmpich.so
+%{_libdir}/%{name}/lib/libmpl.so
+%{_libdir}/%{name}/lib/libopa.so
 %{_libdir}/%{name}/bin/mpicc
 %{_libdir}/%{name}/bin/mpic++
 %{_libdir}/%{name}/bin/mpicxx
