@@ -20,6 +20,21 @@ static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
 
+/* PMIx does not handle duplicate keys reliably. In a session re-init case, the 2nd round
+ * business card exchange may see previous values due to key collisions.
+ */
+/* Use pmix_init_count to track and differentiate each re-init epoch.
+ * 1. skip PMIx_Init if pmix_init_count > 1
+ * 2. prefix kvs keys with pmix_init_count to avoid key collisions.
+ */
+static int pmix_init_count = 0;
+static const char *prefix_key(const char *key)
+{
+    static char buf[PMIX_MAX_KEYLEN];
+    snprintf(buf, PMIX_MAX_KEYLEN, "%s-%d", key, pmix_init_count);
+    return buf;
+}
+
 static void pmix_not_supported(const char *elem, char *error_str, int len);
 static int pmix_add_to_info(MPIR_Info * info_ptr, const char *key, const char *pmix_key,
                             MPIR_Info * target_ptr, int *key_found, size_t * counter, char **value);
@@ -52,7 +67,6 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 
     /* Since we only call PMIx_Finalize once at `atexit` handler, we need prevent
      * calling PMIx_Init multiple times. */
-    static int pmix_init_count = 0;
     pmix_init_count++;
     if (pmix_init_count == 1) {
         pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
@@ -177,7 +191,7 @@ static int pmix_put(const char *key, const char *val)
     pmix_value_t value;
     value.type = PMIX_STRING;
     value.data.string = (char *) val;
-    pmi_errno = PMIx_Put(PMIX_GLOBAL, key, &value);
+    pmi_errno = PMIx_Put(PMIX_GLOBAL, prefix_key(key), &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
     pmi_errno = PMIx_Commit();
@@ -196,13 +210,13 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
 
     pmix_value_t *pvalue;
     if (src < 0) {
-        pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&pmix_wcproc, prefix_key(key), NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
         proc.rank = src;
 
-        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&proc, prefix_key(key), NULL, 0, &pvalue);
     }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
@@ -219,7 +233,7 @@ static int pmix_get_parent(const char *key, char *val, int val_size)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno = PMIX_SUCCESS;
     pmix_value_t *pvalue;
-    pmi_errno = PMIx_Get(&pmix_parent, key, NULL, 0, &pvalue);
+    pmi_errno = PMIx_Get(&pmix_parent, prefix_key(key), NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
                          "**pmix_get %s", PMIx_Error_string(pmi_errno));
     MPL_strncpy(val, pvalue->data.string, val_size);
@@ -244,6 +258,8 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     /* translate MPICH key to PMIx standard format */
     if (strcmp(key, "PMI_process_mapping") == 0) {
         key = PMIX_ANL_MAP;
+    } else {
+        goto fn_exit;
     }
 
     /* if this is a non-reserved key, we want to make sure not to block
@@ -261,6 +277,7 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     }
     PMIX_INFO_FREE(info, 1);
 
+  fn_exit:
     return found;
 }
 
@@ -391,7 +408,7 @@ static int pmix_optimized_put(const char *key, const char *val, int is_local)
     pmix_value_t value;
     value.type = PMIX_STRING;
     value.data.string = (char *) val;
-    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, key, &value);
+    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, prefix_key(key), &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
     pmi_errno = PMIx_Commit();
@@ -417,7 +434,7 @@ static int pmix_put_binary(const char *key, const char *buf, int bufsize, int is
     value.type = PMIX_BYTE_OBJECT;
     value.data.bo.bytes = (char *) buf;
     value.data.bo.size = bufsize;
-    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, key, &value);
+    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, prefix_key(key), &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
     pmi_errno = PMIx_Commit();
@@ -438,13 +455,13 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
     int bufsize ATTRIBUTE((unused)) = *p_size;
     pmix_value_t *pvalue;
     if (src < 0) {
-        pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&pmix_wcproc, prefix_key(key), NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
         proc.rank = src;
 
-        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&proc, prefix_key(key), NULL, 0, &pvalue);
     }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
