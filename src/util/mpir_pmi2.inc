@@ -9,6 +9,9 @@
 typedef INFO_TYPE PMI2_keyval_t;
 #endif
 
+/* Key for parent port name on spawn */
+#define PMI2_KVS_PARENT_PORT_NAME "PARENT_ROOT_PORT_NAME"
+
 static int pmi2_init(int *has_parent, int *rank, int *size, int *appnum)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -74,9 +77,9 @@ static int pmi2_get(int src, const char *key, char *val, int val_size)
     goto fn_exit;
 }
 
-static int pmi2_get_parent(const char *key, char *val, int val_size)
+static int pmi2_get_parent(char *parent_port, int port_size)
 {
-    return pmi2_get(PMI2_ID_NULL, key, val, val_size);
+    return pmi2_get(PMI2_ID_NULL, PMI2_KVS_PARENT_PORT_NAME, parent_port, port_size);
 }
 
 static bool pmi2_get_jobattr(const char *key, char *valbuf)
@@ -202,25 +205,22 @@ static int pmi2_get_universe_size(int *universe_size)
 }
 
 static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
-                      MPIR_Info * info_ptrs[], int num_preput_keyval,
-                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+                      MPIR_Info * info_ptrs[], char *port_name, int *pmi_errcodes)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    INFO_TYPE *preput_vector = NULL;
+    INFO_TYPE preput;
+    int have_preput = 0;
 
     int *info_keyval_sizes = NULL;
     INFO_TYPE **info_keyval_vectors = NULL;
     mpi_errno = get_info_kv_vectors(count, info_ptrs, &info_keyval_vectors, &info_keyval_sizes);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (num_preput_keyval > 0) {
-        preput_vector = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!preput_vector, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        for (int i = 0; i < num_preput_keyval; i++) {
-            INFO_TYPE_KEY(preput_vector[i]) = preput_keyvals[i].key;
-            INFO_TYPE_VAL(preput_vector[i]) = preput_keyvals[i].val;
-        }
+    if (port_name != NULL) {
+        INFO_TYPE_KEY(preput) = PMI2_KVS_PARENT_PORT_NAME;
+        INFO_TYPE_VAL(preput) = port_name;
+        have_preput = 1;
     }
 
     int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
@@ -239,7 +239,7 @@ static int pmi2_spawn(int count, char *commands[], char **argvs[], const int max
     pmi_errno = PMI2_Job_Spawn(count, (const char **) commands,
                                argcs, (const char ***) argvs, maxprocs,
                                info_keyval_sizes, (const PMI2_keyval_t **) info_keyval_vectors,
-                               num_preput_keyval, (const PMI2_keyval_t *) preput_vector,
+                               have_preput, (const PMI2_keyval_t *) &preput,
                                NULL, 0, pmi_errcodes);
     MPL_free(argcs);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -247,9 +247,6 @@ static int pmi2_spawn(int count, char *commands[], char **argvs[], const int max
 
   fn_exit:
     free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-    if (num_preput_keyval > 0) {
-        MPL_free(preput_vector);
-    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -331,7 +328,7 @@ static int pmi2_get(int src, const char *key, char *val, int val_size)
     return MPI_ERR_INTERN;
 }
 
-static int pmi2_get_parent(const char *key, char *val, int val_size)
+static int pmi2_get_parent(char *parent_port, int port_size)
 {
     return MPI_ERR_INTERN;
 }
@@ -378,8 +375,7 @@ static int pmi2_get_universe_size(int *universe_size)
 }
 
 static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
-                      MPIR_Info * info_ptrs[], int num_preput_keyval,
-                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+                      MPIR_Info * info_ptrs[], char *port_name, int *pmi_errcodes)
 {
     return MPI_ERR_INTERN;
 }
@@ -404,8 +400,7 @@ static int pmi2_unpublish(const char name[])
 #ifdef USE_PMI2_SLURM
 static int pmi2_spawn_slurm(int count, char *commands[], char **argvs[],
                             const int maxprocs[], MPIR_Info * info_ptrs[],
-                            int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals,
-                            int *pmi_errcodes)
+                            char *port_name, int *pmi_errcodes)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -417,17 +412,18 @@ static int pmi2_spawn_slurm(int count, char *commands[], char **argvs[],
 
     const INFO_TYPE **preput_vector = NULL;
     INFO_TYPE *preput_vector_array = NULL;
+    int have_preput;
 
-    if (num_preput_keyval > 0) {
-        preput_vector = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE *), MPL_MEM_BUFFER);
+    if (port_name != NULL) {
+        preput_vector = MPL_malloc(sizeof(INFO_TYPE *), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!preput_vector, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        preput_vector_array = MPL_malloc(num_preput_keyval * sizeof(INFO_TYPE), MPL_MEM_BUFFER);
+        preput_vector_array = MPL_malloc(sizeof(INFO_TYPE), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!preput_vector_array, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        for (int i = 0; i < num_preput_keyval; i++) {
-            INFO_TYPE_KEY(preput_vector_array[i]) = (char *) preput_keyvals[i].key;
-            INFO_TYPE_VAL(preput_vector_array[i]) = preput_keyvals[i].val;
-            preput_vector[i] = &preput_vector_array[i];
-        }
+
+        INFO_TYPE_KEY(preput_vector_array[0]) = PMI2_KVS_PARENT_PORT_NAME;
+        INFO_TYPE_VAL(preput_vector_array[0]) = port_name;
+        preput_vector[0] = &preput_vector_array[0];
+        have_preput = 1;
     }
 
     int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
@@ -446,7 +442,7 @@ static int pmi2_spawn_slurm(int count, char *commands[], char **argvs[],
     pmi_errno = PMI2_Job_Spawn(count, (const char **) commands,
                                argcs, (const char ***) argvs, maxprocs,
                                info_keyval_sizes, (const struct MPID_Info **) info_keyval_vectors,
-                               num_preput_keyval, (const struct MPID_Info **) preput_vector,
+                               have_preput, (const struct MPID_Info **) preput_vector,
                                NULL, 0, pmi_errcodes);
     MPL_free(argcs);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -454,7 +450,7 @@ static int pmi2_spawn_slurm(int count, char *commands[], char **argvs[],
 
   fn_exit:
     free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-    if (num_preput_keyval > 0) {
+    if (have_preput) {
         MPL_free(preput_vector_array);
         MPL_free(preput_vector);
     }

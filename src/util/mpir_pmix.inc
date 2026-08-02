@@ -15,6 +15,9 @@
 #define PMIX_ERR_NOT_IMPLEMENTED -48
 #endif
 
+/* Env var name for parent port name on spawn */
+#define ENV_VAR_PARENT_PORT_NAME "PARENT_ROOT_PORT_NAME"
+
 /* These are const after init. FIXME: We need a way to guard changes outside init. */
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
@@ -48,7 +51,6 @@ static int pmix_build_app_cmd(MPIR_Info * info_ptr, char *command, char **app_cm
 static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
                            MPIR_Info * info_ptrs[], pmix_app_t * apps, pmix_info_t ** job_info,
                            size_t * njob_info);
-static int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank);
 
 /* For PMIx Psets */
 static int pmix_pset_define_hdlr = -1;
@@ -228,26 +230,15 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
     goto fn_exit;
 }
 
-static int pmix_get_parent(const char *key, char *val, int val_size)
+static int pmix_get_parent(char *parent_port, int port_size)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int pmi_errno = PMIX_SUCCESS;
-    pmix_value_t *pvalue;
-    pmi_errno = PMIx_Get(&pmix_parent, prefix_key(key), NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
-                         "**pmix_get %s", PMIx_Error_string(pmi_errno));
-    MPL_strncpy(val, pvalue->data.string, val_size);
-    PMIX_VALUE_RELEASE(pvalue);
+    /* with PMIx the preput values are stored in the environment - not in the KVS */
+    const char *envval;
+    if (MPL_env2str(ENV_VAR_PARENT_PORT_NAME, &envval)) {
+        MPL_strncpy(parent_port, envval, port_size);
+    }
 
-    /* Fence with all other spawned procs in namespace and parent proc to
-     * sync with MPIR_pmi_spawn_multiple in parent process */
-    mpi_errno = pmix_fence_nspace_proc(pmix_proc.nspace, pmix_parent.nspace, pmix_parent.rank);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPI_SUCCESS;
 }
 
 static bool pmix_get_jobattr(const char *key, char *valbuf)
@@ -511,8 +502,7 @@ static int pmix_get_universe_size(int *universe_size)
 }
 
 static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
-                      MPIR_Info * info_ptrs[], int num_preput_keyval,
-                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+                      MPIR_Info * info_ptrs[], char *port_name, int *pmi_errcodes)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -529,12 +519,21 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
                                 apps, &job_info, &njob_info);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* PMIx_Put to the KVS what is required by the spawned processes */
-    if (num_preput_keyval > 0) {
-        for (int j = 0; j < num_preput_keyval; j++) {
-            mpi_errno = MPIR_pmi_kvs_put(preput_keyvals[j].key, preput_keyvals[j].val);
-            MPIR_ERR_CHECK(mpi_errno);
+    /* Add port_name to apps' environment so that spawned processes can find it */
+    if (port_name != NULL) {
+        char *envval = NULL;
+        /* +1 for '=' and +1 for null terminator */
+        size_t len = strlen(ENV_VAR_PARENT_PORT_NAME) + 1 + strlen(port_name) + 1;
+        envval = MPL_malloc(len, MPL_MEM_OTHER);
+        snprintf(envval, len, "%s=%s\n", ENV_VAR_PARENT_PORT_NAME, port_name);
+
+        for (int i = 0; i < count; i++) {
+            PMIX_ARGV_APPEND(pmi_errno, apps[i].env, envval);
+            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                 "**pmix_argv_append", "**pmix_argv_append %s",
+                                 PMIx_Error_string(pmi_errno));
         }
+        MPL_free(envval);
     }
 
     pmi_errno = PMIx_Spawn(job_info, njob_info, apps, count, new_nspace);
@@ -555,10 +554,6 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_SPAWN,
                          "**pmix_spawn", "**pmix_spawn %s", PMIx_Error_string(pmi_errno));
 
-    /* Fence with spawned procs in new nspace (counter part in MPIR_pmi_kvs_parent_get)
-     * Preput data in KVS must be read by child procs before is overwritten in next Spawn */
-    mpi_errno = pmix_fence_nspace_proc(new_nspace, pmix_proc.nspace, pmix_proc.rank);
-    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     /* Free job info */
     PMIX_INFO_FREE(job_info, njob_info);
@@ -958,57 +953,6 @@ int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxpr
 }
 
 static
-int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int pmi_errno = PMIX_SUCCESS;
-    int fence_collect_data = 1;
-    size_t nprocs = 0;
-    pmix_proc_t *procs = NULL;
-    pmix_info_t *fence_info = NULL;
-    pmix_value_t *pvalue = NULL;
-    pmix_proc_t nspace_proc;
-
-    if (nspace == NULL) {
-        mpi_errno = MPI_ERR_OTHER;
-        goto fn_fail;
-    }
-
-    /* Determine size of nspace */
-    PMIX_LOAD_PROCID(&nspace_proc, nspace, PMIX_RANK_WILDCARD);
-    pmi_errno = PMIx_Get(&nspace_proc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_get", "**pmix_get %d", pmi_errno);
-    nprocs = pvalue->data.uint32;
-    PMIX_VALUE_RELEASE(pvalue);
-
-    /* Create procs array for fence of procs in nspace and parent */
-    PMIX_PROC_CREATE(procs, nprocs + 1);        /* +1 for parent */
-    for (size_t i = 0; i < nprocs; i++) {
-        PMIX_LOAD_PROCID(&(procs[i]), nspace, i);
-    }
-    PMIX_PROC_LOAD(&(procs[nprocs]), parent_nspace, parent_rank);
-
-    /* Fence */
-    PMIX_INFO_CREATE(fence_info, 1);
-    PMIx_Info_load(fence_info, PMIX_COLLECT_DATA, &fence_collect_data, PMIX_BOOL);
-    pmi_errno = PMIx_Fence(procs, nprocs + 1, fence_info, 1);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_fence", "**pmix_fence %d", pmi_errno);
-
-  fn_exit:
-    if (fence_info) {
-        PMIX_INFO_FREE(fence_info, 1);
-    }
-    if (procs) {
-        PMIX_PROC_FREE(procs, nprocs + 1);
-    }
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static
 void pmix_pset_define_callback(size_t refid, pmix_status_t status, const pmix_proc_t * source,
                                pmix_info_t * info, size_t ninfo, pmix_info_t * results,
                                size_t nresults, pmix_event_notification_cbfunc_fn_t cbfunc,
@@ -1213,7 +1157,7 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
     return MPI_ERR_INTERN;
 }
 
-static int pmix_get_parent(const char *key, char *val, int val_size)
+static int pmix_get_parent(char *parent_port, int port_size)
 {
     return MPI_ERR_INTERN;
 }
@@ -1275,8 +1219,7 @@ static int pmix_get_universe_size(int *universe_size)
 }
 
 static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
-                      MPIR_Info * info_ptrs[], int num_preput_keyval,
-                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+                      MPIR_Info * info_ptrs[], char *port_name, int *pmi_errcodes)
 {
     return MPI_ERR_INTERN;
 }

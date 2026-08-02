@@ -35,12 +35,6 @@ typedef enum {
     MPIR_PMI_DOMAIN_NODE_ROOTS = 2
 } MPIR_PMI_DOMAIN;
 
-/* key/val pair struct to abstract PMI key/val pair */
-typedef struct MPIR_PMI_KEYVAL {
-    const char *key;
-    char *val;
-} MPIR_PMI_KEYVAL_t;
-
 #define MPIR_PMI_GROUP_WORLD      ((int *)0)
 #define MPIR_PMI_GROUP_SELF      ((int *)1)
 
@@ -69,8 +63,8 @@ int MPIR_pmi_barrier_group(int *group, int count, const char *stringtag);
 int MPIR_pmi_kvs_put(const char *key, const char *val);
 /* * get. src in [0..size-1] or -1 for anysrc. val_size <= MPIR_pmi_max_val_size(). */
 int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size);
-/* get from parent process */
-int MPIR_pmi_kvs_parent_get(const char *key, char *val, int val_size);
+/* get port of parent process */
+int MPIR_pmi_get_parent_port(char *parent_port, int port_size);
 
 /* * bcast from rank 0 to ALL or NODE_ROOTS processes. Both are collective over ALL */
 int MPIR_pmi_bcast(void *buf, int size, MPIR_PMI_DOMAIN domain);
@@ -114,8 +108,7 @@ int MPIR_pmi_get_universe_size(int *universe_size);
 struct MPIR_Info;               /* forward declare (mpir_info.h) */
 int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
                             const int maxprocs[], struct MPIR_Info *info_ptrs[],
-                            int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals,
-                            int *pmi_errcodes);
+                            char *port_name, int *pmi_errcodes);
 int MPIR_pmi_has_local_cliques(void);
 int MPIR_pmi_build_nodemap(int *nodemap, int sz);
 int MPIR_pmi_build_nodemap_fallback(int sz, int myrank, int *out_nodemap);
