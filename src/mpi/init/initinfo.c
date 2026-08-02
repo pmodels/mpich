@@ -71,6 +71,11 @@ static char *get_feature_list(void)
 
     strbuf[count] = '\0';
 
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+    ADD_FEATURE("yaksa(depth=" MPICH_YAKSA_DEPTH ")");
+#elif (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_DATALOOP)
+    ADD_FEATURE("dataloop");
+#endif
 #ifdef ENABLE_THREADCOMM
     ADD_FEATURE("threadcomm");
 #endif
