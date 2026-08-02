@@ -229,6 +229,7 @@ int Weak_Fn_B(int); int Fn_B(int);
 #pragma weak Weak_Fn_B = Fn_B
 int Fn_A(int a) { return a; }
 int Fn_B(int a) { return a; }
+int check(int a) { return Weak_Fn_A(a); }
         ])],[
         AC_LANG_SOURCE([
 int Weak_Fn_A(int);
@@ -244,7 +245,7 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
             int Foo(int a) { return a; }
         ]],[[
             return PFoo(1);
-        ]])],pac_cv_prog_c_weak_symbols="pragma _HP_SECONDARY_DEF")
+        ]])],pac_cv_prog_c_weak_symbols="pragma _HP")
     fi
     dnl -------------------------------------
     if test -z "$pac_cv_prog_c_weak_symbols" ; then
@@ -254,22 +255,7 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
             int Foo(int a) { return a; }
         ]],[[
             return PFoo(1);
-        ]])],pac_cv_prog_c_weak_symbols="pragma _CRI duplicate x as y")
-    fi
-    dnl -------------------------------------
-    if test -z "$pac_cv_prog_c_weak_symbols" ; then 
-        PAC_COMPLINK_IFELSE(
-            [AC_LANG_SOURCE([[
-                int Foo(int a);
-                int PFoo(int) __attribute__ ((weak,alias("Foo")));
-                int Foo(int a) { return a; }
-            ]])],
-            [AC_LANG_PROGRAM([[
-                int PFoo(int);
-            ]],[[
-                return PFoo(1);
-            ]])],
-            pac_cv_prog_c_weak_symbols="attribute alias")
+        ]])],pac_cv_prog_c_weak_symbols="pragma _CRI")
     fi
     dnl -------------------------------------
     if test -z "$pac_cv_prog_c_weak_symbols" ; then 
@@ -1281,7 +1267,7 @@ dnl is not declared in a header, this will fail.  Use a non-static global so
 dnl the compiler does not warn about an unused variable.
 dnl
 dnl Simply calling the function is not enough because C89 compilers allow
-dnl calls to implicitly-defined functions.  Re-declaring a library function
+dnl calls to implicitly-defined functions.  Redeclaring a library function
 dnl with an incompatible prototype is also not sufficient because some
 dnl compilers (notably clang-3.2) only produce a warning in this case.
 dnl
