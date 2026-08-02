@@ -3486,7 +3486,7 @@ if test "$enable_f77" = "yes" ; then
     len=`expr $pac_cv_f77_sizeof_integer \* 8`
     AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPIR_INT$len], [Internal type for MPI_INTEGER])
     len=`expr $pac_cv_f77_sizeof_real \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPIR_INT$len], [Internal type for MPI_REAL])
+    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPIR_FLOAT$len], [Internal type for MPI_REAL])
     len=`expr $pac_cv_f77_sizeof_logical \* 8`
     AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPIR_FORTRAN_LOGICAL$len], [Internal type for MPI_LOGICAL])
     len=`expr $pac_cv_f77_sizeof_real \* 8`
