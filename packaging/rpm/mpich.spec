@@ -1,4 +1,4 @@
-%global somajor 12
+%global somajor 0
 
 Summary:        A high-performance implementation of MPI
 Name:           mpich
