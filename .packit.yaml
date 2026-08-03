@@ -54,6 +54,7 @@ jobs:
     project: devpkgs
   - job: copr_build
     trigger: pull_request
+    manual_trigger: true
 
 #  - job: propose_downstream
 #    trigger: release
