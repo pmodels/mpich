@@ -498,6 +498,8 @@ typedef struct {
      * ch4 av tables are initialize to 0s. Thus we need know which "0" is valid. */
     MPIR_Lpid lpid0;
 
+    bool fabric_initialized;
+
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_capabilities_t settings;
