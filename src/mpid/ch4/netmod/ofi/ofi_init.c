@@ -681,8 +681,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-static bool fabric_initialized = false;
-
 /* we delay init fabric until the first comm creation (in MPIDI_OFI_mpi_comm_commit_pre_hook) */
 int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
 {
@@ -697,7 +695,7 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
         /* TODO: run collective and decide all_need_init (as well as num_nics, close_nic_map) */
     }
 
-    if (!fabric_initialized) {
+    if (!MPIDI_OFI_global.fabric_initialized) {
         if (all_need_init) {
             /* order nics based on allgathered global info */
             mpi_errno = MPIDI_OFI_order_multi_nic_global();
@@ -709,7 +707,7 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
         }
     }
 
-    if (!fabric_initialized) {
+    if (!MPIDI_OFI_global.fabric_initialized) {
         if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
             /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
@@ -776,7 +774,7 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
         MPIDI_OFI_init_per_vci(0);
     }
 
-    fabric_initialized = true;
+    MPIDI_OFI_global.fabric_initialized = true;
 
   fn_exit:
     return mpi_errno;
@@ -884,7 +882,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIR_FUNC_ENTER;
 
-    if (fabric_initialized) {
+    if (MPIDI_OFI_global.fabric_initialized) {
         /* Progress until we drain all inflight RMA send long buffers */
         /* NOTE: am currently only use vci 0. Need update once that changes */
         for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
@@ -965,7 +963,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             }
         }
 
-        fabric_initialized = false;
+        MPIDI_OFI_global.fabric_initialized = false;
     }
 
     for (i = 0; i < MPIDI_OFI_global.num_nics; i++) {
