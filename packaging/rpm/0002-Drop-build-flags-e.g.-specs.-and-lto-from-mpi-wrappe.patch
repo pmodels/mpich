@@ -1,0 +1,32 @@
+From 695102787fde0b3adb3917b12b97f8c49f7f57a5 Mon Sep 17 00:00:00 2001
+From: rpm-build <rpm-build>
+Date: Thu, 2 Mar 2023 17:50:52 -0700
+Subject: [PATCH 3/3] Drop build flags, e.g. -specs... and -lto from mpi
+ wrappers (mpicc and mpicxx)
+
+For discussion see:
+https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/message/7TFWEKTDWBYBHEGMIWBVI3AVGORZGNBS/
+
+diff --git a/src/env/mpicc.def b/src/env/mpicc.def
+index 3c2e2ca072..a5228465c7 100644
+--- a/src/env/mpicc.def
++++ b/src/env/mpicc.def
+@@ -476,14 +476,14 @@ subcode: set_final_vars
+     $(if:cc=fc)
+         $call set_fc_final_vars
+ 
+-    final_$(cflags)="@MPICH_$(MPICC)_$(CFLAGS)@ @WRAPPER_$(CFLAGS)@"
++    final_$(cflags)="@MPICH_$(MPICC)_$(CFLAGS)@"
+     $(if:cc!=fc)
+-        final_cppflags="@MPICH_$(MPICC)_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
+-    final_ldflags="@MPICH_$(MPICC)_LDFLAGS@ @WRAPPER_LDFLAGS@"
++        final_cppflags="@MPICH_$(MPICC)_CPPFLAGS@"
++    final_ldflags="@MPICH_$(MPICC)_LDFLAGS@"
+     final_libs="@MPICH_$(MPICC)_LIBS@"
+     if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
+         final_ldflags="${final_ldflags} @WRAPPER_DEPENDENCY_LDFLAGS@"
+-        final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
++        final_libs="${final_libs}"
+     fi
+ 
+     $(if:cc=cc or cc=cxx)
