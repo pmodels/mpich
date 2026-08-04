@@ -72,7 +72,7 @@ static char *get_feature_list(void)
     strbuf[count] = '\0';
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
-    ADD_FEATURE("yaksa(depth=" MPICH_YAKSA_DEPTH ")");
+    ADD_FEATURE("yaksa(" MPICH_YAKSA_INFO ")");
 #elif (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_DATALOOP)
     ADD_FEATURE("dataloop");
 #endif
