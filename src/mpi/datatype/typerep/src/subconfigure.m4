@@ -34,6 +34,7 @@ AM_CONDITIONAL([BUILD_DATALOOP_ENGINE], [test "${with_datatype_engine}" = "datal
 AM_COND_IF([BUILD_YAKSA_ENGINE], [
     m4_define([yaksa_embedded_dir],[src/mpi/datatype/typerep/yaksa])
     PAC_CONFIG_YAKSA
+    AC_SUBST(MPICH_YAKSA_INFO)
 ])
 
 ])dnl end _BODY
