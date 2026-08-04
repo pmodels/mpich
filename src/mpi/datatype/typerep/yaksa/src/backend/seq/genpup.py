@@ -384,3 +384,9 @@ if __name__ == '__main__':
 
     ##### generate the switching logic to select pup functions
     gencomm.populate_pupfns(args.pup_max_nesting, "seq", blklens, builtin_types, builtin_maps)
+
+    ##### write autogen info for configure to pick up
+    filename = "src/backend/seq/autogen_info"
+    OUTFILE = open(filename, "w")
+    OUTFILE.write("seq_pup_max_nesting=%d\n" % args.pup_max_nesting)
+    OUTFILE.close()

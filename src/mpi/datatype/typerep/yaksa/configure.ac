@@ -246,6 +246,35 @@ m4_include([src/backend/hip/subcfg.m4])
 
 
 dnl ----------------------------------------------------------------------------
+dnl Assemble yaksa info for MPICH
+dnl ----------------------------------------------------------------------------
+dnl Read autogen_info files produced by each backend's genpup.py and build
+dnl MPICH_YAKSA_INFO string, e.g. "seq(depth=3) cuda(depth=3)"
+MPICH_YAKSA_INFO=""
+for backend in $(echo $supported_backends | tr ',' ' ') ; do
+    info_file="$srcdir/src/backend/${backend}/autogen_info"
+    depth=""
+    if test -f "$info_file" ; then
+        . "$info_file"
+        eval depth=\$${backend}_pup_max_nesting
+    fi
+    if test -n "$depth" ; then
+        if test -n "$MPICH_YAKSA_INFO" ; then
+            MPICH_YAKSA_INFO="$MPICH_YAKSA_INFO ${backend}(depth=${depth})"
+        else
+            MPICH_YAKSA_INFO="${backend}(depth=${depth})"
+        fi
+    else
+        if test -n "$MPICH_YAKSA_INFO" ; then
+            MPICH_YAKSA_INFO="$MPICH_YAKSA_INFO ${backend}"
+        else
+            MPICH_YAKSA_INFO="${backend}"
+        fi
+    fi
+done
+AC_SUBST(MPICH_YAKSA_INFO)
+
+dnl ----------------------------------------------------------------------------
 dnl Final setup
 dnl ----------------------------------------------------------------------------
 
@@ -269,6 +298,7 @@ AH_BOTTOM([
 
 AC_CONFIG_FILES([Makefile
                  Doxyfile
+                 localdefs
                  maint/yaksa.pc
                  src/frontend/include/yaksa.h
 ])

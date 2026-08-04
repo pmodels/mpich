@@ -639,3 +639,9 @@ if __name__ == '__main__':
     ##### generate the switching logic to select pup functions
     gencomm.populate_pupfns(args.pup_max_nesting, "ze", blklens, builtin_types, builtin_maps)
 
+    ##### write autogen info for configure to pick up
+    filename = "src/backend/ze/autogen_info"
+    OUTFILE = open(filename, "w")
+    OUTFILE.write("ze_pup_max_nesting=%d\n" % args.pup_max_nesting)
+    OUTFILE.close()
+
