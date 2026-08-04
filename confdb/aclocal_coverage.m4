@@ -26,9 +26,6 @@ if test "$enable_coverage" = "yes" ; then
     if test "$ac_cv_c_compiler_gnu" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
         LIBS="$LIBS -lgcov"
-        if test ${WRAPPER_CFLAGS+set} = set ; then
-            WRAPPER_CFLAGS="$WRAPPER_CFLAGS -fprofile-arcs -ftest-coverage"
-        fi
     else
         AC_MSG_WARN([--enable-coverage only supported for GCC])
     fi
@@ -36,9 +33,6 @@ if test "$enable_coverage" = "yes" ; then
         if test "$ac_cv_cxx_compiler_gnu" = "yes" ; then
             CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
             LIBS="$LIBS -lgcov"
-            if test ${WRAPPER_CXXFLAGS+set} = set ; then
-                WRAPPER_CXXFLAGS="$WRAPPER_CXXFLAGS -fprofile-arcs -ftest-coverage"
-            fi
         else
             AC_MSG_WARN([--enable-coverage only supported for GCC])
         fi
@@ -49,9 +43,6 @@ if test "$enable_coverage" = "yes" ; then
         if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
              FFLAGS="$FFLAGS -fprofile-arcs -ftest-coverage"
              LIBS="$LIBS -lgcov"
-             if test ${WRAPPER_FFLAGS+set} = set ; then
-                 WRAPPER_FFLAGS="$WRAPPER_FFLAGS -fprofile-arcs -ftest-coverage"
-             fi
         else
             AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
         fi
@@ -60,9 +51,6 @@ if test "$enable_coverage" = "yes" ; then
         if test "$ac_cv_fc_compiler_gnu" = "yes" ; then
              FCFLAGS="$FCFLAGS -fprofile-arcs -ftest-coverage"
              LIBS="$LIBS -lgcov"
-             if test ${WRAPPER_FCFLAGS+set} = set ; then
-                 WRAPPER_FCFLAGS="$WRAPPER_FCFLAGS -fprofile-arcs -ftest-coverage"
-             fi
         else
             AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
         fi
