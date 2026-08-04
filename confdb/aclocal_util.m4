@@ -45,10 +45,10 @@ AC_DEFUN([PAC_POP_ALL_FLAGS],[
 	PAC_POP_FLAG(LIBS)
 ])
 
-dnl PAC_PREFIX_FLAG - Save flag with a prefix
+dnl PAC_PREFIX_FLAG - Initialize a prefixed flag variable
 dnl Usage: PAC_PREFIX_FLAG(PREFIX, FLAG)
 AC_DEFUN([PAC_PREFIX_FLAG],[
-	$1_$2=$$2
+	$1_$2=""
 	export $1_$2
 	AC_SUBST($1_$2)
 ])
