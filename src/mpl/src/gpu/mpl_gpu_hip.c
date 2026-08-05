@@ -354,7 +354,6 @@ int MPL_gpu_init(int debug_summary)
         char *free_ptr = devices;
         memcpy(devices, visible_devices, len + 1);
         for (int i = 0; i < device_count; i++) {
-            int global_dev_id;
             char *tmp = strtok(devices, ",");
             assert(tmp);
             local_to_global_map[i] = atoi(tmp);
