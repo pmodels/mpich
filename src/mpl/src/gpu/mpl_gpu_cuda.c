@@ -199,7 +199,7 @@ MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr)
     MPL_gpu_buffer_id_t buffer_id;
 
     ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
-    assert(ret == cudaSuccess);
+    assert(ret == CUDA_SUCCESS);
 
     return buffer_id;
 }
@@ -210,7 +210,7 @@ bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
     MPL_gpu_buffer_id_t buffer_id;
 
     ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
-    assert(ret == cudaSuccess);
+    assert(ret == CUDA_SUCCESS);
 
     return buffer_id == handle->id;
 }
