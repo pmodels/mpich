@@ -27,7 +27,6 @@
 
 int MPIDI_OFI_vci_init(void)
 {
-    MPIDI_OFI_global.num_nics = 1;
     MPIDI_OFI_global.num_vcis = 1;
     return MPI_SUCCESS;
 }
@@ -96,7 +95,6 @@ static int init_vcis(int num_vcis, int *num_vcis_actual)
     MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
 #endif
 
-    MPIDI_OFI_global.num_nics = MPIDI_OFI_global.num_nics_available;
     MPIDI_OFI_global.num_vcis = num_vcis;
 
     /* may update MPIDI_OFI_global.num_vcis */
