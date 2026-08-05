@@ -1328,10 +1328,6 @@ if test "$enable_append_g" = "yes" ; then
     PAC_APPEND_FLAG([-g],[CXXFLAGS])
     PAC_APPEND_FLAG([-g],[FFLAGS])
     PAC_APPEND_FLAG([-g],[FCFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
 fi
 
 if test "$enable_asan" = "yes" ; then
@@ -1339,29 +1335,24 @@ if test "$enable_asan" = "yes" ; then
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CXXFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FFLAGS])
     PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
+    dnl The sanitizer ldflags need be passed to wrapper or the user program will
+    dnl fail with "ASan runtime does not come first in initial library list"
+    PAC_APPEND_FLAG([-fsanitize=address],[WRAPPER_LDFLAGS])
 fi
 if test "$enable_ubsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=undefined],[CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[CXXFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[FFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[FCFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
     PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_LDFLAGS])
 fi
 if test "$enable_tsan" = "yes" ; then
     PAC_APPEND_FLAG([-fsanitize=thread],[CFLAGS])
     PAC_APPEND_FLAG([-fsanitize=thread],[CXXFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CFLAGS])
-    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_CXXFLAGS])
     PAC_APPEND_FLAG([-fsanitize=thread],[LDFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=thread],[WRAPPER_LDFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
