@@ -90,6 +90,7 @@ cvars:
 #include "mpidimpl.h"
 #include "gpu_pre.h"
 #include "gpu_types.h"
+#include "ipc_p2p.h"
 #include "mpir_async_things.h"
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
