@@ -9,6 +9,7 @@
 !
       program main
       use mpi
+      implicit none
       integer ierr, errs
       integer rank, size, mpisize
       logical verbose

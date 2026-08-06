@@ -7,6 +7,7 @@
 
       subroutine uop( cin, cout, count, datatype )
       use mpi_f08
+      implicit none
       integer cin(*), cout(*)
       integer count
       TYPE(MPI_Datatype) datatype
@@ -32,6 +33,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr, toterr
       integer maxsize
       parameter (maxsize=1024)

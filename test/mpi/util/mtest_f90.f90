@@ -11,6 +11,7 @@
 !       the module is in a different place, the compiler can complain
 !       about out-of-order statements
         use mpi
+        implicit none
         integer ierr
         logical flag
         logical dbgflag
@@ -28,6 +29,7 @@
 !
         subroutine MTest_Finalize( errs )
         use mpi
+        implicit none
         integer errs
         integer rank, toterrs, ierr
         
@@ -50,6 +52,7 @@
 ! A simple get intracomm for now
         logical function MTestGetIntracomm( comm, min_size, qsmaller )
         use mpi
+        implicit none
         integer ierr
         integer comm, min_size, size, rank
         logical qsmaller
@@ -78,6 +81,7 @@
 !
         subroutine MTestFreeComm( comm )
         use mpi
+        implicit none
         integer comm, ierr
         if (comm .ne. MPI_COMM_WORLD .and. &
       &      comm .ne. MPI_COMM_SELF  .and. &
@@ -88,6 +92,7 @@
 !
         subroutine MTestPrintError( errcode )
         use mpi
+        implicit none
         integer errcode
         integer errclass, slen, ierr
         character*(MPI_MAX_ERROR_STRING) string
@@ -99,6 +104,7 @@
 !
         subroutine MTestPrintErrorMsg( msg, errcode )
         use mpi
+        implicit none
         character*(*) msg
         integer errcode
         integer errclass, slen, ierr
@@ -112,6 +118,7 @@
 
         subroutine MTestSpawnPossible( can_spawn, errs )
         use mpi
+        implicit none
         integer can_spawn
         integer errs
         integer(kind=MPI_ADDRESS_KIND) val

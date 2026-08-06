@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer ierr, rank, size, count
       integer sendbuf(8), recvbuf(8)
       TYPE(MPI_Status) s1, s2

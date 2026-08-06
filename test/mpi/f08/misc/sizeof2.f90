@@ -5,6 +5,7 @@
 
         program main
           use mpi_f08
+          implicit none
           integer ierr, errs
           integer size1, size2
           real    a

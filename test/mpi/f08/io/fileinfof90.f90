@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer ierr, errs
       type(MPI_File) fh
       type(MPI_Info) info1, info2

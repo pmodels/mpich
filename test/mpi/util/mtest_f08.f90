@@ -6,6 +6,7 @@
         subroutine MTest_Init( ierr )
 
         use mpi_f08
+        implicit none
         integer ierr
         logical flag
         logical dbgflag
@@ -23,6 +24,7 @@
 !
         subroutine MTest_Finalize( errs )
         use mpi_f08
+        implicit none
         integer errs
         integer rank, toterrs, ierr
 
@@ -45,6 +47,7 @@
 ! A simple get intracomm for now
         logical function MTestGetIntracomm( comm, min_size, qsmaller )
         use mpi_f08
+        implicit none
         integer ierr
         integer min_size, size, rank
         TYPE(MPI_Comm) comm
@@ -74,6 +77,7 @@
 !
         subroutine MTestFreeComm( comm )
         use mpi_f08
+        implicit none
         integer ierr
         TYPE(MPI_Comm) comm
         if (comm .ne. MPI_COMM_WORLD .and. &
@@ -85,6 +89,7 @@
 !
         subroutine MTestPrintError( errcode )
         use mpi_f08
+        implicit none
         integer errcode
         integer errclass, slen, ierr
         character*(MPI_MAX_ERROR_STRING) string
@@ -96,6 +101,7 @@
 !
         subroutine MTestPrintErrorMsg( msg, errcode )
         use mpi_f08
+        implicit none
         character*(*) msg
         integer errcode
         integer errclass, slen, ierr
@@ -109,6 +115,7 @@
 
         subroutine MTestSpawnPossible( can_spawn, errs )
         use mpi_f08
+        implicit none
         integer can_spawn
         integer errs
         integer(kind=MPI_ADDRESS_KIND) val

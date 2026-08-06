@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer size, rank, ierr, errs, eclass
       integer color
       type(MPI_Comm) comm, intercomm

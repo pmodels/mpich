@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr, i, intsize
       TYPE(MPI_Datatype) type1, type2, type3, type4, type5
       integer max_asizev

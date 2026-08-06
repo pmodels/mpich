@@ -9,6 +9,7 @@
 !
        program main
        use mpi_f08
+       implicit none
        integer SIZEOFINT
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)

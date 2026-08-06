@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer ierr, errs
       integer buf(10)
       integer result, intsize

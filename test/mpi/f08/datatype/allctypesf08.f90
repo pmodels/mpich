@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer atype, ierr
 !
       call mtest_init(ierr)
@@ -92,6 +93,7 @@
 ! Check name of datatype
       subroutine CheckDtype( intype, name, ierr )
       use mpi_f08
+      implicit none
       integer ierr
       TYPE(MPI_Datatype) intype
       character *(*) name
@@ -117,6 +119,7 @@
 ! Check name of datatype (allows alias)
       subroutine CheckDtype2( intype, name, name2, ierr )
       use mpi_f08
+      implicit none
       integer ierr
       TYPE(MPI_Datatype) intype
       character *(*) name, name2

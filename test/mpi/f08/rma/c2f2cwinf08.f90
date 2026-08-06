@@ -9,6 +9,7 @@
 !
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer wrank, wsize
       integer wgroup, info, req

@@ -5,6 +5,7 @@
 
 program pt2pt_large
     use mpi_f08
+    implicit none
     integer:: ierr, errs
     integer, parameter:: BUFSIZE = 1024
     Type(MPI_Comm):: comm
@@ -35,6 +36,7 @@ program pt2pt_large
 
     contains
     subroutine init_sendbuf(buf)
+    implicit none
         integer, dimension(:), intent(inout) :: buf
         integer:: i
 
@@ -44,6 +46,7 @@ program pt2pt_large
     end subroutine
 
     subroutine init_recvbuf(buf)
+    implicit none
         integer, dimension(:), intent(inout) :: buf
         integer:: i
 
@@ -53,6 +56,7 @@ program pt2pt_large
     end subroutine
 
     subroutine check_recvbuf(buf, errs)
+    implicit none
         integer, dimension(:), intent(in) :: buf
         integer, intent(inout):: errs
         integer:: i

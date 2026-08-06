@@ -55,6 +55,7 @@ C  Check that requests have been set to null
 C
 C------------------------------------------------------------------------------
       subroutine rq_check( requests, n, msg )
+      implicit none
       include 'mpif.h'
       integer n, requests(n)
       character*(*) msg
@@ -73,6 +74,7 @@ C  Initialize test data buffer with integral sequence.
 C
 C------------------------------------------------------------------------------
       subroutine init_test_data(buf,n)
+      implicit none
       integer n
       real buf(n)
       integer i
@@ -88,6 +90,7 @@ C  Clear test data buffer
 C
 C------------------------------------------------------------------------------
       subroutine clear_test_data(buf, n)
+      implicit none
       integer n
       real buf(n)
       integer i
@@ -136,6 +139,7 @@ C    codes).  Without this, for example, tests fail with the Cray ftn
 C    compiler.
 C
       subroutine dummyRef( a, n, ie )
+      implicit none
       integer n, ie
       real    a(n)
 C This condition will never be true, but the compile won't know that

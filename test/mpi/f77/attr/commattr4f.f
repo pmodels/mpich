@@ -4,6 +4,7 @@ C     See COPYRIGHT in top-level directory
 C
 
       program main
+      implicit none
 C
       include 'mpif.h'
 

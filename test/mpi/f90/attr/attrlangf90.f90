@@ -89,6 +89,7 @@
 ! interfaces to the C routines
       module keyvals
         use mpi, only: MPI_ADDRESS_KIND
+        implicit none
         logical fverbose, useintSize
         integer ptrSize, intSize, aintSize
         integer fcomm1_key, fcomm1_extra
@@ -100,35 +101,44 @@
              & fwin2_extra
         interface
            pure function bigint()
+           implicit none
              integer bigint
            end function bigint
            pure function bigaint()
              use mpi, only : MPI_ADDRESS_KIND
+             implicit none
              integer (kind=MPI_ADDRESS_KIND) bigaint
            end function bigaint
            ! Could use bind(c) once we require that level of Fortran support.
            subroutine csetmpi( fcomm, fkey, val, errs ) 
+           implicit none
              integer, INTENT(IN) :: fcomm, fkey, val
              integer errs
            end subroutine csetmpi
            subroutine csetmpi2( fcomm, fkey, val, errs ) 
              use mpi, only : MPI_ADDRESS_KIND
+             implicit none
              integer, INTENT(IN) :: fcomm, fkey
              integer  errs
              integer (KIND=MPI_ADDRESS_KIND) val
            end subroutine csetmpi2
            subroutine cattrinit( fv )
+           implicit none
              integer fv
            end subroutine cattrinit
            subroutine cgetsizes( ps, is, as )
+           implicit none
              integer, INTENT(OUT) :: ps, is, as
            end subroutine cgetsizes
            subroutine ccreatekeys( k1, k2, k3, k4 )
+           implicit none
              integer, INTENT(OUT) :: k1, k2, k3, k4
            end subroutine ccreatekeys
            subroutine cfreekeys()
+           implicit none
            end subroutine cfreekeys
            subroutine ctoctest( errs )
+           implicit none
              integer errs
            end subroutine ctoctest
         end interface
@@ -247,6 +257,7 @@
 ! -------------------------------------------------------------------
       integer function FMPI1checkCommAttr( comm, key, expected, msg )
       use mpi
+      implicit none
       integer comm, key, expected
       character*(*) msg
       integer value, ierr
@@ -274,6 +285,7 @@
            & outval, flag, ierr )  
       use mpi
       use keyvals, only : fverbose
+      implicit none
       integer oldcomm, key, extrastate, inval, outval, ierr
       logical flag
 !
@@ -290,6 +302,7 @@
      &     ierr ) 
       use mpi
       use keyvals, only : fverbose
+      implicit none
       integer oldcomm, key, extrastate, inval, ierr
       logical flag
 !
@@ -875,6 +888,7 @@
 ! -------------------------------------------------------------------
 ! Return an integer value that fills all of the bytes
       pure integer function bigint()
+      implicit none
         integer i, v, digits
         digits = range(i)
         v = 0

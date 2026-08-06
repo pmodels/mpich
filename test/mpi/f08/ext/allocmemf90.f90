@@ -6,6 +6,7 @@
         program main
         use mpi_f08
         use, intrinsic :: iso_c_binding
+        implicit none
         real, pointer :: a(:,:)
         integer (kind=MPI_ADDRESS_KIND) asize
         type(c_ptr) cptr

@@ -5,6 +5,7 @@
 
        program main
        use mpi_f08
+       implicit none
        integer ierr
        integer smsg(3), rmsg(3), toterrs, wsize, wrank
        common /myinfo/ calls, amount, rcalls, ramount
@@ -56,6 +57,7 @@
 !
        subroutine mpi_send_f08ts( smsg, count, dtype, dest, tag, comm, ierr )
        use :: mpi_f08, my_noname => mpi_send_f08ts
+       implicit none
        type(*), dimension(..), intent(in) :: smsg
        integer, intent(in) :: count, dest, tag
        type(MPI_Datatype), intent(in) :: dtype
@@ -76,6 +78,7 @@
 !
       subroutine mpi_recv_f08ts( rmsg, count, dtype, src, tag, comm, status, ierr )
        use :: mpi_f08, my_noname => mpi_recv_f08ts
+       implicit none
        type(*), dimension(..) :: rmsg
        integer, intent(in) :: count, src, tag
        type(MPI_Datatype), intent(in) :: dtype
@@ -95,6 +98,7 @@
        end
 !
        subroutine init_counts()
+       implicit none
        common /myinfo/ calls, amount, rcalls, ramount
        integer calls, amount, rcalls, ramount
        calls = 0
@@ -104,6 +108,7 @@
        end
 !
        subroutine mpi_pcontrol( ierr )
+       implicit none
        integer ierr
        return
        end

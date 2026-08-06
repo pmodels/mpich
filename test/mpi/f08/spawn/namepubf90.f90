@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs
       character*(MPI_MAX_PORT_NAME) port_name
       character*(MPI_MAX_PORT_NAME) port_name_out

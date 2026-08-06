@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer maxn, maxm
       parameter (maxn=10,maxm=15)
