@@ -171,7 +171,8 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     *size = 1;
     *has_parent = 0;
     *appnum = 0;
-    pmi_kvs_name = MPL_strdup("0");
+    pmi_kvs_name = MPL_malloc(100, MPL_MEM_PM);
+    snprintf(pmi_kvs_name, 100, "singinit-%d", getpid());
     goto fn_exit;
 }
 
