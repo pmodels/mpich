@@ -64,6 +64,16 @@ static char cached_singinit_val[PMIU_MAXLINE];
 #define MAX_SINGINIT_KVSNAME 256
 static char singinit_kvsname[MAX_SINGINIT_KVSNAME];
 
+/* if kvsname is a pseudo name created during singleton init, use singinit_kvsname instead */
+static const char *get_use_kvsname(const char *kvsname)
+{
+    if (strncmp(kvsname, "singinit-", 9) == 0) {
+        return singinit_kvsname;
+    } else {
+        return kvsname;
+    }
+}
+
 static int expect_pmi_cmd(const char *cmd, const char *key, int *val_out);
 
 PMI_API_PUBLIC int PMI_Init(int *spawned)
@@ -460,7 +470,7 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
         /* Return a dummy name */
         /* Upon singinit of server, we'll check and replace "singinit" with
          * initialized singinit_kvsname */
-        snprintf(kvsname, length, "singinit");
+        snprintf(kvsname, length, "singinit-%d", getpid());
         goto fn_exit;
     }
 
@@ -509,7 +519,7 @@ PMI_API_PUBLIC int PMI_KVS_Get_value_length_max(int *maxlen)
 PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 {
     int pmi_errno = PMI_SUCCESS;
-    const char *use_kvsname = kvsname;
+    const char *use_kvsname = get_use_kvsname(kvsname);
 
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
@@ -530,10 +540,6 @@ PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const cha
     PMIU_cmd_init_zero(&pmicmd);
 
     PMIU_CS_ENTER;
-
-    if (strcmp(kvsname, "singinit") == 0) {
-        use_kvsname = singinit_kvsname;
-    }
 
     PMIU_msg_set_query_put(&pmicmd, USE_WIRE_VER, no_static, use_kvsname, key, value);
 
@@ -559,7 +565,7 @@ PMI_API_PUBLIC int PMI_KVS_Commit(const char kvsname[]ATTRIBUTE((unused)))
 PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char value[], int length)
 {
     int pmi_errno = PMI_SUCCESS;
-    const char *use_kvsname = kvsname;
+    const char *use_kvsname = get_use_kvsname(kvsname);
 
     /* singleton can skip PMI builtin keys */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM && strncmp(key, "PMI_", 4) == 0) {
@@ -577,10 +583,6 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
     PMIU_cmd_init_zero(&pmicmd);
 
     PMIU_CS_ENTER;
-
-    if (strcmp(kvsname, "singinit") == 0) {
-        use_kvsname = singinit_kvsname;
-    }
 
     PMIU_msg_set_query_get(&pmicmd, USE_WIRE_VER, no_static, use_kvsname, key);
 
