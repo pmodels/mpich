@@ -794,35 +794,27 @@ static int gcn_check_id_exhaustion(struct gcn_state *st)
 /** Allocating a new context ID collectively over the given communicator in a
  * nonblocking way.
  *
- * The nonblocking mechanism is implemented by inserting MPIDU_Sched_entry to
- * the nonblocking collective progress, which is a part of the progress engine.
- * It uses a two-level linked list 'all_schedules' to manager all nonblocking
- * collective calls: the first level is a linked list of struct MPIDU_Sched;
- * and each struct MPIDU_Sched is an array of struct MPIDU_Sched_entry. The
- * following four functions are used together to implement the algorithm:
- * sched_cb_gcn_copy_mask, sched_cb_gcn_allocate_cid, sched_cb_gcn_bcast and
- * sched_get_cid_nonblock.
+ * The nonblocking mechanism is implemented via the async progress engine.
+ * async_get_cid creates a generalized request and registers a poll function
+ * (async_gcn_poll) with MPIR_Async_things_add. All state is saved in a
+ * gcn_state struct so that async_gcn_poll can drive a state machine through
+ * the following stages:
+ *   COPYMASK -> ALLREDUCE -> (for intercomm: SENDRECV -> BCAST) -> done
  *
- * The above four functions use the same algorithm as
- * MPIR_Get_contextid_sparse_group (multi-threaded version) to allocate a
- * context id. The algorithm needs to retry the allocation process in the case
- * of conflicts. In MPIR_Get_contextid_sparse_group, it is a while loop.  In
- * the nonblocking algorithm, 1) new entries are inserted to the end of
- * schedule to replace the 'while' loop in MPI_Comm_dup algorithm; 2) all
- * arguments passed to sched_get_cid_nonblock are saved to gcn_state in order
- * to be called in the future; 3) in sched_cb_gcn_allocate_cid, if the first
- * try failed, it will insert sched_cb_gcn_copy_mask to the schedule again.
+ * The algorithm uses the same approach as MPIR_Get_contextid_sparse_group
+ * (multi-threaded version) to allocate a context id. The allocation may need
+ * to retry in the case of conflicts. In the blocking version this is a while
+ * loop; in the nonblocking version, async_gcn_poll transitions back to the
+ * COPYMASK stage to retry.
  *
  * To ensure thread-safety, it shares the same global flag 'mask_in_use' with
- * other communicator functions to protect access to context_mask. And use
- * CONTEXTID lock to protect critical sections.
+ * other communicator functions to protect access to context_mask, and uses
+ * the CONTEXTID lock to protect critical sections.
  *
  * There is a subtle difference between INTRACOMM and INTERCOMM when
- * duplicating a communicator.  They needed to be treated differently in
- * current algorithm. Specifically, 1) when calling sched_get_cid_nonblock, the
- * parameters are different; 2) updating newcommp->recvcontext_id in
- * MPIR_Get_intercomm_contextid_nonblock has been moved to sched_cb_gcn_bcast
- * because this should happen after sched_cb_gcn_allocate_cid has succeed.
+ * duplicating a communicator. For intercomm, after the allreduce succeeds,
+ * rank 0 exchanges context IDs with the remote side via sendrecv, then all
+ * ranks broadcast the result.
  *
  * To avoid deadlock or livelock, it uses the same eager protocol as
  * multi-threaded MPIR_Get_contextid_sparse_group.
