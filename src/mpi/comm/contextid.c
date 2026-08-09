@@ -1020,6 +1020,10 @@ static int gcn_complete(struct gcn_state *st)
         MPIR_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
         st->req_ptr->status.MPI_ERROR = st->error;
     } else {
+        /* We can't safely call blocking bcast(new_comm->seq). Disable vcis_enabled.
+         * Effectively we require blocking communicator creation to use multiple VCIs.
+         */
+        st->new_comm->vcis_enabled = false;
         mpi_errno = MPIR_Comm_commit(st->new_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
