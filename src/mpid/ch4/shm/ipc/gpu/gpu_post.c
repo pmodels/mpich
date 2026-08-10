@@ -115,7 +115,7 @@ cvars:
 
 struct map_entry {
     int remote_lrank;
-    void *mapped_addr;
+    MPL_gpu_map_t map;
 };
 
 struct handle_cache_entry {
@@ -157,7 +157,7 @@ static int ipc_track_cache_check_limit(struct am_context am_ctx);
 static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   MPL_gpu_ipc_mem_handle_t handle,
                                   struct am_context am_ctx, bool * cache_inserted);
-static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int rank);
+static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank);
 
 /* free the cache entry without updating ipc_handle_cache array */
 static int ipc_track_cache_free(int idx, struct am_context am_ctx)
@@ -172,15 +172,21 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
         struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
             entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
-            int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
-            mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
-                                             am_ctx.local_vci, am_ctx.remote_vci,
-                                             MPIDI_IPCI_TYPE__GPU, maps[i].mapped_addr);
-            if (am_ctx.comm == NULL) {
-                /* ignore the error in case the remote process already exit */
-                mpi_errno = MPI_SUCCESS;
-            } else {
+            if (maps[i].remote_lrank == MPIR_Process.local_rank) {
+                /* local mmap entry -- just unmap locally, no AM needed */
+                mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i].map);
                 MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
+                mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
+                                                 am_ctx.local_vci, am_ctx.remote_vci,
+                                                 MPIDI_IPCI_TYPE__GPU, maps[i].map);
+                if (am_ctx.comm == NULL) {
+                    /* ignore the error in case the remote process already exit */
+                    mpi_errno = MPI_SUCCESS;
+                } else {
+                    MPIR_ERR_CHECK(mpi_errno);
+                }
             }
         }
     }
@@ -250,7 +256,7 @@ static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_A
     return found;
 }
 
-static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int lrank)
+static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank)
 {
     for (int i = 0; i < ipc_handle_cache_count; i++) {
         struct handle_cache_entry *entry = &ipc_handle_cache[i];
@@ -278,7 +284,7 @@ static int ipc_track_cache_map_addr(const void *addr, const void *map_addr, int 
                 maps = entry->maps;
             }
             maps[entry->num_maps].remote_lrank = lrank;
-            maps[entry->num_maps].mapped_addr = (void *) map_addr;
+            maps[entry->num_maps].map = map;
             entry->num_maps++;
 
             return MPI_SUCCESS;
@@ -517,7 +523,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
             if (maps[i].remote_lrank == remote_lrank) {
                 uintptr_t offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
-                ipc_handle->direct = (void *) ((uintptr_t) maps[i].mapped_addr + offset);
+                ipc_handle->direct = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
                 goto fn_done;
             }
         }
@@ -540,7 +546,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_done:
     if (req) {
         /* store base_addr in case we need free the handle at completion */
-        MPIDI_SHM_REQUEST(req, ipc.base_addr) = is_cached ? NULL : pbase;
+        MPIDI_SHM_REQUEST(req, ipc.u.base_addr) = is_cached ? NULL : pbase;
     }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__DIRECT) {
         ipc_handle->gpu.handle_is_cached = is_cached;
@@ -552,9 +558,91 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     goto fn_exit;
 }
 
-int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, void *map_addr, int rank)
+int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, MPL_gpu_map_t map, int lrank)
 {
-    return ipc_track_cache_map_addr(base_addr, map_addr, rank);
+    return ipc_track_cache_map_addr(base_addr, map, lrank);
+}
+
+/* Cache the local device buffer's mmap. Stores the mapping as a map_entry
+ * with remote_lrank = local_rank in the ipc_handle_cache. On cache hit,
+ * returns the cached mmap pointer. On miss, creates the IPC handle, inserts
+ * into cache, maps it, and returns the new mmap pointer. */
+int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
+                             MPI_Aint data_sz, void **host_ptr_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *host_ptr_out = dev_ptr;    /* default: unchanged */
+
+#ifdef MPL_HAVE_ZE
+    if (attr->type != MPL_GPU_POINTER_DEV) {
+        goto fn_exit;
+    }
+    if (data_sz > MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
+        goto fn_exit;
+    }
+
+    void *pbase;
+    uintptr_t len;
+    int mpl_err = MPL_gpu_get_buffer_bounds(dev_ptr, &pbase, &len);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
+
+    uintptr_t offset = (uintptr_t) dev_ptr - (uintptr_t) pbase;
+    int local_rank = MPIR_Process.local_rank;
+
+    struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, default_am_ctx);
+    if (entry) {
+        /* search maps for local rank entry */
+        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
+            entry->maps : entry->static_maps;
+        for (int i = 0; i < entry->num_maps; i++) {
+            if (maps[i].remote_lrank == local_rank) {
+                *host_ptr_out = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
+                attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+                goto fn_exit;
+            }
+        }
+    } else {
+        /* cache miss: create IPC handle and insert */
+        MPL_gpu_ipc_mem_handle_t handle;
+        mpl_err = MPL_gpu_ipc_handle_create(pbase, &attr->device_attr, &handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_create");
+
+        bool inserted;
+        mpi_errno = ipc_track_cache_insert(pbase, len, handle, default_am_ctx, &inserted);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (!inserted) {
+            MPL_gpu_ipc_handle_destroy(pbase);
+            goto fn_exit;
+        }
+
+        entry = ipc_track_cache_search(pbase, len, default_am_ctx);
+        MPIR_Assert(entry);
+    }
+
+    /* map the local device buffer to host via mmap */
+    int dev_id = MPL_gpu_get_dev_id_from_attr(attr);
+    MPIDI_GPU_ipc_handle_t gpu_handle;
+    memset(&gpu_handle, 0, sizeof(gpu_handle));
+    gpu_handle.ipc_handle = entry->handle;
+    gpu_handle.len = entry->len;
+
+    MPL_gpu_map_t map;
+    mpi_errno = MPIDI_GPU_ipc_handle_map_base(gpu_handle, dev_id, &map, true /* do_mmap */);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    ipc_track_cache_map_addr(pbase, map, local_rank);
+
+    *host_ptr_out = (void *) ((uintptr_t) map.mapped_addr + offset);
+    attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
@@ -597,29 +685,15 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
     return map_to_dev_id;
 }
 
-int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **pbase_out,
-                                  bool do_mmap)
+int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id,
+                                  MPL_gpu_map_t * map_out, bool do_mmap)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    void *pbase = NULL;
-    if (do_mmap) {
-#ifdef MPL_HAVE_ZE
-        int mpl_err = MPL_ze_ipc_handle_mmap_host(&handle.ipc_handle, 1, map_dev_id, handle.len,
-                                                  &pbase);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_map");
-#else
-        MPIR_Assert(0);
-#endif
-    } else {
-        int mpl_err = MPL_gpu_ipc_handle_map(&handle.ipc_handle, map_dev_id, &pbase);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_map");
-    }
-
-    *pbase_out = pbase;
+    int mpl_err = MPL_gpu_ipc_handle_map(&handle.ipc_handle, map_dev_id,
+                                         map_out, do_mmap, handle.len);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_map");
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -628,31 +702,14 @@ int MPIDI_GPU_ipc_handle_map_base(MPIDI_GPU_ipc_handle_t handle, int map_dev_id,
     goto fn_exit;
 }
 
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
-                             bool do_mmap)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    void *pbase = NULL;
-    mpi_errno = MPIDI_GPU_ipc_handle_map_base(handle, map_dev_id, &pbase, do_mmap);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
 
 /* this is used by noncached paths, e.g. window */
-int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int do_mmap)
+int MPIDI_GPU_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    int mpl_err = MPL_SUCCESS;
-    mpl_err = MPL_gpu_ipc_handle_unmap((void *) ((uintptr_t) vaddr - handle.offset));
+    int mpl_err = MPL_gpu_ipc_handle_unmap(map_ptr);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_unmap");
 
   fn_exit:
@@ -663,12 +720,11 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
 }
 
 /* origin process (sender) tell us via AM to unmap, we just unmap */
-int MPIDI_GPU_ipc_handle_unmap_base(void *mapped_addr)
+int MPIDI_GPU_ipc_handle_unmap_base(MPL_gpu_map_t * map_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int mpl_err = MPL_SUCCESS;
-    mpl_err = MPL_gpu_ipc_handle_unmap(mapped_addr);
+    int mpl_err = MPL_gpu_ipc_handle_unmap(map_ptr);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_unmap");
 
   fn_exit:
@@ -742,7 +798,7 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_SHM_REQUEST(req, ipc.base_addr) = NULL;
+    memset(&MPIDI_SHM_REQUEST(req, ipc.u.map), 0, sizeof(MPL_gpu_map_t));
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT) {
         *addr_out = ipc_hdr->ipc_handle.direct;
     } else {
@@ -753,12 +809,12 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 #endif
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(req, datatype));
-        void *mapped_base;
-        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev,
-                                                  &mapped_base, do_mmap);
+        MPL_gpu_map_t map;
+        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev, &map, do_mmap);
         MPIR_ERR_CHECK(mpi_errno);
 
-        *addr_out = (void *) ((uintptr_t) mapped_base + ipc_hdr->ipc_handle.gpu.offset);
+        *addr_out = (void *) ((uintptr_t) map.mapped_addr + ipc_hdr->ipc_handle.gpu.offset);
+
         if (ipc_hdr->ipc_handle.gpu.handle_is_cached) {
             /* notify sender of mapped address so it can use DIRECT path next time */
             mpi_errno = MPIDI_IPC_send_mapaddr(req->comm, MPIDIG_REQUEST(req, u.ipc.peer_rank),
@@ -766,10 +822,10 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
                                                MPIDIG_REQUEST(req, req->remote_vci),
                                                MPIDI_IPCI_TYPE__GPU,
                                                (void *) ipc_hdr->ipc_handle.gpu.remote_base_addr,
-                                               mapped_base);
+                                               map);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            MPIDI_SHM_REQUEST(req, ipc.base_addr) = mapped_base;
+            MPIDI_SHM_REQUEST(req, ipc.u.map) = map;
         }
     }
 
@@ -810,11 +866,16 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_A
     }
     MPIDIG_REQUEST(req, u.ipc.src_dt_ptr) = src_dt_ptr;
 
+    /* try to use cached local mmap for fast_memcpy */
+    void *local_buf = MPIDIG_REQUEST(req, buffer);
+    mpi_errno = MPIDI_GPU_ipc_local_mmap(local_buf, &attr, src_data_sz, &local_buf);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine =
         MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
-                                    MPIDIG_REQUEST(req, buffer), MPIDIG_REQUEST(req, count),
+                                    local_buf, MPIDIG_REQUEST(req, count),
                                     MPIDIG_REQUEST(req, datatype), 0, &attr, engine, true, &yreq);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -866,6 +927,10 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
         MPIDIG_REQUEST(sreq, u.ipc.src_dt_ptr) = dt_ptr;
     }
 
+    /* try to use cached local mmap for fast_memcpy */
+    mpi_errno = MPIDI_GPU_ipc_local_mmap(src_buf, &attr, src_data_sz, &src_buf);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* copy */
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine =
@@ -889,7 +954,7 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    void *pbase = MPIDI_SHM_REQUEST(req, ipc.base_addr);
+    void *pbase = MPIDI_SHM_REQUEST(req, ipc.u.base_addr);
     if (pbase) {
         int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -906,9 +971,9 @@ int MPIDI_GPU_ipc_map_complete(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    void *pbase = MPIDI_SHM_REQUEST(req, ipc.base_addr);
-    if (pbase) {
-        int mpl_err = MPL_gpu_ipc_handle_unmap(pbase);
+    MPL_gpu_map_t *map = &MPIDI_SHM_REQUEST(req, ipc.u.map);
+    if (map->mapped_addr) {
+        int mpl_err = MPL_gpu_ipc_handle_unmap(map);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_unmap");
     }

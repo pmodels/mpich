@@ -40,6 +40,11 @@ typedef struct {
     MPL_gpu_device_attr device_attr;
 } MPL_pointer_attr_t;
 
+typedef struct {
+    void *mapped_addr;
+    MPL_gpu_map_attr attr;      /* driver-specific attributes */
+} MPL_gpu_map_t;
+
 typedef enum {
     MPL_GPU_TYPE_NONE = 0,
     MPL_GPU_TYPE_CUDA,
@@ -115,8 +120,9 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle);
 /* Used in ipc_handle_free_hook. Needed for fd-based ipc mechanism. */
 int MPL_gpu_ipc_handle_destroy(const void *ptr);
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr);
-int MPL_gpu_ipc_handle_unmap(void *ptr);
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out, bool is_mmap, size_t len);
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr);
 MPL_gpu_buffer_id_t MPL_gpu_get_buffer_id(void *ptr);
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr);
 

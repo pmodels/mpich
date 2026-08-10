@@ -36,6 +36,34 @@ MPL_dbg_class MPL_DBG_GPU_ZE;
 /* Latest Level-zero Specification:
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
+
+/* == IPC Memory Mapping ==
+ * There are two mechanisms for transporting the DMA-buf fd between processes:
+ *
+ * 1. DRM fd (shared_fd / physical_device_states path):
+ *    When processes share the same DRM device fd (e.g. via MPICH's shared
+ *    device fd infrastructure), the origin converts the DMA-buf fd to a
+ *    GEM handle (DRM_IOCTL_PRIME_FD_TO_HANDLE). GEM handles are scoped to
+ *    the DRM fd, so they are valid in any process sharing that fd. The remote
+ *    converts the GEM handle back to a DMA-buf fd (DRM_IOCTL_PRIME_HANDLE_TO_FD)
+ *    and passes it to zeMemOpenIpcHandle.
+ *
+ * 2. pidfd (fallback path):
+ *    When DRM fd sharing is not available, the origin sends its raw DMA-buf fd
+ *    plus its pid. The remote uses pidfd_open + pidfd_getfd to duplicate the fd
+ *    from the origin's process into its own fd table.
+ */
+
+/* == Implicit Scaling (multi-tile) ==
+ *
+ * On multi-tile Intel GPUs, a single device memory allocation may be striped
+ * across two tiles. In this case, the Level Zero extended APIs
+ * (zexMemGetIpcHandles / zexMemOpenIpcHandles) return two IPC handles (nfds=2),
+ * one per tile. The mmap path uses split_size() to compute per-tile sizes and
+ * maps each tile's fd into a contiguous virtual range via MAP_FIXED. For
+ * single-tile devices, nfds=1 and the standard single-handle APIs are used.
+ */
+
 ze_context_handle_t ze_context;
 ze_driver_handle_t ze_driver_handle;
 /* ze_devices_handle contains all devices and subdevices. Indices [0, device_count) are
@@ -765,7 +793,6 @@ static int mmapFunction(int nfds, int *fds, size_t size, void **ptr)
     goto fn_exit;
 }
 
-/* FIXME: temporarily commented out to suppress warnings. We need fix the missing munmap paths.
 static int munmapFunction(int nfds, void *ptr, size_t size)
 {
     int mpl_err = MPL_SUCCESS;
@@ -797,7 +824,6 @@ static int munmapFunction(int nfds, void *ptr, size_t size)
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
-*/
 
 /* Loads a ze driver */
 static int gpu_ze_init_driver(void)
@@ -1424,32 +1450,51 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr)
     return mpl_err;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
-{
-    int fds[2] = { -1 };
-    return MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, &fds, ptr);
-}
-
-int MPL_gpu_ipc_handle_unmap(void *ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id,
+                           MPL_gpu_map_t * map_out, bool is_mmap, size_t len)
 {
     int mpl_err = MPL_SUCCESS;
-    ze_result_t ret;
-    ze_device_handle_t device = NULL;
 
-    ze_memory_allocation_properties_t ptr_attr = {
-        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
-        .pNext = NULL,
-        .type = 0,
-        .id = 0,
-        .pageSize = 0,
-    };
+    mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, is_mmap, len,
+                                    &map_out->mapped_addr);
+    if (mpl_err != MPL_SUCCESS) {
+        goto fn_fail;
+    }
+    map_out->attr.is_mmap = is_mmap;
+    map_out->attr.len = len;
+    map_out->attr.nfds = mpl_ipc_handle->data.nfds;
 
-    ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
-    ZE_ERR_CHECK(ret);
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
+}
 
-    /* Unmap the buffer */
-    ret = zeMemCloseIpcHandle(ze_context, ptr);
-    ZE_ERR_CHECK(ret);
+int MPL_gpu_ipc_handle_unmap(MPL_gpu_map_t * map_ptr)
+{
+    int mpl_err = MPL_SUCCESS;
+
+    if (map_ptr->attr.is_mmap) {
+        mpl_err = munmapFunction(map_ptr->attr.nfds, map_ptr->mapped_addr, map_ptr->attr.len);
+    } else {
+        ze_result_t ret;
+        ze_device_handle_t device = NULL;
+
+        ze_memory_allocation_properties_t ptr_attr = {
+            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+            .pNext = NULL,
+            .type = 0,
+            .id = 0,
+            .pageSize = 0,
+        };
+
+        ret = zeMemGetAllocProperties(ze_context, map_ptr->mapped_addr, &ptr_attr, &device);
+        ZE_ERR_CHECK(ret);
+
+        /* Unmap the buffer */
+        ret = zeMemCloseIpcHandle(ze_context, map_ptr->mapped_addr);
+        ZE_ERR_CHECK(ret);
+    }
 
   fn_exit:
     return mpl_err;
@@ -2472,57 +2517,52 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 }
 
 int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
-                          int dev_id, int is_mmap, size_t size, int (*_fds)[2], void **ptr)
+                          int dev_id, int is_mmap, size_t size, void **ptr)
 {
-    /* The fds created below need to be stored for closing later. Normally they should be closed
-     * immediately, but instead need to remain open in case they are ever needed for mmapping to
-     * the host (i.e. via mmapFunction)
-     */
-
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
     int status;
     uint32_t nfds;
+    int fds[2];
+    bool need_close_fds = true;
     MPL_gpu_device_handle_t dev_handle;
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
     nfds = h.nfds;
-    int *fds = *_fds;
 
-    /* Only do the conversion if it wasn't previously done */
-    if (fds[0] == -1) {
-        if (physical_device_states != NULL) {
-            /* convert GEM handle to fd */
+    if (physical_device_states != NULL) {
+        /* convert GEM handle to fd */
+        for (int i = 0; i < nfds; i++) {
+            status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
+            if (status) {
+                goto fn_fail;
+            }
+        }
+    } else {
+        /* pidfd_getfd */
+        if (h.pid != mypid) {
+            int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+            if (pid_fd == -1) {
+                printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
+                       h.dev_id);
+            }
+            assert(pid_fd != -1);
             for (int i = 0; i < nfds; i++) {
-                status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
-                if (status) {
+                fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
+                if (fds[i] == -1) {
+                    printf("Error> pidfd_getfd is not implemented!");
+                    mpl_err = MPL_ERR_GPU_INTERNAL;
                     goto fn_fail;
                 }
             }
+            close(pid_fd);
         } else {
-            /* pidfd_getfd */
-            if (h.pid != mypid) {
-                int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
-                if (pid_fd == -1) {
-                    printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
-                           h.dev_id);
-                }
-                assert(pid_fd != -1);
-                for (int i = 0; i < nfds; i++) {
-                    fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
-                    if (fds[i] == -1) {
-                        printf("Error> pidfd_getfd is not implemented!");
-                        mpl_err = MPL_ERR_GPU_INTERNAL;
-                        goto fn_fail;
-                    }
-                }
-                close(pid_fd);
-            } else {
-                for (int i = 0; i < nfds; i++) {
-                    fds[i] = h.fds[i];
-                }
+            /* mapping buffer from the same process, use the handle fds directly */
+            for (int i = 0; i < nfds; i++) {
+                fds[i] = h.fds[i];
             }
+            need_close_fds = false;
         }
     }
 
@@ -2551,6 +2591,16 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
         ZE_ERR_CHECK(ret);
     }
 
+    /* Close fds since they are no longer needed after mmap or zeMemOpenIpcHandle.
+     * Only close fds that were newly created (via handle_to_fd or pidfd_getfd),
+     * not ones borrowed from the same process. */
+    if (need_close_fds) {
+        for (int i = 0; i < nfds; i++) {
+            close(fds[i]);
+            fds[i] = -1;
+        }
+    }
+
   fn_exit:
     return mpl_err;
   fn_fail:
@@ -2561,8 +2611,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
 int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
                                 int dev_id, size_t size, void **ptr)
 {
-    int fds[2] = { -1 };
-    return MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
+    return MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, ptr);
 }
 
 /* this function takes a local device pointer and mmap to host */
@@ -2620,6 +2669,32 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
+int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+    void *pbase;
+    size_t len;
+    uint64_t offset;
+
+    ret = zeMemGetAddressRange(ze_context, dptr, &pbase, &len);
+    ZE_ERR_CHECK(ret);
+
+    offset = (char *) dptr - (char *) pbase;
+    void *base = (char *) mmaped_ptr - offset;
+
+    int r = munmap(base, len);
+    if (r != 0) {
+        goto fn_fail;
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size)
 {
@@ -2627,12 +2702,14 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     char *d = (char *) dest;
     const char *s = (const char *) src;
     size_t n = size;
+    bool src_mmaped = false, dest_mmaped = false;
 
     if (src_attr && src_attr->type == MPL_GPU_POINTER_DEV) {
         mpl_err =
             MPL_ze_mmap_device_pointer(src, &src_attr->device_attr, src_attr->device, (void **) &s);
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
+        src_mmaped = true;
     }
 
     if (dest_attr && dest_attr->type == MPL_GPU_POINTER_DEV) {
@@ -2641,6 +2718,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                                        (void **) &d);
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
+        dest_mmaped = true;
     }
 
     if (MPL_ARCH_HAS_AVX512F) {
@@ -2649,6 +2727,17 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         MPL_Memcpy_stream_dev_avx(d, s, n);
     } else {
         memcpy(d, s, n);
+    }
+
+    if (src_mmaped) {
+        mpl_err = MPL_ze_munmap_device_pointer((void *) s, src);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+    }
+    if (dest_mmaped) {
+        mpl_err = MPL_ze_munmap_device_pointer(d, dest);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
     }
 
     return mpl_err;

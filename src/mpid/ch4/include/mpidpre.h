@@ -364,10 +364,11 @@ typedef struct MPIDIG_win_shared_info {
     int ipc_mapped_device;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_IPCI_type_t ipc_type;
-    MPIDI_GPU_ipc_handle_t ipc_handle;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPL_gpu_map_t map;
+    int global_dev_id;
 #endif
-    int mapped_type;            /* 0: gpu ipc mapped 1: gpu host mmapped 2: xpmem */
-    int global_dev_id;          /* device ID if mapped_type is 0 */
+#endif
 } MPIDIG_win_shared_info_t;
 
 #define MPIDIG_ACCU_ORDER_RAR (1)

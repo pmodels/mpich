@@ -122,9 +122,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPL_pointer_attr_t origin_attr, target_attr;
     int origin_dev_id ATTRIBUTE((unused)) = -1;
     int target_dev_id ATTRIBUTE((unused)) = -1;
+#endif
     MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
@@ -135,44 +137,54 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_GPU_query_pointer_attr(origin_addr, &origin_attr);
     if (MPL_gpu_attr_is_dev(&origin_attr))
         origin_dev_id = MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&origin_attr));
+#endif
 
     if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
         if (MPL_gpu_attr_is_dev(&target_attr))
             target_dev_id =
                 MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&target_attr));
+#endif
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
         int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
         target_dev_id = shared_table[local_target_rank].global_dev_id;
+#endif
     }
 
     void *target_addr = (char *) base + disp_unit * target_disp;
 
-#ifdef MPL_HAVE_GPU
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
         MPL_gpu_engine_type_t engine_type =
             MPIDI_RMA_choose_engine(MPL_gpu_attr_is_dev(&origin_attr), origin_dev_id,
                                     MPL_gpu_attr_is_dev(&target_attr), target_dev_id);
+        /* try to use cached local mmap for fast_memcpy */
+        MPI_Aint copy_sz = MPL_MIN(origin_data_sz, target_data_sz);
+        void *put_origin = (void *) origin_addr;
+        MPIDI_GPU_ipc_local_mmap(put_origin, &origin_attr, copy_sz, &put_origin);
         if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
             MPIR_gpu_req yreq;
             mpi_errno =
-                MPIR_Ilocalcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
+                MPIR_Ilocalcopy_gpu(put_origin, origin_count, origin_datatype, 0, &origin_attr,
                                     target_addr, target_count, target_datatype, 0, &target_attr,
                                     engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
                 MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
         } else {
             mpi_errno =
-                MPIR_Localcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
+                MPIR_Localcopy_gpu(put_origin, origin_count, origin_datatype, 0, &origin_attr,
                                    target_addr, target_count, target_datatype, 0, &target_attr,
                                    engine_type, 1);
         }
@@ -212,9 +224,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     size_t origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPL_pointer_attr_t origin_attr, target_attr;
     int origin_dev_id ATTRIBUTE((unused)) = -1;
     int target_dev_id ATTRIBUTE((unused)) = -1;
+#endif
     MPIR_FUNC_ENTER;
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
@@ -225,45 +239,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_GPU_query_pointer_attr(origin_addr, &origin_attr);
     if (MPL_gpu_attr_is_dev(&origin_attr))
         origin_dev_id = MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&origin_attr));
+#endif
 
     if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
         if (MPL_gpu_attr_is_dev(&target_attr))
             target_dev_id =
                 MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&target_attr));
+#endif
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
         int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
         target_dev_id = shared_table[local_target_rank].global_dev_id;
+#endif
     }
 
     void *target_addr = (char *) base + disp_unit * target_disp;
 
-#ifdef MPL_HAVE_GPU
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
         MPL_gpu_engine_type_t engine_type =
             MPIDI_RMA_choose_engine(MPL_gpu_attr_is_dev(&origin_attr), origin_dev_id,
                                     MPL_gpu_attr_is_dev(&target_attr), target_dev_id);
+        /* try to use cached local mmap for fast_memcpy */
+        MPI_Aint copy_sz = MPL_MIN(origin_data_sz, target_data_sz);
+        void *get_origin = origin_addr;
+        MPIDI_GPU_ipc_local_mmap(get_origin, &origin_attr, copy_sz, &get_origin);
         if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
             MPIR_gpu_req yreq;
             mpi_errno = MPIR_Ilocalcopy_gpu(target_addr, target_count,
-                                            target_datatype, 0, NULL, origin_addr,
-                                            origin_count, origin_datatype, 0, NULL,
+                                            target_datatype, 0, NULL, get_origin,
+                                            origin_count, origin_datatype, 0, &origin_attr,
                                             engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
                 MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
         } else {
             mpi_errno = MPIR_Localcopy_gpu(target_addr, target_count,
-                                           target_datatype, 0, NULL, origin_addr,
-                                           origin_count, origin_datatype, 0, NULL, engine_type, 1);
+                                           target_datatype, 0, NULL, get_origin,
+                                           origin_count, origin_datatype, 0, &origin_attr,
+                                           engine_type, 1);
         }
         goto fn_exit;
     }
