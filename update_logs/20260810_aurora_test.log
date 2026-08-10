@@ -1,0 +1,153 @@
+UPDATE aurora_test e7b0c5ca4f 2aa6207f2b
+
+    current aurora_test HEAD bc365db087
+
+2b312ed41e 2026-06-05 datatype: use complex_map for creating Fortran 90 datatypesc7c5ddc2e7 2026-06-05 datatype: Support for complex4 in create f90 complex
+1b0112cde3 2026-06-12 maint: extracterrmsgs need work with ABI MPI_ERR_ constants
+31d79547ba 2026-06-12 abi: fix output datatype conversion in MPI_Type_get_contents
+c181b57280 2026-06-11 topo: MPI_Cart_sub and zero-dimensional topology
+359af6d475 2026-02-27 doc: generate mansrc in asciidoc format
+5706e8da7d 2026-02-27 doc: convert mansrc from doctext to asciidoc
+9f46b23912 2026-05-28 build: update Makefiles for build docs via asciidoc
+fd76684b64 2026-06-01 No longer changing location of API items or other non C doc
+b9c3a1ac21 2026-06-02 binding/c: reset manpage_out inside dump_func
+f4b9143b0b 2026-06-02 binding/doc: generate doc in doc/mansrc/binding
+3aa79abc7e 2026-06-15 maint: update createhtmlindex
+37d91e403e 2026-06-13 test/topo: remove questionable tests
+2eb9a81202 2026-06-13 abi: double inclusion of mpi_abi_util.c under noweak
+d8bc778c12 2026-06-03 comm: Provide null-comm for empty group on MPIR_Comm_create_from_group_impl
+91540529a4 2026-06-03 test/session: Improve error handling of session test
+582532a77b 2026-06-03 test/session: Test mult-init with world and without
+6b6cb5e4ca 2026-06-03 test/session: Add tests with 4 procs for session_psets and session_self
+4b67ceb74c 2026-06-03 test/session: Add session_mod_group and session_mod_group_re_init tests
+cd499a548a 2026-06-17 test/session: Enhance session_self test and add session_self_with_world test
+5e75b774ff 2026-06-17 test/session: allow running session_pset test with multiple procs
+2239ce64d5 2026-04-28 mpid/ucc: initialize UCC objects explicitly with zero
+a49083e2f8 2026-04-28 mpid/ucc: make priority/timing of ucc finalize more flexible
+0465337175 2026-04-29 mpid/ucc: make progress poke handling more flexible
+9973310837 2026-04-28 mpid/ucc: introduce MPIDI_common_ucc_req_t struct
+316498442e 2026-04-28 mpid/ucc: add WRAPPER macros to streamline collops
+8653c93d82 2026-04-28 mpid/ucc: add functions to check for UCC activation
+f9de79ee95 2026-04-29 mpid/ucc: introduce MPIDI_common_ucc_config_t struct
+a8689a4480 2026-04-29 mpid/ucc: make thread mode an explicit config parameter
+691b8d6d3f 2026-04-29 mpid/ucc: add mechanics for data type packing/compactification
+2a1a04fcba 2026-04-30 mpid/ucc: check also for internal datatypes with byte granularity
+3c62d45ab4 2026-06-21 configure: rename HAVE_PRAGMA_WEAK to HAVE_PRAGMA_WEAK_ALIAS
+1e012b1635 2026-06-21 configure: rename HAVE_WEAK_ATTRIBUTE to HAVE_ATTR_WEAK_ALIAS
+cbd7db58ae 2026-06-21 confdb: refactor PAC_PROG_C_WEAK_SYMBOLS
+050de08c9c 2026-06-21 misc: support weak symbols without alias
+ce30612a02 2026-06-21 configure: check HAVE_MULTIPLE_PRAGMA_WEAK inside
+cf26fc8530 2026-06-22 confdb: fix PAC_PROG_C_WEAK_SYMBOLS for caching
+c57c3b3147 2026-06-20 Run legacy romio tests against the build tree
+043dd1db04 2026-06-24 mpl: fix AVX detection on macOS-x64_64
+be4847fb00 2026-06-18 makefile: fix generation of test/mpi/configure
+5862243044 2026-06-18 autogen: fix minor typos
+faddc36ae2 2026-06-18 readme: fix minor typos
+7624542439 2026-06-24 include: split mpix declarations into mpix.h
+d158a323fa 2026-06-24 mpix.h: ABI conversion for MPIX constants
+d9bd423c8b 2026-06-25 config: prevent AC_PROG_CC add -std=gnu23 to CC
+ba44659fe5 2026-06-26 autogen.sh: Use "command -v" instead of "which"
+e6c2249449 2026-06-25 ch4/ofi: fix spelling errors
+486e9f327b 2026-06-25 ch4/ofi: update default capability based on fi_getinfo
+6ef33da499 2026-06-25 ch4/ofi: init initial version requirement
+5fe6408539 2026-06-28 config: Fix unquoted shell variable $GPU_SUPPORT
+4bc9ff2f7d 2026-06-25 ch4/ofi: fix msg descriptor passing for GPU RMA operations
+fa07a67d5e 2026-06-17 ch4/ofi: skip inject path when memory registration is required
+364f002bf3 2026-07-04 github: Add GitHub Actions CI workflow entry point
+bb167f1c85 2026-07-04 config: actually apply libmpi_abi.so version-info
+72e0ac2c6d 2026-06-29 configure: fix syntax issues
+320b38db2f 2026-06-29 comm: fix test for MPIR_COMM_ATTR__HIERARCHY
+9a45cd24db 2026-07-02 build: fix ROMIO make check using portable makefile
+1bee634f2d 2026-07-12 spellcheck: add a skip word
+2f9f1f9e66 2026-07-12 doc: update mailing lists addresses
+5d600dd825 2026-07-12 doc: remove README.vin
+66caa22a1a 2026-07-12 build: remove dist targets
+996b278ebb 2026-07-12 misc: remove a stray file
+cc3a240033 2026-07-13 build: remove dist_noinst_ targets
+0374ded33c 2026-07-14 romio: use MPI_ERR_UNSUPPORTED_DATAREP
+5d6ef0281b 2026-07-15 ch4/ipc: fix deadlock issue with parallel GPU buffer copies
+6826c7dca5 2026-07-12 doc: remove a debug print in maint/createhtmlindex
+13ebb6be47 2026-07-12 doc/python: generate mansrc files using Function names
+0bb450dc44 2026-07-13 doc: separate out function notes
+8c25f51e4b 2026-07-16 doc/mansrc: Add MPIX warning and missing error text from standard
+27e15a4bed 2026-07-16 binding/c: fix generation of MPI_Pcontrol
+5b33295d10 2026-07-17 errutil: fix buffer overflow in MPIR_Err_print_stack_string
+b20114532d 2026-07-17 errutil: refactor MPIR_Err_print_stack_string with str_append utilities
+d2f997172c 2026-07-20 ch4/ipc: include sub-layer post headers from ipc_types.h
+25b829405a 2026-07-20 ch4/ipc: remove redundant header includes
+ad68f08f70 2026-07-20 ch4/shm: replace monolithic shm_inline.h with specific includes in gateway files
+da3e735a80 2026-07-20 ch4/shm: remove circular inclusion and fix header order
+f82e1a0ce2 2026-07-20 ch4/shm: fix misc missing inclusions
+14e83fbf5e 2026-07-20 github: Add GitHub Actions CI workflow
+51b9951367 2026-07-20 ci/github: use label "test-mpi4py" to trigger tests
+f461117104 2026-07-21 ch4/ofi: cosmetic clean up
+8771d15971 2026-07-21 ch4/ofi: fix the missing sigreq creation in MPIDI_OFI_pack_put
+95ef429c10 2026-07-21 ch4/ofi: fix missing MPIDI_OFI_sigreq_complete
+717799f7d3 2026-07-21 test/rma: add rput/rget reproducer test
+2fb6772f89 2026-07-22 ch4/ofi: refactor do_put/do_get and fix thread safety
+fe8eae76db 2026-07-20 ch4/ofi: delay fabric init until first comm creation
+2208a33f3d 2026-07-20 ch4/ofi: guard finalize with fabric_initialized check
+15bdc04dd1 2026-07-14 ch4/ofi: refactor init fabric to allow collectives
+047c9858cc 2026-07-14 ch4/ofi: layout clean up ofi_nic.c
+ad9a27357d 2026-07-20 ch4/ofi: set both num_nics_available and num_nics
+0a17131be7 2026-07-20 ch4/ofi: need find providers in _init_local
+a00d035577 2026-06-07 mpl/gpu: define MPL_gpu_buffer_id_t across CUDA/HIP/ZE
+d6475139e5 2026-07-01 mpl/gpu: add MPL_gpu_get_buffer_id
+dcd3e7b462 2026-07-01 ch4/ofi: add mr cache for FI_HMEM_MR
+2bc44cef63 2026-07-22 ch4/ucx: query max_am_header during init
+40a8205624 2026-07-17 ch4/ofi: increase max nics
+103cbb522c 2026-07-23 ch4/ucx: fix missing Rput/Rget paths for noncontig data
+bdd5712f45 2026-06-27 ch4/ipc/gpu: remove unused MPIDI_GPU_ipc_fast_memcpy
+f2510f8eea 2026-06-27 ch4/ipc/gpu: add notes on IPC GPU caching design
+60c74ae9b4 2026-06-29 mpl/ze: remove specialized cache in mpl_gpu_ze.c
+9b80641bd7 2026-07-18 mpl/ze: clean up and remove unused variables
+b9391ff0ce 2026-06-29 mpl/gpu: remove attr param in MPL_gpu_ipc_handle_destroy
+c9c8cd046c 2026-06-27 ch4/ipc/gpu: remove mapped cache
+4f7fc2e8c5 2026-06-28 ch4/ipc/gpu: gather the ipc cache code
+dec1aaf514 2026-06-28 ch4/ipc/gpu: track mapped address in ipc_track_cache
+ac69dbd536 2026-07-17 ch4/ipc/gpu: refactor the map/unmap routines
+7e7f6a1594 2026-07-18 ch4/ipc/gpu: refactor handling of static_maps
+0c9fe75f48 2026-06-30 ch4/ipc/gpu: rename MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
+b656f788c2 2026-06-30 ch4/proc: MPIDIU_get_grank to accept comm=NULL
+29cb44b93d 2026-07-01 ch4/ipc/gpu: ignore AM unmap error in finalize
+e692266ea0 2026-07-16 ch4/ipc: clean up usage of remote_lrank
+5289bc4d34 2026-07-24 pm/util: replace select() with poll() in MPIE_IOLoop
+2de6ae3402 2026-07-24 github/ci: remove result-mpi4py job
+26e65e0ea9 2026-07-26 test/f77: fix bsendf.f
+1024ccda6f 2026-07-30 maint: Update documentation checks in release.pl
+cbad55c56d 2026-07-28 Move packaging folder out of src
+6e9f722315 2026-07-29 Fix max_align_t alignment check
+cc91750247 2026-08-01 pmix: fix session re-init
+9b12585f72 2026-07-21 mpir_pmix/spawn: Pass spawn preput values via environment for PMIx
+7193b4d023 2026-07-21 mpir_pmi: Remove preput values from MPIR_pmi_spawn_multiple
+787aaadf9e 2026-08-02 config: fix issues in weak symbol support
+50fb97fb2c 2026-08-02 configure: fix mapping of MPIR_REAL_INTERNAL
+2e114506d5 2026-08-02 test/f77: add reducef test
+8632750a7b 2026-08-01 packaging: Add RPM spec recipes from downstream
+3685682e63 2026-08-01 packaging: Adjust RPM recipes
+e73f0ad469 2026-07-30 packaging: Add .packit.yaml for RPM-build CI-testing
+caf1b0d5db 2026-08-01 packaging: Set soversion explicitly in RPM spec
+93ec092eea 2026-08-01 packaging: Make library names explicit
+0827227e3b 2026-08-02 packaging: Temporarily set soversion to 0 in upstream RPM spec
+4de20d578f 2026-08-04 packaging: add manual trigger for packit PR job
+6cbd3d0633 2026-08-03 ch4/ofi: move fabric_initialized into MPIDI_OFI_global
+4c52405ce8 2026-07-20 ch4/ofi: fix distribution of NICs in NUMA systems
+3db7570662 2026-07-31 Report Yaksa autogen depth in mpichversion
+7672dfce5b 2026-08-01 initinfo: list yaksa as a feature
+5a7abc32d7 2026-08-04 yaksa: generate autogen_info from genpup.py and export via localdefs
+265cc4cfe8 2026-08-04 initinfo: use MPICH_YAKSA_INFO from yaksa localdefs
+e657efbd65 2026-07-16 mpl/ze: fix leak of mapped fds
+6fe1695a38 2026-07-16 mpl/ze: add comment explaining IPC and implicit scaling
+e8b6dd5f22 2026-07-18 mpl/ze: fix fast_memcpy mmap leak
+72671e4e93 2026-07-19 ch4/ipc/gpu: fix IPC handle mmap unmap path
+c5a3e24468 2026-07-19 ch4/posix/rma: guard GPU variables with MPIDI_CH4_SHM_ENABLE_GPU
+b15a343148 2026-07-19 posix/coll: add missing IPC unmap in GPU collective operations
+4b9d5b2f8f 2026-07-19 ch4/ipc/gpu: cache local device buffer mmap for fast_memcpy
+9e30adbc86 2026-07-19 ch4/posix/rma: use cached local mmap in GPU put/get paths
+8d0bec939d 2026-08-05 ch4/ipc: add missing inclusion of ipc_p2p.h
+1c4d3bc50a 2026-08-08 pmi: create unique singleton kvsname in pmi_v1
+bfdfe90c80 2026-08-08 mpir/pmix: generate unique singleton kvsname
+338496d7c7 2026-08-08 mpir/pmi: create unique world_id between re-init epochs
+1b10df4014 2026-08-09 comm: disable vcis_enabled for idup
+0f1a6ea7e1 2026-08-09 comm: update comment for async_get_cid
+a4f22c8d6c 2026-08-05 ch4/ofi: fix overwrite of num_nics
