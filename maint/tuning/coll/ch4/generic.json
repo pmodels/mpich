@@ -59,13 +59,9 @@
                 {
                     "is_commutative=yes":
                     {
-                        "avg_msg_size<=32768":
-                        {
-                            "composition=MPIDI_Allreduce_intra_composition_alpha":{}
-                        },
                         "avg_msg_size=any":
                         {
-                            "composition=MPIDI_Allreduce_intra_composition_beta":{}
+                            "composition=MPIDI_Allreduce_intra_composition_alpha":{}
                         }
                     },
                     "is_commutative=no":

@@ -248,8 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     void *target_addr = (char *) base + disp_unit * target_disp;
 
 #ifdef MPL_HAVE_GPU
-    if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa &&
-        origin_data_sz < 100000) {
+    if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
         MPL_gpu_engine_type_t engine_type =
             MPIDI_RMA_choose_engine(MPL_gpu_attr_is_dev(&origin_attr), origin_dev_id,
                                     MPL_gpu_attr_is_dev(&target_attr), target_dev_id);
