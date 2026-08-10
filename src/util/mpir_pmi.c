@@ -217,6 +217,10 @@ int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     static bool pmi_connected = false;
+    static int init_count = 0;
+
+    /* track init_count to differentiate re-init world_id */
+    init_count++;
 
     if (finalize_pending > 0) {
         finalize_pending--;
@@ -241,11 +245,9 @@ int MPIR_pmi_init(void)
 
     unsigned world_id = 0;
     if (pmi_kvs_name) {
-        if (!strcmp(pmi_kvs_name, "singinit") || !strcmp(pmi_kvs_name, "0")) {
-            world_id = getpid();
-        } else {
-            HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
-        }
+        char buf[1024];
+        snprintf(buf, 1024, "%s-%d", pmi_kvs_name, init_count);
+        HASH_FNV(buf, strlen(buf), world_id);
     }
 
     if (!pmi_connected) {
