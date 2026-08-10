@@ -9,7 +9,6 @@
 #include <assert.h>
 #ifdef MPL_HAVE_HIP
 #define HIP_ERR_CHECK(ret) if (unlikely((ret) != hipSuccess)) goto fn_fail
-#define HI_ERR_CHECK(ret) if (unlikely((ret) != HIP_SUCCESS)) goto fn_fail
 
 static int gpu_initialized = 0;
 static int device_count = -1;
@@ -358,7 +357,6 @@ int MPL_gpu_init(int debug_summary)
         char *free_ptr = devices;
         memcpy(devices, visible_devices, len + 1);
         for (int i = 0; i < device_count; i++) {
-            int global_dev_id;
             char *tmp = strtok(devices, ",");
             assert(tmp);
             local_to_global_map[i] = atoi(tmp);
@@ -445,10 +443,10 @@ int MPL_gpu_get_root_device(int dev_id)
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
     int mpl_err = MPL_SUCCESS;
-    hipError_t hiret;
+    hipError_t ret;
 
-    hiret = hipMemGetAddressRange((hipDeviceptr_t *) pbase, (size_t *) len, (hipDeviceptr_t) ptr);
-    HI_ERR_CHECK(hiret);
+    ret = hipMemGetAddressRange((hipDeviceptr_t *) pbase, (size_t *) len, (hipDeviceptr_t) ptr);
+    HIP_ERR_CHECK(ret);
 
   fn_exit:
     return mpl_err;
