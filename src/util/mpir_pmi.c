@@ -252,8 +252,7 @@ int MPIR_pmi_init(void)
         /* Register finalization of PM connection in exit handler */
         mpi_errno = atexit(MPIR_pmi_finalize_on_exit);
         MPIR_ERR_CHKANDJUMP1(mpi_errno != 0, mpi_errno, MPI_ERR_OTHER,
-                             "**atexit_pmi_finalize", "**atexit_pmi_finalize %d", mpi_errno);
-
+                             "**atexit", "**atexit %d", mpi_errno);
         pmi_connected = true;
     }
 

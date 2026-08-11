@@ -131,5 +131,5 @@
 #
 # PMI finalize exit handler registration
 #
-**atexit_pmi_finalize: Registration of PMI finalize function in exit handler failed
-**atexit_pmi_finalize %d: Registration of PMI finalize function in exit handler failed with %d
+**atexit: Registration of atexit handler failed
+**atexit %d: Registration of atexit handler failed with %d
