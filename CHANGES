@@ -1,4 +1,80 @@
 ===============================================================================
+                               Changes in 5.0.2
+===============================================================================
+
+# Fix buffer overflow in error message printing
+
+# Fix deadlock issue with parallel GPU buffer copies in IPC path
+
+# Fix thread safety issues in OFI RMA put/get operations
+
+# Fix missing Rput/Rget paths for noncontiguous data with UCX
+
+# Fix GPU RMA message descriptor passing in OFI
+
+# Fix memory leak in CMA code
+
+# Fix MPI_Cart_sub with zero-dimensional topology
+
+# Fix MPI_Type_get_contents output datatype conversion in ABI layer
+
+# Fix MPI_Status_set_elements_x for large counts
+
+# Fix MPI_Pack_external with internal datatype mapping
+
+# Fix reduction operations for Fortran 90 created types
+
+# Fix Fortran 90 MPI_Type_create_f90_complex to support complex4
+
+# Fix configure mapping of MPIR_REAL_INTERNAL for Fortran types
+
+# Fix PMIx session re-initialization by adding MPIR_CVAR_FINALIZE_ATEXIT
+
+# Fix max_align_t alignment check for portability
+
+# Fix wrong communicator use in ROMIO ADIOI_GEN_OpenColl
+
+# Fix rank allocation consistency in MPI_Comm_spawn
+
+# Fix Hydra filler_processes initialization in proxy
+
+# Fix MPI_Comm_create_from_group to return null communicator for
+  empty group
+
+# Fix hierarchy attribute test in communicator code
+
+# Fix async request type reset in MPIR_async_test
+
+# Fix shared memory base address checking in ch3/nemesis
+
+# Fix AVX detection on macOS x86_64
+
+# Fix libmpi_abi.so version-info not being applied
+
+# Fix configure syntax issues and unquoted shell variables
+
+# Fix configure to prevent AC_PROG_CC from adding -std=gnu23 to CC
+
+# Fix OFI inject path to skip when memory registration is required
+
+# Fix OFI to avoid FI_MATCH_COMPLETE for small messages improving
+  compatibility
+
+# Fix OFI to use emulated inject instead of blocking send
+
+# Fix OFI to always process window accumulate hints
+
+# Add support for HWLOC_OBJ_DIE topology object
+
+# Add option to build mpicxx wrapper without libmpicxx
+
+# Replace select() with poll() in Hydra MPIE_IOLoop
+
+# Improve error message for progress timeout
+
+# Various compiler warning fixes
+
+===============================================================================
                                Changes in 5.0.1
 ===============================================================================
 
