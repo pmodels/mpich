@@ -217,10 +217,6 @@ int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     static bool pmi_connected = false;
-    static int init_count = 0;
-
-    /* track init_count to differentiate re-init world_id */
-    init_count++;
 
     if (finalize_pending > 0) {
         finalize_pending--;
@@ -245,19 +241,20 @@ int MPIR_pmi_init(void)
 
     unsigned world_id = 0;
     if (pmi_kvs_name) {
-        char buf[1024];
-        snprintf(buf, 1024, "%s-%d", pmi_kvs_name, init_count);
-        HASH_FNV(buf, strlen(buf), world_id);
+        if (!strcmp(pmi_kvs_name, "singinit") || !strcmp(pmi_kvs_name, "0")) {
+            world_id = getpid();
+        } else {
+            HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
+        }
     }
 
-    if (!pmi_connected) {
+    if (!MPIR_CVAR_FINALIZE_ATEXIT && !pmi_connected) {
         /* Register finalization of PM connection in exit handler */
         mpi_errno = atexit(MPIR_pmi_finalize_on_exit);
         MPIR_ERR_CHKANDJUMP1(mpi_errno != 0, mpi_errno, MPI_ERR_OTHER,
-                             "**atexit_pmi_finalize", "**atexit_pmi_finalize %d", mpi_errno);
-
-        pmi_connected = true;
+                             "**atexit", "**atexit %d", mpi_errno);
     }
+    pmi_connected = true;
 
     int world_idx = MPIR_add_world(pmi_kvs_name, size);
     MPIR_Assertp(world_idx == 0);
@@ -331,8 +328,12 @@ void MPIR_pmi_finalize(void)
     free_hwloc_topology();
 #endif
 
-    /* delay PMI_Finalize to the exit hook */
-    finalize_pending++;
+    if (MPIR_CVAR_FINALIZE_ATEXIT) {
+        SWITCH_PMI(pmi1_exit(), pmi2_exit(), pmix_exit());
+    } else {
+        /* delay PMI_Finalize to the exit hook */
+        finalize_pending++;
+    }
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
