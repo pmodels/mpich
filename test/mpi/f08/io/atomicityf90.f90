@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer (kind=MPI_OFFSET_KIND) disp
 
 ! tests whether atomicity semantics are satisfied for overlapping accesses

@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer ierr, errs
       type(MPI_Info) i1, i2
       integer nkeys, i, j, sumindex, vlen, ln, valuelen

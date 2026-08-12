@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer ierr
       integer errs, wrank
       integer f2ctype

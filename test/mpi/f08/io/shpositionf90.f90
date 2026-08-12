@@ -5,6 +5,7 @@
 
         program main
         use mpi_f08
+        implicit none
         type(MPI_Comm) comm
         type(MPI_File) fh
         integer r, s, i

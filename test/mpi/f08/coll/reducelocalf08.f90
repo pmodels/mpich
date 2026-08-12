@@ -9,6 +9,7 @@
 !
       subroutine user_op( invec, outvec, count, datatype )
       use mpi_f08
+      implicit none
       integer invec(*), outvec(*)
       integer count
       TYPE(MPI_Datatype) datatype
@@ -27,6 +28,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer max_buf_size
       parameter (max_buf_size=65000)
       integer vin(max_buf_size), vout(max_buf_size)

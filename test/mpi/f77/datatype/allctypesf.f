@@ -4,6 +4,7 @@ C     See COPYRIGHT in top-level directory
 C
 
       program main
+      implicit none
       include 'mpif.h'
       integer atype, ierr
 C
@@ -89,6 +90,7 @@ C
 C
 C Check name of datatype
       subroutine CheckDtype( intype, name, ierr )
+      implicit none
       include 'mpif.h'
       integer intype, ierr
       character *(*) name
@@ -113,6 +115,7 @@ C
 C
 C Check name of datatype (allows alias)
       subroutine CheckDtype2( intype, name, name2, ierr )
+      implicit none
       include 'mpif.h'
       integer intype, ierr
       character *(*) name, name2

@@ -131,19 +131,20 @@ sub ConvertToF90 {
     print OUTF "! This file created from $infile with f77tof90\n";
     my $lastline = "";
     my $firstline = 1;
-    my $scope = ""; # program or subroutine
+    my $scope = ""; # program, subroutine, or function
+    my $pending_implicit_none = "";
     while (<INF>) {
 	if (/\r/) { $newline = "\r\n"; }
 	# Remove any end-of-line characters
 	s/[\r\n]*//g;
-        if (/^\s*(program|subroutine)\s*(\w+)/i) {
+        my $is_fixed_comment = /^[Cc*!]/;
+        if (!$is_fixed_comment &&
+            /^\s*(?:\w+\s+)*(program|subroutine|function|block\s+data)\s*(\w+)/i) {
             $scope = lc($1) . " " . lc($2);
+            $pending_implicit_none = "";
         }
-        # The implicit none must not come before the use mpi statement,
-	# but in F77, it must come before the include mpif.h statement.
-	# Rather than try and fix this, rely on the F77 versions to 
-	# catch undeclared variables
-        if (/IMPLICIT\s+NONE/i) {
+        if (/^\s*IMPLICIT\s+NONE/i) {
+            $pending_implicit_none = $_;
             next;
         }
 	if (/^(\s*)include\s+[\'\"]mpif\.h/) {
@@ -152,6 +153,10 @@ sub ConvertToF90 {
                 $_ = $sp . "use mpi, skip_$1 => $1";
             } else {
                 $_ = $sp . "use mpi";
+            }
+            if ($pending_implicit_none ne "") {
+                $_ .= $newline . $pending_implicit_none;
+                $pending_implicit_none = "";
             }
 	}
 	# Allow the insertion of Fortran 90 only statements, such as
@@ -172,6 +177,10 @@ sub ConvertToF90 {
 	    s/^C/!/;
 	    s/^c/!/;
 	}	
+        if ($pending_implicit_none ne "" && ! /^\s*($|!)/) {
+            $_ = $pending_implicit_none . $newline . $_;
+            $pending_implicit_none = "";
+        }
 	# Update the special includes that are used to provide 
 	# address or offset sized types with ones the use the
 	# Fortran90 KIND style

@@ -5,6 +5,7 @@
 
        program main
        use mpi_f08
+       implicit none
        integer ierr, provided, errs, rank, size
        integer iv, isubv, qprovided
        logical flag

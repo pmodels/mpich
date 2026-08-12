@@ -5,6 +5,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, toterrs, ierr
       integer wrank, wsize
       type(MPI_Group) wgroup

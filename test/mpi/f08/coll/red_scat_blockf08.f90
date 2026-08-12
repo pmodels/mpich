@@ -10,6 +10,7 @@
 !
        program main
        use mpi_f08
+       implicit none
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)
        integer sbuf(MAX_SIZE), rbuf(MAX_SIZE)

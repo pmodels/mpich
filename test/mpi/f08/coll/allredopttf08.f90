@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer*8 inbuf, outbuf
       double complex zinbuf, zoutbuf
       integer wsize

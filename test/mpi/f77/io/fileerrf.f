@@ -14,6 +14,7 @@ C
        external myerrhanfunc
 CF90   INTERFACE 
 CF90   SUBROUTINE myerrhanfunc(vv0,vv1)
+CF90   IMPLICIT NONE
 CF90   INTEGER vv0,vv1
 CF90   END SUBROUTINE
 CF90   END INTERFACE

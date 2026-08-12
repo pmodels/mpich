@@ -5,6 +5,7 @@
 
 program main
     use mpi_f08
+    implicit none
     integer ierr, errs
     INTEGER :: f_status(MPI_STATUS_SIZE)
     type(mpi_status) :: f08_status

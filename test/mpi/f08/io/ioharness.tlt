@@ -1,6 +1,7 @@
 <f90header/>
         program main
         use mpi_f08
+        implicit none
         integer maxfparm
         parameter (maxfparm=5)
         integer max_buffer

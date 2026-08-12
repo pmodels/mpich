@@ -8,6 +8,7 @@
 !
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr
       integer ndims, nperiods, i, size
       integer source, dest
