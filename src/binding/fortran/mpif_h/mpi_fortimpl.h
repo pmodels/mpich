@@ -303,12 +303,7 @@ extern FORT_DLL_SPEC void *MPIR_F_MPI_IN_PLACE;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_BUFFER_AUTOMATIC;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_UNWEIGHTED;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_WEIGHTS_EMPTY;
-/* MPI_F_STATUS(ES)_IGNORE are defined in mpi.h and are intended for C
-   programs. */
-/*
-extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
-extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
-*/
+
 /* MPI_F_ERRCODES_IGNORE is defined as a Fortran INTEGER type, so must
    be declared as MPI_Fint */
 extern FORT_DLL_SPEC MPI_Fint *MPI_F_ERRCODES_IGNORE;
