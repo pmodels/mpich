@@ -110,9 +110,9 @@ int MPIR_Comm_spawn_multiple_c(int count, char *array_of_commands_f,
         free(buf);
     }
 
-    mpi_errno = PMPI_Comm_spawn_multiple(count, array_of_commands_c, array_of_argv_c,
-                                         array_of_maxprocs, array_of_info, root, comm, intercomm,
-                                         array_of_errcodes);
+    mpi_errno = MPI_Comm_spawn_multiple(count, array_of_commands_c, array_of_argv_c,
+                                        array_of_maxprocs, array_of_info, root, comm, intercomm,
+                                        array_of_errcodes);
 
     free(array_of_commands_c);
 
