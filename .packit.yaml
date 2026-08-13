@@ -33,10 +33,10 @@ files_to_sync:
   - .packit.yaml
 
 targets:
-  - fedora-latest-x86_64
-  - fedora-latest-aarch64
-  - fedora-latest-ppc64le
-  - fedora-latest-s390x
+  - fedora-latest-stable-x86_64
+  - fedora-latest-stable-aarch64
+  - fedora-latest-stable-ppc64le
+  - fedora-latest-stable-s390x
   - fedora-development-x86_64
   - fedora-development-aarch64
   - fedora-development-ppc64le
@@ -58,6 +58,12 @@ jobs:
   - job: tests
     trigger: pull_request
     manual_trigger: true
+    targets:
+      # Run on subset because other arches are not available
+      - fedora-latest-stable-x86_64
+      - fedora-latest-stable-aarch64
+      - fedora-development-x86_64
+      - fedora-development-aarch64
 
 #  - job: propose_downstream
 #    trigger: release
