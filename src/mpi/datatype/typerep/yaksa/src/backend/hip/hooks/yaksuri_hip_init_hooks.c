@@ -64,8 +64,8 @@ static int finalize_hook(void)
     int rc = YAKSA_SUCCESS;
     hipError_t cerr;
 
-    for (int i = 0; i < yaksuri_hipi_global.ndevices; i++) {
-        cerr = hipSetDevice(i);
+    for (unsigned i = 0; i < yaksuri_hipi_global.ndevices; i++) {
+        cerr = hipSetDevice((int) i);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
         cerr = hipStreamDestroy(yaksuri_hipi_global.stream[i]);
@@ -82,7 +82,7 @@ static int finalize_hook(void)
     goto fn_exit;
 }
 
-static int get_num_devices(int *ndevices)
+static int get_num_devices(unsigned *ndevices)
 {
     *ndevices = yaksuri_hipi_global.ndevices;
 
@@ -107,21 +107,24 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     int rc = YAKSA_SUCCESS;
     hipError_t cerr;
 
-    cerr = hipGetDeviceCount(&yaksuri_hipi_global.ndevices);
+    int ndevices;
+    cerr = hipGetDeviceCount(&ndevices);
     if (cerr == hipErrorNoDevice) {
         goto fn_exit;
     }
     YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+    YAKSU_ERR_CHKANDJUMP(ndevices < 0, rc, YAKSA_ERR__INTERNAL, fn_fail);
+    yaksuri_hipi_global.ndevices = (unsigned) ndevices;
 
     if (getenv("HIP_VISIBLE_DEVICES") == NULL) {
         /* user did not do any filtering for us; if any of the devices
          * is in exclusive mode, disable GPU support to avoid
          * incorrect device sharing */
         bool excl = false;
-        for (int i = 0; i < yaksuri_hipi_global.ndevices; i++) {
+        for (unsigned i = 0; i < yaksuri_hipi_global.ndevices; i++) {
             struct hipDeviceProp_t prop;
 
-            cerr = hipGetDeviceProperties(&prop, i);
+            cerr = hipGetDeviceProperties(&prop, (int) i);
             YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
             if (prop.computeMode != hipComputeModeDefault) {
@@ -146,7 +149,7 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
         malloc(yaksuri_hipi_global.ndevices * sizeof(hipStream_t));
 
     yaksuri_hipi_global.p2p = (bool **) malloc(yaksuri_hipi_global.ndevices * sizeof(bool *));
-    for (int i = 0; i < yaksuri_hipi_global.ndevices; i++) {
+    for (unsigned i = 0; i < yaksuri_hipi_global.ndevices; i++) {
         yaksuri_hipi_global.p2p[i] = (bool *) malloc(yaksuri_hipi_global.ndevices * sizeof(bool));
     }
 
@@ -154,23 +157,23 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     cerr = hipGetDevice(&cur_device);
     YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-    for (int i = 0; i < yaksuri_hipi_global.ndevices; i++) {
-        cerr = hipSetDevice(i);
+    for (unsigned i = 0; i < yaksuri_hipi_global.ndevices; i++) {
+        cerr = hipSetDevice((int) i);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
         cerr = hipStreamCreateWithFlags(&yaksuri_hipi_global.stream[i], hipStreamNonBlocking);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-        for (int j = 0; j < yaksuri_hipi_global.ndevices; j++) {
+        for (unsigned j = 0; j < yaksuri_hipi_global.ndevices; j++) {
             if (i == j) {
                 yaksuri_hipi_global.p2p[i][j] = 1;
             } else {
                 int val;
-                cerr = hipDeviceCanAccessPeer(&val, i, j);
+                cerr = hipDeviceCanAccessPeer(&val, (int) i, (int) j);
                 YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
                 if (val) {
-                    cerr = hipDeviceEnablePeerAccess(j, 0);
+                    cerr = hipDeviceEnablePeerAccess((int) j, 0);
                     if (cerr != hipErrorPeerAccessAlreadyEnabled) {
                         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
                     }
