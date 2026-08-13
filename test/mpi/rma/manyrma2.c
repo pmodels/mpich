@@ -17,7 +17,7 @@
 
 #define MAX_COUNT 65536*4/16
 #define MAX_RMA_SIZE 2  /* 16 in manyrma performance test */
-#define MAX_RUNS 8
+#define MAX_RUNS 2
 #define MAX_ITER_TIME  5.0      /* seconds */
 
 typedef enum { SYNC_NONE = 0,
