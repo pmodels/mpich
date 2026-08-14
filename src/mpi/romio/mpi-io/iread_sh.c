@@ -40,9 +40,7 @@ int MPI_File_iread_shared_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatyp
 #include "mpioprof.h"
 #endif
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_shared - Nonblocking read using shared file pointer

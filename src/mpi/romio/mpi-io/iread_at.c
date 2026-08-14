@@ -39,9 +39,7 @@ int MPI_File_iread_at_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count cou
 #include "mpioprof.h"
 #endif
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_at - Nonblocking read using explicit offset
@@ -80,9 +78,7 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 /* large count function */
 
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_at_c - Nonblocking read using explicit offset

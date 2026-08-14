@@ -117,7 +117,6 @@ PAC_CONFIG_MPL
 CFLAGS=${CFLAGS:-""}
 LL="lld"
 AR_LOCAL=""
-DEFINE_HAVE_MPI_GREQUEST="#undef HAVE_MPI_GREQUEST"
 MPI_FINFO1=""
 MPI_FINFO2=""
 MPI_FINFO3=""
@@ -1168,7 +1167,6 @@ if test $FROM_OMPI = yes ; then
    TEST_LIBNAME=
    # Open MPI: see comments in mpi-io/mpioprof.h
    AC_DEFINE(MPIO_BUILD_PROFILING, 1, [hack to make ROMIO build without profiling])
-   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST"
    AC_DEFINE(HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK, 1, [Define if MPI library provides HINDEXED_BLOCK datatype])
 elif test $FROM_MPICH = yes ; then
    # For now, separate the mpich from mpich cases
@@ -1189,7 +1187,6 @@ elif test $FROM_MPICH = yes ; then
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
-   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
    AC_DEFINE(HAVE_MPIX_H, 1, [])
    AC_DEFINE(HAVE_MPIIO_CONST, const, Set if MPI-IO prototypes use const qualifier)
@@ -1319,7 +1316,6 @@ AC_SUBST(FROM_LAM)
 AC_SUBST(WITHIN_KNOWN_MPI_IMPL)
 AC_SUBST(NEEDS_MPI_FINT)
 AC_SUBST(DEFINE_MPI_OFFSET)
-AC_SUBST(DEFINE_HAVE_MPI_GREQUEST)
 AC_SUBST(MPI_OFFSET_TYPE)
 AC_SUBST(MPI_FINFO1)
 AC_SUBST(MPI_FINFO2)

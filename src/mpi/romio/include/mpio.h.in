@@ -28,12 +28,6 @@ extern "C" {
 typedef struct ADIOI_FileD *MPI_File;
 #endif
 
-/* *INDENT-OFF* */
-@DEFINE_HAVE_MPI_GREQUEST@
-/* *INDENT-ON* */
-#ifndef HAVE_MPI_GREQUEST
-typedef struct ADIOI_RequestD *MPIO_Request;  
-#else
 #define MPIO_Request MPI_Request
 #define MPIO_USES_MPI_REQUEST
 /* Also rename the MPIO routines to get the MPI versions */
@@ -41,7 +35,6 @@ typedef struct ADIOI_RequestD *MPIO_Request;
 #define MPIO_Test MPI_Test
 #define PMPIO_Wait PMPI_Wait
 #define PMPIO_Test PMPI_Test
-#endif
 #define MPIO_REQUEST_DEFINED
 
 #ifndef HAVE_MPI_OFFSET
@@ -338,27 +331,6 @@ MPI_File MPI_File_f2c(MPI_Fint file) ROMIO_API_PUBLIC;
 MPI_Fint MPI_File_c2f(MPI_File file) ROMIO_API_PUBLIC;
 
 
-#ifndef HAVE_MPI_GREQUEST
-/* The following functions are required if generalized requests are not
-   available, because in that case, an MPIO_Request object
-   is currently used for nonblocking I/O. */
-int MPIO_Test(MPIO_Request *request, int *flag, MPI_Status *status) ROMIO_API_PUBLIC;
-int MPIO_Wait(MPIO_Request *request, MPI_Status *status) ROMIO_API_PUBLIC;
-int MPIO_Testall(int count, MPIO_Request array_of_requests[], int *flag,
-                 MPI_Status array_of_statuses[]) ROMIO_API_PUBLIC;
-int MPIO_Waitall(int count, MPIO_Request array_of_requests[], MPI_Status array_of_statuses[]) ROMIO_API_PUBLIC;
-int MPIO_Testany(int count, MPIO_Request array_of_requests[], int *indx, int *flag,
-                 MPI_Status *status) ROMIO_API_PUBLIC;
-int MPIO_Waitany(int count, MPIO_Request array_of_requests[], int *indx, MPI_Status *status) ROMIO_API_PUBLIC;
-int MPIO_Waitsome(int incount, MPIO_Request array_of_requests[], int *outcount,
-                  int array_of_indices[], MPI_Status array_of_statuses[]) ROMIO_API_PUBLIC;
-int MPIO_Testsome(int incount, MPIO_Request array_of_requests[], int *outcount,
-                  int array_of_indices[], MPI_Status array_of_statuses[]) ROMIO_API_PUBLIC;
-
-MPI_Fint MPIO_Request_c2f(MPIO_Request request) ROMIO_API_PUBLIC;
-MPIO_Request MPIO_Request_f2c(MPI_Fint request) ROMIO_API_PUBLIC;
-#endif /* HAVE_MPI_GREQUEST */
-
 #endif   /* HAVE_PRAGMA_HP_SEC_DEF */
 
 
@@ -583,22 +555,6 @@ int PMPI_Register_datarep_c(const char *datarep, MPI_Datarep_conversion_function
 /* Section 4.12.4 */
 MPI_File PMPI_File_f2c(MPI_Fint) ROMIO_API_PUBLIC;
 MPI_Fint PMPI_File_c2f(MPI_File) ROMIO_API_PUBLIC;
-
-#ifndef HAVE_MPI_GREQUEST
-/* The following functions are required if generalized requests are not
-   available, because in that case, an MPIO_Request object
-   is currently used for nonblocking I/O. */
-int PMPIO_Test(MPIO_Request *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Wait(MPIO_Request *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Testall(int, MPIO_Request *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Waitall(int, MPIO_Request *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Testany(int, MPIO_Request *, int *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Waitany(int, MPIO_Request *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Waitsome(int, MPIO_Request *, int *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-int PMPIO_Testsome(int, MPIO_Request *, int *, int *, MPI_Status *) ROMIO_API_PUBLIC;
-MPI_Fint PMPIO_Request_c2f(MPIO_Request) ROMIO_API_PUBLIC;
-MPIO_Request PMPIO_Request_f2c(MPI_Fint) ROMIO_API_PUBLIC;
-#endif /* HAVE_MPI_GREQUEST */
 
 #if defined(__cplusplus)
 }

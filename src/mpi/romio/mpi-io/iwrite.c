@@ -52,9 +52,7 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite(MPI_File fh, ROMIO_CONST void *buf, int count,
                     MPI_Datatype datatype, MPI_Request * request)
@@ -92,9 +90,7 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                       MPI_Datatype datatype, MPI_Request * request)
