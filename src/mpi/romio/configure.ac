@@ -118,8 +118,6 @@ CFLAGS=${CFLAGS:-""}
 LL="lld"
 AR_LOCAL=""
 DEFINE_HAVE_MPI_GREQUEST="#undef HAVE_MPI_GREQUEST"
-HAVE_MPI_INFO=""
-BUILD_MPI_INFO=""
 MPI_FINFO1=""
 MPI_FINFO2=""
 MPI_FINFO3=""
@@ -470,22 +468,7 @@ if test -n "$ac_cv_sizeof_long_long"; then
    fi
 fi
 #
-# check if MPI_Info functions are defined in the MPI implementation
-if test $WITHIN_KNOWN_MPI_IMPL = no ; then
-   PAC_MPI_INFO
-else
-   AC_DEFINE(HAVE_MPI_INFO,1,[Define if MPI Info is available])
-   HAVE_MPI_INFO="#define HAVE_MPI_INFO"
-   MPI_FINFO1="!"
-   MPI_FINFO2="!"
-   MPI_FINFO3="!"
-   MPI_FINFO4="!"
-fi
-#
 if test -n "$mpi_sgi"; then
-dnl   if test -z "$HAVE_MPI_INFO" ; then
-dnl      PAC_CHECK_MPI_SGI_INFO_NULL  # is MPI_INFO_NULL defined in mpi.h?
-dnl   fi
    PAC_TEST_MPI_SGI_type_is_contig
    PAC_TEST_MPI_COMBINERS
    PAC_TEST_MPI_HAVE_OFFSET_KIND
@@ -1332,9 +1315,6 @@ AM_CONDITIONAL([MPIO_GLUE_MPICH],[test "X$mpio_glue" = "Xmpich"])
 AM_CONDITIONAL([MPIO_GLUE_OPENMPI],[test "X$mpio_glue" = "Xopenmpi"])
 AM_CONDITIONAL([MPIO_GLUE_DEFAULT],[test "X$mpio_glue" = "Xdefault"])
 
-if test "$BUILD_MPI_INFO" = 1 ; then
-    EXTRA_SRC_DIRS="$EXTRA_SRC_DIRS mpi2-other/info"
-fi
 if test "$BUILD_MPI_ARRAY" = 1 ; then
     EXTRA_SRC_DIRS="$EXTRA_SRC_DIRS mpi2-other/array"
 fi
@@ -1378,8 +1358,6 @@ AC_SUBST(FROM_MPICH)
 AC_SUBST(FROM_LAM)
 AC_SUBST(WITHIN_KNOWN_MPI_IMPL)
 AC_SUBST(NEEDS_MPI_FINT)
-AC_SUBST(HAVE_MPI_INFO)
-AC_SUBST(BUILD_MPI_INFO)
 AC_SUBST(HAVE_MPI_DARRAY_SUBARRAY)
 AC_SUBST(BUILD_MPI_ARRAY)
 AC_SUBST(DEFINE_MPI_OFFSET)
@@ -1428,7 +1406,6 @@ if test ! -d mpi-io/glue ; then mkdir mpi-io/glue ; fi
 AC_CONFIG_FILES([
     Makefile
     localdefs
-    mpi2-other/info/Makefile
     mpi2-other/array/Makefile
     test/Makefile
     test/misc.c

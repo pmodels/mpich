@@ -70,18 +70,6 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 typedef int MPI_Fint; 
 #endif
 
-#ifndef HAVE_MPI_INFO
-/* *INDENT-OFF* */
-@HAVE_MPI_INFO@
-/* *INDENT-ON* */
-#endif
-#ifndef HAVE_MPI_INFO
-  typedef struct MPIR_Info *MPI_Info;
-# define MPI_INFO_NULL         ((MPI_Info) 0)
-# define MPI_MAX_INFO_KEY       255
-# define MPI_MAX_INFO_VAL      1024
-#endif
-
 #ifndef MPI_MODE_RDONLY
 /* only define these if they are not defined in mpi.h */
 #define MPI_MODE_RDONLY              2  /* ADIO_RDONLY */
@@ -398,35 +386,6 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request) ROMIO_API_PUBLIC;
 MPIO_Request MPIO_Request_f2c(MPI_Fint request) ROMIO_API_PUBLIC;
 #endif /* HAVE_MPI_GREQUEST */
 
-/* info functions if not defined in the MPI implementation */
-#ifndef HAVE_MPI_INFO
-
-int MPI_Info_create(MPI_Info *info) ROMIO_API_PUBLIC;
-int MPI_Info_set(MPI_Info info, const char *key, const char *value) ROMIO_API_PUBLIC;
-int MPI_Info_delete(MPI_Info info, const char *key) ROMIO_API_PUBLIC;
-int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int *flag) ROMIO_API_PUBLIC;
-int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag) ROMIO_API_PUBLIC;
-int MPI_Info_get_nkeys(MPI_Info info, int *nkeys) ROMIO_API_PUBLIC;
-int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) ROMIO_API_PUBLIC;
-int MPI_Info_dup(MPI_Info info, MPI_Info *newinfo) ROMIO_API_PUBLIC;
-int MPI_Info_free(MPI_Info *info) ROMIO_API_PUBLIC;
-
-/* The globus2 device has to rename MPI_ symbols in order to use the vendor
-   MPI as one of its transport mechanisms.  Therefore, the following undefines
-   should only happen if MPICH_RENAMING_MPI_FUNCS is not defined. */
-#if !defined(MPICH_RENAMING_MPI_FUNCS)
-#ifdef MPI_Info_f2c
-#undef MPI_Info_f2c
-#endif
-#ifdef MPI_Info_c2f
-#undef MPI_Info_c2f
-#endif
-#endif
-/* above needed for some versions of mpi.h in MPICH!! */
-MPI_Fint MPI_Info_c2f(MPI_Info info) ROMIO_API_PUBLIC;
-MPI_Info MPI_Info_f2c(MPI_Fint info) ROMIO_API_PUBLIC;
-#endif
-
 #endif   /* HAVE_PRAGMA_HP_SEC_DEF */
 
 
@@ -677,23 +636,6 @@ int PMPIO_Testsome(int, MPIO_Request *, int *, int *, MPI_Status *) ROMIO_API_PU
 MPI_Fint PMPIO_Request_c2f(MPIO_Request) ROMIO_API_PUBLIC;
 MPIO_Request PMPIO_Request_f2c(MPI_Fint) ROMIO_API_PUBLIC;
 #endif /* HAVE_MPI_GREQUEST */
-
-/* info functions if not defined in the MPI implementation */
-#ifndef HAVE_MPI_INFO
-
-int PMPI_Info_create(MPI_Info *) ROMIO_API_PUBLIC;
-int PMPI_Info_set(MPI_Info, char *, char *) ROMIO_API_PUBLIC;
-int PMPI_Info_delete(MPI_Info, char *) ROMIO_API_PUBLIC;
-int PMPI_Info_get(MPI_Info, char *, int, char *, int *) ROMIO_API_PUBLIC;
-int PMPI_Info_get_valuelen(MPI_Info, char *, int *, int *) ROMIO_API_PUBLIC;
-int PMPI_Info_get_nkeys(MPI_Info, int *) ROMIO_API_PUBLIC;
-int PMPI_Info_get_nthkey(MPI_Info, int, char *) ROMIO_API_PUBLIC;
-int PMPI_Info_dup(MPI_Info, MPI_Info *) ROMIO_API_PUBLIC;
-int PMPI_Info_free(MPI_Info *) ROMIO_API_PUBLIC;
-
-MPI_Fint PMPI_Info_c2f(MPI_Info) ROMIO_API_PUBLIC;
-MPI_Info PMPI_Info_f2c(MPI_Fint) ROMIO_API_PUBLIC;
-#endif
 
 #if defined(__cplusplus)
 }

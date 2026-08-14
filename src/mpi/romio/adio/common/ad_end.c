@@ -19,10 +19,6 @@ void ADIO_End(int *error_code)
 /* free file and info tables used for Fortran interface */
     if (ADIOI_Ftable)
         ADIOI_Free(ADIOI_Ftable);
-#ifndef HAVE_MPI_INFO
-    if (MPIR_Infotable)
-        ADIOI_Free(MPIR_Infotable);
-#endif
 
 
 /* free the memory allocated for a new data representation, if any */

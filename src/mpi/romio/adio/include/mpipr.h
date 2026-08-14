@@ -478,7 +478,6 @@
 #undef MPI_Status_set_elements_x
 #define MPI_Status_set_elements_x PMPI_Status_set_elements_x
 
-#ifndef HAVE_MPI_INFO_SRC       /* everywhere except in info source directory */
 #undef MPI_Info_create
 #define MPI_Info_create PMPI_Info_create
 #undef MPI_Info_set
@@ -497,12 +496,6 @@
 #define MPI_Info_dup PMPI_Info_dup
 #undef MPI_Info_free
 #define MPI_Info_free PMPI_Info_free
-/* #undef MPI_Info_c2f
-#define MPI_Info_c2f PMPI_Info_c2f
-#undef MPI_Info_f2c
-#define MPI_Info_f2c PMPI_Info_f2c
-*/
-#endif
 #undef MPI_Grequest_start
 #define MPI_Grequest_start PMPI_Grequest_start
 #undef MPI_Grequest_complete

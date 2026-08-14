@@ -14,10 +14,6 @@ ADIO_File *ADIOI_Ftable = NULL;
 int ADIOI_Ftable_ptr = 0, ADIOI_Ftable_max = 0;
 ADIO_Request *ADIOI_Reqtable = NULL;
 int ADIOI_Reqtable_ptr = 0, ADIOI_Reqtable_max = 0;
-#ifndef HAVE_MPI_INFO
-MPI_Info *MPIR_Infotable = NULL;
-int MPIR_Infotable_ptr = 0, MPIR_Infotable_max = 0;
-#endif
 
 MPI_Info ADIOI_syshints = MPI_INFO_NULL;
 

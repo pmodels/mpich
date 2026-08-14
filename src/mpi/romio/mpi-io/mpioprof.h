@@ -241,33 +241,6 @@
 #undef MPIO_Request_c2f
 #define MPIO_Request_c2f PMPIO_Request_c2f
 
-#if defined(HAVE_MPI_INFO_SRC)  /* only in info source directory */
-
-#undef MPI_Info_create
-#define MPI_Info_create PMPI_Info_create
-#undef MPI_Info_set
-#define MPI_Info_set PMPI_Info_set
-#undef MPI_Info_delete
-#define MPI_Info_delete PMPI_Info_delete
-#undef MPI_Info_get
-#define MPI_Info_get PMPI_Info_get
-#undef MPI_Info_get_valuelen
-#define MPI_Info_get_valuelen PMPI_Info_get_valuelen
-#undef MPI_Info_get_nkeys
-#define MPI_Info_get_nkeys PMPI_Info_get_nkeys
-#undef MPI_Info_get_nthkey
-#define MPI_Info_get_nthkey PMPI_Info_get_nthkey
-#undef MPI_Info_dup
-#define MPI_Info_dup PMPI_Info_dup
-#undef MPI_Info_free
-#define MPI_Info_free PMPI_Info_free
-#undef MPI_Info_c2f
-#define MPI_Info_c2f PMPI_Info_c2f
-#undef MPI_Info_f2c
-#define MPI_Info_f2c PMPI_Info_f2c
-
-#endif
-
 #undef MPI_Grequest_start
 #define MPI_Grequest_start PMPI_Grequest_start
 #undef MPI_Grequest_complete
