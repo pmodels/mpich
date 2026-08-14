@@ -468,12 +468,6 @@ if test -n "$ac_cv_sizeof_long_long"; then
    fi
 fi
 #
-if test -n "$mpi_sgi"; then
-   PAC_TEST_MPI_SGI_type_is_contig
-   PAC_TEST_MPI_COMBINERS
-   PAC_TEST_MPI_HAVE_OFFSET_KIND
-fi
-#
 # check if darray and subarray constructors are defined in the MPI
 # implementation
 if test $WITHIN_KNOWN_MPI_IMPL = no ; then
@@ -1092,10 +1086,6 @@ if test -n "$mpi_mpich"; then
       AC_DEFINE(NEEDS_MPI_TEST,1,[Define if mpi_test needed])
       AC_DEFINE(MPICH,1,[Define if using MPICH])
    fi
-fi
-
-if test -n "$mpi_sgi"; then
-   AC_DEFINE(MPISGI,1,[Define if SGI MPI])
 fi
 
 #

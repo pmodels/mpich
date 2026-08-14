@@ -23,22 +23,6 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     }
 }
 
-#elif (defined(MPISGI) && !defined(NO_MPI_SGI_type_is_contig))
-
-int MPI_SGI_type_is_contig(MPI_Datatype datatype);
-
-void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
-{
-    MPI_Aint displacement, extent;
-    MPI_Type_get_extent(datatype, &distplacement, &extent);
-
-    /* SGI's MPI_SGI_type_is_contig() returns true for indexed
-     * datatypes with holes at the beginning, which causes
-     * problems with ROMIO's use of this function.
-     */
-    *flag = MPI_SGI_type_is_contig(datatype) && (displacement == 0);
-}
-
 #elif defined(OMPI_BUILDING) && OMPI_BUILDING
 
 /* void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag) is defined

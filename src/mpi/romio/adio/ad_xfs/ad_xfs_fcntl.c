@@ -14,11 +14,7 @@
 void ADIOI_XFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *error_code)
 {
     int i, err;
-#if defined(LINUX) && defined(MPISGI)
-    struct xfs_flock64 fl;
-#else
     struct flock64 fl;
-#endif
     static char myname[] = "ADIOI_XFS_FCNTL";
 
     switch (flag) {
@@ -39,11 +35,7 @@ void ADIOI_XFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *e
             fl.l_whence = SEEK_SET;
             fl.l_len = fcntl_struct->diskspace;
 
-#if defined(LINUX) && defined(MPISGI)
-            err = ioctl(fd->fd_sys, XFS_IOC_RESVSP64, &fl);
-#else
             err = fcntl(fd->fd_sys, F_RESVSP64, &fl);
-#endif
 
             if (err)
                 i = 1;

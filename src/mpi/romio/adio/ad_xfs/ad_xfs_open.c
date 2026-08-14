@@ -51,11 +51,7 @@ void ADIOI_XFS_Open(ADIO_File fd, int *error_code)
     fd->fd_direct = open(fd->filename, amode_direct, perm);
     if (fd->fd_direct != -1) {
 
-#if defined(MPISGI)
-        ioctl(fd->fd_direct, XFS_IOC_DIOINFO, &st);
-#else
         fcntl(fd->fd_direct, F_DIOINFO, &st);
-#endif
 
         fd->d_mem = st.d_mem;
         fd->d_miniosz = st.d_miniosz;
