@@ -218,29 +218,6 @@
 #undef MPI_Register_datarep_c
 #define MPI_Register_datarep_c PMPI_Register_datarep_c
 
-#undef MPIO_Test
-#undef PMPIO_Test
-#define MPIO_Test PMPIO_Test
-#undef MPIO_Wait
-#undef PMPIO_Wait
-#define MPIO_Wait PMPIO_Wait
-#undef MPIO_Testall
-#define MPIO_Testall PMPIO_Testall
-#undef MPIO_Waitall
-#define MPIO_Waitall PMPIO_Waitall
-#undef MPIO_Testany
-#define MPIO_Testany PMPIO_Testany
-#undef MPIO_Waitany
-#define MPIO_Waitany PMPIO_Waitany
-#undef MPIO_Testsome
-#define MPIO_Testsome PMPIO_Testsome
-#undef MPIO_Waitsome
-#define MPIO_Waitsome PMPIO_Waitsome
-#undef MPIO_Request_f2c
-#define MPIO_Request_f2c PMPIO_Request_f2c
-#undef MPIO_Request_c2f
-#define MPIO_Request_c2f PMPIO_Request_c2f
-
 #undef MPI_Grequest_start
 #define MPI_Grequest_start PMPI_Grequest_start
 #undef MPI_Grequest_complete

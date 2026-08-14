@@ -28,14 +28,6 @@ extern "C" {
 typedef struct ADIOI_FileD *MPI_File;
 #endif
 
-#define MPIO_Request MPI_Request
-#define MPIO_USES_MPI_REQUEST
-/* Also rename the MPIO routines to get the MPI versions */
-#define MPIO_Wait MPI_Wait
-#define MPIO_Test MPI_Test
-#define PMPIO_Wait PMPI_Wait
-#define PMPIO_Test PMPI_Test
-#define MPIO_REQUEST_DEFINED
 
 #ifndef HAVE_MPI_OFFSET
 /* *INDENT-OFF* */
@@ -95,8 +87,6 @@ typedef int MPI_Fint;
 /* MPICH defines null object handles differently */
 #define MPI_FILE_NULL           ((MPI_File) 0)
 #endif
-#define MPIO_REQUEST_NULL       ((MPIO_Request) 0)
-
 
 /* MPI-IO function prototypes */
 
@@ -137,13 +127,13 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
                           MPI_Datatype datatype, MPI_Status *status)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 
-/* nonblocking calls currently use MPIO_Request, because generalized
+/* nonblocking calls currently use MPI_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                      MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
+                      MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int count,
-                       MPI_Datatype datatype, MPIO_Request *request)
+                       MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 
 /* Section 9.4.3 */
@@ -156,14 +146,14 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
                        MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
-/* nonblocking calls currently use MPIO_Request, because generalized
+/* nonblocking calls currently use MPI_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
-int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPIO_Request *request)
+int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                    MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                    MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
 int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence) ROMIO_API_PUBLIC;
 int MPI_File_get_position(MPI_File fh, MPI_Offset *offset) ROMIO_API_PUBLIC;
@@ -175,9 +165,9 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatyp
 int MPI_File_write_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                          MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                          MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                           MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                           MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_read_ordered(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_write_ordered(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
@@ -280,31 +270,31 @@ int MPI_File_write_ordered_begin_c(MPI_File fh, const void *buf, MPI_Count count
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_write_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
-int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype, MPIO_Request *request)
+int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
                         MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iread_at_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count, MPI_Datatype datatype,
-                      MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
+                      MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int MPI_File_iread_at_all_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count,
                            MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int MPI_File_iread_shared_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
-                          MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                          MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                    MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                    MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_all_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
                          MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
-                       MPI_Datatype datatype, MPIO_Request *request)
+                       MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_at_all_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
                             MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int MPI_File_iwrite_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                           MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                           MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
 int MPI_File_get_type_extent_c(MPI_File fh, MPI_Datatype datatype, MPI_Count *extent) ROMIO_API_PUBLIC;
 
@@ -369,15 +359,15 @@ int PMPI_File_write_at_all(MPI_File, MPI_Offset, const void *,
 	      int, MPI_Datatype, MPI_Status *)
               MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 
-/* nonblocking calls currently use MPIO_Request, because generalized
+/* nonblocking calls currently use MPI_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
 int PMPI_File_iread_at(MPI_File, MPI_Offset, void *,
-	      int, MPI_Datatype, MPIO_Request *)
+	      int, MPI_Datatype, MPI_Request *)
               MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_at(MPI_File, MPI_Offset, const void *,
-	      int, MPI_Datatype, MPIO_Request *)
+	      int, MPI_Datatype, MPI_Request *)
               MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 
 /* Section 9.4.3 */
@@ -390,13 +380,13 @@ int PMPI_File_write(MPI_File, const void *, int, MPI_Datatype, MPI_Status *)
 int PMPI_File_write_all(MPI_File, const void *, int, MPI_Datatype, MPI_Status *)
                         MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
-/* nonblocking calls currently use MPIO_Request, because generalized
+/* nonblocking calls currently use MPI_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
-int PMPI_File_iread(MPI_File, void *, int, MPI_Datatype, MPIO_Request *)
+int PMPI_File_iread(MPI_File, void *, int, MPI_Datatype, MPI_Request *)
                     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
-int PMPI_File_iwrite(MPI_File, const void *, int, MPI_Datatype, MPIO_Request *)
+int PMPI_File_iwrite(MPI_File, const void *, int, MPI_Datatype, MPI_Request *)
                      MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
 int PMPI_File_seek(MPI_File, MPI_Offset, int) ROMIO_API_PUBLIC;
@@ -409,10 +399,10 @@ int PMPI_File_read_shared(MPI_File, void *, int, MPI_Datatype, MPI_Status *)
 int PMPI_File_write_shared(MPI_File, const void *, int, MPI_Datatype, MPI_Status *)
                            MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iread_shared(MPI_File, void *, int, 
-			   MPI_Datatype, MPIO_Request *)
+			   MPI_Datatype, MPI_Request *)
                            MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_shared(MPI_File, const void *, int,
-			    MPI_Datatype, MPIO_Request *)
+			    MPI_Datatype, MPI_Request *)
                             MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_read_ordered(MPI_File, void *, int, MPI_Datatype, MPI_Status *)
                            MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
@@ -520,31 +510,31 @@ int PMPI_File_write_ordered_begin_c(MPI_File fh, const void *buf, MPI_Count coun
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_write_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
-int PMPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype, MPIO_Request *request)
+int PMPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
                         MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iread_at_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count, MPI_Datatype datatype,
-                      MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
+                      MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int PMPI_File_iread_at_all_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count,
                            MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int PMPI_File_iread_shared_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
-                          MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                          MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                    MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                    MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_all_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
                          MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
-                       MPI_Datatype datatype, MPIO_Request *request)
+                       MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_at_all_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
                             MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) ROMIO_API_PUBLIC;
 int PMPI_File_iwrite_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                           MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
+                           MPI_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) ROMIO_API_PUBLIC;
 
 int PMPI_File_get_type_extent_c(MPI_File fh, MPI_Datatype datatype, MPI_Count *extent) ROMIO_API_PUBLIC;
 

@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                          MPIO_Request * request)
+                          MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_shared")));
 #endif
 
@@ -31,7 +31,7 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype dataty
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_shared_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
-                            MPIO_Request * request)
+                            MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_shared_c")));
 #endif
 

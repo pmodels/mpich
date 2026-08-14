@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                      MPIO_Request * request) __attribute__ ((weak, alias("PMPI_File_iread_at")));
+                      MPI_Request * request) __attribute__ ((weak, alias("PMPI_File_iread_at")));
 #endif
 
 #if defined(HAVE_PRAGMA_WEAK_ALIAS)
@@ -30,7 +30,7 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_at_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count,
-                        MPI_Datatype datatype, MPIO_Request * request)
+                        MPI_Datatype datatype, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_at_c")));
 #endif
 
@@ -57,7 +57,7 @@ Output Parameters:
 .N fortran
 @*/
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                      MPIO_Request * request)
+                      MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();
@@ -96,7 +96,7 @@ Output Parameters:
 .N fortran
 @*/
 int MPI_File_iread_at_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count count,
-                        MPI_Datatype datatype, MPIO_Request * request)
+                        MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();

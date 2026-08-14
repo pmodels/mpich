@@ -482,8 +482,6 @@ AC_SUBST(HAVE_WEAK_SYMBOLS)
 
 AM_CONDITIONAL([BUILD_ROMIO_EMBEDDED],[test "$WITHIN_KNOWN_MPI_IMPL" = "yes" ])
 # FIXME need to get this right for non-MPICH builds
-AM_CONDITIONAL([BUILD_MPIO_REQUEST],[false])
-# FIXME need to get this right for non-MPICH builds
 AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 
 # if we don't have weak symbol support, we must build a separate convenience

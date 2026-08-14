@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_iread as PMPI_File_iread
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
-int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPIO_Request * request)
+int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread")));
 #endif
 
@@ -30,7 +30,7 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype,
-                     MPIO_Request * request)
+                     MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iread_c")));
 #endif
 

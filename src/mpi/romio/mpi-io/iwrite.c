@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                    MPIO_Request * request) __attribute__ ((weak, alias("PMPI_File_iwrite")));
+                    MPI_Request * request) __attribute__ ((weak, alias("PMPI_File_iwrite")));
 #endif
 
 #if defined(HAVE_PRAGMA_WEAK_ALIAS)
@@ -30,7 +30,7 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                      MPIO_Request * request) __attribute__ ((weak, alias("PMPI_File_iwrite_c")));
+                      MPI_Request * request) __attribute__ ((weak, alias("PMPI_File_iwrite_c")));
 #endif
 
 /* Include mapping from MPI->PMPI */

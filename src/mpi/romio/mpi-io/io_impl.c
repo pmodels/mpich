@@ -23,7 +23,7 @@ static int MPIOI_File_iwrite_all(MPI_File fh, MPI_Offset offset, int file_ptr_ty
                                  const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                  MPI_Request * request);
 static int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
-                                    MPI_Datatype datatype, MPIO_Request * request);
+                                    MPI_Datatype datatype, MPI_Request * request);
 static int MPIOI_File_read(MPI_File fh, MPI_Offset offset, int file_ptr_type,
                            void *buf, MPI_Aint count, MPI_Datatype datatype, MPI_Status * status);
 static int MPIOI_File_read_all(MPI_File fh, MPI_Offset offset, int file_ptr_type,
@@ -1705,7 +1705,7 @@ static int MPIOI_File_iwrite_all(MPI_File fh, MPI_Offset offset, int file_ptr_ty
 }
 
 static int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
-                                    MPI_Datatype datatype, MPIO_Request * request)
+                                    MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_File adio_fh;
