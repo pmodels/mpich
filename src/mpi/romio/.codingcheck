@@ -42,7 +42,6 @@
 	'MPI_OFFSET_IS_INT'=> romio,
 	'MPI_COMBINER_NAMED'=> romio,
 	'_UNICOS'=> romio,
-	'MPIHP'=> romio,
 	);
 
 # Only invoke this function if the function is defined (in case the

@@ -23,16 +23,6 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     }
 }
 
-#elif (defined(MPIHP))
-/* i.e. HPMPI 1.4 only */
-
-int hpmp_dtiscontig(MPI_Datatype datatype);
-
-void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
-{
-    *flag = hpmp_dtiscontig(datatype);
-}
-
 #elif (defined(MPISGI) && !defined(NO_MPI_SGI_type_is_contig))
 
 int MPI_SGI_type_is_contig(MPI_Datatype datatype);

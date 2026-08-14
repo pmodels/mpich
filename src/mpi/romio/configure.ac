@@ -1098,9 +1098,6 @@ if test -n "$mpi_sgi"; then
    AC_DEFINE(MPISGI,1,[Define if SGI MPI])
 fi
 
-if test -n "$mpi_hp"; then
-   AC_DEFINE(MPIHP,1,[Define if using HP MPI])
-fi
 #
 AC_CHECK_FUNCS(strerror)
 if test -z "$srcdir" -o "$srcdir" = "." ; then srcdir="$ROMIO_HOME" ; fi
