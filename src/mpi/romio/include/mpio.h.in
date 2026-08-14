@@ -104,20 +104,6 @@ typedef int MPI_Fint;
 #endif
 #define MPIO_REQUEST_NULL       ((MPIO_Request) 0)
 
-#ifndef HAVE_MPI_DARRAY_SUBARRAY
-/* *INDENT-OFF* */
-@HAVE_MPI_DARRAY_SUBARRAY@
-/* *INDENT-ON* */
-#endif
-#ifndef HAVE_MPI_DARRAY_SUBARRAY
-#  define MPI_ORDER_C             56
-#  define MPI_ORDER_FORTRAN       57
-#  define MPI_DISTRIBUTE_BLOCK    121
-#  define MPI_DISTRIBUTE_CYCLIC   122
-#  define MPI_DISTRIBUTE_NONE     123
-#  define MPI_DISTRIBUTE_DFLT_DARG -49767
-#endif
-
 
 /* MPI-IO function prototypes */
 
@@ -334,19 +320,6 @@ int MPI_Register_datarep_c(const char *datarep, MPI_Datarep_conversion_function_
 			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) ROMIO_API_PUBLIC;
 
 /* End Prototypes */
-
-#ifndef HAVE_MPI_DARRAY_SUBARRAY
-/* Section 4.14.4 */
-int MPI_Type_create_subarray(int ndims, const int array_of_sizes[], const int array_of_subsizes[],
-                             const int array_of_starts[], int order, MPI_Datatype oldtype,
-                             MPI_Datatype *newtype) ROMIO_API_PUBLIC;
-
-/* Section 4.14.5 */
-int MPI_Type_create_darray(int size, int rank, int ndims, const int array_of_gsizes[],
-                           const int array_of_distribs[], const int array_of_dargs[],
-                           const int array_of_psizes, int order, MPI_Datatype oldtype,
-                           MPI_Datatype *newtype) ROMIO_API_PUBLIC;
-#endif
 
 /* The globus2 device has to rename MPI_ symbols in order to use the vendor
    MPI as one of its transport mechanisms.  Therefore, the following undefines
@@ -606,16 +579,6 @@ int PMPI_File_get_type_extent_c(MPI_File fh, MPI_Datatype datatype, MPI_Count *e
 int PMPI_Register_datarep_c(const char *datarep, MPI_Datarep_conversion_function_c *read_conversion_fn,
 			 MPI_Datarep_conversion_function_c *write_conversion_fn,
 			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) ROMIO_API_PUBLIC;
-
-#ifndef HAVE_MPI_DARRAY_SUBARRAY
-/* Section 4.14.4 */
-int PMPI_Type_create_subarray(int, int *, int *, int *, int, 
-                      MPI_Datatype, MPI_Datatype *) ROMIO_API_PUBLIC;
-
-/* Section 4.14.5 */
-int PMPI_Type_create_darray(int, int, int, int *, int *, 
-                    int *, int *, int, MPI_Datatype, MPI_Datatype *) ROMIO_API_PUBLIC;
-#endif
 
 /* Section 4.12.4 */
 MPI_File PMPI_File_f2c(MPI_Fint) ROMIO_API_PUBLIC;
