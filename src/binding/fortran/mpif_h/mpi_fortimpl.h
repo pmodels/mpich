@@ -24,6 +24,13 @@
 #define MPICH_INTERNAL  /* define to exclude f2c/c2f MPICH ABI compatibility macros */
 #include "mpi_fortran.h"
 
+int MPIR_Status_f2c_impl(const MPI_Fint * f_status, MPI_Status * c_status);
+int MPIR_Status_c2f_impl(const MPI_Status * c_status, MPI_Fint * f_status);
+int MPIR_Status_f2f08_impl(const MPI_Fint * f_status, MPI_F08_status * f08_status);
+int MPIR_Status_f082f_impl(const MPI_F08_status * f08_status, MPI_Fint * f_status);
+int MPIR_Status_f082c_impl(const MPI_F08_status * f08_status, MPI_Status * c_status);
+int MPIR_Status_c2f08_impl(const MPI_Status * c_status, MPI_F08_status * f08_status);
+
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
  * In the case where MPI_Fint is a different size from int, it appears that
