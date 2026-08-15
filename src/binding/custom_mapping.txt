@@ -8,6 +8,7 @@ LIS_KIND_MAP:
     IOVEC: None
     ASYNC_THING: None
     INTEGER: integer
+    F90_STREAM: None
 
 SMALL_F90_KIND_MAP:
     GPU_TYPE: INTEGER
@@ -44,6 +45,7 @@ SMALL_C_KIND_MAP:
     IOVEC: MPIX_Iov
     ASYNC_THING: MPIX_Async_thing
     INTEGER: int
+    F90_STREAM: MPI_Fint
 
 BIG_C_KIND_MAP:
     GPU_TYPE: int
@@ -52,3 +54,4 @@ BIG_C_KIND_MAP:
     IOVEC: MPIX_Iov
     ASYNC_THING: MPIX_Async_thing
     INTEGER: int
+    F90_STREAM: MPI_Fint
