@@ -30,15 +30,6 @@ typedef struct ADIOI_FileD *MPI_File;
 
 
 
-#ifndef NEEDS_MPI_FINT
-/* *INDENT-OFF* */
-@NEEDS_MPI_FINT@
-/* *INDENT-ON* */
-#endif
-#ifdef NEEDS_MPI_FINT
-typedef int MPI_Fint; 
-#endif
-
 #ifndef MPI_MODE_RDONLY
 /* only define these if they are not defined in mpi.h */
 #define MPI_MODE_RDONLY              2  /* ADIO_RDONLY */
@@ -288,23 +279,6 @@ int MPI_Register_datarep_c(const char *datarep, MPI_Datarep_conversion_function_
 
 /* End Prototypes */
 
-/* The globus2 device has to rename MPI_ symbols in order to use the vendor
-   MPI as one of its transport mechanisms.  Therefore, the following undefines
-   should only happen if MPICH_RENAMING_MPI_FUNCS is not defined. */
-/* Section 4.12.4 */
-#if !defined(MPICH_RENAMING_MPI_FUNCS)
-#ifdef MPI_File_f2c
-#undef MPI_File_f2c
-#endif
-#ifdef MPI_File_c2f
-#undef MPI_File_c2f
-#endif
-#endif
-/* above needed for some versions of mpi.h in MPICH!! */
-MPI_File MPI_File_f2c(MPI_Fint file) ROMIO_API_PUBLIC;
-MPI_Fint MPI_File_c2f(MPI_File file) ROMIO_API_PUBLIC;
-
-
 #endif   /* HAVE_PRAGMA_HP_SEC_DEF */
 
 
@@ -525,10 +499,6 @@ int PMPI_File_get_type_extent_c(MPI_File fh, MPI_Datatype datatype, MPI_Count *e
 int PMPI_Register_datarep_c(const char *datarep, MPI_Datarep_conversion_function_c *read_conversion_fn,
 			 MPI_Datarep_conversion_function_c *write_conversion_fn,
 			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) ROMIO_API_PUBLIC;
-
-/* Section 4.12.4 */
-MPI_File PMPI_File_f2c(MPI_Fint) ROMIO_API_PUBLIC;
-MPI_Fint PMPI_File_c2f(MPI_File) ROMIO_API_PUBLIC;
 
 #if defined(__cplusplus)
 }

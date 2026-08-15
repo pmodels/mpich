@@ -100,11 +100,6 @@ typedef MPI_Offset ADIO_Offset;
 
 #define ADIO_Status MPI_Status
 
-#ifndef MPIO_INCLUDE
-#ifdef NEEDS_MPI_FINT
-typedef int MPI_Fint;
-#endif
-#endif
 
 /* style: allow:strdup:1 sig:0 */
 
@@ -401,8 +396,8 @@ int ADIO_Type_create_darray(int size, int rank, int ndims,
 MPI_File MPIO_File_create(int size);
 ADIO_File MPIO_File_resolve(MPI_File mpi_fh);
 void MPIO_File_free(MPI_File * mpi_fh);
-MPI_File MPIO_File_f2c(MPI_Fint fh);
-MPI_Fint MPIO_File_c2f(MPI_File fh);
+MPI_File MPIO_File_fromint(int fh);
+int MPIO_File_toint(MPI_File fh);
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
                          int line, int error_class, const char generic_msg[],
                          const char specific_msg[], ...);

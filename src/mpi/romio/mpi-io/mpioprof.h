@@ -150,13 +150,6 @@
 #undef MPI_File_get_errhandler
 #define MPI_File_get_errhandler PMPI_File_get_errhandler
 
-#if !defined(MPI_File_f2c) || defined(MPICH_RENAMING_MPI_FUNCS)
-#undef MPI_File_f2c
-#define MPI_File_f2c PMPI_File_f2c
-#undef MPI_File_c2f
-#define MPI_File_c2f PMPI_File_c2f
-#endif
-
 #undef MPI_File_read_c
 #define MPI_File_read_c PMPI_File_read_c
 #undef MPI_File_read_all_c

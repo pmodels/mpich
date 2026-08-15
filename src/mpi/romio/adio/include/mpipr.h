@@ -508,12 +508,6 @@
 #undef MPIX_Grequest_class_allocate
 #define MPIX_Grequest_class_allocate PMPIX_Grequest_class_allocate
 
-#ifdef MPIO_FORTRAN_SRC /* only in MPI-IO Fortran source directory */
-#undef MPI_File_c2f
-#define MPI_File_c2f PMPI_File_c2f
-#undef MPI_File_f2c
-#define MPI_File_f2c PMPI_File_f2c
-#endif
 
 #undef MPI_Type_get_attr
 #define MPI_Type_get_attr PMPI_Type_get_attr
