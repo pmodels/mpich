@@ -430,42 +430,11 @@ if test "$pac_cv_int_hold_pointer" != yes ; then
     AC_DEFINE(INT_LT_POINTER,1,[Define if int smaller than pointer])
 fi
 
-# LL is the printf-style format name for output of a MPI_Offset.
-# We have to match this to the type that we use for MPI_Offset.
+# MPI_Offset is always long long in MPICH and Open MPI
 AC_CHECK_SIZEOF(long long)
-if test "$ac_cv_sizeof_long_long" != 0 ; then
-    if test "$ac_cv_sizeof_long_long" = "8" ; then
-       AC_DEFINE(HAVE_LONG_LONG_64,1,[Define if long long is 64 bits])
-       MPI_OFFSET_TYPE="long long"
-       DEFINE_MPI_OFFSET="typedef long long MPI_Offset;"
-       LL="lld"
-    elif test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_int" ; then
-       MPI_OFFSET_TYPE="int"
-       DEFINE_MPI_OFFSET="typedef int MPI_Offset;"
-       AC_DEFINE(MPI_OFFSET_IS_INT,1,[Define if MPI_Offset is int])
-       LL="d"
-    else
-       AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
-       MPI_OFFSET_TYPE="long"
-       DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-       LL="ld"
-    fi
-else
-    AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
-    MPI_OFFSET_TYPE="long"
-    DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-    LL="ld"
-fi
+MPI_OFFSET_TYPE="long long"
 
 
-#
-if test -n "$ac_cv_sizeof_long_long"; then
-   if test $WITHIN_KNOWN_MPI_IMPL = no ; then
-       PAC_MPI_LONG_LONG_INT
-   else
-       AC_DEFINE(HAVE_MPI_LONG_LONG_INT,1,[Define if supports long long int])
-   fi
-fi
 # Check to see if weak symbols work correctly
 if test "$enable_weak_symbols" = "yes" ; then
     # Turn off weak symbols if they aren't available
@@ -1313,7 +1282,6 @@ AC_SUBST(FROM_MPICH)
 AC_SUBST(FROM_LAM)
 AC_SUBST(WITHIN_KNOWN_MPI_IMPL)
 AC_SUBST(NEEDS_MPI_FINT)
-AC_SUBST(DEFINE_MPI_OFFSET)
 AC_SUBST(MPI_OFFSET_TYPE)
 AC_SUBST(MPI_FINFO1)
 AC_SUBST(MPI_FINFO2)

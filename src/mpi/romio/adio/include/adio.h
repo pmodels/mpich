@@ -96,19 +96,7 @@
 #endif
 
 typedef MPI_Offset ADIO_Offset;
-#ifdef MPI_OFFSET_IS_INT
-#define ADIO_OFFSET MPI_INT
-#elif defined(HAVE_LONG_LONG_64)
-#ifdef HAVE_MPI_LONG_LONG_INT
-#define ADIO_OFFSET MPI_LONG_LONG_INT
-#else
-#define ADIO_OFFSET MPI_DOUBLE
-#endif
-#elif defined(HAVE_INT64)
-#define ADIO_OFFSET MPI_DOUBLE
-#else
-#define ADIO_OFFSET MPI_LONG
-#endif
+#define ADIO_OFFSET MPI_OFFSET
 
 #define ADIO_Status MPI_Status
 
