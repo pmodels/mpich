@@ -236,3 +236,43 @@ MPIX_Allreduce_enqueue:
     datatype: DATATYPE, [data type of elements of send buffer]
     op: OPERATION, [operation]
     comm: COMMUNICATOR, [communicator]
+
+MPIX_Stream_toint:
+    .desc: converts MPIX_Stream to an integer handle
+    .return: INTEGER
+    stream: STREAM
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) stream;
+}
+
+MPIX_Stream_fromint:
+    .desc: converts an integer handle to MPIX_Stream
+    .return: STREAM
+    stream: INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPIX_Stream) stream;
+}
+
+MPIX_Stream_c2f:
+    .desc: converts MPIX_Stream to an integer handle
+    .return: F90_STREAM
+    stream: STREAM
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return MPIX_Stream_toint(stream);
+}
+
+MPIX_Stream_f2c:
+    .desc: converts an integer handle to MPIX_Stream
+    .return: STREAM
+    stream: F90_STREAM
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return MPIX_Stream_fromint(stream);
+}

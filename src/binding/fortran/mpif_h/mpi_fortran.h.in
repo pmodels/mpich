@@ -46,6 +46,81 @@ typedef struct {
 extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
 extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
+MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
+MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
+MPI_Fint PMPI_Comm_c2f(MPI_Comm comm);
+MPI_Comm PMPI_Comm_f2c(MPI_Fint comm);
+
+MPI_Fint MPI_Errhandler_c2f(MPI_Errhandler errhandler);
+MPI_Errhandler MPI_Errhandler_f2c(MPI_Fint errhandler);
+MPI_Fint PMPI_Errhandler_c2f(MPI_Errhandler errhandler);
+MPI_Errhandler PMPI_Errhandler_f2c(MPI_Fint errhandler);
+
+MPI_Fint MPI_File_c2f(MPI_File file);
+MPI_File MPI_File_f2c(MPI_Fint file);
+MPI_Fint PMPI_File_c2f(MPI_File file);
+MPI_File PMPI_File_f2c(MPI_Fint file);
+
+MPI_Fint MPI_Group_c2f(MPI_Group group);
+MPI_Group MPI_Group_f2c(MPI_Fint group);
+MPI_Fint PMPI_Group_c2f(MPI_Group group);
+MPI_Group PMPI_Group_f2c(MPI_Fint group);
+
+MPI_Fint MPI_Info_c2f(MPI_Info info);
+MPI_Info MPI_Info_f2c(MPI_Fint info);
+MPI_Fint PMPI_Info_c2f(MPI_Info info);
+MPI_Info PMPI_Info_f2c(MPI_Fint info);
+
+MPI_Fint MPI_Message_c2f(MPI_Message message);
+MPI_Message MPI_Message_f2c(MPI_Fint message);
+MPI_Fint PMPI_Message_c2f(MPI_Message message);
+MPI_Message PMPI_Message_f2c(MPI_Fint message);
+
+MPI_Fint MPI_Op_c2f(MPI_Op op);
+MPI_Op MPI_Op_f2c(MPI_Fint op);
+MPI_Fint PMPI_Op_c2f(MPI_Op op);
+MPI_Op PMPI_Op_f2c(MPI_Fint op);
+
+MPI_Fint MPI_Request_c2f(MPI_Request request);
+MPI_Request MPI_Request_f2c(MPI_Fint request);
+MPI_Fint PMPI_Request_c2f(MPI_Request request);
+MPI_Request PMPI_Request_f2c(MPI_Fint request);
+
+MPI_Fint MPI_Session_c2f(MPI_Session session);
+MPI_Session MPI_Session_f2c(MPI_Fint session);
+MPI_Fint PMPI_Session_c2f(MPI_Session session);
+MPI_Session PMPI_Session_f2c(MPI_Fint session);
+
+MPI_Fint MPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype MPI_Type_f2c(MPI_Fint datatype);
+MPI_Fint PMPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype PMPI_Type_f2c(MPI_Fint datatype);
+
+MPI_Fint MPI_Win_c2f(MPI_Win win);
+MPI_Win MPI_Win_f2c(MPI_Fint win);
+MPI_Fint PMPI_Win_c2f(MPI_Win win);
+MPI_Win PMPI_Win_f2c(MPI_Fint win);
+
+MPI_Fint MPIX_Stream_c2f(MPIX_Stream stream);
+MPIX_Stream MPIX_Stream_f2c(MPI_Fint stream);
+MPI_Fint PMPIX_Stream_c2f(MPIX_Stream stream);
+MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream);
+
+int MPI_Status_f2c(const MPI_Fint * f_status, MPI_Status * c_status);
+int MPI_Status_c2f(const MPI_Status * c_status, MPI_Fint * f_status);
+int MPI_Status_f2f08(const MPI_Fint * f_status, MPI_F08_status * f08_status);
+int MPI_Status_f082f(const MPI_F08_status * f08_status, MPI_Fint * f_status);
+int MPI_Status_f082c(const MPI_F08_status * f08_status, MPI_Status * c_status);
+int MPI_Status_c2f08(const MPI_Status * c_status, MPI_F08_status * f08_status);
+int PMPI_Status_f2c(const MPI_Fint * f_status, MPI_Status * c_status);
+int PMPI_Status_c2f(const MPI_Status * c_status, MPI_Fint * f_status);
+int PMPI_Status_f2f08(const MPI_Fint * f_status, MPI_F08_status * f08_status);
+int PMPI_Status_f082f(const MPI_F08_status * f08_status, MPI_Fint * f_status);
+int PMPI_Status_f082c(const MPI_F08_status * f08_status, MPI_Status * c_status);
+int PMPI_Status_c2f08(const MPI_Status * c_status, MPI_F08_status * f08_status);
+
+void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
+
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.
  */
@@ -95,7 +170,5 @@ extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 
 #endif /* !defined(MPICH_INTERNAL) && !defined(MPI_ABI) */
-
-void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
 
 #endif /* MPI_FORTRAN_H_INCLUDED */

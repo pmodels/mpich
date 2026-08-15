@@ -304,6 +304,10 @@ fn_pmi() {
 # ./autogen.sh -do=fortran if *only* build libfortran
 fn_fortran() {
     dir=src/binding/fortran
+    if ! test -f "$dir/mpif_h/f2c.c" ; then
+        fn_gen_binding_c
+    fi
+
     echo "####################################"
     echo "## Prepareing src/binding/fortran ##"
     echo "####################################"

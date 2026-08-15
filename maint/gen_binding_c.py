@@ -53,9 +53,18 @@ def main():
             repl_func['_replaces'].append(func)
 
 
-    # We generate io functions separately for now
-    io_func_list = [f for f in func_list if f['dir'] == 'io']
-    func_list = [f for f in func_list if f['dir'] != 'io']
+    # We generate io and f2c functions separately for now
+    f2c_func_list = []
+    io_func_list = []
+    remain_list = []
+    for func in func_list:
+        if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+            f2c_func_list.append(func)
+        elif func['dir'] == 'io':
+            io_func_list.append(func)
+        else:
+            remain_list.append(func)
+    func_list = remain_list
 
     # -- Generating code --
     G.doc3_src = []
@@ -69,6 +78,10 @@ def main():
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
         G.need_dump_romio_reference = True
+
+    def dump_out_no_make(file_path):
+        G.check_write_path(file_path)
+        dump_c_file(file_path, G.out)
 
     def dump_func(func, do_doc):
         G.err_codes = {}
@@ -97,6 +110,33 @@ def main():
         if func['_has_poly']:
             dump_mpi_c(func, True)
         del func['_is_abi']
+
+    # f2c functions need be build by Fortran binding
+    def dump_func_f2c(func):
+        func_decl = get_declare_function(func, False)
+
+        G.out.append("")
+
+        # declare with MPICH_API_PUBLIC
+        G.out.append("%s MPICH_API_PUBLIC;" % func_decl)
+        if RE.match(r'(\w+) (MPI.*)', func_decl):
+            G.out.append("%s P%s MPICH_API_PUBLIC;" % RE.m.group(1,2))
+        G.out.append("")
+
+        func['_is_large'] = False
+        G.out.append("")
+        dump_profiling(func)
+
+        dump_line_with_break(func_decl)
+        G.out.append("{")
+        params = func['c_parameters']
+        if RE.match(r'MPI_Status_(.*)', func['name']):
+            G.out.append("    return MPIR_Status_%s_impl(%s, %s);" % (RE.m.group(1), params[0]['name'], params[1]['name']))
+        elif RE.match(r'(MPI.*)_(f2c)', func['name']):
+            G.out.append("    return P%s_fromint(%s);" % (RE.m.group(1), params[0]['name']))
+        elif RE.match(r'(MPI.*)_(c2f)', func['name']):
+            G.out.append("    return P%s_toint(%s);" % (RE.m.group(1), params[0]['name']))
+        G.out.append("}")
 
     def dump_c_binding():
         G.out = []
@@ -139,8 +179,6 @@ def main():
                     pass
                 else:
                     continue
-            elif re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
-                continue
 
             dump_func_abi(func)
             if '_replaces' in func:
@@ -171,19 +209,27 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
-            if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
-                continue
             dump_func_abi(func)
 
         abi_file_path = G.abi_dir + "/io_abi.c"
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
 
+    def dump_f2c_funcs():
+        G.out = []
+        G.out.append("#include \"mpi_fortimpl.h\"")
+        G.out.append("")
+
+        for func in f2c_func_list:
+            dump_func_f2c(func)
+        dump_out_no_make(G.f77_dir + "/f2c.c")
+
     # ----
     dump_c_binding()
     dump_c_binding_abi()
     dump_io_funcs()
     dump_io_funcs_abi()
+    dump_f2c_funcs()
 
     if do_doc:
         f = mansrc_dir + '/poly_aliases.lst'

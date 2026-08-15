@@ -12,6 +12,7 @@ noinst_LTLIBRARIES += lib/libf77_mpi.la
 
 lib_libf77_mpi_la_SOURCES = \
         mpif_h/fortran_binding.c \
+        mpif_h/f2c.c \
         mpif_h/f2c_impl.c \
         mpif_h/user_proxy.c \
         mpif_h/fdebug.c \
