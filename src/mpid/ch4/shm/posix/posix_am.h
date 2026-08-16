@@ -13,7 +13,7 @@
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_eager_limit(void)
 {
-    return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
+    return MPIDI_POSIX_eager_payload_limit();
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_send_hdr(int grank,
