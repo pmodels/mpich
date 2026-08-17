@@ -4218,6 +4218,16 @@ dnl
 AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip generating bindings])],
     [enable_gen_bindings=$enableval], [enable_gen_bindings=yes])
 
+AC_ARG_ENABLE([fortran-mpix], [AS_HELP_STRING([--disable-fortran-mpix], [skip mpix in Fortran bindings])],
+    [enable_fortran_mpix=$enableval], [enable_fortran_mpix=yes])
+
+gen_cmd_common="-mpi-h=src/include/mpi.h"
+if test "$enable_fortran_mpix" = "yes" ; then
+    AC_DEFINE([MPI_MPIX], 1, [Define if the fortran binding supports MPIX])
+else
+    gen_cmd_common="$gen_cmd_common -skip-mpix"
+fi
+
 if test "$enable_gen_bindings" = "yes" ; then
     # Python 3 is needed to generate Fortran bindings
     PAC_CHECK_PYTHON
@@ -4227,8 +4237,7 @@ if test "$enable_gen_bindings" = "yes" ; then
 
     # use AC_CONFIG_COMMANDS to ensures mpi.h is already generated
     if test "$enable_f77" = "yes" ; then
-        cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py"
-        cmd_f77="$cmd_f77 -mpi-h=src/include/mpi.h"
+        cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py $gen_cmd_common"
         cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
         AC_CONFIG_COMMANDS([binding_f77],[$cmd_f77],[cmd_f77="$cmd_f77"])
     fi
@@ -4237,7 +4246,7 @@ if test "$enable_gen_bindings" = "yes" ; then
         PAC_FC_CHECK_IGNORE_TKR
         PAC_FC_ISO_C_BINDING
 
-        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
+        cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py $gen_cmd_common"
         # pass in type sizes for MPI_SIZEOF
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
         if test "$pac_fc_ignore_tkr" != "no" ; then
@@ -4253,16 +4262,12 @@ if test "$enable_gen_bindings" = "yes" ; then
         PAC_FC_CHECK_REAL128
         PAC_FC_CHECK_IGNORE_TKR_D
 
-        cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
-        cmd_f08="$cmd_f08 -mpi-h=src/include/mpi.h"
+        cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py $gen_cmd_common"
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"
         fi
         if test "$pac_fc_ignore_tkr_d" != "no" ; then
             cmd_f08="$cmd_f08 -ignore-tkr-d=$pac_fc_ignore_tkr_d"
-        fi
-        if test "$enable_romio" = "no" ; then
-            cmd_f08="$cmd_f08 -no-mpiio"
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
         cmd_f08="$cmd_f08 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"

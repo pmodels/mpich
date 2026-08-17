@@ -754,6 +754,7 @@ def dump_mpi_c_interface_cdesc(func, is_large):
 
 def dump_mpi_c_interface_nobuf(func, is_large):
     name = get_f08_c_name(func, is_large)
+    has_mpix = ('skip-mpix' not in G.opts)
     if RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
         c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
@@ -764,7 +765,7 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         c_name = "MPII_op_create"
     elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
         c_name = "MPII_greq_start"
-    elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large:
+    elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large and has_mpix:
         c_name = "PMPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:
         # uses PMPI c binding directly
@@ -1298,6 +1299,10 @@ def process_func_parameters(func):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
+    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif 'skip-mpix' in G.opts and RE.match(r'mpix_', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
     elif RE.match(r'mpix_(grequest_|type_iov|async_)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_attr_', func['name'], re.IGNORECASE):
@@ -1654,7 +1659,6 @@ def dump_c_interface_types_f90(f):
         for a in G.handle_list:
             if RE.match(r'MPIX?_(\w+)', a):
                 c_name = "c_" + RE.m.group(1)
-            # FIXME: handle mpix
             if a not in G.mpih_ctypes:
                 G.mpih_ctypes[a] = 'c_int'
             print("integer, parameter :: %s = %s" % (c_name, G.mpih_ctypes[a]), file=Out)

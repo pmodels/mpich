@@ -186,3 +186,8 @@ class MPI_API_Global:
                 MPI_API_Global.opts[RE.m.group(1)] = 1
             else:
                 MPI_API_Global.args.append(a)
+
+        if 'skip-mpix' in MPI_API_Global.opts:
+            MPI_API_Global.handle_list.remove("MPIX_Stream")
+            del MPI_API_Global.handle_conversions["MPIX_Stream"]
+
