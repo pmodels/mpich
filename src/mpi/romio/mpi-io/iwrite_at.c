@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int count,
-                       MPI_Datatype datatype, MPIO_Request * request)
+                       MPI_Datatype datatype, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iwrite_at")));
 #endif
 
@@ -31,7 +31,7 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, const void *buf, MPI_Count count,
-                         MPI_Datatype datatype, MPIO_Request * request)
+                         MPI_Datatype datatype, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iwrite_at_c")));
 #endif
 
@@ -55,12 +55,10 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
-                       int count, MPI_Datatype datatype, MPIO_Request * request)
+                       int count, MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();
@@ -96,12 +94,10 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
-                         MPI_Count count, MPI_Datatype datatype, MPIO_Request * request)
+                         MPI_Count count, MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();

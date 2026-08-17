@@ -40,9 +40,7 @@ int MPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype d
 #include "mpioprof.h"
 #endif
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_all - Nonblocking collective read using individual file pointer
@@ -80,9 +78,7 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count,
 /* large count function */
 
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_all_c - Nonblocking collective read using individual file pointer

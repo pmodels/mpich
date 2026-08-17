@@ -40,9 +40,7 @@ int MPI_File_iread_at_all_c(MPI_File fh, MPI_Offset offset, void *buf, MPI_Count
 #include "mpioprof.h"
 #endif
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_at_all - Nonblocking collective read using explicit offset
@@ -81,9 +79,7 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf,
 /* large count function */
 
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iread_at_all_c - Nonblocking collective read using explicit offset

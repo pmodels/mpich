@@ -12,7 +12,7 @@
 
 #include "adio.h"
 
-/* The handle conversion (MPI_File_c2f/f2c) need reserve the range [0, 4096) for ABI constants */
+/* The handle conversion (MPI_File_toint/fromint) need reserve the range [0, 4096) for ABI constants */
 #define ROMIO_HANDLE_OFFSET 0x1000
 
 #ifdef ROMIO_INSIDE_MPICH
@@ -186,7 +186,7 @@ int MPIR_Register_datarep_large_impl(const char *datarep,
                                      MPI_Datarep_conversion_function_c * write_conversion_fn,
                                      MPI_Datarep_extent_function * dtype_file_extent_fn,
                                      void *extra_state);
-MPI_Fint MPIR_File_c2f_impl(MPI_File fh);
-MPI_File MPIR_File_f2c_impl(MPI_Fint fh);
+int MPIR_File_toint_impl(MPI_File fh);
+MPI_File MPIR_File_fromint_impl(int fh);
 
 #endif /* MPIOIMPL_H_INCLUDED */

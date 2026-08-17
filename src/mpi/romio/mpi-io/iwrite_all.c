@@ -40,9 +40,7 @@ int MPI_File_iwrite_all_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Dat
 #include "mpioprof.h"
 #endif
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iwrite_all - Nonblocking collective write using individual file pointer
@@ -80,9 +78,7 @@ int MPI_File_iwrite_all(MPI_File fh, ROMIO_CONST void *buf, int count,
 /* large count function */
 
 
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 /*@
     MPI_File_iwrite_all_c - Nonblocking collective write using individual file pointer

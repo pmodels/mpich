@@ -7,7 +7,7 @@ MPI_File_c2f:
 #ifndef HAVE_ROMIO
     return 0;
 #else
-    return MPIR_File_c2f_impl(file);
+    return MPIR_File_toint_impl(file);
 #endif
 }
 
@@ -18,7 +18,7 @@ MPI_File_f2c:
 #ifndef HAVE_ROMIO
     return 0;
 #else
-    return MPIR_File_f2c_impl(file);
+    return MPIR_File_fromint_impl(file);
 #endif
 }
 
@@ -31,7 +31,7 @@ MPI_File_toint:
 #ifndef HAVE_ROMIO
     return 0;
 #else
-    return (int) MPIR_File_c2f_impl(file);
+    return MPIR_File_toint_impl(file);
 #endif
 }
 
@@ -44,7 +44,7 @@ MPI_File_fromint:
 #ifndef HAVE_ROMIO
     return 0;
 #else
-    return MPIR_File_f2c_impl(file);
+    return MPIR_File_fromint_impl(file);
 #endif
 }
 

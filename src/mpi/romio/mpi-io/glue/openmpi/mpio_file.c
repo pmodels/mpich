@@ -40,13 +40,13 @@ void MPIO_File_free(MPI_File * mpi_fh)
 #if 0
 
 
-MPI_File MPIO_File_f2c(MPI_Fint fh)
+MPI_File MPIO_File_fromint(int fh)
 {
 #ifndef INT_LT_POINTER
     return (MPI_File) ((void *) fh);
     /* the extra cast is to get rid of a compiler warning on Exemplar.
      * The warning is because MPI_File points to a structure containing
-     * longlongs, which may be 8-byte aligned. But MPI_Fint itself
+     * longlongs, which may be 8-byte aligned. But int itself
      * may not be 8-byte aligned. */
 #else
     if (!fh)
@@ -59,15 +59,15 @@ MPI_File MPIO_File_f2c(MPI_Fint fh)
 #endif
 }
 
-MPI_Fint MPIO_File_c2f(MPI_File fh)
+int MPIO_File_toint(MPI_File fh)
 {
 #ifndef INT_LT_POINTER
-    return (MPI_Fint) fh;
+    return (int) fh;
 #else
     int i;
 
     if ((fh == MPI_FILE_NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
-        return (MPI_Fint) 0;
+        return (int) 0;
     if (!ADIOI_Ftable) {
         ADIOI_Ftable_max = 1024;
         ADIOI_Ftable = (MPI_File *)
@@ -86,7 +86,7 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
     }
     ADIOI_Ftable_ptr++;
     ADIOI_Ftable[ADIOI_Ftable_ptr] = fh;
-    return (MPI_Fint) ADIOI_Ftable_ptr;
+    return (int) ADIOI_Ftable_ptr;
 #endif
 }
 

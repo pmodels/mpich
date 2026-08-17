@@ -96,67 +96,10 @@
 #endif
 
 typedef MPI_Offset ADIO_Offset;
-#ifdef MPI_OFFSET_IS_INT
-#define ADIO_OFFSET MPI_INT
-#elif defined(HAVE_LONG_LONG_64)
-#ifdef HAVE_MPI_LONG_LONG_INT
-#define ADIO_OFFSET MPI_LONG_LONG_INT
-#else
-#define ADIO_OFFSET MPI_DOUBLE
-#endif
-#elif defined(HAVE_INT64)
-#define ADIO_OFFSET MPI_DOUBLE
-#else
-#define ADIO_OFFSET MPI_LONG
-#endif
+#define ADIO_OFFSET MPI_OFFSET
 
 #define ADIO_Status MPI_Status
 
-#ifndef MPIO_INCLUDE
-#ifdef NEEDS_MPI_FINT
-typedef int MPI_Fint;
-#endif
-#endif
-
-#if (!defined(HAVE_MPI_INFO) && !defined(MPIO_INCLUDE))
-typedef struct MPIR_Info *MPI_Info;
-#define MPI_INFO_NULL 0
-#define MPI_MAX_INFO_VAL      1024
-
-int MPI_Info_create(MPI_Info * info);
-int MPI_Info_set(MPI_Info info, char *key, char *value);
-int MPI_Info_delete(MPI_Info info, char *key);
-int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value, int *flag);
-int MPI_Info_get_valuelen(MPI_Info info, char *key, int *valuelen, int *flag);
-int MPI_Info_get_nkeys(MPI_Info info, int *nkeys);
-int MPI_Info_get_nthkey(MPI_Info info, int n, char *key);
-int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo);
-int MPI_Info_free(MPI_Info * info);
-
-#ifdef MPI_Info_f2c
-#undef MPI_Info_f2c
-#endif
-#ifdef MPI_Info_c2f
-#undef MPI_Info_c2f
-#endif
-/* above needed for some versions of mpi.h in MPICH!! */
-MPI_Fint MPI_Info_c2f(MPI_Info info);
-MPI_Info MPI_Info_f2c(MPI_Fint info);
-
-int PMPI_Info_create(MPI_Info * info);
-int PMPI_Info_set(MPI_Info info, char *key, char *value);
-int PMPI_Info_delete(MPI_Info info, char *key);
-int PMPI_Info_get(MPI_Info info, char *key, int valuelen, char *value, int *flag);
-int PMPI_Info_get_valuelen(MPI_Info info, char *key, int *valuelen, int *flag);
-int PMPI_Info_get_nkeys(MPI_Info info, int *nkeys);
-int PMPI_Info_get_nthkey(MPI_Info info, int n, char *key);
-int PMPI_Info_dup(MPI_Info info, MPI_Info * newinfo);
-int PMPI_Info_free(MPI_Info * info);
-
-MPI_Fint PMPI_Info_c2f(MPI_Info info);
-MPI_Info PMPI_Info_f2c(MPI_Fint info);
-
-#endif
 
 /* style: allow:strdup:1 sig:0 */
 
@@ -453,8 +396,8 @@ int ADIO_Type_create_darray(int size, int rank, int ndims,
 MPI_File MPIO_File_create(int size);
 ADIO_File MPIO_File_resolve(MPI_File mpi_fh);
 void MPIO_File_free(MPI_File * mpi_fh);
-MPI_File MPIO_File_f2c(MPI_Fint fh);
-MPI_Fint MPIO_File_c2f(MPI_File fh);
+MPI_File MPIO_File_fromint(int fh);
+int MPIO_File_toint(MPI_File fh);
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
                          int line, int error_class, const char generic_msg[],
                          const char specific_msg[], ...);

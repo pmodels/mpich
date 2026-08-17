@@ -117,9 +117,6 @@ PAC_CONFIG_MPL
 CFLAGS=${CFLAGS:-""}
 LL="lld"
 AR_LOCAL=""
-DEFINE_HAVE_MPI_GREQUEST="#undef HAVE_MPI_GREQUEST"
-HAVE_MPI_INFO=""
-BUILD_MPI_INFO=""
 MPI_FINFO1=""
 MPI_FINFO2=""
 MPI_FINFO3=""
@@ -433,84 +430,10 @@ if test "$pac_cv_int_hold_pointer" != yes ; then
     AC_DEFINE(INT_LT_POINTER,1,[Define if int smaller than pointer])
 fi
 
-# LL is the printf-style format name for output of a MPI_Offset.
-# We have to match this to the type that we use for MPI_Offset.
+# MPI_Offset is always long long in MPICH and Open MPI
 AC_CHECK_SIZEOF(long long)
-if test "$ac_cv_sizeof_long_long" != 0 ; then
-    if test "$ac_cv_sizeof_long_long" = "8" ; then
-       AC_DEFINE(HAVE_LONG_LONG_64,1,[Define if long long is 64 bits])
-       MPI_OFFSET_TYPE="long long"
-       DEFINE_MPI_OFFSET="typedef long long MPI_Offset;"
-       LL="lld"
-    elif test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_int" ; then
-       MPI_OFFSET_TYPE="int"
-       DEFINE_MPI_OFFSET="typedef int MPI_Offset;"
-       AC_DEFINE(MPI_OFFSET_IS_INT,1,[Define if MPI_Offset is int])
-       LL="d"
-    else
-       AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
-       MPI_OFFSET_TYPE="long"
-       DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-       LL="ld"
-    fi
-else
-    AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
-    MPI_OFFSET_TYPE="long"
-    DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-    LL="ld"
-fi
+MPI_OFFSET_TYPE="long long"
 
-
-#
-if test -n "$ac_cv_sizeof_long_long"; then
-   if test $WITHIN_KNOWN_MPI_IMPL = no ; then
-       PAC_MPI_LONG_LONG_INT
-   else
-       AC_DEFINE(HAVE_MPI_LONG_LONG_INT,1,[Define if supports long long int])
-   fi
-fi
-#
-# check if MPI_Info functions are defined in the MPI implementation
-if test $WITHIN_KNOWN_MPI_IMPL = no ; then
-   PAC_MPI_INFO
-else
-   AC_DEFINE(HAVE_MPI_INFO,1,[Define if MPI Info is available])
-   HAVE_MPI_INFO="#define HAVE_MPI_INFO"
-   MPI_FINFO1="!"
-   MPI_FINFO2="!"
-   MPI_FINFO3="!"
-   MPI_FINFO4="!"
-fi
-#
-if test -n "$mpi_sgi"; then
-dnl   if test -z "$HAVE_MPI_INFO" ; then
-dnl      PAC_CHECK_MPI_SGI_INFO_NULL  # is MPI_INFO_NULL defined in mpi.h?
-dnl   fi
-   PAC_TEST_MPI_SGI_type_is_contig
-   PAC_TEST_MPI_COMBINERS
-   PAC_TEST_MPI_HAVE_OFFSET_KIND
-fi
-#
-# check if darray and subarray constructors are defined in the MPI
-# implementation
-if test $WITHIN_KNOWN_MPI_IMPL = no ; then
-   PAC_MPI_DARRAY_SUBARRAY
-fi
-if test $FROM_MPICH = yes ; then
-   dnl Made this a message instead of a warning because the warning is
-   dnl likely to confuse users.
-   AC_MSG_RESULT([Overriding Array test for MPICH])
-   unset BUILD_MPI_ARRAY
-   AC_DEFINE(HAVE_MPI_DARRAY_SUBARRAY,1,[Define if Darray is available])
-   HAVE_MPI_DARRAY_SUBARRAY="#define HAVE_MPI_DARRAY_SUBARRAY"
-   MPI_FARRAY1="!"
-   MPI_FARRAY2="!"
-   MPI_FARRAY3="!"
-   MPI_FARRAY4="!"
-   MPI_FARRAY5="!"
-   MPI_FARRAY6="!"
-   MPI_FARRAY7="!"
-fi
 
 # Check to see if weak symbols work correctly
 if test "$enable_weak_symbols" = "yes" ; then
@@ -527,8 +450,6 @@ fi
 AC_SUBST(HAVE_WEAK_SYMBOLS)
 
 AM_CONDITIONAL([BUILD_ROMIO_EMBEDDED],[test "$WITHIN_KNOWN_MPI_IMPL" = "yes" ])
-# FIXME need to get this right for non-MPICH builds
-AM_CONDITIONAL([BUILD_MPIO_REQUEST],[false])
 # FIXME need to get this right for non-MPICH builds
 AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 
@@ -1111,13 +1032,6 @@ if test -n "$mpi_mpich"; then
    fi
 fi
 
-if test -n "$mpi_sgi"; then
-   AC_DEFINE(MPISGI,1,[Define if SGI MPI])
-fi
-
-if test -n "$mpi_hp"; then
-   AC_DEFINE(MPIHP,1,[Define if using HP MPI])
-fi
 #
 AC_CHECK_FUNCS(strerror)
 if test -z "$srcdir" -o "$srcdir" = "." ; then srcdir="$ROMIO_HOME" ; fi
@@ -1190,9 +1104,6 @@ AC_SUBST(DOCTEXT)
 #
 if test $WITHIN_KNOWN_MPI_IMPL = no ; then
    PAC_TEST_MPI
-   PAC_NEEDS_FINT
-else
-   NEEDS_MPI_FINT=""
 fi
 #
 if test "$MPI_INCLUDE_DIR" = "." ; then
@@ -1218,11 +1129,8 @@ if test $FROM_OMPI = yes ; then
    ROMIO_INCLUDE=
    USER_CFLAGS=
    TEST_LIBNAME=
-   AC_DEFINE(HAVE_MPI_DARRAY_SUBARRAY,1,[Define if Darray is available])
-   HAVE_MPI_DARRAY_SUBARRAY="#define HAVE_MPI_DARRAY_SUBARRAY"
    # Open MPI: see comments in mpi-io/mpioprof.h
    AC_DEFINE(MPIO_BUILD_PROFILING, 1, [hack to make ROMIO build without profiling])
-   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST"
    AC_DEFINE(HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK, 1, [Define if MPI library provides HINDEXED_BLOCK datatype])
 elif test $FROM_MPICH = yes ; then
    # For now, separate the mpich from mpich cases
@@ -1243,7 +1151,6 @@ elif test $FROM_MPICH = yes ; then
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
-   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
    AC_DEFINE(HAVE_MPIX_H, 1, [])
    AC_DEFINE(HAVE_MPIIO_CONST, const, Set if MPI-IO prototypes use const qualifier)
@@ -1332,12 +1239,6 @@ AM_CONDITIONAL([MPIO_GLUE_MPICH],[test "X$mpio_glue" = "Xmpich"])
 AM_CONDITIONAL([MPIO_GLUE_OPENMPI],[test "X$mpio_glue" = "Xopenmpi"])
 AM_CONDITIONAL([MPIO_GLUE_DEFAULT],[test "X$mpio_glue" = "Xdefault"])
 
-if test "$BUILD_MPI_INFO" = 1 ; then
-    EXTRA_SRC_DIRS="$EXTRA_SRC_DIRS mpi2-other/info"
-fi
-if test "$BUILD_MPI_ARRAY" = 1 ; then
-    EXTRA_SRC_DIRS="$EXTRA_SRC_DIRS mpi2-other/array"
-fi
 AC_SUBST(EXTRA_SRC_DIRS)
 AC_SUBST(FILE_SYS_DIRS)
 
@@ -1377,13 +1278,6 @@ AC_SUBST(LL)
 AC_SUBST(FROM_MPICH)
 AC_SUBST(FROM_LAM)
 AC_SUBST(WITHIN_KNOWN_MPI_IMPL)
-AC_SUBST(NEEDS_MPI_FINT)
-AC_SUBST(HAVE_MPI_INFO)
-AC_SUBST(BUILD_MPI_INFO)
-AC_SUBST(HAVE_MPI_DARRAY_SUBARRAY)
-AC_SUBST(BUILD_MPI_ARRAY)
-AC_SUBST(DEFINE_MPI_OFFSET)
-AC_SUBST(DEFINE_HAVE_MPI_GREQUEST)
 AC_SUBST(MPI_OFFSET_TYPE)
 AC_SUBST(MPI_FINFO1)
 AC_SUBST(MPI_FINFO2)
@@ -1419,7 +1313,6 @@ AC_SUBST(SHLIBNAME)
 dnl
 if test ! -d adio ; then mkdir adio ; fi
 if test ! -d adio/include ; then mkdir adio/include ; fi
-if test ! -d mpi2-other ; then mkdir mpi2-other ; fi
 if test ! -d mpi-io ; then mkdir mpi-io ; fi
 if test ! -d mpi-io/glue ; then mkdir mpi-io/glue ; fi
 
@@ -1428,8 +1321,6 @@ if test ! -d mpi-io/glue ; then mkdir mpi-io/glue ; fi
 AC_CONFIG_FILES([
     Makefile
     localdefs
-    mpi2-other/info/Makefile
-    mpi2-other/array/Makefile
     test/Makefile
     test/misc.c
     test/large_file.c

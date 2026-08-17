@@ -23,7 +23,7 @@ static int MPIOI_File_iwrite_all(MPI_File fh, MPI_Offset offset, int file_ptr_ty
                                  const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                  MPI_Request * request);
 static int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
-                                    MPI_Datatype datatype, MPIO_Request * request);
+                                    MPI_Datatype datatype, MPI_Request * request);
 static int MPIOI_File_read(MPI_File fh, MPI_Offset offset, int file_ptr_type,
                            void *buf, MPI_Aint count, MPI_Datatype datatype, MPI_Status * status);
 static int MPIOI_File_read_all(MPI_File fh, MPI_Offset offset, int file_ptr_type,
@@ -1238,19 +1238,19 @@ int MPIR_Register_datarep_large_impl(ROMIO_CONST char *datarep,
                                   dtype_file_extent_fn, extra_state, is_large);
 }
 
-MPI_Fint MPIR_File_c2f_impl(MPI_File fh)
+int MPIR_File_toint_impl(MPI_File fh)
 {
-    MPI_Fint val = MPIO_File_c2f(fh);
+    int val = MPIO_File_toint(fh);
     if (val > 0)
         val += ROMIO_HANDLE_OFFSET;
     return val;
 }
 
-MPI_File MPIR_File_f2c_impl(MPI_Fint fh)
+MPI_File MPIR_File_fromint_impl(int fh)
 {
     if (fh > 0)
         fh -= ROMIO_HANDLE_OFFSET;
-    return MPIO_File_f2c(fh);
+    return MPIO_File_fromint(fh);
 }
 
 /* internal routines */
@@ -1705,7 +1705,7 @@ static int MPIOI_File_iwrite_all(MPI_File fh, MPI_Offset offset, int file_ptr_ty
 }
 
 static int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
-                                    MPI_Datatype datatype, MPIO_Request * request)
+                                    MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_File adio_fh;

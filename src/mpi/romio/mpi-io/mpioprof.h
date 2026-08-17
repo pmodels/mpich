@@ -150,13 +150,6 @@
 #undef MPI_File_get_errhandler
 #define MPI_File_get_errhandler PMPI_File_get_errhandler
 
-#if !defined(MPI_File_f2c) || defined(MPICH_RENAMING_MPI_FUNCS)
-#undef MPI_File_f2c
-#define MPI_File_f2c PMPI_File_f2c
-#undef MPI_File_c2f
-#define MPI_File_c2f PMPI_File_c2f
-#endif
-
 #undef MPI_File_read_c
 #define MPI_File_read_c PMPI_File_read_c
 #undef MPI_File_read_all_c
@@ -217,56 +210,6 @@
 #define MPI_File_get_type_extent_c PMPI_File_get_type_extent_c
 #undef MPI_Register_datarep_c
 #define MPI_Register_datarep_c PMPI_Register_datarep_c
-
-#undef MPIO_Test
-#undef PMPIO_Test
-#define MPIO_Test PMPIO_Test
-#undef MPIO_Wait
-#undef PMPIO_Wait
-#define MPIO_Wait PMPIO_Wait
-#undef MPIO_Testall
-#define MPIO_Testall PMPIO_Testall
-#undef MPIO_Waitall
-#define MPIO_Waitall PMPIO_Waitall
-#undef MPIO_Testany
-#define MPIO_Testany PMPIO_Testany
-#undef MPIO_Waitany
-#define MPIO_Waitany PMPIO_Waitany
-#undef MPIO_Testsome
-#define MPIO_Testsome PMPIO_Testsome
-#undef MPIO_Waitsome
-#define MPIO_Waitsome PMPIO_Waitsome
-#undef MPIO_Request_f2c
-#define MPIO_Request_f2c PMPIO_Request_f2c
-#undef MPIO_Request_c2f
-#define MPIO_Request_c2f PMPIO_Request_c2f
-
-#if defined(HAVE_MPI_INFO_SRC)  /* only in info source directory */
-
-#undef MPI_Info_create
-#define MPI_Info_create PMPI_Info_create
-#undef MPI_Info_set
-#define MPI_Info_set PMPI_Info_set
-#undef MPI_Info_delete
-#define MPI_Info_delete PMPI_Info_delete
-#undef MPI_Info_get
-#define MPI_Info_get PMPI_Info_get
-#undef MPI_Info_get_valuelen
-#define MPI_Info_get_valuelen PMPI_Info_get_valuelen
-#undef MPI_Info_get_nkeys
-#define MPI_Info_get_nkeys PMPI_Info_get_nkeys
-#undef MPI_Info_get_nthkey
-#define MPI_Info_get_nthkey PMPI_Info_get_nthkey
-#undef MPI_Info_dup
-#define MPI_Info_dup PMPI_Info_dup
-#undef MPI_Info_free
-#define MPI_Info_free PMPI_Info_free
-#undef MPI_Info_c2f
-#define MPI_Info_c2f PMPI_Info_c2f
-#undef MPI_Info_f2c
-#define MPI_Info_f2c PMPI_Info_f2c
-
-#endif
 
 #undef MPI_Grequest_start
 #define MPI_Grequest_start PMPI_Grequest_start

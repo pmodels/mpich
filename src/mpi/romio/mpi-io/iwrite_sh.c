@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                           MPIO_Request * request)
+                           MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iwrite_shared")));
 #endif
 
@@ -31,7 +31,7 @@ int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype
 /* end of weak pragmas */
 #elif defined(HAVE_ATTR_WEAK_ALIAS)
 int MPI_File_iwrite_shared_c(MPI_File fh, const void *buf, MPI_Count count, MPI_Datatype datatype,
-                             MPIO_Request * request)
+                             MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_File_iwrite_shared_c")));
 #endif
 
@@ -54,12 +54,10 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
-                           MPI_Datatype datatype, MPIO_Request * request)
+                           MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();
@@ -94,12 +92,10 @@ Output Parameters:
 
 .N fortran
 @*/
-#ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
-#endif
 
 int MPI_File_iwrite_shared_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
-                             MPI_Datatype datatype, MPIO_Request * request)
+                             MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
     ROMIO_THREAD_CS_ENTER();

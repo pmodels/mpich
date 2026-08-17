@@ -11,14 +11,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#if defined(MPISGI)
-#include "xfs/xfs_fs.h"
-#ifndef  __USE_LARGEFILE64
-#define  __USE_LARGEFILE64
-#endif
-typedef struct aiocb64 aiocb64_t;
-#endif
-
 void ADIOI_XFS_Open(ADIO_File fd, int *error_code);
 void ADIOI_XFS_Close(ADIO_File fd, int *error_code);
 void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,

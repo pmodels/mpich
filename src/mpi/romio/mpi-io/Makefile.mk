@@ -12,8 +12,6 @@ if BUILD_BINDING
 romio_mpi_sources +=          \
     mpi-io/close.c            \
     mpi-io/delete.c           \
-    mpi-io/file_c2f.c         \
-    mpi-io/file_f2c.c         \
     mpi-io/fsync.c            \
     mpi-io/get_amode.c        \
     mpi-io/get_atom.c         \
@@ -80,29 +78,11 @@ romio_other_sources +=       \
     mpi-io/mpiu_external32.c \
     mpi-io/mpir_cst_filesys.c
 
-# helper variables for conditionally compiled sources
-mpio_request_sources=   \
-    mpi-io/ioreq_c2f.c  \
-    mpi-io/ioreq_f2c.c  \
-    mpi-io/iotest.c     \
-    mpi-io/iotestall.c  \
-    mpi-io/iotestany.c  \
-    mpi-io/iotestsome.c \
-    mpi-io/iowait.c     \
-    mpi-io/iowaitall.c  \
-    mpi-io/iowaitany.c  \
-    mpi-io/iowaitsome.c
-
 mpio_extra_sources =  \
     mpi-io/get_errh.c \
     mpi-io/set_errh.c
 
-# not used in MPICH, we use generalized requests instead
-if BUILD_MPIO_REQUEST
-romio_other_sources += $(mpio_request_sources)
-endif BUILD_MPIO_REQUEST
-
 # not used in MPICH
 if BUILD_MPIO_ERRHAN
-romio_other_sources += $(mpio_request_sources)
+romio_other_sources += $(mpio_extra_sources)
 endif BUILD_MPIO_ERRHAN
