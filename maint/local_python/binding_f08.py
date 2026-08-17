@@ -933,22 +933,33 @@ def dump_F_uses(uses):
             mpi_c_list_1.append(a)
         else:
             mpi_c_list_2.append(a)
+
+    def dump_use_line(prefix, symbol_list):
+        line = prefix + symbol_list[0]
+        for sym in symbol_list[1:]:
+            if len(line) + 2 + len(sym) > 100:
+                G.out.append(line + ", &")
+                line = "    " + sym
+            else:
+                line += ", " + sym
+        G.out.append(line)
+
     if iso_c_binding_list:
-        dump_fortran_line("USE, intrinsic :: iso_c_binding, ONLY : %s" % ', '.join(iso_c_binding_list))
+        dump_use_line("USE, intrinsic :: iso_c_binding, ONLY : ", iso_c_binding_list)
     if mpi_f08_list_1:
-        dump_fortran_line("USE :: mpi_f08_types, ONLY : %s" % ', '.join(mpi_f08_list_1))
+        dump_use_line("USE :: mpi_f08_types, ONLY : ", mpi_f08_list_1)
     if mpi_f08_list_2:
-        dump_fortran_line("USE :: mpi_f08_compile_constants, ONLY : %s" % ', '.join(mpi_f08_list_2))
+        dump_use_line("USE :: mpi_f08_compile_constants, ONLY : ", mpi_f08_list_2)
     if mpi_f08_list_3:
-        dump_fortran_line("USE :: mpi_f08_link_constants, ONLY : %s" % ', '.join(mpi_f08_list_3))
+        dump_use_line("USE :: mpi_f08_link_constants, ONLY : ", mpi_f08_list_3)
     if mpi_f08_list_4:
-        dump_fortran_line("USE :: mpi_f08_callbacks, ONLY : %s" % ', '.join(mpi_f08_list_4))
+        dump_use_line("USE :: mpi_f08_callbacks, ONLY : ", mpi_f08_list_4)
     if mpi_c_list_1:
-        dump_fortran_line("USE :: mpi_c_interface_types, ONLY : %s" % ', '.join(mpi_c_list_1))
+        dump_use_line("USE :: mpi_c_interface_types, ONLY : ", mpi_c_list_1)
     if mpi_c_list_2:
-        dump_fortran_line("USE :: mpi_c_interface, ONLY : %s" % ', '.join(mpi_c_list_2))
+        dump_use_line("USE :: mpi_c_interface, ONLY : ", mpi_c_list_2)
     if mpi_c_list_3:
-        dump_fortran_line("USE :: mpi_c_interface_glue, ONLY : %s" % ', '.join(mpi_c_list_3))
+        dump_use_line("USE :: mpi_c_interface_glue, ONLY : ", mpi_c_list_3)
 
 def dump_F_if_open(cond):
     G.out.append("IF (%s) THEN" % cond)
