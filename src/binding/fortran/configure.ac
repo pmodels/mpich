@@ -61,7 +61,7 @@ if test "$FROM_MPICH" = "yes" ; then
         mpi_h="$main_top_srcdir/src/include/mpi_mpich.h.in"
     elif test "$WITH_MPI" = "abi" ; then
         PAC_APPEND_FLAG(-I${main_top_srcdir}/src/binding, [CPPFLAGS])
-        mpi_h="$main_top_srcdir/src/binding/mpi_abi.h"
+        mpi_h="$main_top_srcdir/src/binding/abi/mpi_abi.h"
     else
         AC_MSG_ERROR([$FROM_MPICH is set but $WITH_MPI is not set!])
     fi
@@ -131,6 +131,12 @@ if test -z "$MPI_SIZEOF_COUNT" ; then
     AC_MSG_ERROR([Can't determine the size of MPI_Count])
 fi
 
+# TODO: check specific MPIX functions
+has_mpix=no
+AC_CHECK_DECL([MPIX_Comm_create_keyval_x], [has_mpix=yes], [], [#include "mpi.h"])
+if test "$has_mpix" = "yes" ; then
+    AC_DEFINE([MPICH_HAS_MPIX], 1, [Define HAS_MPIX if we are building against MPICH ABI])
+fi
 
 dnl enable_fortran is assumed to be true
 
@@ -1046,6 +1052,9 @@ if test "$skip_gen_bindings" = no ; then
         if test -n "$mpi_h" ; then
             cmd_f77="$cmd_f77 -mpi-h=$mpi_h"
         fi
+        if test "$has_mpix" = "no" ; then
+            cmd_f77="$cmd_f77 -skip-mpix"
+        fi
         cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
         # if mpi_h is mpi_mpich.in, pass in those autoconf macro values
         if test -n "$MPI_MAX_PROCESSOR_NAME" ; then
@@ -1058,6 +1067,9 @@ if test "$skip_gen_bindings" = no ; then
         PAC_FC_CHECK_IGNORE_TKR
         PAC_FC_ISO_C_BINDING
         cmd_f90="$PYTHON $maintdir/gen_binding_f90.py"
+        if test "$has_mpix" = "no" ; then
+            cmd_f90="$cmd_f90 -skip-mpix"
+        fi
 # pass in type sizes for MPI_SIZEOF
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
         if test "$pac_fc_ignore_tkr" != "no" ; then
@@ -1075,6 +1087,9 @@ if test "$skip_gen_bindings" = no ; then
         cmd_f08="$PYTHON $maintdir/gen_binding_f08.py"
         if test -n "$mpi_h" ; then
             cmd_f08="$cmd_f08 -mpi-h=$mpi_h"
+        fi
+        if test "$has_mpix" = "no" ; then
+            cmd_f08="$cmd_f08 -skip-mpix"
         fi
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"

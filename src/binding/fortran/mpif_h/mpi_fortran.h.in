@@ -87,9 +87,11 @@ MPI_Win MPI_Win_f2c(MPI_Fint win);
 MPI_Fint PMPI_Win_c2f(MPI_Win win);
 MPI_Win PMPI_Win_f2c(MPI_Fint win);
 
+#ifdef MPICH_HAS_MPIX
 MPI_Fint MPIX_Stream_c2f(MPIX_Stream stream);
 MPIX_Stream MPIX_Stream_f2c(MPI_Fint stream);
 MPI_Fint PMPIX_Stream_c2f(MPIX_Stream stream);
 MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream);
+#endif
 
 void MPIX_Init_fortran(void) MPICH_API_PUBLIC;

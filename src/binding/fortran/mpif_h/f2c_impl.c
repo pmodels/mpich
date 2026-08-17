@@ -317,6 +317,7 @@ MPI_Win PMPI_Win_f2c(MPI_Fint win)
     return MPI_Win_fromint(win);
 }
 
+#ifdef MPICH_HAS_MPIX
 MPI_Fint MPIX_Stream_c2f(MPIX_Stream stream)
 {
     return (MPI_Fint) MPIX_Stream_toint(stream);
@@ -336,3 +337,4 @@ MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream)
 {
     return MPIX_Stream_fromint(stream);
 }
+#endif
