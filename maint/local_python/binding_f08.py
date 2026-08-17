@@ -153,18 +153,16 @@ def dump_f08_wrappers_f(func, is_large):
     c_mapping = get_kind_map('C', is_large)
     f08_mapping = get_kind_map('F08', is_large)
 
+    need_int_conversions = (G.opts['fint-size'] != G.opts['cint-size'])
+
     f_param_list = []
     uses = {}
     f_decl_list = []
     c_decl_list = []
-    arg_list_1 = []  # used if (c_int == kind(0))
-    arg_list_2 = []  # used otherwise
+    arg_list = []
     code_list = []
-    convert_list_pre = []  # conversions always needed
+    convert_list_pre = []
     convert_list_post = []
-    convert_list_1 = []    # conversions only if c_int != kind(0)
-    convert_list_2 = []
-    need_check_int_kind = False
     need_check_status_ignore = None # or p (the status parameter)
     has_comm_size = False  # arrays of length = comm_size
     status_var = ""
@@ -182,16 +180,12 @@ def dump_f08_wrappers_f(func, is_large):
     uses[c_func_name] = 1
 
     if RE.match(r'MPI_(Init|Init_thread)$', func['name'], re.IGNORECASE):
-        arg_list_1.append("c_null_ptr")
-        arg_list_1.append("c_null_ptr")
-        arg_list_2.append("c_null_ptr")
-        arg_list_2.append("c_null_ptr")
+        arg_list.append("c_null_ptr")
+        arg_list.append("c_null_ptr")
         uses['c_null_ptr'] = 1
     elif RE.match(r'MPI_Info_create_env$', func['name'], re.IGNORECASE):
-        arg_list_1.append("0")
-        arg_list_1.append("c_null_ptr")
-        arg_list_2.append("0")
-        arg_list_2.append("c_null_ptr")
+        arg_list.append("0")
+        arg_list.append("c_null_ptr")
         uses['c_null_ptr'] = 1
     elif RE.match(r'mpi_i?alltoall[vw]', func['name'], re.IGNORECASE):
         # Need check MPI_IN_PLACE in order to skip accessing sender arrays
@@ -201,18 +195,9 @@ def dump_f08_wrappers_f(func, is_large):
         uses['MPI_IN_PLACE'] = 1
 
     # alltoallw inplace hack (since it is a corner case)
-    def dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2):
-        # cannot use like sendcounts(1:length)
-        if G.opts['fint-size'] == G.opts['cint-size']:
-            if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
-                send_args = "sendbuf, sendcounts, sdispls, sendtypes(1:1)%MPI_VAL"
-                args1 = send_args + ", " + ', '.join(arg_list_1[4:])
-            else:
-                # alltoallv is fine
-                args1 = ', '.join(arg_list_1)
-            dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args1))
-        else:
-            args2 = ', '.join(arg_list_2)
+    def dump_alltoallvw_inplace():
+        if need_int_conversions:
+            # cannot use like sendcounts(1:length)
             G.out.append("sendcounts_c = sendcounts(1:1)")
             G.out.append("sdispls_c = sdispls(1:1)")
             G.out.append("recvcounts_c = recvcounts(1:length)")
@@ -223,12 +208,20 @@ def dump_f08_wrappers_f(func, is_large):
             else:
                 G.out.append("sendtype_c = sendtype%MPI_VAL")
                 G.out.append("recvtype_c = recvtype%MPI_VAL")
-            dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args2))
-            G.out.extend(convert_list_2)
+        else:
+            if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
+                # For alltoallw inplace, sendtypes only has 1 element
+                send_args = "sendbuf, sendcounts, sdispls, sendtypes(1:1)%MPI_VAL"
+                args1 = send_args + ", " + ', '.join(arg_list[4:])
+            else:
+                # alltoallv is fine
+                args1 = ', '.join(arg_list)
+            dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args1))
+            return
+        dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, ', '.join(arg_list)))
 
     # ----
     def process_integer(p):
-        nonlocal need_check_int_kind
 
         def info_get_string_buflen():
             convert_list_pre.append("IF (buflen > 0) THEN")
@@ -238,32 +231,37 @@ def dump_f08_wrappers_f(func, is_large):
             convert_list_pre.append("END IF")
 
         def info_get_valuelen():
-            convert_list_2.append("IF (flag_c /= 0) THEN")
-            convert_list_2.append("    valuelen = valuelen_c")
-            convert_list_2.append("END IF")
+            convert_list_post.append("IF (flag_c /= 0) THEN")
+            convert_list_post.append("    valuelen = valuelen_c")
+            convert_list_post.append("END IF")
 
         # ----
         if RE.match(r'TYPE\(MPIX?_\w+\)', f08_mapping[p['kind']], re.IGNORECASE):
-            arg_1 = p['name'] + "%MPI_VAL"
+            arg_val = p['name'] + "%MPI_VAL"
         else:
-            arg_1 = p['name']
-        arg_2 = "%s_c" % p['name']
+            arg_val = p['name']
         if p['name'] == 'comm' and (has_comm_size or RE.match(r'mpi_cart_(rank|sub)', func['name'], re.IGNORECASE)):
             # already processed
             pass
         elif p['name'] == 'buflen' and func['name'] == "MPI_Info_get_string":
             # always use "buflen_c"
-            arg_1 = arg_2
             info_get_string_buflen()
+            return "%s_c" % p['name']
         elif p['name'] == 'valuelen' and func['name'] == "MPI_Info_get_valuelen":
-            info_get_valuelen()
-        else:
-            need_check_int_kind = True
+            if need_int_conversions:
+                info_get_valuelen()
+                return "%s_c" % p['name']
+            else:
+                return p['name']
+        elif need_int_conversions:
+            arg_c = "%s_c" % p['name']
             if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
-                convert_list_1.append("%s = %s" % (arg_2, arg_1))
+                convert_list_pre.append("%s = %s" % (arg_c, arg_val))
             if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
-                convert_list_2.append("%s = %s" % (arg_1, arg_2))
-        return (arg_1, arg_2)
+                convert_list_post.append("%s = %s" % (arg_val, arg_c))
+            return arg_c
+        else:
+            return arg_val
 
     def process_mpi_file(p):
         arg = "%s_c" % p['name']
@@ -273,7 +271,7 @@ def dump_f08_wrappers_f(func, is_large):
         if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
             uses['MPI_File_c2f'] = 1
             convert_list_post.append("%s%%MPI_VAL = MPI_File_c2f(%s)" % (p['name'], arg))
-        return (arg, arg)
+        return arg
 
     def process_logical(p):
         arg = "%s_c" % p['name']
@@ -285,7 +283,7 @@ def dump_f08_wrappers_f(func, is_large):
             convert_list_pre.append("END IF")
         if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
             convert_list_post.append("%s = (%s /= 0)" % (p['name'], arg))
-        return (arg, arg)
+        return arg
 
     def process_index(p):
         arg = "%s_c" % p['name']
@@ -298,7 +296,7 @@ def dump_f08_wrappers_f(func, is_large):
             convert_list_post.append("ELSE")
             convert_list_post.append("    %s = %s + 1" % (p['name'], arg))
             convert_list_post.append("END IF")
-        return (arg, arg)
+        return arg
 
     def process_string(p):
         arg = "%s_c" % p['name']
@@ -329,51 +327,47 @@ def dump_f08_wrappers_f(func, is_large):
             else:
                 convert_list_post.append("call MPIR_Fortran_string_c2f(%s, %s)" % (arg, p['name']))
             uses["MPIR_Fortran_string_c2f"] = 1
-        return (arg, arg)
+        return arg
 
     def process_status(p):
-        nonlocal need_check_int_kind, need_check_status_ignore
-        need_check_int_kind = True
+        nonlocal need_check_status_ignore
         uses['c_loc'] = 1
         uses['c_associated'] = 1
         uses['assignment(=)'] = 1
-        if p['length'] is not None: 
+        if p['length'] is not None:
             # always output parameter
             uses['MPI_STATUSES_IGNORE'] = 1
             uses['MPIR_F08_get_MPI_STATUSES_IGNORE_c'] = 1
             need_check_status_ignore = p
-            arg_1 = ":STATUS:"
-            arg_2 = ":STATUS:"
             length = p['_array_length']
             if RE.match(r'mpix?_(test|wait|request_get_status_)some', func['name'], re.IGNORECASE):
                 length = "outcount_c"
             p['_status_convert'] = "%s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length)
+            return ":STATUS:"
         else:
-            arg_1 = "c_loc(status)"
-            arg_2 = "c_loc(status_c)"
             if p['param_direction'] == 'out':
                 need_check_status_ignore = p
                 uses['MPI_STATUS_IGNORE'] = 1
                 uses['MPIR_F08_get_MPI_STATUS_IGNORE_c'] = 1
-                arg_1 = ":STATUS:"
-                arg_2 = ":STATUS:"
-                # currently we preserve status%MPI_ERROR
-                p['_status_convert_in'] = "status_c = status"
-                p['_status_convert'] = "status = status_c"
-            elif p['param_direction'] == 'inout':
-                convert_list_1.append("status_c = status")
-                convert_list_2.append("status = status_c")
+                if need_int_conversions:
+                    p['_status_convert_in'] = "status_c = status"
+                    p['_status_convert'] = "status = status_c"
+                return ":STATUS:"
+            elif need_int_conversions:
+                if p['param_direction'] == 'inout':
+                    convert_list_pre.append("status_c = status")
+                    convert_list_post.append("status = status_c")
+                else:
+                    convert_list_pre.append("status_c = status")
+                return "c_loc(status_c)"
             else:
-                convert_list_1.append("status_c = status")
-        return (arg_1, arg_2)
+                return "c_loc(status)"
 
     def process_array_check(p):
-        nonlocal need_check_int_kind
         uses['c_loc'] = 1
         uses['c_ptr'] = 1
-        arg_1 = "%s_cptr" % p['name']
-        arg_2 = arg_1
-        convert_list_pre.append("%s = c_loc(%s)" % (arg_1, p['name']))
+        arg = "%s_cptr" % p['name']
+        convert_list_pre.append("%s = c_loc(%s)" % (arg, p['name']))
 
         check = None
         if p['name'] == "argv":
@@ -384,7 +378,6 @@ def dump_f08_wrappers_f(func, is_large):
             # weights are input int array
             c_decl_list.append("LOGICAL :: has_%s = .false." % p['name'])
             check = "MPI_UNWEIGHTED"
-            need_check_int_kind = True
             if RE.match(r'mpi_dist_graph_create$', func['name'], re.IGNORECASE):
                 length = "sum(degrees)"
             elif RE.match(r'mpi_dist_graph_create_adjacent$', func['name'], re.IGNORECASE):
@@ -400,33 +393,34 @@ def dump_f08_wrappers_f(func, is_large):
             else:
                 print("process_array_check: Unhandled %s" % p['name'])
 
-            c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
-            convert_list_1.append("IF (has_%s) THEN" % p['name'])
-            convert_list_1.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
-            convert_list_1.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
-            convert_list_1.append("END IF")
-            # output conversion for MPI_Dist_graph_neighbors
-            if p['param_direction'] == 'out':
-                convert_list_2.append("IF (has_%s) THEN" % p['name'])
-                convert_list_2.append("    %s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length))
-                convert_list_2.append("END IF")
+            if need_int_conversions:
+                c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
+                convert_list_pre.append("IF (has_%s) THEN" % p['name'])
+                convert_list_pre.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
+                convert_list_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
+                convert_list_pre.append("END IF")
+                # output conversion for MPI_Dist_graph_neighbors
+                if p['param_direction'] == 'out':
+                    convert_list_post.append("IF (has_%s) THEN" % p['name'])
+                    convert_list_post.append("    %s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length))
+                    convert_list_post.append("END IF")
 
         elif p['name'] == "array_of_errcodes":
             # errcodes are output int array
             c_decl_list.append("LOGICAL :: has_errcodes_ignore = .false.")
             check = "MPI_ERRCODES_IGNORE"
-            need_check_int_kind = True
-            if RE.match(r'mpi_comm_spawn_multiple', func['name'], re.IGNORECASE):
-                length = "sum(array_of_maxprocs(1:count))"
-            else: # mpi_comm_spawn
-                length = "maxprocs"
-            c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
-            convert_list_1.append("IF (.not. has_errcodes_ignore) THEN")
-            convert_list_1.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
-            convert_list_1.append("END IF")
-            convert_list_2.append("IF (.not. has_errcodes_ignore) THEN")
-            convert_list_2.append("    %s(1:%s) = %s_c" % (p['name'], length, p['name']))
-            convert_list_2.append("END IF")
+            if need_int_conversions:
+                if RE.match(r'mpi_comm_spawn_multiple', func['name'], re.IGNORECASE):
+                    length = "sum(array_of_maxprocs(1:count))"
+                else: # mpi_comm_spawn
+                    length = "maxprocs"
+                c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
+                convert_list_pre.append("IF (.not. has_errcodes_ignore) THEN")
+                convert_list_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
+                convert_list_pre.append("END IF")
+                convert_list_post.append("IF (.not. has_errcodes_ignore) THEN")
+                convert_list_post.append("    %s(1:%s) = %s_c" % (p['name'], length, p['name']))
+                convert_list_post.append("END IF")
         else:
             print("Unhandled process_array_check")
 
@@ -434,8 +428,8 @@ def dump_f08_wrappers_f(func, is_large):
             uses['c_associated'] = 1
             uses[check] = 1
             uses['MPIR_F08_get_%s_c' % check] = 1
-            convert_list_pre.append("IF (c_associated(%s, c_loc(%s))) THEN" % (arg_1, check))
-            convert_list_pre.append("    %s = MPIR_F08_get_%s_c()" % (arg_1, check))
+            convert_list_pre.append("IF (c_associated(%s, c_loc(%s))) THEN" % (arg, check))
+            convert_list_pre.append("    %s = MPIR_F08_get_%s_c()" % (arg, check))
             if check == "MPI_ERRCODES_IGNORE":
                 convert_list_pre.append("    has_errcodes_ignore = .true.")
             elif check == "MPI_UNWEIGHTED":
@@ -443,57 +437,61 @@ def dump_f08_wrappers_f(func, is_large):
                 check = "MPI_WEIGHTS_EMPTY"
                 uses[check] = 1
                 uses['MPIR_F08_get_%s_c' % check] = 1
-                convert_list_pre.append("ELSE IF (c_associated(%s, c_loc(%s))) THEN" % (arg_1, check))
-                convert_list_pre.append("    %s = MPIR_F08_get_%s_c()" % (arg_1, check))
+                convert_list_pre.append("ELSE IF (c_associated(%s, c_loc(%s))) THEN" % (arg, check))
+                convert_list_pre.append("    %s = MPIR_F08_get_%s_c()" % (arg, check))
                 convert_list_pre.append("ELSE")
-                convert_list_pre.append("    %s = c_loc(%s)" % (arg_1, p['name']))
+                convert_list_pre.append("    %s = c_loc(%s)" % (arg, p['name']))
                 convert_list_pre.append("    has_%s = .true." % p['name'])
             convert_list_pre.append("END IF")
 
-        return (arg_1, arg_2)
+        return arg
 
     def process_array(p):
-        nonlocal need_check_int_kind, has_comm_size
+        nonlocal has_comm_size
 
         if p['_array_convert'] == "MPI_VAL":
-            need_check_int_kind = True
             if p['kind'] == "DATATYPE" and has_comm_size:
                 # alltoallw types array
-                arg_1 = "%s(1:length)%%MPI_VAL" % p['name']
+                arg_val = "%s(1:length)%%MPI_VAL" % p['name']
             else:
-                arg_1 = "%s%%MPI_VAL" % p['name']
-            arg_2 = "%s_c" % p['name']
-            if RE.match(r'in|inout', p['param_direction']):
-                convert_list_1.append("%s = %s" % (arg_2, arg_1))
-            if RE.match(r'out|inout', p['param_direction']):
-                convert_list_2.append("%s = %s" % (arg_1, arg_2))
+                arg_val = "%s%%MPI_VAL" % p['name']
+            if need_int_conversions:
+                arg_c = "%s_c" % p['name']
+                if RE.match(r'in|inout', p['param_direction']):
+                    convert_list_pre.append("%s = %s" % (arg_c, arg_val))
+                if RE.match(r'out|inout', p['param_direction']):
+                    convert_list_post.append("%s = %s" % (arg_val, arg_c))
+                return arg_c
+            else:
+                return arg_val
         elif p['_array_convert'] == "LOGICAL":
-            arg_1 = "%s_c" % p['name']
-            arg_2 = "%s_c" % p['name']
+            arg = "%s_c" % p['name']
             if RE.match(r'in|inout', p['param_direction']):
-                convert_list_pre.append("%s = merge(1, 0, %s)" % (arg_2, p['name']))
+                convert_list_pre.append("%s = merge(1, 0, %s)" % (arg, p['name']))
             if RE.match(r'out|inout', p['param_direction']):
-                convert_list_post.append("%s = (%s /= 0)" % (p['name'], arg_2))
+                convert_list_post.append("%s = (%s /= 0)" % (p['name'], arg))
+            return arg
         elif p['_array_convert'] == "INDEX":
-            arg_1 = "%s_c" % p['name']
-            arg_2 = "%s_c" % p['name']
+            arg = "%s_c" % p['name']
             if RE.match(r'MPI_(Wait|Test|Request_get_status_)some', func['name'], re.IGNORECASE):
-                convert_list_post.append("%s(1:outcount) = %s(1:outcount) + 1" % (p['name'], arg_2))
+                convert_list_post.append("%s(1:outcount) = %s(1:outcount) + 1" % (p['name'], arg))
             else:
                 raise Exception("Unexpected function encountered in process_array: %s" % func['name'])
+            return arg
         elif RE.match(r'allocate:(.+)', p['_array_convert']):
             # The length variable name
             is_MPI_VAL = (RE.m.group(1) == 'MPI_VAL')
             length = "length"
             # get array length
             if p['_array_length'] == 'comm_size':
-                need_check_int_kind = True
                 if not has_comm_size:
                     if RE.search(r'alltoall[vw]', func['name'], re.IGNORECASE):
                         # always need the length for types or counts array
                         use_list = convert_list_pre
+                    elif need_int_conversions:
+                        use_list = convert_list_pre
                     else:
-                        use_list = convert_list_1
+                        use_list = convert_list_pre
                     use_list.append("comm_c = comm%MPI_VAL")
                     if RE.search(r'neighbor', func['name'], re.IGNORECASE):
                         c_decl_list.append("INTEGER(c_int) :: err, indegree, outdegree, weighted")
@@ -512,54 +510,57 @@ def dump_f08_wrappers_f(func, is_large):
             elif p['_array_length'] == 'cart_dim':
                 # MPI_Cart_rank, only 1 allocatable array
                 c_decl_list.append("INTEGER(c_int) :: err, length")
-                use_list = convert_list_pre
-                if RE.match(r'mpi_cart_rank', func['name'], re.IGNORECASE):
-                    use_list = convert_list_2
-                use_list.append("comm_c = comm%MPI_VAL")
-                use_list.append("err = MPIR_Cartdim_get_c(comm_c, length)")
+                convert_list_pre.append("comm_c = comm%MPI_VAL")
+                convert_list_pre.append("err = MPIR_Cartdim_get_c(comm_c, length)")
                 uses['MPIR_Cartdim_get_c'] = 1
             else:
                 print("process_array: Unhandled assumed array length")
 
-            # set args
-            if is_MPI_VAL:
-                if p['kind'] == "DATATYPE":
-                    arg_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], length)
-                else:
-                    arg_1 = "%s%%MPI_VAL" % p['name']
-                args_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], length)
-            else:
-                arg_1 = p['name']
-                args_1 = "%s(1:%s)" % (p['name'], length)
-            arg_2 = "%s_c" % p['name']
-
+            arg_c = "%s_c" % p['name']
             # convert
             if p['kind'] == "LOGICAL":
-                convert_list_pre.append("%s = merge(1, 0, %s)" % (arg_2, args_1))
-                arg_1 = arg_2
+                args_1 = "%s(1:%s)" % (p['name'], length)
+                convert_list_pre.append("%s = merge(1, 0, %s)" % (arg_c, args_1))
+                return arg_c
+            elif is_MPI_VAL:
+                if need_int_conversions:
+                    args_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], length)
+                    convert_list_pre.append("%s = %s" % (arg_c, args_1))
+                    return arg_c
+                else:
+                    if p['kind'] == "DATATYPE":
+                        return "%s(1:%s)%%MPI_VAL" % (p['name'], length)
+                    else:
+                        return "%s%%MPI_VAL" % p['name']
             else:
-                convert_list_1.append("%s = %s" % (arg_2, args_1))
+                if need_int_conversions:
+                    args_1 = "%s(1:%s)" % (p['name'], length)
+                    convert_list_pre.append("%s = %s" % (arg_c, args_1))
+                    return arg_c
+                else:
+                    return p['name']
         elif p['_array_convert'] == "c_int":
-            need_check_int_kind = True
-            arg_1 = "%s" % p['name']
-            arg_2 = "%s_c" % p['name']
-            if p['_array_length']:
-                argv_1 = arg_1 + "(1:%s)" % p['_array_length']
-                argv_2 = arg_2 + "(1:%s)" % p['_array_length']
+            if need_int_conversions:
+                arg_c = "%s_c" % p['name']
+                if p['_array_length']:
+                    argv_1 = "%s(1:%s)" % (p['name'], p['_array_length'])
+                    argv_2 = "%s_c(1:%s)" % (p['name'], p['_array_length'])
+                else:
+                    argv_1 = p['name']
+                    argv_2 = arg_c
+                if RE.match(r'in|inout', p['param_direction']):
+                    convert_list_pre.append("%s = %s" % (argv_2, argv_1))
+                if RE.match(r'out|inout', p['param_direction']):
+                    if RE.match(r'mpix?_(test|wait|request_get_status_)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
+                        argv_1 = "array_of_indices(1:outcount_c)"
+                        argv_2 = "array_of_indices_c(1:outcount_c)"
+                    convert_list_post.append("%s = %s" % (argv_1, argv_2))
+                return arg_c
             else:
-                argv_1 = arg_1
-                argv_2 = arg_2
-            if RE.match(r'in|inout', p['param_direction']):
-                convert_list_1.append("%s = %s" % (argv_2, argv_1))
-            if RE.match(r'out|inout', p['param_direction']):
-                if RE.match(r'mpix?_(test|wait|request_get_status_)some', func['name'], re.IGNORECASE) and p['name'] == "array_of_indices":
-                    argv_1 = "array_of_indices(1:outcount_c)"
-                    argv_2 = "array_of_indices_c(1:outcount_c)"
-                convert_list_2.append("%s = %s" % (argv_1, argv_2))
+                return p['name']
         else:
             print("Unhandled process_array")
-
-        return (arg_1, arg_2)
+            return p['name']
 
     def process_procedure(p):
         uses['c_funptr'] = 1
@@ -578,13 +579,12 @@ def dump_f08_wrappers_f(func, is_large):
             uses['c_null_funptr'] = 1
             uses[FN_NULL] = 1
         arg = "%s_c" % p['name']
-        return (arg, arg)
+        return arg
 
     def post_string_len(v):
         c_decl_list.append("INTEGER(c_int) :: %s_len" % v)
         convert_list_pre.append("%s_len = len(%s)" % (v, v))
-        arg_list_1.append("%s_len" % v)
-        arg_list_2.append("%s_len" % v)
+        arg_list.append("%s_len" % v)
 
     # ----
     for p in func['parameters']:
@@ -600,40 +600,40 @@ def dump_f08_wrappers_f(func, is_large):
         c_decl = get_F_c_decl(func, p, f08_mapping, c_mapping)
         if not c_decl:
             if p['kind'] == "STRING_ARRAY":
-                arg_1 = "c_loc(%s)" % p['name']
+                arg = "c_loc(%s)" % p['name']
                 uses['c_loc'] = 1
             elif p['kind'] == "INFO":
-                arg_1 = "%s(1:%s)%%MPI_VAL" % (p['name'], p['_array_length'])
+                arg = "%s(1:%s)%%MPI_VAL" % (p['name'], p['_array_length'])
             elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
-                arg_1 = p['name']
+                arg = p['name']
             else:
                 # no conversion needed, e.g. choice buffer, MPI_Aint, etc.
-                arg_1 = p['name']
-            arg_2 = arg_1
+                arg = p['name']
         else:
-            c_decl_list.append(c_decl)
-            check_decl_uses(c_decl, uses)
             if p['kind'] == "STRING":
-                (arg_1, arg_2) = process_string(p)
+                arg = process_string(p)
             elif p['kind'] == "STATUS":
-                (arg_1, arg_2) = process_status(p)
+                arg = process_status(p)
             elif '_array_length' in p: # set by get_F_c_decl(p)
                 if p['_array_convert'] == 'c_ptr_check':
-                    (arg_1, arg_2) = process_array_check(p)
+                    arg = process_array_check(p)
                 else:
-                    (arg_1, arg_2) = process_array(p)
+                    arg = process_array(p)
             elif p['kind'] == "LOGICAL" or p['kind'] == "LOGICAL_BOOLEAN":
-                (arg_1, arg_2) = process_logical(p)
+                arg = process_logical(p)
             elif p['kind'] == "INDEX" and re.match(r'MPI_(Test|Wait|Request_get_status_)any', func['name'], re.IGNORECASE):
-                (arg_1, arg_2) = process_index(p)
+                arg = process_index(p)
             elif f08_mapping[p['kind']] == "PROCEDURE":
-                (arg_1, arg_2) = process_procedure(p)
+                arg = process_procedure(p)
             elif p['kind'] == 'FILE':
-                (arg_1, arg_2) = process_mpi_file(p)
+                arg = process_mpi_file(p)
             else:
-                (arg_1, arg_2) = process_integer(p)
-        arg_list_1.append(arg_1)
-        arg_list_2.append(arg_2)
+                arg = process_integer(p)
+            if arg != p['name']:
+                c_decl_list.append(c_decl)
+                check_decl_uses(c_decl, uses)
+
+        arg_list.append(arg)
 
         if isinstance(p['length'], str) and RE.match(r'(MPI_\w+)', p['length'], re.IGNORECASE):
             uses[RE.m.group(1)] = 1
@@ -654,7 +654,7 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         f_decl_list.append("%s :: res" % f08_mapping[func['return']])
 
-    if need_check_int_kind:
+    if need_int_conversions:
         uses['c_int'] = 1
 
     # -- dump to G.out
@@ -677,7 +677,7 @@ def dump_f08_wrappers_f(func, is_large):
         G.out.append("")
 
     # ----
-    def dump_call(s, check_int_kind):
+    def dump_call(s):
         if need_check_status_ignore:
             p = need_check_status_ignore # the status parameter
             if p['length'] is None:
@@ -688,14 +688,14 @@ def dump_f08_wrappers_f(func, is_large):
             s2 = re.sub(r':STATUS:', "MPIR_F08_get_%s_c()" % ignore, s)
             dump_fortran_line(s2)
             dump_F_else()
-            if check_int_kind:
+            if need_int_conversions:
                 s2 = re.sub(r':STATUS:', "c_loc(%s_c)" % p['name'], s)
                 if '_status_convert_in' in p:
                     G.out.append(p['_status_convert_in'])
             else:
                 s2 = re.sub(r':STATUS:', "c_loc(%s)" % p['name'], s)
             dump_fortran_line(s2)
-            if check_int_kind:
+            if need_int_conversions:
                 G.out.append(p['_status_convert'])
             dump_F_if_close()
         else:
@@ -710,21 +710,11 @@ def dump_f08_wrappers_f(func, is_large):
     if not ('skip' in func and RE.search(r'initcheck', func['skip'], re.IGNORECASE)):
         G.out.append("call MPIR_Init_fortran()")
 
-    if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
-        if is_alltoallvw:
-            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
-            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
-            dump_F_else()
-        dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_1)), False)
-    else:
-        if is_alltoallvw:
-            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
-            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
-            dump_F_else()
-        G.out.extend(convert_list_1)
-        dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_2)), True)
-        G.out.extend(convert_list_2)
-
+    if is_alltoallvw:
+        dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+        dump_alltoallvw_inplace()
+        dump_F_else()
+    dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list)))
     if is_alltoallvw:
         dump_F_if_close()
     G.out.append("")
