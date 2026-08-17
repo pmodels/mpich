@@ -113,6 +113,11 @@ def main():
 
     # f2c functions need be build by Fortran binding
     def dump_func_f2c(func):
+        is_mpix = False
+        if RE.match(r'MPIX_', func['name']):
+            G.out.append("#ifdef MPICH_HAS_MPIX")
+            is_mpix = True
+
         func_decl = get_declare_function(func, False)
 
         G.out.append("")
@@ -137,6 +142,8 @@ def main():
         elif RE.match(r'(MPI.*)_(c2f)', func['name']):
             G.out.append("    return P%s_toint(%s);" % (RE.m.group(1), params[0]['name']))
         G.out.append("}")
+        if is_mpix:
+            G.out.append("#endif /* MPICH_HAS_MPIX */")
 
     def dump_c_binding():
         G.out = []

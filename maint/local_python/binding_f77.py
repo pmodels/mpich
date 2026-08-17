@@ -862,13 +862,16 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
+    has_mpix = ('skip-mpix' not in G.opts)
     if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
-        if RE.m.group(1) == 'put':
-            c_func_name = "MPIX_Comm_set_attr_as_fortran"
-        else:
-            c_func_name = "MPIX_Comm_get_attr_as_fortran"
+        if has_mpix:
+            if RE.m.group(1) == 'put':
+                c_func_name = "MPIX_Comm_set_attr_as_fortran"
+            else:
+                c_func_name = "MPIX_Comm_get_attr_as_fortran"
     elif RE.match(r'MPI_(Comm|Type|Win)_(get|set)_attr$', func['name'], re.IGNORECASE):
-        c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
+        if has_mpix:
+            c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     elif re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
@@ -1096,7 +1099,9 @@ def load_mpi_h(f):
                 # direct macros
                 (name, val) = RE.m.group(1, 2)
 
-                if RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
+                if RE.match(r'MPI_ABI_(Aint|Offset|Count)', name):
+                    continue
+                elif RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
                     # handle constants
                     val = hex_to_signed_int(RE.m.group(1))
                 elif RE.match(r'\(+MPI_\w+\)\s*([-0-9]+)', val):
@@ -1308,9 +1313,17 @@ def dump_fortran_line(s):
 
 # -------------------------------
 def check_func_directives(func):
+    none_standard = False
+    if RE.match(r'mpix_', func['name'], re.IGNORECASE):
+        none_standard = True
+    elif 'replace' in func:
+        none_standard = True
+
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
     elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif 'skip-mpix' in G.opts and none_standard:
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
