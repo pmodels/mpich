@@ -460,8 +460,7 @@ def dump_f08_wrappers_f(func, is_large):
 
         if p['_array_convert'] == "MPI_VAL":
             arg_c = "%s_c" % p['name']
-            if "INTEGER :: i" not in c_decl_list:
-                c_decl_list.append("INTEGER :: i")
+            c_decl_list.append("INTEGER :: i")
             (f2c, c2f) = get_f2c_name(p)
             if RE.match(r'in|inout', p['param_direction']):
                 uses[f2c] = 1
@@ -530,8 +529,7 @@ def dump_f08_wrappers_f(func, is_large):
             elif is_MPI_VAL:
                 (f2c, c2f) = get_f2c_name(p)
                 uses[f2c] = 1
-                if "INTEGER :: i" not in c_decl_list:
-                    c_decl_list.append("INTEGER :: i")
+                c_decl_list.append("INTEGER :: i")
                 if not is_alltoallvw:
                     # alltoallvw types are handled in dump_alltoallvw_inplace/normal
                     convert_list_pre.append("do i = 1, %s" % length)
@@ -664,26 +662,14 @@ def dump_f08_wrappers_f(func, is_large):
     if need_int_conversions:
         uses['c_int'] = 1
 
-    # -- dump to G.out
-    G.out.append("")
-    if 'return' not in func:
-        dump_fortran_line("SUBROUTINE %s(%s)" % (f08ts_name, ', '.join(f_param_list)))
-    else:
-        dump_fortran_line("FUNCTION %s(%s) result(res)" % (f08ts_name, ', '.join(f_param_list)))
-    G.out.append("INDENT")
-    dump_F_uses(uses)
-    G.out.append("")
-    G.out.append("IMPLICIT NONE")
-    G.out.append("")
-    G.out.extend(f_decl_list)
-    G.out.append("")
-    G.out.extend(c_decl_list)
-    G.out.append("")
-    if convert_list_pre:
-        G.out.extend(convert_list_pre)
-        G.out.append("")
-
     # ----
+    def dump_decl_list(c_decl_list):
+        seen = set()
+        for decl in c_decl_list:
+            if decl not in seen:
+                seen.add(decl)
+                G.out.append(decl)
+
     def dump_call(s):
         if need_check_status_ignore:
             p = need_check_status_ignore # the status parameter
@@ -707,6 +693,25 @@ def dump_f08_wrappers_f(func, is_large):
             dump_F_if_close()
         else:
             dump_fortran_line(s)
+
+    # -- dump to G.out
+    G.out.append("")
+    if 'return' not in func:
+        dump_fortran_line("SUBROUTINE %s(%s)" % (f08ts_name, ', '.join(f_param_list)))
+    else:
+        dump_fortran_line("FUNCTION %s(%s) result(res)" % (f08ts_name, ', '.join(f_param_list)))
+    G.out.append("INDENT")
+    dump_F_uses(uses)
+    G.out.append("")
+    G.out.append("IMPLICIT NONE")
+    G.out.append("")
+    G.out.extend(f_decl_list)
+    G.out.append("")
+    dump_decl_list(c_decl_list)
+    G.out.append("")
+    if convert_list_pre:
+        G.out.extend(convert_list_pre)
+        G.out.append("")
 
     # ----
     if 'return' not in func:
