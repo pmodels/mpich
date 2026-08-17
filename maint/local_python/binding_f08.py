@@ -1303,6 +1303,8 @@ def process_func_parameters(func):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
+    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
     elif RE.match(r'mpix_(grequest_|type_iov|async_)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_attr_', func['name'], re.IGNORECASE):
