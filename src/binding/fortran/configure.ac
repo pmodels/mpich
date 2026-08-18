@@ -37,7 +37,9 @@ PAC_PREFIX_ALL_FLAGS(WRAPPER)
 AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
             [Specify the path where MPI is installed.])],,with_mpi=mpich)
 
+# $mpi_h is needed for python scripts gen_binding_{f77,f90,f08}.py
 mpi_h=
+
 AC_ARG_VAR([MPILIBNAME], [default: "mpi"])
 AC_ARG_VAR([LPMPILIBNAME], [default: ""])
 AC_SUBST(MPILIBNAME)
@@ -53,15 +55,13 @@ export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
 
 if test "$FROM_MPICH" = "yes" ; then
+    PAC_APPEND_FLAG(-I${main_top_builddir}/src/include, [CPPFLAGS])
     if test "$WITH_MPI" = "mpich" ; then
-        # We expect the following vars to be set from parent configure
-        # MPI_MAX_PROCESSOR_NAME, MPI_MAX_LIBRARY_VERSION_STRING, MPI_MAX_ERROR_STRING, BSEND_OVERHEAD
-        # MPI_SIZEOF_AINT, MPI_SIZEOF_OFFSET, MPI_SIZEOF_COUNT
-        PAC_APPEND_FLAG(-I${main_top_srcdir}/src/include, [CPPFLAGS])
         mpi_h="$main_top_srcdir/src/include/mpi_mpich.h.in"
+        has_mpix=yes
     elif test "$WITH_MPI" = "abi" ; then
-        PAC_APPEND_FLAG(-I${main_top_srcdir}/src/binding, [CPPFLAGS])
         mpi_h="$main_top_srcdir/src/binding/abi/mpi_abi.h"
+        has_mpix=no
     else
         AC_MSG_ERROR([$FROM_MPICH is set but $WITH_MPI is not set!])
     fi
@@ -103,24 +103,31 @@ fi
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-# check some constants from mpi.h
-if test -z "$MPI_SIZEOF_AINT" -a -n "$mpi_h" ; then
-    AC_CHECK_SIZEOF(MPI_Aint, 0, [#include "mpi.h"])
-    if test $ac_cv_sizeof_MPI_Aint -gt "0" ; then
-        MPI_SIZEOF_AINT=$ac_cv_sizeof_MPI_Aint
+if test "$FROM_MPICH" != "yes" ; then
+    # check mpi.h if we are not build with MPICH
+    if test -z "$MPI_SIZEOF_AINT" ; then
+        AC_CHECK_SIZEOF(MPI_Aint, 0, [#include "mpi.h"])
+        if test $ac_cv_sizeof_MPI_Aint -gt "0" ; then
+            MPI_SIZEOF_AINT=$ac_cv_sizeof_MPI_Aint
+        fi
+
+        AC_CHECK_SIZEOF(MPI_Offset, 0, [#include "mpi.h"])
+        if test $ac_cv_sizeof_MPI_Offset -gt "0" ; then
+            MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
+        fi
+
+        AC_CHECK_SIZEOF(MPI_Count, 0, [#include "mpi.h"])
+        if test $ac_cv_sizeof_MPI_Count -gt "0" ; then
+            MPI_SIZEOF_COUNT=$ac_cv_sizeof_MPI_Count
+        fi
     fi
 
-    AC_CHECK_SIZEOF(MPI_Offset, 0, [#include "mpi.h"])
-    if test $ac_cv_sizeof_MPI_Offset -gt "0" ; then
-        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
-    fi
-
-    AC_CHECK_SIZEOF(MPI_Count, 0, [#include "mpi.h"])
-    if test $ac_cv_sizeof_MPI_Count -gt "0" ; then
-        MPI_SIZEOF_COUNT=$ac_cv_sizeof_MPI_Count
-    fi
+    # TODO: check specific MPIX functions
+    has_mpix=no
+    AC_CHECK_DECL([MPIX_Comm_create_keyval_x], [has_mpix=yes], [], [#include "mpi.h"])
 fi
 
+# sanity check
 if test -z "$MPI_SIZEOF_AINT" ; then
     AC_MSG_ERROR([Can't determine the size of MPI_Aint])
 fi
@@ -131,12 +138,10 @@ if test -z "$MPI_SIZEOF_COUNT" ; then
     AC_MSG_ERROR([Can't determine the size of MPI_Count])
 fi
 
-# TODO: check specific MPIX functions
-has_mpix=no
-AC_CHECK_DECL([MPIX_Comm_create_keyval_x], [has_mpix=yes], [], [#include "mpi.h"])
 if test "$has_mpix" = "yes" ; then
     AC_DEFINE([MPICH_HAS_MPIX], 1, [Define HAS_MPIX if we are building against MPICH ABI])
 fi
+
 
 dnl enable_fortran is assumed to be true
 
