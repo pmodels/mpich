@@ -13,29 +13,9 @@ extern "C" {
 #define MPI_ABI_VERSION    1
 #define MPI_ABI_SUBVERSION 0
 
-/* MPI_Aint is defined to be intptr_t (or equivalent to it, if compiler support is absent).
- * The only acceptable alternative to intptr_t is the C89 type equivalent to it. */
-#if !defined(MPI_ABI_Aint)
-#define MPI_ABI_Aint intptr_t
-#endif
-typedef MPI_ABI_Aint MPI_Aint;
-#undef  MPI_ABI_Aint
-
-/* MPI_Offset will be 64b on all relevant systems.
- * We allow for MPI implementations supporting for 128b filesystems. */
-#if !defined(MPI_ABI_Offset)
-#define MPI_ABI_Offset int64_t
-#endif
-typedef MPI_ABI_Offset MPI_Offset;
-#undef  MPI_ABI_Offset
-
-/* MPI_Count must be large enough to hold the larger of MPI_Aint and MPI_Offset.
- * Platforms where MPI_Aint is larger than MPI_Offset are extremely rare. */
-#if !defined(MPI_ABI_Count)
-#define MPI_ABI_Count MPI_Offset
-#endif
-typedef MPI_ABI_Count MPI_Count;
-#undef  MPI_ABI_Count
+typedef intptr_t MPI_Aint;
+typedef int64_t  MPI_Offset;
+typedef int64_t  MPI_Count;
 
 typedef struct {
     int MPI_SOURCE;
@@ -265,7 +245,7 @@ enum {
     MPI_T_ERR_PVAR_NO_STARTSTOP        = 1017,
     MPI_T_ERR_PVAR_NO_ATOMIC           = 1018,
 
-    MPI_ERR_LASTCODE                   = 0x3fff /* half of the minimum required value of INT_MAX */
+    MPI_ERR_LASTCODE                   = 16383
 };
 
 /* Buffer Address Constants */
@@ -338,8 +318,8 @@ enum {
     MPI_THREAD_MULTIPLE                = 4096,
 
     /* Array Datatype Order */
-    MPI_ORDER_C                        = 0xC, /* 12 */
-    MPI_ORDER_FORTRAN                  = 0xF, /* 15 */
+    MPI_ORDER_C                        = 12, /* 0xC */
+    MPI_ORDER_FORTRAN                  = 15, /* 0xF */
 
     /* Array Datatype Distribution */
     MPI_DISTRIBUTE_NONE                = 16,
@@ -481,12 +461,12 @@ typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
 
 /* MPI_T types and constants */
 
-typedef struct MPI_T_enum_t* MPI_T_enum;
-typedef struct MPI_T_cvar_handle_t* MPI_T_cvar_handle;
-typedef struct MPI_T_pvar_handle_t* MPI_T_pvar_handle;
-typedef struct MPI_T_pvar_session_t* MPI_T_pvar_session;
-typedef struct MPI_T_event_registration_t* MPI_T_event_registration;
-typedef struct MPI_T_event_instance_t* MPI_T_event_instance;
+typedef struct MPI_ABI_T_enum* MPI_T_enum;
+typedef struct MPI_ABI_T_cvar_handle* MPI_T_cvar_handle;
+typedef struct MPI_ABI_T_pvar_handle* MPI_T_pvar_handle;
+typedef struct MPI_ABI_T_pvar_session* MPI_T_pvar_session;
+typedef struct MPI_ABI_T_event_registration* MPI_T_event_registration;
+typedef struct MPI_ABI_T_event_instance* MPI_T_event_instance;
 
 #define MPI_T_ENUM_NULL                ((MPI_T_enum)0)
 #define MPI_T_CVAR_HANDLE_NULL         ((MPI_T_cvar_handle)0)
@@ -1146,12 +1126,10 @@ int MPI_Win_test(MPI_Win win, int *flag);
 int MPI_Win_unlock(int rank, MPI_Win win);
 int MPI_Win_unlock_all(MPI_Win win);
 int MPI_Win_wait(MPI_Win win);
-
 MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp);
 MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 double MPI_Wtick(void);
 double MPI_Wtime(void);
-
 MPI_Comm MPI_Comm_fromint(int comm);
 int MPI_Comm_toint(MPI_Comm comm);
 MPI_Errhandler MPI_Errhandler_fromint(int errhandler);
@@ -1266,9 +1244,9 @@ int PMPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 int PMPI_Alltoallw_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm);
 int PMPI_Alltoallw_init(const void *sendbuf, const int sendcounts[], const int sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int PMPI_Alltoallw_init_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
-int PMPI_Attr_delete(MPI_Comm comm, int keyval);
-int PMPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag);
-int PMPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val);
+int PMPI_Attr_delete(MPI_Comm comm, int keyval); /* deprecated: MPI-2.0 */
+int PMPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag); /* deprecated: MPI-2.0 */
+int PMPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val); /* deprecated: MPI-2.0 */
 int PMPI_Barrier(MPI_Comm comm);
 int PMPI_Barrier_init(MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int PMPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
@@ -1460,7 +1438,7 @@ int PMPI_Get_count(const MPI_Status *status, MPI_Datatype datatype, int *count);
 int PMPI_Get_count_c(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count);
 int PMPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count);
 int PMPI_Get_elements_c(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count);
-int PMPI_Get_elements_x(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count);
+int PMPI_Get_elements_x(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count); /* deprecated: MPI-4.1 */
 int PMPI_Get_hw_resource_info(MPI_Info *hw_info);
 int PMPI_Get_library_version(char *version, int *resultlen);
 int PMPI_Get_processor_name(char *name, int *resultlen);
@@ -1527,11 +1505,11 @@ int PMPI_Info_create_env(int argc, char *argv[], MPI_Info *info);
 int PMPI_Info_delete(MPI_Info info, const char *key);
 int PMPI_Info_dup(MPI_Info info, MPI_Info *newinfo);
 int PMPI_Info_free(MPI_Info *info);
-int PMPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int *flag);
+int PMPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int *flag); /* deprecated: MPI-4.0 */
 int PMPI_Info_get_nkeys(MPI_Info info, int *nkeys);
 int PMPI_Info_get_nthkey(MPI_Info info, int n, char *key);
 int PMPI_Info_get_string(MPI_Info info, const char *key, int *buflen, char *value, int *flag);
-int PMPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag);
+int PMPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag); /* deprecated: MPI-4.0 */
 int PMPI_Info_set(MPI_Info info, const char *key, const char *value);
 int PMPI_Init(int *argc, char ***argv);
 int PMPI_Init_thread(int *argc, char ***argv, int required, int *provided);
@@ -1565,8 +1543,8 @@ int PMPI_Isendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest
 int PMPI_Isendrecv_replace_c(void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Request *request);
 int PMPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
 int PMPI_Issend_c(const void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
-int PMPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn, int *keyval, void *extra_state);
-int PMPI_Keyval_free(int *keyval);
+int PMPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn, int *keyval, void *extra_state); /* deprecated: MPI-2.0 */
+int PMPI_Keyval_free(int *keyval); /* deprecated: MPI-2.0 */
 int PMPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name);
 int PMPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Status *status);
 int PMPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message, MPI_Status *status);
@@ -1704,7 +1682,7 @@ int PMPI_Status_get_tag(const MPI_Status *status, int *tag);
 int PMPI_Status_set_cancelled(MPI_Status *status, int flag);
 int PMPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype, int count);
 int PMPI_Status_set_elements_c(MPI_Status *status, MPI_Datatype datatype, MPI_Count count);
-int PMPI_Status_set_elements_x(MPI_Status *status, MPI_Datatype datatype, MPI_Count count);
+int PMPI_Status_set_elements_x(MPI_Status *status, MPI_Datatype datatype, MPI_Count count); /* deprecated: MPI-4.1 */
 int PMPI_Status_set_error(MPI_Status *status, int error);
 int PMPI_Status_set_source(MPI_Status *status, int source);
 int PMPI_Status_set_tag(MPI_Status *status, int tag);
@@ -1748,11 +1726,11 @@ int PMPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_ad
 int PMPI_Type_get_envelope_c(MPI_Datatype datatype, MPI_Count *num_integers, MPI_Count *num_addresses, MPI_Count *num_large_counts, MPI_Count *num_datatypes, int *combiner);
 int PMPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent);
 int PMPI_Type_get_extent_c(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
-int PMPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
+int PMPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent); /* deprecated: MPI-4.1 */
 int PMPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen);
 int PMPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent);
 int PMPI_Type_get_true_extent_c(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
-int PMPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
+int PMPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent); /* deprecated: MPI-4.1 */
 int PMPI_Type_get_value_index(MPI_Datatype value_type, MPI_Datatype index_type, MPI_Datatype *pair_type);
 int PMPI_Type_indexed(int count, const int array_of_blocklengths[], const int array_of_displacements[], MPI_Datatype oldtype, MPI_Datatype *newtype);
 int PMPI_Type_indexed_c(MPI_Count count, const MPI_Count array_of_blocklengths[], const MPI_Count array_of_displacements[], MPI_Datatype oldtype, MPI_Datatype *newtype);
@@ -1761,7 +1739,7 @@ int PMPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 int PMPI_Type_set_name(MPI_Datatype datatype, const char *type_name);
 int PMPI_Type_size(MPI_Datatype datatype, int *size);
 int PMPI_Type_size_c(MPI_Datatype datatype, MPI_Count *size);
-int PMPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size);
+int PMPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size); /* deprecated: MPI-4.1 */
 int PMPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype *newtype);
 int PMPI_Type_vector_c(MPI_Count count, MPI_Count blocklength, MPI_Count stride, MPI_Datatype oldtype, MPI_Datatype *newtype);
 int PMPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int outcount, MPI_Datatype datatype, MPI_Comm comm);
@@ -1814,12 +1792,10 @@ int PMPI_Win_test(MPI_Win win, int *flag);
 int PMPI_Win_unlock(int rank, MPI_Win win);
 int PMPI_Win_unlock_all(MPI_Win win);
 int PMPI_Win_wait(MPI_Win win);
-
 MPI_Aint PMPI_Aint_add(MPI_Aint base, MPI_Aint disp);
 MPI_Aint PMPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 double PMPI_Wtick(void);
 double PMPI_Wtime(void);
-
 MPI_Comm PMPI_Comm_fromint(int comm);
 int PMPI_Comm_toint(MPI_Comm comm);
 MPI_Errhandler PMPI_Errhandler_fromint(int errhandler);
