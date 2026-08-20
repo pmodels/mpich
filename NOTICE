@@ -1,0 +1,40 @@
+=========================================================================
+NOTICE file corresponding to section 4(d) of the Apache License, Version 2.0,
+for the distribution of MPICH.
+=========================================================================
+
+MPICH
+Copyright (c) 1998-2026, MPICH contributors. All rights reserved.
+
+This product includes software developed by the MPICH project 
+(https://mpich.org) and its original contributors.
+
+-------------------------------------------------------------------------
+Third-Party and Institutional Attribution Notices
+-------------------------------------------------------------------------
+
+Permissions are granted under the Apache License, Version 2.0. This file 
+maintains an incomplete list of copyright owners. More precise per-file based 
+copyrights can be traced via the complete git commit log.
+
+Portions of this code have been contributed under the Apache License, Version 2.0
+by the following institutions and organizations:
+
+ * Argonne National Laboratory
+ * University of Illinois at Urbana-Champaign
+ * Cray
+ * DataDirect Networks.
+ * Dolphin Interconnect Solutions Inc.
+ * IBM Corporation
+ * Institut Polytechnique de Bordeaux
+ * Intel Corporation
+ * Mellanox Technologies Ltd.
+ * Microsoft Corporation
+ * Oak Ridge National Laboratory
+ * ParTec AG
+ * Quobyte Corporation
+ * Sandia National Laboratories
+ * Sun Microsystems, Lustre group
+
+=========================================================================
+
