@@ -139,7 +139,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_GPU_query_pointer_attr(origin_addr, &origin_attr);
-    if (MPL_gpu_attr_is_dev(&origin_attr))
+    if (MPL_gpu_attr_is_strict_dev(&origin_attr))
         origin_dev_id = MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&origin_attr));
 #endif
 
@@ -148,7 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
         disp_unit = win->disp_unit;
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
-        if (MPL_gpu_attr_is_dev(&target_attr))
+        if (MPL_gpu_attr_is_strict_dev(&target_attr))
             target_dev_id =
                 MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&target_attr));
 #endif
@@ -168,8 +168,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
         MPL_gpu_engine_type_t engine_type =
-            MPIDI_RMA_choose_engine(MPL_gpu_attr_is_dev(&origin_attr), origin_dev_id,
-                                    MPL_gpu_attr_is_dev(&target_attr), target_dev_id);
+            MPIDI_RMA_choose_engine(MPL_gpu_attr_is_strict_dev(&origin_attr), origin_dev_id,
+                                    MPL_gpu_attr_is_strict_dev(&target_attr), target_dev_id);
         /* try to use cached local mmap for fast_memcpy */
         MPI_Aint copy_sz = MPL_MIN(origin_data_sz, target_data_sz);
         void *put_origin = (void *) origin_addr;
@@ -241,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_GPU_query_pointer_attr(origin_addr, &origin_attr);
-    if (MPL_gpu_attr_is_dev(&origin_attr))
+    if (MPL_gpu_attr_is_strict_dev(&origin_attr))
         origin_dev_id = MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&origin_attr));
 #endif
 
@@ -250,7 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
         disp_unit = win->disp_unit;
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         MPIR_GPU_query_pointer_attr(base, &target_attr);
-        if (MPL_gpu_attr_is_dev(&target_attr))
+        if (MPL_gpu_attr_is_strict_dev(&target_attr))
             target_dev_id =
                 MPL_gpu_local_to_global_dev_id(MPL_gpu_get_dev_id_from_attr(&target_attr));
 #endif
@@ -270,8 +270,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
         MPL_gpu_engine_type_t engine_type =
-            MPIDI_RMA_choose_engine(MPL_gpu_attr_is_dev(&origin_attr), origin_dev_id,
-                                    MPL_gpu_attr_is_dev(&target_attr), target_dev_id);
+            MPIDI_RMA_choose_engine(MPL_gpu_attr_is_strict_dev(&origin_attr), origin_dev_id,
+                                    MPL_gpu_attr_is_strict_dev(&target_attr), target_dev_id);
         /* try to use cached local mmap for fast_memcpy */
         MPI_Aint copy_sz = MPL_MIN(origin_data_sz, target_data_sz);
         void *get_origin = origin_addr;
