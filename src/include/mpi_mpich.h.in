@@ -990,8 +990,8 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #include <mpix.h>
 #include <mpi_proto.h>
 
-/* include fortran inter-op header if needed */
-#ifdef MPICH_ENABLE_FORTRAN
+/* include fortran inter-op header for MPI_Fint and _f2c/c2f routines. Compile by add -DMPI_FORTRAN CPPFLAG */
+#ifdef MPI_FORTRAN
 #include <mpi_fortran.h>
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.

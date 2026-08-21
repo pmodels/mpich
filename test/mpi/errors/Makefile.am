@@ -10,5 +10,4 @@ include $(top_srcdir)/Makefile_single.mtest
 # simplemake version for some reason and is also missing from the testlist
 # file
 static_subdirs = attr coll comm datatype group pt2pt rma topo basic faults
-all_lang_subdirs = cxx f77 f90 f08
 SUBDIRS = $(static_subdirs) $(iodir) $(otherlangs) $(spawndir)

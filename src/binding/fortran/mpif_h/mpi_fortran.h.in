@@ -14,8 +14,8 @@ typedef @MPI_FINT@ MPI_Fint;
 #define MPIU_DLL_SPEC
 
 /* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
 
 /* C type for MPI_STATUS in F08.
    The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
@@ -29,8 +29,8 @@ typedef struct {
 } MPI_F08_status;
 
 /* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE;
 
 MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
 MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
@@ -94,4 +94,4 @@ MPI_Fint PMPIX_Stream_c2f(MPIX_Stream stream);
 MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream);
 #endif
 
-void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
+void MPIX_Init_fortran(void);

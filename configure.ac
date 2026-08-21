@@ -3253,6 +3253,10 @@ if test "$enable_fortran" = "yes" ; then
 
     AC_MSG_NOTICE([sourcing $main_top_builddir/src/binding/fortran/localdefs])
     . $main_top_builddir/src/binding/fortran/localdefs
+    AC_SUBST(F77)
+    AC_SUBST(FFLAGS)
+    AC_SUBST(FC)
+    AC_SUBST(FCFLAGS)
 fi
 
 # FCEXT used in mpifort.bash.in
