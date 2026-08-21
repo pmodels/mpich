@@ -285,10 +285,6 @@ AC_ARG_WITH(mpi,
                 [Use the selected MPI; compilation scripts for mpicc,
                 mpifort and mpicxx should be in dir/bin])],,)
 
-AC_ARG_ENABLE(mpi-abi,
-        [AS_HELP_STRING([--enable-mpi-abi],
-                [Compile the C tests using mpicc_abi])],,[enable_mpi_abi=no])
-
 AC_ARG_WITH(pm,
         AS_HELP_STRING([--with-pm=name],
                 [Specify the process manager for MPICH.  "no" or "none" are
@@ -368,21 +364,8 @@ if test "$with_config_args" != "no" ; then
     fi
 fi
 
-# only a subset of tests work with (experimental) MPI-5 ABI
-if test "$enable_mpi_abi" = "yes" ; then
-    enable_strictmpi="yes"
-    enable_f77="no"
-    enable_fc="no"
-    enable_f08="no"
-    enable_cxx="no"
-fi
-
 # Attach program prefix and suffix to executable names
-if test "$enable_mpi_abi" = "yes" ; then
-    PAC_GET_EXENAME("mpicc_abi", MPICC_NAME)
-else
-    PAC_GET_EXENAME("mpicc", MPICC_NAME)
-fi
+PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
@@ -498,6 +481,10 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
         elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
             enable_part=no
+        fi
+
+        if [grep 'MPICH ABI: *MPI ABI ' conftest.output > /dev/null] ; then
+            enable_cxx="no"
         fi
 
         if ! grep 'MPICH features:.*threadcomm' conftest.output > /dev/null ; then
