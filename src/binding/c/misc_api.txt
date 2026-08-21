@@ -2,7 +2,7 @@
 
 MPI_Aint_add:
     .desc: Returns the sum of base and disp
-    .skip: ThreadSafe, Fortran, Errors, validate-ANY
+    .skip: ThreadSafe, Errors, validate-ANY
     .seealso: MPI_Aint_diff
     .impl: direct
 {
@@ -19,7 +19,7 @@ MPI_Aint_add:
 
 MPI_Aint_diff:
     .desc: Returns the difference between addr1 and addr2
-    .skip: ThreadSafe, Fortran, Errors, validate-ANY
+    .skip: ThreadSafe, Errors, validate-ANY
     .seealso: MPI_Aint_add
     .impl: direct
 {
