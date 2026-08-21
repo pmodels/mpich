@@ -56,7 +56,7 @@ nodist_writeshf_SOURCES      = writeshf.f
 
 c2fmultio_SOURCES     = c2fmultio.c
 # this is a C only program, so we must include mtest_c_objects
-c2fmultio_LDADD       = $(mtest_c_objects)
+c2fmultio_LDADD       = $(mtest_c_objects) -lmpifort
 
 c2f2ciof_SOURCES      = c2f2cio.c c2f2ciof.f
 

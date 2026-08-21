@@ -1,0 +1,97 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+/* *INDENT-OFF* */
+typedef @MPI_FINT@ MPI_Fint;
+/* *INDENT-ON* */
+
+/* The annotation MPIU_DLL_SPEC to the extern statements is used
+   as a hook for systems that require C extensions to correctly construct
+   DLLs, and is defined as an empty string otherwise
+ */
+#define MPIU_DLL_SPEC
+
+/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
+
+/* C type for MPI_STATUS in F08.
+   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
+ */
+typedef struct {
+    MPI_Fint count_lo;
+    MPI_Fint count_hi_and_cancelled;
+    MPI_Fint MPI_SOURCE;
+    MPI_Fint MPI_TAG;
+    MPI_Fint MPI_ERROR;
+} MPI_F08_status;
+
+/* Provided in libmpifort.so */
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE;
+
+MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
+MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
+MPI_Fint PMPI_Comm_c2f(MPI_Comm comm);
+MPI_Comm PMPI_Comm_f2c(MPI_Fint comm);
+
+MPI_Fint MPI_Errhandler_c2f(MPI_Errhandler errhandler);
+MPI_Errhandler MPI_Errhandler_f2c(MPI_Fint errhandler);
+MPI_Fint PMPI_Errhandler_c2f(MPI_Errhandler errhandler);
+MPI_Errhandler PMPI_Errhandler_f2c(MPI_Fint errhandler);
+
+MPI_Fint MPI_File_c2f(MPI_File file);
+MPI_File MPI_File_f2c(MPI_Fint file);
+MPI_Fint PMPI_File_c2f(MPI_File file);
+MPI_File PMPI_File_f2c(MPI_Fint file);
+
+MPI_Fint MPI_Group_c2f(MPI_Group group);
+MPI_Group MPI_Group_f2c(MPI_Fint group);
+MPI_Fint PMPI_Group_c2f(MPI_Group group);
+MPI_Group PMPI_Group_f2c(MPI_Fint group);
+
+MPI_Fint MPI_Info_c2f(MPI_Info info);
+MPI_Info MPI_Info_f2c(MPI_Fint info);
+MPI_Fint PMPI_Info_c2f(MPI_Info info);
+MPI_Info PMPI_Info_f2c(MPI_Fint info);
+
+MPI_Fint MPI_Message_c2f(MPI_Message message);
+MPI_Message MPI_Message_f2c(MPI_Fint message);
+MPI_Fint PMPI_Message_c2f(MPI_Message message);
+MPI_Message PMPI_Message_f2c(MPI_Fint message);
+
+MPI_Fint MPI_Op_c2f(MPI_Op op);
+MPI_Op MPI_Op_f2c(MPI_Fint op);
+MPI_Fint PMPI_Op_c2f(MPI_Op op);
+MPI_Op PMPI_Op_f2c(MPI_Fint op);
+
+MPI_Fint MPI_Request_c2f(MPI_Request request);
+MPI_Request MPI_Request_f2c(MPI_Fint request);
+MPI_Fint PMPI_Request_c2f(MPI_Request request);
+MPI_Request PMPI_Request_f2c(MPI_Fint request);
+
+MPI_Fint MPI_Session_c2f(MPI_Session session);
+MPI_Session MPI_Session_f2c(MPI_Fint session);
+MPI_Fint PMPI_Session_c2f(MPI_Session session);
+MPI_Session PMPI_Session_f2c(MPI_Fint session);
+
+MPI_Fint MPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype MPI_Type_f2c(MPI_Fint datatype);
+MPI_Fint PMPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype PMPI_Type_f2c(MPI_Fint datatype);
+
+MPI_Fint MPI_Win_c2f(MPI_Win win);
+MPI_Win MPI_Win_f2c(MPI_Fint win);
+MPI_Fint PMPI_Win_c2f(MPI_Win win);
+MPI_Win PMPI_Win_f2c(MPI_Fint win);
+
+#ifdef MPICH_HAS_MPIX
+MPI_Fint MPIX_Stream_c2f(MPIX_Stream stream);
+MPIX_Stream MPIX_Stream_f2c(MPI_Fint stream);
+MPI_Fint PMPIX_Stream_c2f(MPIX_Stream stream);
+MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream);
+#endif
+
+void MPIX_Init_fortran(void);

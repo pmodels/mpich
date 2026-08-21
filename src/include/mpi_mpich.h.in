@@ -3,11 +3,6 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifdef MPI_ABI
-#include "mpi_abi.h"
-#include "mpix.h"
-#else
-
 /* @configure_input@ */
 #ifndef MPI_INCLUDED
 #define MPI_INCLUDED
@@ -148,8 +143,6 @@ extern "C" {
 #else
 #  define MPICH_ATTR_TYPE_TAG_CXX(type)
 #endif
-
-@MPIU_DLL_SPEC_DEF@
 
 /* Define some null objects */
 #define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
@@ -369,7 +362,6 @@ typedef int MPI_Info;
 #ifndef MPICH_BUILD_MPI_ABI
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
 typedef @MPI_COUNT@ MPI_Count;
 
 /* Let ROMIO know that MPI_Offset is already defined */
@@ -389,34 +381,11 @@ typedef struct MPI_Status {
     int MPI_ERROR;
 } MPI_Status;
 
-/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used
-   as a hook for systems that require C extensions to correctly construct
-   DLLs, and is defined as an empty string otherwise
- */
-
-/* C type for MPI_STATUS in F08.
-   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
- */
-typedef struct {
-    MPI_Fint count_lo;
-    MPI_Fint count_hi_and_cancelled;
-    MPI_Fint MPI_SOURCE;
-    MPI_Fint MPI_TAG;
-    MPI_Fint MPI_ERROR;
-} MPI_F08_status;
-
 /* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
 #define MPI_F_STATUS_SIZE 5
 #define MPI_F_SOURCE 2
 #define MPI_F_TAG 3
 #define MPI_F_ERROR 4
-
-/* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
 #endif /* MPICH_BUILD_MPI_ABI */
 
@@ -1021,6 +990,9 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #include <mpix.h>
 #include <mpi_proto.h>
 
+/* include fortran inter-op header for MPI_Fint and _f2c/c2f routines. Compile by add -DMPI_FORTRAN CPPFLAG */
+#ifdef MPI_FORTRAN
+#include <mpi_fortran.h>
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.
  */
@@ -1070,6 +1042,8 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 #endif
 
+#endif
+
 #endif /* MPICH_BUILD_MPI_ABI */
 
 #if defined(__cplusplus)
@@ -1091,4 +1065,3 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #endif
 
 #endif  /* MPI_INCLUDED */
-#endif  /* MPI_ABI */

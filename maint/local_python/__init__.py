@@ -8,9 +8,6 @@ import re
 import sys
 
 def get_srcdir():
-    if os.path.exists("maint/local_python/__init__.py"):
-        return "."
-
     m = re.match(r'(.*)\/maint\/local_python', __file__)
     if m:
         return m.group(1)
@@ -18,6 +15,14 @@ def get_srcdir():
         return "."
     else:
         raise Exception("Can't determine srcdir from __file__")
+
+def get_binding_dir(srcdir):
+    if os.path.exists(srcdir + "/src/binding/mpi_standard_api.txt"):
+        return srcdir + "/src/binding"
+    elif os.path.exists(srcdir + "/maint/mpi_standard_api.txt"):
+        return srcdir + "/src/maint"
+    else:
+        raise Exception("Can't find mpi_standard_api.txt")
 
 # RE class allows convenience of using regex capture in a condition
 class RE:
@@ -32,6 +37,20 @@ class RE:
 # Global data used across modules
 class MPI_API_Global:
     srcdir = get_srcdir()
+    binding_dir = get_binding_dir(srcdir)
+    if os.path.exists("mpif_h"):
+        # stand-alone fortran binding
+        f77_dir = "mpif_h"
+        f90_dir = "use_mpi"
+        f08_dir = "use_mpi_f08"
+    elif os.path.exists("src/binding/c"):
+        c_dir = "src/binding/c"
+        abi_dir = "src/binding/abi"
+        f77_dir = "src/binding/fortran/mpif_h"
+        f90_dir = "src/binding/fortran/use_mpi"
+        f08_dir = "src/binding/fortran/use_mpi_f08"
+    else:
+        raise Exception("Can't determine output directories")
 
     def is_autogen():
         return MPI_API_Global.srcdir == "."
@@ -47,7 +66,10 @@ class MPI_API_Global:
     # By default assumes sizes for LP64 model.
     # The F08 bindings use the sizes to detect duplicate large interfaces
     # The F90 bindings use the sizes to implement MPI_SIZEOF (although deprecated in MPI-4)
-    opts = {'fint-size':4, 'aint-size':8, 'count-size':8, 'cint-size':4, 'f-logical-size':4,
+    opts = {'integer-kind':4, 'address-kind':8, 'count-kind':8, 'offset-kind':8,
+            'max-processor-name':128, 'max-version-string':8192, 'max-error-string':512, 'bsend-overhead':96,
+            'fint-size':4, 'aint-size':8, 'count-size':8, 'cint-size':4, 'f-logical-size':4,
+            'mpi-h':'src/include/mpi_mpich.h.in',
             'iso-c-binding':'yes'}
 
     args = []
@@ -83,6 +105,20 @@ class MPI_API_Global:
         'SESSION': "MPIR_Session",
         'GREQUEST_CLASS': "MPIR_Grequest_class",
         'STREAM': "MPIR_Stream",
+    }
+
+    # C types that have conversion apis, e.g. MPI_Comm_{from,to}int
+    handle_conversions = {
+        'MPI_Comm': "MPI_Comm",
+        'MPI_Group': "MPI_Group",
+        'MPI_Datatype': "MPI_Type",
+        'MPI_Errhandler': "MPI_Errhandler",
+        'MPI_Op': "MPI_Op",
+        'MPI_Info': "MPI_Info",
+        'MPI_Win': "MPI_Win",
+        'MPI_Request': "MPI_Request",
+        'MPI_Session': "MPI_Session",
+        'MPI_File': "MPI_File",
     }
 
     handle_error_codes = {

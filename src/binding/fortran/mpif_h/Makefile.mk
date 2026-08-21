@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-f77_cppflags = $(AM_CPPFLAGS) -I${main_top_srcdir}/src/binding/fortran/mpif_h
+f77_cppflags = $(AM_CPPFLAGS) -I${srcdir}/mpif_h
 
 if BUILD_F77_BINDING
 
@@ -11,11 +11,13 @@ mpifort_convenience_libs += lib/libf77_mpi.la
 noinst_LTLIBRARIES += lib/libf77_mpi.la
 
 lib_libf77_mpi_la_SOURCES = \
-	src/binding/fortran/mpif_h/fortran_binding.c \
-	src/binding/fortran/mpif_h/user_proxy.c \
-	src/binding/fortran/mpif_h/fdebug.c \
-	src/binding/fortran/mpif_h/setbot.c \
-	src/binding/fortran/mpif_h/setbotf.f
+	mpif_h/fortran_binding.c \
+        mpif_h/f2c_impl.c \
+	mpif_h/user_proxy.c \
+	mpif_h/fdebug.c \
+	mpif_h/setbot.c \
+        mpif_h/cmblk.c \
+	mpif_h/setbotf.f
 
 lib_libf77_mpi_la_CPPFLAGS = $(f77_cppflags)
 
@@ -23,7 +25,7 @@ if BUILD_LIBF77_PMPI
 mpifort_convenience_libs += lib/libf77_pmpi.la
 noinst_LTLIBRARIES += lib/libf77_pmpi.la
 
-lib_libf77_pmpi_la_SOURCES = src/binding/fortran/mpif_h/fortran_binding.c
+lib_libf77_pmpi_la_SOURCES = mpif_h/fortran_binding.c
 
 # build "pmpi_xxx_" f77 public functions
 lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags) -DF77_USE_PMPI
@@ -33,15 +35,13 @@ lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
 endif BUILD_LIBF77_PMPI
 
 noinst_HEADERS += \
-	src/binding/fortran/mpif_h/fortran_profile.h \
-	src/binding/fortran/mpif_h/mpi_fortimpl.h
+	mpif_h/fortran_profile.h \
+	mpif_h/mpi_fortimpl.h
 
-# config.status copies src/binding/fortran/mpif_h/mpif.h to src/include (see the relevant
-# AC_CONFIG_COMMANDS in configure.ac), so we need to delete it at distclean time
-# too.  More work is needed in this Makefile.mk to keep src/include/mpif.h up to
-# date w.r.t. the src/binding/fortran/mpif_h version.
-DISTCLEANFILES += src/binding/fortran/mpif_h/mpif.h src/include/mpif.h
-nodist_include_HEADERS += src/binding/fortran/mpif_h/mpif.h
+DISTCLEANFILES += mpif_h/mpif.h
+include_HEADERS += \
+        mpif_h/mpif.h \
+        mpif_h/mpi_fortran.h
 
 
 endif BUILD_F77_BINDING

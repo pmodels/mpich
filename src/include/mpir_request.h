@@ -73,13 +73,6 @@ typedef enum MPIR_Request_kind_t {
 
 #define MPIR_REQUEST_NULL_RECV     (MPI_Request)0x6c000010
 
-/* This currently defines a single structure type for all requests.
-   Eventually, we may want a union type, as used in MPICH-1 */
-/* Typedefs for Fortran generalized requests */
-typedef void (MPIR_Grequest_f77_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
-typedef void (MPIR_Grequest_f77_free_function) (void *, MPI_Fint *);
-typedef void (MPIR_Grequest_f77_query_function) (void *, MPI_Fint *, MPI_Fint *);
-
 /* vtable-ish structure holding generalized request function pointers and other
  * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
 struct MPIR_Grequest_fns {
@@ -89,11 +82,6 @@ struct MPIR_Grequest_fns {
             MPI_Grequest_free_function *free_fn;
             MPI_Grequest_query_function *query_fn;
         } C;
-        struct {
-            MPIR_Grequest_f77_cancel_function *cancel_fn;
-            MPIR_Grequest_f77_free_function *free_fn;
-            MPIR_Grequest_f77_query_function *query_fn;
-        } F;
     } U;
     MPIX_Grequest_poll_function *poll_fn;
     MPIX_Grequest_wait_function *wait_fn;
