@@ -1293,7 +1293,12 @@ int MPL_gpu_global_to_local_dev_id(int global_dev_id)
 
 int MPL_gpu_local_to_global_dev_id(int local_dev_id)
 {
-    assert(local_dev_id < local_ze_device_count);
+    /* Host-owned allocations (e.g. ZE registered host memory) have no
+     * associated device. */
+    if (local_dev_id == -1) {
+        return -1;
+    }
+    assert(local_dev_id >= 0 && (uint32_t) local_dev_id < local_ze_device_count);
     return local_to_global_map[local_dev_id];
 }
 
