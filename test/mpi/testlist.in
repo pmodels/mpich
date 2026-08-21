@@ -16,6 +16,7 @@ session
 topo
 @perfdir@
 @iodir@
+@f2cdir@
 @f77dir@
 @cxxdir@
 @f90dir@

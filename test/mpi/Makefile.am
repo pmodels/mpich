@@ -12,9 +12,8 @@ ACLOCAL_AMFLAGS = -I confdb
 static_subdirs = util attr basic datatype coll comm errhan group info init \
                  pt2pt rma topo errors manual perf mpi_t impls ckpoint dtpools \
                  part session
-all_lang_subdirs = f77 cxx f90 f08
 
-SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) $(ckpointdir) $(ftdir) .
+SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(f2cdir) $(threadsdir) $(spawndir) $(ckpointdir) $(ftdir) .
 
 DISTCLEANFILES = config.system
 

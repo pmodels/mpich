@@ -1102,6 +1102,9 @@ fi
 # Use these only when configuring separate from an MPICH build
 f77dir="#"
 AC_SUBST(f77dir)
+f2cdir=
+AC_SUBST(f2cdir)
+
 buildingF77=no
 if test "$enable_f77" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with Fortran 77])
@@ -1119,6 +1122,7 @@ if test "$enable_f77" = yes ; then
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs f77"
         f77dir=f77
+        f2cdir=f2c
         buildingF77=yes
     ],[
         AC_MSG_RESULT(no)
@@ -1234,7 +1238,7 @@ EOF
 
     # Check for name mapping so that we can do the handle conversion tests
     # This test needs both the base c and fortran compilers
-    AC_LANG_FORTRAN77
+    AC_LANG([Fortran 77])
     PAC_PROG_F77_NAME_MANGLE
 
     # Check whether we need -lU77 to get iargc and getarg, which
@@ -1629,7 +1633,7 @@ if test "$enable_cxx" = yes ; then
     AC_LANG_POP([C++])
 fi
 
-AC_LANG_C
+AC_LANG([C])
 
 LT_INIT()
 
@@ -1771,9 +1775,8 @@ AC_CONFIG_COMMANDS([chmod],[
     chmod a+x manual/manyconnect
     chmod a+x impls/hydra/proc_binding.sh
 ])
-dnl Note that this format for AC_OUTPUT can cause problems for autoconf
-dnl run under cygwin
-AC_OUTPUT(maint/testmerge \
+
+AC_CONFIG_FILES(maint/testmerge \
           checktests \
           Makefile \
           basic/Makefile \
@@ -1803,6 +1806,7 @@ AC_OUTPUT(maint/testmerge \
           topo/Makefile \
           io/Makefile \
           io/testlist \
+          f2c/Makefile \
           f77/Makefile \
           f77/attr/Makefile \
           f77/attr/attraints.h \
@@ -1966,4 +1970,5 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/info/testlist \
           bench/Makefile \
           )
+AC_OUTPUT
 

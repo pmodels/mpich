@@ -1872,6 +1872,10 @@ int PMPI_T_source_get_info(int source_index, char *name, int *name_len, char *de
 int PMPI_T_source_get_num(int *num_sources);
 int PMPI_T_source_get_timestamp(int source_index, MPI_Count *timestamp);
 
+#ifdef MPI_FORTRAN
+#include <mpi_fortran.h>
+#endif
+
 #if defined(__cplusplus)
 }
 #endif

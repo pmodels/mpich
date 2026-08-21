@@ -17,8 +17,8 @@ typedef @MPI_FINT@ MPI_Fint;
 #define MPIU_DLL_SPEC
 
 /* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
 
 /* C type for MPI_STATUS in F08.
    The field order should match that in C MPI_Status.
@@ -43,8 +43,8 @@ typedef struct {
 #endif
 
 /* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE;
 
 MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
 MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
@@ -121,7 +121,7 @@ int PMPI_Status_f082f(const MPI_F08_status * f08_status, MPI_Fint * f_status);
 int PMPI_Status_f082c(const MPI_F08_status * f08_status, MPI_Status * c_status);
 int PMPI_Status_c2f08(const MPI_Status * c_status, MPI_F08_status * f08_status);
 
-void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
+void MPIX_Init_fortran(void);
 
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.
