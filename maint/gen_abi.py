@@ -36,6 +36,12 @@ def load_mpi_abi_h(mpi_abi_h):
             if RE.search(r'(MPI_ABI|MPIX)_H_INCLUDED', line):
                 # skip the include guard, harmless
                 pass
+            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)', line):
+                # handle multi-line function prototypes
+                lines = [line.strip()]
+                while not RE.match(r'(.*)\);', lines[-1]):
+                    lines.append(next(In).strip())
+                G.abi_h_lines.append(' '.join(lines) + '\n')
             else:
                 G.abi_h_lines.append(line)
 
@@ -75,7 +81,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 # rename to internal mpi_t struct type
                 T = RE.m.group(1)
                 out.append("typedef struct %s_s *%s;" % (re.sub(r'MPI_', 'MPIR_', T), T))
-            elif RE.match(r'^(int|double|MPI_\w+) (P?MPI\w+)\((.*)\);', line):
+            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
                 T=re.sub(re_Handle, r'ABI_\1', T)
@@ -125,7 +131,7 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
                 pass
             elif RE.match(r'typedef struct.*\bMPI_File;\s*$', line):
                 out.append("typedef struct ADIOI_FileD *MPI_File;")
-            elif RE.match(r'(int|double|MPI_\w+) (P?MPI\w+)\((.*)\);', line):
+            elif RE.match(r'(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
                 if RE.match(r'P?MPI_(File_\w+|Register_datarep\w*)', name):
@@ -189,7 +195,7 @@ def dump_io_abi_internal_h(io_abi_internal_h):
                 pass
             elif RE.match(r'typedef struct.*\bMPI_File;\s*$', line):
                 out.append("typedef struct ADIOI_FileD *MPI_File;")
-            elif RE.match(r'(int|double|MPI_\w+) (P?MPI\w+)\((.*)\);', line):
+            elif RE.match(r'(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
                 if RE.match(r'P?MPI_(File_\w+|Register_datarep\w*)', name):
