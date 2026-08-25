@@ -36,13 +36,16 @@
                     {
                         "algorithm=MPIR_Bcast_intra_binomial":{}
                     },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
                     "avg_msg_size=any":
                     {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        "per_proc_msg_size<=65536":
+                        {
+                            "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
+                        },
+                        "per_proc_msg_size=any":
+                        {
+                            "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        }
                     }
                 },
                 "comm_hierarchy=any":
@@ -51,13 +54,16 @@
                     {
                         "algorithm=MPIR_Bcast_intra_binomial":{}
                     },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
                     "avg_msg_size=any":
                     {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        "per_proc_msg_size<=65536":
+                        {
+                            "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
+                        },
+                        "per_proc_msg_size=any":
+                        {
+                            "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        }
                     }
                 }
             },
@@ -69,22 +75,25 @@
                     {
                         "algorithm=MPIR_Bcast_intra_smp":{}
                     },
-                    "avg_msg_size<=12288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_binomial":{}
-                    },
                     "avg_msg_size=any":
                     {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        "per_proc_msg_size<=12288":
+                        {
+                            "algorithm=MPIR_Bcast_intra_binomial":{}
+                        },
+                        "per_proc_msg_size=any":
+                        {
+                            "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        }
                     }
                 },
                 "comm_hierarchy=any":
                 {
-                    "avg_msg_size<=12288":
+                    "per_proc_msg_size<=12288":
                     {
                         "algorithm=MPIR_Bcast_intra_binomial":{}
                     },
-                    "avg_msg_size=any":
+                    "per_proc_msg_size=any":
                     {
                         "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
                     }
