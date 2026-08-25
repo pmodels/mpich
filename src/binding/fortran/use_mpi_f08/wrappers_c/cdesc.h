@@ -17,8 +17,8 @@
 #define MPIO_Request MPI_Request
 #endif
 
-extern int MPIR_F08_MPI_IN_PLACE;
-extern int MPIR_F08_MPI_BOTTOM;
+extern void *MPIR_F08_MPI_IN_PLACE;
+extern void *MPIR_F08_MPI_BOTTOM;
 
 extern int cdesc_create_datatype(CFI_cdesc_t * cdesc, MPI_Aint oldcount, MPI_Datatype oldtype,
                                  MPI_Datatype * newtype);
@@ -41,5 +41,7 @@ void *MPIR_F08_get_MPI_ERRCODES_IGNORE(void);
 void *MPIR_F08_get_MPI_UNWEIGHTED(void);
 void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void);
 void *MPIR_F08_get_MPI_BUFFER_AUTOMATIC(void);
+void *MPIR_F08_get_MPI_BOTTOM(void);
+void *MPIR_F08_get_MPI_IN_PLACE(void);
 
 #endif /* CDESC_H_INCLUDED */

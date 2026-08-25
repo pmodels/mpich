@@ -15,6 +15,7 @@
 module mpi_c_interface_types
 
 use, intrinsic :: iso_c_binding
+use mpi_f08_types, only: MPI_STATUS_SIZE
 
 implicit none
 
@@ -45,15 +46,8 @@ integer,parameter :: c_File       = c_intptr_t
 ! C struct for STATUS values; should match  mpi.h
 !================================================
 
-! MPI_Status, with name changed to c_Status for internal disambiguation
-! A.1.2 p 676
-
-type, bind(c) :: c_Status
-   integer(c_int)  :: count_lo
-   integer(c_int)  :: count_hi_and_cancelled
-   integer(c_int)  :: MPI_SOURCE
-   integer(c_int)  :: MPI_TAG
-   integer(c_int)  :: MPI_ERROR
-end type c_Status
+type, bind(c) :: MPI_C_Status
+   integer(c_int)  :: dummy(MPI_STATUS_SIZE)
+end type MPI_C_Status
 
 end module mpi_c_interface_types

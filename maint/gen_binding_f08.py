@@ -35,6 +35,10 @@ def main():
         process_func_parameters(func)
     func_list = [f for f in func_list if '_skip_fortran' not in f]
 
+    # load mpi.h
+    G.mpih_defines = {}
+    load_mpi_h(G.opts['mpi-h'])
+
     # f08_cdesc.c
     G.out = []
     G.decls = []
@@ -53,6 +57,9 @@ def main():
     # f08ts.f90
     G.out = []
     for func in func_list:
+        if RE.match(r'mpi_status_(f082c|c2f08)', func['name'], re.IGNORECASE):
+            # define in mpi_c_interface but skip in mpi_f08
+            continue
         dump_f08_wrappers_f(func, False)
         if func['_need_large']:
             dump_f08_wrappers_f(func, True)
@@ -103,6 +110,9 @@ def main():
     G.out.append("")
     G.out.append("IMPLICIT NONE")
     for func in func_list:
+        if RE.match(r'mpi_status_(f082c|c2f08)', func['name'], re.IGNORECASE):
+            # define in mpi_c_interface but skip in mpi_f08
+            continue
         G.out.append("")
         func_name = get_function_name(func, False)
         G.out.append("INTERFACE %s" % func_name)
@@ -150,8 +160,6 @@ def main():
     dump_f90_file(f, G.out)
 
     # mpi_f08_compile_constants.f90
-    G.mpih_defines = {}
-    load_mpi_h(G.opts['mpi-h'])
     f = "%s/mpi_f08_compile_constants.f90" % G.f08_dir
     dump_compile_constants_f90(f)
 

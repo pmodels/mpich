@@ -34,11 +34,12 @@ typedef struct {
 #else
 /* matches MPI_Status in MPICH ABI */
 typedef struct {
-    MPI_Fint count_lo;
-    MPI_Fint count_hi_and_cancelled;
+    /* First 3 fields for access from f08 as e.g. status%MPI_SOURCE */
     MPI_Fint MPI_SOURCE;
     MPI_Fint MPI_TAG;
     MPI_Fint MPI_ERROR;
+    /* Extra INTEGER array for copy MPI_Status as array */
+    MPI_Fint dummy[MPI_F_STATUS_SIZE];
 } MPI_F08_status;
 #endif
 

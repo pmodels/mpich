@@ -35,7 +35,7 @@ PAC_PREFIX_ALL_FLAGS(WRAPPER)
 # When build from MPICH, --with-mpi=mpich to build native mpich ABI, --with-mpi=abi to build MPI ABI
 # When build stand-alone, set --with-mpi to path. TODO: check for system mpi.
 AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
-            [Specify the path where MPI is installed.])],,with_mpi=mpich)
+            [Specify the path where MPI is installed.])])
 
 # $mpi_h is needed for python scripts gen_binding_{f77,f90,f08}.py
 mpi_h=
@@ -54,6 +54,12 @@ fi
 export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
 
+# Find a C compiler.
+# We also need to do this before the F77 and FC test to ensure that we
+# find the C preprocessor reliably.
+AC_PROG_CC
+AM_PROG_CC_C_O
+
 if test "$FROM_MPICH" = "yes" ; then
     PAC_APPEND_FLAG(-I${main_top_builddir}/src/include, [CPPFLAGS])
     if test "$WITH_MPI" = "mpich" ; then
@@ -69,39 +75,48 @@ if test "$FROM_MPICH" = "yes" ; then
         AC_MSG_ERROR([MPICH configure need export MPILIBNAME and LPMPILIBNAME])
     fi
 else
-    if ! test "$with_mpi/include/mpi.h" ; then
+    if test -z "$with_mpi" ; then
+        AC_MSG_CHECKING([for mpi path...])
+        # try to extract mpi path using mpicc. First try MPICH's -
+        INC_STR=`mpicc -show 2>/dev/null | grep -o '\-I[[^ ]]*'`
+        if test -z "$INC_STR" ; then
+            # try Open MPI's -
+            INC_STR=`mpicc -compile-info 2>/dev/null | grep -o '\-I[[^ ]]*'`
+        fi
+        if test -z "$INC_STR" ; then
+            AC_MSG_ERROR([Failed to probe mpi path via mpicc!])
+        fi
+        # Remove the leading -I
+        PATH_NO_I="${INC_STR#-I}"
+        # Remove the trailing /include (or /include/)
+        with_mpi="${PATH_NO_I%/include*}"
+        AC_MSG_RESULT([$with_mpi])
+    fi
+
+    if ! test -e "$with_mpi/include/mpi.h" ; then
         AC_MSG_ERROR([mpi.h not found in $with_mpi/include/])
     fi
     PAC_APPEND_FLAG(-I${with_mpi}/include, [CPPFLAGS])
     PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
     mpi_h="$with_mpi/include/mpi.h"
 
-    if test -e "$with_mpi/lib/libmpi.so" ; then
-        if test -z "$MPILIBNAME" ; then
-            MPILIBNAME="mpi"
-        fi
-        if test -e "$with_mpi/lib/libpmpi.so" ; then
+    AC_CHECK_LIB([mpi], [MPI_Init], [
+        MPILIBNAME="mpi"
+        AC_CHECK_LIB([pmpi], [PMPI_Init], [
             LPMPILIBNAME="-lpmpi"
-        fi
-    elif test -e "$with_mpi/lib/libmpi_abi.so" ; then
-        if test -z "$MPILIBNAME" ; then
+        ])
+    ], [
+        AC_CHECK_LIB([mpi_abi], [MPI_Init], [
             MPILIBNAME="mpi_abi"
-        fi
-        if test -e "$with_mpi/lib/libpmpi_abi.so" ; then
-            LPMPILIBNAME="-lpmpi_abi"
-        fi
-    else
-        if test -z "$MPILIBNAME" ; then
-            AC_MSG_ERROR([Please export \$MPILIBNAME and \$LPMPILIBNAME])
-        fi
+            AC_CHECK_LIB([pmpi_abi], [PMPI_Init], [
+                LPMPILIBNAME="-lpmpi_abi"
+            ])
+        ])
+    ])
+    if test -z "$MPILIBNAME" ; then
+        AC_MSG_ERROR([Failed to find -lmpi or -lmpi_abi])
     fi
 fi
-
-# Find a C compiler.
-# We also need to do this before the F77 and FC test to ensure that we
-# find the C preprocessor reliably.
-AC_PROG_CC
-AM_PROG_CC_C_O
 
 if test "$FROM_MPICH" != "yes" ; then
     # check mpi.h if we are not build with MPICH
@@ -832,6 +847,14 @@ if test "$enable_f08" = "yes"; then
     AC_SUBST(F08_C_AINT)
     AC_SUBST(F08_C_COUNT)
     AC_SUBST(F08_C_OFFSET)
+
+    AC_LANG_PUSH([C])
+    AC_COMPUTE_INT([F08_STATUS_SIZE], [MPI_F_STATUS_SIZE], [#include <mpi.h>], [F08_STATUS_SIZE=])
+    if test -z "$F08_STATUS_SIZE" ; then
+        AC_MSG_ERROR([MPI_F_STATUS_SIZE not defined!])
+    fi
+    AC_SUBST(F08_STATUS_SIZE)
+    AC_LANG_POP
 fi
 
 AC_LANG_PUSH([Fortran])

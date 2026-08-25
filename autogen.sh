@@ -317,7 +317,7 @@ fn_fortran() {
     rm -rf "$dir/maint"
     mkdir -p "$dir/maint"
     cp -pPR maint/local_python $dir/maint/
-    cp maint/gen_{f77,f90,f08}.py $dir/maint/
+    cp maint/gen_binding_{f77,f90,f08}.py $dir/maint/
     cp src/binding/*.txt $dir/maint/
 
     (cd $dir && ./autogen.sh)

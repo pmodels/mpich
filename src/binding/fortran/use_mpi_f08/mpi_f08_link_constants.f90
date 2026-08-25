@@ -6,7 +6,6 @@
 module mpi_f08_link_constants
 use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_loc
 use :: mpi_f08_types, only : MPI_Status
-use :: mpi_c_interface_types, only : c_Status
 
 implicit none
 
@@ -21,8 +20,8 @@ implicit none
 ! In MPICH C code, MPI_STATUS_IGNORE, MPI_STATUSES_IGNORE are pointers of bad address
 
 ! Fortran programmers use these MPI_Status variables for INOUT status arguments
-type(MPI_Status), bind(C, name="MPIR_F08_MPI_STATUS_IGNORE_OBJ"), target :: MPI_STATUS_IGNORE
-type(MPI_Status), dimension(1), bind(C, name="MPIR_F08_MPI_STATUSES_IGNORE_OBJ"), target :: MPI_STATUSES_IGNORE
+type(MPI_Status), target :: MPI_STATUS_IGNORE
+type(MPI_Status), dimension(1), target :: MPI_STATUSES_IGNORE
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -66,16 +65,14 @@ integer, dimension(1), target :: MPI_BUFFER_AUTOMATIC
 !  MPI_IN_PLACE
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-integer(c_int), bind(C, name="MPIR_F08_MPI_IN_PLACE"), target :: MPI_IN_PLACE
+integer, dimension(1), target :: MPI_IN_PLACE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !  MPI_BOTTOM
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Buffer Address Constants
-! A.1.1 p. 663
-integer(c_int), bind(C, name="MPIR_F08_MPI_BOTTOM"), target :: MPI_BOTTOM
+integer, dimension(1), target :: MPI_BOTTOM
 
 INTERFACE
 
@@ -130,6 +127,20 @@ END FUNCTION
 
 FUNCTION MPIR_F08_get_MPI_BUFFER_AUTOMATIC_c() &
     bind (C, name="MPIR_F08_get_MPI_BUFFER_AUTOMATIC") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_BOTTOM_c() &
+    bind (C, name="MPIR_F08_get_MPI_BOTTOM") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_IN_PLACE_c() &
+    bind (C, name="MPIR_F08_get_MPI_IN_PLACE") result(p)
     USE, intrinsic :: iso_c_binding, ONLY : c_ptr
     IMPLICIT NONE
     TYPE(c_ptr) :: p

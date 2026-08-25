@@ -136,12 +136,6 @@ def dump_f90_constants():
     # ----------------------------------
     G.out.append("INCLUDE 'mpifnoext.h'")
 
-    G.out.append("")
-    dump_F_type_open('MPI_Status')
-    for field in G.status_fields:
-        G.out.append("INTEGER :: %s" % field)
-    dump_F_type_close('MPI_Status')
-
     for a in G.handle_list:
         G.out.append("")
         dump_F_type_open("%s" % a)
