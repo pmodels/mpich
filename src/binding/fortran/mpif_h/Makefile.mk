@@ -15,7 +15,6 @@ lib_libf77_mpi_la_SOURCES = \
 	src/binding/fortran/mpif_h/user_proxy.c \
 	src/binding/fortran/mpif_h/fdebug.c \
 	src/binding/fortran/mpif_h/setbot.c \
-	src/binding/fortran/mpif_h/cmblk.c \
 	src/binding/fortran/mpif_h/setbotf.f
 
 lib_libf77_mpi_la_CPPFLAGS = $(f77_cppflags)
