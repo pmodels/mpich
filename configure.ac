@@ -4305,8 +4305,7 @@ AC_CONFIG_FILES([Makefile \
           packaging/pkgconfig/mpich.pc \
           packaging/envmods/mpich.module])
 if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
-                     src/binding/fortran/mpif_h/setbotf.f])
+    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h])
 fi
 if test "$enable_f08" = "yes" ; then
     AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
