@@ -8,7 +8,6 @@
 /mpif_h/mpif77
 /mpif_h/fproto.h
 /mpif_h/mpif.h
-/mpif_h/mpif.h.in
 /mpif_h/fortran_profile.h
 /mpif_h/fortran_binding.c
 

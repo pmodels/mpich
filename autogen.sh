@@ -938,8 +938,6 @@ fn_abi
 
 if [ $do_f77 = "yes" ] ; then
     fn_f77
-else
-    touch src/binding/fortran/mpif_h/mpif.h.in
 fi
 if [ $do_f90 = "yes" ] ; then
     fn_f90
