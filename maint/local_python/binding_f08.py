@@ -1200,11 +1200,10 @@ def dump_mpi_f08_types():
     filter_f08_sizeof_list()
 
     dump_F_module_open("mpi_f08_types")
-    G.out.append("USE, intrinsic :: iso_c_binding, ONLY: c_int")
-    G.out.append("USE :: mpi_c_interface_types, ONLY: c_Count, MPI_C_Status")
+    G.out.append("USE :: mpi_c_interface_types, ONLY: MPI_C_Status")
     G.out.append("IMPLICIT NONE")
     G.out.append("")
-    G.out.append("private :: c_int, c_Count, MPI_C_Status")
+    G.out.append("private :: MPI_C_Status")
     dump_handle_types()
     dump_handle_f2c()
     dump_status_type()
@@ -1279,8 +1278,6 @@ def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
     elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif 'skip-mpix' in G.opts and RE.match(r'mpix_', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif 'skip-mpix' in G.opts and RE.match(r'mpix_', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
@@ -1625,16 +1622,12 @@ def dump_compile_constants_f90(f):
         for l in G.copyright_f90:
             print(l, file=Out)
         print("module mpi_f08_compile_constants", file=Out)
-        print("use,intrinsic :: iso_c_binding, only: c_int", file=Out)
         print("use :: mpi_f08_types", file=Out)
-        print("use :: mpi_c_interface_types, only: c_Aint, c_Count, c_Offset", file=Out)
-        for a in ['c_int', 'c_Aint', 'c_Count', 'c_Offset']:
-            print("private :: %s" % a, file=Out)
 
-        print("integer, parameter :: %-32s = %s" % ('MPI_INTEGER_KIND', 'c_int'), file=Out)
-        print("integer, parameter :: %-32s = %s" % ('MPI_ADDRESS_KIND', 'c_Aint'), file=Out)
-        print("integer, parameter :: %-32s = %s" % ('MPI_OFFSET_KIND', 'c_Offset'), file=Out)
-        print("integer, parameter :: %-32s = %s" % ('MPI_COUNT_KIND', 'c_Count'), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_INTEGER_KIND', G.opts['integer-kind']), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_ADDRESS_KIND', G.opts['address-kind']), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_OFFSET_KIND', G.opts['offset-kind']), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_COUNT_KIND', G.opts['count-kind']), file=Out)
 
         # -- all integer constants
         for name in G.mpih_defines:
@@ -1668,6 +1661,28 @@ def dump_compile_constants_f90(f):
 
         print("end module mpi_f08_compile_constants", file=Out)
 
+def dump_c_interface_types_f90(f):
+    print("  --> [%s]" % f)
+    with open(f, "w") as Out:
+        for l in G.copyright_f90:
+            print(l, file=Out)
+        print("module mpi_c_interface_types", file=Out)
+        print("use, intrinsic :: iso_c_binding", file=Out)
+        print("implicit none", file=Out)
+        print("", file=Out)
+        for a in G.handle_list:
+            if RE.match(r'MPIX?_(\w+)', a):
+                c_name = "c_" + RE.m.group(1)
+            print("integer, parameter :: %s = %s" % (c_name, G.mpih_ctypes[a]), file=Out)
+        print("", file=Out)
+        print("type, bind(c) :: MPI_C_Status", file=Out)
+        print("    integer(c_int) :: dummy(%s)" % G.mpih_defines['MPI_F_STATUS_SIZE'], file=Out)
+        print("end type MPI_C_Status", file=Out)
+        print("", file=Out)
+        print("end module mpi_c_interface_types", file=Out)
+
+
+#------------------------------------------
 """load_mpi_h - loads mpi.h or MPICH's mpi_mpich.h.in
    use regex, it only works with -
    * mpi.h from https://github.com/mpi-forum/mpi-abi-stubs
@@ -1693,11 +1708,16 @@ def load_mpi_h(f):
             raise Exception("Unexpected autoconf macro " + name)
 
     # load constants into G.mpih_defines
+    # load MPI handle types into G.mpih_ctypes
     with open(f, "r") as In:
         for line in In:
             # trim trailing comments
             line = re.sub(r'\s+\/\*.*', '', line)
-            if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
+            if RE.match(r'typedef int (MPIX?_\w+)', line):
+                G.mpih_ctypes[RE.m.group(1)] = 'c_int'
+            elif RE.match(r'typedef struct .*\*\s*(MPIX?_\w+)', line):
+                G.mpih_ctypes[RE.m.group(1)] = 'c_intptr_t'
+            elif RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
                 # direct macros
                 (name, val) = RE.m.group(1, 2)
                 if RE.match(r'MPI_ABI_(Aint|Offset|Count)', name):
@@ -1730,3 +1750,4 @@ def load_mpi_h(f):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val
+

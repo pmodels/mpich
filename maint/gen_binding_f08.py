@@ -37,7 +37,13 @@ def main():
 
     # load mpi.h
     G.mpih_defines = {}
+    G.mpih_ctypes = {}
     load_mpi_h(G.opts['mpi-h'])
+    if 'skip-mpix' not in G.opts:
+        mpix_h = re.sub(r'(mpi\.h|mpi_mpich\.h\.in)$', 'mpix.h', G.opts['mpi-h'])
+        if os.path.exists(mpix_h):
+            load_mpi_h(mpix_h)
+    G.handle_list = [a for a in G.handle_list if a in G.mpih_ctypes]
 
     # f08_cdesc.c
     G.out = []
@@ -162,6 +168,10 @@ def main():
     # mpi_f08_compile_constants.f90
     f = "%s/mpi_f08_compile_constants.f90" % G.f08_dir
     dump_compile_constants_f90(f)
+
+    # mpi_c_interface_types.f90
+    f = "%s/mpi_c_interface_types.f90" % G.f08_dir
+    dump_c_interface_types_f90(f)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

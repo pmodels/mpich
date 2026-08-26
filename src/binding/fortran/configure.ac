@@ -840,23 +840,6 @@ else
     COUNT_KIND=$OFFSET_KIND
 fi
 
-if test "$enable_f08" = "yes"; then
-    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_AINT], [F08_C_AINT])
-    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_OFFSET], [F08_C_OFFSET])
-    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_COUNT], [F08_C_COUNT])
-    AC_SUBST(F08_C_AINT)
-    AC_SUBST(F08_C_COUNT)
-    AC_SUBST(F08_C_OFFSET)
-
-    AC_LANG_PUSH([C])
-    AC_COMPUTE_INT([F08_STATUS_SIZE], [MPI_F_STATUS_SIZE], [#include <mpi.h>], [F08_STATUS_SIZE=])
-    if test -z "$F08_STATUS_SIZE" ; then
-        AC_MSG_ERROR([MPI_F_STATUS_SIZE not defined!])
-    fi
-    AC_SUBST(F08_STATUS_SIZE)
-    AC_LANG_POP
-fi
-
 AC_LANG_PUSH([Fortran])
 AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
                 [pac_cv_fort90_real8],[
@@ -1132,6 +1115,7 @@ if test "$skip_gen_bindings" = no ; then
             cmd_f08="$cmd_f08 -call-pmpi"
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
+        cmd_f08="$cmd_f08 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
         AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])
     fi
 fi
@@ -1166,7 +1150,4 @@ AC_CONFIG_FILES([Makefile \
                  env/mpifort.sh \
                  env/mpifort.bash \
                  localdefs])
-if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([use_mpi_f08/mpi_c_interface_types.f90])
-fi
 AC_OUTPUT
