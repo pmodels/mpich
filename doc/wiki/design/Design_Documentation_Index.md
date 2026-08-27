@@ -38,6 +38,9 @@
 	- [Collectives Framework](Collectives_framework.md)
 	- [Overriding Collective Functions](Overriding_Collective_Functions.md)
 
+- Language Bindings
+	- [Fortran Bindings](Fortran_Binding.md)
+
 - Debugging
 	- [Debug Event Logging](Debug_Event_Logging.md)
 	- [Debugger Message Queue Access](Debugger_Message_Queue_Access.md)
@@ -68,7 +71,7 @@
 
 - RMA
 	- [ADI Interface](ADI_RMA_Interface.md)
-	- [New Dessign](New_RMA_Design.md)
+	- [New Design](New_RMA_Design.md)
 	- [Implementation](RMA_Implementation.md)
 	- [Old RMA Design](RMA_Design.md)
 
