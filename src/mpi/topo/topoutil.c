@@ -295,6 +295,42 @@ static int MPIR_Topology_delete_fn(ABI_Comm comm ATTRIBUTE((unused)),
  *     to be MPI_PROC_NULL.
  */
 
+/* The neighborhood alltoall-type collectives post all of their sends and
+ * receives with a single tag, so the messages exchanged between one pair of
+ * MPI processes are matched in the order in which they are posted.  Whenever
+ * the neighbor lists contain duplicate edges the posting order is therefore
+ * part of the semantics, and the two topology families define it differently:
+ *
+ *   - Cartesian.  A dimension that is periodic and of size 1 or 2 has
+ *     rank_source == rank_dest, so its two blocks are exchanged with the same
+ *     MPI process.  MPI-4.1 Example 8.10 spells out the required matching: the
+ *     block sent in the negative direction of dimension d is received into
+ *     block 2*d+1 (the positive direction block) of the neighbor, and the
+ *     block sent in the positive direction is received into block 2*d.  With
+ *     the sends posted in list order, that matching is obtained by posting the
+ *     receives with the two blocks of each dimension swapped.
+ *
+ *     Note that reversing the whole list, which is what this code used to do,
+ *     is not equivalent.  It agrees with the pairwise swap only as long as no
+ *     more than one pair of duplicate edges shares an MPI process; with two or
+ *     more periodic dimensions of size 1 every one of their blocks is
+ *     exchanged with self, and a full reversal then pairs blocks belonging to
+ *     different dimensions (for ndims == 3 and dims == {1,1,2} it matched the
+ *     block sent in -x with the block received in +y).
+ *
+ *   - Graph and distributed graph.  The neighbor sequence is user defined and
+ *     may repeat an MPI process any number of times.  The equivalent code in
+ *     MPI-4.1 Section 8.6 posts the receives in srcs[] order, so the k-th edge
+ *     to an MPI process matches the k-th edge from it and the receives must be
+ *     posted in the natural order.
+ */
+int MPIR_Topo_nhb_swap_recv_pairs(MPIR_Comm * comm_ptr)
+{
+    MPIR_Topology *topo_ptr = MPIR_Topology_get(comm_ptr);
+
+    return (topo_ptr && topo_ptr->kind == MPI_CART);
+}
+
 int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegree, int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;

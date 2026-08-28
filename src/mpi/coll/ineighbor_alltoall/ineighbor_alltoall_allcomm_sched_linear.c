@@ -19,7 +19,8 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint s
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int k, l;
+    int i, k, l;
+    int swap_recv_pairs;
     int *srcs, *dsts;
     MPI_Aint sendtype_extent, recvtype_extent;
     MPIR_CHKLMEM_DECL();
@@ -42,20 +43,23 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint s
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Cartesian graph may result in multiple edges going to the same process when it is
-     * periodic and dim is 1 or 2, in which case, both left and right neighbor (in a circular sense) points to
-     * self or the other process. When that occurs, we are sending two messages to the
-     * same receiver and receiving two messages from the same sender. Both messages are using
-     * the same tag, thus we need reverse the order of recvs to ensure correct matching.
-     * In the example of 1-dim cartesian graph, if we send in the order of left and right,
-     * the target need receive in the order of right and left to receive the correct messages.
-     *
-     * Note: duplicate graph edges can only result from MPI_Cart_create when certain
-     * dimension is periodic and size is 1 or 2. And the resulting graph edges will be
-     * in fixed orders, which the code here takes advantage of. A general graph will not
-     * contain duplicated edges, and the order of send and recv should not matter.
-     */
-    for (l = indegree - 1; l >= 0; l--) {
+    /* All the messages of the collective share one tag, so messages exchanged
+     * with the same MPI process are matched in the order they are posted, and
+     * the neighbor lists may contain the same MPI process more than once: a
+     * Cartesian dimension that is periodic and of size 1 or 2 has
+     * rank_source == rank_dest, and a (distributed) graph topology may simply
+     * repeat an edge.  On a Cartesian communicator MPI-4.1 Example 8.10
+     * requires the block sent in the negative direction of dimension d to be
+     * received into block 2*d+1 of the neighbor and vice versa, which is
+     * obtained by posting the receives with the two blocks of each dimension
+     * swapped; on the graph topologies the equivalent code of MPI-4.1
+     * Section 8.6 matches the k-th edge to an MPI process with the k-th edge
+     * from it, so the receives are posted in list order.  See
+     * MPIR_Topo_nhb_swap_recv_pairs() in src/mpi/topo/topoutil.c. */
+    swap_recv_pairs = MPIR_Topo_nhb_swap_recv_pairs(comm_ptr);
+    MPIR_Assert(!swap_recv_pairs || indegree % 2 == 0);
+    for (i = 0; i < indegree; ++i) {
+        l = swap_recv_pairs ? (i ^ 1) : i;
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);

@@ -134,6 +134,7 @@ noinst_PROGRAMS =      \
     neighb_alltoallv   \
     neighb_alltoallw   \
     neighb_alltoallw2  \
+    neighb_dup_edges   \
     bcast              \
     bcast_comm_world_only \
     bcast_gpu          \
