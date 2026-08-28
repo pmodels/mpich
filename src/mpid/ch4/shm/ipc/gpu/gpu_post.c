@@ -525,6 +525,8 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                 uintptr_t offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
                 ipc_handle->direct = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
+                int local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
+                ipc_handle->gpu.global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
                 goto fn_done;
             }
         }
