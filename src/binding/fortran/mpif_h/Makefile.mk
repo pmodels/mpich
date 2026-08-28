@@ -25,13 +25,15 @@ if BUILD_LIBF77_PMPI
 mpifort_convenience_libs += lib/libf77_pmpi.la
 noinst_LTLIBRARIES += lib/libf77_pmpi.la
 
-lib_libf77_pmpi_la_SOURCES = mpif_h/fortran_binding.c
+lib_libf77_pmpi_la_SOURCES = \
+        mpif_h/fortran_binding.c \
+        mpif_h/f2c.c
 
 # build "pmpi_xxx_" f77 public functions
 lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags)
 
 # build "mpi_xxx_" f77 public functions
-lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
+lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI
 endif BUILD_LIBF77_PMPI
 
 noinst_HEADERS += \

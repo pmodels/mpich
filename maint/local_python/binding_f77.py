@@ -1141,22 +1141,42 @@ def dump_profiling(name, param_str, return_type, is_cptr):
     # use e.g. mpi_send_ to define the function
     use_idx = 2
 
-    def dump_multiple_pragma_weak(use_only_mpi_names):
-        for nm in names:
-            dump_mpi_decl(nm, param_str)
+    def dump_multiple_pragma_weak():
+        for i in range(len(names)):
+            dump_mpi_decl(names[i], param_str)
+        for i in range(len(names)):
+            G.profile_out.append("#ifndef %s" % defines[i])
+            dump_mpi_decl(pnames[i], param_str)
+            G.profile_out.append("#endif")
+
         G.profile_out.append("")
         for i in range(len(names)):
             G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
             for j in range(len(names)):
-                if use_only_mpi_names:
-                    if i == j:
-                        continue
-                    G.profile_out.append("#pragma weak %s = %s" % (names[j], names[i]))
-                else:    
-                    G.profile_out.append("#pragma weak %s = %s" % (names[j], pnames[i]))
+                G.profile_out.append("#pragma weak %s = %s" % (names[j], pnames[i]))
+            for j in range(len(names)):
+                if i == j:
+                    continue
+                G.profile_out.append("#pragma weak %s = %s" % (pnames[j], pnames[i]))
         G.profile_out.append("#else")
         G.profile_out.append("#error missing F77 name mangling")
         G.profile_out.append("#endif")
+        G.profile_out.append("")
+
+    def dump_weak_attribute():
+        for i in range(len(names)):
+            G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
+            for j in range(len(names)):
+                dump_mpi_decl_weak_attr(names[j], param_str, pnames[i])
+            for j in range(len(names)):
+                if i == j:
+                    continue
+                else:
+                    dump_mpi_decl_weak_attr(pnames[j], param_str, pnames[i])
+        G.profile_out.append("#else")
+        G.profile_out.append("#error missing F77 name mangling")
+        G.profile_out.append("#endif")
+        G.profile_out.append("")
 
     def dump_elif_pragma_weak(have_pragma):
         G.profile_out.append("#elif defined(%s)" % have_pragma)
@@ -1173,59 +1193,20 @@ def dump_profiling(name, param_str, return_type, is_cptr):
         G.profile_out.append("#endif")
         G.profile_out.append("")
 
-    def dump_weak_attribute(use_only_mpi_names):
-        for i in range(len(names)):
-            G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
-            for j in range(len(names)):
-                if use_only_mpi_names:
-                    if i == j:
-                        dump_mpi_decl(names[i], param_str)
-                    else:
-                        dump_mpi_decl_weak_attr(names[j], param_str, names[i])
-                else:    
-                    dump_mpi_decl_weak_attr(names[j], param_str, pnames[i])
-        G.profile_out.append("#else")
-        G.profile_out.append("#error missing F77 name mangling")
-        G.profile_out.append("#endif")
-
-    def dump_pmpi_decl_multiple_pragma_weak():
-        for i in range(len(names)):
-            G.profile_out.append("#ifndef %s" % defines[i])
-            dump_mpi_decl(pnames[i], param_str)
-            G.profile_out.append("#endif")
-
-        for i in range(len(names)):
-            G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
-            for j in range(len(names)):
-                if i != j:
-                    G.profile_out.append("#pragma weak %s = %s" % (pnames[j], pnames[i]))
-        G.profile_out.append("#else")
-        G.profile_out.append("#error missing F77 name mangling")
-        G.profile_out.append("#endif")
-
-    def dump_pmpi_decl_weak_attribute():
-        for i in range(len(names)):
-            G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
-            for j in range(len(names)):
-                if i != j:
-                    dump_mpi_decl_weak_attr(pnames[j], param_str, pnames[i])
-        G.profile_out.append("#else")
-        G.profile_out.append("#error missing F77 name mangling")
-        G.profile_out.append("#endif")
-
-    def dump_define_mpi_as_pmpi():
+    def dump_define_pmpi():
         for i in range(len(names)):
             G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
             G.profile_out.append("#define %s %s" % (names[use_idx], pnames[i]))
         G.profile_out.append("#endif")
         G.profile_out.append("")
 
-    def dump_define_mpi_as_mangle():
+    def dump_define_mpi():
         for i in range(len(names)):
             if i != use_idx:
                 G.profile_out.append("#%s defined(%s)" % (get_if_or_elif(i), defines[i]))
                 G.profile_out.append("#define %s %s" % (names[use_idx], names[i]))
         G.profile_out.append("#endif")
+        G.profile_out.append("")
 
     # ---- general util ----
     def get_if_or_elif(i):
@@ -1243,50 +1224,23 @@ def dump_profiling(name, param_str, return_type, is_cptr):
     # ---------        
     G.profile_out.append("")
     G.profile_out.append("/* ---- %s ---- */" % name)
-    G.profile_out.append("#if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES)")
+    G.profile_out.append("#if defined(USE_WEAK_SYMBOLS)")
     G.profile_out.append("#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)")
-    dump_multiple_pragma_weak(False)
-    G.profile_out.append("")
+    dump_multiple_pragma_weak()
+    G.profile_out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
+    dump_weak_attribute()
     dump_elif_pragma_weak("HAVE_PRAGMA_WEAK_ALIAS")
     dump_elif_pragma_weak("HAVE_PRAGMA_HP_SEC_DEF")
     dump_elif_pragma_weak("HAVE_PRAGMA_CRI_DUP")
-    G.profile_out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
-    dump_weak_attribute(False)
-    G.profile_out.append("")
     G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK_ALIAS, HAVE_ATTR_WEAK_ALIAS */")
-    G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS && !USE_ONLY_MPI_NAMES */")
-    G.profile_out.append("")
-
-    G.profile_out.append("#if defined(USE_WEAK_SYMBOLS) && defined(USE_ONLY_MPI_NAMES)")
-    G.profile_out.append("#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)")
-    dump_multiple_pragma_weak(True)
-    # no weak pragma since the names will be identical
-    G.profile_out.append("")
-    G.profile_out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
-    dump_weak_attribute(True)
-    G.profile_out.append("")
-    G.profile_out.append("#endif  /* HAVE_MULTIPLE_PRAGMA_WEAK, HAVE_PRAGMA_WEAK_ALIAS, HAVE_ATTR_WEAK_ALIAS */")
-    G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS && USE_ONLY_MPI_NAMES */")
+    G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS */")
     G.profile_out.append("")
 
     G.profile_out.append("#ifndef MPICH_MPI_FROM_PMPI")
-
-    G.profile_out.append("#if defined(USE_WEAK_SYMBOLS)")
-    G.profile_out.append("#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)")
-    G.profile_out.append("")
-    dump_pmpi_decl_multiple_pragma_weak()
-    G.profile_out.append("")
-    G.profile_out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
-    dump_pmpi_decl_weak_attribute()
-    G.profile_out.append("")
-    G.profile_out.append("#endif")
-    G.profile_out.append("#endif  /* USE_WEAK_SYMBOLS */")
-    dump_define_mpi_as_pmpi()
-    G.profile_out.append("")
+    dump_define_pmpi()
 
     G.profile_out.append("#else  /* MPICH_MPI_FROM_PMPI */")
-    dump_define_mpi_as_mangle()
-    G.profile_out.append("")
+    dump_define_mpi()
 
     G.profile_out.append("#endif  /* MPICH_MPI_FROM_PMPI */")
 
