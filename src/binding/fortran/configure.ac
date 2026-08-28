@@ -348,15 +348,12 @@ AC_SUBST(VISIBILITY_CFLAGS)
 # check weak symbols, needed by f77 binding
 # duplicated from mpich configure
 
-# If build with MPICH, if paraent configure set NEEDSPLIB to yes, skip weak symbol check
-if test "$NEEDSPLIB" != "yes" ; then
-    PAC_PROG_C_WEAK_SYMBOLS(enable_weak_symbols=yes,enable_weak_symbols=no)
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" -o "$pac_cv_prog_c_weak_symbols" = "attr weak alias" ; then
-        AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
-        NEEDSPLIB=no
-    else
-        NEEDSPLIB=yes
-    fi
+PAC_PROG_C_WEAK_SYMBOLS
+if test "$pac_cv_prog_c_has_weak_alias" = "yes" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDSPLIB=no
+else
+    NEEDSPLIB=yes
 fi
 AM_CONDITIONAL([BUILD_LIBF77_PMPI],[test "$NEEDSPLIB" = "yes"])
 

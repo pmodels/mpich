@@ -218,6 +218,12 @@ dnl weak symbols, not weak aliases
 dnl 
 dnl D*/
 AC_DEFUN([PAC_PROG_C_WEAK_SYMBOLS],[
+    AC_ARG_ENABLE(weak-symbols,
+        AS_HELP_STRING([--enable-weak-symbols], [Enable weak symbols]),
+        [],[enable_weak_symbols=yes])
+
+    if test "$enable_weak_symbols" = "yes" ; then
+
     pragma_extra_message=""
     AC_CACHE_CHECK([for type of weak symbol alias support], pac_cv_prog_c_weak_symbols,[
     dnl -------------------------------------
@@ -318,6 +324,10 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
     fi
     ]) dnl AC_CACHE_CHECK
 
+    else
+        pac_cv_prog_c_weak_symbols=no
+    fi
+
     AC_CACHE_CHECK([for multiple weak symbol alias support], pac_cv_prog_c_mult_weak_symbols,[
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak alias" ; then
         PAC_COMPLINK_IFELSE([AC_LANG_SOURCE([[
@@ -341,6 +351,7 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
     fi
     ]) dnl AC_CACHE_CHECK
 
+    pac_cv_prog_c_has_weak_alias=no
     case "$pac_cv_prog_c_weak_symbols" in
         "no")
             ;;
@@ -348,30 +359,28 @@ int main(int argc, char **argv) { return Weak_Fn_A(0) + Weak_Fn_B(0);}
             AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
             ;;
         "pragma weak alias")
+            pac_cv_prog_c_has_weak_alias=yes
             AC_DEFINE(HAVE_PRAGMA_WEAK_ALIAS,1,[Supports weak alias pragma])
             ;;
         "attr weak")
             AC_DEFINE(HAVE_ATTR_WEAK,1,[Supports weak attribute])
             ;;
         "attr weak alias")
+            pac_cv_prog_c_has_weak_alias=yes
             AC_DEFINE(HAVE_ATTR_WEAK_ALIAS,1,[Supports weak alias attribute])
             ;;
         "pragma _HP")
+            pac_cv_prog_c_has_weak_alias=yes
             AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[HP style weak pragma])
             ;;
         "pragma _CRI")
+            pac_cv_prog_c_has_weak_alias=yes
             AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
             ;;
     esac
 
     if test "$pac_cv_prog_c_mult_weak_symbols" != "no" ; then
         AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined])
-    fi
-
-    if test "$pac_cv_prog_c_weak_symbols" = "no" ; then
-        ifelse([$2],,:,[$2])
-    else
-        ifelse([$1],,:,[$1])
     fi
 ])
 

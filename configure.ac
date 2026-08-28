@@ -554,11 +554,6 @@ AC_ARG_ENABLE([predefined-refcount],
 		       depends on --enable-thread-cs choice)]),[],
               [enable_predefined_refcount=default])
 
-AC_ARG_ENABLE(weak-symbols,
-	AS_HELP_STRING([--enable-weak-symbols],
-			[Use weak symbols to implement PMPI routines (default)]),,
-		enable_weak_symbols=yes)
-
 AC_ARG_ENABLE(qmpi,
 	AS_HELP_STRING([--enable-qmpi],
 			[Enable QMPI support (default)]),,
@@ -984,13 +979,12 @@ if test "$enable_extended_context_bits" = "yes" ; then
     AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
-if test $enable_weak_symbols = yes ; then
-    # Turn off weak symbols if they aren't available
-    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
-fi
+PAC_PROG_C_WEAK_SYMBOLS
 
-NEEDSPLIB=yes
-if test $enable_weak_symbols = "yes" ; then
+if test "$pac_cv_prog_c_weak_symbols" = "no" ; then
+    NEEDSPLIB=yes
+else
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
     NEEDSPLIB=no
 fi
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
