@@ -4213,6 +4213,22 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+AC_ARG_ENABLE([fortran-call-pmpi],
+              [AS_HELP_STRING([--enable-fortran-call-pmpi],
+                              [If enabled, Fortran routines will call C PMPI functions, skipping
+                               profiling via C MPI interface. If disabled, Fortran routines will
+                               call C MPI functions to allow profiling at the C interface; profiling
+                               at both the Fortran interface and the C interface are enabled,
+                               potentially resulting in double profiling.
+                               The default is no to allow profiling at both interfaces.
+                               ])],
+              [],
+              [enable_fortran_call_pmpi=no])
+
+if test "$enable_fortran_call_pmpi" = "yes" ; then
+    AC_DEFINE([FORTRAN_CALL_PMPI], 1, [Define for the Fortran binding to call C PMPI functions])
+fi
+
 dnl If bindings have been pre-generated, one may use this option to skip re-generating the bindings.
 dnl
 AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip generating bindings])],
