@@ -14,6 +14,18 @@
 #define MPL_free(p)              free(p)
 #endif
 
+#ifdef FORTRAN_CALL_PMPI
+#define MPI_Comm_create_keyval PMPI_Comm_create_keyval
+#define MPI_Win_create_keyval  PMPI_Win_create_keyval
+#define MPI_Type_create_keyval PMPI_Type_create_keyval
+#define MPI_Op_create          PMPI_Op_create
+#define MPI_Comm_create_errhandler    PMPI_Comm_create_errhandler
+#define MPI_Win_create_errhandler     PMPI_Win_create_errhandler
+#define MPI_File_create_errhandler    PMPI_File_create_errhandler
+#define MPI_Session_create_errhandler PMPI_Session_create_errhandler
+#define MPI_Grequest_start     PMPI_Grequest_start
+#endif
+
 /* ---- attr -----*/
 struct F77_attr_state {
     int keyval;

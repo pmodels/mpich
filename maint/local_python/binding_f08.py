@@ -141,6 +141,11 @@ def dump_f08_wrappers_c(func, is_large):
         G.out.append("")
         for l in code_list:
             G.out.append(l)
+
+        c_func_name = get_function_name(func, is_large)
+        if 'call-pmpi' in G.opts:
+            c_func_name = 'P' + c_func_name
+
         G.out.append("err = %s(%s);" % (get_function_name(func, is_large), ', '.join(c_arg_list)))
         G.out.append("")
         for l in end_list:
@@ -774,10 +779,15 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
         c_name = "MPII_greq_start"
     elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large and has_mpix:
-        c_name = "PMPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
+        c_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:
         # uses PMPI c binding directly
-        c_name = 'P' + get_function_name(func, is_large)
+        c_name = get_function_name(func, is_large)
+
+    if 'call-pmpi' in G.opts:
+        if re.match(r'MPIX?_', c_name):
+            c_name = 'P' + c_name
+
     dump_interface_function(func, name, c_name, is_large)
 
 def dump_interface_function(func, name, c_name, is_large):

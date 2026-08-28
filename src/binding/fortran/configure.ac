@@ -213,6 +213,22 @@ AC_ARG_ENABLE([two-level-namespace],
               [],
               [enable_two_level_namespace=no])
 
+AC_ARG_ENABLE([fortran-call-pmpi],
+              [AS_HELP_STRING([--enable-fortran-call-pmpi],
+                              [If enabled, Fortran routines will call C PMPI functions, skipping
+                               profiling via C MPI interface. If disabled, Fortran routines will
+                               call C MPI functions to allow profiling at the C interface; profiling
+                               at both the Fortran interface and the C interface are enabled,
+                               potentially resulting in double profiling.
+                               The default is no to allow profiling at both interfaces.
+                               ])],
+              [],
+              [enable_fortran_call_pmpi=no])
+
+if test "$enable_fortran_call_pmpi" = "yes" ; then
+    AC_DEFINE([FORTRAN_CALL_PMPI], 1, [Define for the Fortran binding to call C PMPI functions])
+fi
+
 FCLIB_LDFLAGS=
 AC_SUBST([FCLIB_LDFLAGS])
 
@@ -1041,6 +1057,9 @@ if test "$skip_gen_bindings" = no ; then
         if test "$has_mpix" = "no" ; then
             cmd_f77="$cmd_f77 -skip-mpix"
         fi
+        if test "$enable_fortran_call_pmpi" = "yes" ; then
+            cmd_f77="$cmd_f77 -call-pmpi"
+        fi
         cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
         # if mpi_h is mpi_mpich.in, pass in those autoconf macro values
         if test -n "$MPI_MAX_PROCESSOR_NAME" ; then
@@ -1085,6 +1104,9 @@ if test "$skip_gen_bindings" = no ; then
         fi
         if test "$enable_romio" = "no" ; then
             cmd_f08="$cmd_f08 -no-mpiio"
+        fi
+        if test "$enable_fortran_call_pmpi" = "yes" ; then
+            cmd_f08="$cmd_f08 -call-pmpi"
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
         AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])

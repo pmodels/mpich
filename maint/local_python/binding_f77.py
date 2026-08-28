@@ -896,6 +896,10 @@ def dump_f77_c_func(func, is_cptr=False):
     elif re.match(r'MPI_Grequest_start$', func['name'], re.IGNORECASE):
         c_func_name = "MPII_greq_start"
 
+    if 'call-pmpi' in G.opts:
+        if re.match(r'MPIX?_', c_func_name):
+            c_func_name = 'P' + c_func_name
+
     if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"
         return_type = "int"
@@ -1215,15 +1219,6 @@ def dump_profiling(name, param_str, return_type, is_cptr):
             G.profile_out.append("#define %s %s" % (names[use_idx], pnames[i]))
         G.profile_out.append("#endif")
         G.profile_out.append("")
-
-        # This defines the routine that we call, which must be the PMPI version
-        # since we're renaming the Fortran entry as the pmpi version.  The MPI name
-        # must be undefined first to prevent any conflicts with previous renamings.
-        G.profile_out.append("#ifdef F77_USE_PMPI")
-        use_name = name[0:5].upper() + name[5:]
-        G.profile_out.append("#undef %s" % use_name)
-        G.profile_out.append("#define %s P%s" % (use_name, use_name))
-        G.profile_out.append("#endif")
 
     def dump_define_mpi_as_mangle():
         for i in range(len(names)):

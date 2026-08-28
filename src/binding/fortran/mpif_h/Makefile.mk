@@ -28,7 +28,7 @@ noinst_LTLIBRARIES += lib/libf77_pmpi.la
 lib_libf77_pmpi_la_SOURCES = mpif_h/fortran_binding.c
 
 # build "pmpi_xxx_" f77 public functions
-lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags) -DF77_USE_PMPI
+lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags)
 
 # build "mpi_xxx_" f77 public functions
 lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
