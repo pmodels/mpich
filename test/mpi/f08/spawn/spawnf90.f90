@@ -5,6 +5,7 @@
 
         program main
         use mpi_f08
+        implicit none
         integer errs, err
         integer rank, size, rsize, i
         integer np

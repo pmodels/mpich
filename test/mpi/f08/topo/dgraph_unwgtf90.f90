@@ -9,7 +9,7 @@
 
       logical function validate_dgraph(dgraph_comm)
       use mpi_f08
-
+      implicit none
       type(MPI_Comm) dgraph_comm
       integer     comm_topo
       integer     src_sz, dest_sz
@@ -90,6 +90,7 @@
       end
 
       integer function ring_rank(world_size, in_rank)
+      implicit none
       integer world_size, in_rank
       if (in_rank .ge. 0 .and. in_rank .lt. world_size) then
           ring_rank = in_rank
@@ -111,7 +112,7 @@
 
       program dgraph_unwgt
       use mpi_f08
-
+      implicit none
       integer    ring_rank
       external   ring_rank
       logical    validate_dgraph

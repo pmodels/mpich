@@ -7,6 +7,7 @@
 
        program main
        use mpi_f08
+       implicit none
        integer errs, ierr, code(2), newerrclass, eclass
        character*(MPI_MAX_ERROR_STRING) errstring
        integer rlen
@@ -107,6 +108,7 @@
 !
        subroutine myerrhanfunc( comm, errcode )
        use mpi_f08
+       implicit none
        integer errcode
        TYPE(MPI_Comm) comm
        integer rlen, ierr

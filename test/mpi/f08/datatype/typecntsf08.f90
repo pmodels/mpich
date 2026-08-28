@@ -7,6 +7,7 @@
 
        program main
        use mpi_f08
+       implicit none
        integer errs, ierr
        TYPE(MPI_Datatype) ntype1, ntype2
 !
@@ -34,6 +35,7 @@
 !
        subroutine explore( dtype, mycomb, errs )
        use mpi_f08
+       implicit none
        integer mycomb, errs
        TYPE(MPI_Datatype) dtype
        integer ierr

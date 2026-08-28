@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer NUM_INTS
       parameter (NUM_INTS=2)
       integer maxSize

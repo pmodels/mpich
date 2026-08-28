@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer errs, ierr, intsize
       integer i, counts(10)
       integer(kind=MPI_ADDRESS_KIND) displs(10)

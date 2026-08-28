@@ -5,6 +5,7 @@
 
         program main
         use mpi
+        implicit none
         integer ierr
         integer errs
         integer nints, nadds, ndtypes, combiner

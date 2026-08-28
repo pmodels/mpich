@@ -6,6 +6,7 @@
 program main
     use mpi
     use, intrinsic :: iso_c_binding
+    implicit none
     integer ierr, errs
     integer(kind=MPI_ADDRESS_KIND) :: sz
     type(c_ptr) :: baseptr

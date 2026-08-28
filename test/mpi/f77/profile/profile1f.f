@@ -4,6 +4,7 @@ C     See COPYRIGHT in top-level directory
 C
 
        program main
+      implicit none
        include "mpif.h"
        integer ierr
        integer smsg(3), rmsg(3), toterrs, wsize, wrank
@@ -56,6 +57,7 @@ C
        end
 C
        subroutine mpi_send( smsg, count, dtype, dest, tag, comm, ierr )
+      implicit none
        include "mpif.h"
        integer count, dtype, dest, tag, comm, ierr
        integer smsg(count)
@@ -70,6 +72,7 @@ C
 C
       subroutine mpi_recv( rmsg, count, dtype, src, tag, comm, status,
      $     ierr ) 
+      implicit none
        include "mpif.h"
        integer count, dtype, src, tag, comm, status(MPI_STATUS_SIZE),
      $      ierr 
@@ -84,6 +87,7 @@ C
        end
 C
        subroutine init_counts()
+      implicit none
        common /myinfo/ calls, amount, rcalls, ramount
        integer calls, amount, rcalls, ramount
        calls = 0
@@ -93,6 +97,7 @@ C
        end
 C
        subroutine mpi_pcontrol( ierr )
+      implicit none
        integer ierr
        return
        end

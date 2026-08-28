@@ -9,6 +9,7 @@
 !
       subroutine uop( cin, cout, count, datatype )
       use mpi_f08
+      implicit none
       integer cin(*), cout(*)
       integer count
       TYPE(MPI_Datatype) datatype
@@ -26,6 +27,7 @@
 
       program main
       use mpi_f08
+      implicit none
       external uop
       integer ierr, errs
       integer count, vin(65000), vout(65000), i, size

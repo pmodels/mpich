@@ -7,6 +7,7 @@
 
       program main
       use mpi_f08
+      implicit none
       integer (kind=MPI_ADDRESS_KIND) asize
 
       integer (kind=MPI_OFFSET_KIND) offset
@@ -117,6 +118,7 @@
       end
 !
       subroutine comm_errh_fn( comm, ec )
+      implicit none
       integer comm, ec
       common /ec/ iseen
       integer iseen(3)
@@ -127,6 +129,7 @@
       end
 !
       subroutine win_errh_fn( win, ec )
+      implicit none
       integer win, ec
       common /ec/ iseen
       integer iseen(3)
@@ -136,6 +139,7 @@
 !
       end
       subroutine file_errh_fn( fh, ec )
+      implicit none
       integer fh, ec
       common /ec/ iseen
       integer iseen(3)

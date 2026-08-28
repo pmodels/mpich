@@ -7,6 +7,7 @@
 
       subroutine query_fn( extrastate, status, ierr )
       use mpi_f08
+      implicit none
       TYPE(MPI_Status) status
       integer ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
@@ -24,6 +25,7 @@
 !
       subroutine free_fn( extrastate, ierr )
       use mpi_f08
+      implicit none
       integer value, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
@@ -42,6 +44,7 @@
 !
       subroutine cancel_fn( extrastate, complete, ierr )
       use mpi_f08
+      implicit none
       integer ierr
       logical complete
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
@@ -63,6 +66,7 @@
 !
        program main
        use mpi_f08
+       implicit none
        integer errs, ierr
        logical flag
        TYPE(MPI_Status) status

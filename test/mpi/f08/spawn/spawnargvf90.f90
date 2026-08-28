@@ -6,8 +6,8 @@
 ! This is a special test that requires an getarg/iargc routine
 !
         program main
-!     declared on the old sparc compilers
         use mpi_f08
+        implicit none
         integer errs, err
         integer rank, size, rsize, i
         integer np
@@ -17,6 +17,7 @@
         character*(10) inargv(6), outargv(6)
         character*(80)   argv(64)
         integer argc
+        integer iargc
         data inargv /"a", "b=c", "d e", "-pf", " Ss", " " /
         data outargv /"a", "b=c", "d e", "-pf", " Ss", " " /
         integer ierr

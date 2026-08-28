@@ -8,6 +8,7 @@
 ! an INTEGER.
         program main
         use mpi_f08
+        implicit none
         integer ierr, errs
         logical flag
         integer commsize, commrank

@@ -10,6 +10,7 @@
 !
       program main
       use mpi
+      implicit none
       integer (kind=MPI_ADDRESS_KIND) val
       integer ierr, errs, fcomm2_keyval, ftype2_keyval
       integer ccomm2_keyval, ctype2_keyval, cwin2_keyval
@@ -54,6 +55,7 @@
       subroutine mycopyfn( oldcomm, keyval, extrastate, valin, valout, &
       &                     flag, ierr )
       use mpi
+      implicit none
       integer oldcomm, keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
@@ -75,6 +77,7 @@
 !
       subroutine mydelfn( comm, keyval, val, extrastate, ierr )
       use mpi
+      implicit none
       integer comm, keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
@@ -92,6 +95,7 @@
       subroutine mytcopyfn( oldtype, keyval, extrastate, valin, valout, &
       &                     flag, ierr )
       use mpi
+      implicit none
       integer oldtype, keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 
@@ -113,6 +117,7 @@
 !
       subroutine mytdelfn( dtype, keyval, val, extrastate, ierr )
       use mpi
+      implicit none
       integer dtype, keyval, ierr
       integer (kind=MPI_ADDRESS_KIND) extrastate, valin, valout, val
 

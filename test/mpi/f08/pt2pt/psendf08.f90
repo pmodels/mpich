@@ -9,6 +9,7 @@
 
       program psend
       use mpi_f08
+      implicit none
       type(MPI_Comm) comm
       integer ierr, errs
       logical mtestGetIntraComm
@@ -27,6 +28,7 @@
 !
       subroutine test_pair_psend( comm, errs )
       use mpi_f08
+      implicit none
       type(MPI_Comm) comm
       integer errs
 

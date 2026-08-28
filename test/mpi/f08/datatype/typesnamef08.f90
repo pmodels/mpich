@@ -7,6 +7,7 @@
 
        program main
        use mpi_f08
+       implicit none
        character*(MPI_MAX_OBJECT_NAME) cname
        integer rlen, ln
        integer errs, ierr
