@@ -96,7 +96,7 @@ static int finalize_hook(void)
     goto fn_exit;
 }
 
-static int get_num_devices(int *ndevices)
+static int get_num_devices(unsigned *ndevices)
 {
     *ndevices = yaksuri_zei_global.ndevices;
 

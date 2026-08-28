@@ -22,7 +22,7 @@ static void *malloc_fn(uintptr_t size, void *state)
 
         if (state == &yaksuri_global.gpudriver[id].host) {
             return yaksuri_global.gpudriver[id].hooks->host_malloc(size);
-        } else {
+        } else if (yaksuri_global.gpudriver[id].ndevices > 0) {
             uintptr_t start = (uintptr_t) yaksuri_global.gpudriver[id].device;
             uintptr_t end =
                 (uintptr_t) & yaksuri_global.gpudriver[id].device[yaksuri_global.
@@ -49,7 +49,7 @@ static void free_fn(void *buf, void *state)
         if (state == &yaksuri_global.gpudriver[id].host) {
             yaksuri_global.gpudriver[id].hooks->host_free(buf);
             return;
-        } else {
+        } else if (yaksuri_global.gpudriver[id].ndevices > 0) {
             uintptr_t start = (uintptr_t) yaksuri_global.gpudriver[id].device;
             uintptr_t end =
                 (uintptr_t) & yaksuri_global.gpudriver[id].device[yaksuri_global.
@@ -109,13 +109,13 @@ int yaksur_init_hook(yaksi_info_s * info)
                                      &yaksuri_global.gpudriver[id].host);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
-        int ndevices;
+        unsigned ndevices;
         rc = yaksuri_global.gpudriver[id].hooks->get_num_devices(&ndevices);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
         yaksuri_global.gpudriver[id].device = (yaksu_buffer_pool_s *)
             malloc(ndevices * sizeof(yaksu_buffer_pool_s));
-        for (int i = 0; i < ndevices; i++) {
+        for (unsigned i = 0; i < ndevices; i++) {
             rc = yaksu_buffer_pool_alloc(YAKSURI_TMPBUF_EL_SIZE, 1, YAKSURI_TMPBUF_NUM_EL,
                                          malloc_fn, free_fn,
                                          &yaksuri_global.gpudriver[id].device[i],
@@ -153,8 +153,8 @@ int yaksur_finalize_hook(void)
         rc = yaksu_buffer_pool_free(yaksuri_global.gpudriver[id].host);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
-        int ndevices = yaksuri_global.gpudriver[id].ndevices;
-        for (int i = 0; i < ndevices; i++) {
+        unsigned ndevices = yaksuri_global.gpudriver[id].ndevices;
+        for (unsigned i = 0; i < ndevices; i++) {
             rc = yaksu_buffer_pool_free(yaksuri_global.gpudriver[id].device[i]);
             YAKSU_ERR_CHECK(rc, fn_fail);
         }
