@@ -15,7 +15,8 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int k, l;
+    int i, k, l;
+    bool is_cartesian;
     int *srcs, *dsts;
     MPI_Aint sendtype_extent, recvtype_extent;
     int tag, vtx_id;
@@ -49,10 +50,16 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* need reverse the order to ensure matching when the graph is from MPI_Cart_create and
-     * the n-th dimension is periodic and the size is 1 or 2.
-     * ref. ineighbor_alltoall_allcomm_sched_linear.c */
-    for (l = indegree - 1; l >= 0; l--) {
+    /* See ineighbor_alltoall_allcomm_sched_linear.c for why the receives are
+     * swapped on a Cartesian topology. */
+    is_cartesian = MPIR_Topo_is_cartesian(comm_ptr);
+    MPIR_Assert(!is_cartesian || indegree % 2 == 0);
+    for (i = 0; i < indegree; ++i) {
+        if (is_cartesian) {
+            l = i ^ 1;
+        } else {
+            l = i;
+        }
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno =
             MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], tag, comm_ptr, sched, 0, NULL,

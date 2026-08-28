@@ -172,6 +172,9 @@ neighb_alltoall 4
 neighb_alltoallv 4
 neighb_alltoallw 4
 neighb_alltoallw2 3
+neighb_dup_edges 4
+neighb_dup_edges 2
+neighb_dup_edges 1
 ring_neighbor_alltoall 2
 ring_neighbor_alltoall 1
 

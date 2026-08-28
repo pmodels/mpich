@@ -296,6 +296,13 @@ static int MPIR_Topology_delete_fn(ABI_Comm comm ATTRIBUTE((unused)),
  *     to be MPI_PROC_NULL.
  */
 
+bool MPIR_Topo_is_cartesian(MPIR_Comm * comm_ptr)
+{
+    MPIR_Topology *topo_ptr = MPIR_Topology_get(comm_ptr);
+
+    return (topo_ptr && topo_ptr->kind == MPI_CART);
+}
+
 int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegree, int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;
