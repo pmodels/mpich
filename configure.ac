@@ -517,6 +517,7 @@ if test "$enable_mpich_abi" = "no" ; then
     # currently CXX and Fortran binding only works on MPICH ABI.
     # TODO: make CXX and Fortran binding work on MPI ABI
     enable_cxx=no
+    # temporarily disable fortran with mpi-abi (until we merge stand-alone fortran binding)
     enable_fortran=no
 fi
 
