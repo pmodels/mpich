@@ -817,7 +817,7 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         # defined in src/binding/fortran/mpif_h/user_proxy.c
         c_name = "MPII_op_create"
     elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
-        c_name = "MPII_greq_start"
+        c_name = "MPII_greq_start_f08"
     elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large and has_mpix:
         c_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:

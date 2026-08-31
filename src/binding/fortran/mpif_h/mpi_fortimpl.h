@@ -411,6 +411,7 @@ typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_free_function) (void *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F08_greq_query_function) (void *, MPI_F08_status *, MPI_Fint *);
 
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
@@ -428,6 +429,8 @@ int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function free_fn,
                     F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
+int MPII_greq_start_f08(F08_greq_query_function query_fn, F77_greq_free_function free_fn,
+                        F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);

@@ -372,7 +372,10 @@ int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandl
 struct F77_greq_state {
     F77_greq_cancel_function *cancel_fn;
     F77_greq_free_function *free_fn;
-    F77_greq_query_function *query_fn;
+    union {
+        F77_greq_query_function *f77_query_fn;
+        F08_greq_query_function *f08_query_fn;
+    } u;
     void *extra_state;
 };
 
@@ -405,20 +408,34 @@ static int F77_greq_query_proxy(void *extra_state, MPI_Status * status)
 
     MPI_Fint ierr;
     if (status == MPI_STATUS_IGNORE) {
-        p->query_fn(p->extra_state, MPI_F_STATUS_IGNORE, &ierr);
+        p->u.f77_query_fn(p->extra_state, MPI_F_STATUS_IGNORE, &ierr);
     } else {
 #ifdef HAVE_FINT_IS_INT
         MPI_Fint *status_p = (void *) status;
-        p->query_fn(p->extra_state, status_p, &ierr);
+        p->u.f77_query_fn(p->extra_state, status_p, &ierr);
 #else
         MPI_Fint status_i[MPI_F_STATUS_SIZE];
-        p->query_fn(p->extra_state, status_i, &ierr);
+        p->u.f77_query_fn(p->extra_state, status_i, &ierr);
 
-        int *t = (void *) status;
-        for (int i = 0; i < MPI_F_STATUS_SIZE; i++) {
-            t[i] = status_i[i];
-        }
+        ierr = MPIR_Status_f2c_impl(status_i, status);
 #endif
+    }
+
+    return ierr;
+}
+
+static int F08_greq_query_proxy(void *extra_state, MPI_Status * status)
+{
+    struct F77_greq_state *p = extra_state;
+
+    MPI_Fint ierr;
+    if (status == MPI_STATUS_IGNORE) {
+        p->u.f08_query_fn(p->extra_state, MPI_F08_STATUS_IGNORE, &ierr);
+    } else {
+        MPI_F08_status status_i;
+        p->u.f08_query_fn(p->extra_state, &status_i, &ierr);
+
+        ierr = MPIR_Status_f082c_impl(&status_i, status);
     }
 
     return ierr;
@@ -428,7 +445,7 @@ int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function fre
                     F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request)
 {
     struct F77_greq_state *p = MPL_malloc(sizeof(struct F77_greq_state), MPL_MEM_OTHER);
-    p->query_fn = query_fn;
+    p->u.f77_query_fn = query_fn;
     p->free_fn = free_fn;
     p->cancel_fn = cancel_fn;
     p->extra_state = extra_state;
@@ -436,6 +453,26 @@ int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function fre
     int mpi_errno;
     MPI_Request req_i;
     mpi_errno = MPI_Grequest_start(F77_greq_query_proxy, F77_greq_free_proxy, F77_greq_cancel_proxy,
+                                   p, &req_i);
+    if (mpi_errno == MPI_SUCCESS) {
+        *request = MPI_Request_toint(req_i);
+    }
+
+    return mpi_errno;
+}
+
+int MPII_greq_start_f08(F08_greq_query_function query_fn, F77_greq_free_function free_fn,
+                        F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request)
+{
+    struct F77_greq_state *p = MPL_malloc(sizeof(struct F77_greq_state), MPL_MEM_OTHER);
+    p->u.f08_query_fn = query_fn;
+    p->free_fn = free_fn;
+    p->cancel_fn = cancel_fn;
+    p->extra_state = extra_state;
+
+    int mpi_errno;
+    MPI_Request req_i;
+    mpi_errno = MPI_Grequest_start(F08_greq_query_proxy, F77_greq_free_proxy, F77_greq_cancel_proxy,
                                    p, &req_i);
     if (mpi_errno == MPI_SUCCESS) {
         *request = MPI_Request_toint(req_i);
