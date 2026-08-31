@@ -500,6 +500,8 @@ AC_SUBST(enable_mpi_abi)
 
 if test "$enable_mpi_abi" = "yes" ; then
     enable_cxx=no
+    # temporarily disable fortran with mpi-abi (until we merge stand-alone fortran binding)
+    enable_fortran=no
 fi
 
 ## Enable creation of libtool-style versioning or no versioning
