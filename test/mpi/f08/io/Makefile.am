@@ -55,7 +55,7 @@ nodist_iwriteatallf90_SOURCES  = iwriteatallf90.f90
 
 c2f90multio_SOURCES     = c2f90multio.c
 # this is a C only program, so we include mtest_c_objects
-c2f90multio_LDADD = $(mtest_c_objects)
+c2f90multio_LDADD = $(mtest_c_objects) -lmpifort
 
 c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c
 
