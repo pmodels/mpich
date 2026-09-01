@@ -517,34 +517,29 @@ int MPIR_Abi_get_fortran_booleans_impl(int logical_size, void *logical_true, voi
     if (!MPIR_fortran_booleans_is_set) {
         *is_set = 0;
         /* we leave other outputs unset */
-    } else {
-        *is_set = 1;
-        switch (logical_size) {
-            case 1:
-                *(int8_t *) logical_true = (int8_t) MPIR_fortran_true;
-                *(int8_t *) logical_false = (int8_t) MPIR_fortran_false;
-                break;
-            case 2:
-                *(int16_t *) logical_true = (int16_t) MPIR_fortran_true;
-                *(int16_t *) logical_false = (int16_t) MPIR_fortran_false;
-                break;
-            case 4:
-                *(int32_t *) logical_true = (int32_t) MPIR_fortran_true;
-                *(int32_t *) logical_false = (int32_t) MPIR_fortran_false;
-                break;
-            case 8:
-                *(int64_t *) logical_true = (int64_t) MPIR_fortran_true;
-                *(int64_t *) logical_false = (int64_t) MPIR_fortran_false;
-                break;
+        goto fn_exit;
+    }
+
+    *is_set = 1;
+    switch (logical_size) {
+#define GET_FORTRAN_BOOLEANS(intN_t) \
+        case sizeof(intN_t): { \
+            intN_t true_value = (intN_t) MPIR_fortran_true; \
+            intN_t false_value = (intN_t) MPIR_fortran_false; \
+            (void) memcpy(logical_true, &true_value, sizeof(intN_t)); \
+            (void) memcpy(logical_false, &false_value, sizeof(intN_t)); \
+        } break
+            GET_FORTRAN_BOOLEANS(int8_t);
+            GET_FORTRAN_BOOLEANS(int16_t);
+            GET_FORTRAN_BOOLEANS(int32_t);
+            GET_FORTRAN_BOOLEANS(int64_t);
 #if defined(MPIR_INT128_CTYPE)
-                *(MPIR_INT128_CTYPE *) logical_true = (MPIR_INT128_CTYPE) MPIR_fortran_true;
-                *(MPIR_INT128_CTYPE *) logical_false = (MPIR_INT128_CTYPE) MPIR_fortran_false;
-                break;
+            GET_FORTRAN_BOOLEANS(MPIR_INT128_CTYPE);
 #endif
-            default:
-                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
-                                     "**logical_size_unexp %d", logical_size);
-        }
+#undef GET_FORTRAN_BOOLEANS
+        default:
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
+                                 "**logical_size_unexp %d", logical_size);
     }
 
   fn_exit:
@@ -564,28 +559,22 @@ int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, voi
 
     MPIR_fortran_booleans_is_set = true;
     switch (logical_size) {
-        case 1:
-            MPIR_fortran_true = (int) *(int8_t *) logical_true;
-            MPIR_fortran_false = (int) *(int8_t *) logical_false;
-            break;
-        case 2:
-            MPIR_fortran_true = (int) *(int16_t *) logical_true;
-            MPIR_fortran_false = (int) *(int16_t *) logical_false;
-            break;
-        case 4:
-            MPIR_fortran_true = (int) *(int32_t *) logical_true;
-            MPIR_fortran_false = (int) *(int32_t *) logical_false;
-            break;
-        case 8:
-            MPIR_fortran_true = (int) *(int64_t *) logical_true;
-            MPIR_fortran_false = (int) *(int64_t *) logical_false;
-            break;
+#define SET_FORTRAN_BOOLEANS(intN_t) \
+        case sizeof(intN_t): { \
+            intN_t true_value, false_value; \
+            (void) memcpy(&true_value, logical_true, sizeof(intN_t)); \
+            (void) memcpy(&false_value, logical_false, sizeof(intN_t)); \
+            MPIR_fortran_true = (int) true_value; \
+            MPIR_fortran_false = (int) false_value; \
+        } break
+            SET_FORTRAN_BOOLEANS(int8_t);
+            SET_FORTRAN_BOOLEANS(int16_t);
+            SET_FORTRAN_BOOLEANS(int32_t);
+            SET_FORTRAN_BOOLEANS(int64_t);
 #if defined(MPIR_INT128_CTYPE)
-        case 16:
-            MPIR_fortran_true = (int) *(MPIR_INT128_CTYPE *) logical_true;
-            MPIR_fortran_false = (int) *(MPIR_INT128_CTYPE *) logical_false;
-            break;
+            SET_FORTRAN_BOOLEANS(MPIR_INT128_CTYPE);
 #endif
+#undef SET_FORTRAN_BOOLEANS
         default:
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
                                  "**logical_size_unexp %d", logical_size);
