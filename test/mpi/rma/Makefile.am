@@ -205,10 +205,8 @@ noinst_PROGRAMS =          \
     putfence1              \
     putpscw1
 
-if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint   \
                    aint_collattach
-endif
 
 atomic_get_short_int_SOURCES      = atomic_get.c
 atomic_get_2int_SOURCES           = atomic_get.c

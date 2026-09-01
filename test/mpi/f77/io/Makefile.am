@@ -31,11 +31,9 @@ noinst_PROGRAMS = \
     c2fmultio \
     c2f2ciof
 
-if BUILD_MPIX_TESTS
 noinst_PROGRAMS += \
     i_setviewcurf  \
     iwriteatallf
-endif
 
 
 # We don't want to distribute these source files because they are created by
