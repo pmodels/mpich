@@ -501,13 +501,57 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
  */
 #if !defined(F77_TRUE_VALUE_SET)
 bool MPIR_fortran_booleans_is_set = false;
-MPICH_API_PUBLIC int MPIR_fortran_true = 1;
-MPICH_API_PUBLIC int MPIR_fortran_false = 0;
+int MPIR_fortran_true = 1;
+int MPIR_fortran_false = 0;
 #else
 bool MPIR_fortran_booleans_is_set = true;
-MPICH_API_PUBLIC int MPIR_fortran_true = F77_TRUE_VALUE;
-MPICH_API_PUBLIC int MPIR_fortran_false = F77_FALSE_VALUE;
+int MPIR_fortran_true = F77_TRUE_VALUE;
+int MPIR_fortran_false = F77_FALSE_VALUE;
 #endif
+
+int MPIR_Abi_get_fortran_booleans_impl(int logical_size, void *logical_true, void *logical_false,
+                                       int *is_set)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIR_fortran_booleans_is_set) {
+        *is_set = 0;
+        /* we leave other outputs unset */
+    } else {
+        *is_set = 1;
+        switch (logical_size) {
+            case 1:
+                *(int8_t *) logical_true = (int8_t) MPIR_fortran_true;
+                *(int8_t *) logical_false = (int8_t) MPIR_fortran_false;
+                break;
+            case 2:
+                *(int16_t *) logical_true = (int16_t) MPIR_fortran_true;
+                *(int16_t *) logical_false = (int16_t) MPIR_fortran_false;
+                break;
+            case 4:
+                *(int32_t *) logical_true = (int32_t) MPIR_fortran_true;
+                *(int32_t *) logical_false = (int32_t) MPIR_fortran_false;
+                break;
+            case 8:
+                *(int64_t *) logical_true = (int64_t) MPIR_fortran_true;
+                *(int64_t *) logical_false = (int64_t) MPIR_fortran_false;
+                break;
+#if defined(MPIR_INT128_CTYPE)
+                *(MPIR_INT128_CTYPE *) logical_true = (MPIR_INT128_CTYPE) MPIR_fortran_true;
+                *(MPIR_INT128_CTYPE *) logical_false = (MPIR_INT128_CTYPE) MPIR_fortran_false;
+                break;
+#endif
+            default:
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
+                                     "**logical_size_unexp %d", logical_size);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, void *logical_false)
 {
@@ -521,25 +565,94 @@ int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, voi
     MPIR_fortran_booleans_is_set = true;
     switch (logical_size) {
         case 1:
-            MPIR_fortran_true = *(int8_t *) logical_true;
-            MPIR_fortran_false = *(int8_t *) logical_false;
+            MPIR_fortran_true = (int) *(int8_t *) logical_true;
+            MPIR_fortran_false = (int) *(int8_t *) logical_false;
             break;
         case 2:
-            MPIR_fortran_true = *(int16_t *) logical_true;
-            MPIR_fortran_false = *(int16_t *) logical_false;
+            MPIR_fortran_true = (int) *(int16_t *) logical_true;
+            MPIR_fortran_false = (int) *(int16_t *) logical_false;
             break;
         case 4:
-            MPIR_fortran_true = *(int32_t *) logical_true;
-            MPIR_fortran_false = *(int32_t *) logical_false;
+            MPIR_fortran_true = (int) *(int32_t *) logical_true;
+            MPIR_fortran_false = (int) *(int32_t *) logical_false;
             break;
         case 8:
-            MPIR_fortran_true = *(int64_t *) logical_true;
-            MPIR_fortran_false = *(int64_t *) logical_false;
+            MPIR_fortran_true = (int) *(int64_t *) logical_true;
+            MPIR_fortran_false = (int) *(int64_t *) logical_false;
             break;
+#if defined(MPIR_INT128_CTYPE)
+        case 16:
+            MPIR_fortran_true = (int) *(MPIR_INT128_CTYPE *) logical_true;
+            MPIR_fortran_false = (int) *(MPIR_INT128_CTYPE *) logical_false;
+            break;
+#endif
         default:
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_unexp",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
                                  "**logical_size_unexp %d", logical_size);
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#define MPIR_ABI_FORTRAN_IS_SET (MPIR_Internal_types[MPI_INTEGER & 0xff].internal_type != MPI_DATATYPE_NULL)
+
+int MPIR_Abi_get_fortran_info_impl(MPIR_Info ** info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIR_ABI_FORTRAN_IS_SET) {
+        *info = NULL;
+        goto fn_exit;
+    }
+
+    MPIR_Info *info_ptr;
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Datatype type;
+    char str[8];
+#define PUSH_TYPE_INFO(type_, keyname) \
+do { \
+    type = type_; \
+    MPIR_DATATYPE_REPLACE_BUILTIN(type); \
+    snprintf(str, sizeof(str), "%d", MPIR_Datatype_get_basic_size(type)); \
+    MPIR_Info_push(info_ptr, keyname, str); \
+} while (0)
+    PUSH_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size");
+    PUSH_TYPE_INFO(MPI_INTEGER, "mpi_integer_size");
+    PUSH_TYPE_INFO(MPI_REAL, "mpi_real_size");
+    PUSH_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size");
+#undef PUSH_TYPE_INFO
+#define PUSH_TYPE_INFO(type_, keyname) \
+do { \
+    type = type_; \
+    MPIR_DATATYPE_REPLACE_BUILTIN(type); \
+    MPIR_Info_push(info_ptr, keyname, type != MPI_DATATYPE_NULL ? "true" : "false"); \
+} while (0)
+    PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER1, "mpi_integer1_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER2, "mpi_integer2_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
+    PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
+    PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
+    PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
+    PUSH_TYPE_INFO(MPI_REAL16, "mpi_real16_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX4, "mpi_complex4_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX8, "mpi_complex8_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX16, "mpi_complex16_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX32, "mpi_complex32_supported");
+    PUSH_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported");
+#undef PUSH_TYPE_INFO
+    *info = info_ptr;
 
   fn_exit:
     return mpi_errno;
@@ -551,7 +664,6 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#define MPIR_ABI_FORTRAN_IS_SET (MPIR_Internal_types[MPI_INTEGER & 0xff].internal_type != MPI_DATATYPE_NULL)
     if (MPIR_ABI_FORTRAN_IS_SET) {
         return MPI_ERR_ABI;
     }
