@@ -57,7 +57,7 @@ void ADIOI_DAOS_Init(int *error_code)
     adio_daos_path_prefix = getenv("DAOS_UNS_PREFIX");
 
     /** attach to comm_self destroy to finalize DAOS */
-    MPI_Comm_create_keyval(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
     MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
 }
 
