@@ -1674,6 +1674,9 @@ def load_mpi_h_in(f):
                     (T, V) = RE.m.group(1, 2)
                     val = hex_to_signed_int(V)
                     val = "%s(%d) ! 0x%s" % (T, hex_to_signed_int(V), V)
+                elif RE.match(r'\(+MPI_\w+\)\s*([-0-9]+)', val):
+                    # type-cast constants (MPICH does this for MPI_DISPLACEMENT_CURRENT)
+                    val = RE.m.group(1)
                 elif RE.match(r'0x([0-9a-fA-F]+)', val):
                     # direct hex constants (KEYVAL constants)
                     val = int(RE.m.group(1), 16)

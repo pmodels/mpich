@@ -51,7 +51,6 @@ def main():
     if G.is_autogen():
         G.mpih_defines = {}
         load_mpi_h_in("src/include/mpi.h.in")
-        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
         f = "%s/mpif.h.in" % f77_dir
         dump_mpif_h(f)
 

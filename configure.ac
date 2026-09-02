@@ -121,9 +121,6 @@ MPICH_VERSION=MPICH_VERSION_m4
 AC_SUBST([MPICH_VERSION])
 MPICH_RELEASE_DATE="MPICH_RELEASE_DATE_m4"
 AC_SUBST([MPICH_RELEASE_DATE])
-libmpi_so_version="libmpi_so_version_m4"
-AC_SUBST([libmpi_so_version])
-
 
 if test -z "$MPICH_VERSION" ; then
     AC_MSG_ERROR([MPICH_VERSION is empty, check maint/version.m4 for errors])
@@ -182,13 +179,6 @@ AC_ARG_WITH(custom-version-string,
             AS_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
 MPICH_CUSTOM_STRING=$with_custom_version_string
 AC_SUBST(MPICH_CUSTOM_STRING)
-
-# ABIVERSION is the name used by simplemake, so we reassign the
-# libmpi_so_version number to it
-ABIVERSION=${libmpi_so_version}
-export ABIVERSION
-export libmpi_so_version
-AC_SUBST(ABIVERSION)
 
 # Print out the configure options
 CONFIGURE_ARGUMENTS="$ac_configure_args"
@@ -503,16 +493,21 @@ AC_ARG_ENABLE(versioning,
         [enable_versioning=yes])
 
 if test "$enable_versioning" = "yes" ; then
-   ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
-   ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
+    ABIVERSIONFLAGS="-version-info libmpi_so_version_m4"
+    ABI_ABIVERSIONFLAGS="-version-info libmpi_abi_so_version_m4"
 else
    ABIVERSIONFLAGS="-avoid-version"
-   ABI_ABIVERSIONFLAGS="-avoid-version"
 fi
 export ABIVERSIONFLAGS
 AC_SUBST(ABIVERSIONFLAGS)
 export ABI_ABIVERSIONFLAGS
 AC_SUBST(ABI_ABIVERSIONFLAGS)
+
+# ABIVERSION is used in mpichinfo.h
+ABIVERSION="MPICH ABI libmpi_so_version_m4"
+ABI_ABIVERSION="MPI ABI libmpi_abi_so_version_m4"
+AC_SUBST(ABIVERSION)
+AC_SUBST(ABI_ABIVERSION)
 
 
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
@@ -590,21 +585,6 @@ AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
-
-AC_ARG_WITH([wrapper-dl-type],
-            [AS_HELP_STRING([--with-wrapper-dl-type],
-                            [Dynamic loading model for alternate MPI
-                             libraries, used when programs are linked
-                             by mpicc compiler wrappers.  This only
-                             applies when shared libraries are built.
-                             The default is "runpath"; use
-                             --with-wrapper-dl-type=rpath to force
-                             rpath; use --with-wrapper-dl-type=none to
-                             find shared libraries according to the
-                             rules for your system (e.g., in
-                             LD_LIBRARY_PATH)])],
-              [],[with_wrapper_dl_type=runpath])
-AC_SUBST([with_wrapper_dl_type])
 
 AC_ARG_ENABLE([long-double],
               [AS_HELP_STRING([--disable-long-double],
