@@ -6,6 +6,10 @@
 #ifndef MPIX_H_INCLUDED
 #define MPIX_H_INCLUDED
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* GPU extensions */
 #define MPIX_GPU_SUPPORT_CUDA  (0)
 #define MPIX_GPU_SUPPORT_ZE    (1)
@@ -335,5 +339,9 @@ int PMPIX_Irecv_enqueue_c(void *buf, MPI_Count count, MPI_Datatype datatype, int
                           MPI_Comm comm, MPI_Request * request);
 int PMPIX_Allreduce_enqueue_c(const void *sendbuf, void *recvbuf, MPI_Count count,
                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* MPIX_H_INCLUDED */
