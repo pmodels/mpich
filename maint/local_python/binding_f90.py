@@ -136,12 +136,6 @@ def dump_f90_constants():
     # ----------------------------------
     G.out.append("INCLUDE 'mpifnoext.h'")
 
-    G.out.append("")
-    dump_F_type_open('MPI_Status')
-    for field in G.status_fields:
-        G.out.append("INTEGER :: %s" % field)
-    dump_F_type_close('MPI_Status')
-
     for a in G.handle_list:
         G.out.append("")
         dump_F_type_open("%s" % a)
@@ -215,6 +209,8 @@ def dump_f90_sizeofs():
 #---------------------------------------- 
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
+        func['_skip_fortran'] = 1
+    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1

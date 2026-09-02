@@ -172,6 +172,10 @@ set_externals() {
         # external packages that require autogen.sh to be run for each of them
         externals="src/mpl test/mpi"
 
+        if [ "yes" = "$do_fortran" ] ; then
+            externals="${externals} src/binding/fortran"
+        fi
+
         if [ "yes" = "$do_hydra" ] ; then
             externals="${externals} src/pm/hydra"
         fi
@@ -297,6 +301,28 @@ fn_pmi() {
     (cd src/pmi && ./autogen.sh)
 }
 
+# ./autogen.sh -do=fortran if *only* build libfortran
+fn_fortran() {
+    dir=src/binding/fortran
+    if ! test -f "$dir/mpif_h/f2c.c" ; then
+        fn_gen_binding_c
+    fi
+
+    echo "####################################"
+    echo "## Prepareing src/binding/fortran ##"
+    echo "####################################"
+    cp -pPR maint/version.m4 $dir/version.m4
+    sync_external confdb $dir/confdb
+
+    rm -rf "$dir/maint"
+    mkdir -p "$dir/maint"
+    cp -pPR maint/local_python $dir/maint/
+    cp maint/gen_binding_{f77,f90,f08}.py $dir/maint/
+    cp src/binding/*.txt $dir/maint/
+
+    (cd $dir && ./autogen.sh)
+}
+
 # ./autogen.sh -do=test if *only* build testsuite
 fn_test() {
     echo "####################################"
@@ -320,6 +346,7 @@ fn_copy_confdb_etc() {
 
     # a couple of other random files
     if [ -f maint/version.m4 ] ; then
+        cp -pPR maint/version.m4 src/binding/fortran/version.m4
         cp -pPR maint/version.m4 src/pm/hydra/version.m4
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
         cp -pPR maint/version.m4 src/pmi/version.m4
@@ -938,8 +965,6 @@ fn_abi
 
 if [ $do_f77 = "yes" ] ; then
     fn_f77
-else
-    touch src/binding/fortran/mpif_h/mpif.h.in
 fi
 if [ $do_f90 = "yes" ] ; then
     fn_f90

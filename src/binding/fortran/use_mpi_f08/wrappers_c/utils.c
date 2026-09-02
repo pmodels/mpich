@@ -3,11 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include "mpifort_config.h"
 #include "cdesc.h"
 #include <string.h>
 
-int MPIR_F08_MPI_IN_PLACE MPICH_API_PUBLIC;
-int MPIR_F08_MPI_BOTTOM MPICH_API_PUBLIC;
+#ifndef MPICH_API_PUBLIC
+#if defined(HAVE_VISIBILITY)
+#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define MPICH_API_PUBLIC
+#endif
+#endif /* MPICH_API_PUBLIC */
+
+/* initialized in MPIR_Init_fortran, ref. mpi_c_interface_glue.f90 */
+void *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
+void *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+void *MPIR_F08_MPI_IN_PLACE;
+void *MPIR_F08_MPI_BOTTOM;
 
 /*
   Convert an array of strings in Fortran Format to an array of strings in C format (i.e., char* a[]).
@@ -136,4 +148,14 @@ void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void)
 void *MPIR_F08_get_MPI_BUFFER_AUTOMATIC(void)
 {
     return (void *) MPI_BUFFER_AUTOMATIC;
+}
+
+void *MPIR_F08_get_MPI_BOTTOM(void)
+{
+    return (void *) MPI_BOTTOM;
+}
+
+void *MPIR_F08_get_MPI_IN_PLACE(void)
+{
+    return (void *) MPI_IN_PLACE;
 }

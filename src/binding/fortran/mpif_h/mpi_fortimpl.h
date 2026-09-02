@@ -6,12 +6,30 @@
 #ifndef MPI_FORTIMPL_H_INCLUDED
 #define MPI_FORTIMPL_H_INCLUDED
 
-#include "mpichconf.h"
+#include "mpifort_config.h"
 #include "mpi.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef MPICH_API_PUBLIC
+#if defined(HAVE_VISIBILITY)
+#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define MPICH_API_PUBLIC
+#endif
+#endif /* MPICH_API_PUBLIC */
+
+#define MPICH_INTERNAL  /* define to exclude f2c/c2f MPICH ABI compatibility macros */
+#include "mpi_fortran.h"
+
+int MPIR_Status_f2c_impl(const MPI_Fint * f_status, MPI_Status * c_status);
+int MPIR_Status_c2f_impl(const MPI_Status * c_status, MPI_Fint * f_status);
+int MPIR_Status_f2f08_impl(const MPI_Fint * f_status, MPI_F08_status * f08_status);
+int MPIR_Status_f082f_impl(const MPI_F08_status * f08_status, MPI_Fint * f_status);
+int MPIR_Status_f082c_impl(const MPI_F08_status * f08_status, MPI_Status * c_status);
+int MPIR_Status_c2f08_impl(const MPI_Status * c_status, MPI_F08_status * f08_status);
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -51,6 +69,18 @@
 #define FORT_MIXED_LEN(a)
 #define FORT_END_LEN(a)       , FORT_SIZE_INT a
 #endif
+
+/* configure defines F77_TRUE_VALUE and F77_FALSE_VALUE */
+#define MPII_TO_FLOG(a)   ((a) ? F77_TRUE_VALUE : F77_FALSE_VALUE)
+#define MPII_FROM_FLOG(a) ((a) == F77_FALSE_VALUE ? 0 : 1)
+
+/* define internal MPI usage to PMPI */
+#define MPI_Abi_get_fortran_info    PMPI_Abi_get_fortran_info
+#define MPI_Abi_set_fortran_info    PMPI_Abi_set_fortran_info
+#define MPI_Abi_set_fortran_boolean PMPI_Abi_set_fortran_boolean
+#define MPI_Info_create PMPI_Info_create
+#define MPI_Info_set    PMPI_Info_set
+#define MPI_Info_free   PMPI_Info_free
 
 /* NOTE: both leading and trailing spaces are not counted */
 static inline int get_fort_str_len(char *s, int len)
@@ -274,13 +304,6 @@ typedef MPI_Aint MPI_FAint;
 
 /* Define the internal values needed for Fortran support */
 
-/* Fortran logicals */
-/* The definitions for the Fortran logical values are also needed
-   by the reduction operations in mpi/coll/opland, oplor, and oplxor,
-   so they are defined in src/include/mpii_fortlogical.h */
-#include "mpii_fortlogical.h"
-
-
 /* MPIR_F_MPI_BOTTOM is the address of the Fortran MPI_BOTTOM value */
 extern FORT_DLL_SPEC int MPIR_F_NeedInit;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_BOTTOM;
@@ -288,12 +311,7 @@ extern FORT_DLL_SPEC void *MPIR_F_MPI_IN_PLACE;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_BUFFER_AUTOMATIC;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_UNWEIGHTED;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_WEIGHTS_EMPTY;
-/* MPI_F_STATUS(ES)_IGNORE are defined in mpi.h and are intended for C
-   programs. */
-/*
-extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
-extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
-*/
+
 /* MPI_F_ERRCODES_IGNORE is defined as a Fortran INTEGER type, so must
    be declared as MPI_Fint */
 extern FORT_DLL_SPEC MPI_Fint *MPI_F_ERRCODES_IGNORE;
@@ -366,14 +384,6 @@ typedef char *MPID_FCHAR_T;
 #undef MPI_CONVERSION_FN_NULL
 #endif /* MPI_DUP_FN */
 
-/* A special case to help out when ROMIO is disabled */
-#ifndef HAVE_ROMIO
-#ifndef MPI_File_f2c
-#define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
-#define MPI_File_c2f(a) ((MPI_Fint)(MPI_Aint)(a))
-#endif
-#endif /* HAVE_ROMIO */
-
 enum F77_handle_type {
     F77_COMM,
     F77_GROUP,
@@ -401,6 +411,7 @@ typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_free_function) (void *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F08_greq_query_function) (void *, MPI_F08_status *, MPI_Fint *);
 
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
@@ -418,6 +429,8 @@ int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function free_fn,
                     F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
+int MPII_greq_start_f08(F08_greq_query_function query_fn, F77_greq_free_function free_fn,
+                        F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);

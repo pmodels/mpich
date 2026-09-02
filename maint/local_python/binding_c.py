@@ -1275,6 +1275,7 @@ def dump_profiling(func):
     args = get_function_args(func)
 
     G.out.append("/* -- Begin Profiling Symbol Block for routine %s */" % func_name)
+    G.out.append("#ifdef USE_WEAK_SYMBOLS")
     # prefer weak symbols with alias
     G.out.append("#if defined(HAVE_PRAGMA_WEAK_ALIAS)")
     G.out.append("#pragma weak %s = P%s" % (func_name, func_name))
@@ -1298,6 +1299,7 @@ def dump_profiling(func):
     else:
         G.out.append("    return P%s(%s);" % (func_name, args))
     G.out.append("}")
+    G.out.append("#endif")
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
 

@@ -32,10 +32,11 @@ AM_MAINTAINER_MODE([enable])
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_USE_SYSTEM_EXTENSIONS
+
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)
 
-AC_USE_SYSTEM_EXTENSIONS
 PAC_C_NO_COMMON
 
 AM_PROG_AR
@@ -174,8 +175,6 @@ AC_ARG_ENABLE(aio,[
 ], disable_aio=no)
 AC_ARG_ENABLE(echo,
 [--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
-AC_ARG_ENABLE(weak-symbols,
-[--enable-weak-symbols - Turn on support for weak symbols],,enable_weak_symbols=yes)
 AC_ARG_ENABLE(debug,
 [--enable-debug - Build a debugging version],,)
 AC_ARG_WITH(file-system,[
@@ -436,12 +435,8 @@ MPI_OFFSET_TYPE="long long"
 
 
 # Check to see if weak symbols work correctly
-if test "$enable_weak_symbols" = "yes" ; then
-    # Turn off weak symbols if they aren't available
-    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
-fi
-
-if test "$enable_weak_symbols" = "yes" ; then
+PAC_PROG_C_WEAK_SYMBOLS
+if test "$pac_cv_prog_c_has_weak_alias" = "yes" ; then
     AC_DEFINE(HAVE_WEAK_SYMBOLS,1,[Define if weak symbols available])
     HAVE_WEAK_SYMBOLS=1
 else

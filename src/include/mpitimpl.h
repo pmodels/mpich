@@ -9,7 +9,7 @@
 #ifndef MPITIMPL_H_INCLUDED
 #define MPITIMPL_H_INCLUDED
 
-#include "mpi.h"
+#include "mpi_mpich.h"
 #include "mpir_strerror.h"
 #include "mpir_type_defs.h"
 #include "mpir_assert.h"

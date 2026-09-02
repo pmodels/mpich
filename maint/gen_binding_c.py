@@ -14,10 +14,7 @@ def main():
     # currently support: -single-source
     G.parse_cmdline()
 
-    binding_dir = G.get_srcdir_path("src/binding")
-    c_dir = "src/binding/c"
-    abi_dir = "src/binding/abi"
-    func_list = load_C_func_list(binding_dir)
+    func_list = load_C_func_list(G.binding_dir)
 
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
@@ -56,9 +53,18 @@ def main():
             repl_func['_replaces'].append(func)
 
 
-    # We generate io functions separately for now
-    io_func_list = [f for f in func_list if f['dir'] == 'io']
-    func_list = [f for f in func_list if f['dir'] != 'io']
+    # We generate io and f2c functions separately for now
+    f2c_func_list = []
+    io_func_list = []
+    remain_list = []
+    for func in func_list:
+        if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+            f2c_func_list.append(func)
+        elif func['dir'] == 'io':
+            io_func_list.append(func)
+        else:
+            remain_list.append(func)
+    func_list = remain_list
 
     # -- Generating code --
     G.doc3_src = []
@@ -72,6 +78,10 @@ def main():
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
         G.need_dump_romio_reference = True
+
+    def dump_out_no_make(file_path):
+        G.check_write_path(file_path)
+        dump_c_file(file_path, G.out)
 
     def dump_func(func, do_doc):
         G.err_codes = {}
@@ -101,6 +111,40 @@ def main():
             dump_mpi_c(func, True)
         del func['_is_abi']
 
+    # f2c functions need be build by Fortran binding
+    def dump_func_f2c(func):
+        is_mpix = False
+        if RE.match(r'MPIX_', func['name']):
+            G.out.append("#ifdef MPICH_HAS_MPIX")
+            is_mpix = True
+
+        func_decl = get_declare_function(func, False)
+
+        G.out.append("")
+
+        # declare with MPICH_API_PUBLIC
+        G.out.append("%s MPICH_API_PUBLIC;" % func_decl)
+        if RE.match(r'(\w+) (MPI.*)', func_decl):
+            G.out.append("%s P%s MPICH_API_PUBLIC;" % RE.m.group(1,2))
+        G.out.append("")
+
+        func['_is_large'] = False
+        G.out.append("")
+        dump_profiling(func)
+
+        dump_line_with_break(func_decl)
+        G.out.append("{")
+        params = func['c_parameters']
+        if RE.match(r'MPI_Status_(.*)', func['name']):
+            G.out.append("    return MPIR_Status_%s_impl(%s, %s);" % (RE.m.group(1), params[0]['name'], params[1]['name']))
+        elif RE.match(r'(MPI.*)_(f2c)', func['name']):
+            G.out.append("    return P%s_fromint(%s);" % (RE.m.group(1), params[0]['name']))
+        elif RE.match(r'(MPI.*)_(c2f)', func['name']):
+            G.out.append("    return P%s_toint(%s);" % (RE.m.group(1), params[0]['name']))
+        G.out.append("}")
+        if is_mpix:
+            G.out.append("#endif /* MPICH_HAS_MPIX */")
+
     def dump_c_binding():
         G.out = []
         G.out.append("#include \"mpiimpl.h\"")
@@ -117,14 +161,14 @@ def main():
 
             if 'single-source' not in G.opts:
                 # dump individual functions in separate source files
-                dump_out(get_func_file_path(func, c_dir))
+                dump_out(get_func_file_path(func, G.c_dir))
                 G.out = []
                 G.out.append("#include \"mpiimpl.h\"")
                 G.out.append("")
 
         if 'single-source' in G.opts:
             # otherwise, dump all functions in binding.c
-            dump_out(c_dir + "/c_binding.c")
+            dump_out(G.c_dir + "/c_binding.c")
 
     def dump_c_binding_abi():
         G.out = []
@@ -142,15 +186,13 @@ def main():
                     pass
                 else:
                     continue
-            elif re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
-                continue
 
             dump_func_abi(func)
             if '_replaces' in func:
                 for t_func in func['_replaces']:
                     dump_func_abi(t_func)
 
-        abi_file_path = abi_dir + "/c_binding_abi.c"
+        abi_file_path = G.abi_dir + "/c_binding_abi.c"
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
 
@@ -163,7 +205,7 @@ def main():
         for func in io_func_list:
             dump_func(func, do_doc)
 
-        dump_out(c_dir + "/io.c")
+        dump_out(G.c_dir + "/io.c")
 
     def dump_io_funcs_abi():
         G.out = []
@@ -174,19 +216,27 @@ def main():
         G.out.append("")
 
         for func in io_func_list:
-            if re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
-                continue
             dump_func_abi(func)
 
-        abi_file_path = abi_dir + "/io_abi.c"
+        abi_file_path = G.abi_dir + "/io_abi.c"
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
+
+    def dump_f2c_funcs():
+        G.out = []
+        G.out.append("#include \"mpi_fortimpl.h\"")
+        G.out.append("")
+
+        for func in f2c_func_list:
+            dump_func_f2c(func)
+        dump_out_no_make(G.f77_dir + "/f2c.c")
 
     # ----
     dump_c_binding()
     dump_c_binding_abi()
     dump_io_funcs()
     dump_io_funcs_abi()
+    dump_f2c_funcs()
 
     if do_doc:
         f = mansrc_dir + '/poly_aliases.lst'
@@ -198,10 +248,10 @@ def main():
     G.check_write_path("src/include")
     G.check_write_path("src/mpi_t")
     G.check_write_path("src/include/mpi_proto.h")
-    dump_Makefile_mk("%s/Makefile.mk" % c_dir)
+    dump_Makefile_mk("%s/Makefile.mk" % G.c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_mpir_io_impl_h("src/include/mpir_io_impl.h")
-    dump_errnames_txt("%s/errnames.txt" % c_dir)
+    dump_errnames_txt("%s/errnames.txt" % G.c_dir)
     dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
     dump_mtest_mpix_h("test/mpi/include/mtest_mpix.h")
