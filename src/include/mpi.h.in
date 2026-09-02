@@ -6,6 +6,7 @@
 #ifdef MPI_ABI
 #include "mpi_abi.h"
 #include "mpix.h"
+#include "mpi_legacy.h"
 #else
 
 /* @configure_input@ */
