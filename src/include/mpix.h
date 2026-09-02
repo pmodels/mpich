@@ -58,21 +58,6 @@ typedef int (MPIX_Grequest_wait_function) (int, void **, double, MPI_Status *);
 typedef int (MPIX_Async_poll_function) (MPIX_Async_thing);
 
 
-int MPI_Address(void *location, MPI_Aint * address);
-int MPI_Type_hindexed(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                      MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                     MPI_Datatype * newtype);
-int MPI_Type_struct(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                    MPI_Datatype array_of_types[], MPI_Datatype * newtype);
-int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent);
-int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement);
-int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement);
-int MPI_Errhandler_create(MPI_Comm_errhandler_function * comm_errhandler_fn,
-                          MPI_Errhandler * errhandler);
-int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
-int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
-
 int MPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
 int MPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
                      void *extra_state, MPIX_Stream stream);
@@ -198,21 +183,6 @@ int MPIX_Irecv_enqueue_c(void *buf, MPI_Count count, MPI_Datatype datatype, int 
                          MPI_Comm comm, MPI_Request * request);
 int MPIX_Allreduce_enqueue_c(const void *sendbuf, void *recvbuf, MPI_Count count,
                              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
-
-int PMPI_Address(void *location, MPI_Aint * address);
-int PMPI_Type_hindexed(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                       MPI_Datatype oldtype, MPI_Datatype * newtype);
-int PMPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                      MPI_Datatype * newtype);
-int PMPI_Type_struct(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                     MPI_Datatype array_of_types[], MPI_Datatype * newtype);
-int PMPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent);
-int PMPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement);
-int PMPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement);
-int PMPI_Errhandler_create(MPI_Comm_errhandler_function * comm_errhandler_fn,
-                           MPI_Errhandler * errhandler);
-int PMPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
-int PMPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
 
 int PMPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
 int PMPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
