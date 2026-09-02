@@ -5,7 +5,15 @@
 
 #ifdef MPI_ABI
 #include "mpi_abi.h"
+#ifdef MPI_MPIX
 #include "mpix.h"
+#endif
+#ifdef MPI_LEGACY
+#include "mpi_legacy.h"
+#endif
+#ifdef MPI_FORTRAN
+#include "mpi_fortran.h"
+#endif
 #else
 
 /* @configure_input@ */

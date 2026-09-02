@@ -212,6 +212,8 @@ subcode: parse_args
             $(if:cc=cc or cc=cxx)
                 $call parse_delay_libs
                 $call parse_mpi_abi
+                $call parse_need_mpix
+                $call parse_need_fortran
             $call parse_arg_help
             # fc args such as -I*, -D* need be in between the case for *'*|*"*) and *)
             &call parse_other_args_$(sh)
@@ -367,6 +369,24 @@ subcode: parse_args
         &call case, -lcuda|-lcudart|-lze_loader
             delay_libs="$delay_libs $arg"
 
+    subcode: parse_need_legacy
+        $(block:parse_args_init)
+            need_legacy=
+        &call case, -mpi-legacy
+            need_legacy="yes"
+
+    subcode: parse_need_mpix
+        $(block:parse_args_init)
+            need_mpix=
+        &call case, -mpi-mpix
+            need_mpix="yes"
+
+    subcode: parse_need_fortran
+        $(block:parse_args_init)
+            need_fortran=
+        &call case, -mpi-fortran
+            need_fortran="yes"
+
     subcode: show_help
         NC=`echo "$$(CC)" | sed 's%\/% %g' | awk '{print $NF}' -`
         if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -502,6 +522,24 @@ subcode: set_final_vars
             final_cppflags="-DMPI_ABI ${final_cppflags}"
             mpi_libs_shared="-l@MPIABILIBNAME@ @LPMPIABILIBNAME@"
             mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
+        fi
+
+        if test "$need_mpix" = "yes" ; then
+            final_cppflags="${final_cppflags} -DMPI_MPIX"
+        fi
+
+        if test "$need_legacy" = "yes" ; then
+            final_cppflags="${final_cppflags} -DMPI_LEGACY"
+        fi
+
+        if test "$need_fortran" = "yes" ; then
+            final_cppflags="${final_cppflags} -DMPI_FORTRAN"
+            mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
+            \x23 dlsym won't work with static linking but at least we make it available
+            # FIXME: need libmpifort_abi for dual ABI build
+            if test -e "$libdir/libmpifort.a" ; then
+                mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
+            fi
         fi
     $(else)
         mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
