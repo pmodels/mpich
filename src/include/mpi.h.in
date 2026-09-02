@@ -20,6 +20,9 @@
 #ifndef MPI_INCLUDED
 #define MPI_INCLUDED
 
+/* MPICH ABI, always define MPI_MPIX */
+#define MPI_MPIX
+
 /* user include file for MPI programs */
 
 #if defined(HAVE_VISIBILITY)
@@ -996,25 +999,25 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 */
 /* --Insert Additional Definitions Here-- */
 
-/*
- * Normally, we provide prototypes for all MPI routines.  In a few weird
- * cases, we need to suppress the prototypes.
- */
-#ifndef MPICH_BUILD_MPI_ABI
-/* We require that the C compiler support prototypes */
-#include <mpix.h>
-#include <mpi_proto.h>
-
-/* include fortran inter-op header if needed */
-#ifdef MPI_FORTRAN
-#include <mpi_fortran.h>
-#endif
-
-#endif /* MPICH_BUILD_MPI_ABI */
-
 #if defined(__cplusplus)
 }
+#endif
+
+#ifndef MPICH_BUILD_MPI_ABI
+#ifdef MPI_MPIX
+#include "mpix.h"
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+#include <mpi_proto.h>
+#if defined(__cplusplus)
+}
+#endif
+
 /* Add the C++ bindings */
+#if defined(__cplusplus)
 /*
    If MPICH_SKIP_MPICXX is defined, the mpicxx.h file will *not* be included.
    This is necessary, for example, when building the C++ interfaces.  It
@@ -1022,13 +1025,20 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
    and do not want to load the C++ bindings.  These definitions can
    be made by the C++ compilation script
  */
-#if !defined(MPICH_SKIP_MPICXX)
 /* mpicxx.h contains the MPI C++ binding.  In the mpi.h.in file, this
    include is in an autoconf variable in case the compiler is a C++
    compiler but MPI was built without the C++ bindings */
+#if !defined(MPICH_SKIP_MPICXX)
 @INCLUDE_MPICXX_H@
+#endif /* MPICH_SKIP_MPICXX */
+#endif /* __cplusplus */
+
+/* legacy APIs are already included in mpi_proto.h */
+#ifdef MPI_FORTRAN
+#include "mpi_fortran.h"
 #endif
-#endif
+
+#endif /* MPICH_BUILD_MPI_ABI */
 
 #endif  /* MPI_INCLUDED */
 #endif  /* MPI_ABI */

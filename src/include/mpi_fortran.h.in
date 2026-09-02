@@ -6,17 +6,15 @@
 #ifndef MPI_FORTRAN_H_INCLUDED
 #define MPI_FORTRAN_H_INCLUDED
 
-/* *INDENT-OFF* */
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 typedef @MPI_FINT@ MPI_Fint;
-/* *INDENT-ON* */
 
 /* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used
-   as a hook for systems that require C extensions to correctly construct
-   DLLs, and is defined as an empty string otherwise
- */
+extern MPI_Fint *MPI_F_STATUS_IGNORE;
+extern MPI_Fint *MPI_F_STATUSES_IGNORE;
 
 /* C type for MPI_STATUS in F08.
    The field order should match that in C MPI_Status.
@@ -41,8 +39,8 @@ typedef struct {
 #endif
 
 /* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+extern MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
 
 MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
 MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
@@ -99,10 +97,12 @@ MPI_Win MPI_Win_f2c(MPI_Fint win);
 MPI_Fint PMPI_Win_c2f(MPI_Win win);
 MPI_Win PMPI_Win_f2c(MPI_Fint win);
 
+#ifdef MPI_MPIX
 MPI_Fint MPIX_Stream_c2f(MPIX_Stream stream);
 MPIX_Stream MPIX_Stream_f2c(MPI_Fint stream);
 MPI_Fint PMPIX_Stream_c2f(MPIX_Stream stream);
 MPIX_Stream PMPIX_Stream_f2c(MPI_Fint stream);
+#endif
 
 int MPI_Status_f2c(const MPI_Fint * f_status, MPI_Status * c_status);
 int MPI_Status_c2f(const MPI_Status * c_status, MPI_Fint * f_status);
@@ -116,8 +116,6 @@ int PMPI_Status_f2f08(const MPI_Fint * f_status, MPI_F08_status * f08_status);
 int PMPI_Status_f082f(const MPI_F08_status * f08_status, MPI_Fint * f_status);
 int PMPI_Status_f082c(const MPI_F08_status * f08_status, MPI_Status * c_status);
 int PMPI_Status_c2f08(const MPI_Status * c_status, MPI_F08_status * f08_status);
-
-void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
 
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.
@@ -168,5 +166,9 @@ void MPIX_Init_fortran(void) MPICH_API_PUBLIC;
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 
 #endif /* !defined(MPICH_INTERNAL) && !defined(MPI_ABI) */
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* MPI_FORTRAN_H_INCLUDED */
