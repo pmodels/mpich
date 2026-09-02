@@ -170,4 +170,31 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid);
  * Return the local index of my nic in my first non io ancestor.
  */
 int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func);
+
+/* Proximity score returned when two PCI devices have no common ancestor, one of
+ * the BDFs is not present in the topology, or topology info is unavailable. It
+ * is lower than any real score so "closest" comparisons naturally reject it. */
+#define MPIR_HWTOPO_PCI_PROXIMITY_NONE (-1)
+
+/* Proximity score for two PCI devices whose only common ancestor is the machine
+ * root, i.e. they share nothing below the top of the system. This is a valid
+ * (successfully determined) result, but it means locality does not distinguish
+ * the devices: the pair is as far apart as any two devices in the machine.
+ * Callers selecting on locality should treat this as "no useful signal" (no
+ * closer than the coarsest level) rather than as a meaningful match. */
+#define MPIR_HWTOPO_PCI_PROXIMITY_ROOT (0)
+
+/*
+ * Return a structural proximity score between two PCI devices, identified by
+ * their (domain,bus,dev,func) addresses. The score is the depth (distance from
+ * the topology root) of the two devices' nearest common ancestor: a larger
+ * value implies that the devices share a closer common point in the hierarchy
+ * (e.g. the same PCIe switch), while a smaller value means they only converge
+ * higher up (e.g. the same NUMA node or package). A score of
+ * MPIR_HWTOPO_PCI_PROXIMITY_ROOT (0) means the only common ancestor is the
+ * machine root (no meaningful locality). Returns
+ * MPIR_HWTOPO_PCI_PROXIMITY_NONE (-1) if proximity cannot be determined.
+ */
+int MPIR_hwtopo_get_pci_proximity(int domain1, int bus1, int dev1, int func1,
+                                  int domain2, int bus2, int dev2, int func2);
 #endif /* MPIR_HWTOPO_H_INCLUDED */

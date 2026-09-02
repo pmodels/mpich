@@ -20,6 +20,24 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Accept the NIC value from a user
+
+    - name        : MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Controls whether NIC selection considers GPU locality, rather than CPU/NUMA
+        locality. Disabled by default (0). When set to 1, selects NIC(s) with the
+        closest PCI proximity to active GPU(s) (i.e. behind the same PCIe switch).
+        This is currently only implemented for CUDA.
+
+        IMPORTANT: MPICH has no notion of a per-rank GPU assignment; it inspects the
+        first CUDA device visible to the process (local ordinal 0). For best results
+        per-rank CUDA_VISIBLE_DEVICES should be constrained to device(s) that could
+        effectively share the same NIC assignments.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -50,6 +68,7 @@ static int compare_nic_closeness(const void *nic1, const void *nic2);
 static int order_multi_nic_by_pref(int pref);
 #ifdef HAVE_LIBFABRIC_NIC
 static bool is_nic_pci_valid(struct fi_info *info);
+static void refine_nic_close_by_gpu(MPIDI_OFI_nic_info_t * nics, int nic_count);
 static int set_nic_info(void);
 #endif
 
@@ -546,6 +565,90 @@ static void set_nic_close_snc4_with_cxi_nics(MPIDI_OFI_nic_info_t * nics, int ni
     }
 }
 
+/* Obtain the PCI BDF of the GPU this process is using. Returns true and fills
+ * *domain, *bus, *dev, *func on success; returns false when GPU affinity is
+ * unavailable (non-CUDA build, or no CUDA device / BDF resolvable).
+ *
+ * If the process has already bound a CUDA context, we use that context's
+ * device; otherwise fall back to the first visible CUDA device; it's the user's
+ * responsibility to constrain each rank to its intended GPU via
+ * CUDA_VISIBLE_DEVICES (see the MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY docs), or
+ * make a CUDA context before getting this far. */
+static bool get_selected_gpu_bdf(int *domain, int *bus, int *dev, int *func)
+{
+#ifdef MPL_HAVE_CUDA
+    int rc = MPL_gpu_cuda_get_current_pci_bdf(domain, bus, dev, func);
+    if (rc != MPL_SUCCESS) {
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+/* Extract a NIC's PCI BDF from its fi_info. Returns true only for NICs that
+ * expose valid PCI bus info. */
+static bool get_nic_bdf(struct fi_info *info, int *domain, int *bus, int *dev, int *func)
+{
+    if (!is_nic_pci_valid(info)) {
+        return false;
+    }
+    struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+    *domain = pci.domain_id;
+    *bus = pci.bus_id;
+    *dev = pci.device_id;
+    *func = pci.function_id;
+    return true;
+}
+
+/* Replace the previously-computed (CPU/NUMA-affinity) "close" flags with a
+ * GPU-locality-based selection. Closeness is based on direct GPU-NIC proximity
+ * (e.g., sharing a PCI bridge), rather than NUMA node.
+ *
+ * If no NIC has a determinable proximity to the GPU, the CPU/NUMA result is
+ * left intact so we never produce zero close NICs from GPU locality alone. */
+static void refine_nic_close_by_gpu(MPIDI_OFI_nic_info_t * nics, int nic_count)
+{
+    if (MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY != 1) {
+        return;
+    }
+
+    int gdom, gbus, gdev, gfunc;
+    if (!get_selected_gpu_bdf(&gdom, &gbus, &gdev, &gfunc)) {
+        return;
+    }
+
+    /* Score each NIC's PCI proximity to the GPU and track the closest tier. */
+    int best = MPIR_HWTOPO_PCI_PROXIMITY_NONE;
+    int scores[MPIDI_OFI_MAX_NICS];
+    for (int i = 0; i < nic_count; ++i) {
+        int ndom, nbus, ndev, nfunc;
+        int score = MPIR_HWTOPO_PCI_PROXIMITY_NONE;
+        if (get_nic_bdf(nics[i].nic, &ndom, &nbus, &ndev, &nfunc)) {
+            score = MPIR_hwtopo_get_pci_proximity(gdom, gbus, gdev, gfunc, ndom, nbus, ndev, nfunc);
+        }
+        scores[i] = score;
+        if (score > best) {
+            best = score;
+        }
+    }
+
+    if (best <= MPIR_HWTOPO_PCI_PROXIMITY_ROOT) {
+        /* Either no NIC's relationship to the GPU could be determined, or the
+         * best any NIC achieves is a machine-root-only common ancestor. In the
+         * latter case we successfully determined that GPU locality does not
+         * favor any NIC (all are equally far), so overriding would just flatten
+         * the CPU/NUMA distinctions. Either way, keep the CPU/NUMA selection. */
+        return;
+    }
+
+    /* Keep only NICs in the closest tier (proximity == best). */
+    for (int i = 0; i < nic_count; ++i) {
+        nics[i].close = (scores[i] == best) ? 1 : 0;
+    }
+}
+
 static int set_nic_info(void)
 {
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
@@ -558,6 +661,8 @@ static int set_nic_info(void)
             nics[i].close = is_nic_close(nics[i].nic);
         }
     }
+
+    refine_nic_close_by_gpu(nics, MPIDI_OFI_global.num_nics_available);
 
     return MPI_SUCCESS;
 }

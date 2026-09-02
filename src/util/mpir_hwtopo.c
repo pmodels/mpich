@@ -586,7 +586,54 @@ static bool pci_device_is_close(hwloc_obj_t device)
     return (hwloc_bitmap_isincluded(bindset, device->cpuset) ||
             hwloc_bitmap_isincluded(device->cpuset, bindset));
 }
+
+/* Number of links from obj up to the topology root (the root itself is 0).
+ * Deeper objects (further from the root) return larger values. We follow the
+ * ->parent chain rather than using hwloc's per-object depth because I/O objects
+ * (PCI devices and bridges) use special negative depth sentinels that are not
+ * directly comparable to normal-object depths. Walking parents yields a single
+ * monotonic "deeper == closer" scale across both I/O and normal objects. */
+static int obj_level_from_root(hwloc_obj_t obj)
+{
+    int level = 0;
+    while (obj && obj->parent) {
+        level++;
+        obj = obj->parent;
+    }
+    return level;
+}
 #endif
+
+int MPIR_hwtopo_get_pci_proximity(int domain1, int bus1, int dev1, int func1,
+                                  int domain2, int bus2, int dev2, int func2)
+{
+    int proximity = MPIR_HWTOPO_PCI_PROXIMITY_NONE;
+    if (!bindset_is_valid)
+        return proximity;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t o1 = hwloc_get_pcidev_by_busid(hwloc_topology, domain1, bus1, dev1, func1);
+    hwloc_obj_t o2 = hwloc_get_pcidev_by_busid(hwloc_topology, domain2, bus2, dev2, func2);
+    if (!o1 || !o2) {
+        return MPIR_HWTOPO_PCI_PROXIMITY_NONE;
+    }
+
+    hwloc_obj_t common = hwloc_get_common_ancestor_obj(hwloc_topology, o1, o2);
+    if (!common) {
+        return MPIR_HWTOPO_PCI_PROXIMITY_NONE;
+    }
+
+    /* Score by how deep the common ancestor sits: two devices sharing a PCIe
+     * switch/bridge have a deeper common ancestor (larger score) than two that
+     * only share a NUMA node or package, which in turn score higher than
+     * devices that only share the machine root. This lets callers pick the
+     * closest tier (e.g. NICs behind the same switch as a GPU) rather than
+     * collapsing everything to the NUMA node, which hwloc's non-I/O ancestor
+     * lookup would do. */
+    proximity = obj_level_from_root(common);
+#endif
+    return proximity;
+}
+
 
 bool MPIR_hwtopo_is_dev_close_by_name(const char *name)
 {
