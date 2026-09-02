@@ -4,7 +4,20 @@
 ##
 
 AM_CPPFLAGS = -I$(top_builddir)/src/include -I${top_srcdir}/src/include
-LDADD       = ../lib/lib@MPILIBNAME@.la -lm
+
+if BUILD_MPICH_LIB
+LDADD = ../lib/lib@MPILIBNAME@.la -lm
+if BUILD_PROFILING_LIB
+LDADD += ../lib/lib@PMPILIBNAME@.la
+endif
+else # BUILD_ABI_LIB
+AM_CPPFLAGS += -DMPI_ABI -I$(top_srcdir)/src/binding/abi
+LDADD = ../lib/lib@MPIABILIBNAME@.la -lm
+if BUILD_PROFILING_LIB
+LDADD += ../lib/lib@PMPIABILIBNAME@.la
+endif
+endif
+
 
 # "cpi" is special, we always build it at the end of the regular "make" process
 # and its main purpose is to catch missing symbol link-time errors before any
