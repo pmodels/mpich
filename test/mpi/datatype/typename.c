@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     MTest_Init(&argc, &argv);
 
     /* set error return for checking optional types */
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /* Sample some datatypes */
     /* See 8.4, "Naming Objects" in MPI-2.  The default name is the same
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         /* Are we in the optional types? */
         if (strcmp(mpi_names[i].name, "MPI_REAL4") == 0) {
             inOptional = 1;
-#ifdef ENABLE_STRICTMPI
+#ifdef USE_STRICT_MPI
             /* strictly we can't use MPI_DATATYPE_NULL to test datatype availability,
              * just skip the optional datatypes */
             break;

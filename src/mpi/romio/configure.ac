@@ -162,7 +162,26 @@ known_filesystems="m4_join([ ],known_filesystems_m4)"
 AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
         enable_mpi_abi=no)
+case "$enable_mpi_abi" in
+  yes)
+    enable_mpi_abi=yes
+    enable_mpich_abi=no
+    ;;
+  no)
+    enable_mpi_abi=no
+    enable_mpich_abi=yes
+    ;;
+  both|dual|mpich,mpi|mpi,mpich)
+    enable_mpi_abi=yes
+    enable_mpich_abi=yes
+    ;;
+  *)
+    AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
+    ;;
+esac
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
+AM_CONDITIONAL([BUILD_MPICH_LIB], [test "$enable_mpich_abi" = "yes"])
+
 
 AC_ARG_ENABLE(aio,[
 --enable-aio - Request use of asynchronous I/O routines (default)],

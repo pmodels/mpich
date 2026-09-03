@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     /* set error return for checking optional types */
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     comm = MPI_COMM_WORLD;
 

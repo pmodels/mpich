@@ -34,7 +34,6 @@ noinst_PROGRAMS = \
     striped_hints
 
 
-if BUILD_MPIX_TESTS
 noinst_PROGRAMS +=      \
     i_bigtype           \
     i_hindexed_io       \
@@ -48,7 +47,6 @@ noinst_PROGRAMS +=      \
     i_noncontig_coll    \
     i_noncontig_coll2   \
     i_types_with_zeros
-endif
 
 clean-local:
 	-rm -f testfile testfile.*

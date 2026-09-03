@@ -31,11 +31,9 @@ noinst_PROGRAMS = \
     c2f90multio \
     c2f2ciof90
 
-if BUILD_MPIX_TESTS
 noinst_PROGRAMS += \
     i_fcoll_test \
     iwriteatallf90
-endif
 
 # We don't want to distribute these source files because they are created by
 # "testmerge", hence "nodist_foo_SOURCES"
@@ -55,7 +53,7 @@ nodist_iwriteatallf90_SOURCES  = iwriteatallf90.f90
 
 c2f90multio_SOURCES     = c2f90multio.c
 # this is a C only program, so we include mtest_c_objects
-c2f90multio_LDADD = $(mtest_c_objects)
+c2f90multio_LDADD = $(mtest_c_objects) -lmpifort
 
 c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c
 

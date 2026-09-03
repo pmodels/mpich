@@ -1266,7 +1266,7 @@ def dump_abi_wrappers(func, is_large):
     G.out.append("}")
     G.out.append("")
 
-def dump_profiling(func):
+def dump_profiling(func, only_alias=False):
     func_name = get_function_name(func, func['_is_large'])
     kind = None
     if "_is_abi" in func:
@@ -1285,19 +1285,20 @@ def dump_profiling(func):
     G.out.append("#elif defined(HAVE_ATTR_WEAK_ALIAS)")
     dump_line_with_break(decl, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
     # has weak symbols but not alias
-    G.out.append("#elif defined(HAVE_PRAGMA_WEAK) || defined(HAVE_ATTR_WEAK)")
-    G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
-    G.out.append("#pragma weak %s" % (func_name))
-    G.out.append("#elif defined(HAVE_ATTR_WEAK)")
-    dump_line_with_break(decl, " __attribute__ ((weak));")
-    G.out.append("#endif  /* weak without alias */")
-    # define MPI function that simply call PMPI
-    G.out.append("%s {" % (decl))
-    if func_name == "MPI_Pcontrol":
-        G.out.append("    return MPI_SUCCESS;")
-    else:
-        G.out.append("    return P%s(%s);" % (func_name, args))
-    G.out.append("}")
+    if not only_alias:
+        G.out.append("#elif defined(HAVE_PRAGMA_WEAK) || defined(HAVE_ATTR_WEAK)")
+        G.out.append("#if defined(HAVE_PRAGMA_WEAK)")
+        G.out.append("#pragma weak %s" % (func_name))
+        G.out.append("#elif defined(HAVE_ATTR_WEAK)")
+        dump_line_with_break(decl, " __attribute__ ((weak));")
+        G.out.append("#endif  /* weak without alias */")
+        # define MPI function that simply call PMPI
+        G.out.append("%s {" % (decl))
+        if func_name == "MPI_Pcontrol":
+            G.out.append("    return MPI_SUCCESS;")
+        else:
+            G.out.append("    return P%s(%s);" % (func_name, args))
+        G.out.append("}")
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
 

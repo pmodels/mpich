@@ -39,6 +39,8 @@
 #include "mpichconfconst.h"
 #include "mpichconf.h"
 
+#define MPICH_INTERNAL
+
 /* pmix.h contains inline functions that calls malloc, calloc, and free,
    and it will break with MPL's memory tracing when enabled.
    Make sure it is included *before* mpl.h.

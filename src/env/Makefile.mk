@@ -12,8 +12,15 @@ sysconf_DATA += src/env/mpixxx_opts.conf
 bin_PROGRAMS += src/env/mpichversion \
     src/env/mpivars
 
+if BUILD_MPICH_LIB
 src_env_mpichversion_LDADD = lib/lib@MPILIBNAME@.la
 src_env_mpivars_LDADD   = lib/lib@MPILIBNAME@.la
+else # BUILD_ABI_LIB
+src_env_mpichversion_CPPFLAGS = $(AM_CPPFLAGS) -DMPI_ABI -I$(srcdir)/src/binding/abi
+src_env_mpivars_CPPFLAGS = $(AM_CPPFLAGS) -DMPI_ABI -I$(srcdir)/src/binding/abi
+src_env_mpichversion_LDADD = lib/lib@MPIABILIBNAME@.la
+src_env_mpivars_LDADD   = lib/lib@MPIABILIBNAME@.la
+endif !BUILD_MPICH_LIB
 
 if BUILD_FC_BINDING
 bin_SCRIPTS += src/env/mpifort

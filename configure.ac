@@ -485,7 +485,44 @@ AC_ARG_ENABLE(debuginfo,
 AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
         enable_mpi_abi=no)
+
+case "$enable_mpi_abi" in
+  yes)
+    enable_mpi_abi=yes
+    enable_mpich_abi=no
+    ABI_INFO="MPI ABI 1.0"
+    DEFAULT_MPI_ABI=yes
+    ;;
+  no)
+    enable_mpi_abi=no
+    enable_mpich_abi=yes
+    ABI_INFO="MPICH ABI"
+    DEFAULT_MPI_ABI=no
+    ;;
+  both|dual|mpich,mpi|mpi,mpich)
+    enable_mpi_abi=yes
+    enable_mpich_abi=yes
+    ABI_INFO="MPICH ABI, MPI ABI 1.0"
+    DEFAULT_MPI_ABI=no
+    ;;
+  *)
+    AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
+    ;;
+esac
+
+dnl used in mpicc for whether to enable -mpi-abi option by default
+AC_SUBST([DEFAULT_MPI_ABI])
+
+if test "$enable_mpich_abi" = "no" ; then
+    # currently CXX and Fortran binding only works on MPICH ABI.
+    # TODO: make CXX and Fortran binding work on MPI ABI
+    enable_cxx=no
+    # temporarily disable fortran with mpi-abi (until we merge stand-alone fortran binding)
+    enable_fortran=no
+fi
+
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
+AM_CONDITIONAL([BUILD_MPICH_LIB], [test "$enable_mpich_abi" = "yes"])
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
@@ -4067,16 +4104,20 @@ export MPI_NO_RMA
 # Attach program prefix and suffix to executable names for Makefile
 AC_SUBST(MPICC_NAME)
 AC_SUBST(MPICC_ABI_NAME)
+AC_SUBST(MPICC_MPICH_NAME)
 AC_SUBST(MPICXX_NAME)
 AC_SUBST(MPICXX_ABI_NAME)
+AC_SUBST(MPICXX_MPICH_NAME)
 AC_SUBST(MPICPP_NAME)
 AC_SUBST(MPIFORT_NAME)
 AC_SUBST(MPIF90_NAME)
 AC_SUBST(MPIF77_NAME)
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpicc_abi", MPICC_ABI_NAME)
+PAC_GET_EXENAME("mpicc_mpich", MPICC_MPICH_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
 PAC_GET_EXENAME("mpicxx_abi", MPICXX_ABI_NAME)
+PAC_GET_EXENAME("mpicxx_mpich", MPICXX_MPICH_NAME)
 PAC_GET_EXENAME("mpic++", MPICPP_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
@@ -4326,6 +4367,7 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
+          src/include/mpi_fortran.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
@@ -4343,11 +4385,12 @@ if test "$enable_f08" = "yes" ; then
 fi
 AC_OUTPUT
 
-# TODO: add info about MPI ABI
 cat <<EOF
 *****************************************************
 ***
 *** MPICH $MPICH_VERSION ($MPICH_RELEASE_DATE)
+***
+*** ABI: $ABI_INFO
 ***
 *** Language Support
 *** ----------------
