@@ -6,8 +6,8 @@ The MPICH Project adopts a flexible hybrid governance model consisting of a
 Technical Core Team (TCT) and a Technical Steering Committee (TSC).
 
 The Technical Core Team is responsible for the day-to-day technical development
-and maintenance of MPICH. Technical Core Team members are generally those granted write
-access to the MPICH GitHub repository. Technical Core Team members may make routine
+and maintenance of MPICH. Technical Core Team members are generally those granted at least _Maintain_
+permission on the MPICH GitHub project. Technical Core Team members may make routine
 technical decisions within their areas of responsibility. While review and
 discussion are strongly encouraged, the level of process required may vary
 depending on the scope, urgency, and impact of a change.
@@ -39,10 +39,10 @@ the existing Technical Core Team.
 ### Role
 The role of the Technical Steering Committee (TSC) is to provide technical direction to the project. The TSC will vote on any matters deferred by the Technical Core Team or issues raised by the community.
 
-Each member of the TSC has one vote.
+Each member of the TSC has one vote. Votes may be cast during the voting meeting or asynchronously within 48 hours after the meeting. A member may delegate their vote to a proxy, subject to unanimous approval by the voting meeting. The threshold for passing is a majority vote calculated over the total TSC membership, including absentees.
 
 ### Membership
-Members can be added to the TSC by a majority vote of the TSC. Members may be removed from the TSC by a 2/3 vote of the TSC. If a TSC member has been inactive for over 6 months, the TSC must hold a vote on whether to remove that member from the TSC.
+Members can be added to the TSC by a majority vote of the TSC. Members may be removed from the TSC by a 2/3 vote of the TSC. If a TSC member has been inactive for over 6 months, as measured from the last time the member failed to respond to a formal query from the TSC, the TSC must hold a vote on whether to remove that member from the TSC.
 
 Current Membership:
 
@@ -62,8 +62,10 @@ Current chair:
   * Rajeev Thakur (Argonne National Laboratory)
 
 ### Meetings and Notes
-The TSC meets regularly twice every year (time TBD). The meeting agenda will be announced at least two weeks ahead of the meeting. Additional meetings and issues can be raised by TSC members and organized by the TSC chair.
-The meetings are open to the public, and are held virtually. Meeting notes will be published in the MPICH Github wiki.
+The TSC convenes twice a year. Additional meetings may be held as needed. Meeting notes will be published on the MPICH GitHub wiki.
+
+-------------------------------------------------------------------
+[NOTE: changes to this document up to this point require TSC voting]
 
 ## Other Public MPICH forums
 
