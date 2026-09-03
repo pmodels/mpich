@@ -18,6 +18,8 @@ extern "C" {
 #ifndef MPICH
 #define MPIX_C_FLOAT16    ((MPI_Datatype)0x000002f0)
 #define MPIX_BFLOAT16     ((MPI_Datatype)0x000002f1)
+#define MPIX_LB           ((MPI_Datatype)0x000002fe)
+#define MPIX_UB           ((MPI_Datatype)0x000002ff)
 #define MPIX_EQUAL        ((MPI_Op)0x0000003e)
 #endif
 

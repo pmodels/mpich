@@ -262,8 +262,6 @@ def dump_mpi_abi_util_c(mpi_abi_util_c):
         for idx in G.abi_ops.keys():
             print("    abi_op_builtins[%d] = %s;" % (idx, G.abi_ops[idx]), file=Out)
         print("}", file=Out)
-    num_datatypes = len(G.abi_datatypes)
-    G.abi_h_lines.append("#define ABI_MAX_DATATYPE_BUILTINS %d" % num_datatypes)
 
 def dump_copyright(Out):
     print("/*", file=Out)
