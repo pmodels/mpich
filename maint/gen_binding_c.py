@@ -133,7 +133,7 @@ def main():
         G.out.append("")
 
         for func in func_list:
-            if 'replace' in func and 'body' not in func:
+            if 'replace' in func:
                 continue
 
             if re.match(r'MPIX_', func['name']):
@@ -146,9 +146,6 @@ def main():
                 continue
 
             dump_func_abi(func)
-            if '_replaces' in func:
-                for t_func in func['_replaces']:
-                    dump_func_abi(t_func)
 
         abi_file_path = abi_dir + "/c_binding_abi.c"
         G.check_write_path(abi_file_path)

@@ -6,6 +6,10 @@
 #ifndef MPIX_H_INCLUDED
 #define MPIX_H_INCLUDED
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* GPU extensions */
 #define MPIX_GPU_SUPPORT_CUDA  (0)
 #define MPIX_GPU_SUPPORT_ZE    (1)
@@ -14,6 +18,8 @@
 #ifndef MPICH
 #define MPIX_C_FLOAT16    ((MPI_Datatype)0x000002f0)
 #define MPIX_BFLOAT16     ((MPI_Datatype)0x000002f1)
+#define MPIX_LB           ((MPI_Datatype)0x000002fe)
+#define MPIX_UB           ((MPI_Datatype)0x000002ff)
 #define MPIX_EQUAL        ((MPI_Op)0x0000003e)
 #endif
 
@@ -53,21 +59,6 @@ typedef int (MPIX_Grequest_poll_function) (void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function) (int, void **, double, MPI_Status *);
 typedef int (MPIX_Async_poll_function) (MPIX_Async_thing);
 
-
-int MPI_Address(void *location, MPI_Aint * address);
-int MPI_Type_hindexed(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                      MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                     MPI_Datatype * newtype);
-int MPI_Type_struct(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                    MPI_Datatype array_of_types[], MPI_Datatype * newtype);
-int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent);
-int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement);
-int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement);
-int MPI_Errhandler_create(MPI_Comm_errhandler_function * comm_errhandler_fn,
-                          MPI_Errhandler * errhandler);
-int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
-int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
 
 int MPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
 int MPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
@@ -195,21 +186,6 @@ int MPIX_Irecv_enqueue_c(void *buf, MPI_Count count, MPI_Datatype datatype, int 
 int MPIX_Allreduce_enqueue_c(const void *sendbuf, void *recvbuf, MPI_Count count,
                              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
 
-int PMPI_Address(void *location, MPI_Aint * address);
-int PMPI_Type_hindexed(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                       MPI_Datatype oldtype, MPI_Datatype * newtype);
-int PMPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                      MPI_Datatype * newtype);
-int PMPI_Type_struct(int count, int array_of_blocklengths[], MPI_Aint array_of_displacements[],
-                     MPI_Datatype array_of_types[], MPI_Datatype * newtype);
-int PMPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent);
-int PMPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement);
-int PMPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement);
-int PMPI_Errhandler_create(MPI_Comm_errhandler_function * comm_errhandler_fn,
-                           MPI_Errhandler * errhandler);
-int PMPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
-int PMPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
-
 int PMPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
 int PMPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
                       void *extra_state, MPIX_Stream stream);
@@ -335,5 +311,9 @@ int PMPIX_Irecv_enqueue_c(void *buf, MPI_Count count, MPI_Datatype datatype, int
                           MPI_Comm comm, MPI_Request * request);
 int PMPIX_Allreduce_enqueue_c(const void *sendbuf, void *recvbuf, MPI_Count count,
                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* MPIX_H_INCLUDED */
