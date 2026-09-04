@@ -43,11 +43,15 @@ class MPI_API_Global:
     def check_write_path(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    # command line options and arguments
-    # By default assumes sizes for LP64 model.
+    # command line options and arguments for generating Fortran bindings
+    # By default assumes sizes for LP64 model. These options should be supplied at configure
+    # time or directly parsed from mpi.h.
     # The F08 bindings use the sizes to detect duplicate large interfaces
     # The F90 bindings use the sizes to implement MPI_SIZEOF (although deprecated in MPI-4)
     opts = {'fint-size':4, 'aint-size':8, 'count-size':8, 'cint-size':4, 'f-logical-size':4,
+            'integer-kind':4, 'address-kind':8, 'count-kind':8, 'offset-kind':8,
+            'max-processor-name':128, 'max-version-string':8192, 'max-error-string':512, 'bsend-overhead':96,
+            'mpi-h':'src/include/mpi.h.in',
             'iso-c-binding':'yes'}
 
     args = []

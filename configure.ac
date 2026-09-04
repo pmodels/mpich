@@ -787,9 +787,6 @@ if test "$enable_fortran" = "no" ; then
     enable_f08=no
 fi
 
-# Python 3 is needed to generate Fortran bindings
-PAC_CHECK_PYTHON
-
 if test "$enable_fortran" != "no" ; then
     # suppress default "-g -O2" from AC_PROG_FC
     : ${FCFLAGS=""}
@@ -4224,16 +4221,30 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-if test "$enable_f90" = "yes" ; then
-    PAC_FC_CHECK_IGNORE_TKR
-    PAC_FC_ISO_C_BINDING
+dnl If bindings have been pre-generated, one may use this option to skip re-generating the bindings.
+dnl
+AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip generating bindings])],
+    [enable_gen_bindings=$enableval], [enable_gen_bindings=yes])
+
+if test "$enable_gen_bindings" = "yes" ; then
+    # Python 3 is needed to generate Fortran bindings
+    PAC_CHECK_PYTHON
     if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
-            AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
-        fi
-    else
+        AC_MSG_ERROR([Python 3 is required to generate Fortran bindings but not found!])
+    fi
+
+    # use AC_CONFIG_COMMANDS_POST to ensures mpi.h is already generated
+    if test "$enable_f77" = "yes" ; then
+        cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py"
+        cmd_f77="$cmd_f77 -mpi-h=src/include/mpi.h"
+        cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
+        AC_CONFIG_COMMANDS_POST([$cmd_f77])
+    fi
+
+    if test "$enable_f90" = "yes" ; then
+        PAC_FC_CHECK_IGNORE_TKR
+        PAC_FC_ISO_C_BINDING
+
         cmd_f90="$PYTHON $srcdir/maint/gen_binding_f90.py"
         # pass in type sizes for MPI_SIZEOF
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
@@ -4243,21 +4254,15 @@ if test "$enable_f90" = "yes" ; then
         if test "$pac_fc_iso_c_binding" = "no" ; then
             cmd_f90="$cmd_f90 -iso-c-binding=no"
         fi
-        AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
+        AC_CONFIG_COMMANDS_POST([$cmd_f90])
     fi
-fi
 
-if test "$enable_f08" = "yes" ; then
-    PAC_FC_CHECK_REAL128
-    PAC_FC_CHECK_IGNORE_TKR_D
-    if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
-            AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
-        else
-            AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
-        fi
-    else
+    if test "$enable_f08" = "yes" ; then
+        PAC_FC_CHECK_REAL128
+        PAC_FC_CHECK_IGNORE_TKR_D
+
         cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
+        cmd_f08="$cmd_f08 -mpi-h=src/include/mpi.h"
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"
         fi
@@ -4268,7 +4273,8 @@ if test "$enable_f08" = "yes" ; then
             cmd_f08="$cmd_f08 -no-mpiio"
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
-        AC_CONFIG_COMMANDS([gen_binding_f08], [$cmd_gen_binding_f08], [cmd_gen_binding_f08="$cmd_f08"])
+        cmd_f08="$cmd_f08 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
+        AC_CONFIG_COMMANDS_POST([$cmd_f08])
     fi
 fi
 
@@ -4304,13 +4310,6 @@ AC_CONFIG_FILES([Makefile \
           test/commands/cmdtests \
           packaging/pkgconfig/mpich.pc \
           packaging/envmods/mpich.module])
-if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h])
-fi
-if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
-                     src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90])
-fi
 AC_OUTPUT
 
 cat <<EOF
