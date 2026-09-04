@@ -364,6 +364,8 @@ allreduce-intra:
     ccl
         extra_params: ccl
         cvar_params: CCL
+    circ_graph
+        restrictions: commutative
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:

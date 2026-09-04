@@ -431,6 +431,8 @@ void *MPII_Create_container(struct json_object *obj)
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_k_reduce_scatter_allgather;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_ccl"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_ccl;
+        else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_circ_graph"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_circ_graph;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_inter_reduce_exchange_bcast;
