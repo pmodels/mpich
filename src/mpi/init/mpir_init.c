@@ -102,6 +102,18 @@ cvars:
       description : >-
         Skip MPIR_pmi_barrier() in MPI_Init
 
+    - name        : MPIR_CVAR_FINALIZE_ATEXIT
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, delay MPI_Finalize until exit via atexit hook. This may be
+        necessary to support applications that uses MPI sessions and require
+        multiple re-init via MPI_Session_init/finalize.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -148,6 +160,12 @@ int MPIR_Init_impl(int *argc, char ***argv)
     return mpi_errno;
 }
 
+static void finalize_atexit(void)
+{
+#define DUMMY_SESSION_PTR ((void *) 1)
+    MPII_Finalize(DUMMY_SESSION_PTR);
+}
+
 int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
                      MPIR_Session ** p_session_ptr)
 {
@@ -167,6 +185,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     if (init_counter > 1) {
         goto fn_exit;
     }
+
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
      * These need to be initialized first.  They have strong
@@ -183,6 +202,12 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_CVAR_FINALIZE_ATEXIT) {
+        init_counter++;
+        err = atexit(finalize_atexit);
+        MPIR_ERR_CHKANDJUMP1(err != 0, mpi_errno, MPI_ERR_OTHER, "**atexit", "**atexit %d", err);
+    }
 
     MPIR_Err_init();
     MPII_pre_init_dbg_logging(argc, argv);
