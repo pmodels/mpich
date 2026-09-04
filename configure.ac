@@ -950,9 +950,6 @@ export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
 AC_SUBST(MPIFCLIBNAME)
 
-# We'll set FORTRAN_BINDING to 1 if we support Fortran
-FORTRAN_BINDING=0
-
 # enable-fast
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
@@ -1439,7 +1436,7 @@ elif test -f $devicedir/subconfigure.m4 ; then
     :
 else
     # Add the device to the configure list
-    devsubsystems="$devsubsystems $devicereldir"
+    subsystems="$subsystems $devicereldir"
     # Make device_name available to subdirs
 fi
 
@@ -2060,9 +2057,6 @@ if test "$enable_f77" = "yes" ; then
     bindings="$bindings f77"
     PAC_APPEND_CSV([mpif.h], [fortran_bindings])
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
-    # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
-    FORTRAN_BINDING=1
-
 fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
@@ -2090,7 +2084,6 @@ libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
 if test "$enable_f90" = "yes" ; then
-    bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
     bindings="$bindings f90"
     PAC_APPEND_CSV([use mpi], [fortran_bindings])
 fi
@@ -2379,13 +2372,6 @@ if test "$enable_cxx" = "yes" ; then
     AC_DEFINE(HAVE_CXX_BINDING,1,[Define if C++ is supported])
     INCLUDE_MPICXX_H='#include "mpicxx.h"'
     AC_SUBST(INCLUDE_MPICXX_H)
-
-    # In order to support the Fortran datatypes within C++,
-    #
-    # FORTRAN_BINDING always has a CPP-time value of either 0 or 1,
-    # so that it may be used in #if statements without adding to
-    # the CPP name space
-    AC_SUBST(FORTRAN_BINDING)
 fi
 
 # we install mpicxx as long as CXX is defined. In the case of enable_cxx=no,
@@ -3400,36 +3386,6 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant 
 # We may wish to use a different approach
 MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
 AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT)
-# and is needed in mpif.h.in.
-# First, we check that this works with both Fortran compilers (if
-# they are defined)
-#
-if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
-    FORTRAN_MPI_OFFSET="INTEGER(KIND=$OFFSET_KIND)"
-
-    AC_LANG_PUSH([Fortran 77])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
-    AC_MSG_RESULT($has_f77_offsettype)
-    AC_LANG_POP([Fortran 77])
-
-    AC_LANG_PUSH([Fortran])
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
-    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
-    AC_LANG_POP([Fortran])
-    AC_MSG_RESULT($has_fc_offsettype)
-
-    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
-        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
-    fi
-fi
-AC_SUBST(FORTRAN_MPI_OFFSET)
 
 # ------------
 # MPI_COUNT
@@ -4008,19 +3964,14 @@ fi
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
-# now configure any actual recursively configures subsystems, such as ROMIO and
-# hydra, or older components that haven't been updated to a subconfigure.m4 yet
-for subsys in $devsubsystems $subsystems ; do
+# We explicitly configure most modules now. $subsystems only contains hydra and nameserv/* (if configured).
+for subsys in $subsystems ; do
     PAC_CONFIG_SUBDIR_ARGS([$subsys],[$subsys_config_args],[],[AC_MSG_ERROR([$subsys configure failed])])
 done
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
     set +x
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
-
-# Make subsystems available to makefiles.
-# FIXME does the makefile actually need this?
-subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
 # MPI_STATUS_SIZE is hardcoded and need to be synchronized with mpi.h
 MPI_STATUS_SIZE=5

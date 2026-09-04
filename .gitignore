@@ -509,7 +509,7 @@ Makefile.am-stamp
 /src/mpi/romio/cscope.out
 
 # /src/mpi/romio/include/
-/src/mpi/romio/include/mpio.h mpiof.h
+/src/mpi/romio/include/mpio.h
 
 # /src/mpi/romio/mpi-io/
 

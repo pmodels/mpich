@@ -130,15 +130,6 @@ def dump_f08_wrappers_c(func, is_large):
     tlist = split_line_with_break(s, "", 80)
     G.out.extend(tlist)
     G.out.append("{")
-    if re.match(r'MPI_File_', func['name']):
-        if is_large:
-            # File large functions are not there yet
-            G.out.append("    return MPI_ERR_INTERN;")
-            G.out.append("}")
-            return
-        G.out.append("#ifndef HAVE_ROMIO")
-        G.out.append("    return MPI_ERR_INTERN;")
-        G.out.append("#else")
     G.out.append("INDENT");
     G.out.append("int err = MPI_SUCCESS;")
     if re.match(r'MPI_F_sync_reg', func['name'], re.IGNORECASE):
@@ -156,8 +147,6 @@ def dump_f08_wrappers_c(func, is_large):
             G.out.append(l)
     G.out.append("return err;")
     G.out.append("DEDENT")
-    if re.match(r'MPI_File_', func['name']):
-        G.out.append("#endif")
     G.out.append("}")
 
 def dump_f08_wrappers_f(func, is_large):
@@ -194,6 +183,12 @@ def dump_f08_wrappers_f(func, is_large):
         arg_list_1.append("c_null_ptr")
         arg_list_1.append("c_null_ptr")
         arg_list_2.append("c_null_ptr")
+        arg_list_2.append("c_null_ptr")
+        uses['c_null_ptr'] = 1
+    elif RE.match(r'MPI_Info_create_env$', func['name'], re.IGNORECASE):
+        arg_list_1.append("0")
+        arg_list_1.append("c_null_ptr")
+        arg_list_2.append("0")
         arg_list_2.append("c_null_ptr")
         uses['c_null_ptr'] = 1
     elif RE.match(r'mpi_i?alltoall[vw]', func['name'], re.IGNORECASE):
@@ -792,6 +787,13 @@ def dump_interface_function(func, name, c_name, is_large):
         f_param_list.append("argv")
         decl_list.append("TYPE(c_ptr), VALUE, INTENT(in) :: argc")
         decl_list.append("TYPE(c_ptr), VALUE, INTENT(in) :: argv")
+        uses['c_ptr'] = 1
+    elif RE.match(r'MPI_Info_create_env$', func['name'], re.IGNORECASE):
+        f_param_list.append("argc")
+        f_param_list.append("argv")
+        decl_list.append("INTEGER(c_int), VALUE, INTENT(in) :: argc")
+        decl_list.append("TYPE(c_ptr), VALUE, INTENT(in) :: argv")
+        uses['c_int'] = 1
         uses['c_ptr'] = 1
 
     # ----
