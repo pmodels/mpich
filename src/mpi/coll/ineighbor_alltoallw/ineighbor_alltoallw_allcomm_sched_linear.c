@@ -22,7 +22,8 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int k, l;
+    int i, k, l;
+    int swap_recv_pairs;
     int *srcs, *dsts;
     MPIR_CHKLMEM_DECL();
 
@@ -43,10 +44,14 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* need reverse the order to ensure matching when the graph is from MPI_Cart_create and
-     * the n-th dimension is periodic and the size is 1 or 2.
-     * ref. ineighbor_alltoall_allcomm_sched_linear.c */
-    for (l = indegree - 1; l >= 0; l--) {
+    /* Receives are posted with the two blocks of each dimension swapped on a
+     * Cartesian communicator, and in list order otherwise; this is what makes
+     * duplicate edges land in the block the standard prescribes.  See
+     * MPIR_Topo_nhb_swap_recv_pairs() in src/mpi/topo/topoutil.c. */
+    swap_recv_pairs = MPIR_Topo_nhb_swap_recv_pairs(comm_ptr);
+    MPIR_Assert(!swap_recv_pairs || indegree % 2 == 0);
+    for (i = 0; i < indegree; ++i) {
+        l = swap_recv_pairs ? (i ^ 1) : i;
         char *rb;
 
         rb = ((char *) recvbuf) + rdispls[l];
