@@ -425,6 +425,54 @@ int MPL_gpu_get_root_device(int dev_id)
     return dev_id;
 }
 
+int MPL_gpu_cuda_get_current_pci_bdf(int *domain, int *bus, int *dev, int *func)
+{
+    int mpl_err = MPL_SUCCESS;
+    cudaError_t ret;
+
+    if (!gpu_initialized) {
+        MPL_gpu_init(0);
+    }
+
+    if (device_count <= 0) {
+        goto fn_fail;
+    }
+
+    int cur_dev = 0;
+    CUcontext cur_ctx = NULL;
+    if (cuCtxGetCurrent(&cur_ctx) == CUDA_SUCCESS && cur_ctx != NULL) {
+        CUdevice cudev;
+        if (cuCtxGetDevice(&cudev) == CUDA_SUCCESS) {
+            cur_dev = (int) cudev;
+        }
+    }
+
+    char bus_id[MAX_GPU_STR_LEN];
+    ret = cudaDeviceGetPCIBusId(bus_id, sizeof(bus_id), cur_dev);
+    CUDA_ERR_CHECK(ret);
+
+    /* Format is "domain:bus:device.function" in hex, e.g. "0000:3B:00.0". */
+    int d, b, dv, f;
+    if (sscanf(bus_id, "%x:%x:%x.%x", &d, &b, &dv, &f) != 4) {
+        goto fn_fail;
+    }
+
+    if (domain)
+        *domain = d;
+    if (bus)
+        *bus = b;
+    if (dev)
+        *dev = dv;
+    if (func)
+        *func = f;
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
     int mpl_err = MPL_SUCCESS;
