@@ -248,14 +248,13 @@ int MPIR_pmi_init(void)
         }
     }
 
-    if (!pmi_connected) {
+    if (!MPIR_CVAR_FINALIZE_ATEXIT && !pmi_connected) {
         /* Register finalization of PM connection in exit handler */
         mpi_errno = atexit(MPIR_pmi_finalize_on_exit);
         MPIR_ERR_CHKANDJUMP1(mpi_errno != 0, mpi_errno, MPI_ERR_OTHER,
-                             "**atexit_pmi_finalize", "**atexit_pmi_finalize %d", mpi_errno);
-
-        pmi_connected = true;
+                             "**atexit", "**atexit %d", mpi_errno);
     }
+    pmi_connected = true;
 
     int world_idx = MPIR_add_world(pmi_kvs_name, size);
     MPIR_Assertp(world_idx == 0);
@@ -329,8 +328,12 @@ void MPIR_pmi_finalize(void)
     free_hwloc_topology();
 #endif
 
-    /* delay PMI_Finalize to the exit hook */
-    finalize_pending++;
+    if (MPIR_CVAR_FINALIZE_ATEXIT) {
+        SWITCH_PMI(pmi1_exit(), pmi2_exit(), pmix_exit());
+    } else {
+        /* delay PMI_Finalize to the exit hook */
+        finalize_pending++;
+    }
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
