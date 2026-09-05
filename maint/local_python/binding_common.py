@@ -253,3 +253,72 @@ def get_userbuffer_group(func_name, parameters, i):
     else:
         group_kind, group_count = None, 0
     return (group_kind, group_count)
+
+"""load_mpi_h - loads mpi.h into G.mpih_defines
+   use regex, it only works with -
+   * mpi.h from https://github.com/mpi-forum/mpi-abi-stubs
+   * mpi.h from mpich
+"""
+def load_mpi_h(f):
+    def hex_to_signed_int(s):
+        val = int(s, 16)
+        if val >= 0x80000000:
+            val = val - 0x100000000
+        return val
+
+    def translate_autoconf(name):
+        if name == 'MPI_MAX_PROCESSOR_NAME':
+            return int(G.opts['max-processor-name']) - 1
+        elif name == 'MPI_MAX_LIBRARY_VERSION_STRING':
+            return int(G.opts['max-version-string']) - 1
+        elif name == 'MPI_MAX_ERROR_STRING':
+            return int(G.opts['max-error-string']) - 1
+        elif name == 'BSEND_OVERHEAD':
+            return G.opts['bsend-overhead']
+        else:
+            raise Exception("Unexpected autoconf macro " + name)
+
+    # load constants into G.mpih_defines
+    # load MPI handle types into G.mpih_ctypes (needed by f08)
+    G.mpih_defines = {}
+    G.mpih_ctypes = {}
+    with open(f, "r") as In:
+        for line in In:
+            # trim trailing comments
+            line = re.sub(r'\s+\/\*.*', '', line)
+            if RE.match(r'typedef int (MPIX?_\w+)', line):
+                G.mpih_ctypes[RE.m.group(1)] = 'c_int'
+            elif RE.match(r'typedef struct .*\*\s*(MPIX?_\w+)', line):
+                G.mpih_ctypes[RE.m.group(1)] = 'c_intptr_t'
+            elif RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
+                # direct macros
+                (name, val) = RE.m.group(1, 2)
+                if RE.match(r'MPI_ABI_(Aint|Offset|Count)', name):
+                    continue
+                elif RE.match(r'\(+(MPI_\w+)\)\s*\(?0x([0-9a-fA-F]+)', val):
+                    # handle constants - hex
+                    val = "%s:%s" % (RE.m.group(1), hex_to_signed_int(RE.m.group(2)))
+                elif RE.match(r'\(+(MPI_\w+)\)\s*([-0-9]+)', val):
+                    # type-cast constants (MPICH does this for MPI_FILE_NULL and MPI_DISPLACEMENT_CURRENT)
+                    if RE.m.group(1) == 'MPI_Offset':
+                        val = RE.m.group(2)
+                    else:
+                        val = "%s:%s" % (RE.m.group(1), RE.m.group(2))
+                elif RE.match(r'0x([0-9a-fA-F]+)', val):
+                    # direct hex constants (MPICH's mpi.h use e.g. #define MPI_TAG_UB 0x64400001)
+                    val = hex_to_signed_int(RE.m.group(1))
+                elif RE.match(r'@(\w+)@', val):
+                    # MPICH's mpi.h.in. Only works if these values are provided via options.
+                    val = translate_autoconf(RE.m.group(1))
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
+                    # datatype aliases
+                    val = G.mpih_defines[val]
+                elif re.match(r'^(\d+)\s*$', val):
+                    if re.match(r'MPI_MAX_', name):
+                        # Fortran string buffer limit need be 1-less
+                        val = int(val) - 1
+                G.mpih_defines[name] = val
+            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(-?\d+)', line):
+                # enum values
+                (name, val) = RE.m.group(1, 2)
+                G.mpih_defines[name] = val

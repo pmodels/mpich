@@ -973,15 +973,17 @@ def dump_mpif_h(f):
         for l in G.copyright_f77:
             print(l, file=Out)
 
+        # declare KIND parameters first since they may be used for later parameters
         for a in ['INTEGER', 'ADDRESS', 'COUNT', 'OFFSET']:
-            G.mpih_defines['MPI_%s_KIND' % a] = '@%s_KIND@' % a
+            print("       INTEGER MPI_%s_KIND" % a, file=Out)
+            print("       PARAMETER (MPI_%s_KIND=%s)" % (a, G.opts[a.lower() + '-kind']), file=Out)
+
         G.mpih_defines['MPI_STATUS_SIZE'] = G.mpih_defines['MPI_F_STATUS_SIZE']
         for a in ['SOURCE', 'TAG', 'ERROR']:
             G.mpih_defines['MPI_%s' % a] = int(G.mpih_defines['MPI_F_%s' % a]) + 1
 
         # -- all integer constants
         for name in G.mpih_defines:
-            T = "INTEGER"
             if re.match(r'MPI_[TF]_', name):
                 continue
             elif re.match(r'MPI_\w+_FN', name):
@@ -990,10 +992,16 @@ def dump_mpif_h(f):
                 continue
             elif re.match(r'MPI_(UNWEIGHTED|WEIGHTS_EMPTY|BUFFER_AUTOMATIC|BOTTOM|IN_PLACE|STATUS_IGNORE|STATUSES_IGNORE|ERRCODES_IGNORE|ARGVS_NULL|ARGV_NULL)', name):
                 continue
+
+            val = G.mpih_defines[name]
+            T = "INTEGER"
+            if isinstance(val, str) and RE.match(r'(MPI_\w+):(.+)', val):
+                # strip the handle type
+                val = RE.m.group(2)
             elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
-                T = 'INTEGER(KIND=@OFFSET_KIND@)'
+                T = 'INTEGER(KIND=MPI_ADDRESS_KIND)'
             print("       %s %s" % (T, name), file=Out)
-            print("       PARAMETER (%s=%s)" % (name, G.mpih_defines[name]), file=Out)
+            print("       PARAMETER (%s=%s)" % (name, val), file=Out)
 
         # -- Fortran08 capability
         for a in ['SUBARRAYS_SUPPORTED', 'ASYNC_PROTECTS_NONBLOCKING']:
@@ -1025,7 +1033,6 @@ def dump_mpif_h(f):
         print("       INTEGER MPI_ERRCODES_IGNORE(1)", file=Out)
         print("       CHARACTER*1 MPI_ARGVS_NULL(1,1)", file=Out)
         print("       CHARACTER*1 MPI_ARGV_NULL(1)", file=Out)
-        print("@DLLIMPORT@", file=Out)
         print("       COMMON /MPIFCMB5/ MPI_UNWEIGHTED", file=Out)
         print("       COMMON /MPIFCMB9/ MPI_WEIGHTS_EMPTY", file=Out)
         print("       COMMON /MPIFCMBa/ MPI_BUFFER_AUTOMATIC", file=Out)
@@ -1034,59 +1041,6 @@ def dump_mpif_h(f):
         print("       COMMON /MPIPRIVC/ MPI_ARGVS_NULL, MPI_ARGV_NULL", file=Out)
         print("       SAVE /MPIFCMB5/, /MPIFCMB9/, /MPIFCMBa/", file=Out)
         print("       SAVE /MPIPRIV1/, /MPIPRIV2/, /MPIPRIVC/", file=Out)
-
-def load_mpi_h_in(f):
-    def hex_to_signed_int(s):
-        val = int(s, 16)
-        if val >= 0x80000000:
-            val = val - 0x100000000
-        return val
-
-    # load constants into G.mpih_defines
-    with open(f, "r") as In:
-        for line in In:
-            # trim trailing comments
-            line = re.sub(r'\s+\/\*.*', '', line)
-            if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
-                # direct macros
-                (name, val) = RE.m.group(1, 2)
-                if re.match(r'MPI_FILE_NULL', name):
-                    val = 0
-                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
-                    # datatype aliases
-                    val = G.mpih_defines[val]
-                elif re.match(r'\(?\(MPI_Datatype\)\@(MPIR?_\w+)\@\)?', val):
-                    # datatypes
-                    if re.match(r'MPI_(AINT|OFFSET|COUNT)', name):
-                        val = "@F77_%s_DATATYPE@" % name
-                    elif RE.match(r'MPI_CXX_(\w+)', name):
-                        val = "@F77_MPIR_CXX_%s@" % RE.m.group(1)
-                    else:
-                        val = "@F77_%s@" % name
-                elif RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
-                    # handle constants
-                    val = hex_to_signed_int(RE.m.group(1))
-                elif RE.match(r'\(+MPI_\w+\)\s*([-0-9]+)', val):
-                    # type-cast constants (MPICH does this for MPI_FILE_NULL and MPI_DISPLACEMENT_CURRENT)
-                    val = RE.m.group(1)
-                elif RE.match(r'0x([0-9a-fA-F]+)', val):
-                    # direct hex constants (KEYVAL constants)
-                    val = int(RE.m.group(1), 16)
-                elif RE.match(r'MPI_MAX_', name):
-                    # Fortran string buffer limit need be 1-less
-                    if re.match(r'@\w+@', val):
-                        val += "-1"
-                    else:
-                        val = int(val) - 1
-                elif RE.match(r'\(([-\d]+)\)', val):
-                    # take off the extra parentheses
-                    val = RE.m.group(1)
-
-                G.mpih_defines[name] = val
-            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(\d+)', line):
-                # enum values
-                (name, val) = RE.m.group(1, 2)
-                G.mpih_defines[name] = val
 
 #---------------------------------------- 
 def dump_profiling(name, param_str, return_type, is_cptr):
