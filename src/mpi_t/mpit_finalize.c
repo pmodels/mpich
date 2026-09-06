@@ -139,14 +139,13 @@ static void MPIR_T_pvar_env_finalize(void)
     }
 }
 
-extern int MPIR_T_env_initialized;
-
 void MPIR_T_env_finalize(void)
 {
+    MPIR_T_THREAD_CS_FINALIZE();
+
     MPIR_T_enum_env_finalize();
     MPIR_T_cvar_env_finalize();
     MPIR_T_pvar_env_finalize();
     MPIR_T_cat_env_finalize();
     MPIR_T_events_finalize();
-    MPIR_T_env_initialized = FALSE;
 }
