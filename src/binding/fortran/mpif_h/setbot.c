@@ -24,21 +24,15 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
                                         void *asn FORT_MIXED_LEN(d1),
                                         void *we FORT_END_LEN(d1) FORT_END_LEN(d2));
 
-/*
-    # MPI-2, section 4.12.5, on the declaration of MPI_F_STATUS_IGNORE
-    # MPI_F_STATUSES_IGNORE as global variables in mpi.h (!)
-*/
 int MPIR_F_NeedInit = 1;
+
+/* MPI_F_STATUS_IGNORE and MPI_F_STATUSES_IGNORE are declared in
+ * mpi.h (mpi_fortran.h) and are defined in f2c_impl.c.
+ */
 void *MPIR_F_MPI_BOTTOM = 0;
 void *MPIR_F_MPI_IN_PLACE = 0;
 void *MPIR_F_MPI_BUFFER_AUTOMATIC = 0;
 void *MPIR_F_MPI_UNWEIGHTED = 0;
-/* MPI_F_STATUS_IGNORE etc must be declared within mpi.h (MPI-2 standard
-   requires this) */
-/*
-void *MPI_F_STATUS_IGNORE   = 0;
-void *MPI_F_STATUSES_IGNORE = 0;
-*/
 MPI_Fint *MPI_F_ERRCODES_IGNORE = 0;
 void *MPI_F_ARGV_NULL = 0;
 void *MPI_F_ARGVS_NULL = 0;
