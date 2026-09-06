@@ -4213,6 +4213,12 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+# To support ABI, check whether MPIX callback extensions are available
+has_mpix_callbacks=yes
+if test "$has_mpix_callbacks" = "yes" ; then
+    AC_DEFINE([HAS_MPIX_CALLBACKS],1,[Define if mpix callbacks (e.g. MPIX_Comm_create_keyval_x) are available])
+fi
+
 AC_ARG_ENABLE([fortran-call-pmpi],
               [AS_HELP_STRING([--enable-fortran-call-pmpi],
                               [If enabled, Fortran routines will call C PMPI functions, skipping
