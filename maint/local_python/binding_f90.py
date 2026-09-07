@@ -213,21 +213,6 @@ def dump_f90_sizeofs():
         G.out.append("END SUBROUTINE MPI_SIZEOF_%sV" % k)
 
 #---------------------------------------- 
-def check_func_directives(func):
-    if 'dir' in func and func['dir'] == "mpit":
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_attr_', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'.*_function', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_pcontrol', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix?_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
-        # implemented in mpi_f08_types.f90
-        func['_skip_fortran'] = 1
-
 #---------------------------------------- 
 def dump_F_module_open(name):
     G.out.append("MODULE %s" % name)

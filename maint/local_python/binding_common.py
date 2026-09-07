@@ -322,3 +322,30 @@ def load_mpi_h(f):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val
+
+def check_func_directives(func, binding):
+    is_mpix = False
+    is_legacy = False
+    if RE.match(r'mpix_', func['name'], re.IGNORECASE):
+        is_mpix = True
+    elif 'replace' in func:
+        is_legacy = True
+
+    if 'dir' in func and func['dir'] == "mpit":
+        func['_skip_fortran'] = 1
+    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif binding == "f08" and is_legacy:
+        func['_skip_fortran'] = 1
+    elif 'skip-mpix' in G.opts and (is_mpix or is_legacy):
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpix?_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
+        # implemented in mpi_f08_types.f90
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpi_.*_function$', func['name'], re.IGNORECASE):
+        # defined in mpi_f08_callbacks.f90
+        func['_skip_fortran'] = 1
+    elif binding == "f90" and RE.match(r'mpi_pcontrol', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1

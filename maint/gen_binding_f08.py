@@ -23,7 +23,7 @@ def main():
     # preprocess
     get_real_POLY_kinds()
     for func in func_list:
-        check_func_directives(func)
+        check_func_directives(func, "f08")
         if '_skip_fortran' in func:
             continue
         if re.match(r'mpi_op_create|mpi_register_datarep', func['name'], re.IGNORECASE):

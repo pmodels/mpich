@@ -1296,36 +1296,6 @@ def process_func_parameters(func):
             func['_need_cdesc'] = True
             return
 
-def check_func_directives(func):
-    if 'dir' in func and func['dir'] == "mpit":
-        func['_skip_fortran'] = 1
-    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif 'skip-mpix' in G.opts and RE.match(r'mpix_', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_)', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_attr_', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix?_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
-        # implemented in mpi_f08_types.f90
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_.*_function$', func['name'], re.IGNORECASE):
-        # defined in mpi_f08_callbacks.f90
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_type_(lb|ub|extent|hindexed|hvector|struct)$', func['name'], re.IGNORECASE):
-        # removed in MPI-1 and not defined in mpi_f08
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_(address|errhandler_(create|get|set))$', func['name'], re.IGNORECASE):
-        # removed in MPI-1 and not defined in mpi_f08
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_keyval_(create|free)$', func['name'], re.IGNORECASE):
-        # deprecated and not defined in mpi_f08
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_op_create_x|mpix_(\w+)_create_(errhandler|keyval)_x$', func['name'], re.IGNORECASE):
-        # c-only
-        func['_skip_fortran'] = 1
-
 # -------------------------------
 def need_ptr_check(p):
     # Array parameter that may have special constant values
@@ -1440,7 +1410,7 @@ def get_F_c_interface_decl(func, p, f_mapping, c_mapping):
     elif RE.match(r'(out|inout)', p['param_direction'], re.IGNORECASE):
         if t_c == 'int':
             return "INTEGER(c_int), %s :: %s" % (intent, p['name'])
-        elif p['kind'] == 'ATTRIBUTE_VAL':
+        elif RE.match(r'ATTRIBUTE_VAL(_10)?', p['kind']):
             return "%s, %s :: %s" % (t_f, intent, p['name'])
         elif RE.match(r'MPI_(Fint|Aint|Count|Offset)', t_c):
             return "%s, %s :: %s" % (t_f, intent, p['name'])
@@ -1449,7 +1419,7 @@ def get_F_c_interface_decl(func, p, f_mapping, c_mapping):
             return "TYPE(c_funptr), VALUE :: %s" % p['name']
         elif t_c == 'int':
             return "INTEGER(c_int), VALUE, INTENT(in) :: %s" % p['name']
-        elif p['kind'] == 'ATTRIBUTE_VAL':
+        elif RE.match(r'ATTRIBUTE_VAL(_10)?', p['kind']):
             return "%s, VALUE, INTENT(in) :: %s" % (t_f, p['name'])
         elif RE.match(r'MPI_(Fint|Aint|Count|Offset)', t_c):
             return "%s, VALUE, INTENT(in) :: %s" % (t_f, p['name'])
@@ -1556,7 +1526,7 @@ def get_F_c_decl(func, p, f_mapping, c_mapping):
             return "TYPE(c_%s), TARGET :: %s_c" % (RE.m.group(1), p['name'])
         else:
             return "INTEGER(c_%s) :: %s_c" % (RE.m.group(1), p['name'])
-    elif RE.match(r'(BUFFER|EXTRA_STATE|ATTRIBUTE_VAL)', p['kind']):
+    elif RE.match(r'(BUFFER|EXTRA_STATE|ATTRIBUTE_VAL(_10)?)', p['kind']):
         return None
     elif RE.match(r'MPI_(Fint|Aint|Count|Offset)', t_c):
         return None

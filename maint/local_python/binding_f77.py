@@ -1231,28 +1231,6 @@ def dump_fortran_line(s):
     G.out.extend(tlist)
 
 # -------------------------------
-def check_func_directives(func):
-    none_standard = False
-    if RE.match(r'mpix_', func['name'], re.IGNORECASE):
-        none_standard = True
-    elif 'replace' in func:
-        none_standard = True
-
-    if 'dir' in func and func['dir'] == "mpit":
-        func['_skip_fortran'] = 1
-    elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif 'skip-mpix' in G.opts and none_standard:
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpix?_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
-        # implemented in mpi_f08_types.f90
-        func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_.*_function$', func['name'], re.IGNORECASE):
-        # defined in mpi_f08_callbacks.f90
-        func['_skip_fortran'] = 1
-
 def f90_param_need_skip(p):
     if RE.search(r'suppress=.*f90_parameter', p['t']):
         return True

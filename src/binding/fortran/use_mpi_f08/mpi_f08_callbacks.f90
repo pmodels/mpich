@@ -39,6 +39,25 @@ subroutine MPI_User_function_c(invec, inoutvec, len, datatype)
     type(MPI_Datatype) :: datatype
 end subroutine
 
+subroutine MPI_Copy_function(oldcomm,comm_keyval,extra_state, &
+       attribute_val_in,attribute_val_out,flag,ierror)
+    use mpi_f08_types, only : MPI_Comm
+    implicit none
+    type(MPI_Comm) :: oldcomm
+    integer :: comm_keyval, ierror
+    integer :: extra_state, attribute_val_in, attribute_val_out
+    logical :: flag
+end subroutine
+
+subroutine MPI_Delete_function(comm,comm_keyval, &
+       attribute_val, extra_state, ierror)
+    use mpi_f08_types, only : MPI_Comm
+    implicit none
+    type(MPI_Comm) :: comm
+    integer :: comm_keyval, ierror
+    integer :: attribute_val, extra_state
+end subroutine
+
 subroutine MPI_Comm_copy_attr_function(oldcomm,comm_keyval,extra_state, &
        attribute_val_in,attribute_val_out,flag,ierror)
     use mpi_f08_types, only : MPI_Comm
