@@ -2,6 +2,10 @@
                                Changes in 5.0.2
 ===============================================================================
 
+# Fix early MPI_T_finalize causing segfault in internal CVAR access
+
+# Fix passing build flags to wrapper mpicc
+
 # Fix buffer overflow in error message printing
 
 # Fix deadlock issue with parallel GPU buffer copies in IPC path

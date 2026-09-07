@@ -200,8 +200,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPID_Thread_init(&err);
     MPIR_Assert(err == 0);
 
-    mpi_errno = MPIR_T_env_init();
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_T_init_balance++;
+    if (MPIR_T_init_balance == 1) {
+        mpi_errno = MPIR_T_env_init();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (MPIR_CVAR_FINALIZE_ATEXIT) {
         init_counter++;
@@ -470,8 +473,10 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
-    if (!MPIR_T_is_initialized())
+    MPIR_T_init_balance--;
+    if (MPIR_T_init_balance == 0) {
         MPIR_T_env_finalize();
+    }
 
     /* If performing coverage analysis, make each process sleep for
      * rank * 100 ms, to give time for the coverage tool to write out

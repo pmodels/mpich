@@ -75,8 +75,6 @@ static inline int MPIR_T_cvar_env_init(void)
     return MPIR_T_cvar_init();
 }
 
-int MPIR_T_env_initialized = FALSE;
-
 int MPIR_T_env_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,15 +87,15 @@ int MPIR_T_env_init(void)
     }
 #endif
 
-    if (!MPIR_T_env_initialized) {
-        MPIR_T_env_initialized = TRUE;
-        MPIR_T_enum_env_init();
-        MPIR_T_cat_env_init();
-        mpi_errno = MPIR_T_cvar_env_init();
-        MPIR_T_pvar_env_init();
-        if (MPIR_CVAR_DEBUG_SUMMARY && config_filename) {
-            printf("Global config file: %s\n", config_filename);
-        }
+    MPIR_T_THREAD_CS_INIT();
+
+    MPIR_T_enum_env_init();
+    MPIR_T_cat_env_init();
+    mpi_errno = MPIR_T_cvar_env_init();
+    MPIR_T_pvar_env_init();
+    if (MPIR_CVAR_DEBUG_SUMMARY && config_filename) {
+        printf("Global config file: %s\n", config_filename);
     }
+
     return mpi_errno;
 }

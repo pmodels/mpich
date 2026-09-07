@@ -227,7 +227,6 @@ MPI_T_finalize:
     }
 
     if (MPIR_T_init_balance == 0) {
-        MPIR_T_THREAD_CS_FINALIZE();
         MPIR_T_env_finalize();
     }
 }
@@ -264,7 +263,6 @@ MPI_T_init_thread:
 
     ++MPIR_T_init_balance;
     if (MPIR_T_init_balance == 1) {
-        MPIR_T_THREAD_CS_INIT();
         mpi_errno = MPIR_T_env_init();
         if (mpi_errno) {
             goto fn_fail;
