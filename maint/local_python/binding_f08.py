@@ -1009,13 +1009,16 @@ def dump_mpi_f08_types():
         G.out.append("")
         G.out.append("TYPE, bind(C) :: MPI_Status")
         for field in G.status_fields:
-            G.out.append("    INTEGER :: %s" % field)
+            if RE.match(r'(\w+)\[(\d+)\]', field):
+                G.out.append("    INTEGER :: %s(%s)" % RE.m.group(1,2))
+            else:
+                G.out.append("    INTEGER :: %s" % field)
         G.out.append("END TYPE MPI_Status")
         G.out.append("")
-        G.out.append("INTEGER, parameter :: MPI_SOURCE = 3")
-        G.out.append("INTEGER, parameter :: MPI_TAG    = 4")
-        G.out.append("INTEGER, parameter :: MPI_ERROR  = 5")
-        G.out.append("INTEGER, parameter :: MPI_STATUS_SIZE = 5")
+        G.out.append("INTEGER, parameter :: MPI_SOURCE = %s" % (int(G.mpih_defines['MPI_F_SOURCE']) + 1))
+        G.out.append("INTEGER, parameter :: MPI_TAG = %s" % (int(G.mpih_defines['MPI_F_TAG']) + 1))
+        G.out.append("INTEGER, parameter :: MPI_ERROR = %s" % (int(G.mpih_defines['MPI_F_ERROR']) + 1))
+        G.out.append("INTEGER, parameter :: MPI_STATUS_SIZE = %s" % G.mpih_defines['MPI_F_STATUS_SIZE'])
 
     def dump_status_interface():
         G.out.append("")
@@ -1040,14 +1043,11 @@ def dump_mpi_f08_types():
                 G.out.append("TYPE(MPI_Status), INTENT(%s) :: %s" % (intent, name))
 
         # phrase of individual status field
-        def field(t, name, idx):
+        def field(t, name, field_name, idx):
             if t == 'f':
-                if idx < 2:
-                    return "%s(%d)" % (name, idx + 1)
-                else:
-                    return "%s(%s)" % (name, G.status_fields[idx])
+                return "%s(%d)" % (name, idx)
             else:
-                return "%s%%%s" % (name, G.status_fields[idx])
+                return "%s%%%s" % (name, field_name)
 
         # body of the status conversion routines
         def dump_convert(in_type, in_name, out_type, out_name, res):
@@ -1060,8 +1060,13 @@ def dump_mpi_f08_types():
 
             G.out.append("")
             if in_type == "f" or out_type == "f" or res is None:
-                for i in range(5):
-                    G.out.append("%s = %s" % (field(out_type, out_name, i), field(in_type, in_name, i)))
+                idx = 1
+                for field_name in G.status_fields:
+                    G.out.append("%s = %s" % (field(out_type, out_name, field_name, idx), field(in_type, in_name, field_name, idx)))
+                    if RE.match(r'\w+\[(\d+)\]', field_name):
+                        idx += int(RE.m.group(1))
+                    else:
+                        idx += 1
             else:
                 G.out.append("%s = %s" % (out_name, in_name))
 
@@ -1651,7 +1656,10 @@ def dump_c_interface_types_f90(f):
 
         print("type, bind(c) :: c_Status", file=Out)
         for a in G.status_fields:
-            print("    integer(c_int) :: %s" % a, file=Out)
+            if RE.match(r'(\w+)\[(\d+)\]', a):
+                print("    integer(c_int) :: %s(%s)" % RE.m.group(1,2), file=Out)
+            else:
+                print("    integer(c_int) :: %s" % a, file=Out)
         print("end type c_Status", file=Out)
         print("", file=Out)
 

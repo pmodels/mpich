@@ -20,6 +20,10 @@ def main():
     G.check_write_path("%s/wrappers_c/" % f08_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
 
+    # load mpi.h
+    G.mpih_defines = {}
+    load_mpi_h(G.opts['mpi-h'])
+
     # preprocess
     get_real_POLY_kinds()
     for func in func_list:
@@ -150,9 +154,6 @@ def main():
     dump_mpi_f08_types()
     f = "%s/mpi_f08_types.f90" % f08_dir
     dump_f90_file(f, G.out)
-
-    G.mpih_defines = {}
-    load_mpi_h(G.opts['mpi-h'])
 
     # mpi_f08_compile_constants.f90
     f = "%s/mpi_f08_compile_constants.f90" % f08_dir

@@ -282,11 +282,20 @@ def load_mpi_h(f):
     # load MPI handle types into G.mpih_ctypes (needed by f08)
     G.mpih_defines = {}
     G.mpih_ctypes = {}
+    G.status_fields = []
     with open(f, "r") as In:
         for line in In:
             # trim trailing comments
             line = re.sub(r'\s+\/\*.*', '', line)
-            if RE.match(r'typedef int (MPIX?_\w+)', line):
+            # assume MPI_Status is the only "typedef struct .* {"
+            if RE.match(r'typedef\s+struct\s*(\w+\s*)?{', line):
+                # python lets you do an inner loop of line iteration
+                for line_i in In:
+                    if RE.match(r'^}\s* \w+;\s*$', line_i):
+                        break
+                    elif RE.match(r'\s*int\s+(\w+(\[.*\])?);', line_i):
+                        G.status_fields.append(RE.m.group(1));
+            elif RE.match(r'typedef int (MPIX?_\w+)', line):
                 G.mpih_ctypes[RE.m.group(1)] = 'c_int'
             elif RE.match(r'typedef struct .*\*\s*(MPIX?_\w+)', line):
                 G.mpih_ctypes[RE.m.group(1)] = 'c_intptr_t'
