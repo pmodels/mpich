@@ -2,95 +2,11 @@
 
 MPI_Abi_get_fortran_booleans:
     .desc: Get the size of Fortran logical type and the .TRUE. and .FALSE. value
-{
-    MPI_Datatype type = MPI_LOGICAL;
-    MPIR_DATATYPE_REPLACE_BUILTIN(type);
-    if (type == MPI_DATATYPE_NULL) {
-        *is_set = 0;
-        /* do we leave other outputs unset? */
-    } else {
-        *is_set = 1;
-        int exp_logical_size = MPIR_Datatype_get_basic_size(type);
-        if (logical_size != exp_logical_size) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_wrong", "**logical_size_wrong %d", exp_logical_size);
-        }
-        switch(logical_size) {
-            case 1:
-                *(int8_t *) logical_true = MPIR_fortran_true;
-                *(int8_t *) logical_false = MPIR_fortran_false;
-                break;
-            case 2:
-                *(int16_t *) logical_true = MPIR_fortran_true;
-                *(int16_t *) logical_false = MPIR_fortran_false;
-                break;
-            case 4:
-                *(int32_t *) logical_true = MPIR_fortran_true;
-                *(int32_t *) logical_false = MPIR_fortran_false;
-                break;
-            case 8:
-                *(int64_t *) logical_true = MPIR_fortran_true;
-                *(int64_t *) logical_false = MPIR_fortran_false;
-                break;
-            default:
-                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ABI, "**logical_size_unexp", "**logical_size_unexp %d", logical_size);
-        }
-    }
-}
+    .seealso: MPI_Abi_set_fortran_booleans
 
 MPI_Abi_get_fortran_info:
     .desc: Return an info object that provides information related to the Fortran ABI
-    .seealso: MPI_Abi_get_info
-{
-    if (MPIR_Internal_types[MPI_INTEGER & 0xff].internal_type == MPI_DATATYPE_NULL) {
-        *info = MPI_INFO_NULL;
-    } else {
-        MPIR_Info *info_ptr;
-        mpi_errno = MPIR_Info_alloc(&info_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPI_Datatype type;
-        char str[8];
-#define PUSH_TYPE_INFO(type_, keyname) \
-    do { \
-        type = type_; \
-        MPIR_DATATYPE_REPLACE_BUILTIN(type); \
-        snprintf(str, sizeof(str), "%d", MPIR_Datatype_get_basic_size(type)); \
-        MPIR_Info_push(info_ptr, keyname, str); \
-    } while (0)
-        PUSH_TYPE_INFO(MPI_LOGICAL, "mpi_logical_size");
-        PUSH_TYPE_INFO(MPI_INTEGER, "mpi_integer_size");
-        PUSH_TYPE_INFO(MPI_REAL, "mpi_real_size");
-        PUSH_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size");
-#undef PUSH_TYPE_INFO
-#define PUSH_TYPE_INFO(type_, keyname) \
-    do { \
-        type = type_; \
-        MPIR_DATATYPE_REPLACE_BUILTIN(type); \
-        MPIR_Info_push(info_ptr, keyname, type != MPI_DATATYPE_NULL ? "true" : "false"); \
-    } while (0)
-        PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
-        PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
-        PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
-        PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
-        PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
-        PUSH_TYPE_INFO(MPI_INTEGER1, "mpi_integer1_supported");
-        PUSH_TYPE_INFO(MPI_INTEGER2, "mpi_integer2_supported");
-        PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
-        PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
-        PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
-        PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
-        PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
-        PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
-        PUSH_TYPE_INFO(MPI_REAL16, "mpi_real16_supported");
-        PUSH_TYPE_INFO(MPI_COMPLEX4, "mpi_complex4_supported");
-        PUSH_TYPE_INFO(MPI_COMPLEX8, "mpi_complex8_supported");
-        PUSH_TYPE_INFO(MPI_COMPLEX16, "mpi_complex16_supported");
-        PUSH_TYPE_INFO(MPI_COMPLEX32, "mpi_complex32_supported");
-        PUSH_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported");
-#undef PUSH_TYPE_INFO
-        *info = info_ptr->handle;
-    }
-}
+    .seealso: MPI_Abi_set_fortran_info
 
 MPI_Abi_get_info:
     .desc: Return an info object that provides information related to the ABI
@@ -133,9 +49,11 @@ MPI_Abi_get_version:
 
 MPI_Abi_set_fortran_booleans:
     .desc: Set Fortran logical type size and the value for .TRUE. and .FALSE.
+    .seealso: MPI_Abi_get_fortran_booleans
 
 MPI_Abi_set_fortran_info:
     .desc: Set Fortran datatype sizes and whether optional Fortran types are supported
+    .seealso: MPI_Abi_get_fortran_info
 
 MPI_Comm_toint:
     .return: INTEGER
