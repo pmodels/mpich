@@ -45,9 +45,17 @@ AC_DEFUN([PAC_POP_ALL_FLAGS],[
 	PAC_POP_FLAG(LIBS)
 ])
 
-dnl PAC_PREFIX_FLAG - Initialize a prefixed flag variable
+dnl PAC_PREFIX_FLAG - Initialize a prefixed flag variable by copying FLAG
 dnl Usage: PAC_PREFIX_FLAG(PREFIX, FLAG)
 AC_DEFUN([PAC_PREFIX_FLAG],[
+	$1_$2=$$2
+	export $1_$2
+	AC_SUBST($1_$2)
+])
+
+dnl PAC_INIT_FLAG - Initialize a prefixed flag variable as empty
+dnl Usage: PAC_INIT_FLAG(PREFIX, FLAG)
+AC_DEFUN([PAC_INIT_FLAG],[
 	$1_$2=""
 	export $1_$2
 	AC_SUBST($1_$2)
@@ -64,6 +72,19 @@ AC_DEFUN([PAC_PREFIX_ALL_FLAGS],[
 	PAC_PREFIX_FLAG($1, LDFLAGS)
 	PAC_PREFIX_FLAG($1, LIBS)
 	PAC_PREFIX_FLAG($1, EXTRA_LIBS)
+])
+
+dnl PAC_INIT_ALL_FLAG - Initialize all flags with a prefix
+dnl Usage: PAC_INIT_ALL_FLAGS(PREFIX)
+AC_DEFUN([PAC_INIT_ALL_FLAGS],[
+	PAC_INIT_FLAG($1, CFLAGS)
+	PAC_INIT_FLAG($1, CPPFLAGS)
+	PAC_INIT_FLAG($1, CXXFLAGS)
+	PAC_INIT_FLAG($1, FFLAGS)
+	PAC_INIT_FLAG($1, FCFLAGS)
+	PAC_INIT_FLAG($1, LDFLAGS)
+	PAC_INIT_FLAG($1, LIBS)
+	PAC_INIT_FLAG($1, EXTRA_LIBS)
 ])
 
 dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user
