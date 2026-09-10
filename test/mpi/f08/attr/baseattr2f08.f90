@@ -9,7 +9,8 @@
         use mpi_f08
         integer ierr, errs
         logical flag
-        integer value, commsize, commrank
+        integer(kind=MPI_ADDRESS_KIND) value
+        integer commsize, commrank
 
         errs = 0
         call mtest_init( ierr )
@@ -17,7 +18,7 @@
         call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
         call mpi_comm_rank( MPI_COMM_WORLD, commrank, ierr )
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_TAG_UB, value, flag, ierr &
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_TAG_UB, value, flag, ierr &
       &       )
         if (.not. flag) then
            errs = errs + 1
@@ -29,7 +30,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_HOST, value, flag, ierr )
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_HOST, value, flag, ierr )
         if (.not. flag) then
            errs = errs + 1
            print *, "Could not get HOST"
@@ -41,7 +42,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_IO, value, flag, ierr )
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_IO, value, flag, ierr )
         if (.not. flag) then
            errs = errs + 1
            print *, "Could not get IO"
@@ -53,7 +54,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_WTIME_IS_GLOBAL, value, &
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_WTIME_IS_GLOBAL, value, &
       &       flag, ierr )
         if (flag) then
 !          Wtime need not be set
@@ -64,7 +65,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_APPNUM, value, flag, ierr &
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_APPNUM, value, flag, ierr &
       &       )
 !     appnum need not be set
         if (flag) then
@@ -75,7 +76,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, &
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, &
       &       flag, ierr )
 !     MPI_UNIVERSE_SIZE need not be set
         if (flag) then
@@ -86,7 +87,7 @@
            endif
         endif
 
-        call mpi_attr_get( MPI_COMM_WORLD, MPI_LASTUSEDCODE, value, flag &
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_LASTUSEDCODE, value, flag &
       &       , ierr )
 ! Last used code must be defined and >= MPI_ERR_LASTCODE
         if (flag) then

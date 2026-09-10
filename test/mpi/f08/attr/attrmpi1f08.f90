@@ -8,8 +8,8 @@
       program main
       use mpi_f08
       implicit none
-      integer value, wsize, wrank, extra, mykey
-      integer rvalue, svalue
+      integer wsize, wrank, mykey
+      integer(kind=MPI_ADDRESS_KIND) extra, value, rvalue, svalue
       TYPE(MPI_Comm) ncomm
       logical flag
       integer ierr, errs
@@ -21,9 +21,9 @@
 !
 !     Simple attribute put and get
 !
-      call mpi_keyval_create( MPI_COMM_NULL_COPY_FN, MPI_COMM_NULL_DELETE_FN, &
+      call mpi_comm_create_keyval( MPI_COMM_NULL_COPY_FN, MPI_COMM_NULL_DELETE_FN, &
       &     mykey, extra,ierr )
-      call mpi_attr_get( MPI_COMM_WORLD, mykey, value, flag, ierr )
+      call mpi_comm_get_attr( MPI_COMM_WORLD, mykey, value, flag, ierr )
       if (flag) then
          errs = errs + 1
          print *, &
@@ -32,9 +32,9 @@
 !
       value = 1234567
       svalue = value
-      call mpi_attr_put( MPI_COMM_WORLD, mykey, value, ierr )
+      call mpi_comm_set_attr( MPI_COMM_WORLD, mykey, value, ierr )
       value = -9876543
-      call mpi_attr_get( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
+      call mpi_comm_get_attr( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
       if (.not. flag) then
          errs = errs + 1
          print *, "Did not find attribute after set"
@@ -46,9 +46,9 @@
       endif
       value = -123456
       svalue = value
-      call mpi_attr_put( MPI_COMM_WORLD, mykey, value, ierr )
+      call mpi_comm_set_attr( MPI_COMM_WORLD, mykey, value, ierr )
       value = 987654
-      call mpi_attr_get( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
+      call mpi_comm_get_attr( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
       if (.not. flag) then
          errs = errs + 1
          print *, "Did not find attribute after set (neg)"
@@ -59,6 +59,6 @@
          endif
       endif
 !
-      call mpi_keyval_free( mykey, ierr )
+      call mpi_comm_free_keyval( mykey, ierr )
       call mtest_finalize( errs )
       end

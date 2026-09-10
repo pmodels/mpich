@@ -7,7 +7,8 @@
 
       program main
       use mpi_f08
-      integer value, commsize
+      integer(kind=MPI_ADDRESS_KIND) value
+      integer commsize
       logical flag
       integer ierr, errs
 
@@ -15,7 +16,7 @@
       call mtest_init( ierr )
 
       call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
-      call mpi_attr_get( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, flag &
+      call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, flag &
       &     , ierr)
       ! MPI_UNIVERSE_SIZE need not be set
       if (flag) then
@@ -26,7 +27,7 @@
          endif
       endif
 
-      call mpi_attr_get( MPI_COMM_WORLD, MPI_LASTUSEDCODE, value, flag, &
+      call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_LASTUSEDCODE, value, flag, &
       &     ierr )
       ! Last used code must be defined and >= MPI_ERR_LASTCODE
       if (flag) then
@@ -41,7 +42,7 @@
          print *, "MPI_LASTUSECODE is not defined"
       endif
 
-      call mpi_attr_get( MPI_COMM_WORLD, MPI_APPNUM, value, flag, ierr )
+      call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_APPNUM, value, flag, ierr )
       ! appnum need not be set
       if (flag) then
          if (value .lt. 0) then
