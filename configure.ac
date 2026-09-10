@@ -4228,12 +4228,6 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
-# To support ABI, check whether MPIX callback extensions are available
-has_mpix_callbacks=yes
-if test "$has_mpix_callbacks" = "yes" ; then
-    AC_DEFINE([HAS_MPIX_CALLBACKS],1,[Define if mpix callbacks (e.g. MPIX_Comm_create_keyval_x) are available])
-fi
-
 AC_ARG_ENABLE([fortran-call-pmpi],
               [AS_HELP_STRING([--enable-fortran-call-pmpi],
                               [If enabled, Fortran routines will call C PMPI functions, skipping
@@ -4258,7 +4252,23 @@ AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip ge
 AC_ARG_ENABLE([fortran-mpix], [AS_HELP_STRING([--disable-fortran-mpix], [skip mpix in Fortran bindings])],
     [enable_fortran_mpix=$enableval], [enable_fortran_mpix=yes])
 
-gen_cmd_common="-mpi-h=src/include/mpi.h"
+# To support ABI, check whether MPIX callback extensions are available
+has_mpix_callbacks=yes
+
+mpi_h="src/include/mpi.h"
+if test "$enable_mpich_abi" = "no" ; then
+    # Build Fortran binding on top of MPI ABI
+    mpi_h="$srcdir/src/binding/abi/mpi_abi.h"
+    # TODO: after we split fortran package: enable mpix if libmpi_abi.so have them
+    enable_fortran_mpix=no
+    has_mpix_callbacks=no
+fi
+
+if test "$has_mpix_callbacks" = "yes" ; then
+    AC_DEFINE([HAS_MPIX_CALLBACKS],1,[Define if mpix callbacks (e.g. MPIX_Comm_create_keyval_x) are available])
+fi
+
+gen_cmd_common="-mpi-h=$mpi_h"
 if test "$enable_fortran_mpix" = "yes" ; then
     AC_DEFINE([MPI_MPIX], 1, [Define if the fortran binding supports MPIX])
 else

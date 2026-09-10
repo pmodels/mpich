@@ -201,6 +201,10 @@ lib_lib@MPIFCLIBNAME@_la_SOURCES =
 if BUILD_FC_BINDING
 modinc_HEADERS = $(mpi_fc_modules)
 endif BUILD_FC_BINDING
+if !BUILD_MPICH_LIB
+# define MPI_ABI to avoid picking up MPICH-specific pieces in mpi.h
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPI_ABI
+endif
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
 lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
 endif BUILD_F77_BINDING
