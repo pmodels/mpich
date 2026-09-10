@@ -2,6 +2,9 @@
                                Changes in 5.0.2
 ===============================================================================
 
+# Fix neighborhood alltoall erroneous matching order for periodic cartesian
+  topology
+
 # Fix early MPI_T_finalize causing segfault in internal CVAR access
 
 # Fix passing build flags to wrapper mpicc
