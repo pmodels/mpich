@@ -6,9 +6,6 @@
 #include "cdesc.h"
 #include <string.h>
 
-int MPIR_F08_MPI_IN_PLACE;
-int MPIR_F08_MPI_BOTTOM;
-
 /*
   Convert an array of strings in Fortran Format to an array of strings in C format (i.e., char* a[]).
 
