@@ -7,6 +7,19 @@
 #define MPI_FORTIMPL_H_INCLUDED
 
 #include "mpichconf.h"
+
+#ifdef FORTRAN_BUILD_MPI_ABI
+
+#define MPI_ABI
+
+#if defined(HAVE_VISIBILITY)
+#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define MPICH_API_PUBLIC
+#endif
+
+#endif
+
 #include "mpi.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>

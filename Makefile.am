@@ -160,7 +160,7 @@ endif !BUILD_PROFILING_LIB
 endif BUILD_MPICH_LIB
 
 if BUILD_ABI_LIB
-abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
+abi_cppflags = -DMPICH_BUILD_MPI_ABI
 if BUILD_PROFILING_LIB
 # -------- mpi-abi: libpmpi_abi + libmpi_abi ------------------
 #
@@ -203,7 +203,7 @@ modinc_HEADERS = $(mpi_fc_modules)
 endif BUILD_FC_BINDING
 if !BUILD_MPICH_LIB
 # define MPI_ABI to avoid picking up MPICH-specific pieces in mpi.h
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPI_ABI
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
 endif
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
 lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)

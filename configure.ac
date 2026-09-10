@@ -522,6 +522,10 @@ if test "$enable_mpich_abi" = "no" ; then
     enable_f08=no
 fi
 
+if test "$enable_mpi_abi" = "yes" ; then
+    PAC_APPEND_FLAG([-I${srcdir}/src/binding/abi], [CPPFLAGS])
+fi
+
 AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
 AM_CONDITIONAL([BUILD_MPICH_LIB], [test "$enable_mpich_abi" = "yes"])
 
@@ -4262,6 +4266,7 @@ if test "$enable_mpich_abi" = "no" ; then
     # TODO: after we split fortran package: enable mpix if libmpi_abi.so have them
     enable_fortran_mpix=no
     has_mpix_callbacks=no
+    AC_DEFINE([FORTRAN_BUILD_MPI_ABI],1,[Define to build Fortran binding on MPI ABI])
 fi
 
 if test "$has_mpix_callbacks" = "yes" ; then
