@@ -42,6 +42,7 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_IPC_ack_t *hdr = am_hdr;
+    MPIDI_IPCI_type_t ipc_type = MPIDI_SHM_REQUEST(hdr->req_ptr, ipc.ipc_type);
 
     MPIR_FUNC_ENTER;
 
@@ -50,7 +51,7 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     }
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     /* cleanup any GPU resources created as part of the IPC */
-    if (MPIDI_SHM_REQUEST(hdr->req_ptr, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
+    if (ipc_type == MPIDI_IPCI_TYPE__GPU || ipc_type == MPIDI_IPCI_TYPE_DIRECT) {
         mpi_errno = MPIDI_GPU_ipc_handle_complete(hdr->req_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
