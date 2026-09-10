@@ -219,7 +219,7 @@ static int pmix_get_parent(const char *key, char *val, int val_size)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno = PMIX_SUCCESS;
     pmix_value_t *pvalue;
-    pmi_errno = PMIx_Get(&pmix_parent, prefix_key(key), NULL, 0, &pvalue);
+    pmi_errno = PMIx_Get(&pmix_parent, key, NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
                          "**pmix_get %s", PMIx_Error_string(pmi_errno));
     MPL_strncpy(val, pvalue->data.string, val_size);

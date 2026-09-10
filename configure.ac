@@ -267,7 +267,8 @@ export FROM_MPICH
 # so executables built within MPICH use them.  If inter-library
 # dependencies are not supported on the platform, these libraries are
 # added to the MPICH wrappers (mpicc and friends) as well.
-PAC_PREFIX_ALL_FLAGS(WRAPPER)
+# Initialize all WRAPPER flags to empty string.
+PAC_INIT_ALL_FLAGS(WRAPPER)
 
 # confdb routines are used in multiple components. Let the macros know
 # whether WRAPPER FLAGS are used.

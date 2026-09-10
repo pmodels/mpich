@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 
+#ifdef USE_CONFIGFILE
 /*
  * Read global config files that have MPICH_ environment variables for us to
  * use
@@ -49,6 +50,7 @@ static int read_config_files(const char *fname)
     fclose(f);
     return TRUE;
 }
+#endif
 
 static inline void MPIR_T_enum_env_init(void)
 {

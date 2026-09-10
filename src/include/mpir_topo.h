@@ -75,6 +75,8 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
                         int indegree, int sources[], int *inweights,
                         int outdegree, int dests[], int *outweights);
 
+bool MPIR_Topo_is_cartesian(MPIR_Comm * comm_ptr);
+
 #define MAX_CART_DIM 16
 
 #endif /* MPIR_TOPO_H_INCLUDED */
