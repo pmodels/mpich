@@ -2709,6 +2709,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     size_t n = size;
     bool src_mmaped = false, dest_mmaped = false;
 
+    /* NOTE: mmap here is uncached -- each call creates a fresh mmap and unmaps after copy */
     if (src_attr && src_attr->type == MPL_GPU_POINTER_DEV) {
         mpl_err =
             MPL_ze_mmap_device_pointer(src, &src_attr->device_attr, src_attr->device, (void **) &s);

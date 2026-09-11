@@ -608,7 +608,7 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
         for (int i = 0; i < entry->num_maps; i++) {
             if (maps[i].remote_lrank == local_rank) {
                 *host_ptr_out = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
-                attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+                attr->type = MPL_GPU_POINTER_DEV_MMAP;
                 goto fn_exit;
             }
         }
@@ -646,7 +646,7 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
     ipc_track_cache_map_addr(pbase, map, local_rank);
 
     *host_ptr_out = (void *) ((uintptr_t) map.mapped_addr + offset);
-    attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+    attr->type = MPL_GPU_POINTER_DEV_MMAP;
 #endif
 
   fn_exit:
@@ -804,7 +804,7 @@ static int gpu_ipc_async_start(MPIR_Request * req, MPIR_gpu_req * req_p,
 }
 
 static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint data_sz,
-                        int dev_id, void **addr_out)
+                        int dev_id, void **addr_out, MPL_pointer_attr_t * attr_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -817,6 +817,9 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 #else
         bool do_mmap = false;
 #endif
+        if (do_mmap && attr_out) {
+            attr_out->type = MPL_GPU_POINTER_DEV_MMAP;
+        }
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(req, datatype));
         MPL_gpu_map_t map;
@@ -855,7 +858,8 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_A
     MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(req, buffer), &attr);
     dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
 
-    mpi_errno = ipc_map_addr(ipc_hdr, req, src_data_sz, dev_id, &src_buf);
+    MPL_pointer_attr_t src_attr = { 0 };
+    mpi_errno = ipc_map_addr(ipc_hdr, req, src_data_sz, dev_id, &src_buf, &src_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* copy */
@@ -886,7 +890,7 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_A
 
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine = MPIDI_IPCI_choose_engine(remote_global_dev_id, dev_id);
-    mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
+    mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, &src_attr,
                                     local_buf, MPIDIG_REQUEST(req, count),
                                     MPIDIG_REQUEST(req, datatype), 0, &attr, engine, true, &yreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -917,7 +921,8 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
     MPIR_GPU_query_pointer_attr(src_buf, &attr);
     dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
 
-    mpi_errno = ipc_map_addr(ipc_hdr, sreq, src_data_sz, dev_id, &dst_buf);
+    MPL_pointer_attr_t dst_attr = { 0 };
+    mpi_errno = ipc_map_addr(ipc_hdr, sreq, src_data_sz, dev_id, &dst_buf, &dst_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* retrieve remote count and datatype  */
@@ -950,7 +955,8 @@ int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq)
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine = MPIDI_IPCI_choose_engine(remote_global_dev_id, dev_id);
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_datatype, 0, &attr,
-                                    dst_buf, dst_count, dst_datatype, 0, NULL, engine, true, &yreq);
+                                    dst_buf, dst_count, dst_datatype, 0, &dst_attr, engine, true,
+                                    &yreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = gpu_ipc_async_start(sreq, &yreq, dst_buf, ipc_hdr->ipc_handle.gpu);

@@ -26,7 +26,8 @@ typedef enum {
     MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
     MPL_GPU_POINTER_REGISTERED_HOST,
     MPL_GPU_POINTER_DEV,
-    MPL_GPU_POINTER_MANAGED
+    MPL_GPU_POINTER_MANAGED,
+    MPL_GPU_POINTER_DEV_MMAP,   /* device memory mmap'd to host for fast CPU access */
 } MPL_pointer_type_t;
 
 typedef enum {
