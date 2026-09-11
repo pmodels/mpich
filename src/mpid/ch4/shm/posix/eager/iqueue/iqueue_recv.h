@@ -23,19 +23,45 @@ MPIDI_POSIX_eager_recv_begin(int vci, MPIDI_POSIX_eager_recv_transaction_t * tra
     for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
         transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci);
 
-        MPIDU_genq_shmem_queue_dequeue(transport->cell_pool, transport->my_terminal,
-                                       (void **) &cell);
+        if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+            MPIDI_POSIX_eager_iqueue_qp_t *qp = NULL;
+            for (int i = 0; i < MPIR_Process.local_size; i++) {
+                if (i == MPIR_Process.local_rank)
+                    continue;
+
+                qp = transport->qp[i];
+                cell = (MPIDI_POSIX_eager_iqueue_cell_t *)
+                    MPIDI_POSIX_eager_iqueue_qp_get_recv_cell(qp);
+                if (cell == NULL) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            MPIDU_genq_shmem_queue_dequeue(transport->cell_pool, transport->my_terminal,
+                                           (void **) &cell);
+        }
+
         if (cell) {
             transaction->src_local_rank = cell->from;
             transaction->src_vci = vci_src;
             transaction->dst_vci = vci;
-            transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
             transaction->payload_sz = cell->payload_size;
 
-            if (likely(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR)) {
+            if (cell->type & MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_BUF) {
+                uint64_t handle = ((MPIDI_POSIX_eager_iqueue_cell_ext_t *) cell)->buf_handle;
+                /* payload should be buffer mapped from the handle */
+                transaction->payload = MPIDU_genq_shmem_pool_handle_to_cell(transport->cell_pool,
+                                                                            handle);
+            } else {
+                transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
+            }
+
+            if (likely(cell->type & MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR)) {
                 transaction->msg_hdr = &cell->am_header;
             } else {
-                MPIR_Assert(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA);
+                MPIR_Assert(cell->type & MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA);
                 transaction->msg_hdr = NULL;
             }
 
@@ -66,9 +92,14 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIR_FUNC_ENTER;
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport(transaction->src_vci, transaction->dst_vci);
-    cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
 
-    MPIDU_genq_shmem_pool_cell_free(transport->cell_pool, cell);
+    if (MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_QP_ENABLE) {
+        MPIDI_POSIX_eager_iqueue_qp_t *qp = transport->qp[transaction->src_local_rank];
+        MPIDI_POSIX_eager_iqueue_qp_recv_complete(qp);
+    } else {
+        cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
+        MPIDU_genq_shmem_pool_cell_free(transport->cell_pool, cell);
+    }
 
     MPIR_FUNC_EXIT;
 }
