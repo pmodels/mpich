@@ -123,7 +123,7 @@ struct handle_cache_entry {
     const void *base_addr;
     MPI_Aint len;
 
-    bool in_use;
+    int in_use;
     unsigned long long usage_stamp;
 
     MPL_gpu_ipc_mem_handle_t handle;
@@ -527,6 +527,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                 ipc_handle->direct.addr = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
                 int local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
                 ipc_handle->direct.global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
+                entry->in_use++;
                 goto fn_done;
             }
         }
@@ -535,6 +536,7 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
         mpi_errno = MPIDI_GPU_fill_ipc_handle(ipc_attr, ipc_handle);
         MPIR_ERR_CHECK(mpi_errno);
         ipc_handle->gpu.ipc_handle = entry->handle;
+        entry->in_use++;
         goto fn_done;
     }
 
@@ -545,11 +547,16 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     mpi_errno = ipc_track_cache_insert(pbase, len, ipc_handle->gpu.ipc_handle, ctx, &is_cached);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (is_cached) {
+        entry = ipc_track_cache_search(pbase, len, ctx);
+        MPIR_Assert(entry);
+        entry->in_use++;
+    }
 
   fn_done:
     if (req) {
-        /* store base_addr in case we need free the handle at completion */
-        MPIDI_SHM_REQUEST(req, ipc.u.base_addr) = is_cached ? NULL : pbase;
+        /* store base_addr to find the cache entry at completion */
+        MPIDI_SHM_REQUEST(req, ipc.u.base_addr) = pbase;
     }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__DIRECT) {
         ipc_handle->gpu.handle_is_cached = is_cached;
@@ -963,9 +970,22 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
 
     void *pbase = MPIDI_SHM_REQUEST(req, ipc.u.base_addr);
     if (pbase) {
-        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_destroy");
+        /* check if the handle is in cache */
+        bool found_in_cache = false;
+        for (int i = 0; i < ipc_handle_cache_count; i++) {
+            if (ipc_handle_cache[i].base_addr == pbase) {
+                ipc_handle_cache[i].in_use--;
+                MPIR_Assert(ipc_handle_cache[i].in_use >= 0);
+                found_in_cache = true;
+                break;
+            }
+        }
+        if (!found_in_cache) {
+            /* not cached, destroy the handle */
+            int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**gpu_ipc_handle_destroy");
+        }
     }
 
   fn_exit:
