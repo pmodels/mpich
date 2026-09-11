@@ -4225,12 +4225,12 @@ if test "$enable_gen_bindings" = "yes" ; then
         AC_MSG_ERROR([Python 3 is required to generate Fortran bindings but not found!])
     fi
 
-    # use AC_CONFIG_COMMANDS_POST to ensures mpi.h is already generated
+    # use AC_CONFIG_COMMANDS to ensures mpi.h is already generated
     if test "$enable_f77" = "yes" ; then
         cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py"
         cmd_f77="$cmd_f77 -mpi-h=src/include/mpi.h"
         cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
-        AC_CONFIG_COMMANDS_POST([$cmd_f77])
+        AC_CONFIG_COMMANDS([binding_f77],[$cmd_f77],[cmd_f77="$cmd_f77"])
     fi
 
     if test "$enable_f90" = "yes" ; then
@@ -4246,7 +4246,7 @@ if test "$enable_gen_bindings" = "yes" ; then
         if test "$pac_fc_iso_c_binding" = "no" ; then
             cmd_f90="$cmd_f90 -iso-c-binding=no"
         fi
-        AC_CONFIG_COMMANDS_POST([$cmd_f90])
+        AC_CONFIG_COMMANDS([binding_f90],[$cmd_f90],[cmd_f90="$cmd_f90"])
     fi
 
     if test "$enable_f08" = "yes" ; then
@@ -4266,7 +4266,7 @@ if test "$enable_gen_bindings" = "yes" ; then
         fi
         cmd_f08="$cmd_f08 -fint-size=$pac_cv_f77_sizeof_integer -aint-size=$MPI_SIZEOF_AINT -count-size=$MPI_SIZEOF_COUNT -cint-size=$ac_cv_sizeof_int"
         cmd_f08="$cmd_f08 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
-        AC_CONFIG_COMMANDS_POST([$cmd_f08])
+        AC_CONFIG_COMMANDS([binding_f08],[$cmd_f08],[cmd_f08="$cmd_f08"])
     fi
 fi
 
