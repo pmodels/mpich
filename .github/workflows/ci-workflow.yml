@@ -155,7 +155,7 @@ jobs:
               --disable-doc
               --enable-g=all
               --enable-fast=none
-              --enable-mpi-abi
+              --enable-mpi-abi=dual
               --with-mpl=embedded
               --with-ucx=embedded
               --with-json=embedded
