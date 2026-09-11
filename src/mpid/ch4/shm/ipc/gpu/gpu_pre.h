@@ -20,6 +20,12 @@ typedef struct MPIDI_GPU_ipc_handle {
     bool handle_is_cached;
 } MPIDI_GPU_ipc_handle_t;
 
+/* ipc handle for MPIDI_IPCI_TYPE__DIRECT: sender has a cached mapped address */
+typedef struct MPIDI_GPU_ipc_direct {
+    void *addr;
+    int global_dev_id;
+} MPIDI_GPU_ipc_direct_t;
+
 /* local struct used for query and preparing memory handle */
 typedef struct MPIDI_GPU_ipc_attr {
     MPL_pointer_attr_t gpu_attr;
