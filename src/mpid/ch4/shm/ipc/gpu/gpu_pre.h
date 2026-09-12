@@ -22,7 +22,8 @@ typedef struct MPIDI_GPU_ipc_handle {
 
 /* ipc handle for MPIDI_IPCI_TYPE__DIRECT: sender has a cached mapped address */
 typedef struct MPIDI_GPU_ipc_direct {
-    void *addr;
+    void *base_addr;
+    uintptr_t offset;
     int global_dev_id;
 } MPIDI_GPU_ipc_direct_t;
 
