@@ -104,7 +104,7 @@ static void finish_pack(void *state)
 
 int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {
-    if (datatype_p->is_committed && (int) datatype_p->dev.netmod.ucx.ucp_datatype >= 0) {
+    if (datatype_p->is_committed && datatype_p->dev.netmod.ucx.ucp_datatype != (ucp_datatype_t) - 1) {
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
