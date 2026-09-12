@@ -522,9 +522,10 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
             entry->maps : entry->static_maps;
         for (int i = 0; i < entry->num_maps; i++) {
             if (maps[i].remote_lrank == remote_lrank) {
-                uintptr_t offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
-                ipc_handle->direct.addr = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
+                ipc_handle->direct.base_addr = maps[i].map.mapped_addr;
+                ipc_handle->direct.offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
+
                 int local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
                 ipc_handle->direct.global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
                 entry->in_use++;
@@ -812,7 +813,9 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 
     bool do_mmap = false;
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT) {
-        *addr_out = ipc_hdr->ipc_handle.direct.addr;
+        void *base_addr = ipc_hdr->ipc_handle.direct.base_addr;
+        uintptr_t offset = ipc_hdr->ipc_handle.direct.offset;
+        *addr_out = (void *) ((uintptr_t) base_addr + offset);
     } else {
 #ifdef MPL_HAVE_ZE
         do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
