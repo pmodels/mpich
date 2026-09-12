@@ -809,17 +809,14 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
     int mpi_errno = MPI_SUCCESS;
 
     memset(&MPIDI_SHM_REQUEST(req, ipc.u.map), 0, sizeof(MPL_gpu_map_t));
+
+    bool do_mmap = false;
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT) {
         *addr_out = ipc_hdr->ipc_handle.direct.addr;
     } else {
 #ifdef MPL_HAVE_ZE
-        bool do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
-#else
-        bool do_mmap = false;
+        do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
 #endif
-        if (do_mmap && attr_out) {
-            attr_out->type = MPL_GPU_POINTER_DEV_MMAP;
-        }
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(req, datatype));
         MPL_gpu_map_t map;
@@ -840,6 +837,12 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
         } else {
             MPIDI_SHM_REQUEST(req, ipc.u.map) = map;
         }
+    }
+
+    if (do_mmap) {
+        attr_out->type = MPL_GPU_POINTER_DEV_MMAP;
+    } else {
+        MPIR_GPU_query_pointer_attr(*addr_out, attr_out);
     }
 
   fn_exit:
