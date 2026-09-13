@@ -1,4 +1,14 @@
 dnl
+dnl Set werror flag for checks that need exclude warnings
+dnl
+AC_DEFUN([PAC_SET_FC_WERROR],[
+    AS_CASE([$FC],
+        [*ifx*|*ifort*], [pac_fc_werror_flag="-diag-error"],
+        [*],             [pac_fc_werror_flag="-Werror"]
+    )
+])
+
+dnl
 dnl PAC_FC_EXT checks for the default Fortran 90 program extension, f90 then f.
 dnl This could be replaced by AC_FC_SRCEXT but since AC_FC_SRCEXT
 dnl adds FCFLAGS_ext, which is used to modify FCFLAGS or Makefile.in.
@@ -981,7 +991,13 @@ dnl PAC_FC_CHECK_IGNORE_TKR check directives to ignore type-kind-rank checks
 dnl set pac_fc_ignore_tkr to a type if supported, otherwise, no.
 dnl
 AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
+    AC_REQUIRE([PAC_SET_FC_WERROR])
     AC_LANG_PUSH(Fortran)
+
+    dnl warnings usually mean the pragma does not work
+    PAC_PUSH_FLAG([FCFLAGS])
+    FCFLAGS="$FCFLAGS $pac_fc_werror_flag"
+
     AC_MSG_CHECKING([directives for Fortran compiler to ignore TKR check])
     pac_fc_ignore_tkr=no
     for a in gcc dec pragma dir ibm assumed; do
@@ -1030,6 +1046,7 @@ AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
         fi
     done
     AC_MSG_RESULT([$pac_fc_ignore_tkr])
+    PAC_POP_FLAG([FCFLAGS])
     AC_LANG_POP(Fortran)
 ])
 
@@ -1038,7 +1055,13 @@ dnl PAC_FC_CHECK_IGNORE_TKR_D check directives to ignore "DEVICE" attribute.
 dnl set pac_fc_ignore_tkr_d to a type if supported, otherwise, no.
 dnl
 AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR_D],[
+    AC_REQUIRE([PAC_SET_FC_WERROR])
     AC_LANG_PUSH(Fortran)
+
+    dnl warnings usually mean the pragma does not work
+    PAC_PUSH_FLAG([FCFLAGS])
+    FCFLAGS="$FCFLAGS $pac_fc_werror_flag"
+
     AC_MSG_CHECKING([directives for Fortran compiler to ignore TKR(d) check])
     pac_fc_ignore_tkr_d=no
     for a in dir ; do
@@ -1068,6 +1091,7 @@ AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR_D],[
         fi
     done
     AC_MSG_RESULT([$pac_fc_ignore_tkr_d])
+    PAC_POP_FLAG([FCFLAGS])
     AC_LANG_POP(Fortran)
 ])
 
