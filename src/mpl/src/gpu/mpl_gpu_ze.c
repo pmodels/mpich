@@ -2620,8 +2620,8 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
 }
 
 /* this function takes a local device pointer and mmap to host */
-int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
-                               MPL_gpu_device_handle_t device, void **mmaped_ptr)
+static int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
+                                      MPL_gpu_device_handle_t device, void **mmaped_ptr)
 {
     ze_result_t ret;
     int mpl_err = MPL_SUCCESS;
@@ -2674,7 +2674,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
-int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
+static int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
