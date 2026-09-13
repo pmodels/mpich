@@ -134,6 +134,85 @@ struct handle_cache_entry {
     struct map_entry static_maps[IPC_STATIC_MAPS_SIZE];
 };
 
+/* Cache for remote IPC mappings. Stores the IPC handle so we can efficiently
+ * mmap to host when needed for fast_memcpy, without re-exporting through the driver. */
+#ifdef MPL_HAVE_ZE
+#include "uthash.h"
+
+struct ipc_map_cache {
+    void *dev_addr;             /* device base address (hash key) */
+    MPL_gpu_ipc_mem_handle_t ipc_handle;        /* saved IPC handle for mmap */
+    size_t len;                 /* allocation length */
+    int map_dev;                /* device id for mapping */
+    MPL_gpu_map_t mmap;         /* mmap result, mapped_addr is NULL until needed */
+    UT_hash_handle hh;
+};
+
+struct ipc_map_cache *ipc_map_cache_table = NULL;
+
+/* Insert a cache entry after the first (non-DIRECT) IPC mapping */
+static void ipc_map_cache_insert(void *dev_addr, MPL_gpu_ipc_mem_handle_t * ipc_handle,
+                                 size_t len, int map_dev)
+{
+    struct ipc_map_cache *entry;
+    HASH_FIND_PTR(ipc_map_cache_table, &dev_addr, entry);
+    if (!entry) {
+        entry = MPL_malloc(sizeof(struct ipc_map_cache), MPL_MEM_OTHER);
+        entry->dev_addr = dev_addr;
+        entry->ipc_handle = *ipc_handle;
+        entry->len = len;
+        entry->map_dev = map_dev;
+        memset(&entry->mmap, 0, sizeof(MPL_gpu_map_t));
+        HASH_ADD_PTR(ipc_map_cache_table, dev_addr, entry, MPL_MEM_OTHER);
+    }
+}
+
+static int ipc_map_cache_remove(void *dev_addr)
+{
+    struct ipc_map_cache *entry;
+    HASH_FIND_PTR(ipc_map_cache_table, &dev_addr, entry);
+    if (entry) {
+        if (entry->mmap.mapped_addr) {
+            int mpl_err = MPL_gpu_ipc_handle_unmap(&entry->mmap);
+            MPIR_Assertp(mpl_err == MPL_SUCCESS);
+        }
+        HASH_DEL(ipc_map_cache_table, entry);
+        MPL_free(entry);
+    }
+    return MPI_SUCCESS;
+}
+
+static void *ipc_map_cache_get_mmap(void *dev_addr)
+{
+    struct ipc_map_cache *entry;
+    HASH_FIND_PTR(ipc_map_cache_table, &dev_addr, entry);
+    MPIR_Assert(entry);
+
+    if (!entry->mmap.mapped_addr) {
+        int mpl_err = MPL_gpu_ipc_handle_map(&entry->ipc_handle, entry->map_dev,
+                                             &entry->mmap, true, entry->len);
+        MPIR_Assertp(mpl_err == MPL_SUCCESS);
+    }
+    return entry->mmap.mapped_addr;
+}
+
+#else /* !MPL_HAVE_ZE */
+static void ipc_map_cache_insert(void *dev_addr, MPL_gpu_ipc_mem_handle_t * ipc_handle,
+                                 size_t len, int map_dev)
+{
+}
+
+static int ipc_map_cache_remove(void *dev_addr)
+{
+    return MPI_SUCCESS;
+}
+
+static void *ipc_map_cache_get_mmap(void *dev_addr)
+{
+    return NULL;
+}
+#endif /* MPL_HAVE_ZE */
+
 /* We may need send AM messages as we evict cache entries. Wrap the message context in a struct to
    keep the interface clean */
 struct am_context {
@@ -735,6 +814,10 @@ int MPIDI_GPU_ipc_handle_unmap_base(MPL_gpu_map_t * map_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* remove cached mmap (if any) before unmapping the device mapping */
+    mpi_errno = ipc_map_cache_remove(map_ptr->mapped_addr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     int mpl_err = MPL_gpu_ipc_handle_unmap(map_ptr);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_unmap");
 
@@ -811,22 +894,22 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 
     memset(&MPIDI_SHM_REQUEST(req, ipc.u.map), 0, sizeof(MPL_gpu_map_t));
 
-    bool do_mmap = false;
+    void *mapped_base;
+    MPI_Aint offset;
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT) {
-        void *base_addr = ipc_hdr->ipc_handle.direct.base_addr;
-        uintptr_t offset = ipc_hdr->ipc_handle.direct.offset;
-        *addr_out = (void *) ((uintptr_t) base_addr + offset);
+        mapped_base = ipc_hdr->ipc_handle.direct.base_addr;
+        offset = ipc_hdr->ipc_handle.direct.offset;
     } else {
-#ifdef MPL_HAVE_ZE
-        do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
-#endif
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(req, datatype));
         MPL_gpu_map_t map;
-        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev, &map, do_mmap);
+        /* Always map to device address space. If we need fast_memcpy, we'll mmap separately. */
+        mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev, &map, false);
         MPIR_ERR_CHECK(mpi_errno);
 
-        *addr_out = (void *) ((uintptr_t) map.mapped_addr + ipc_hdr->ipc_handle.gpu.offset);
+        /* Cache the IPC handle so DIRECT path can mmap from it later */
+        ipc_map_cache_insert(map.mapped_addr, &ipc_hdr->ipc_handle.gpu.ipc_handle,
+                             ipc_hdr->ipc_handle.gpu.len, map_dev);
 
         if (ipc_hdr->ipc_handle.gpu.handle_is_cached) {
             /* notify sender of mapped address so it can use DIRECT path next time */
@@ -840,11 +923,24 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
         } else {
             MPIDI_SHM_REQUEST(req, ipc.u.map) = map;
         }
+
+        mapped_base = map.mapped_addr;
+        offset = ipc_hdr->ipc_handle.gpu.offset;
     }
 
+    bool do_mmap;
+#ifdef MPL_HAVE_ZE
+    do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
+#else
+    do_mmap = false;
+#endif
+
     if (do_mmap) {
+        void *mmap_base = ipc_map_cache_get_mmap(mapped_base);
+        *addr_out = (void *) ((uintptr_t) mmap_base + offset);
         attr_out->type = MPL_GPU_POINTER_DEV_MMAP;
     } else {
+        *addr_out = (void *) ((uintptr_t) mapped_base + offset);
         MPIR_GPU_query_pointer_attr(*addr_out, attr_out);
     }
 
