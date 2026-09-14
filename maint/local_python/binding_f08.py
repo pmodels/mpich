@@ -203,29 +203,31 @@ def dump_f08_wrappers_f(func, is_large):
     def dump_alltoallvw_types():
         is_alltoallw = re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE)
         if is_alltoallw:
-            uses['MPI_Type_f2c'] = 1
+            (f2c, c2f) = get_f2c_name("DATATYPE")
+            uses[f2c] = 1
             G.out.append("allocate(sendtypes_c(1:length))")
             G.out.append("allocate(recvtypes_c(1:length))")
             G.out.append("do i = 1, length")
-            G.out.append("    sendtypes_c(i) = MPI_Type_f2c(sendtypes(i)%MPI_VAL)")
+            G.out.append("    sendtypes_c(i) = %s(sendtypes(i)%%MPI_VAL)" % f2c)
             G.out.append("end do")
             G.out.append("do i = 1, length")
-            G.out.append("    recvtypes_c(i) = MPI_Type_f2c(recvtypes(i)%MPI_VAL)")
+            G.out.append("    recvtypes_c(i) = %s(recvtypes(i)%%MPI_VAL)" % f2c)
             G.out.append("end do")
 
     def dump_alltoallvw_inplace():
         is_alltoallw = re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE)
+        (f2c, c2f) = get_f2c_name("DATATYPE")
+        uses[f2c] = 1
         if is_alltoallw:
-            uses['MPI_Type_f2c'] = 1
             G.out.append("allocate(sendtypes_c(1:1))")
             G.out.append("allocate(recvtypes_c(1:length))")
-            G.out.append("sendtypes_c(1) = MPI_Type_f2c(sendtypes(1)%MPI_VAL)")
+            G.out.append("sendtypes_c(1) = %s(sendtypes(1)%%MPI_VAL)" % f2c)
             G.out.append("do i = 1, length")
-            G.out.append("    recvtypes_c(i) = MPI_Type_f2c(recvtypes(i)%MPI_VAL)")
+            G.out.append("    recvtypes_c(i) = %s(recvtypes(i)%%MPI_VAL)" % f2c)
             G.out.append("end do")
         else:
-            G.out.append("sendtype_c = MPI_Type_f2c(sendtype%MPI_VAL)")
-            G.out.append("recvtype_c = MPI_Type_f2c(recvtype%MPI_VAL)")
+            G.out.append("sendtype_c = %s(sendtype%%MPI_VAL)" % f2c)
+            G.out.append("recvtype_c = %s(recvtype%%MPI_VAL)" % f2c)
         if need_int_conversions:
             # cannot use like sendcounts(1:length)
             G.out.append("sendcounts_c = sendcounts(1:1)")
@@ -277,7 +279,7 @@ def dump_f08_wrappers_f(func, is_large):
             # already processed
             pass
         else:
-            (f2c, c2f) = get_f2c_name(p)
+            (f2c, c2f) = get_f2c_name(p['kind'])
             if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                 uses[f2c] = 1
                 convert_list_pre.append("%s = %s(%s%%MPI_VAL)" % (arg, f2c, p['name']))
@@ -466,7 +468,7 @@ def dump_f08_wrappers_f(func, is_large):
         if p['_array_convert'] == "MPI_VAL":
             arg_c = "%s_c" % p['name']
             c_decl_list.append("INTEGER :: i")
-            (f2c, c2f) = get_f2c_name(p)
+            (f2c, c2f) = get_f2c_name(p['kind'])
             if RE.match(r'in|inout', p['param_direction']):
                 uses[f2c] = 1
                 convert_list_pre.append("do i = 1, %s" % p['length'])
@@ -499,8 +501,9 @@ def dump_f08_wrappers_f(func, is_large):
             # get array length
             if p['_array_length'] == 'comm_size':
                 if not has_comm_size:
-                    uses['MPI_Comm_f2c'] = 1
-                    convert_list_pre.append("comm_c = MPI_Comm_f2c(comm%MPI_VAL)")
+                    (f2c, c2f) = get_f2c_name('COMMUNICATOR')
+                    uses[f2c] = 1
+                    convert_list_pre.append("comm_c = %s(comm%%MPI_VAL)" % f2c)
                     if RE.search(r'neighbor', func['name'], re.IGNORECASE):
                         c_decl_list.append("INTEGER(c_int) :: indegree, outdegree, weighted")
                         convert_list_pre.append("ierror_c = MPIR_Dist_graph_neighbors_count_c(comm_c, indegree, outdegree, weighted)")
@@ -517,9 +520,10 @@ def dump_f08_wrappers_f(func, is_large):
                         length = "indegree"
             elif p['_array_length'] == 'cart_dim':
                 # MPI_Cart_rank, only 1 allocatable array
+                (f2c, c2f) = get_f2c_name('COMMUNICATOR')
+                uses[f2c] = 1
                 c_decl_list.append("INTEGER(c_int) :: length")
-                uses['MPI_Comm_f2c'] = 1
-                convert_list_pre.append("comm_c = MPI_Comm_f2c(comm%MPI_VAL)")
+                convert_list_pre.append("comm_c = %s(comm%%MPI_VAL)" % f2c)
                 convert_list_pre.append("ierror_c = MPIR_Cartdim_get_c(comm_c, length)")
                 uses['MPIR_Cartdim_get_c'] = 1
             else:
@@ -532,7 +536,7 @@ def dump_f08_wrappers_f(func, is_large):
                 convert_list_pre.append("%s = merge(1, 0, %s)" % (arg_c, args_1))
                 return arg_c
             elif is_MPI_VAL:
-                (f2c, c2f) = get_f2c_name(p)
+                (f2c, c2f) = get_f2c_name(p['kind'])
                 uses[f2c] = 1
                 c_decl_list.append("INTEGER :: i")
                 if not is_alltoallvw:
@@ -612,8 +616,9 @@ def dump_f08_wrappers_f(func, is_large):
                 arg = "c_loc(%s)" % p['name']
                 uses['c_loc'] = 1
             elif p['kind'] == "INFO":
-                uses['MPI_Info_f2c'] = 1
-                arg = "MPI_Info_f2c(%s(1:%s)%%MPI_VAL)" % (p['name'], p['_array_length'])
+                (f2c, c2f) = get_f2c_name('INFO')
+                uses[f2c] = 1
+                arg = "%s(%s(1:%s)%%MPI_VAL)" % (f2c, p['name'], p['_array_length'])
             elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
                 arg = p['name']
             else:
@@ -949,6 +954,8 @@ def dump_F_uses(uses):
             mpi_f08_list_3.append(a)
         elif re.match(r'MPI_[A-Z_]+$', a):
             mpi_f08_list_2.append(a)
+        elif re.match(r'MPIR_\w+_(f2c|c2f|f082c|c2f08)_c', a):
+            mpi_f08_list_1.append(a)
         elif re.match(r'MPIX?_\w+', a):
             mpi_f08_list_1.append(a)
         elif re.match(r'assignment', a):
@@ -1197,20 +1204,29 @@ def dump_mpi_f08_types():
                         G.out.append("    res = (f08%MPI_VAL /= f)")
                     G.out.append("END FUNCTION %s" % func_name)
 
-    def dump_handle_f2c():
+    def dump_handle_status_f2c():
         # e.g. MPI_Comm_f2c/c2f
         G.out.append("INTERFACE")
         G.out.append("INDENT")
         for a in G.handle_list:
-            if RE.match(r'MPIX?_(\w+)', a):
-                c_name = "c_" + RE.m.group(1)
+            if a == 'MPI_Datatype':
+                name = "Type"
+                c_name = "c_Datatype"
+                mpi_prefix = "MPI"
+            elif RE.match(r'(MPIX?)_(\w+)', a):
+                name = RE.m.group(2)
+                c_name = "c_" + RE.m.group(2)
+                mpi_prefix = RE.m.group(1)
+            else:
+                raise Exception("Bad item in G.handle_list!")
+
             for p in [("f", "c"), ("c", "f")]:
-                if a == 'MPI_Datatype':
-                    func_name = "MPI_Type_%s2%s" % (p[0], p[1])
-                else:
-                    func_name = "%s_%s2%s" % (a, p[0], p[1])
+                func_name = "MPIR_%s_%s2%s_c" % (name, p[0], p[1])
+                c_func_name = "%s_%s_%s2%s" % (mpi_prefix, name, p[0], p[1])
+                if 'call-pmpi' in G.opts:
+                    c_func_name = 'P' + c_func_name
                 G.out.append("")
-                G.out.append("FUNCTION %s(x) bind(C, name=\"P%s\") result(res)" % (func_name, func_name))
+                G.out.append("FUNCTION %s(x) bind(C, name=\"%s\") result(res)" % (func_name, c_func_name))
                 G.out.append("    USE mpi_c_interface_types, ONLY: %s" % c_name)
                 if p[0] == "f":
                     G.out.append("    INTEGER, VALUE :: x")
@@ -1219,6 +1235,25 @@ def dump_mpi_f08_types():
                     G.out.append("    INTEGER(%s), VALUE :: x" % c_name)
                     G.out.append("    INTEGER :: res")
                 G.out.append("END FUNCTION %s" % func_name)
+
+        # MPIR_Status_{f082c,c2f08}_c
+        for p in [("f08", "c"), ("c", "f08")]:
+            func_name = "MPIR_Status_%s2%s_c" % (p[0], p[1])
+            c_func_name = "MPI_Status_%s2%s" % (p[0], p[1])
+            if 'call-pmpi' in G.opts:
+                c_func_name = 'P' + c_func_name
+            G.out.append("")
+            G.out.append("FUNCTION %s(status_%s, status_%s) bind(C, name=\"%s\") result(ierror)" % (func_name, p[0], p[1], c_func_name))
+            G.out.append("    IMPORT :: MPI_Status, c_Status, c_int")
+            if p[0] == "f08":
+                G.out.append("    TYPE(MPI_Status), INTENT(in) :: status_f08")
+                G.out.append("    TYPE(c_Status), INTENT(out) :: status_c")
+            else:
+                G.out.append("    TYPE(c_Status), INTENT(in) :: status_c")
+                G.out.append("    TYPE(MPI_Status), INTENT(out) :: status_f08")
+            G.out.append("    INTEGER(c_int) :: ierror")
+            G.out.append("END FUNCTION %s" % func_name)
+
         G.out.append("DEDENT")
         G.out.append("END INTERFACE")
 
@@ -1271,8 +1306,8 @@ def dump_mpi_f08_types():
     G.out.append("")
     G.out.append("private :: c_int, c_Status")
     dump_handle_types()
-    dump_handle_f2c()
     dump_status_type()
+    dump_handle_status_f2c()
     dump_status_interface()
     dump_handle_interface()
     dump_sizeof_interface()
@@ -1342,24 +1377,24 @@ def process_func_parameters(func):
             func['_need_cdesc'] = True
             return
 
-def get_f2c_name(p):
+def get_f2c_name(kind):
     """Returns (f2c_func, c2f_func) names for MPI handle conversion."""
     kind_map = {
-        'COMMUNICATOR': 'MPI_Comm',
-        'DATATYPE': 'MPI_Type',
-        'GROUP': 'MPI_Group',
-        'REQUEST': 'MPI_Request',
-        'WINDOW': 'MPI_Win',
-        'OPERATION': 'MPI_Op',
-        'INFO': 'MPI_Info',
-        'FILE': 'MPI_File',
-        'ERRHANDLER': 'MPI_Errhandler',
-        'MESSAGE': 'MPI_Message',
-        'SESSION': 'MPI_Session',
-        'STREAM': 'MPIX_Stream',
+        'COMMUNICATOR': 'Comm',
+        'DATATYPE': 'Type',
+        'GROUP': 'Group',
+        'REQUEST': 'Request',
+        'WINDOW': 'Win',
+        'OPERATION': 'Op',
+        'INFO': 'Info',
+        'FILE': 'File',
+        'ERRHANDLER': 'Errhandler',
+        'MESSAGE': 'Message',
+        'SESSION': 'Session',
+        'STREAM': 'Stream',
     }
-    prefix = kind_map[p['kind']]
-    return ("%s_f2c" % prefix, "%s_c2f" % prefix)
+    name = kind_map[kind]
+    return ("MPIR_%s_f2c_c" % name, "MPIR_%s_c2f_c" % name)
 
 # -------------------------------
 def need_ptr_check(p):
