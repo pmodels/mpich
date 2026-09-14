@@ -72,9 +72,6 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int is_shared_h
                           int is_mmap, size_t size, void **ptr);
 int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * ipc_handle, int shared_handle,
                                 int dev_id, size_t size, void **ptr);
-int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
-                               MPL_gpu_device_handle_t device, void **mmaped_ptr);
-int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr);
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id);
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */

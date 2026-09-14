@@ -2627,8 +2627,8 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
 }
 
 /* this function takes a local device pointer and mmap to host */
-int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
-                               MPL_gpu_device_handle_t device, void **mmaped_ptr)
+static int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
+                                      MPL_gpu_device_handle_t device, void **mmaped_ptr)
 {
     ze_result_t ret;
     int mpl_err = MPL_SUCCESS;
@@ -2681,7 +2681,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     goto fn_exit;
 }
 
-int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
+static int MPL_ze_munmap_device_pointer(void *mmaped_ptr, void *dptr)
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
@@ -2716,6 +2716,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     size_t n = size;
     bool src_mmaped = false, dest_mmaped = false;
 
+    /* NOTE: mmap here is uncached -- each call creates a fresh mmap and unmaps after copy */
     if (src_attr && src_attr->type == MPL_GPU_POINTER_DEV) {
         mpl_err =
             MPL_ze_mmap_device_pointer(src, &src_attr->device_attr, src_attr->device, (void **) &s);
