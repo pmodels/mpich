@@ -31,7 +31,7 @@ typedef struct {
         yaksu_buffer_pool_s host;
         yaksu_buffer_pool_s *device;
         yaksur_gpudriver_hooks_s *hooks;
-        int ndevices;
+        unsigned ndevices;
     } gpudriver[YAKSURI_GPUDRIVER_ID__LAST];
 } yaksuri_global_s;
 extern yaksuri_global_s yaksuri_global;
