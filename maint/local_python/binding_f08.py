@@ -168,7 +168,6 @@ def dump_f08_wrappers_f(func, is_large):
     code_list = []
     convert_list_pre = []
     convert_list_post = []
-    need_check_status_ignore = None # or p (the status parameter)
     has_comm_size = False  # arrays of length = comm_size
     status_var = ""
     status_count = ""
@@ -345,39 +344,80 @@ def dump_f08_wrappers_f(func, is_large):
         return arg
 
     def process_status(p):
-        nonlocal need_check_status_ignore
+        uses['c_ptr'] = 1
         uses['c_loc'] = 1
         uses['c_associated'] = 1
-        uses['assignment(=)'] = 1
+        check_ignore = None
+        # temp list for conversion. Conversion needed if status is not IGNORE
+        temp_pre = []
+        temp_post = []
+
+        pname = p['name']
         if p['length'] is not None:
             # always output parameter
+            check_ignore = 'MPI_STATUSES_IGNORE'
             uses['MPI_STATUSES_IGNORE'] = 1
             uses['MPIR_F08_get_MPI_STATUSES_IGNORE_c'] = 1
-            need_check_status_ignore = p
+
             length = p['_array_length']
+            c_decl_list.append("TYPE(c_Status), TARGET :: %s_c(%s)" % (pname, length))
             if RE.match(r'mpix?_(test|wait|request_get_status_)some', func['name'], re.IGNORECASE):
+                # use outcount for output conversion
+                c_decl_list.append("INTEGER(c_int) :: outcount_c")
+                temp_post.append("outcount_c = outcount")
                 length = "outcount_c"
-            p['_status_convert'] = "%s(1:%s) = %s_c(1:%s)" % (p['name'], length, p['name'], length)
-            return ":STATUS:"
+
+            c_decl_list.append("INTEGER(c_int) :: ierror_c")
+            c_decl_list.append("INTEGER :: i")
+            uses['c_Status'] = 1
+            uses['MPIR_Status_c2f08_c'] = 1
+            c2f08 = "ierror_c = MPIR_Status_c2f08_c(%s_c(i), %s(i))" % (pname, pname)
+            temp_post.append("do i = 1, %s" % length)
+            temp_post.append("    " + c2f08)
+            temp_post.append("end do")
         else:
             if p['param_direction'] == 'out':
-                need_check_status_ignore = p
+                check_ignore = 'MPI_STATUS_IGNORE'
                 uses['MPI_STATUS_IGNORE'] = 1
                 uses['MPIR_F08_get_MPI_STATUS_IGNORE_c'] = 1
+
+            c_decl_list.append("TYPE(c_Status), TARGET :: %s_c" % pname)
+            c_decl_list.append("INTEGER(c_int) :: ierror_c")
+            uses['c_Status'] = 1
+            uses['MPIR_Status_f082c_c'] = 1
+            uses['MPIR_Status_c2f08_c'] = 1
+            f082c = "ierror_c = MPIR_Status_f082c_c(%s, %s_c)" % (pname, pname)
+            c2f08 = "ierror_c = MPIR_Status_c2f08_c(%s_c, %s)" % (pname, pname)
+            if p['param_direction'] == 'out':
                 # currently we preserve status%MPI_ERROR
-                if need_int_conversions:
-                    p['_status_convert_in'] = "status_c = status"
-                    p['_status_convert'] = "status = status_c"
-                return ":STATUS:"
-            elif need_int_conversions:
-                if p['param_direction'] == 'inout':
-                    convert_list_pre.append("status_c = status")
-                    convert_list_post.append("status = status_c")
-                else:
-                    convert_list_pre.append("status_c = status")
-                return "c_loc(status_c)"
+                temp_pre.append(f082c)
+                temp_post.append(c2f08)
+            elif p['param_direction'] == 'inout':
+                temp_pre.append(f082c)
+                temp_post.append(c2f08)
             else:
-                return "c_loc(status)"
+                temp_pre.append(f082c)
+
+        c_decl_list.append("TYPE(c_ptr) :: %s_ptr" % pname)
+        c_decl_list.append("LOGICAL :: status_ignore")
+        convert_list_pre.append("status_ignore = .FALSE.")
+        if check_ignore:
+            convert_list_pre.append("IF (c_associated(c_loc(%s), c_loc(%s))) THEN" % (pname, check_ignore))
+            convert_list_pre.append("    status_ignore = .TRUE.")
+            convert_list_pre.append("    %s_ptr = MPIR_F08_get_%s_c()" % (pname, check_ignore))
+            convert_list_pre.append("ELSE")
+        if temp_pre:
+            convert_list_pre.extend(temp_pre)
+        convert_list_pre.append("    %s_ptr = c_loc(%s_c)" % (pname, pname))
+        if check_ignore:
+            convert_list_pre.append("END IF")
+
+        if temp_post:
+            convert_list_post.append("IF (.NOT. status_ignore) THEN")
+            convert_list_post.extend(temp_post)
+            convert_list_post.append("END IF")
+
+        return "%s_ptr" % pname
 
     def process_array_check(p):
         uses['c_loc'] = 1
@@ -611,7 +651,9 @@ def dump_f08_wrappers_f(func, is_large):
         check_decl_uses(f_decl, uses)
 
         c_decl = get_F_c_decl(func, p, f08_mapping, c_mapping)
-        if not c_decl:
+        if p['kind'] == "STATUS":
+            arg = process_status(p)
+        elif not c_decl:
             if p['kind'] == "STRING_ARRAY":
                 arg = "c_loc(%s)" % p['name']
                 uses['c_loc'] = 1
@@ -627,8 +669,6 @@ def dump_f08_wrappers_f(func, is_large):
         else:
             if p['kind'] == "STRING":
                 arg = process_string(p)
-            elif p['kind'] == "STATUS":
-                arg = process_status(p)
             elif '_array_length' in p: # set by get_F_c_decl(p)
                 if p['_array_convert'] == 'c_ptr_check':
                     arg = process_array_check(p)
@@ -681,28 +721,7 @@ def dump_f08_wrappers_f(func, is_large):
                 G.out.append(decl)
 
     def dump_call(s):
-        if need_check_status_ignore:
-            p = need_check_status_ignore # the status parameter
-            if p['length'] is None:
-                ignore = 'MPI_STATUS_IGNORE'
-            else:
-                ignore = 'MPI_STATUSES_IGNORE'
-            dump_F_if_open("c_associated(c_loc(%s), c_loc(%s))" % (p['name'], ignore))
-            s2 = re.sub(r':STATUS:', "MPIR_F08_get_%s_c()" % ignore, s)
-            dump_fortran_line(s2)
-            dump_F_else()
-            if need_int_conversions:
-                s2 = re.sub(r':STATUS:', "c_loc(%s_c)" % p['name'], s)
-                if '_status_convert_in' in p:
-                    G.out.append(p['_status_convert_in'])
-            else:
-                s2 = re.sub(r':STATUS:', "c_loc(%s)" % p['name'], s)
-            dump_fortran_line(s2)
-            if need_int_conversions:
-                G.out.append(p['_status_convert'])
-            dump_F_if_close()
-        else:
-            dump_fortran_line(s)
+        dump_fortran_line(s)
 
     # -- dump to G.out
     G.out.append("")
@@ -941,7 +960,7 @@ def dump_F_uses(uses):
     mpi_f08_list_3 = []  # mpi_f08_link_constants
     mpi_f08_list_4 = []  # mpi_f08_callbacks
     mpi_c_list_1 = []    # mpi_c_interface_types
-    mpi_c_list_2 = []    # mpi_c_interfaces_{nobuf,cdesc}
+    mpi_c_list_2 = []    # mpi_c_interface_{nobuf,cdesc}
     mpi_c_list_3 = []    # mpi_c_interface_glue
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
