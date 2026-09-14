@@ -630,6 +630,13 @@ int MPL_gpu_get_root_device(int dev_id)
     return subdevice_map[dev_id];
 }
 
+/* Get bus BDF for the "current" device */
+int MPL_gpu_get_current_dev_bdf(int *domain, int *bus, int *dev, int *func)
+{
+    // Not yet implemented
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 /* Get dev_id for shared_device_fds from regular dev_id */
 static int get_physical_device(int dev_id)
 {
