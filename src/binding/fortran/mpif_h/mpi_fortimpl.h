@@ -7,6 +7,19 @@
 #define MPI_FORTIMPL_H_INCLUDED
 
 #include "mpichconf.h"
+
+#ifdef FORTRAN_BUILD_MPI_ABI
+
+#define MPI_ABI
+
+#if defined(HAVE_VISIBILITY)
+#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define MPICH_API_PUBLIC
+#endif
+
+#endif
+
 #include "mpi.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
@@ -423,5 +436,7 @@ int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function fre
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
+
+void MPIX_Init_fortran(void) __attribute__ ((visibility("default")));
 
 #endif /* MPI_FORTIMPL_H_INCLUDED */

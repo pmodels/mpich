@@ -32,7 +32,7 @@ MPI_Buffer_attach:
 
 MPI_Buffer_detach:
     .desc: Removes an existing buffer (for use in MPI_Bsend etc)
-    .skip: ThreadSafe, Fortran
+    .skip: ThreadSafe
     .seealso: MPI_Buffer_attach
 
 MPI_Buffer_flush:

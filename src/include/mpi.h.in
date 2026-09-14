@@ -21,7 +21,9 @@
 #define MPI_INCLUDED
 
 /* MPICH ABI, always define MPI_MPIX */
+#ifndef MPI_MPIX
 #define MPI_MPIX
+#endif
 
 /* user include file for MPI programs */
 

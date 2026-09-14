@@ -23,7 +23,7 @@ def main():
 
     # preprocess
     for func in func_list:
-        check_func_directives(func)
+        check_func_directives(func, "f77")
     func_list = [f for f in func_list if '_skip_fortran' not in f]
 
     # fortran_binding.c

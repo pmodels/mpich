@@ -70,7 +70,6 @@ class MPI_API_Global:
     mpi_errnames = []
     mpix_symbols = {}
 
-    status_fields = ["count_lo", "count_hi_and_cancelled", "MPI_SOURCE", "MPI_TAG", "MPI_ERROR"]
     handle_list = ["MPI_Comm", "MPI_Datatype", "MPI_Errhandler", "MPI_File", "MPI_Group", "MPI_Info", "MPI_Op", "MPI_Request", "MPI_Win", "MPI_Message", "MPI_Session", "MPIX_Stream"]
 
     handle_mpir_types = {
@@ -87,6 +86,21 @@ class MPI_API_Global:
         'SESSION': "MPIR_Session",
         'GREQUEST_CLASS': "MPIR_Grequest_class",
         'STREAM': "MPIR_Stream",
+    }
+
+    # C types that have conversion apis, e.g. MPI_Comm_{from,to}int
+    handle_conversions = {
+        'MPI_Comm': "MPI_Comm",
+        'MPI_Group': "MPI_Group",
+        'MPI_Datatype': "MPI_Type",
+        'MPI_Errhandler': "MPI_Errhandler",
+        'MPI_Op': "MPI_Op",
+        'MPI_Info': "MPI_Info",
+        'MPI_Win': "MPI_Win",
+        'MPI_Request': "MPI_Request",
+        'MPI_Session': "MPI_Session",
+        'MPI_File': "MPI_File",
+        'MPIX_Stream': "MPIX_Stream",
     }
 
     handle_error_codes = {
@@ -186,3 +200,8 @@ class MPI_API_Global:
                 MPI_API_Global.opts[RE.m.group(1)] = 1
             else:
                 MPI_API_Global.args.append(a)
+
+        if 'skip-mpix' in MPI_API_Global.opts:
+            MPI_API_Global.handle_list.remove("MPIX_Stream")
+            del MPI_API_Global.handle_conversions["MPIX_Stream"]
+
