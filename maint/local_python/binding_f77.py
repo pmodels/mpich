@@ -1030,7 +1030,7 @@ def dump_mpif_h(f):
                 # strip the handle type
                 val = RE.m.group(2)
             elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
-                T = 'INTEGER(KIND=MPI_ADDRESS_KIND)'
+                T = 'INTEGER(KIND=MPI_OFFSET_KIND)'
             print("       %s %s" % (T, name), file=Out)
             print("       PARAMETER (%s=%s)" % (name, val), file=Out)
 
