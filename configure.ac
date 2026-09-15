@@ -2376,10 +2376,6 @@ if test -n "$CXX" ; then
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])
-
-    if test "$enable_cxx" != yes; then
-        MPICXXLIBNAME="$MPILIBNAME"
-    fi
 fi
 AM_CONDITIONAL([INSTALL_MPICXX],[test -n "$CXX"])
 
@@ -3798,7 +3794,7 @@ fi
 AC_SUBST(LPMPILIBNAME)
 AC_SUBST(LPMPIABILIBNAME)
 
-if test "enable_cxx" = "yes" -a "$enable_mpi_abi" = "no" -a x"$MPICXXLIBNAME" != x"$MPILIBNAME" ; then
+if test "enable_cxx" = "yes" ; then
     LMPICXXLIBNAME="-l${MPICXXLIBNAME}"
 else
     LMPICXXLIBNAME=
