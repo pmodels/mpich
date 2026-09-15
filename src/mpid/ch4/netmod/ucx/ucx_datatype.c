@@ -10,6 +10,8 @@
 #include "../../../common/hcoll/hcoll.h"
 #endif
 
+#define UCX_DATATYPE_INVALID ((ucp_datatype_t) -1)
+
 struct pack_state {
     void *buffer;
     size_t count;
@@ -104,9 +106,9 @@ static void finish_pack(void *state)
 
 int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {
-    if (datatype_p->is_committed && datatype_p->dev.netmod.ucx.ucp_datatype != (ucp_datatype_t) - 1) {
+    if (datatype_p->is_committed && datatype_p->dev.netmod.ucx.ucp_datatype != UCX_DATATYPE_INVALID) {
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
-        datatype_p->dev.netmod.ucx.ucp_datatype = -1;
+        datatype_p->dev.netmod.ucx.ucp_datatype = UCX_DATATYPE_INVALID;
     }
 #ifdef HAVE_HCOLL
     hcoll_type_free_hook(datatype_p);
@@ -121,7 +123,7 @@ int MPIDI_UCX_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
     ucs_status_t status;
     int is_contig;
 
-    datatype_p->dev.netmod.ucx.ucp_datatype = -1;
+    datatype_p->dev.netmod.ucx.ucp_datatype = UCX_DATATYPE_INVALID;
     MPIR_Datatype_is_contig(datatype_p->handle, &is_contig);
 
     if (!is_contig) {
