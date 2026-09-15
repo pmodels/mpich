@@ -1060,18 +1060,6 @@ def dump_mpi_f08_types():
         G.out.append("INTEGER, parameter :: MPI_ERROR = %s" % (int(G.mpih_defines['MPI_F_ERROR']) + 1))
         G.out.append("INTEGER, parameter :: MPI_STATUS_SIZE = %s" % G.mpih_defines['MPI_F_STATUS_SIZE'])
 
-    def dump_status_interface():
-        G.out.append("")
-        G.out.append("INTERFACE assignment(=)")
-        G.out.append("    module procedure MPI_Status_f08_assign_c")
-        G.out.append("    module procedure MPI_Status_c_assign_f08")
-        G.out.append("END INTERFACE")
-        G.out.append("")
-        G.out.append("private :: MPI_Status_f08_assign_c")
-        G.out.append("private :: MPI_Status_c_assign_f08")
-        G.out.append("private :: MPI_Status_f_assign_c")
-        G.out.append("private :: MPI_Status_c_assign_f")
-
     def dump_status_routines():
         # declare variable name of status in f, c, or f08
         def dump_decl(intent, t, name):
@@ -1124,21 +1112,6 @@ def dump_mpi_f08_types():
             elif res == "res":
                 G.out.append("res = 0")
 
-        # e.g. MPI_Status_f08_assign_c
-        def dump_convert_assign(in_type, out_type):
-            G.out.append("")
-            in_name = "status_%s" % in_type
-            out_name = "status_%s" % out_type
-
-            if in_type != 'f' and out_type != 'f':
-                G.out.append("elemental SUBROUTINE MPI_Status_%s_assign_%s(%s, %s)" % (out_type, in_type, out_name, in_name))
-            else:
-                G.out.append("SUBROUTINE MPI_Status_%s_assign_%s(%s, %s)" % (out_type, in_type, out_name, in_name))
-            G.out.append("INDENT")
-            dump_convert(in_type, in_name, out_type, out_name, None)
-            G.out.append("DEDENT")
-            G.out.append("END SUBROUTINE")
-
         # e.g. MPI_Status_f082f
         def dump_convert_2(in_type, out_type, prefix):
             G.out.append("")
@@ -1158,13 +1131,7 @@ def dump_mpi_f08_types():
             G.out.append("END SUBROUTINE")
 
         # ----
-        dump_convert_assign("f08", "c")
-        dump_convert_assign("c", "f08")
-        dump_convert_assign("f", "c")
-        dump_convert_assign("c", "f")
         for prefix in ["MPI", "PMPI"]:
-            dump_convert_2("f08", "c", prefix)
-            dump_convert_2("c", "f08", prefix)
             dump_convert_2("f08", "f", prefix)
             dump_convert_2("f", "f08", prefix)
 
@@ -1326,15 +1293,20 @@ def dump_mpi_f08_types():
     G.out.append("private :: c_int, c_Status")
     dump_handle_types()
     dump_status_type()
+    # f2c, c2f, Status_{f082c, c2f08}
     dump_handle_status_f2c()
-    dump_status_interface()
+    # operator(==, /=)
     dump_handle_interface()
+    # MPI_Sizeof
     dump_sizeof_interface()
     G.out.append("")
     G.out.append("contains")
     G.out.append("")
+    # MPI_Sizeof
     dump_sizeof_routines()
+    # MPI_Status_{f082f,f2f08}
     dump_status_routines()
+    # eq/neq
     dump_handle_routines()
     G.out.append("")
     dump_F_module_close("mpi_f08_types")
