@@ -33,6 +33,7 @@ Core Team are:
 - Kenneth Raffenetti, @raffenet, Cornelis Networks
 - Robert Latham, @roblatham00, Argonne National Laboratory
 - Sonja Happ, @sonjahapp, ParTec AG
+- William Gropp, @wgropp, University of Illinois Urbana-Champaign
 
 The composition of the Technical Core Team may evolve over time as determined by
 the existing Technical Core Team.
