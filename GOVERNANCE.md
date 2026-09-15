@@ -28,12 +28,12 @@ The Technical Core Team consists of members who have at least _Maintain_
 permission on the MPICH GitHub project.  The current members of the Technical
 Core Team are:
 
-- Hui Zhou, @hzhou, Argonne National Laboratory
-- Rajeev Thakur, @rsth, Argonne National Laboratory
-- Kenneth Raffenetti, @raffenet, Cornelis Networks
-- Robert Latham, @roblatham00, Argonne National Laboratory
-- Sonja Happ, @sonjahapp, ParTec AG
-- William Gropp, @wgropp, University of Illinois Urbana-Champaign
+1. Hui Zhou, @hzhou, Argonne National Laboratory
+2. Rajeev Thakur, @rsth, Argonne National Laboratory
+3. Kenneth Raffenetti, @raffenet, Cornelis Networks
+4. Robert Latham, @roblatham00, Argonne National Laboratory
+5. Sonja Happ, @sonjahapp, ParTec AG
+6. William Gropp, @wgropp, University of Illinois Urbana-Champaign
 
 The composition of the Technical Core Team may evolve over time as determined by
 the existing Technical Core Team.
