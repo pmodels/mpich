@@ -198,15 +198,17 @@ endif BUILD_ABI_LIB
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
 lib_lib@MPIFCLIBNAME@_la_SOURCES =
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
+lib_lib@MPIFCLIBNAME@_la_LIBADD = $(mpifort_convenience_libs)
 if BUILD_FC_BINDING
 modinc_HEADERS = $(mpi_fc_modules)
 endif BUILD_FC_BINDING
-if !BUILD_MPICH_LIB
-# define MPI_ABI to avoid picking up MPICH-specific pieces in mpi.h
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+if BUILD_MPICH_LIB
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+else
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPIABILIBNAME@.la
 endif
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
 endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
