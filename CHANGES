@@ -2,6 +2,8 @@
                                Changes in 5.0.2
 ===============================================================================
 
+# Fix ucx datatype missing type-free hook
+
 # Fix neighborhood alltoall erroneous matching order for periodic cartesian
   topology
 
