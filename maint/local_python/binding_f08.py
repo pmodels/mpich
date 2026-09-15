@@ -1042,15 +1042,21 @@ def dump_mpi_f08_types():
             else:
                 G.out.append("TYPE(MPI_Status), INTENT(%s) :: %s" % (intent, name))
 
-        # phrase of individual status field
-        def field(t, name, field_name, idx):
-            if t == 'f':
-                return "%s(%d)" % (name, idx)
-            else:
-                return "%s%%%s" % (name, field_name)
-
         # body of the status conversion routines
         def dump_convert(in_type, in_name, out_type, out_name, res):
+            # phrase of individual status field
+            def field(t, name, field_name, idx, size):
+                if t == 'f':
+                    if size == 1:
+                        return "%s(%d)" % (name, idx)
+                    else:
+                        return "%s(%d:%d)" % (name, idx, idx + size - 1)
+                else:
+                    if size == 1:
+                        return "%s%%%s" % (name, field_name)
+                    else:
+                        return "%s%%%s(1:%d)" % (name, field_name, size)
+
             dump_decl("in", in_type, in_name)
             dump_decl("out", out_type, out_name)
             if res == "ierror":
@@ -1061,12 +1067,15 @@ def dump_mpi_f08_types():
             G.out.append("")
             if in_type == "f" or out_type == "f" or res is None:
                 idx = 1
-                for field_name in G.status_fields:
-                    G.out.append("%s = %s" % (field(out_type, out_name, field_name, idx), field(in_type, in_name, field_name, idx)))
-                    if RE.match(r'\w+\[(\d+)\]', field_name):
-                        idx += int(RE.m.group(1))
+                for a in G.status_fields:
+                    if RE.match(r'(\w+)\[(\d+)\]', a):
+                        field_name = RE.m.group(1)
+                        size = int(RE.m.group(2))
                     else:
-                        idx += 1
+                        field_name = a
+                        size = 1
+                    G.out.append("%s = %s" % (field(out_type, out_name, field_name, idx, size), field(in_type, in_name, field_name, idx, size)))
+                    idx += size
             else:
                 G.out.append("%s = %s" % (out_name, in_name))
 
