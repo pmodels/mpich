@@ -257,6 +257,9 @@ algorithms:
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384
                 .MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=4,8
+            circ_graph
+                .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,262144
+                .MPIR_CVAR_CIRC_GRAPH_Q_LEN=2,8
         intra-nonblocking:
             sched_naive
             sched_smp
