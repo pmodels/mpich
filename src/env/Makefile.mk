@@ -12,6 +12,8 @@ sysconf_DATA += src/env/mpixxx_opts.conf
 bin_PROGRAMS += src/env/mpichversion \
     src/env/mpivars
 
+AM_CFLAGS += -I$(top_srcdir)/src/include
+
 if BUILD_MPICH_LIB
 src_env_mpichversion_LDADD = lib/lib@MPILIBNAME@.la
 src_env_mpivars_LDADD   = lib/lib@MPILIBNAME@.la
