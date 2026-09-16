@@ -340,18 +340,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         PAC_LIBS_ADD([-lfabric])
     fi
 
-    # check for libfabric dependence libs
-    pcdir=""
-    if test "${ofi_embedded}" = "yes" ; then
-        pcdir="${main_top_builddir}/modules/libfabric"
-    elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
-        pcdir="${with_libfabric}/lib/pkgconfig"
-    fi
-    PAC_LIB_DEPS(fabric, $pcdir)
-    if test "x$ac_libfabric_deps" != "x"; then
-        PAC_APPEND_FLAG([${ac_libfabric_deps}],[WRAPPER_LIBS])
-    fi
-
     AC_ARG_ENABLE(ofi-domain, [
   --enable-ofi-domain - Use fi_domain for vci contexts. This is the default.
                         Use --disable-ofi-domain to use fi_contexts within
