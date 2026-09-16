@@ -184,24 +184,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL);
 
-    if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
-        int vci = MPIDI_Request_get_vci(sreq);
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool,
-                                           (void **) &sreq_hdr);
-        MPIR_Assert(sreq_hdr);
-        MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) = sreq_hdr;
+    int vci = MPIDI_Request_get_vci(sreq);
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool,
+                                       (void **) &sreq_hdr);
+    MPIR_Assert(sreq_hdr);
+    MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) = sreq_hdr;
 
-        sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
-        sreq_hdr->am_hdr_sz = am_hdr_sz;
-        sreq_hdr->pack_buffer = NULL;
-    } else {
-        sreq_hdr = MPIDI_OFI_AMREQUEST(sreq, sreq_hdr);
-    }
+    sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
+    sreq_hdr->am_hdr_sz = am_hdr_sz;
+    sreq_hdr->pack_buffer = NULL;
 
     if (am_hdr) {
         MPIR_Memcpy(sreq_hdr->am_hdr, am_hdr, am_hdr_sz);
     }
+#ifdef NEEDS_STRICT_ALIGNMENT
+    /* adjust am_hdr_sz so the payload will always start aligned */
+    if (am_hdr_sz % MAX_ALIGNMENT) {
+        sreq_hdr->am_hdr_sz += (MAX_ALIGNMENT - am_hdr_sz % MAX_ALIGNMENT);
+    }
+#endif
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
