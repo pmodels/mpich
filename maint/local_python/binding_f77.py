@@ -1002,7 +1002,10 @@ def dump_mpif_h(f):
     # note: fixed-form Fortran line is ignored after column 72
     with open(f, "w") as Out:
         for l in G.copyright_f77:
-            print(l, file=Out)
+            if G.opts['f77-use-exclaim']:
+                print(l.replace('C', '!', 1), file=Out)
+            else:
+                print(l, file=Out)
 
         # declare KIND parameters first since they may be used for later parameters
         for a in ['INTEGER', 'ADDRESS', 'COUNT', 'OFFSET']:
@@ -1050,7 +1053,10 @@ def dump_mpif_h(f):
         print("       EXTERNAL MPI_CONVERSION_FN_NULL", file=Out)
         # -- MPI_Wtime, MPI_Wtick, MPI_Aint_add, MPI_Aint_diff
         for a in ['Wtime', 'Wtick', 'Aint_add', 'Aint_diff']:
-            T = "DOUBLE PRECISION"
+            if G.opts['f77-use-real8']:
+                T = "REAL*8"
+            else:
+                T = "DOUBLE PRECISION"
             if a.startswith("Aint"):
                 T = "INTEGER(KIND=MPI_ADDRESS_KIND)"
             print("       EXTERNAL MPI_%s, PMPI_%s" % (a.upper(), a.upper()), file=Out)

@@ -52,7 +52,7 @@ class MPI_API_Global:
             'integer-kind':4, 'address-kind':8, 'count-kind':8, 'offset-kind':8,
             'max-processor-name':128, 'max-version-string':8192, 'max-error-string':512, 'bsend-overhead':96,
             'mpi-h':'src/include/mpi.h.in',
-            'iso-c-binding':'yes'}
+            'iso-c-binding':'yes', 'f77-use-exclaim':False, 'f77-use-real8':False}
 
     args = []
     # output
