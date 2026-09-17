@@ -303,6 +303,18 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             goto fn_exit;
         }
 
+        /* DEV_MMAP pointers are device memory mmap'd to host -- always use fast_memcpy */
+        if (send_attr->type == MPL_GPU_POINTER_DEV_MMAP ||
+            recv_attr->type == MPL_GPU_POINTER_DEV_MMAP) {
+            mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
+            MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_gpu_fast_memcpy");
+            if (gpu_req) {
+                gpu_req->type = MPIR_NULL_REQUEST;
+            }
+            goto fn_exit;
+        }
+
         MPL_gpu_copy_direction_t dir;
         if (send_attr->type == MPL_GPU_POINTER_DEV) {
             if (recv_attr->type == MPL_GPU_POINTER_DEV) {

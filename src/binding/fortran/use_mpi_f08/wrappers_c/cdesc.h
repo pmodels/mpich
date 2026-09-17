@@ -7,10 +7,15 @@
 #define CDESC_H_INCLUDED
 
 #include "mpichconf.h"
+
+#ifdef FORTRAN_BUILD_MPI_ABI
+#define MPI_ABI
+#endif
+#include "mpi.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ISO_Fortran_binding.h>
-#include <mpi.h>
 #include "cdesc_proto.h"
 
 #ifndef HAVE_ROMIO

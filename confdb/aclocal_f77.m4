@@ -1405,7 +1405,6 @@ if test "X$pac_cv_prog_f77_true_false_value" != "X" ; then
     fi
 fi
 if test -n "$true_val" -a -n "$false_val" ; then
-    AC_DEFINE(F77_TRUE_VALUE_SET,1,[Define if we know the value of Fortran true and false])
     AC_DEFINE_UNQUOTED(F77_TRUE_VALUE,$true_val,[The value of true in Fortran])
     AC_DEFINE_UNQUOTED(F77_FALSE_VALUE,$false_val,[The value of false in Fortran])
 fi

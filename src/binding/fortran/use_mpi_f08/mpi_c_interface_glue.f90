@@ -9,10 +9,25 @@ use, intrinsic :: iso_c_binding, only : c_char, C_NULL_CHAR
 
 implicit none
 
+logical, save :: is_initialized = .false.
+interface
+    subroutine MPIX_Init_fortran() bind(c, name="MPIX_Init_fortran")
+        implicit none
+    end subroutine
+end interface
+
+public :: MPIR_Init_fortran
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
 
 contains
+
+subroutine MPIR_Init_fortran()
+    implicit none
+    if (is_initialized) return
+    call MPIX_Init_fortran()
+    is_initialized = .true.
+end subroutine MPIR_Init_fortran
 
 ! Copy Fortran string to C character array, assuming the C array is one-char
 ! longer for the terminating null char.

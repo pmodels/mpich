@@ -442,6 +442,13 @@ int MPL_gpu_get_root_device(int dev_id)
     return dev_id;
 }
 
+/* Get bus BDF for the "current" device */
+int MPL_gpu_get_current_dev_bdf(int *domain, int *bus, int *dev, int *func)
+{
+    // Not yet implemented
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 {
     int mpl_err = MPL_SUCCESS;

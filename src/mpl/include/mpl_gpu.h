@@ -26,7 +26,8 @@ typedef enum {
     MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
     MPL_GPU_POINTER_REGISTERED_HOST,
     MPL_GPU_POINTER_DEV,
-    MPL_GPU_POINTER_MANAGED
+    MPL_GPU_POINTER_MANAGED,
+    MPL_GPU_POINTER_DEV_MMAP,   /* device memory mmap'd to host for fast CPU access */
 } MPL_pointer_type_t;
 
 typedef enum {
@@ -143,6 +144,7 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id);
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 int MPL_gpu_get_root_device(int dev_id);
+int MPL_gpu_get_current_dev_bdf(int *domain, int *bus, int *dev, int *func);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);

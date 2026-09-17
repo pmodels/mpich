@@ -12,3 +12,6 @@ typecntsx_SOURCES = typecntsx.cxx
 typenamex_SOURCES = typenamex.cxx
 typemiscx_SOURCES = typemiscx.cxx
 packsizex_SOURCES = packsizex.cxx
+
+typenamex_LDFLAGS = -mpi-fortran
+typemiscx_LDFLAGS = -mpi-fortran

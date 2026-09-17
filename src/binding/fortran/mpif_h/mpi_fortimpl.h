@@ -7,6 +7,19 @@
 #define MPI_FORTIMPL_H_INCLUDED
 
 #include "mpichconf.h"
+
+#ifdef FORTRAN_BUILD_MPI_ABI
+
+#define MPI_ABI
+
+#if defined(HAVE_VISIBILITY)
+#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#else
+#define MPICH_API_PUBLIC
+#endif
+
+#endif
+
 #include "mpi.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
@@ -376,14 +389,6 @@ typedef char *MPID_FCHAR_T;
 #undef MPI_CONVERSION_FN_NULL
 #endif /* MPI_DUP_FN */
 
-/* A special case to help out when ROMIO is disabled */
-#ifndef HAVE_ROMIO
-#ifndef MPI_File_f2c
-#define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
-#define MPI_File_c2f(a) ((MPI_Fint)(MPI_Aint)(a))
-#endif
-#endif /* HAVE_ROMIO */
-
 enum F77_handle_type {
     F77_COMM,
     F77_GROUP,
@@ -411,6 +416,7 @@ typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_free_function) (void *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F08_greq_query_function) (void *, MPI_F08_status *, MPI_Fint *);
 
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
@@ -428,8 +434,12 @@ int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 int MPII_greq_start(F77_greq_query_function query_fn, F77_greq_free_function free_fn,
                     F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
+int MPII_greq_start_f08(F08_greq_query_function query_fn, F77_greq_free_function free_fn,
+                        F77_greq_cancel_function cancel_fn, void *extra_state, MPI_Fint * request);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
+
+void MPIX_Init_fortran(void) __attribute__ ((visibility("default")));
 
 #endif /* MPI_FORTIMPL_H_INCLUDED */

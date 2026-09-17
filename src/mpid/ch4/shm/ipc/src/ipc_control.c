@@ -213,6 +213,9 @@ static int reply_ipc_write(MPIDI_IPCI_ipc_attr_t * ipc_attr, MPI_Aint count, MPI
     /* In case we manage cache for remote processes (e.g. GPU), pass in remote_lrank */
     int remote_lrank = MPIDI_SHM_global.local_ranks[MPIDIU_get_grank(peer_rank, rreq->comm)];
 
+    /* set ipc_type in request so MPIDI_GPU_ipc_handle_complete gets called at the end */
+    MPIDI_SHM_REQUEST(rreq, ipc.ipc_type) = ipc_attr->ipc_type;
+
     void *hdr = NULL;
     MPI_Aint hdr_sz;
     mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype, sizeof(MPIDI_IPC_write_t),

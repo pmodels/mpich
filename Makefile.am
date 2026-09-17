@@ -160,7 +160,7 @@ endif !BUILD_PROFILING_LIB
 endif BUILD_MPICH_LIB
 
 if BUILD_ABI_LIB
-abi_cppflags = -DMPICH_BUILD_MPI_ABI -I$(srcdir)/src/binding/abi
+abi_cppflags = -DMPICH_BUILD_MPI_ABI
 if BUILD_PROFILING_LIB
 # -------- mpi-abi: libpmpi_abi + libmpi_abi ------------------
 #
@@ -198,11 +198,17 @@ endif BUILD_ABI_LIB
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
 lib_lib@MPIFCLIBNAME@_la_SOURCES =
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
+lib_lib@MPIFCLIBNAME@_la_LIBADD = $(mpifort_convenience_libs)
 if BUILD_FC_BINDING
 modinc_HEADERS = $(mpi_fc_modules)
 endif BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
+if BUILD_MPICH_LIB
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+else
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPIABILIBNAME@.la
+endif
 endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING

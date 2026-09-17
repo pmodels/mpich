@@ -419,25 +419,6 @@ fn_abi() {
     ($PYTHON maint/gen_abi.py)
 }
 
-fn_f77() {
-    set_PYTHON
-    echo_n "Building Fortran 77 interface... "
-    $PYTHON maint/gen_binding_f77.py
-    echo "done"
-}
-
-fn_f90() {
-    echo_n "Building Fortran 90 interface... "
-    $PYTHON maint/gen_binding_f90.py
-    echo "done"
-}
-
-fn_f08() {
-    echo_n "Building Fortran 08 interface... "
-    $PYTHON maint/gen_binding_f08.py
-    echo "done"
-}
-
 fn_cxx() {
     echo_n "Building C++ interface... "
     ( cd src/binding/cxx && chmod a+x ./buildiface &&
@@ -935,20 +916,6 @@ fn_gen_binding_c
 
 # Create the bindings if necessary 
 fn_abi
-
-if [ $do_f77 = "yes" ] ; then
-    fn_f77
-else
-    touch src/binding/fortran/mpif_h/mpif.h.in
-fi
-if [ $do_f90 = "yes" ] ; then
-    fn_f90
-fi
-if [ $do_f08 = "yes" ] ; then
-    fn_f08
-else
-    touch src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90.in
-fi
 
 if [ $do_cxx = "yes" ] ; then
     fn_cxx

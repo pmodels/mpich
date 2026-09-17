@@ -668,6 +668,40 @@ sub RunTests {
     return $need_stop;
 }
 
+sub classify_output_line {
+    my ($line) = @_;
+
+    if ($line =~ /^(MPICH: |WARNING: |(Abort.*)?application called MPI_Abort)/) {
+        return "warning";
+    }
+    elsif ($line =~ /(FORTRAN STOP|requesting checkpoint|checkpoint completed)\s*$/) {
+        return "ignored";
+    }
+    elsif ($line =~ /^srun: error: .*: signal: Communication connection failure/) {
+        return "ignored";
+    }
+    elsif ($line =~ /psm3_sockets_tcp_recvhdrq_progress: First PKT received is not PSM pkt\./) {
+        return "ignored";
+    }
+
+    # Honor MPITEST_IGNORE_OUTPUT here so callers don't each need to
+    # re-check $g_opt{ignore_output}.
+    return $g_opt{ignore_output} ? "ignored" : "stray";
+}
+
+sub batch_inline_has_failure {
+    my ($inline) = @_;
+
+    foreach my $line (@$inline) {
+        my $classification = classify_output_line($line);
+        if ($classification eq "warning" || $classification eq "stray") {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 sub run_mpitests {
     my ($all_tests) = @_;
 
@@ -755,7 +789,7 @@ sub run_mpitests {
                 RunTestFailed($test_opt, join('', @inline), $runtime);
                 $flag_aborted = 1;
                 last;
-            } elsif ($ret eq "0" and !@inline) {
+            } elsif ($ret eq "0" && !batch_inline_has_failure(\@inline)) {
                 RunTestPassed($test_opt, $runtime);
             } elsif ($ret eq "not found") {
                 print "run_mpitests: $cmd not found!\n";
@@ -783,7 +817,7 @@ sub run_mpitests {
                 print "        $_" if $g_opt{verbose};
                 push @inline, $_;
             }
-            if (@inline) {
+            if (batch_inline_has_failure(\@inline)) {
                 my $runtime = 0;
                 my $test_opt = {name=>"run_mpitests", np=>$np, dir=>".", args=>[], envs=>[] };
                 RunPreMsg($test_opt);
@@ -1225,20 +1259,14 @@ sub check_result {
         elsif (/^\s*Test Skipped\s*$/) {
             $test_skipped++;
         }
-        elsif (/^(MPICH: |WARNING: |(Abort.*)?application called MPI_Abort)/) {
-            $warning_output++;
-        }
-        elsif (/(FORTRAN STOP|requesting checkpoint|checkpoint completed)\s*$/) {
-            # skip
-        }
-        elsif (/^srun: error: .*: signal: Communication connection failure/) {
-            # skip
-        }
-        elsif (/psm3_sockets_tcp_recvhdrq_progress: First PKT received is not PSM pkt./) {
-            # skip
-        }
-        elsif (!$g_opt{ignore_output}) {
-            $stray_output++;
+        else {
+            my $classification = classify_output_line($_);
+            if ($classification eq "warning") {
+                $warning_output++;
+            }
+            elsif ($classification eq "stray") {
+                $stray_output++;
+            }
         }
     }
     my $rc = close ($MPIOUT);

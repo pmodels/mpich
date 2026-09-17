@@ -31,7 +31,7 @@ def main():
     dump_F_module_open("mpi_base")
     is_pmpi = False
     for func in func_list:
-        check_func_directives(func)
+        check_func_directives(func, "f90")
         if '_skip_fortran' in func:
             continue
         G.out.append("INTERFACE %s" % func['name'])
@@ -53,7 +53,6 @@ def main():
     dump_F_module_open("pmpi_base")
     is_pmpi = True
     for func in func_list:
-        check_func_directives(func)
         if '_skip_fortran' in func:
             continue
         G.out.append("INTERFACE P%s" % func['name'])
