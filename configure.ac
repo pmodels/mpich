@@ -2007,7 +2007,6 @@ if test "$enable_f77" = "yes" ; then
     AC_SUBST_FILE([f77_shlib_conf])
 
     AC_LANG([Fortran 77])
-    PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
     PAC_PROG_F77_LIBRARY_DIR_FLAG
 
@@ -2053,30 +2052,6 @@ if test "$enable_f77" = "yes" ; then
     PAC_APPEND_CSV([mpif.h], [fortran_bindings])
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
 fi
-
-dnl By modifying mpif.h to use ! for comments, it can work with many f90
-dnl compilers without creating a separate version.
-dnl Note that this is run AFTER the AC_OUTPUT actions
-AC_CONFIG_COMMANDS([src/include/mpif.h],[if test "$enable_f77" = yes ; then
-if test "$has_exclaim" = "yes" ; then
-    sed -e 's/^C/\!/g' src/binding/fortran/mpif_h/mpif.h > src/include/mpif.h
-	cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-else
-    cp src/binding/fortran/mpif_h/mpif.h src/include
-fi
-if test "$has_fort_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
-    mv src/include/mpif.h.new src/include/mpif.h
-    cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-fi
-fi],
-main_top_srcdir=$main_top_srcdir
-enable_f77=$enable_f77
-has_exclaim=$has_exclaim
-has_fort_real8=$pac_cv_fort_real8
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
 
 if test "$enable_f90" = "yes" ; then
     bindings="$bindings f90"
@@ -4285,8 +4260,22 @@ if test "$enable_gen_bindings" = "yes" ; then
     if test "$enable_f77" = "yes" ; then
         cmd_f77="$PYTHON $srcdir/maint/gen_binding_f77.py $gen_cmd_common"
         cmd_f77="$cmd_f77 -integer-kind=$INTEGER_KIND -address-kind=$ADDRESS_KIND -count-kind=$COUNT_KIND -offset-kind=$OFFSET_KIND"
+        # options for mpif.h
+        # Since we require FC compiler, it should always support '!' comments. However,
+        # that doesn't mean users always want to use '!' in their `mpif.h`, which may break
+        # legacy F77 compilers.
+        # FIXME: make it an option
+        has_exclaim=yes
+        if test "$has_exclaim" = "yes" ; then
+            cmd_f77="$cmd_f77 -f77-use-exclaim"
+        fi
+        if test "$pac_cv_fort_real8" = "yes" ; then
+            cmd_f77="$cmd_f77 -f77-use-real8"
+        fi
         AC_CONFIG_COMMANDS([binding_f77],[$cmd_f77],[cmd_f77="$cmd_f77"])
     fi
+
+    AC_CONFIG_COMMANDS([src/include/mpif.h],[cp src/binding/fortran/mpif_h/mpif.h src/include])
 
     if test "$enable_f90" = "yes" ; then
         PAC_FC_CHECK_IGNORE_TKR
