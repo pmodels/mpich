@@ -2,6 +2,12 @@
                                Changes in 5.0.2
 ===============================================================================
 
+# Fix libfabric selecting VPN issue
+
+# Remove LONG_DOUBLE autoconf macros from mpi.h.in
+
+# Fix ucx datatype missing type-free hook
+
 # Fix neighborhood alltoall erroneous matching order for periodic cartesian
   topology
 
