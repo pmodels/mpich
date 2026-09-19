@@ -289,3 +289,36 @@ if test "$program_suffix" != "NONE" ; then
     $2="$$2$program_suffix"
 fi
 ])
+
+dnl PAC_CHECK_LONG_DOUBLE_BINARY128
+dnl
+AC_DEFUN([PAC_CHECK_LONG_DOUBLE_BINARY128],[
+  AC_CACHE_CHECK([whether long double is IEEE 754 binary128],
+  [pac_cv_long_double_binary128],
+  [AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+      [[#include <float.h>
+        #include <limits.h>
+
+        #if !defined(LDBL_MANT_DIG) || LDBL_MANT_DIG != 113
+        #error "long double is not binary128"
+        #endif
+
+        #if !defined(LDBL_MAX_EXP) || LDBL_MAX_EXP != 16384
+        #error "long double is not binary128"
+        #endif
+
+        #if !defined(LDBL_MIN_EXP) || LDBL_MIN_EXP != -16381
+        #error "long double is not binary128"
+        #endif
+
+        #if !defined(__SIZEOF_LONG_DOUBLE__) || __SIZEOF_LONG_DOUBLE__ != 16
+        #error "long double is not 128-bit"
+        #endif
+      ]],
+      [[]]
+    )],
+    [pac_cv_long_double_binary128=yes],
+    [pac_cv_long_double_binary128=no]
+  )])
+])

@@ -77,9 +77,6 @@ typedef struct {
 /* long double */
 #ifdef MPIR_FLOAT128_CTYPE
 #define EXTERNAL_LONG_DOUBLE_TYPE MPIR_FLOAT128_CTYPE
-#else
-#define EXTERNAL_LONG_DOUBLE_TYPE long double
-#endif
 
 #define PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len) \
     do {                                                                \
@@ -109,6 +106,8 @@ typedef struct {
             }                                                           \
         }                                                               \
     } while (0)
+
+#endif
 
 int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                                void *outbuf, MPI_Aint * actual_pack_bytes)
@@ -163,7 +162,12 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
     MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
     if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
+#ifdef MPIR_FLOAT128_CTYPE
         PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
+#else
+        MPIR_Assert(0);
+        mpi_errno = MPI_ERR_INTERN;
+#endif
     } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
             PACK_EXTERNAL_equal_size(iov, outbuf, max_iov_len, int8_t);
@@ -262,7 +266,12 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
     if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
+#ifdef MPIR_FLOAT128_CTYPE
         UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
+#else
+        MPIR_Assert(0);
+        mpi_errno = MPI_ERR_INTERN;
+#endif
     } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
             UNPACK_EXTERNAL_equal_size(inbuf, iov, max_iov_len, int8_t);

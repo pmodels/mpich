@@ -2910,20 +2910,27 @@ if test "${ac_cv_sizeof_double:-0}" -eq 8 ; then
     AC_DEFINE_UNQUOTED([MPIR_FLOAT64_ALIGN],[$ac_cv_alignof_double], [The alignment for MPIR_FLOAT64])
 fi
 
-if test "$MPID_NO_FLOAT128" != "yes" ; then
-    AC_CHECK_SIZEOF(__float128)
-    if test "${ac_cv_sizeof___float128:-0}" -eq 16 ; then
-        AC_DEFINE_UNQUOTED([MPIR_FLOAT128_CTYPE],[__float128], [The C type for MPIR_FLOAT128])
-        AC_CHECK_ALIGNOF(__float128)
-        AC_DEFINE_UNQUOTED([MPIR_FLOAT128_ALIGN],[$ac_cv_alignof___float128], [The alignment for MPIR_FLOAT64])
-    fi
-fi
-
-if test "${ac_cv_sizeof_long_double:-0}" -gt 0 ; then
-    len=`expr ${ac_cv_sizeof_long_double:-0} \* 8`
-    AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_CTYPE],[long double], [The C type for MPIR_ALT_FLOAT${len}])
+PAC_CHECK_LONG_DOUBLE_BINARY128
+if test "$pac_cv_long_double_binary128" = "yes" ; then
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT128_CTYPE],[long double], [The C type for MPIR_FLOAT128])
     AC_CHECK_ALIGNOF(long double)
-    AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_ALIGN],[$ac_cv_alignof_long_double], [The alignment for MPIR_ALT_FLOAT${len}])
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT128_ALIGN],[$ac_cv_alignof_long_double], [The alignment for MPIR_FLOAT128])
+else
+    if test "$MPID_NO_FLOAT128" != "yes" ; then
+	AC_CHECK_SIZEOF(__float128)
+	if test "${ac_cv_sizeof___float128:-0}" -eq 16 ; then
+	    AC_DEFINE_UNQUOTED([MPIR_FLOAT128_CTYPE],[__float128], [The C type for MPIR_FLOAT128])
+	    AC_CHECK_ALIGNOF(__float128)
+	    AC_DEFINE_UNQUOTED([MPIR_FLOAT128_ALIGN],[$ac_cv_alignof___float128], [The alignment for MPIR_FLOAT128])
+	fi
+    fi
+
+    if test "${ac_cv_sizeof_long_double:-0}" -gt 0 ; then
+	len=`expr ${ac_cv_sizeof_long_double:-0} \* 8`
+	AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_CTYPE],[long double], [The C type for MPIR_ALT_FLOAT${len}])
+	AC_CHECK_ALIGNOF(long double)
+	AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_ALIGN],[$ac_cv_alignof_long_double], [The alignment for MPIR_ALT_FLOAT${len}])
+    fi
 fi
 
 if test "${ac_cv_sizeof_float__Complex:-0}" -eq 8 ; then
@@ -3512,6 +3519,8 @@ len=`expr $ac_cv_sizeof_long_double \* 8`
 if test "$len" = 64 ; then
     # long double is an alias of double, e.g. arm64
     internal_type=MPIR_FLOAT$len
+elif test "$pac_cv_long_double_binary128" = "yes" ; then
+    internal_type=MPIR_FLOAT128
 else
     internal_type=MPIR_ALT_FLOAT$len
 fi
