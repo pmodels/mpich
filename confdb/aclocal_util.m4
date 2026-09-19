@@ -3,7 +3,7 @@ dnl Usage: PAC_APPEND_CSV([foo], [bar])
 AC_DEFUN([PAC_APPEND_CSV],[
     AS_IF([test -n "$$2"],
           [$2="$$2, $1"],
-          [$2=$1])
+          [$2="$1"])
 ])
 
 dnl Nesting safe macros for saving variables
