@@ -909,6 +909,7 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
 
     void *mapped_base;
     MPI_Aint offset;
+    bool use_cache = true;
     if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__DIRECT) {
         mapped_base = ipc_hdr->ipc_handle.direct.base_addr;
         offset = ipc_hdr->ipc_handle.direct.offset;
@@ -920,11 +921,11 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
         mpi_errno = MPIDI_GPU_ipc_handle_map_base(ipc_hdr->ipc_handle.gpu, map_dev, &map, false);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* Cache the IPC handle so DIRECT path can mmap from it later */
-        ipc_map_cache_insert(map.mapped_addr, &ipc_hdr->ipc_handle.gpu.ipc_handle,
-                             ipc_hdr->ipc_handle.gpu.len, map_dev);
-
         if (ipc_hdr->ipc_handle.gpu.handle_is_cached) {
+            /* Cache the IPC handle so DIRECT path can mmap from it later */
+            ipc_map_cache_insert(map.mapped_addr, &ipc_hdr->ipc_handle.gpu.ipc_handle,
+                                 ipc_hdr->ipc_handle.gpu.len, map_dev);
+
             /* notify sender of mapped address so it can use DIRECT path next time */
             mpi_errno = MPIDI_IPC_send_mapaddr(req->comm, MPIDIG_REQUEST(req, u.ipc.peer_rank),
                                                MPIDIG_REQUEST(req, req->local_vci),
@@ -934,6 +935,7 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
                                                map);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
+            use_cache = false;
             MPIDI_SHM_REQUEST(req, ipc.u.map) = map;
         }
 
@@ -948,7 +950,7 @@ static int ipc_map_addr(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * req, MPI_Aint da
     do_mmap = false;
 #endif
 
-    if (do_mmap) {
+    if (do_mmap && use_cache) {
         void *mmap_base = ipc_map_cache_get_mmap(mapped_base);
         *addr_out = (void *) ((uintptr_t) mmap_base + offset);
         attr_out->type = MPL_GPU_POINTER_DEV_MMAP;
