@@ -24,7 +24,11 @@ typedef struct {
     MPIDI_IPCI_type_t ipc_type;
     union {
         MPL_gpu_map_t map;
-        void *base_addr;        /* if set, remove the handle at request completion */
+        struct {
+            bool is_cached;
+            void *base_addr;    /* is_cached is false, call handle_destroy at completion
+                                 * otherwise, decrement in_use counter at completion */
+        } handle;
     } u;
 } MPIDI_IPC_am_request_t;
 
