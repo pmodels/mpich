@@ -233,6 +233,7 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx);
 static int ipc_track_cache_delete(int idx, struct am_context am_ctx);
 static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_Aint len,
                                                          struct am_context am_ctx);
+static struct handle_cache_entry *ipc_track_cache_lookup(const void *addr);
 static int ipc_track_cache_check_limit(struct am_context am_ctx);
 static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   MPL_gpu_ipc_mem_handle_t handle,
@@ -334,6 +335,18 @@ static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_A
         found->usage_stamp = ++ipc_handle_cache_usage_counter;
     }
     return found;
+}
+
+static struct handle_cache_entry *ipc_track_cache_lookup(const void *addr)
+{
+    for (int i = 0; i < ipc_handle_cache_count; i++) {
+        struct handle_cache_entry *entry = &ipc_handle_cache[i];
+        if (entry->base_addr == addr) {
+            return entry;
+        }
+    }
+    MPIR_Assert(0);
+    return NULL;
 }
 
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank)
@@ -635,8 +648,8 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
 
   fn_done:
     if (req) {
-        /* store base_addr to find the cache entry at completion */
-        MPIDI_SHM_REQUEST(req, ipc.u.base_addr) = pbase;
+        MPIDI_SHM_REQUEST(req, ipc.u.handle.is_cached) = is_cached;
+        MPIDI_SHM_REQUEST(req, ipc.u.handle.base_addr) = pbase;
     }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__DIRECT) {
         ipc_handle->gpu.handle_is_cached = is_cached;
@@ -1076,24 +1089,16 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    void *pbase = MPIDI_SHM_REQUEST(req, ipc.u.base_addr);
-    if (pbase) {
-        /* check if the handle is in cache */
-        bool found_in_cache = false;
-        for (int i = 0; i < ipc_handle_cache_count; i++) {
-            if (ipc_handle_cache[i].base_addr == pbase) {
-                ipc_handle_cache[i].in_use--;
-                MPIR_Assert(ipc_handle_cache[i].in_use >= 0);
-                found_in_cache = true;
-                break;
-            }
-        }
-        if (!found_in_cache) {
-            /* not cached, destroy the handle */
-            int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**gpu_ipc_handle_destroy");
-        }
+    void *pbase = MPIDI_SHM_REQUEST(req, ipc.u.handle.base_addr);
+    if (MPIDI_SHM_REQUEST(req, ipc.u.handle.is_cached)) {
+        struct handle_cache_entry *entry = ipc_track_cache_lookup(pbase);
+        MPIR_Assert(entry);
+        entry->in_use--;
+        MPIR_Assert(entry->in_use >= 0);
+    } else {
+        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_destroy");
     }
 
   fn_exit:
