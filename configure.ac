@@ -4277,6 +4277,41 @@ case "$host_os" in
         ;;
 esac
 
+# export to binding subconfigure
+# - mpi_libs is used in building libmpifort
+# - mpi_dependency_libs is used in mpifort if $interlib_deps is "no"
+#
+if test "$WITH_MPI" = "mpich" ; then
+    mpi_libs="$main_top_builddir/lib/lib${MPILIBNAME}.la"
+    mpi_dependency_libs="-l${MPILIBNAME}"
+    if test "$NEEDSPLIB" = "yes" ; then
+        mpi_libs="$mpi_libs $main_top_builddir/lib/lib${PMPILIBNAME}.la"
+        mpi_dependency_libs="$mpi_dependency_libs -l${PMPILIBNAME}"
+    fi
+else
+    mpi_libs="$main_top_builddir/lib/lib${MPIABILIBNAME}.la"
+    mpi_dependency_libs="-l${MPIABILIBNAME}"
+    if test "$NEEDSPLIB" = "yes" ; then
+        mpi_libs="$mpi_libs $main_top_builddir/lib/lib${PMPIABILIBNAME}.la"
+        mpi_dependency_libs="$mpi_dependency_libs -l${PMPIABILIBNAME}"
+    fi
+fi
+mpi_dependency_libs="$mpi_dependency_libs $WRAPPER_DEPENDENCY_LDFLAGS"
+export mpi_libs mpi_dependency_libs
+
+fortrandir=
+AC_SUBST(fortrandir)
+if test "$enable_fortran" = "yes" ; then
+    fortrandir="src/binding/fortran"
+    PAC_PUSH_ALL_FLAGS()
+    PAC_RESET_ALL_FLAGS()
+    PAC_CONFIG_SUBDIR_ARGS([src/binding/fortran],[$fortran_args],[],[AC_MSG_ERROR(Fortran binding configure failed)])
+    PAC_POP_ALL_FLAGS()
+
+    AC_MSG_NOTICE([sourcing $main_top_builddir/src/binding/fortran/localdefs])
+    . $main_top_builddir/src/binding/fortran/localdefs
+fi
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_CONFIG_FILES([Makefile \

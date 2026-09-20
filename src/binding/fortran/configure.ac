@@ -30,11 +30,130 @@ AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive foreign 1.12.3 silent-rules s
 AM_MAINTAINER_MODE([disable])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+PAC_INIT_ALL_FLAGS(WRAPPER)
+
+# When build from MPICH, --with-mpi=mpich to build native mpich ABI, --with-mpi=abi to build MPI ABI
+# When build stand-alone, set --with-mpi to path. TODO: check for system mpi.
+AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi=dir],
+            [Specify the path where MPI is installed.])])
+
+# This option is ignored when build FROM_MPICH.
+# When build stand-alone, this option can be used to pick an abi if both libmpi and libmpi_abi are available
+# User also can set "$mpi_libs" to e.g. `-lmpi` or `-lmpi_abi` directly.
+AC_ARG_ENABLE(mpi-abi,
+        AS_HELP_STRING([--enable-mpi-abi], [Build with libmpi_abi]),,
+        enable_mpi_abi=no)
+
+case "$enable_mpi_abi" in
+  yes|mpi|mpi,mpich)
+    enable_mpi_abi=yes
+    ;;
+  no|mpich|both|dual|mpich,mpi)
+    enable_mpi_abi=no
+    ;;
+  *)
+    AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
+    ;;
+esac
+
+
+# $mpi_h is needed for python scripts gen_binding_{f77,f90,f08}.py
+mpi_h=
+
+AC_CONFIG_HEADERS([mpifort_config.h])
+
+AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "mpifort")])
+if test -z "$MPIFCLIBNAME" ; then
+    MPIFCLIBNAME="mpifort" ;
+fi
+export MPIFCLIBNAME
+AC_SUBST(MPIFCLIBNAME)
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 AC_PROG_CC
 AM_PROG_CC_C_O
+
+if test "$FROM_MPICH" = "yes" ; then
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/include], [CPPFLAGS])
+    if test "$WITH_MPI" = "mpich" ; then
+        mpi_h="$main_top_srcdir/src/include/mpi.h.in"
+    elif test "$WITH_MPI" = "abi" ; then
+        mpi_h="$main_top_srcdir/src/binding/abi/mpi_abi.h"
+        PAC_APPEND_FLAG([-I${main_top_srcdir}/src/binding/abi], [CPPFLAGS])
+    else
+        AC_MSG_ERROR([$FROM_MPICH is set but $WITH_MPI is not set!])
+    fi
+    if test -z "$mpi_libs" ; then
+        AC_MSG_ERROR([MPICH configure need export mpi_libs])
+    fi
+else
+    if test -z "$with_mpi" ; then
+        # get a C compiler that can find mpi
+        mpicc=mpicc
+        if test "$enable_mpi_abi" = "yes" ; then
+            mpicc=mpicc_abi
+        fi
+        AC_PATH_PROG([MPICC], [$mpicc], [no])
+
+        AC_MSG_CHECKING([path to mpi])
+        if test "$MPICC" = "no"; then
+            MPICC="$CC"
+        fi
+        # trick to get it spit out the path to mpi.h
+        [mpi_h=`echo '#include <mpi.h>' | $MPICC -M -x c - | grep -oE '/[^ ]*/mpi\.h' | head -n1`]
+        with_mpi=${mpi_h%/include/mpi.h}
+        AC_MSG_RESULT([$with_mpi])
+    fi
+
+    if ! test -f "$with_mpi/include/mpi.h" ; then
+        AC_MSG_ERROR([mpi.h not found in $with_mpi/include/])
+    fi
+    PAC_APPEND_FLAG(-I${with_mpi}/include, [CPPFLAGS])
+    PAC_APPEND_FLAG(-L${with_mpi}/lib, [LDFLAGS])
+
+    # Check whether we are testing MPI derived from MPICH
+    MPI_IS_MPICH=no
+    AC_MSG_CHECKING([Is the MPI derived from MPICH])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
+        [MPI_IS_MPICH=yes],[MPI_IS_MPICH=no])
+    AC_MSG_RESULT($MPI_IS_MPICH)
+
+    WITH_MPI=
+
+    AC_CHECK_LIB([mpi], [MPI_Init], [has_mpi=yes], [has_mpi=no])
+    AC_CHECK_LIB([mpi_abi], [MPI_Init], [has_mpi_abi=yes], [has_mpi_abi=no])
+    if test "$enable_mpi_abi" = "yes" ; then
+        if test "$has_mpi_abi" = "yes" ; then
+            WITH_MPI="abi"
+            PAC_LIBS_ADD([-lmpi_abi])
+        else
+            AC_MSG_ERROR([Option enable-mpi-abi is set but libmpi_abi not found!])
+        fi
+    else
+        if test "$has_mpi" = "yes" ; then
+            PAC_LIBS_ADD([-lmpi])
+        elif test "$has_mpi_abi" = "yes" ; then
+            WITH_MPI="abi"
+            PAC_LIBS_ADD([-lmpi_abi])
+        else
+            AC_MSG_ERROR([Neither libmpi nor libmpi_abi is found!])
+        fi
+
+        if test "$WITH_MPI" = "abi" ; then
+            AC_CHECK_LIB([pmpi_abi], [PMPI_Init])
+        else
+            AC_CHECK_LIB([pmpi], [PMPI_Init])
+        fi
+    fi
+
+    mpi_h="$with_mpi/include/mpi.h"
+    if test -f "$with_mpi/include/mpi_abi.h" -a "$WITH_MPI" = "abi"; then
+        mpi_h="$with_mpi/include/mpi_abi.h"
+    fi
+fi
+AC_SUBST([mpi_libs])
 
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])

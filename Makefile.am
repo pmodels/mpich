@@ -45,7 +45,7 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi_srcdir@ @fortrandir@
+external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi_srcdir@
 external_ldflags = @RPATHS@
 external_libs = @WRAPPER_LIBS@
 
@@ -186,7 +186,7 @@ lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_CXX_BINDING
 
 # build the current directory and then the examples directory after everything else
-SUBDIRS += . examples
+SUBDIRS += . @fortrandir@ examples
 
 testing:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
