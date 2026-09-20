@@ -19,14 +19,14 @@ extern MPI_Fint *MPI_F_STATUSES_IGNORE;
 /* C type for MPI_STATUS in F08.
    The field order should match that in C MPI_Status.
  */
-#ifdef MPICH_BUILD_MPI_ABI
+#ifdef MPI_ABI
 /* matches MPI_Status in mpi_abi.h */
 typedef struct {
     MPI_Fint MPI_SOURCE;
     MPI_Fint MPI_TAG;
     MPI_Fint MPI_ERROR;
     MPI_Fint MPI_internal[5];
-} MPI_F08_Status;
+} MPI_F08_status;
 #else
 /* matches MPI_Status in MPICH ABI */
 typedef struct {

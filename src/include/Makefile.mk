@@ -5,7 +5,6 @@
 
 include_HEADERS += \
     src/include/mpi.h \
-    src/include/mpi_fortran.h \
     src/include/mpix.h
 
 if BUILD_MPICH_LIB

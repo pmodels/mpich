@@ -6,7 +6,7 @@
 #ifndef CDESC_H_INCLUDED
 #define CDESC_H_INCLUDED
 
-#include "mpichconf.h"
+#include "mpifort_config.h"
 
 #ifdef FORTRAN_BUILD_MPI_ABI
 #define MPI_ABI
