@@ -5,6 +5,9 @@
 
 AC_PREREQ([2.69])
 
+dnl define a m4 macro so confdb functions can tell
+m4_define([mpich_fortran_configure], [yes])
+
 m4_include([version.m4])
 
 AC_INIT([MPIFORT], MPICH_VERSION_m4, [discuss@mpich.org], [mpifort], [http://www.mpich.org/])
@@ -152,8 +155,58 @@ else
     if test -f "$with_mpi/include/mpi_abi.h" -a "$WITH_MPI" = "abi"; then
         mpi_h="$with_mpi/include/mpi_abi.h"
     fi
+
 fi
 AC_SUBST([mpi_libs])
+
+# ---------------------------------------------
+# Substitution macros for mpifort
+
+# User-provided flags
+AC_SUBST(MPICH_MPIFORT_CPPFLAGS)
+AC_SUBST(MPICH_MPIFORT_FCFLAGS)
+AC_SUBST(MPICH_MPIFORT_LDFLAGS)
+AC_SUBST(MPICH_MPIFORT_LIBS)
+
+AC_SUBST(MPICH_MPIF77_CPPFLAGS)
+AC_SUBST(MPICH_MPIF77_FCFLAGS)
+AC_SUBST(MPICH_MPIF77_LDFLAGS)
+AC_SUBST(MPICH_MPIF77_LIBS)
+
+# Check that the Fortran compiler will allow us to pass arguments
+# of different types (e.g., for MPI_Send)
+PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
+if test "X$addarg" != "X" ; then
+    # Code using mpif.h interface will likely need this flag to compile.
+    # Code with `use mpi` or `use mpi_f08` do not need this flag.
+    # Add the flag to mpif77 wrappers.
+    WRAPPER_EXTRA_F77_FLAGS="$addarg"
+fi
+AC_SUBST(WRAPPER_EXTRA_F77_FLAGS)
+
+AC_ARG_ENABLE(interlib-deps,[
+    AS_HELP_STRING([--enable-interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
+if test -z "$INTERLIB_DEPS" ; then
+    INTERLIB_DEPS=yes
+    if test "X$enable_shared" = "Xno" -o "$deplibs_check_method" != "pass_all" -o "$enable_interlib_deps" = "no" ; then
+        INTERLIB_DEPS=no
+    fi
+    # Used when INTERLIB_DEPS is "no"
+    mpi_dependency_libs="$mpi_libs"
+fi
+AC_SUBST(INTERLIB_DEPS)
+
+WRAPPER_DEPENDENCY_LDFLAGS="$mpi_dependency_libs"
+AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
+
+# generate rpath-related macros, needed for substitute with_wrapper_dl_type
+fc_shlib_conf=fc_shlib.conf
+PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
+AC_SUBST_FILE([fc_shlib_conf])
+
+
+
+# ---------------------------------------------
 
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])

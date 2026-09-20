@@ -926,7 +926,6 @@ AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling 
 AC_ARG_VAR([MPIABILIBNAME],[can be used to override the name of the MPI library (default: "mpi_abi")])
 AC_ARG_VAR([PMPIABILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPIABILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
-AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 MPILIBNAME=${MPILIBNAME:-"mpi"}
 # ROMIO is configured as a subdirectory and needs the resolved library name
 # when building its legacy tests against the top-level build tree.
@@ -944,10 +943,13 @@ PMPIABILIBNAME=${PMPIABILIBNAME:-"p$MPIABILIBNAME"}
 # We use a different library for the C++ wrappers to avoid problems when
 # creating shared libraries
 if test -z "$MPICXXLIBNAME" ; then MPICXXLIBNAME="${MPILIBNAME}cxx" ; fi
-if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPICXXLIBNAME
-export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
+
+# mpicc need MPIFCLIBNAME to support -mpi-fortran option
+AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
+if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
+export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
 
 # enable-fast

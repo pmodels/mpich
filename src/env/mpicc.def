@@ -536,16 +536,13 @@ subcode: set_final_vars
 
         if test "$need_fortran" = "yes" ; then
             final_cppflags="${final_cppflags} -DMPI_FORTRAN"
-            mpi_libs_shared="$no_as_needed-lmpifort $mpi_libs_shared"
-            \x23 dlsym won't work with static linking but at least we make it available
-            # FIXME: need libmpifort_abi for dual ABI build
-            if test -e "$libdir/libmpifort.a" ; then
-                mpi_libs_static="$libdir/libmpifort.a $mpi_libs_static"
+            mpi_libs_shared="$no_as_needed-l@MPIFCLIBNAME@ $mpi_libs_shared"
+            if test -e "$libdir/lib@MPIFCLIBNAME@.a" ; then
+                mpi_libs_static="$libdir/lib@MPIFCLIBNAME@.a $mpi_libs_static"
             fi
         fi
     $(else)
-        mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
-        mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
+        # libmpi should be added in WRAPPER_DEPENDENCY_LDFLAGS
 
     $(if:cc=fc)
         $call patch_final_fcflags
