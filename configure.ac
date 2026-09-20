@@ -2405,42 +2405,12 @@ PAC_PROG_CHECK_INSTALL_WORKS
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
 
-AC_ARG_ENABLE([bash],[AS_HELP_STRING([--disable-bash],[Do not use bash for wrapper scripts (mpicc etc)])],
-              [],[enable_bash=yes])
-AC_PATH_PROG(BASH_SHELL,bash)
-
-bashWorks=no
-if test "$enable_bash" = "yes" ; then
-    # Check for bash to allow more robust shell scripts
-    #
-    # Confirm that bash has working arrays.  We can use this to
-    # build more robust versions of the scripts (particularly the
-    # compilation scripts) by taking advantage of the array features in
-    # bash.
-    if test -x "$BASH_SHELL" ; then
-        changequote(%%,::)dnl
-        cat >>conftest <<EOF
-#! $BASH_SHELL
-A[0]="b"
-A[1]="c"
-rc=1
-if test \${A[1]} != "c" ; then rc=2 ; else rc=0 ; fi
-exit \$rc
-EOF
-        changequote([,])dnl
-        AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
-        chmod +x conftest
-        if ./conftest 2>&1 >/dev/null ; then
-            bashWorks=yes
-        else
-            bashWorks=no
-        fi
-        rm -f conftest*
-        AC_MSG_RESULT($bashWorks)
-    fi
-fi
 dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
-AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
+PAC_CHECK_BASH
+AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$pac_cv_bash_works" = xyes])
+
+# export variables for subconfigure in mpifort
+export BASH_SHELL pac_cv_bash_works
 
 # ----------------------------------------------------------------------------
 # At this point, we've finally settled on the value of PMPILIBNAME.  We
@@ -4170,27 +4140,9 @@ if test "X$enable_shared" = "Xyes" ; then
 fi
 
 if test "$enable_f08" = "yes"; then
-    AS_CASE([$MPI_AINT],
-        [short],       [F08_C_AINT="c_short"],
-        [int],         [F08_C_AINT="c_int"],
-        [long],        [F08_C_AINT="c_long"],
-        ['long long'], [F08_C_AINT="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_AINT type in Fortran 2008])])
-
-    AS_CASE([$MPI_COUNT],
-        [short],       [F08_C_COUNT="c_short"],
-        [int],         [F08_C_COUNT="c_int"],
-        [long],        [F08_C_COUNT="c_long"],
-        ['long long'], [F08_C_COUNT="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_COUNT type in Fortran 2008])])
-
-    AS_CASE([$MPI_OFFSET],
-        [short],       [F08_C_OFFSET="c_short"],
-        [int],         [F08_C_OFFSET="c_int"],
-        [long],        [F08_C_OFFSET="c_long"],
-        ['long long'], [F08_C_OFFSET="c_long_long"],
-        [AC_MSG_ERROR([unable to determine C MPI_OFFSET type in Fortran 2008])])
-
+    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_AINT], [F08_C_AINT])
+    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_OFFSET], [F08_C_OFFSET])
+    PAC_PROG_FC_C_INT_TYPE([$MPI_SIZEOF_COUNT], [F08_C_COUNT])
     AC_SUBST(F08_C_AINT)
     AC_SUBST(F08_C_COUNT)
     AC_SUBST(F08_C_OFFSET)
