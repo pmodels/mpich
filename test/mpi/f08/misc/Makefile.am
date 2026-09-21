@@ -16,4 +16,5 @@ noinst_PROGRAMS = \
 	ring
 
 statusconv_SOURCES = statusconvf08.f90 statusconv.c
+statusconv_LDADD = $(LDADD) @MTEST_MPILIB@
 

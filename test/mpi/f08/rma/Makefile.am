@@ -30,3 +30,4 @@ noinst_PROGRAMS += aintf08
 ##    allocmem
 
 c2f2cwinf08_SOURCES = c2f2cwinf08.f90 c2f902cwin.c
+c2f2cwinf08_LDADD = $(LDADD) @MTEST_MPILIB@

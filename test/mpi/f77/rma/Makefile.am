@@ -30,6 +30,7 @@ noinst_PROGRAMS += aintf
 ##    allocmem
 
 c2f2cwinf_SOURCES = c2f2cwin.c c2f2cwinf.f
+c2f2cwinf_LDADD = $(LDADD) @MTEST_MPILIB@
 
 # see include note in Makefile_f77.mtest
 AM_FFLAGS += -I../attr

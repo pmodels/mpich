@@ -372,9 +372,13 @@ fi
 if test "$enable_mpi_abi" = "yes" ; then
     enable_cxx=no
     PAC_GET_EXENAME("mpicc_abi", MPICC_NAME)
+    MTEST_MPILIB="-lmpi_abi"
 else
     PAC_GET_EXENAME("mpicc", MPICC_NAME)
+    MTEST_MPILIB="-lmpi"
 fi
+AC_SUBST([MTEST_MPILIB])
+
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)

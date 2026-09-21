@@ -21,8 +21,12 @@ noinst_PROGRAMS =                   \
 
 noinst_PROGRAMS += fandcattrf08 baseattr3f08 attrlangf08
 fandcattrf08_SOURCES = fandcattrf08.f90 fandcattrc.c
+fandcattrf08_LDADD = $(LDADD) @MTEST_MPILIB@
+
 baseattr3f08_SOURCES = baseattr3f08.f90
+
 attrlangf08_SOURCES = attrlangf08.f90 attrlangc.c
+attrlangf08_LDADD = $(LDADD) @MTEST_MPILIB@
 
 # Remove any created module files, if we know the extension of those files
 clean-local:
