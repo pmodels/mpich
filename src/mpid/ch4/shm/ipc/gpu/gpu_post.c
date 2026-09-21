@@ -567,12 +567,11 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     goto fn_exit;
 }
 
-/* Non-cached version, used by ipc_win.c and posix_coll_gpu_ipc.h */
-int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                              MPIDI_IPCI_ipc_handle_t * ipc_handle)
+static int fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
+                           MPL_gpu_ipc_mem_handle_t * handle_ptr,
+                           MPIDI_IPCI_ipc_handle_t * ipc_handle)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpl_err;
 
     int local_dev_id, global_dev_id;
     local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
@@ -581,12 +580,7 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     void *pbase = ipc_attr->u.gpu.bounds_base;
     MPI_Aint len = ipc_attr->u.gpu.bounds_len;
 
-    MPL_gpu_ipc_mem_handle_t handle;
-    mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->u.gpu.gpu_attr.device_attr, &handle);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_handle_create");
-
-    ipc_handle->gpu.ipc_handle = handle;
+    ipc_handle->gpu.ipc_handle = *handle_ptr;
     ipc_handle->gpu.global_dev_id = global_dev_id;
     ipc_handle->gpu.local_dev_id = local_dev_id;
     ipc_handle->gpu.remote_base_addr = (uintptr_t) pbase;
@@ -598,6 +592,36 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_exit:
     return mpi_errno;
   fn_fail:
+    goto fn_exit;
+}
+
+/* Non-cached version, used by ipc_win.c and posix_coll_gpu_ipc.h */
+int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
+                              MPIDI_IPCI_ipc_handle_t * ipc_handle, void **local_handle_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPL_gpu_ipc_mem_handle_t *handle_ptr = NULL;
+    handle_ptr = MPL_malloc(sizeof(MPL_gpu_ipc_mem_handle_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!handle_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    int mpl_err;
+    mpl_err = MPL_gpu_ipc_handle_create(ipc_attr->u.gpu.bounds_base,
+                                        &ipc_attr->u.gpu.gpu_attr.device_attr, handle_ptr);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_handle_create");
+
+    mpi_errno = fill_ipc_handle(ipc_attr, handle_ptr, ipc_handle);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *local_handle_out = (void *) handle_ptr;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (handle_ptr) {
+        MPL_free(handle_ptr);
+    }
     goto fn_exit;
 }
 
@@ -637,20 +661,23 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
         }
 
         /* cache hit but no mapped addr yet, fill handle from cache */
-        mpi_errno = MPIDI_GPU_fill_ipc_handle(ipc_attr, ipc_handle);
+        mpi_errno = fill_ipc_handle(ipc_attr, entry->handle_ptr, ipc_handle);
         MPIR_ERR_CHECK(mpi_errno);
-        ipc_handle->gpu.ipc_handle = *entry->handle_ptr;
         entry->in_use++;
         goto fn_done;
     }
 
     /* cache miss, create handle and insert into cache */
-    mpi_errno = MPIDI_GPU_fill_ipc_handle(ipc_attr, ipc_handle);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    handle_ptr = MPL_malloc(sizeof(*handle_ptr), MPL_MEM_OTHER);
+    handle_ptr = MPL_malloc(sizeof(MPL_gpu_ipc_mem_handle_t), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!handle_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    *handle_ptr = ipc_handle->gpu.ipc_handle;
+
+    int mpl_err;
+    mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->u.gpu.gpu_attr.device_attr, handle_ptr);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_ipc_handle_create");
+
+    mpi_errno = fill_ipc_handle(ipc_attr, handle_ptr, ipc_handle);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, ctx, &entry);
     MPIR_ERR_CHECK(mpi_errno);
@@ -677,6 +704,9 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_exit:
     return mpi_errno;
   fn_fail:
+    if (handle_ptr) {
+        MPL_free(handle_ptr);
+    }
     goto fn_exit;
 }
 
