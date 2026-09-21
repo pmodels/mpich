@@ -185,14 +185,6 @@ typedef struct _physical_device_state {
 static int physical_device_count = 0;
 static physical_device_state *physical_device_states = NULL;
 
-typedef struct {
-    const void *ptr;
-    uint64_t mem_id;
-    int shared_dev_id;
-    int handles[2];
-    uint32_t nhandles;
-    UT_hash_handle hh;
-} MPL_ze_gem_hash_entry_t;
 
 /*
 this cache entry may cache two device pointers:
@@ -211,7 +203,6 @@ typedef struct {
 } MPL_ze_ipc_handle_entry_t;
 
 
-static MPL_ze_gem_hash_entry_t *gem_hash = NULL;
 
 static int *ipc_max_entries = NULL;
 
@@ -1231,12 +1222,6 @@ int MPL_gpu_finalize(void)
     MPL_free(subdevice_map);
     MPL_free(subdevice_count);
 
-    MPL_ze_gem_hash_entry_t *entry = NULL, *tmp = NULL;
-    HASH_ITER(hh, gem_hash, entry, tmp) {
-        HASH_DELETE(hh, gem_hash, entry);
-        MPL_free(entry);
-    }
-
     for (i = 0; i < physical_device_count; ++i) {
         close(physical_device_states[i].fd);
     }
@@ -1435,27 +1420,18 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     goto fn_exit;
 }
 
-/* ptr must be a local device pointer and base address */
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
 
     if (physical_device_states != NULL) {
-        /* drmfd */
-        MPL_ze_gem_hash_entry_t *entry = NULL;
-        HASH_FIND_PTR(gem_hash, &ptr, entry);
-        if (entry) {
-            /* close GEM handle */
-            for (int i = 0; i < entry->nhandles; i++) {
-                int status = close_handle(physical_device_states[entry->shared_dev_id].fd,
-                                          entry->handles[i]);
-                if (status) {
-                    break;
-                }
+        fd_pid_t *h = &mpl_ipc_handle->data;
+        for (int i = 0; i < h->nfds; i++) {
+            int status = close_handle(physical_device_states[h->dev_id].fd, h->fds[i]);
+            if (status) {
+                mpl_err = MPL_ERR_GPU_INTERNAL;
+                break;
             }
-
-            HASH_DEL(gem_hash, entry);
-            MPL_free(entry);
         }
     }
 
@@ -2452,52 +2428,18 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     if (physical_device_states != NULL) {
         if (use_shared_fd) {
-            /* Hash (ptr, dev_id, handle) to close later */
-            MPL_ze_gem_hash_entry_t *entry = NULL;
-            HASH_FIND_PTR(gem_hash, &ptr, entry);
-
-            /* invalid entry */
-            if (entry &&
-                (entry->mem_id != mem_id ||
-                 physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id)) {
-                mpl_err = MPL_gpu_ipc_handle_destroy(ptr);
-                if (mpl_err != MPL_SUCCESS) {
+            int shared_dev_id = get_physical_device(local_dev_id);
+            for (int i = 0; i < nfds; i++) {
+                /* convert dma_buf fd to GEM handle */
+                memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
+                status =
+                    fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
+                if (status) {
                     goto fn_fail;
                 }
-                entry = NULL;
+                h.fds[i] = handles[i];
             }
-
-            if (entry == NULL) {
-                int shared_dev_id = get_physical_device(local_dev_id);
-                for (int i = 0; i < nfds; i++) {
-                    /* convert dma_buf fd to GEM handle */
-                    memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
-                    status =
-                        fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
-                    if (status) {
-                        goto fn_fail;
-                    }
-                }
-
-                entry =
-                    (MPL_ze_gem_hash_entry_t *) MPL_malloc(sizeof(MPL_ze_gem_hash_entry_t),
-                                                           MPL_MEM_OTHER);
-                if (entry == NULL) {
-                    goto fn_fail;
-                }
-
-                entry->ptr = ptr;
-                entry->mem_id = mem_id;
-                entry->shared_dev_id = shared_dev_id;
-                for (int i = 0; i < nfds; i++)
-                    entry->handles[i] = handles[i];
-                entry->nhandles = nfds;
-                HASH_ADD_PTR(gem_hash, ptr, entry, MPL_MEM_OTHER);
-            }
-
-            for (int i = 0; i < entry->nhandles; i++)
-                h.fds[i] = entry->handles[i];
-            h.dev_id = entry->shared_dev_id;
+            h.dev_id = shared_dev_id;
         } else {
             for (int i = 0; i < nfds; i++) {
                 memcpy(&h.fds[i], &ze_ipc_handle[i], sizeof(int));

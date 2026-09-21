@@ -33,7 +33,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
