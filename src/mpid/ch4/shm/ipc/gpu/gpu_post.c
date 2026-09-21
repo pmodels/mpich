@@ -229,6 +229,7 @@ static int ipc_handle_cache_count = 0;
 static unsigned long long ipc_handle_cache_usage_counter;       /* for tracking LRU (Least Recently Used) */
 
 /* ipc handle cache utilities */
+static bool ipc_track_cache_can_insert(void);
 static int ipc_track_cache_free(int idx, struct am_context am_ctx);
 static int ipc_track_cache_delete(int idx, struct am_context am_ctx);
 static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_Aint len,
@@ -239,6 +240,12 @@ static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   MPL_gpu_ipc_mem_handle_t handle,
                                   struct am_context am_ctx, bool * cache_inserted);
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank);
+
+static bool ipc_track_cache_can_insert(void)
+{
+    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
+    return (ipc_handle_cache_count < cache_limit);
+}
 
 /* free the cache entry without updating ipc_handle_cache array */
 static int ipc_track_cache_free(int idx, struct am_context am_ctx)
@@ -706,6 +713,9 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
             }
         }
     } else {
+        if (!ipc_track_cache_can_insert()) {
+            goto fn_exit;
+        }
         /* cache miss: create IPC handle and insert */
         MPL_gpu_ipc_mem_handle_t handle;
         mpl_err = MPL_gpu_ipc_handle_create(pbase, &attr->device_attr, &handle);
@@ -716,10 +726,7 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
         mpi_errno = ipc_track_cache_insert(pbase, len, handle, default_am_ctx, &inserted);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (!inserted) {
-            MPL_gpu_ipc_handle_destroy(pbase);
-            goto fn_exit;
-        }
+        MPIR_Assert(inserted);
 
         entry = ipc_track_cache_search(pbase, len, default_am_ctx);
         MPIR_Assert(entry);
