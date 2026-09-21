@@ -238,7 +238,8 @@ static struct handle_cache_entry *ipc_track_cache_lookup(MPL_gpu_ipc_mem_handle_
 static int ipc_track_cache_check_limit(struct am_context am_ctx);
 static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   MPL_gpu_ipc_mem_handle_t * handle_ptr,
-                                  struct am_context am_ctx, struct handle_cache_entry **entry_out);
+                                  struct am_context am_ctx,
+                                  struct handle_cache_entry **entry_out, bool force);
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank);
 
 static bool ipc_track_cache_can_insert(void)
@@ -426,14 +427,20 @@ static int ipc_track_cache_check_limit(struct am_context am_ctx)
 
 static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   MPL_gpu_ipc_mem_handle_t * handle_ptr,
-                                  struct am_context am_ctx, struct handle_cache_entry **entry_out)
+                                  struct am_context am_ctx,
+                                  struct handle_cache_entry **entry_out, bool force)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = ipc_track_cache_check_limit(am_ctx);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
+    int cache_limit;
+    if (force) {
+        cache_limit = IPC_HANDLE_CACHE_MAX;
+    } else {
+        cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
+    }
     if (ipc_handle_cache_count < cache_limit) {
         struct handle_cache_entry *entry = &ipc_handle_cache[ipc_handle_cache_count];
         memset(entry, 0, sizeof(*entry));
@@ -679,7 +686,15 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     mpi_errno = fill_ipc_handle(ipc_attr, handle_ptr, ipc_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, ctx, &entry);
+    bool force = false;
+#ifdef MPL_HAVE_ZE
+    /* the drmfd path cannot have duplicate handles from the same buffer.
+     * Use "force=true" to force caching. */
+    if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+        force = true;
+    }
+#endif
+    mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, ctx, &entry, force);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (entry) {
@@ -755,7 +770,15 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
             }
         }
     } else {
-        if (!ipc_track_cache_can_insert()) {
+        bool force = false;
+#ifdef MPL_HAVE_ZE
+        /* the drmfd path cannot have duplicate handles from the same buffer.
+         * Use "force=true" to force caching. */
+        if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+            force = true;
+        }
+#endif
+        if (!force && !ipc_track_cache_can_insert()) {
             goto fn_exit;
         }
         /* cache miss: create IPC handle and insert */
@@ -765,7 +788,7 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_create");
 
-        mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, default_am_ctx, &entry);
+        mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, default_am_ctx, &entry, force);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(entry);
     }
