@@ -254,7 +254,7 @@ static int ipc_track_cache_free(int idx, struct am_context am_ctx)
 
     struct handle_cache_entry *entry = &ipc_handle_cache[idx];
 
-    MPL_gpu_ipc_handle_destroy(entry->base_addr);
+    MPL_gpu_ipc_handle_destroy(entry->handle_ptr);
     MPL_free(entry->handle_ptr);
 
     if (entry->num_maps > 0) {
@@ -663,7 +663,6 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_done:
     if (req) {
         MPIDI_SHM_REQUEST(req, ipc.u.handle.is_cached) = is_cached;
-        MPIDI_SHM_REQUEST(req, ipc.u.handle.base_addr) = pbase;
         if (is_cached) {
             if (!entry) {
                 entry = ipc_track_cache_search(pbase, len, ctx);
@@ -1122,8 +1121,7 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
         entry->in_use--;
         MPIR_Assert(entry->in_use >= 0);
     } else {
-        void *pbase = MPIDI_SHM_REQUEST(req, ipc.u.handle.base_addr);
-        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
+        int mpl_err = MPL_gpu_ipc_handle_destroy(ipc_handle);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_destroy");
         MPL_free(handle_ptr);
