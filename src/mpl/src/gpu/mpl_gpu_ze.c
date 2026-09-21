@@ -2609,6 +2609,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
   fn_exit:
     return mpl_err;
   fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
 
