@@ -13,7 +13,7 @@ int MPIDI_GPU_ipc_cache_finalize(void);
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                              MPIDI_IPCI_ipc_handle_t * ipc_handle);
+                              MPIDI_IPCI_ipc_handle_t * ipc_handle, void **local_handle_out);
 int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                     MPIDI_IPCI_ipc_handle_t * ipc_handle,
                                     MPIR_Request * req, int remote_lrank);
