@@ -80,6 +80,7 @@ typedef struct {
     bool roundrobin_cmdq;
     /* Output */
     bool enable_ipc;
+    bool ipc_handle_need_destroy;       /* default false; set to true in MPL_ze_set_fds (drmfd path) */
     MPL_gpu_ipc_handle_type_t ipc_handle_type;
 } MPL_gpu_info_t;
 
