@@ -641,7 +641,12 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     mpi_errno = fill_ipc_handle(ipc_attr, handle_ptr, ipc_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *local_handle_out = (void *) handle_ptr;
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        *local_handle_out = (void *) handle_ptr;
+    } else {
+        *local_handle_out = NULL;
+        MPL_free(handle_ptr);
+    }
 
   fn_exit:
     return mpi_errno;
