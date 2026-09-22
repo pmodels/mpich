@@ -390,6 +390,7 @@ AM_CONDITIONAL([BUILD_FC_BINDING], [test "$enable_f90" = "yes"])
 PAC_FC_2008_SUPPORT([enable_f08=yes],[enable_f08=no])
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
 
+# prepare for localdefs.in
 fortran_bindings=
 AC_SUBST([fortran_bindings])
 
@@ -405,6 +406,12 @@ if test "$enable_f08" = "yes" ; then
     PAC_APPEND_CSV([use mpi_f08], [fortran_bindings])
     AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
+
+MPICH_COMPILER_F77="$F77 $MPICH_MPIF77_CPPFLAGS $MPICH_MPIF77_FFLAGS $WRAPPER_FFLAGS"
+MPICH_COMPILER_FC="$FC $MPICH_MPIFORT_CPPFLAGS $MPICH_MPIFORT_FCFLAGS $WRAPPER_FCFLAGS"
+AC_SUBST(MPICH_COMPILER_F77)
+AC_SUBST(MPICH_COMPILER_FC)
+
 
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)

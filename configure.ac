@@ -3312,6 +3312,11 @@ fi
 mpi_dependency_libs="$mpi_dependency_libs $WRAPPER_DEPENDENCY_LDFLAGS"
 export mpi_libs mpi_dependency_libs
 
+MPICH_COMPILER_CC="$CC $MPICH_MPICC_CPPFLAGS $MPICH_MPICC_CFLAGS $WRAPPER_CFLAGS"
+MPICH_COMPILER_CXX="$CXX $MPICH_MPICXX_CPPFLAGS $MPICH_MPICXX_CXXFLAGS $WRAPPER_CXXFLAGS"
+AC_SUBST(MPICH_COMPILER_CC)
+AC_SUBST(MPICH_COMPILER_CXX)
+
 fortrandir=
 AC_SUBST(fortrandir)
 if test "$enable_fortran" = "yes" ; then
@@ -3324,6 +3329,8 @@ if test "$enable_fortran" = "yes" ; then
     AC_MSG_NOTICE([sourcing $main_top_builddir/src/binding/fortran/localdefs])
     . $main_top_builddir/src/binding/fortran/localdefs
 fi
+AC_SUBST(MPICH_COMPILER_F77)
+AC_SUBST(MPICH_COMPILER_FC)
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
