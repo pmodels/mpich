@@ -2370,6 +2370,7 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds, int *bdfs)
 
 void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
 {
+    MPL_gpu_info.ipc_handle_need_destroy = true;
     physical_device_count = num_fds;
     physical_device_states =
         (physical_device_state *) MPL_malloc(num_fds * sizeof(physical_device_state),
