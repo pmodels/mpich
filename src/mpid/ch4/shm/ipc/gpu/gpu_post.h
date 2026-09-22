@@ -13,7 +13,7 @@ int MPIDI_GPU_ipc_cache_finalize(void);
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
-                              MPIDI_IPCI_ipc_handle_t * ipc_handle);
+                              MPIDI_IPCI_ipc_handle_t * ipc_handle, void **local_handle_out);
 int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                     MPIDI_IPCI_ipc_handle_t * ipc_handle,
                                     MPIR_Request * req, int remote_lrank);
@@ -30,6 +30,7 @@ int MPIDI_GPU_comm_bootstrap(MPIR_Comm * comm);
 int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz);
 int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq);
+int MPIDI_GPU_handle_destroy(void *handle);
 int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req);
 int MPIDI_GPU_ipc_map_complete(MPIR_Request * req);
 

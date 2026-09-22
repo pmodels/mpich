@@ -510,6 +510,9 @@ typedef struct MPIDIG_win_t {
     MPIDIG_win_sync_t sync;
     MPIDIG_win_info_args_t info_args;
     MPIDIG_win_shared_info_t *shared_table;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    void *gpu_ipc_handle_ptr;   /* local IPC handle, destroyed at win free */
+#endif
 
     /* per-target structure for sync and OP completion. */
     MPIDIG_win_target_t *targets;

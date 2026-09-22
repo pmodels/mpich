@@ -64,7 +64,8 @@ cvars:
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                  MPIR_Comm * comm, int threshold, MPI_Aint * data_sz_out,
-                                 void **mem_addr_out, MPIDI_IPCI_ipc_handle_t ** ipc_handles_out)
+                                 void **mem_addr_out, MPIDI_IPCI_ipc_handle_t ** ipc_handles_out,
+                                 void **local_handle_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -90,8 +91,9 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
 
     MPIDI_IPCI_ipc_handle_t my_ipc_handle;
     memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
+    *local_handle_out = NULL;
     if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__GPU) {
-        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle);
+        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle, local_handle_out);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         my_ipc_handle.gpu.global_dev_id = -1;
@@ -140,10 +142,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
 
     MPI_Aint data_sz;
     void *mem_addr;
+    void *local_handle = NULL;
     MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
     mpi_errno = allgather_ipc_handles(buffer, count, datatype, comm_ptr,
                                       MPIR_CVAR_BCAST_IPC_READ_MSG_SIZE_THRESHOLD,
-                                      &data_sz, &mem_addr, &ipc_handles);
+                                      &data_sz, &mem_addr, &ipc_handles, &local_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!ipc_handles) {
@@ -182,6 +185,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -220,10 +230,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
 
     MPI_Aint data_sz;
     void *send_mem_addr;
+    void *local_handle = NULL;
     MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
     mpi_errno = allgather_ipc_handles(sendbuf, sendcount, sendtype, comm_ptr,
                                       MPIR_CVAR_ALLTOALL_IPC_READ_MSG_SIZE_THRESHOLD,
-                                      &data_sz, &send_mem_addr, &ipc_handles);
+                                      &data_sz, &send_mem_addr, &ipc_handles, &local_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!ipc_handles) {
@@ -282,6 +293,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
         }
     }
 
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -322,10 +340,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
 
     MPI_Aint data_sz;
     void *send_mem_addr;
+    void *local_handle = NULL;
     MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
     mpi_errno = allgather_ipc_handles(sendbuf, sendcount, sendtype, comm_ptr,
                                       MPIR_CVAR_ALLGATHER_IPC_READ_MSG_SIZE_THRESHOLD,
-                                      &data_sz, &send_mem_addr, &ipc_handles);
+                                      &data_sz, &send_mem_addr, &ipc_handles, &local_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!ipc_handles) {
@@ -384,6 +403,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
         }
     }
 
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -426,10 +452,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
 
     MPI_Aint data_sz;
     void *send_mem_addr;
+    void *local_handle = NULL;
     MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
     mpi_errno = allgather_ipc_handles(sendbuf, sendcount, sendtype, comm_ptr,
                                       MPIR_CVAR_ALLGATHERV_IPC_READ_MSG_SIZE_THRESHOLD,
-                                      &data_sz, &send_mem_addr, &ipc_handles);
+                                      &data_sz, &send_mem_addr, &ipc_handles, &local_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!ipc_handles) {
@@ -491,6 +518,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
         }
     }
 
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:

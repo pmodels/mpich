@@ -24,7 +24,11 @@ typedef struct {
     MPIDI_IPCI_type_t ipc_type;
     union {
         MPL_gpu_map_t map;
-        void *base_addr;        /* if set, remove the handle at request completion */
+        struct {
+            bool is_cached;
+            MPL_gpu_ipc_mem_handle_t *handle_ptr;       /* cached: points to cache entry's handle
+                                                         * !cached: malloc'd, freed on ack */
+        } handle;
     } u;
 } MPIDI_IPC_am_request_t;
 

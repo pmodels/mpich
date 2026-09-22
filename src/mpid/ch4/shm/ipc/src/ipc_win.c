@@ -95,7 +95,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
-            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE));
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE),
+                                      &MPIDIG_WIN(win, gpu_ipc_handle_ptr));
             break;
 #endif
         default:
@@ -224,10 +225,11 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+    mpi_errno = MPIDI_GPU_handle_destroy(MPIDIG_WIN(win, gpu_ipc_handle_ptr));
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     MPL_free(MPIDIG_WIN(win, shared_table));
-    /* extra just to silence potential unused-label warnings */
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
