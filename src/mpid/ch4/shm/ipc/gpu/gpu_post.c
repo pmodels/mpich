@@ -602,6 +602,26 @@ static int fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     goto fn_exit;
 }
 
+/* NOTE: currently only ZE drmfd path require handle-destroy. All other paths are effectively noop */
+int MPIDI_GPU_handle_destroy(void *handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (handle) {
+        int mpl_err = MPL_gpu_ipc_handle_destroy((MPL_gpu_ipc_mem_handle_t *) handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_destroy");
+
+        MPL_free(handle);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
+}
+
 /* Non-cached version, used by ipc_win.c and posix_coll_gpu_ipc.h */
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                               MPIDI_IPCI_ipc_handle_t * ipc_handle, void **local_handle_out)
@@ -1166,10 +1186,7 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
         entry->in_use--;
         MPIR_Assert(entry->in_use >= 0);
     } else {
-        int mpl_err = MPL_gpu_ipc_handle_destroy(handle_ptr);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_destroy");
-        MPL_free(handle_ptr);
+        mpi_errno = MPIDI_GPU_handle_destroy(handle_ptr);
     }
 
   fn_exit:
