@@ -185,11 +185,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* barrier to ensure all ranks have mapped before any rank destroys its handle */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -291,11 +293,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
         }
     }
 
-    /* barrier to ensure all ranks have mapped before any rank destroys its handle */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -399,11 +403,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
         }
     }
 
-    /* barrier to ensure all ranks have mapped before any rank destroys its handle */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
@@ -512,11 +518,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
         }
     }
 
-    /* barrier to ensure all ranks have mapped before any rank destroys its handle */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPL_gpu_info.ipc_handle_need_destroy) {
+        /* barrier to ensure all ranks have mapped before any rank destroys its handle */
+        mpi_errno = MPIR_Barrier_fallback(comm_ptr, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDI_GPU_handle_destroy(local_handle);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPL_free(ipc_handles);
 
   fn_exit:
