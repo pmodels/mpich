@@ -3,6 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#ifndef MPICH
+    #define MPICH         1
+#endif
+
 #ifdef MPI_ABI
 #include "mpi_abi.h"
 #ifdef MPI_MPIX
@@ -54,7 +58,6 @@
 #endif /* MPICH_BUILD_MPI_ABI */
 
 #define MPICH_NAME     5
-#define MPICH         1
 #define MPICH_HAS_C2F  1
 
 @ROMIO_VERSION@
