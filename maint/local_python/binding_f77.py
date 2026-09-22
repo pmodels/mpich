@@ -862,6 +862,19 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
+    if 'replace' in func:
+        if RE.search(r'with\s+(\w+)', func['replace']):
+            c_func_name = RE.m.group(1)
+        if RE.match(r'MPI_Type_(extent|lb|ub)', func_name, re.IGNORECASE):
+            code_list_common = ["MPI_Aint lb_i, extent_i;"]
+            c_arg_list_A = ["MPI_Type_fromint(*datatype)", "&lb_i", "&extent_i"]
+            if RE.m.group(1) == "extent":
+                end_list_common = ["*extent = (MPI_Fint) extent_i;"]
+            elif RE.m.group(1) == "lb":
+                end_list_common = ["*displacement = (MPI_Fint) lb_i;"]
+            elif RE.m.group(1) == "ub":
+                end_list_common = ["*displacement = (MPI_Fint) (lb_i + extent_i);"]
+
     has_mpix = ('skip-mpix' not in G.opts)
     if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
         if has_mpix:
