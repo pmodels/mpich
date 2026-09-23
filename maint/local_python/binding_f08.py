@@ -174,6 +174,7 @@ def dump_f08_wrappers_f(func, is_large):
     is_alltoallvw = False
 
     uses['MPIR_Init_fortran'] = 1
+    has_mpix = ('skip-mpix' not in G.opts)
 
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
@@ -661,8 +662,13 @@ def dump_f08_wrappers_f(func, is_large):
                 (f2c, c2f) = get_f2c_name('INFO')
                 uses[f2c] = 1
                 arg = "%s(%s(1:%s)%%MPI_VAL)" % (f2c, p['name'], p['_array_length'])
-            elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
+            elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win|Type)_get_attr', f08ts_name) and not has_mpix:
                 arg = p['name']
+                keyval = func['parameters'][1]['name']
+                if need_int_conversions:
+                    keyval = keyval + "_c"
+                convert_list_post.append("if (ierror_c == 0 .AND. flag_c /= 0) call MPII_Attr_convert_builtin(%s, %s)" % (keyval, p['name']))
+                uses['MPII_Attr_convert_builtin'] = 1
             else:
                 # no conversion needed, e.g. choice buffer, MPI_Aint, etc.
                 arg = p['name']
@@ -965,7 +971,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran|MPII_Attr_convert_builtin', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)

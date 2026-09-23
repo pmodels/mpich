@@ -26,6 +26,34 @@
 #define MPI_Grequest_start     PMPI_Grequest_start
 #endif
 
+/* ---- utility function ---- */
+static bool keyval_is_builtin(int keyval)
+{
+    if (MPI_TAG_UB == 0x64400001) {
+        /* MPICH ABI */
+        return ((unsigned int) keyval >> 30) == 1;
+    } else if (MPI_TAG_UB == 501) {
+        /* MPI ABI */
+        return (keyval >= 0 && keyval < 1024);
+    } else if (MPI_TAG_UB == 0) {
+        /* OMPI ABI */
+        return (keyval >= 0 && keyval <= 13);
+    } else {
+        return false;
+    }
+}
+
+/* without _as_fortran extension, attr interop between Fortran/C won't work,
+ * but at least make sure builtin attributes get should work.
+ */
+void MPII_Attr_convert_builtin(int keyval, void **val)
+{
+    if (keyval_is_builtin(keyval)) {
+        MPI_Aint *ptr = *val;
+        *val = (void *) (*ptr);
+    }
+}
+
 /* ---- attr -----*/
 struct F77_attr_state {
     int keyval;

@@ -31,6 +31,7 @@ def dump_f77_c_func(func, is_cptr=False):
 
     is_custom_fn = False  # custom function body
     need_skip_ierr = False
+    has_mpix = ('skip-mpix' not in G.opts)
 
     if re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
@@ -529,6 +530,10 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
+        if not has_mpix:
+            # Without mpix, the return depend on whether the keyval is builtin
+            keyval = func['parameters'][1]['name']
+            end_list_common.append("    MPII_Attr_convert_builtin(*%s, &%s_i);" % (keyval, v))
         end_list_common.append("    *%s = (%s) (intptr_t) %s_i;" % (v, c_type, v))
         end_list_common.append("}")
 
@@ -727,9 +732,9 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
             elif re.match(r'ATTRIBUTE_VAL', p['kind']):
-                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
+                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr)', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Aint", "flag_i")
-                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
+                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr)', func['name'], re.IGNORECASE):
                     dump_attr_in(p['name'], "MPI_Aint")
                 elif re.match(r'MPI_Attr_get', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Fint", "flag_i")
@@ -875,13 +880,15 @@ def dump_f77_c_func(func, is_cptr=False):
             elif RE.m.group(1) == "ub":
                 end_list_common = ["*displacement = (MPI_Fint) (lb_i + extent_i);"]
 
-    has_mpix = ('skip-mpix' not in G.opts)
     if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
+        if RE.m.group(1) == 'put':
+            get_or_set = "set"
+        else:
+            get_or_set = "get"
         if has_mpix:
-            if RE.m.group(1) == 'put':
-                c_func_name = "MPIX_Comm_set_attr_as_fortran"
-            else:
-                c_func_name = "MPIX_Comm_get_attr_as_fortran"
+            c_func_name = "MPIX_Comm_%s_attr_as_fortran" % get_or_set
+        else:
+            c_func_name = "MPI_Comm_%s_attr" % get_or_set
     elif RE.match(r'MPI_(Comm|Type|Win)_(get|set)_attr$', func['name'], re.IGNORECASE):
         if has_mpix:
             c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)

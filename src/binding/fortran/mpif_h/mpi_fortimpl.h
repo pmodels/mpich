@@ -423,6 +423,8 @@ typedef void (FORT_CALL F77_greq_free_function) (void *, MPI_Fint *);
 typedef void (FORT_CALL F77_greq_query_function) (void *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F08_greq_query_function) (void *, MPI_F08_status *, MPI_Fint *);
 
+void MPII_Attr_convert_builtin(int keyval, void **val);
+
 int MPII_Keyval_create(F90_CopyFunction * copy_fn, F90_DeleteFunction * delete_fn, int *keyval_out,
                        void *extra_state, enum F77_handle_type type);
 int MPII_Comm_create_keyval(F90_CopyFunction copy_fn, F90_DeleteFunction delete_fn,
