@@ -488,13 +488,13 @@ AC_ARG_ENABLE(mpi-abi,
         enable_mpi_abi=no)
 
 case "$enable_mpi_abi" in
-  yes)
+  yes|mpi)
     enable_mpi_abi=yes
     enable_mpich_abi=no
     ABI_INFO="MPI ABI 1.0"
     DEFAULT_MPI_ABI=yes
     ;;
-  no)
+  no|mpich)
     enable_mpi_abi=no
     enable_mpich_abi=yes
     ABI_INFO="MPICH ABI"

@@ -163,11 +163,11 @@ AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
         enable_mpi_abi=no)
 case "$enable_mpi_abi" in
-  yes)
+  yes|mpi)
     enable_mpi_abi=yes
     enable_mpich_abi=no
     ;;
-  no)
+  no|mpich)
     enable_mpi_abi=no
     enable_mpich_abi=yes
     ;;
