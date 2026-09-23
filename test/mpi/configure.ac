@@ -469,8 +469,6 @@ if test "$mpi_compile_works" != "yes" ; then
     AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
 fi
 
-is_mpi_abi=no
-
 # Check whether we are testing MPI derived from MPICH
 MPI_IS_MPICH=no
 AC_MSG_CHECKING([Is the MPI derived from MPICH])
@@ -492,11 +490,6 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
         elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
             enable_part=no
-        fi
-
-        if [grep 'MPICH ABI: *MPI ABI ' conftest.output > /dev/null] ; then
-            is_mpi_abi=yes
-            enable_cxx="no"
         fi
 
         if ! grep 'MPICH features:.*threadcomm' conftest.output > /dev/null ; then
@@ -529,7 +522,7 @@ if test "$MPI_IS_MPICH" = "yes" ; then
 fi
 
 if test "$enable_strictmpi" = "auto" ; then
-    if test "$MPI_IS_MPICH" = "yes" -a "$is_mpi_abi" = "no" ; then
+    if test "$MPI_IS_MPICH" = "yes" -a "$enable_mpi_abi" = "no" ; then
         enable_strictmpi=no
     else
         enable_strictmpi=yes
