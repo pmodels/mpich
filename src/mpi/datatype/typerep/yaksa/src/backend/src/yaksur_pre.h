@@ -55,7 +55,7 @@ typedef void (*yaksur_hostfn_t) (void *userData);
 
 typedef struct yaksur_gpudriver_hooks_s {
     /* miscellaneous */
-    int (*get_num_devices) (int *ndevices);
+    int (*get_num_devices) (unsigned *ndevices);
     /* *INDENT-OFF* */
     bool (*check_p2p_comm) (int sdev, int ddev);
     /* *INDENT-ON* */
