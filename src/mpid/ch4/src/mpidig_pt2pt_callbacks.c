@@ -381,6 +381,8 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         msg_mode = MSG_MODE_EAGER;
     }
 
+    /* printf("send target msg cb, hdr: src_rank %d, tag %d, context_id %d, data_sz %ld\n", */
+    /*        hdr->src_rank, hdr->tag, hdr->context_id, hdr->data_sz); */
     mpi_errno = match_posted_rreq(hdr->src_rank, hdr->tag, hdr->context_id,
                                   local_vci, is_local, &rreq);
     MPIR_ERR_CHECK(mpi_errno);
