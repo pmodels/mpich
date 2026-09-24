@@ -49,8 +49,8 @@ static bool keyval_is_builtin(int keyval)
 void MPII_Attr_convert_builtin(int keyval, void **val)
 {
     if (keyval_is_builtin(keyval)) {
-        MPI_Aint *ptr = *val;
-        *val = (void *) (*ptr);
+        int *ptr = *val;
+        *val = (void *) (intptr_t) (*ptr);
     }
 }
 
