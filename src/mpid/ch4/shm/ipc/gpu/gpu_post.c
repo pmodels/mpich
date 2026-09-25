@@ -596,10 +596,7 @@ static int fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     ipc_handle->gpu.offset = (uintptr_t) ipc_attr->u.gpu.vaddr - (uintptr_t) pbase;
     ipc_handle->gpu.handle_is_cached = false;
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* NOTE: currently only ZE drmfd path require handle-destroy. All other paths are effectively noop */
@@ -1192,6 +1189,7 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
         MPIR_Assert(entry->in_use >= 0);
     } else {
         mpi_errno = MPIDI_GPU_handle_destroy(handle_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

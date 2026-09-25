@@ -95,9 +95,11 @@ int MPIDI_UCX_do_am_recv(MPIR_Request * rreq)
     MPIDI_UCX_ucp_request_t *ucp_request;
     size_t received_length;
     ucp_request_param_t param = {
-        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_RECV_INFO,
+        .op_attr_mask =
+            UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_RECV_INFO | UCP_OP_ATTR_FIELD_USER_DATA,
         .cb.recv_am = &MPIDI_UCX_am_recv_callback_nbx,
         .recv_info.length = &received_length,
+        .user_data = rreq,
     };
     void *data_desc = MPIDI_UCX_AM_RECV_REQUEST(rreq, data_desc);
     /* note: use in_data_sz to match promised data size */
@@ -105,11 +107,7 @@ int MPIDI_UCX_do_am_recv(MPIR_Request * rreq)
                                        data_desc, recv_buf, in_data_sz, &param);
     if (ucp_request == NULL) {
         /* completed immediately */
-        MPIDI_UCX_ucp_request_t tmp_ucp_request;
-        tmp_ucp_request.req = rreq;
-        MPIDI_UCX_am_recv_callback_nbx(&tmp_ucp_request, UCS_OK, received_length, NULL);
-    } else {
-        ucp_request->req = rreq;
+        MPIDI_UCX_am_recv_callback_nbx(NULL, UCS_OK, received_length, rreq);
     }
 
     return MPI_SUCCESS;
@@ -166,8 +164,7 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
                                     void *user_data)
 {
     int ret;
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *rreq = ucp_request->req;
+    MPIR_Request *rreq = user_data;
 
     /* FIXME: proper error handling */
     MPIR_Assert(status == UCS_OK);
@@ -181,8 +178,9 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
     }
     ret = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     MPIR_Assertp(ret == 0);
-    ucp_request->req = NULL;
-    ucp_request_release(ucp_request);
+    if (request) {
+        ucp_request_release(request);
+    }
 }
 
 void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *user_data)
@@ -190,8 +188,7 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
     /* note: only difference from MPIDI_UCX_am_isend_callback is we need
      * MPL_free in stead of MPIR_gpu_free_host
      */
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
+    MPIR_Request *req = user_data;
     int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
     int ret;
 
@@ -199,6 +196,5 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
     ret = MPIDIG_global.origin_cbs[handler_id] (req);
     MPIR_Assertp(ret == 0);
-    ucp_request->req = NULL;
 }
 #endif
