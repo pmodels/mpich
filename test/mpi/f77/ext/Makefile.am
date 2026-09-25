@@ -12,11 +12,15 @@ EXTRA_PROGRAMS = allocmemf
 noinst_PROGRAMS = c2f2cf ctypesinf c2fmult
 
 allocmemf_SOURCES = allocmemf.f
+
 c2f2cf_SOURCES = c2f2c.c c2f2cf.f
+c2f2cf_LDADD = $(LDADD) @MTEST_MPILIB@
+
 ctypesinf_SOURCES = ctypesinf.f ctypesfromc.c
+ctypesinf_LDADD = $(LDADD) @MTEST_MPILIB@
 
 # C programs get a different mtest utility object
-c2fmult_LDADD = $(mtest_c_objects)
+c2fmult_LDADD = $(mtest_c_objects) -lmpifort
 c2fmult_SOURCES = c2fmult.c
 
 ## add1size.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT

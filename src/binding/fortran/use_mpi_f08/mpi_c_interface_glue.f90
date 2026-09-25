@@ -5,7 +5,8 @@
 
 module mpi_c_interface_glue
 
-use, intrinsic :: iso_c_binding, only : c_char, C_NULL_CHAR
+use, intrinsic :: iso_c_binding, only : c_char, c_int, C_NULL_CHAR
+use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
 
 implicit none
 
@@ -14,9 +15,17 @@ interface
     subroutine MPIX_Init_fortran() bind(c, name="MPIX_Init_fortran")
         implicit none
     end subroutine
+
+    subroutine MPII_Attr_convert_builtin(keyval, val) bind(c, name="MPII_Attr_convert_builtin")
+        import :: c_int, MPI_ADDRESS_KIND
+        implicit none
+        integer(c_int), value, intent(in) :: keyval
+        integer(kind=MPI_ADDRESS_KIND), intent(inout) :: val
+    end subroutine
 end interface
 
 public :: MPIR_Init_fortran
+public :: MPII_Attr_convert_builtin
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
 

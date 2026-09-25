@@ -70,13 +70,10 @@
        else if (combiner .eq. MPI_COMBINER_DUP) then
        else if (combiner .eq. MPI_COMBINER_CONTIGUOUS) then
        else if (combiner .eq. MPI_COMBINER_VECTOR) then
-       else if (combiner .eq. MPI_COMBINER_HVECTOR_INTEGER) then
        else if (combiner .eq. MPI_COMBINER_HVECTOR) then
        else if (combiner .eq. MPI_COMBINER_INDEXED) then
-       else if (combiner .eq. MPI_COMBINER_HINDEXED_INTEGER) then
        else if (combiner .eq. MPI_COMBINER_HINDEXED) then
        else if (combiner .eq. MPI_COMBINER_INDEXED_BLOCK) then
-       else if (combiner .eq. MPI_COMBINER_STRUCT_INTEGER) then
        else if (combiner .eq. MPI_COMBINER_STRUCT) then
        else if (combiner .eq. MPI_COMBINER_SUBARRAY) then
        else if (combiner .eq. MPI_COMBINER_DARRAY) then

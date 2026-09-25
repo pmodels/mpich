@@ -169,8 +169,6 @@ Makefile.am-stamp
 # random additions
 /README.envvar
 /maint/extracterrmsgs
-/src/binding/fortran/use_mpi/mpi_base.f90.in
-/src/binding/fortran/use_mpi/mpi_constants.f90.in
 /src/mpi/romio/include/mpio.h
 /src/mpid/ch3/channels/nemesis/include/mpid_nem_net_module_defs.h
 /src/packaging/envmods/mpich2.module
@@ -188,14 +186,6 @@ Makefile.am-stamp
 /src/packaging/envmods/mpich.module
 /src/packaging/pkgconfig/mpich.pc
 /src/mpi/coll/src/csel_json_autogen.c
-
-# stamp "witness" files from the new build system
-/src/binding/fortran/use_mpi/mpi.mod-stamp
-/src/binding/fortran/use_mpi/mpi_base.mod-stamp
-/src/binding/fortran/use_mpi/pmpi_base.mod-stamp
-/src/binding/fortran/use_mpi/mpi_constants.mod-stamp
-/src/binding/fortran/use_mpi/mpi_sizeofs.mod-stamp
-/src/binding/fortran/use_mpi_f08/*.stamp
 
 /src/mpe2/src/callstack/bin/bt2line
 
@@ -416,21 +406,12 @@ Makefile.am-stamp
 /src/env/mpicxx.sh
 /src/env/mpicxx.bash
 /src/env/mpicxx.conf
-/src/env/mpif77
-/src/env/mpif77.sh
-/src/env/mpif77.bash
-/src/env/mpif77.conf
-/src/env/mpifort
-/src/env/mpifort.sh
-/src/env/mpifort.bash
 /src/env/mpichversion
 /src/env/parkill
 /src/env/mpivars
 /src/env/mpixxx_opts.conf
 /src/env/cc_shlib.conf
 /src/env/cxx_shlib.conf
-/src/env/f77_shlib.conf
-/src/env/fc_shlib.conf
 
 # /src/include/
 /src/include/mpi.h

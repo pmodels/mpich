@@ -9,8 +9,6 @@ ACLOCAL_AMFLAGS = -I confdb
 # before appending to them with "+="
 AM_CFLAGS = @VISIBILITY_CFLAGS@
 AM_CPPFLAGS =
-AM_FFLAGS =
-AM_FCFLAGS =
 include_HEADERS =
 nodist_include_HEADERS =
 nodist_noinst_HEADERS =
@@ -79,19 +77,6 @@ lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(lib_lib@PMPILIBNAME@_la_CFLAGS) $(CFLAGS) \
 	$(lib_lib@PMPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
 
-if BUILD_F77_BINDING
-if BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=FC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(FCLD) \
-	$(AM_FCFLAGS) $(FCFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-else !BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
-	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
-endif !BUILD_FC_BINDING
-endif BUILD_F77_BINDING
 
 ## Create lists of files for different libraries
 ##
@@ -114,11 +99,9 @@ endif BUILD_F77_BINDING
 ## that are used by all bindings.
 mpi_sources =
 mpi_abi_sources =
-mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
 mpi_abi_core_sources =
-mpifort_convenience_libs = @mpl_lib@
 
 lib_LTLIBRARIES =
 
@@ -195,22 +178,6 @@ EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_co
 endif !BUILD_PROFILING_LIB
 endif BUILD_ABI_LIB
 
-if BUILD_F77_BINDING
-lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
-lib_lib@MPIFCLIBNAME@_la_SOURCES =
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
-lib_lib@MPIFCLIBNAME@_la_LIBADD = $(mpifort_convenience_libs)
-if BUILD_FC_BINDING
-modinc_HEADERS = $(mpi_fc_modules)
-endif BUILD_FC_BINDING
-if BUILD_MPICH_LIB
-lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
-else
-lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPIABILIBNAME@.la
-endif
-endif BUILD_F77_BINDING
-
 if BUILD_CXX_BINDING
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
 lib_lib@MPICXXLIBNAME@_la_SOURCES = $(mpi_cxx_sources)
@@ -219,7 +186,7 @@ lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_CXX_BINDING
 
 # build the current directory and then the examples directory after everything else
-SUBDIRS += . examples
+SUBDIRS += . @fortrandir@ examples
 
 testing:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
@@ -242,8 +209,7 @@ install-exec-hook:
 	    . lib/lib@MPILIBNAME@.la ; \
 	fi ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
-		${DESTDIR}${bindir}/@MPICXX_NAME@ \
-		${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
+		${DESTDIR}${bindir}/@MPICXX_NAME@ ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
@@ -260,24 +226,6 @@ install-exec-hook:
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
 	fi ;
-if BUILD_FC_BINDING
-if INSTALL_MPIF90
-	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
-		if test "@MPIFORT_NAME@" != "@MPIF90_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; \
-		fi ; \
-	fi ;
-endif INSTALL_MPIF90
-endif BUILD_FC_BINDING
-if BUILD_F77_BINDING
-if INSTALL_MPIF77
-	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
-		if test "@MPIFORT_NAME@" != "@MPIF77_NAME@" ; then \
-			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; \
-		fi ; \
-	fi ;
-endif INSTALL_MPIF77
-endif BUILD_F77_BINDING
 if BUILD_ABI_LIB
 	if test -e ${DESTDIR}${bindir}/@MPICC_NAME@ ; then \
 		if test "@MPICC_NAME@" != "@MPICC_ABI_NAME@" ; then \

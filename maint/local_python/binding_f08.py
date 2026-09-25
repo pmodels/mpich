@@ -174,6 +174,7 @@ def dump_f08_wrappers_f(func, is_large):
     is_alltoallvw = False
 
     uses['MPIR_Init_fortran'] = 1
+    has_mpix = ('skip-mpix' not in G.opts)
 
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
@@ -283,8 +284,13 @@ def dump_f08_wrappers_f(func, is_large):
                 uses[f2c] = 1
                 convert_list_pre.append("%s = %s(%s%%MPI_VAL)" % (arg, f2c, p['name']))
             if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
-                uses[c2f] = 1
-                convert_list_post.append("%s%%MPI_VAL = %s(%s)" % (p['name'], c2f, arg))
+                # the is_large check is to exclude MPI_Op_create_c - TODO: design better
+                if '_fortran_MPII' not in func or is_large:
+                    uses[c2f] = 1
+                    convert_list_post.append("%s%%MPI_VAL = %s(%s)" % (p['name'], c2f, arg))
+                else:
+                    # MPII functions include c2f, but it only accepts MPI_Fint
+                    arg = "%s%%MPI_VAL" % p['name']
         return arg
 
     def process_logical(p):
@@ -661,8 +667,13 @@ def dump_f08_wrappers_f(func, is_large):
                 (f2c, c2f) = get_f2c_name('INFO')
                 uses[f2c] = 1
                 arg = "%s(%s(1:%s)%%MPI_VAL)" % (f2c, p['name'], p['_array_length'])
-            elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win)_get_attr', f08ts_name):
+            elif p['kind'] == 'ATTRIBUTE_VAL' and RE.match(r'MPI_(Comm|Win|Type)_get_attr', f08ts_name) and not has_mpix:
                 arg = p['name']
+                keyval = func['parameters'][1]['name']
+                if need_int_conversions:
+                    keyval = keyval + "_c"
+                convert_list_post.append("if (ierror_c == 0 .AND. flag_c /= 0) call MPII_Attr_convert_builtin(%s, %s)" % (keyval, p['name']))
+                uses['MPII_Attr_convert_builtin'] = 1
             else:
                 # no conversion needed, e.g. choice buffer, MPI_Aint, etc.
                 arg = p['name']
@@ -792,16 +803,18 @@ def dump_mpi_c_interface_cdesc(func, is_large):
 def dump_mpi_c_interface_nobuf(func, is_large):
     name = get_f08_c_name(func, is_large)
     has_mpix = ('skip-mpix' not in G.opts)
-    if RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
-        c_name = re.sub(r'MPI_', r'MPII_', func['name'])
+    # NOTE: the MPII handle creation functions performs c2f conversions already; make sure to skip c2f in wrappers_f
+    # NOTE: is_large check is to exclude MPI_Op_create_c
+    if '_fortran_MPII' in func and not is_large:
+        if RE.match(r'mpi_op_create', func['name'], re.IGNORECASE):
+            c_name = "MPII_op_create"
+        elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE):
+            c_name = "MPII_greq_start_f08"
+        else:
+            c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name
-    elif RE.match(r'mpi_op_create', func['name'], re.IGNORECASE) and not is_large:
-        # defined in src/binding/fortran/mpif_h/user_proxy.c
-        c_name = "MPII_op_create"
-    elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE) and not is_large:
-        c_name = "MPII_greq_start_f08"
     elif RE.match(r'mpi_(comm|type|win)_(get|set)_attr', func['name'], re.IGNORECASE) and not is_large and has_mpix:
         c_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
     else:
@@ -844,7 +857,10 @@ def dump_interface_function(func, name, c_name, is_large):
         if f08_param_need_skip(p, f08_mapping):
             continue
         f_param_list.append(p['name'])
-        c_decl = get_F_c_interface_decl(func, p, f08_mapping, c_mapping)
+        if RE.match(r'TYPE\(MPIX?_\w+\)', f08_mapping[p['kind']], re.IGNORECASE) and '_fortran_MPII' in func and not is_large:
+            c_decl = "INTEGER, INTENT(out) :: %s" % p['name']
+        else:
+            c_decl = get_F_c_interface_decl(func, p, f08_mapping, c_mapping)
         decl_list.append(c_decl)
         check_decl_uses(c_decl, uses)
 
@@ -965,7 +981,7 @@ def dump_F_uses(uses):
     for a in uses:
         if re.match(r'c_(int|char|ptr|loc|associated|null_ptr|null_funptr|funptr|funloc)', a, re.IGNORECASE):
             iso_c_binding_list.append(a)
-        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran', a):
+        elif re.match(r'MPIR_.*string_(f2c|c2f)|MPIR_Init_fortran|MPII_Attr_convert_builtin', a):
             mpi_c_list_3.append(a)
         elif re.match(r'MPI_\w+_(function|FN|FN_NULL)(_c)?$', a, re.IGNORECASE):
             mpi_f08_list_4.append(a)

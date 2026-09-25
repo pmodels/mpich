@@ -372,9 +372,13 @@ fi
 if test "$enable_mpi_abi" = "yes" ; then
     enable_cxx=no
     PAC_GET_EXENAME("mpicc_abi", MPICC_NAME)
+    MTEST_MPILIB="-lmpi_abi"
 else
     PAC_GET_EXENAME("mpicc", MPICC_NAME)
+    MTEST_MPILIB="-lmpi"
 fi
+AC_SUBST([MTEST_MPILIB])
+
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
@@ -469,8 +473,6 @@ if test "$mpi_compile_works" != "yes" ; then
     AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
 fi
 
-is_mpi_abi=no
-
 # Check whether we are testing MPI derived from MPICH
 MPI_IS_MPICH=no
 AC_MSG_CHECKING([Is the MPI derived from MPICH])
@@ -492,11 +494,6 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
         elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
             enable_part=no
-        fi
-
-        if [grep 'MPICH ABI: *MPI ABI ' conftest.output > /dev/null] ; then
-            is_mpi_abi=yes
-            enable_cxx="no"
         fi
 
         if ! grep 'MPICH features:.*threadcomm' conftest.output > /dev/null ; then
@@ -529,7 +526,7 @@ if test "$MPI_IS_MPICH" = "yes" ; then
 fi
 
 if test "$enable_strictmpi" = "auto" ; then
-    if test "$MPI_IS_MPICH" = "yes" -a "$is_mpi_abi" = "no" ; then
+    if test "$MPI_IS_MPICH" = "yes" -a "$enable_mpi_abi" = "no" ; then
         enable_strictmpi=no
     else
         enable_strictmpi=yes
@@ -1049,7 +1046,7 @@ AC_CHECK_FUNCS(getrusage)
 # some tests, we need to know if we are MPI 2.1 or MPI 2.2,
 # particularly for new routines in Fortran
 AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
-    for pac_cv_mpi_major_version in 4 3 2 1 unknown ; do
+    for pac_cv_mpi_major_version in 5 4 3 2 1 unknown ; do
         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
 #if MPI_VERSION == $pac_cv_mpi_major_version
     ''' force failure '''

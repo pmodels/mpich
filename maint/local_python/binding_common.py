@@ -340,15 +340,21 @@ def check_func_directives(func, binding):
     elif 'replace' in func:
         is_legacy = True
 
+    # ---- whether need skip from the Fortran interface
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
     elif 'skip' in func and RE.search(r'Fortran', func['skip'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif binding == "f08" and is_legacy:
         func['_skip_fortran'] = 1
+    elif binding == "f77" and is_legacy:
+        # support by internally call replacement functions
+        pass
     elif 'skip-mpix' in G.opts and (is_mpix or is_legacy):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session|type)_create_(errhandler|keyval)_x|op_create_x)', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpix?_.*_as_fortran', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpix?_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90
@@ -358,3 +364,11 @@ def check_func_directives(func, binding):
         func['_skip_fortran'] = 1
     elif binding == "f90" and RE.match(r'mpi_pcontrol', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
+
+    # ---- whether to use internal MPII utility functions
+    if RE.match(r'mpi_(comm|type|win|file|session)_create_(errhandler|keyval)', func['name'], re.IGNORECASE):
+        func['_fortran_MPII'] = 1
+    elif RE.match(r'mpi_op_create', func['name'], re.IGNORECASE):
+        func['_fortran_MPII'] = 1
+    elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE):
+        func['_fortran_MPII'] = 1

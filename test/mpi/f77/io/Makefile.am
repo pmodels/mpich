@@ -57,6 +57,7 @@ c2fmultio_SOURCES     = c2fmultio.c
 c2fmultio_LDADD       = $(mtest_c_objects) -lmpifort
 
 c2f2ciof_SOURCES      = c2f2cio.c c2f2ciof.f
+c2f2ciof_LDADD = $(LDADD) @MTEST_MPILIB@
 
 ## these header files will be distributed because they're listed in
 ## AC_CONFIG_FILES/AC_OUTPUT

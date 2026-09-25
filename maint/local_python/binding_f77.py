@@ -31,6 +31,7 @@ def dump_f77_c_func(func, is_cptr=False):
 
     is_custom_fn = False  # custom function body
     need_skip_ierr = False
+    has_mpix = ('skip-mpix' not in G.opts)
 
     if re.match(r'MPI.*_(DUP|DELETE|COPY)_FN|MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         is_custom_fn = True
@@ -529,6 +530,10 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
+        if not has_mpix:
+            # Without mpix, the return depend on whether the keyval is builtin
+            keyval = func['parameters'][1]['name']
+            end_list_common.append("    MPII_Attr_convert_builtin(*%s, &%s_i);" % (keyval, v))
         end_list_common.append("    *%s = (%s) (intptr_t) %s_i;" % (v, c_type, v))
         end_list_common.append("}")
 
@@ -727,9 +732,9 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
             elif re.match(r'ATTRIBUTE_VAL', p['kind']):
-                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
+                if re.match(r'MPIX?_((Comm|Type|Win)_get_attr)', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Aint", "flag_i")
-                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr(_as_fortran)?)', func['name'], re.IGNORECASE):
+                elif re.match(r'MPIX?_((Comm|Type|Win)_set_attr)', func['name'], re.IGNORECASE):
                     dump_attr_in(p['name'], "MPI_Aint")
                 elif re.match(r'MPI_Attr_get', func['name'], re.IGNORECASE):
                     dump_attr_out(p['name'], "MPI_Fint", "flag_i")
@@ -862,13 +867,28 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
-    has_mpix = ('skip-mpix' not in G.opts)
+    if 'replace' in func:
+        if RE.search(r'with\s+(\w+)', func['replace']):
+            c_func_name = RE.m.group(1)
+        if RE.match(r'MPI_Type_(extent|lb|ub)', func_name, re.IGNORECASE):
+            code_list_common = ["MPI_Aint lb_i, extent_i;"]
+            c_arg_list_A = ["MPI_Type_fromint(*datatype)", "&lb_i", "&extent_i"]
+            if RE.m.group(1) == "extent":
+                end_list_common = ["*extent = (MPI_Fint) extent_i;"]
+            elif RE.m.group(1) == "lb":
+                end_list_common = ["*displacement = (MPI_Fint) lb_i;"]
+            elif RE.m.group(1) == "ub":
+                end_list_common = ["*displacement = (MPI_Fint) (lb_i + extent_i);"]
+
     if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
+        if RE.m.group(1) == 'put':
+            get_or_set = "set"
+        else:
+            get_or_set = "get"
         if has_mpix:
-            if RE.m.group(1) == 'put':
-                c_func_name = "MPIX_Comm_set_attr_as_fortran"
-            else:
-                c_func_name = "MPIX_Comm_get_attr_as_fortran"
+            c_func_name = "MPIX_Comm_%s_attr_as_fortran" % get_or_set
+        else:
+            c_func_name = "MPI_Comm_%s_attr" % get_or_set
     elif RE.match(r'MPI_(Comm|Type|Win)_(get|set)_attr$', func['name'], re.IGNORECASE):
         if has_mpix:
             c_func_name = "MPIX_%s_%s_attr_as_fortran" % RE.m.group(1, 2)
@@ -1002,7 +1022,10 @@ def dump_mpif_h(f):
     # note: fixed-form Fortran line is ignored after column 72
     with open(f, "w") as Out:
         for l in G.copyright_f77:
-            print(l, file=Out)
+            if G.opts['f77-use-exclaim']:
+                print(l.replace('C', '!', 1), file=Out)
+            else:
+                print(l, file=Out)
 
         # declare KIND parameters first since they may be used for later parameters
         for a in ['INTEGER', 'ADDRESS', 'COUNT', 'OFFSET']:
@@ -1030,7 +1053,7 @@ def dump_mpif_h(f):
                 # strip the handle type
                 val = RE.m.group(2)
             elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
-                T = 'INTEGER(KIND=MPI_ADDRESS_KIND)'
+                T = 'INTEGER(KIND=MPI_OFFSET_KIND)'
             print("       %s %s" % (T, name), file=Out)
             print("       PARAMETER (%s=%s)" % (name, val), file=Out)
 
@@ -1050,7 +1073,10 @@ def dump_mpif_h(f):
         print("       EXTERNAL MPI_CONVERSION_FN_NULL", file=Out)
         # -- MPI_Wtime, MPI_Wtick, MPI_Aint_add, MPI_Aint_diff
         for a in ['Wtime', 'Wtick', 'Aint_add', 'Aint_diff']:
-            T = "DOUBLE PRECISION"
+            if G.opts['f77-use-real8']:
+                T = "REAL*8"
+            else:
+                T = "DOUBLE PRECISION"
             if a.startswith("Aint"):
                 T = "INTEGER(KIND=MPI_ADDRESS_KIND)"
             print("       EXTERNAL MPI_%s, PMPI_%s" % (a.upper(), a.upper()), file=Out)
