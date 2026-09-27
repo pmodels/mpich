@@ -48,8 +48,6 @@ BuildRequires:  valgrind-devel
 BuildRequires:  python3-devel
 BuildRequires:  rpm-mpi-hooks
 Provides:       mpi
-Provides:       mpich2 = %{version}
-Obsoletes:      mpich2 < 3.0
 Requires:       environment(modules)
 
 # Make sure this package is rebuilt with correct Python version when updating
@@ -81,8 +79,6 @@ mpich-autoload package.
 %package autoload
 Summary:        Load mpich automatically into profile
 Requires:       mpich = %{version}-%{release}
-Provides:       mpich2-autoload = 3.0.1
-Obsoletes:      mpich2-autoload < 3.0
 
 %description autoload
 This package contains profile files that make mpich automatically loaded.
@@ -95,8 +91,6 @@ Requires:       pkgconfig
 Requires:       gcc-gfortran
 Requires:       rpm-mpi-hooks
 Requires:       redhat-rpm-config
-Provides:       mpich2-devel = 3.0.1
-Obsoletes:      mpich2-devel < 3.0
 
 %description devel
 Contains development headers and libraries for mpich
@@ -105,8 +99,6 @@ Contains development headers and libraries for mpich
 Summary:        Documentations and examples for mpich
 BuildArch:      noarch
 Requires:       %{name}-devel = %{version}-%{release}
-Provides:       mpich2-doc = 3.0.1
-Obsoletes:      mpich2-doc < 3.0
 
 %description doc
 Contains documentations, examples and man-pages for mpich
@@ -125,11 +117,8 @@ mpich support for Python 3.
 %build
 CONFIGURE_OPTS=(
         --with-custom-version-string=%{version}-%{release}
-        --enable-sharedlibs=gcc
         --enable-shared
         --enable-static=no
-        --enable-lib-depend
-        --disable-rpath
         --disable-silent-rules
         --disable-dependency-tracking
         --with-wrapper-dl-type=none
