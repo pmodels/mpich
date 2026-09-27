@@ -11,9 +11,8 @@ Source0:        https://www.mpich.org/static/downloads/%{version}/%{name}-%{vers
 Source1:        mpich.macros
 Source3:        mpich.pth.py3
 
-Patch:          0001-pkgconf-remove-optimization-and-link-flags-from-pkgc.patch
-Patch:          0002-Drop-build-flags-e.g.-specs.-and-lto-from-mpi-wrappe.patch
-Patch:          0003-Make-mpich.module-useful.patch
+Patch:          0001-pkgconf-drop-linker-flags.patch
+Patch:          0002-Make-mpich.module-useful.patch
 
 BuildRequires:  make
 BuildRequires:  autoconf
@@ -125,8 +124,6 @@ mpich support for Python 3.
 %autosetup -p1
 
 %build
-./autogen.sh
-
 CONFIGURE_OPTS=(
         --with-custom-version-string=%{version}-%{release}
         --enable-sharedlibs=gcc
@@ -136,6 +133,7 @@ CONFIGURE_OPTS=(
         --disable-rpath
         --disable-silent-rules
         --disable-dependency-tracking
+        --with-wrapper-dl-type=none
         --with-gnu-ld
         --with-pm=hydra:gforker
         --includedir=%{_includedir}/%{name}-%{_arch}
