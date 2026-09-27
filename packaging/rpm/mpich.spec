@@ -1,4 +1,5 @@
 %global somajor 0
+%global mpi_abi_somajor 1
 
 Summary:        A high-performance implementation of MPI
 Name:           mpich
@@ -117,6 +118,7 @@ mpich support for Python 3.
 %build
 CONFIGURE_OPTS=(
         --with-custom-version-string=%{version}-%{release}
+        --enable-mpi-abi=dual
         --enable-shared
         --enable-static=no
         --disable-silent-rules
@@ -227,6 +229,7 @@ make check VERBOSE=1 \
 %{_libdir}/%{name}/lib/libmpi.so.%{somajor}{,.*}
 %{_libdir}/%{name}/lib/libmpicxx.so.%{somajor}{,.*}
 %{_libdir}/%{name}/lib/libmpifort.so.%{somajor}{,.*}
+%{_libdir}/%{name}/lib/libmpi_abi.so.%{mpi_abi_somajor}{,.*}
 %{_libdir}/%{name}/bin/hydra*
 %{_libdir}/%{name}/bin/mpichversion
 %{_libdir}/%{name}/bin/mpiexec*
@@ -246,11 +249,14 @@ make check VERBOSE=1 \
 %{_libdir}/%{name}/lib/libmpi.so
 %{_libdir}/%{name}/lib/libmpicxx.so
 %{_libdir}/%{name}/lib/libmpifort.so
+%{_libdir}/%{name}/lib/libmpi_abi.so
 %{_libdir}/%{name}/bin/mpicc
+%{_libdir}/%{name}/bin/mpicc_mpich
+%{_libdir}/%{name}/bin/mpicc_abi
 %{_libdir}/%{name}/bin/mpic++
 %{_libdir}/%{name}/bin/mpicxx
-%{_libdir}/%{name}/bin/mpicc_mpich
 %{_libdir}/%{name}/bin/mpicxx_mpich
+%{_libdir}/%{name}/bin/mpicxx_abi
 %{_libdir}/%{name}/bin/mpif77
 %{_libdir}/%{name}/bin/mpif90
 %{_libdir}/%{name}/bin/mpifort
