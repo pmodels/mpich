@@ -246,15 +246,11 @@ make check VERBOSE=1 \
 %{_libdir}/%{name}/lib/libmpi.so
 %{_libdir}/%{name}/lib/libmpicxx.so
 %{_libdir}/%{name}/lib/libmpifort.so
-%{_libdir}/%{name}/lib/libmpich.so
-%{_libdir}/%{name}/lib/libmpichcxx.so
-%{_libdir}/%{name}/lib/libmpichf90.so
-%{_libdir}/%{name}/lib/libfmpich.so
-%{_libdir}/%{name}/lib/libmpl.so
-%{_libdir}/%{name}/lib/libopa.so
 %{_libdir}/%{name}/bin/mpicc
 %{_libdir}/%{name}/bin/mpic++
 %{_libdir}/%{name}/bin/mpicxx
+%{_libdir}/%{name}/bin/mpicc_mpich
+%{_libdir}/%{name}/bin/mpicxx_mpich
 %{_libdir}/%{name}/bin/mpif77
 %{_libdir}/%{name}/bin/mpif90
 %{_libdir}/%{name}/bin/mpifort
