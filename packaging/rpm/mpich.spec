@@ -115,7 +115,7 @@ mpich support for Python 3.
 %prep
 %autosetup -p1
 
-%build
+%conf
 CONFIGURE_OPTS=(
         --with-custom-version-string=%{version}-%{release}
         --enable-mpi-abi=dual
@@ -156,6 +156,7 @@ sed -r -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 #Try and work around 'unused-direct-shlib-dependency' rpmlint warnning
 sed -i -e 's| -shared | -Wl,--as-needed\0|g' libtool
 
+%build
 %make_build VERBOSE=1
 
 %install
