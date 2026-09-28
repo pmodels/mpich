@@ -543,6 +543,8 @@ subcode: set_final_vars
         fi
     $(else)
         # libmpi should be added in WRAPPER_DEPENDENCY_LDFLAGS
+        mpi_libs_shared="@mpi_dependency_libs@"
+        mpi_libs_static="@mpi_dependency_libs@"
 
     $(if:cc=fc)
         $call patch_final_fcflags

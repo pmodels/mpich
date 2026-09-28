@@ -91,7 +91,11 @@ if test "$FROM_MPICH" = "yes" ; then
     if test -z "$mpi_libs" ; then
         AC_MSG_ERROR([MPICH configure need export mpi_libs])
     fi
+    if test -z "$mpi_dependency_libs" ; then
+        AC_MSG_ERROR([MPICH configure need export mpi_dependency_libs])
+    fi
 else
+    # Build stand-alone. We assume the standard naming of -lmpi (and -lpmpi) or -lmpi_abi (and -lpmpi_abi)
     if test -z "$with_mpi" ; then
         # get a C compiler that can find mpi
         mpicc=mpicc
@@ -124,30 +128,44 @@ else
     AC_MSG_RESULT($MPI_IS_MPICH)
 
     WITH_MPI=
+    mpi_libs=  # mpi_libs stay empty as they are added via PAC_LIBS_ADD
+    mpi_dependency_libs=
 
     AC_CHECK_LIB([mpi], [MPI_Init], [has_mpi=yes], [has_mpi=no])
     AC_CHECK_LIB([mpi_abi], [MPI_Init], [has_mpi_abi=yes], [has_mpi_abi=no])
     if test "$enable_mpi_abi" = "yes" ; then
         if test "$has_mpi_abi" = "yes" ; then
             WITH_MPI="abi"
-            PAC_LIBS_ADD([-lmpi_abi])
         else
             AC_MSG_ERROR([Option enable-mpi-abi is set but libmpi_abi not found!])
         fi
     else
         if test "$has_mpi" = "yes" ; then
-            PAC_LIBS_ADD([-lmpi])
+            WITH_MPI=""
         elif test "$has_mpi_abi" = "yes" ; then
             WITH_MPI="abi"
-            PAC_LIBS_ADD([-lmpi_abi])
         else
             AC_MSG_ERROR([Neither libmpi nor libmpi_abi is found!])
         fi
+    fi
 
-        if test "$WITH_MPI" = "abi" ; then
-            AC_CHECK_LIB([pmpi_abi], [PMPI_Init])
-        else
-            AC_CHECK_LIB([pmpi], [PMPI_Init])
+    if test "$WITH_MPI" = "abi" ; then
+        PAC_LIBS_ADD([-lmpi_abi])
+        mpi_dependency_libs="-lmpi_abi"
+
+        AC_CHECK_LIB([pmpi_abi], [PMPI_Init], [has_pmpi_abi=yes], [has_pmpi_abi=no])
+        if test "$has_pmpi_abi" = "yes" ; then
+            PAC_LIBS_ADD([-lpmpi_abi])
+            mpi_dependency_libs="$mpi_dependency_libs -lpmpi_abi"
+        fi
+    else
+        PAC_LIBS_ADD([-lmpi])
+        mpi_dependency_libs="-lmpi"
+
+        AC_CHECK_LIB([pmpi], [PMPI_Init], [has_pmpi=yes], [has_pmpi=no])
+        if test "$has_pmpi" = "yes" ; then
+            PAC_LIBS_ADD([-lpmpi])
+            mpi_dependency_libs="$mpi_dependency_libs -lpmpi"
         fi
     fi
 
@@ -157,7 +175,10 @@ else
     fi
 
 fi
+# for Makefile
 AC_SUBST([mpi_libs])
+# for mpifort wrapper script
+AC_SUBST([mpi_dependency_libs])
 
 if test "$FROM_MPICH" != "yes" ; then
     # check mpi.h if we are not build from MPICH
@@ -1168,12 +1189,10 @@ if test -z "$INTERLIB_DEPS" ; then
     if test "X$enable_shared" = "Xno" -o "$deplibs_check_method" != "pass_all" -o "$enable_interlib_deps" = "no" ; then
         INTERLIB_DEPS=no
     fi
-    # Used when INTERLIB_DEPS is "no"
-    mpi_dependency_libs="$mpi_libs"
 fi
 AC_SUBST(INTERLIB_DEPS)
 
-WRAPPER_DEPENDENCY_LDFLAGS="$mpi_dependency_libs"
+WRAPPER_DEPENDENCY_LDFLAGS=""
 AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 
 # generate rpath-related macros, needed for substitute with_wrapper_dl_type
