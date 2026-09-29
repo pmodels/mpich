@@ -1,4 +1,75 @@
 ===============================================================================
+                               Changes in 5.1
+===============================================================================
+
+# Support building both MPICH-native and MPI Standard ABI libraries simultaneously
+  with --enable-mpi-abi=dual. This builds both libmpi.so and libmpi_abi.so.
+
+# Fortran 77/90/08 bindings now supported for MPI ABI builds.
+
+# Support standalone Fortran binding that can be configured and built independently
+  from the MPI C library. mpifort now explicitly links -lmpi (or -lmpi_abi).
+
+# Split mpix.h from mpi.h. MPIX constants are available with ABI conversion support.
+
+# Added circulant graph (circ_graph) algorithms for Bcast, Reduce, Allgather, and
+  nonblocking IBcast.
+
+# Added tagged nonblocking collectives for internal use. Re-implemented nonblocking
+  context-id allocation (MPI_Comm_idup) using tagged collectives, removing previous
+  limitations.
+
+# Added GPU/NIC affinity support in OFI netmod for improved placement of GPU
+  traffic across NICs.
+
+# Added memory registration (MR) cache for FI_HMEM_MR in OFI netmod.
+
+# Added MPL_GPU_POINTER_DEV_MMAP pointer type with cached local device buffer mmap
+  for fast GPU memcpy in put/get RMA paths.
+
+# Delay OFI fabric initialization until first communicator creation, reducing startup
+  overhead when not all contexts are used.
+
+# Avoid FI_MATCH_COMPLETE for small messages on CXI provider for better performance.
+
+# Support dynamic world_id for singleton init and between re-init epochs.
+
+# Pass spawn preput values via environment variables for PMIx.
+
+# Added MPIX_Comm_create_keyval_x and related functions for Fortran-compatible keyval
+  callbacks using proxy functions.
+
+# Added MPIX_Comm_get_attr_as_fortran / MPIX_Comm_set_attr_as_fortran for proper
+  Fortran attribute handling.
+
+# Added --enable-fortran-call-pmpi configure option to control Fortran PMPI binding.
+
+# Removed legacy MPIO_Request API (replaced with MPI_Request).
+
+# ROMIO: removed fallback darray/subarray support, fallback grequest support, and
+  replacement Info support. Removed SGI MPI and MPIHP dependencies.
+
+# Added --enable-g=tsan option for ThreadSanitizer support.
+
+# Added --disable-bash option. Compiler wrapper scripts (mpicc, mpicxx, mpifort)
+  are now generated from .def templates.
+
+# Allow external libmpl via --with-mpl-prefix.
+
+# Added rpaths for dependency libraries.
+
+# Converted man pages from doctext to asciidoc format.
+
+# Replace select() with poll() in Hydra process management.
+
+# Use sched_yield by default for progress engine throttling.
+
+# Added HWLOC_OBJ_DIE topology level support.
+
+# Allow generalized request callbacks to be NULL.
+
+
+===============================================================================
                                Changes in 5.0
 ===============================================================================
 # MPI_VERSION/MPI_SUBVERSION updated to 5 and 0. MPICH now supports the MPI 5.0
