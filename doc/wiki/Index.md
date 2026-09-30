@@ -35,6 +35,8 @@
 
 - [Design Documentation](design/Design_Documentation_Index.md)
 
+- [Configuration Variables (CVARs)](cvar.md)
+
 - Options
     - [MPI+Argobots](options/MPI_Argobots.md)
 
