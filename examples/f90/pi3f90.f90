@@ -30,6 +30,7 @@ program main
  parameter        (PI25DT = 3.141592653589793238462643d0)
 
  double precision  mypi, pi, h, sum, x, f, a
+ double precision  startwtime, endwtime
  integer n, myid, numprocs, i, rc
 !                                 function to integrate
  f(a) = 4.d0 / (1.d0 + a*a)
@@ -38,26 +39,18 @@ program main
  call MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
  call MPI_COMM_SIZE( MPI_COMM_WORLD, numprocs, ierr )
  print *, 'Process ', myid, ' of ', numprocs, ' is alive'
- 
- sizetype   = 1
- sumtype    = 2
- 
- do 
-    if ( myid .eq. 0 ) then
-       write(6,98)
- 98    format('Enter the number of intervals: (0 quits)')
-       read(5,99) n
- 99    format(i10)
-    endif
-      
-    call MPI_BCAST(n,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
-!                                 check for quit signal
-    if ( n .le. 0 ) exit
+ n = 10000
+
+    if ( myid .eq. 0 ) then
+       startwtime = MPI_WTIME()
+    endif
+
+    call MPI_BCAST(n,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
 !                                 calculate the interval size
     h = 1.0d0/n
- 
+
     sum  = 0.0d0
     do i = myid+1, n, numprocs
        x = h * (dble(i) - 0.5d0)
@@ -71,12 +64,13 @@ program main
 
 !                                 node 0 prints the answer.
     if (myid .eq. 0) then
+        endwtime = MPI_WTIME()
         write(6, 97) pi, abs(pi - PI25DT)
  97     format('  pi is approximately: ', F18.16, &
                '  Error is: ', F18.16)
+        write(6, 96) endwtime - startwtime
+ 96     format('  wall clock time = ', F10.6)
     endif
-
- enddo
 
  call MPI_FINALIZE(rc)
  stop
