@@ -2,11 +2,11 @@
 
 ## Table of Contents
 
-- [Collective Algorithms](#collective-algorithms) (294)
-- [CH4 Device Layer](#ch4-device-layer) (95)
-- [CH3 Device Layer](#ch3-device-layer) (24)
-- [Process Management](#process-management) (9)
-- [Debugging and Development](#debugging-and-development) (14)
+- [Collective Algorithms](#collective-algorithms) (301)
+- [CH4 Device Layer](#ch4-device-layer) (96)
+- [CH3 Device Layer](#ch3-device-layer) (25)
+- [Process Management](#process-management) (7)
+- [Debugging and Development](#debugging-and-development) (15)
 - [Other](#other) (25)
 
 ## Collective Algorithms
@@ -705,14 +705,6 @@ Controls receive posting for recursive-exchange Barrier algorithms. It is used o
 
 Used in functions: `MPI_Barrier`
 
-### MPIR_CVAR_BCAST
-
-In `src/mpid/ch4/shm/posix/release_gather/release_gather.c`, `MPIR_CVAR_BCAST` is not a standalone CVAR or an alternate name for another CVAR. It appears only in the CVAR block as part of the shorthand `MPIR_CVAR_BCAST{REDUCE}_INTRANODE_TREE_KVAL` and `MPIR_CVAR_BCAST{REDUCE}_INTRANODE_TREE_TYPE`, referring to the broadcast side of the POSIX shared-memory release-gather intranode tree CVARs. The broadcast tree settings are captured when release-gather communicator state is initialized, and topology-aware tree creation is attempted only when topology-aware intranode trees are enabled, user-provided process binding is present, and hardware topology support is initialized; otherwise a non-topology-aware broadcast tree is created. When active through the actual broadcast intranode tree CVARs, this shorthand represents the broadcast tree radix and tree type used by POSIX release-gather broadcast collectives.
-
-* no standalone values - `MPIR_CVAR_BCAST` does not define valid values by itself; values are defined by the actual broadcast intranode tree CVARs it refers to.
-
-Used in functions: `none as a standalone CVAR in `src/mpid/ch4/shm/posix/release_gather/release_gather.c``
-
 ### MPIR_CVAR_BCAST_COMPOSITION
 
 Selects the CH4 broadcast composition in `MPID_Bcast`. When set to automatic selection, the CH4 collective-selection table is consulted and may fall back to the MPIR broadcast implementation if no selection is found. If `MPIR_CVAR_COLL_HYBRID_MEMORY` is disabled, automatic selection first checks the broadcast buffer memory type and uses the GPU-specific collective-selection table for strict device buffers. Forced CH4 compositions apply only to intracommunicators, with the combined network-module and shared-memory compositions also requiring a parent communicator; if a forced composition cannot be applied, the fallback path uses the MPIR broadcast implementation for intercommunicators and the network-module-only CH4 composition for intracommunicators. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_coll.h`. When active, this CVAR sets whether CH4 broadcast uses automatic collective selection, a combined network-module and shared-memory composition, or a network-module-only composition.
@@ -899,6 +891,15 @@ Sets the fixed overhead cost used when constructing topology-wave Bcast trees. I
 
 Used in functions: `MPIR_Bcast_intra_tree`, `MPIR_Bcast_intra_pipelined_tree`
 
+### MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE
+
+Controls whether leaders are reordered based on the number of ranks in each group for topology-aware broadcast algorithms.
+
+* true - default, enable reordering of leaders based on group size.
+* false - disable topology-aware leader reordering.
+
+Used in functions: `MPIR_Bcast_intra_pipelined_tree`, `MPIR_Bcast_intra_tree`
+
 ### MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES
 
 Sets the latency cost used for communication within the same switch when constructing topology-wave Bcast trees. It is used only by the intra-communicator tree and pipelined-tree Bcast implementations when the selected tree type is `topology_wave`, such as through `MPIR_CVAR_BCAST_TREE_TYPE` together with the tree or pipelined-tree Bcast algorithm or collective tuning selection. Topology-wave tree construction also uses `MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE`, `MPIR_CVAR_BCAST_TOPO_OVERHEAD`, and the Bcast topology latency CVARs for different groups and different switches. When collective tuning selection provides an intra-tree Bcast container, that container's same-switches topology latency value overrides this CVAR for the non-pipelined tree construction.
@@ -953,15 +954,6 @@ Sets the tuning JSON source used to initialize the CH4 GPU collective-selection 
 * file path - load the CH4 GPU collective-selection tuning JSON data from the specified file.
 
 Used in functions: `MPID_Init`
-
-### MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE
-
-Specifies a tuning JSON file for CH4 OFI collective algorithm selection. It is used by the OFI netmod Bcast entry point only when `MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM` selects automatic internal algorithm selection. When active, this CVAR sets the tuning-file input that can override the internally selected CH4 OFI Bcast algorithm.
-
-* NULL - default, do not use a CH4 OFI collective-selection tuning JSON file.
-* JSON file path - use the specified tuning JSON file to guide CH4 OFI collective algorithm selection.
-
-Used in functions: `MPIDI_NM_mpi_bcast`
 
 ### MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE
 
@@ -1034,6 +1026,15 @@ Enables checking for aliased buffers in collective-operation error checks. It is
 
 Used in functions: `MPIR_ERRTEST_ALIAS_COLL`
 
+### MPIR_CVAR_COLL_HYBRID_MEMORY
+
+Indicates whether the memory used in collective operations may be of different types. When true, some buffers in a collective operation could be on the CPU and some on the GPU. When false, all data in a collective operation are assumed to reside on the same type of memory.
+
+* true - default, hybrid memory mode; buffers may reside on different memory types (CPU and GPU).
+* false - all collective buffers reside on the same memory type.
+
+Used in functions: `MPIDI_POSIX_mpi_bcast`, `MPID_Allreduce`
+
 ### MPIR_CVAR_COLL_SCHED_DUMP
 
 Controls whether MPIDU schedule state is printed for nonblocking collective schedules. It is used when a schedule is started and while pending schedules are scanned for progress; it does not rely on another CVAR or mode being active beyond schedule start and progress reaching these paths. When active, this CVAR enables dumping schedule details to `stderr` for debugging nonblocking collective schedule execution.
@@ -1096,6 +1097,15 @@ Controls whether the device can override MPIR-level collective algorithms. When 
 * percoll - default, use the per-collective CVARs to decide whether device collectives are selected.
 
 Used in functions: `MPID_Init`, `devcollstr`
+
+### MPIR_CVAR_ENABLE_HCOLL
+
+Controls whether hcoll-based collective operations are enabled.
+
+* false - default, disable hcoll collective support.
+* true - enable hcoll collective support.
+
+Used in functions: `hcoll_initialize`
 
 ### MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES
 
@@ -1911,6 +1921,17 @@ Controls whether `MPI_Ineighbor_alltoallv` allows the device to override MPIR-le
 
 Used in functions: `MPI_Ineighbor_alltoallv`
 
+### MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
+
+Selects the inter-communicator ineighbor_alltoallv algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* sched_auto - internal algorithm selection for sched-based algorithms.
+* sched_linear - forces the linear algorithm.
+* tsp_linear - forces the generic transport based linear algorithm.
+
+Used in functions: `MPI_Ineighbor_alltoallv`
+
 ### MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
 
 Selects the intra-communicator Ineighbor_alltoallv algorithm. It is used for `MPI_Ineighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
@@ -1930,6 +1951,17 @@ Controls whether `MPI_Ineighbor_alltoallw` allows the device to override MPIR-le
 
 * true - default, allows the device to override MPIR-level `MPI_Ineighbor_alltoallw` collective algorithms.
 * false - disables the device override for `MPI_Ineighbor_alltoallw`.
+
+Used in functions: `MPI_Ineighbor_alltoallw`
+
+### MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
+
+Selects the inter-communicator ineighbor_alltoallw algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* sched_auto - internal algorithm selection for sched-based algorithms.
+* sched_linear - forces the linear algorithm.
+* tsp_linear - forces the generic transport based linear algorithm.
 
 Used in functions: `MPI_Ineighbor_alltoallw`
 
@@ -1955,6 +1987,17 @@ Controls whether `MPI_Ineighbor_alltoall` allows the device to override MPIR-lev
 
 Used in functions: `MPI_Ineighbor_alltoall`
 
+### MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
+
+Selects the inter-communicator ineighbor_alltoall algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* sched_auto - internal algorithm selection for sched-based algorithms.
+* sched_linear - forces the linear algorithm.
+* tsp_linear - forces the generic transport based linear algorithm.
+
+Used in functions: `MPI_Ineighbor_alltoall`
+
 ### MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM
 
 Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI_Ineighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
@@ -1967,6 +2010,15 @@ Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI
 Alternate names: MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
 
 Used in functions: `MPI_Ineighbor_alltoall`
+
+### MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
+
+Controls whether `MPI_Ireduce` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually.
+
+* true - default, allows the device to override MPIR-level `MPI_Ireduce` collective algorithms.
+* false - disables the device override for `MPI_Ireduce`.
+
+Used in functions: `MPI_Ireduce`
 
 ### MPIR_CVAR_IREDUCE_INTER_ALGORITHM
 
@@ -2363,6 +2415,15 @@ Controls whether `MPI_Neighbor_alltoallv_init` allows the device to override MPI
 
 Used in functions: `MPI_Neighbor_alltoallv_init`
 
+### MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTER_ALGORITHM
+
+Selects the inter-communicator neighbor_alltoallv algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* nb - forces the nonblocking algorithm.
+
+Used in functions: `MPI_Neighbor_alltoallv`
+
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
 
 Selects the intra-communicator Neighbor_alltoallv algorithm. It is used for `MPI_Neighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Neighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
@@ -2392,6 +2453,15 @@ Controls whether `MPI_Neighbor_alltoallw_init` allows the device to override MPI
 
 Used in functions: `MPI_Neighbor_alltoallw_init`
 
+### MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
+
+Selects the inter-communicator neighbor_alltoallw algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* nb - forces the nonblocking algorithm.
+
+Used in functions: `MPI_Neighbor_alltoallw`
+
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
 
 Selects the intra-communicator Neighbor_alltoallw algorithm. It is used for `MPI_Neighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Neighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
@@ -2420,6 +2490,15 @@ Controls whether `MPI_Neighbor_alltoall_init` allows the device to override MPIR
 * false - disables the device override for `MPI_Neighbor_alltoall_init`.
 
 Used in functions: `MPI_Neighbor_alltoall_init`
+
+### MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM
+
+Selects the inter-communicator neighbor_alltoall algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
+
+* auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
+* nb - forces the nonblocking algorithm.
+
+Used in functions: `MPI_Neighbor_alltoall`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM
 
@@ -2457,14 +2536,6 @@ Sets the number of POSIX shared-memory release-gather collective calls required 
 * integer - default is 5, represents the release-gather collective-call threshold.
 
 Used in functions: `MPIDI_POSIX_mpi_bcast_release_gather`, `MPIDI_POSIX_mpi_reduce_release_gather`, `MPIDI_POSIX_mpi_allreduce_release_gather`, `MPIDI_POSIX_mpi_barrier_release_gather`
-
-### MPIR_CVAR_POSIX_NUM_NB_COLLS_THRESHOLD
-
-Sets the minimum total number of POSIX release-gather nonblocking collective calls on a communicator before the release-gather nonblocking broadcast or reduce implementation is used. Each attempted release-gather nonblocking broadcast increments the communicator release-gather call count, and release-gather nonblocking reduce increments it when the communicator has more than one rank; calls below this threshold fall back to the MPIR TSP point-to-point algorithm. When the threshold is reached, the release-gather communicator state is lazily initialized for broadcast or reduce, and initialization failure also falls back to the MPIR TSP point-to-point algorithm. When active, this CVAR sets the warmup threshold before POSIX release-gather nonblocking collectives are used.
-
-* integer - default, use the configured call-count threshold for POSIX release-gather nonblocking collectives.
-
-Used in functions: `MPIDI_POSIX_ibcast_release_gather`, `MPIDI_POSIX_ireduce_release_gather`
 
 ### MPIR_CVAR_POSIX_POLL_FREQUENCY
 
@@ -2834,6 +2905,8 @@ Used in functions: `MPIR_Typerep_reduce_is_supported`
 
 ## CH4 Device Layer
 
+## CH4 Device Layer
+
 ### MPIR_CVAR_CH4_CMA_ENABLE
 
 Controls whether the CH4 CMA shared-memory IPC path may be selected for intranode point-to-point communication. It is used only when MPICH is built with the CMA shared-memory submodule; during CMA local initialization, MPICH may force this setting off when Linux Yama ptrace permissions do not allow CMA. The CMA path is selected only for messages at least as large as `MPIR_CVAR_CH4_IPC_CMA_P2P_THRESHOLD` and datatypes whose contiguous-block count fits in the CMA iovec limit. When active, this CVAR enables use of CMA-based single-copy IPC transfers.
@@ -2938,25 +3011,6 @@ Sets the GPU engine type used for CH4 shared-memory GPU IPC point-to-point data 
 * copy_low_latency - use a low-latency copy engine.
 
 Used in functions: `MPIDI_IPCI_choose_engine`
-
-### MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE
-
-Controls how CH4 GPU IPC handles and mapped buffers are cached. It is used during GPU initialization when `MPIR_CVAR_ENABLE_GPU` is enabled to request specialized backend caching, with fallback to generic caching if the backend does not support specialized caching. It is used by the GPU IPC shmmod when creating, mapping, unmapping, destroying, and finalizing IPC handles; IPC handle creation is reached only for GPU buffers selected for GPU IPC, including buffers that meet the `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD` requirement or repeat-address condition. When active, this CVAR enables the selected GPU IPC handle cache mechanism or disables IPC handle caching.
-
-* specialized - default, use the GPU-specific MPL specialized cache mechanism when available; fall back to the generic cache mechanism if unavailable.
-* generic - use the generic CH4 GPU IPC handle and mapped-buffer cache mechanism.
-* disabled - disable GPU IPC handle caching, unmap handles after use, and destroy created handles when sends complete.
-
-Used in functions: `MPII_init_gpu`, `MPIDI_GPU_fill_ipc_handle`, `MPIDI_GPU_ipc_handle_map`, `MPIDI_GPU_ipc_handle_unmap`, `MPIDI_GPU_send_complete`, `ipc_handle_free_hook`
-
-### MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
-
-Sets the maximum number of entries per device for the GPU IPC mapped-buffer cache. It is used during GPU initialization only when `MPIR_CVAR_ENABLE_GPU` is enabled and `MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE` is `limited`; in that case, the value is copied to `MPL_gpu_info.max_cache_entries` before MPL GPU initialization. This maximum currently affects only the specialized GPU IPC cache mechanism selected by `MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE`. When active, this CVAR sets the per-device entry limit for the specialized GPU IPC mapped-buffer cache.
-
-* 16 - default, use 16 entries per device as the specialized GPU IPC mapped-buffer cache limit.
-* positive integer - maximum number of specialized GPU IPC mapped-buffer cache entries per device.
-
-Used in functions: `MPII_init_gpu`
 
 ### MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
 
@@ -3110,14 +3164,6 @@ Sets the message-size threshold used by CH4 OFI point-to-point tagged sends to c
 
 Used in functions: `MPIDI_OFI_send`
 
-### MPIR_CVAR_CH4_OFI_ENABLE
-
-`MPIR_CVAR_CH4_OFI_ENABLE` is not used as an alternate name for another CVAR in `src/mpid/ch4/netmod/ofi/init_settings.c`. This file uses `MPIR_CVAR_CH4_OFI_ENABLE_*` CVARs as separate per-capability overrides while initializing OFI runtime settings, building provider hints, matching providers, and applying selected-provider capabilities. `MPIR_CVAR_CH4_OFI_ENABLE` itself does not enable or set OFI runtime behavior in this file.
-
-* not used - this CVAR is not read in `src/mpid/ch4/netmod/ofi/init_settings.c`; no valid values are represented there.
-
-Used in functions: `none in `src/mpid/ch4/netmod/ofi/init_settings.c``
-
 ### MPIR_CVAR_CH4_OFI_ENABLE_AM
 
 Controls whether CH4 OFI uses libfabric active-message support. It is used while OFI runtime settings are initialized, provider hints are built, candidate providers are scored, selected-provider capabilities are applied, debug settings are printed, per-VCI active-message resources are initialized, active-message receive buffers are posted, active-message buffers are reposted, and active-message resources are finalized. It can override provider capability-set defaults, but the final setting still depends on whether the selected provider supports both message queues and shared receive buffers. When active, this CVAR enables requesting and using OFI message queues with shared receive buffers for CH4 OFI active-message communication.
@@ -3247,6 +3293,15 @@ Controls whether CH4 OFI assigns point-to-point traffic across multiple NICs by 
 * -1 - let MPICH automatically determine whether to use multi-NIC hashing.
 
 Used in functions: `update_multi_nic_hints`, `MPIDI_OFI_mpi_comm_commit_pre_hook`
+
+### MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
+
+Controls whether striping of large messages across multiple NICs is enabled in the OFI netmod.
+
+* 0 - default, disable multi-NIC striping.
+* 1 - enable multi-NIC striping.
+
+Used in functions: `MPIDI_OFI_comm_init`, `MPIDI_OFI_comm_set_hints`
 
 ### MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK
 
@@ -3407,6 +3462,14 @@ Sets the minor component of the required OFI/libfabric version used by CH4 OFI. 
 
 Used in functions: `find_provider`, `MPIDI_OFI_get_required_version`, `MPIDI_OFI_init_hints`, `MPIDI_OFI_init_settings`
 
+### MPIR_CVAR_CH4_OFI_MR_CACHE_SIZE
+
+Sets the maximum number of entries to hold in the HMEM memory region cache. When an entry is evicted, the corresponding memory region is unregistered.
+
+* integer - default is 16, represents the maximum number of MR cache entries.
+
+Used in functions: `MPIDI_OFI_mr_cache_lookup`, `MPIDI_OFI_mr_cache_commit`
+
 ### MPIR_CVAR_CH4_OFI_MULTIRECV_BUFFER_SIZE
 
 Sets the size of each CH4 OFI active-message multi-receive buffer. It is used when active-message receive buffers are preposted; OFI active messages must be enabled for those buffers to be allocated and posted. The internal active-message buffer-size macro maps directly to this CVAR, and no alternate CVAR name or dependency on another CVAR is visible in `src/mpid/ch4/netmod/ofi/ofi_init.c` or `src/mpid/ch4/netmod/ofi/ofi_types.h`. When active, this CVAR sets the byte size of each buffer used for FI multi-receive active-message receives.
@@ -3424,6 +3487,15 @@ Sets the global message-size threshold used by CH4 OFI multi-NIC striping. It is
 * integer - use the specified byte threshold for multi-NIC striping.
 
 Used in functions: `update_global_limits`, `update_multi_nic_hints`
+
+### MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY
+
+Controls whether NIC selection considers GPU locality rather than CPU/NUMA locality. When enabled, selects NICs with the closest PCI proximity to active GPUs.
+
+* false - default, use CPU/NUMA-based NIC selection.
+* true - enable GPU-aware NIC selection based on PCI proximity.
+
+Used in functions: `MPIDI_OFI_nic_select`
 
 ### MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS
 
@@ -3616,6 +3688,15 @@ Enables optimized CH4 PMI business-card exchange for node-root processes only. I
 
 Used in functions: `get_root_av_table_index`
 
+### MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG
+
+Controls whether CH4-level runtime configurations are printed out for debugging purposes.
+
+* false - default, disable CH4 runtime configuration debug output.
+* true - print CH4 runtime configuration debug information.
+
+Used in functions: `MPID_Init`
+
 ### MPIR_CVAR_CH4_SHM
 
 Selects the CH4 shared-memory module during device initialization. In `src/mpid/ch4/src/ch4_init.c`, CH4 calls shared-memory local initialization from `MPID_Init` only when it is not built in direct-netmod mode; the selected shared-memory module contributes to the CH4 tag-bit limit together with the selected network module. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_init.c`. When active, this CVAR sets which CH4 shared-memory module is used for intra-node shared-memory communication.
@@ -3752,6 +3833,8 @@ Used in functions: `MPIDI_UCX_recv`
 
 ## CH3 Device Layer
 
+## CH3 Device Layer
+
 ### MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT
 
 Sets the default timeout period for CH3 dynamic-process connection attempts. It is used by the root process in `MPI_Comm_connect` when connecting to a server communicator whose named port exists but has no pending accept, and the per-call MPI info key `timeout` overrides this CVAR when provided. It does not rely on another CVAR being enabled, but it is active only for CH3 builds with dynamic-process support. When active, this CVAR sets how long the connecting side waits for the accept-side handshake before revoking the connection request and returning a port error.
@@ -3823,6 +3906,15 @@ Sets the active-request threshold at which CH3 RMA operation routines block for 
 * positive integer - wait for progress when the active CH3 RMA request count reaches the specified threshold.
 
 Used in functions: `MPIDI_CH3I_Accumulate`, `MPIDI_CH3I_Get`, `MPIDI_CH3I_Get_accumulate`, `MPIDI_CH3I_Put`, `MPID_Compare_and_swap`, `MPID_Fetch_and_op`
+
+### MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING
+
+Controls whether issuing of RMA operations is delayed for piggybacking LOCK/UNLOCK/FLUSH messages. When enabled, the LOCK message is delayed until the origin process sees the first RMA operation and piggybacks LOCK with that operation, and the origin process keeps the current last operation until the ending synchronization call to piggyback UNLOCK/FLUSH. When disabled, in WIN_LOCK/UNLOCK case the LOCK message is sent out as early as possible; for UNLOCK/FLUSH the origin process no longer keeps the current last operation but only piggybacks if there is an operation available in the ending synchronization call.
+
+* 0 - default, disable delay issuing for piggybacking.
+* 1 - enable delay issuing for piggybacking.
+
+Used in functions: `MPIDI_CH3I_RMA_Handle_oper`, `MPID_Progress_test`, `MPIDI_Win_fence`
 
 ### MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE
 
@@ -3984,6 +4076,8 @@ Used in functions: `MPID_nem_mpich_blocking_recv`
 
 ## Process Management
 
+## Process Management
+
 ### MPIR_CVAR_CLIQUES_BY_BLOCK
 
 Controls how MPICH assigns processes to multiple local cliques on a single local node for nodemap debugging. It is used by `MPIR_build_nodemap` only after process-manager node mapping finds a single node and local-clique partitioning is active; local-clique partitioning is active when `MPIR_CVAR_NUM_CLIQUES` requests more than one clique, or when the deprecated `MPIR_CVAR_ODD_EVEN_CLIQUES` requests two cliques and `MPIR_CVAR_NUM_CLIQUES` does not override it. It is not used when `MPIR_CVAR_NOLOCAL` forces one process per node. When active, this CVAR enables assigning processes to cliques by uniform blocks instead of the default round-robin assignment.
@@ -4055,22 +4149,6 @@ Selects the process-management interface used by MPICH PMI wrapper routines. It 
 
 Used in functions: `check_MPIR_CVAR_PMI_VERSION`, `MPIR_pmi_finalize_on_exit`, `MPIR_pmi_init`, `MPIR_pmi_abort`, `MPIR_pmi_kvs_put`, `MPIR_pmi_kvs_get`, `MPIR_pmi_kvs_parent_get`, `MPIR_pmi_get_jobattr`, `MPIR_pmi_build_nodemap`, `MPIR_pmi_barrier`, `MPIR_pmi_barrier_only`, `MPIR_pmi_barrier_local`, `MPIR_pmi_barrier_group`, `optimized_put`, `optimized_get`, `put_ex`, `get_ex`, `optional_bcast_barrier`, `MPIR_pmi_get_universe_size`, `MPIR_pmi_spawn_multiple`, `MPIR_pmi_publish`, `MPIR_pmi_lookup`, `MPIR_pmi_unpublish`, `MPIR_pmi_load_hwloc_topology`, `MPIR_pmi_pset_event_init`, `MPIR_pmi_pset_event_finalize`
 
-### MPIR_CVAR_PMI_VERSION_1
-
-Selects the PMI-1 process-management interface as the active `MPIR_CVAR_PMI_VERSION` enum value. It is used when `MPIR_CVAR_PMI_VERSION` is explicitly set to this value, when auto-detection selects PMI because PMI process-manager environment variables are present, or when singleton initialization falls back to PMI-1 as an available interface. If MPICH is built without PMI-1 support, this value is replaced by another enabled PMI interface when possible, otherwise PMI initialization fails. When active, this value routes MPICH PMI wrapper routines through the PMI-1 implementation for initialization, finalization, key-value operations, barriers, spawn/publish/lookup operations, and fallback nodemap construction.
-
-* MPIR_CVAR_PMI_VERSION_1 - use PMI-1.
-
-Used in functions: `check_MPIR_CVAR_PMI_VERSION`, `MPIR_pmi_finalize_on_exit`, `MPIR_pmi_init`, `MPIR_pmi_abort`, `MPIR_pmi_kvs_put`, `MPIR_pmi_kvs_get`, `MPIR_pmi_kvs_parent_get`, `MPIR_pmi_get_jobattr`, `MPIR_pmi_build_nodemap`, `MPIR_pmi_barrier`, `MPIR_pmi_barrier_only`, `MPIR_pmi_barrier_local`, `MPIR_pmi_barrier_group`, `optimized_put`, `optimized_get`, `put_ex`, `get_ex`, `optional_bcast_barrier`, `MPIR_pmi_get_universe_size`, `MPIR_pmi_spawn_multiple`, `MPIR_pmi_publish`, `MPIR_pmi_lookup`, `MPIR_pmi_unpublish`, `MPIR_pmi_pset_event_init`, `MPIR_pmi_pset_event_finalize`
-
-### MPIR_CVAR_PMI_VERSION_2
-
-Selects the PMI-2 process-management interface as the active `MPIR_CVAR_PMI_VERSION` enum value. It is used when `MPIR_CVAR_PMI_VERSION` is explicitly set to this value, when auto-detection selects PMI because PMI process-manager environment variables are present and PMI-1 support is not enabled, when singleton initialization falls back to PMI-2 as an available interface, or when an unavailable PMI-1 selection is replaced by PMI-2. If MPICH is built without PMI-2 support, selecting this value causes PMI initialization to fail. When active, this value routes MPICH PMI wrapper routines through the PMI-2 implementation for initialization, finalization, key-value operations, barriers, spawn/publish/lookup operations, and fallback nodemap construction.
-
-* MPIR_CVAR_PMI_VERSION_2 - use PMI-2.
-
-Used in functions: `check_MPIR_CVAR_PMI_VERSION`, `MPIR_pmi_finalize_on_exit`, `MPIR_pmi_init`, `MPIR_pmi_abort`, `MPIR_pmi_kvs_put`, `MPIR_pmi_kvs_get`, `MPIR_pmi_kvs_parent_get`, `MPIR_pmi_get_jobattr`, `MPIR_pmi_build_nodemap`, `MPIR_pmi_barrier`, `MPIR_pmi_barrier_only`, `MPIR_pmi_barrier_local`, `MPIR_pmi_barrier_group`, `optimized_put`, `optimized_get`, `put_ex`, `get_ex`, `optional_bcast_barrier`, `MPIR_pmi_get_universe_size`, `MPIR_pmi_spawn_multiple`, `MPIR_pmi_publish`, `MPIR_pmi_lookup`, `MPIR_pmi_unpublish`, `MPIR_pmi_pset_event_init`, `MPIR_pmi_pset_event_finalize`
-
 ## Debugging and Development
 
 ### MPIR_CVAR_CH4_OFI_ENABLE_INJECT
@@ -4103,6 +4181,15 @@ Controls whether CH4 UCX passes the UCC wrapper debug setting into common UCC in
 Alternate name: MPIR_CVAR_CH4_UCC_ENABLE_DEBUG
 
 Used in functions: `MPIDI_UCX_init_local`
+
+### MPIR_CVAR_DEBUG_HOLD
+
+If true, causes processes to wait in `MPI_Init` and `MPI_Initthread` for a debugger to be attached. Once the debugger has attached, the variable `hold` should be set to 0 in order to allow the process to continue (e.g., in gdb, `set hold=0`).
+
+* false - default, normal initialization without waiting.
+* true - hold processes at `MPI_Init` until a debugger attaches.
+
+Used in functions: `MPIR_Init_impl`
 
 ### MPIR_CVAR_DEBUG_SUMMARY
 
@@ -4212,60 +4299,7 @@ Used in functions: `provider_preference`
 
 ## Other
 
-### MPIR_CVAR_CHOP_ERROR_STACK
-
-Controls the line width used when formatting MPI error stack output. It is used when `MPIR_Err_print_stack_string` emits error-ring entries for a printed error stack; that formatting path is reached when `MPIR_CVAR_PRINT_ERROR_STACK` enables full stack output. During error-stack initialization, a request for the sensible default is resolved before stack output is printed. When active, this CVAR sets the width used to chop long error stack message lines and indent continuation text under the stack location prefix.
-
-* 0 - default, do not chop error stack output lines.
-* negative integer - use a sensible default width, resolved during error-stack initialization.
-* positive integer - chop long error stack message lines to the requested width.
-
-Used in functions: `MPIR_Err_stack_init`, `MPIR_Err_print_stack_string`
-
-### MPIR_CVAR_COREDUMP_ON_ABORT
-
-Controls whether MPICH calls libc `abort()` from the device abort path. It is used after abort diagnostics are emitted and debugger abort state is set, before the normal process-manager abort or direct exit handling. It does not rely on any other CVAR or mode being active. When active, this CVAR enables aborting through libc so the process can generate a core dump.
-
-* false - default, continue through the normal MPICH abort path without calling libc `abort()`.
-* true - call libc `abort()` from the device abort path.
-
-Used in functions: `MPID_Abort`
-
-### MPIR_CVAR_ENABLE_FT
-
-Enables fault-tolerance helper paths for CH3/Nemesis large-message transfer request tracking, cleanup of pending RTS requests when a virtual connection terminates, and detection of incomplete anysource requests whose communicator no longer has anysource receives enabled. The LMT RTS tracking is used after a large-message transfer is initiated through a VC that provides LMT functions, and anysource mismatch detection also depends on the request being incomplete, marked anysource, and associated with a communicator where anysource receives are disabled.
-
-* false - default, disables the FT-specific LMT RTS queue tracking and cleanup, and disables anysource mismatch detection.
-* true - enables the FT-specific LMT RTS queue tracking and cleanup, and enables anysource mismatch detection.
-
-Used in functions: `MPID_nem_lmt_RndvSend`, `pkt_CTS_handler`, `MPIR_Request_is_anysrc_mismatched`, `MPID_nem_lmt_shm_vc_terminated`
-
-### MPIR_CVAR_ERROR_CHECKING
-
-Controls whether MPICH performs runtime error checks, typically to validate inputs to MPI routines. It is used during local process attribute initialization to set `MPIR_Process.do_error_checks`, and it does not rely on any other CVAR being enabled. This CVAR is effective only when MPICH is configured with runtime error-checking control; builds without error checking disable these checks, and builds with non-runtime error checking enable them unconditionally. When active, this CVAR enables runtime MPI error checking.
-
-* true - default, enable runtime MPI error checking when MPICH is configured for runtime error-checking control.
-* false - disable runtime MPI error checking when MPICH is configured for runtime error-checking control.
-
-Used in functions: `MPII_init_local_proc_attrs`
-
-### MPIR_CVAR_PRINT_ERROR_STACK
-
-Controls whether the instance-specific portion of an MPI error string includes the full error stack. It is used when `MPIR_Err_get_string` formats an error code with instance-specific error-ring entries; when enabled, the stack is formatted by `MPIR_Err_print_stack_string`, whose line wrapping is controlled by `MPIR_CVAR_CHOP_ERROR_STACK`. When active, this CVAR enables printing the error stack trace instead of only the last specific error message.
-
-* true - default, print the full error stack trace.
-* false - print only the last specific error message.
-
-Used in functions: `ErrGetInstanceString`
-
-### MPIR_CVAR_SUPPRESS_ABORT_MESSAGE
-
-Controls whether MPICH constructs the abort error message passed to the device abort path. It is used in `MPIR_Abort_impl` after selecting the communicator and resolving its name, and it does not rely on any other CVAR or mode being active. When active, this CVAR enables suppression of the abort error message.
-
-* false - default, construct an abort error message that identifies the communicator, error code, and process rank.
-* true - pass an empty abort error message to the device abort path.
-
-Used in functions: `MPIR_Abort_impl`
+## Other
 
 ### MPIR_CVAR_ABORT_ON_LEAKED_HANDLES
 
@@ -4285,6 +4319,16 @@ Controls whether MPICH requests and starts asynchronous progress support. It is 
 
 Used in functions: `MPII_init_local_proc_attrs`, `MPII_init_async`
 
+### MPIR_CVAR_CHOP_ERROR_STACK
+
+Controls the line width used when formatting MPI error stack output. It is used when `MPIR_Err_print_stack_string` emits error-ring entries for a printed error stack; that formatting path is reached when `MPIR_CVAR_PRINT_ERROR_STACK` enables full stack output. During error-stack initialization, a request for the sensible default is resolved before stack output is printed. When active, this CVAR sets the width used to chop long error stack message lines and indent continuation text under the stack location prefix.
+
+* 0 - default, do not chop error stack output lines.
+* negative integer - use a sensible default width, resolved during error-stack initialization.
+* positive integer - chop long error stack message lines to the requested width.
+
+Used in functions: `MPIR_Err_stack_init`, `MPIR_Err_print_stack_string`
+
 ### MPIR_CVAR_COMM_SPLIT_USE_QSORT
 
 Controls whether `MPI_Comm_split` uses the qsort-based sorting path when ordering processes by key. It is used while constructing the rank order for a new communicator after the split color has selected participating local processes, and for intercommunicators it is also used when ordering the matching remote group. This path requires qsort support to be available at build time; otherwise the insertion-sort path is used. When active, this CVAR enables qsort-based stable ordering of split participants by key.
@@ -4293,6 +4337,15 @@ Controls whether `MPI_Comm_split` uses the qsort-based sorting path when orderin
 * false - use the insertion-sort path.
 
 Used in functions: `MPIU_Sort_inttable`, `MPIR_Comm_split_impl`
+
+### MPIR_CVAR_COREDUMP_ON_ABORT
+
+Controls whether MPICH calls libc `abort()` from the device abort path. It is used after abort diagnostics are emitted and debugger abort state is set, before the normal process-manager abort or direct exit handling. It does not rely on any other CVAR or mode being active. When active, this CVAR enables aborting through libc so the process can generate a core dump.
+
+* false - default, continue through the normal MPICH abort path without calling libc `abort()`.
+* true - call libc `abort()` from the device abort path.
+
+Used in functions: `MPID_Abort`
 
 ### MPIR_CVAR_CTXID_EAGER_SIZE
 
@@ -4332,6 +4385,15 @@ Controls whether MPICH prints verbose diagnostics while computing dimensions for
 
 Used in functions: `MPIR_Dims_create_impl`, `optbalance`
 
+### MPIR_CVAR_ENABLE_FT
+
+Enables fault-tolerance helper paths for CH3/Nemesis large-message transfer request tracking, cleanup of pending RTS requests when a virtual connection terminates, and detection of incomplete anysource requests whose communicator no longer has anysource receives enabled. The LMT RTS tracking is used after a large-message transfer is initiated through a VC that provides LMT functions, and anysource mismatch detection also depends on the request being incomplete, marked anysource, and associated with a communicator where anysource receives are disabled.
+
+* false - default, disables the FT-specific LMT RTS queue tracking and cleanup, and disables anysource mismatch detection.
+* true - enables the FT-specific LMT RTS queue tracking and cleanup, and enables anysource mismatch detection.
+
+Used in functions: `MPID_nem_lmt_RndvSend`, `pkt_CTS_handler`, `MPIR_Request_is_anysrc_mismatched`, `MPID_nem_lmt_shm_vc_terminated`
+
 ### MPIR_CVAR_ENABLE_GPU
 
 Controls whether MPICH initializes GPU support, enables GPU pointer detection and GPU-aware helper paths, reports supported GPU memory kinds, initializes Yaksa with GPU support, enables CH4 IPC GPU setup when the GPU SHM module is built, and requests OFI HMEM capability when OFI HMEM is enabled. During initialization, MPICH may set this CVAR to disabled if no GPU devices are found. Compile-time GPU support and per-thread GPU disable state can also prevent GPU helper paths from being used.
@@ -4359,6 +4421,15 @@ Controls whether MPIDU thread yielding uses a heavier yield operation. It is use
 
 Used in functions: `MPIDU_Thread_yield`
 
+### MPIR_CVAR_ERROR_CHECKING
+
+Controls whether MPICH performs runtime error checks, typically to validate inputs to MPI routines. It is used during local process attribute initialization to set `MPIR_Process.do_error_checks`, and it does not rely on any other CVAR being enabled. This CVAR is effective only when MPICH is configured with runtime error-checking control; builds without error checking disable these checks, and builds with non-runtime error checking enable them unconditionally. When active, this CVAR enables runtime MPI error checking.
+
+* true - default, enable runtime MPI error checking when MPICH is configured for runtime error-checking control.
+* false - disable runtime MPI error checking when MPICH is configured for runtime error-checking control.
+
+Used in functions: `MPII_init_local_proc_attrs`
+
 ### MPIR_CVAR_GPU_HAS_WAIT_KERNEL
 
 Tells Yaksa during typerep initialization that GPU wait kernels are in use. It is only passed to Yaksa when `MPIR_CVAR_ENABLE_GPU` is enabled; otherwise MPICH initializes Yaksa with GPU support disabled and this CVAR has no effect. When active, it sets the Yaksa `yaksa_has_wait_kernel` info key so temporary-buffer handling can avoid GPU-registered host buffers that may deadlock with stream work queues and GPU wait kernels.
@@ -4385,6 +4456,15 @@ Controls whether the GPU backend is requested to use immediate command lists for
 * true - request immediate command lists for GPU copy operations.
 
 Used in functions: `MPII_init_gpu`
+
+### MPIR_CVAR_PRINT_ERROR_STACK
+
+Controls whether the instance-specific portion of an MPI error string includes the full error stack. It is used when `MPIR_Err_get_string` formats an error code with instance-specific error-ring entries; when enabled, the stack is formatted by `MPIR_Err_print_stack_string`, whose line wrapping is controlled by `MPIR_CVAR_CHOP_ERROR_STACK`. When active, this CVAR enables printing the error stack trace instead of only the last specific error message.
+
+* true - default, print the full error stack trace.
+* false - print only the last specific error message.
+
+Used in functions: `ErrGetInstanceString`
 
 ### MPIR_CVAR_PROGRESS_THREAD_AFFINITY
 
@@ -4441,4 +4521,13 @@ Sets the retry limit for collectively allocating a symmetric shared-memory heap 
 * 0 or negative integer - do not attempt symmetric shared-memory mapping.
 
 Used in functions: `shm_alloc_symm_all`
+
+### MPIR_CVAR_SUPPRESS_ABORT_MESSAGE
+
+Controls whether MPICH constructs the abort error message passed to the device abort path. It is used in `MPIR_Abort_impl` after selecting the communicator and resolving its name, and it does not rely on any other CVAR or mode being active. When active, this CVAR enables suppression of the abort error message.
+
+* false - default, construct an abort error message that identifies the communicator, error code, and process rank.
+* true - pass an empty abort error message to the device abort path.
+
+Used in functions: `MPIR_Abort_impl`
 
