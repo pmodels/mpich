@@ -248,9 +248,29 @@ static int recv_issue_read(MPIR_Request * parent_request, int event_id,
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
     fi_addr_t addr = MPIDI_OFI_av_to_phys(av, vci_local, nic, vci_remote, nic);
 
-    MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                 buf, data_sz, NULL,
-                                 addr, remote_disp, rkey, (void *) &r->context),
+    /* The tx endpoint uses selective completion; need to use readmsg with
+     * FI_COMPLETION for progress */
+    void *desc = NULL;
+    struct iovec iov = {
+        .iov_base = buf,
+        .iov_len = data_sz
+    };
+    struct fi_rma_iov rma_iov = {
+        .addr = remote_disp,
+        .len = data_sz,
+        .key = rkey
+    };
+    struct fi_msg_rma msg = {
+        .msg_iov = &iov,
+        .desc = &desc,
+        .iov_count = 1,
+        .addr = addr,
+        .rma_iov = &rma_iov,
+        .rma_iov_count = 1,
+        .context = (void *) &r->context,
+        .data = 0
+    };
+    MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, FI_COMPLETION),
                          vci_local, rdma_readfrom);
 
   fn_exit:

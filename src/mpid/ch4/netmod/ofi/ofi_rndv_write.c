@@ -258,8 +258,29 @@ static int send_issue_write(MPIR_Request * sreq, void *buf, MPI_Aint data_sz,
     fi_addr_t addr = MPIDI_OFI_av_to_phys(p->av, p->vci_local, nic, p->vci_remote, nic);
     uint64_t rkey = p->u.send.rkeys[nic];
 
-    MPIDI_OFI_CALL_RETRY(fi_write(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                  buf, data_sz, NULL, addr, disp, rkey, (void *) &t->context),
+    /* The tx endpoint uses selective completion; need to use readmsg with
+     * FI_COMPLETION for progress */
+    void *desc = NULL;
+    struct iovec iov = {
+        .iov_base = buf,
+        .iov_len = data_sz
+    };
+    struct fi_rma_iov rma_iov = {
+        .addr = disp,
+        .len = data_sz,
+        .key = rkey
+    };
+    struct fi_msg_rma msg = {
+        .msg_iov = &iov,
+        .desc = &desc,
+        .iov_count = 1,
+        .addr = addr,
+        .rma_iov = &rma_iov,
+        .rma_iov_count = 1,
+        .context = (void *) &t->context,
+        .data = 0
+    };
+    MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, FI_COMPLETION),
                          p->vci_local, rdma_write);
     p->u.send.write_infly++;
 
