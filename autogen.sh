@@ -312,10 +312,11 @@ fn_fortran() {
 
     echo "syncing binding scripts"
     rm -rf "$dir/maint"
-    mkdir -p "$dir/maint"
+    mkdir -p "$dir/maint/c"
     cp -pPR maint/local_python $dir/maint/
     cp maint/gen_binding_f*.py $dir/maint/
     cp src/binding/*.txt $dir/maint/
+    cp src/binding/c/*.txt $dir/maint/c/
 
     (cd $dir && ./autogen.sh)
 }
