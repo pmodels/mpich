@@ -19,7 +19,7 @@ static int ipup(const void *inbuf, void *outbuf, uintptr_t count, yaksi_type_s *
     if (!always_query_ptr_attr && reqpriv->gpudriver_id != YAKSURI_GPUDRIVER_ID__UNSET)
         goto query_done;
 
-    yaksuri_info_s *infopriv;
+    yaksuri_info_s *infopriv = NULL;
     int (*hookfn) (const void *inbuf, void *outbuf, yaksi_info_s * info,
                    yaksur_ptr_attr_s * inattr, yaksur_ptr_attr_s * outattr);
 

@@ -219,6 +219,7 @@ static int reply_ipc_write(MPIDI_IPCI_ipc_attr_t * ipc_attr, MPI_Aint count, MPI
     MPI_Aint hdr_sz;
     mpi_errno = MPIDI_IPCI_prepare_ipc_hdr(ipc_attr, count, datatype, sizeof(MPIDI_IPC_write_t),
                                            rreq, remote_lrank, &hdr, &hdr_sz);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDI_IPC_write_t *am_hdr = hdr;
     am_hdr->ipc_type = ipc_attr->ipc_type;
     am_hdr->sreq = MPIDIG_REQUEST(rreq, u.ipc.peer_req);

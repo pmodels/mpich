@@ -229,7 +229,9 @@ static int ipc_handle_cache_count = 0;
 static unsigned long long ipc_handle_cache_usage_counter;       /* for tracking LRU (Least Recently Used) */
 
 /* ipc handle cache utilities */
+#ifdef MPL_HAVE_ZE
 static bool ipc_track_cache_can_insert(void);
+#endif
 static int ipc_track_cache_free(int idx, struct am_context am_ctx);
 static int ipc_track_cache_delete(int idx, struct am_context am_ctx);
 static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_Aint len,
@@ -242,11 +244,13 @@ static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
                                   struct handle_cache_entry **entry_out, bool force);
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank);
 
+#ifdef MPL_HAVE_ZE
 static bool ipc_track_cache_can_insert(void)
 {
     int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
     return (ipc_handle_cache_count < cache_limit);
 }
+#endif
 
 /* free the cache entry without updating ipc_handle_cache array */
 static int ipc_track_cache_free(int idx, struct am_context am_ctx)
@@ -793,13 +797,11 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
         }
     } else {
         bool force = false;
-#ifdef MPL_HAVE_ZE
         /* the drmfd path cannot have duplicate handles from the same buffer.
          * Use "force=true" to force caching. */
         if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
             force = true;
         }
-#endif
         if (!force && !ipc_track_cache_can_insert()) {
             goto fn_exit;
         }
@@ -830,12 +832,14 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
 
     *host_ptr_out = (void *) ((uintptr_t) map.mapped_addr + offset);
     attr->type = MPL_GPU_POINTER_DEV_MMAP;
-#endif
 
   fn_exit:
+#endif
     return mpi_errno;
+#ifdef MPL_HAVE_ZE
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
