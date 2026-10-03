@@ -785,8 +785,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
         /* OFI does not support tiles yet, need to pass the root device. */
         mr_attr.iface = FI_HMEM_ZE;
         mr_attr.device.ze = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(attr));
+#elif defined MPL_HAVE_HIP && \
+    FI_VERSION_GE(FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION), FI_VERSION(2, 5))
+        mr_attr.iface = FI_HMEM_ROCR;
+        mr_attr.device.rocr = MPL_gpu_get_dev_id_from_attr(attr);
 #else
-        /* FIXME: add support for MPL_HAVE_HIP (FI_HMEM_ROCR) */
         mr_attr.iface = FI_HMEM_SYSTEM;
 #endif
     } else {
