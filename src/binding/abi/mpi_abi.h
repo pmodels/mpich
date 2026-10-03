@@ -421,8 +421,6 @@ typedef int (MPI_Grequest_query_function)(void *extra_state, MPI_Status *status)
 typedef int (MPI_Grequest_free_function)(void *extra_state);
 typedef int (MPI_Grequest_cancel_function)(void *extra_state, int complete);
 
-typedef int (MPI_Copy_function)(MPI_Comm comm, int keyval, void *extra_state, void *attribute_val_in, void *attribute_val_out, int *flag); /* deprecated: MPI-2.0 */
-typedef int (MPI_Delete_function)(MPI_Comm omm, int keyval, void *attribute_val, void *extra_state); /* deprecated: MPI-2.0 */
 typedef int (MPI_Comm_copy_attr_function)(MPI_Comm comm, int keyval, void *extra_state, void *attribute_val_in, void *attribute_val_out, int *flag);
 typedef int (MPI_Comm_delete_attr_function)(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state);
 typedef int (MPI_Type_copy_attr_function)(MPI_Datatype datatype, int keyval, void *extra_state, void *attribute_val_in, void *attribute_val_out, int *flag);
@@ -444,9 +442,6 @@ typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
 typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
 typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
 
-#define MPI_NULL_COPY_FN               ((MPI_Copy_function*)0x0) /* deprecated: MPI-2.0 */
-#define MPI_DUP_FN                     ((MPI_Copy_function*)0x1) /* deprecated: MPI-2.0 */
-#define MPI_NULL_DELETE_FN             ((MPI_Delete_function*)0x0) /* deprecated: MPI-2.0 */
 #define MPI_COMM_NULL_COPY_FN          ((MPI_Comm_copy_attr_function*)0x0)
 #define MPI_COMM_DUP_FN                ((MPI_Comm_copy_attr_function*)0x1)
 #define MPI_COMM_NULL_DELETE_FN        ((MPI_Comm_delete_attr_function*)0x0)
@@ -578,9 +573,6 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 int MPI_Alltoallw_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm);
 int MPI_Alltoallw_init(const void *sendbuf, const int sendcounts[], const int sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int MPI_Alltoallw_init_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
-int MPI_Attr_delete(MPI_Comm comm, int keyval); /* deprecated: MPI-2.0 */
-int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag); /* deprecated: MPI-2.0 */
-int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val); /* deprecated: MPI-2.0 */
 int MPI_Barrier(MPI_Comm comm);
 int MPI_Barrier_init(MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
@@ -877,8 +869,6 @@ int MPI_Isendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 int MPI_Isendrecv_replace_c(void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Request *request);
 int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
 int MPI_Issend_c(const void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
-int MPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn, int *keyval, void *extra_state); /* deprecated: MPI-2.0 */
-int MPI_Keyval_free(int *keyval); /* deprecated: MPI-2.0 */
 int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name);
 int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Status *status);
 int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message, MPI_Status *status);
@@ -1244,9 +1234,6 @@ int PMPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 int PMPI_Alltoallw_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm);
 int PMPI_Alltoallw_init(const void *sendbuf, const int sendcounts[], const int sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int PMPI_Alltoallw_init_c(const void *sendbuf, const MPI_Count sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Count recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Info info, MPI_Request *request);
-int PMPI_Attr_delete(MPI_Comm comm, int keyval); /* deprecated: MPI-2.0 */
-int PMPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag); /* deprecated: MPI-2.0 */
-int PMPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val); /* deprecated: MPI-2.0 */
 int PMPI_Barrier(MPI_Comm comm);
 int PMPI_Barrier_init(MPI_Comm comm, MPI_Info info, MPI_Request *request);
 int PMPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
@@ -1543,8 +1530,6 @@ int PMPI_Isendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest
 int PMPI_Isendrecv_replace_c(void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Request *request);
 int PMPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
 int PMPI_Issend_c(const void *buf, MPI_Count count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
-int PMPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn, int *keyval, void *extra_state); /* deprecated: MPI-2.0 */
-int PMPI_Keyval_free(int *keyval); /* deprecated: MPI-2.0 */
 int PMPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name);
 int PMPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Status *status);
 int PMPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message, MPI_Status *status);

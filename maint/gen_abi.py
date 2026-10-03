@@ -25,6 +25,7 @@ class RE:
 def main():
     load_mpi_abi_h("src/binding/abi/mpi_abi.h")
     load_mpi_abi_h("src/include/mpix.h")
+    load_mpi_abi_h("src/include/mpi_legacy.h")
     dump_mpi_abi_internal_h("src/binding/abi/mpi_abi_internal.h")
     dump_io_abi_internal_h("src/binding/abi/io_abi_internal.h")
     dump_romio_abi_internal_h("src/mpi/romio/include/romio_abi_internal.h")

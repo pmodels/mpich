@@ -5,7 +5,8 @@
 
 include_HEADERS += \
     src/include/mpi.h \
-    src/include/mpix.h
+    src/include/mpix.h \
+    src/include/mpi_legacy.h
 
 if BUILD_MPICH_LIB
 include_HEADERS += src/include/mpi_proto.h
