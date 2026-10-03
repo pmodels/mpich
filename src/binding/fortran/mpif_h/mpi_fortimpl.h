@@ -26,6 +26,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Fortran binding will define these as real functions */
+#undef MPI_COMM_NULL_COPY_FN
+#undef MPI_COMM_DUP_FN
+#undef MPI_COMM_NULL_DELETE_FN
+#undef MPI_TYPE_NULL_COPY_FN
+#undef MPI_TYPE_DUP_FN
+#undef MPI_TYPE_NULL_DELETE_FN
+#undef MPI_WIN_NULL_COPY_FN
+#undef MPI_WIN_DUP_FN
+#undef MPI_WIN_NULL_DELETE_FN
+#undef MPI_CONVERSION_FN_NULL
+#undef MPI_CONVERSION_FN_NULL_C
+
+
 #define MPICH_INTERNAL  /* define to exclude f2c/c2f MPICH ABI compatibility macros */
 #include "mpi_fortran.h"
 
