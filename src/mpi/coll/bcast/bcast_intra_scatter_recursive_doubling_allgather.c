@@ -25,6 +25,7 @@
  * it's still a logarithmic algorithm.) Therefore, for long messages
  * Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
 */
+
 int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                                           MPI_Aint count,
                                                           MPI_Datatype datatype,

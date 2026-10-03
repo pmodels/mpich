@@ -15,4 +15,5 @@ mpi_core_sources += \
     src/mpi/coll/allgather/allgather_intra_recexch.c \
     src/mpi/coll/allgather/allgather_intra_ring.c \
     src/mpi/coll/allgather/allgather_intra_circ_graph.c \
+    src/mpi/coll/allgather/allgather_intra_bine.c \
     src/mpi/coll/allgather/allgather_inter_local_gather_remote_bcast.c

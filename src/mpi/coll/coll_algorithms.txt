@@ -210,6 +210,9 @@ bcast-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    bine_lat
+    bine_bdw
+        restrictions: pof2
 ibcast-intra:
     sched_binomial
     sched_smp
@@ -243,6 +246,8 @@ ibcast-inter:
 
 gather-intra:
     binomial
+    bine
+        restrictions: pof2
 gather-inter:
     linear
     local_gather_remote_send
@@ -276,6 +281,8 @@ igatherv-inter:
 
 scatter-intra:
     binomial
+    bine
+        restrictions: pof2
 scatter-inter:
     linear
     remote_send_local_scatter
@@ -322,6 +329,10 @@ allgather-intra:
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     circ_graph
+    bine
+        extra_params: bine_type
+        cvar_params: BINE_TYPE
+        restrictions: pof2
 allgather-inter:
     local_gather_remote_bcast
         inner: gather-intra@local_comm, bcast-inter@comm
@@ -385,6 +396,9 @@ alltoall-intra:
         restrictions: inplace
     scattered
         inplace_copy: 1
+    bine
+        inplace_copy: 1
+        restrictions: pof2
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
@@ -466,6 +480,10 @@ reduce-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    bine_lat
+        restrictions: commutative
+    bine_bdw
+        restrictions: commutative
 reduce-inter:
     local_reduce_remote_send
         inner: reduce-intra@local_comm
@@ -518,6 +536,10 @@ allreduce-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    bine_lat
+        restrictions: commutative
+    bine_bdw
+        restrictions: commutative
 allreduce-inter:
     reduce_exchange_bcast
         inner: reduce-intra@local_comm, bcast-intra@local_comm
@@ -560,6 +582,10 @@ reduce_scatter-intra:
     recursive_doubling
     recursive_halving
         restrictions: commutative
+    bine
+        extra_params: bine_type
+        cvar_params: BINE_TYPE
+        restrictions: commutative, pof2
 reduce_scatter-inter:
     remote_reduce_local_scatter
         inner: reduce-inter@comm, scatterv-intra@local_comm

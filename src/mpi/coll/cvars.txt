@@ -133,7 +133,9 @@ cvars:
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
         release_gather                          - Force CH4 POSIX release_gather algorithm
-	
+        bine_lat                                - Force bine latency algorithm
+        bine_bdw                                - Force bine bandwidth algorithm
+
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
       type        : int
@@ -364,6 +366,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial - Force binomial algorithm
         nb       - Force nonblocking algorithm
+        bine     - Force bine algorithm
 
     - name        : MPIR_CVAR_GATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -479,6 +482,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         binomial - Force binomial algorithm
         nb       - Force nonblocking algorithm
+        bine     - Force bine algorithm
 
     - name        : MPIR_CVAR_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -582,6 +586,20 @@ cvars:
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
 
+    - name        : MPIR_CVAR_ALLGATHER_BINE_TYPE
+      category    : COLLECTIVE
+      type        : enum
+      default     : permute
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select allgather bine tree type.
+        permute            - Force allgather bine permutation algorithm
+        send_remap         - Force allgather bine send algorithm
+        block_by_block     - Force allgather bine block_by_block algorithm
+        two_blocks         - Force allgather bine two transmissions algorithm
+
     - name        : MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -600,6 +618,7 @@ cvars:
         recexch_doubling   - Force recexch distance doubling algorithm
         recexch_halving    - Force recexch distance halving algorithm
         circ_graph         - Force queued circulant graph algorithm
+        bine               - Force bine algorithm
 
     - name        : MPIR_CVAR_ALLGATHER_BRUCKS_KVAL
       category    : COLLECTIVE
@@ -812,6 +831,7 @@ cvars:
         pairwise                  - Force pairwise algorithm
         pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
         scattered                 - Force scattered algorithm
+        bine                      - Force bine algorithm
 
     - name        : MPIR_CVAR_ALLTOALL_BRUCKS_KVAL
       category    : COLLECTIVE
@@ -1012,6 +1032,8 @@ cvars:
         smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
         release_gather        - Force CH4 POSIX release_gather algorithm
+        bine_lat              - Force bine latency algorithm
+        bine_bdw              - Force bine bandwidth algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -1189,6 +1211,8 @@ cvars:
         k_reduce_scatter_allgather - Force reduce scatter allgather algorithm
         ccl                      - Force CCL algorithm
         release_gather           - Force CH4 POSIX release_gather algorithm
+        bine_lat                 - Force bine latency algorithm
+        bine_bdw                 - Force bine bandwidth algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE
@@ -1443,6 +1467,19 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
+    - name        : MPIR_CVAR_REDUCE_SCATTER_BINE_TYPE
+      category    : COLLECTIVE
+      type        : enum
+      default     : permute
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select reduce_scatter bine tree type.
+        permute            - Force reduce_scatter bine tree permutation algorithm
+        send_remap         - Force reduce_scatter bine tree send algorithm
+        block_by_block     - Force reduce_scatter bine tree block_by_block algorithm
+
     - name        : MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1458,6 +1495,7 @@ cvars:
         pairwise           - Force pairwise algorithm
         recursive_doubling - Force recursive doubling algorithm
         recursive_halving  - Force recursive halving algorithm
+        bine               - Force bine algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE

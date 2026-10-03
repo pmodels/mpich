@@ -196,6 +196,8 @@ algorithms:
             circ_graph
                 .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
                 .MPIR_CVAR_CIRC_GRAPH_Q_LEN=1,4,8
+            bine
+                .MPIR_CVAR_ALLGATHER_BINE_TYPE=permute,send_remap,block_by_block,two_blocks
         intra-nonblocking:
             sched_ring
             sched_brucks
@@ -250,6 +252,8 @@ algorithms:
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL=2,3,4,5,9
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_SINGLE_PHASE_RECV=0,1
             ring
+            bine_lat
+            bine_bdw
             k_reduce_scatter_allgather
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL=2,3,4,5,9
                 .MPIR_CVAR_ALLREDUCE_RECEXCH_SINGLE_PHASE_RECV=0,1
@@ -285,6 +289,7 @@ algorithms:
             pairwise
             pairwise_sendrecv_replace
             scattered
+            bine
         intra-nonblocking:
             sched_brucks
             sched_inplace
@@ -355,6 +360,8 @@ algorithms:
             composition:2
             composition:3
             binomial
+            bine_lat
+            bine_bdw
             smp
             smp_node_first
             scatter_recursive_doubling_allgather
@@ -418,6 +425,7 @@ algorithms:
             sched_short
         intra-blocking:
             binomial
+            bine
         intra-nonblocking:
             sched_binomial
             tsp_tree
@@ -482,6 +490,8 @@ algorithms:
             circ_graph
                 .MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE=0,1024,131072,262144
                 .MPIR_CVAR_CIRC_GRAPH_Q_LEN=2,4,8
+            bine_lat
+            bine_bdw
             posix:release_gather
                 .MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072
                 .MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=16384,32768
@@ -507,6 +517,8 @@ algorithms:
             pairwise
             recursive_halving
             recursive_doubling
+            bine
+                .MPIR_CVAR_REDUCE_SCATTER_BINE_TYPE=permute,send_remap,block_by_block
         intra-nonblocking:
             sched_noncommutative
             sched_pairwise
@@ -548,6 +560,7 @@ algorithms:
             sched_remote_send_local_scatter
         intra-blocking:
             binomial
+            bine
         intra-nonblocking:
             sched_binomial
             tsp_tree
