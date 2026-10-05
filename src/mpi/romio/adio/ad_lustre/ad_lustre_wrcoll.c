@@ -64,7 +64,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf, char *wr
                                          MPI_Count * done_to_proc, int *hole, int iter,
                                          MPI_Aint buftype_extent, ADIO_Offset * buf_idx,
                                          ADIO_Offset ** srt_off, MPI_Count ** srt_len,
-                                         MPI_Count * srt_num, int *error_code);
+                                         MPI_Count * srt_num, int deferred_error, int *error_code);
 static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
                                          ADIO_Offset * offset_list, ADIO_Offset * len_list,
                                          MPI_Count contig_access_count,
@@ -73,6 +73,16 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                          ADIO_Offset start_offset, ADIO_Offset end_offset,
                                          ADIO_Offset firstFileOffset, ADIO_Offset lastFileOffset,
                                          MPI_Datatype datatype, int myrank, int *error_code);
+
+/* Record the first error in *deferred_error and clear *error_code. */
+static void ADIOI_LUSTRE_Defer_error(int *deferred_error, int *error_code)
+{
+    if (*error_code != MPI_SUCCESS) {
+        if (*deferred_error == MPI_SUCCESS)
+            *deferred_error = *error_code;
+        *error_code = MPI_SUCCESS;
+    }
+}
 
 void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
                                    MPI_Datatype datatype,
@@ -381,6 +391,13 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     ADIO_Offset off, req_off, send_off, iter_st_off, *off_list;
     ADIO_Offset max_size, step_size = 0;
     int real_size;
+    /* First I/O error seen inside the write loop below.  That loop performs
+     * point-to-point exchanges which every rank must take part in, and the
+     * caller ends with a collective MPI_Allreduce on error_code.  Leaving the
+     * loop early on a single rank therefore deadlocks every other rank, so
+     * record the error, stop writing, and keep taking part in the exchanges
+     * until the loop ends. */
+    int deferred_error = MPI_SUCCESS;
     MPI_Count *recv_count, *send_curr_offlen_ptr, *recv_curr_offlen_ptr;
     MPI_Count *recv_size, *send_size;
     MPI_Count *sent_to_proc, *recv_start_pos;
@@ -589,10 +606,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                      striping_info, others_req, send_buf_idx,
                                      curr_to_proc, done_to_proc, &hole, m,
                                      buftype_extent, this_buf_idx,
-                                     &srt_off, &srt_len, &srt_num, error_code);
-
-        if (*error_code != MPI_SUCCESS)
-            goto over;
+                                     &srt_off, &srt_len, &srt_num, deferred_error, error_code);
+        ADIOI_LUSTRE_Defer_error(&deferred_error, error_code);
 
         flag = 0;
         for (i = 0; i < nprocs; i++)
@@ -600,7 +615,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                 flag = 1;
                 break;
             }
-        if (flag) {
+        if (flag && deferred_error == MPI_SUCCESS) {
             /* check whether to do data sieving */
             if (data_sieving == ADIOI_HINT_ENABLE) {
                 ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
@@ -630,8 +645,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                     ADIO_WriteContig(fd, write_buf + block_offset - off, block_len,
                                                      MPI_BYTE, ADIO_EXPLICIT_OFFSET, block_offset,
                                                      &status, error_code);
-                                    if (*error_code != MPI_SUCCESS)
-                                        goto over;
+                                    ADIOI_LUSTRE_Defer_error(&deferred_error, error_code);
                                     block_offset = srt_off[i];
                                     block_len = srt_len[i];
                                 }
@@ -645,17 +659,20 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                          block_len,
                                          MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                          block_offset, &status, error_code);
-                        if (*error_code != MPI_SUCCESS)
-                            goto over;
+                        ADIOI_LUSTRE_Defer_error(&deferred_error, error_code);
                     }
                 }
             }
-            if (*error_code != MPI_SUCCESS)
-                goto over;
+            ADIOI_LUSTRE_Defer_error(&deferred_error, error_code);
         }
         iter_st_off += max_size;
     }
-  over:
+
+    /* Surface the deferred error so the caller's collective MPI_Allreduce
+     * reports it on every rank. */
+    if (deferred_error != MPI_SUCCESS)
+        *error_code = deferred_error;
+
     if (srt_off)
         ADIOI_Free(srt_off);
     if (srt_len)
@@ -688,7 +705,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
                                          MPI_Aint buftype_extent,
                                          ADIO_Offset * buf_idx,
                                          ADIO_Offset ** srt_off, MPI_Count ** srt_len,
-                                         MPI_Count * srt_num, int *error_code)
+                                         MPI_Count * srt_num, int deferred_error, int *error_code)
 {
     int i, j, nprocs_recv, nprocs_send, err;
     char **send_buf = NULL;
@@ -773,16 +790,15 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         }
     }
 
-    /* check the hint for data sieving */
-    if (data_sieving == ADIOI_HINT_ENABLE && nprocs_recv && *hole) {
+    /* check the hint for data sieving; skip the read after an earlier error */
+    if (data_sieving == ADIOI_HINT_ENABLE && nprocs_recv && *hole && deferred_error == MPI_SUCCESS) {
         ADIO_ReadContig(fd, write_buf, size, MPI_BYTE, ADIO_EXPLICIT_OFFSET, off, &status, &err);
         // --BEGIN ERROR HANDLING--
         if (err != MPI_SUCCESS) {
+            /* don't return: this round's sends/receives must still complete */
             *error_code = MPIO_Err_create_code(err,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__, MPI_ERR_IO, "**ioRMWrdwr", 0);
-            ADIOI_Free(recv_types);
-            return;
         }
         // --END ERROR HANDLING--
     }
