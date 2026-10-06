@@ -123,7 +123,7 @@ static HYD_status handle_user_binding(const char *binding)
     }
 
     HYDT_topo_hwloc_info.num_bitmaps = num_bind_entries;
-    HYDT_topo_hwloc_info.user_binding = 1;
+    HYDT_topo_hwloc_info.has_user_binding = true;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -674,7 +674,7 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     HYDU_FUNC_ENTER();
 
     /* For processes where the user did not specify a binding unit, no binding is needed. */
-    if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
+    if (!HYDT_topo_hwloc_info.has_user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
         id = idx % HYDT_topo_hwloc_info.num_bitmaps;
 
         if (HYDT_topo_info.report_bindings) {
