@@ -13,6 +13,7 @@ struct HYDT_topo_hwloc_info {
     unsigned int num_bitmaps;
     hwloc_bitmap_t *bitmap;
     hwloc_membind_policy_t membind;
+    bool has_membind;
     int user_binding;
     int total_num_pus;
     char *xml_topology_file;
