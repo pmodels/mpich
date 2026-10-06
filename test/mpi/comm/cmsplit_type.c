@@ -73,6 +73,19 @@ int main(int argc, char *argv[])
         MPI_Info_free(&info);
     }
 
+    /* Test MPI_COMM_TYPE_HW_GUIDED: "machine" always matches, it must not return
+     * MPI_COMM_NULL even when it is not a proper subset (e.g. single node). */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "mpi_hw_resource_type", "machine");
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
+    if (comm == MPI_COMM_NULL) {
+        printf("MPI_COMM_TYPE_HW_GUIDED (machine) returned MPI_COMM_NULL\n");
+        errs++;
+    } else {
+        MPI_Comm_free(&comm);
+    }
+    MPI_Info_free(&info);
+
     /* Test MPI_COMM_TYPE_HW_GUIDED: pass MPI_INFO_NULL, it must return MPI_COMM_NULL. */
     info = MPI_INFO_NULL;
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED, 0, info, &comm);
