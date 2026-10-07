@@ -1483,7 +1483,10 @@ if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
    if test ! -z "$MPID_DEFAULT_PM" ; then
       with_pm=${MPID_DEFAULT_PM}
    else
-      with_pm=hydra
+      case "$host_os" in
+          mingw*) with_pm=winexec ;;
+          *)      with_pm=hydra ;;
+      esac
    fi
 fi
 
@@ -1505,6 +1508,14 @@ for pm_name in $pm_names ; do
     case "$pm_name" in
       gforker)
         build_gforker=yes
+        if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
+            with_pmi=pmi1
+        else
+            AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
+        fi
+        ;;
+      winexec)
+        build_winexec=yes
         if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
             with_pmi=pmi1
         else
@@ -1559,6 +1570,7 @@ dnl gforker and remshell does not use separate configure.
 dnl
 AM_CONDITIONAL([BUILD_PM_GFORKER],[test "X$build_gforker" = "Xyes"])
 AM_CONDITIONAL([BUILD_PM_REMSHELL],[test "X$build_refshell" = "Xyes"])
+AM_CONDITIONAL([BUILD_PM_WINEXEC],[test "X$build_winexec" = "Xyes"])
 AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
 AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
