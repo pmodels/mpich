@@ -389,6 +389,16 @@ if test "X$enable_shared" = "Xyes" ; then
                 FCLIB_LDFLAGS="-Wl,-flat_namespace"
             fi
         fi
+        ],
+        [*-*-mingw*],
+        [
+        # As on Darwin, the predefined constants of mpif.h and "use mpi"
+        # (MPI_BOTTOM, MPI_IN_PLACE, ...) are common blocks recognized by
+        # their address, but a DLL and the program referencing it each get
+        # their own copy of a common block.  Build the thin Fortran layer
+        # as a static library instead, so that the common blocks are merged
+        # when the program is linked.  It still uses libmpi as a DLL.
+        FCLIB_LDFLAGS="-static"
         ]
     )
 fi
