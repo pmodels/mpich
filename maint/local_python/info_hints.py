@@ -4,18 +4,26 @@
 ##
 
 from local_python import RE
-import subprocess
+import os
 
 def collect_info_hint_blocks(root_dir):
     """Collect INFO_HINT_BLOCKS from source files and return a function-name-keyed dictionary"""
     infos_by_funcname = {}
 
-    # xargs may process files in batches and return a non-zero exit code if grep comes up empty
-    # use "|| true" to avoid terminating the script in those instances
-    # https://stackoverflow.com/questions/26540813/got-exit-code-123-in-find-xargs-grep
-    files = subprocess.check_output(
-        "find %s -name '*.[ch]' |xargs grep -l BEGIN_INFO_HINT_BLOCK || true" % root_dir,
-        shell=True).splitlines()
+    files = []
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # sorted, so that the generated code does not depend on the filesystem
+        dirnames.sort()
+        for name in sorted(filenames):
+            if name.endswith(('.c', '.h')):
+                path = os.path.join(dirpath, name)
+                try:
+                    with open(path, errors='replace') as In:
+                        if 'BEGIN_INFO_HINT_BLOCK' in In.read():
+                            files.append(path)
+                except OSError:
+                    # e.g. a dangling symlink; grep skipped those as well
+                    pass
     for f in files:
         infos = parse_info_block(f)
         for info in infos:
