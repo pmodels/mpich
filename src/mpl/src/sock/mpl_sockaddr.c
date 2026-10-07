@@ -47,16 +47,27 @@
 
 #include "mplconfig.h"
 #include <assert.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <ifaddrs.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "mpl_sockaddr.h"
+
+#ifdef _WIN32
+#include <iphlpapi.h>
+/* Winsock returns SOCKET_ERROR and reports the reason via WSAGetLastError() */
+static inline int sock_ret(int ret)
+{
+    return ret == SOCKET_ERROR ? MPLI_sock_set_errno() : ret;
+}
+#else
+#include <ifaddrs.h>
+static inline int sock_ret(int ret)
+{
+    return ret;
+}
+#endif
 
 static int is_localhost(struct sockaddr *p_addr);
 
@@ -143,6 +154,59 @@ int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr)
     }
 }
 
+#ifdef _WIN32
+/* s_iface is matched against the adapter's friendly name (e.g. "Ethernet")
+ * or its internal adapter name (a GUID string). */
+int MPL_get_sockaddr_iface(const char *s_iface, MPL_sockaddr_t * p_addr)
+{
+    ULONG size = 16 * 1024;
+    IP_ADAPTER_ADDRESSES *adapters = NULL, *ad;
+    ULONG ret;
+    int found = 0;
+
+    memset(p_addr, 0, sizeof(*p_addr));
+    for (int tries = 0; tries < 3; tries++) {
+        adapters = malloc(size);
+        if (!adapters)
+            return -1;
+        ret = GetAdaptersAddresses(af_type, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
+                                   GAA_FLAG_SKIP_DNS_SERVER, NULL, adapters, &size);
+        if (ret != ERROR_BUFFER_OVERFLOW)
+            break;
+        free(adapters);
+        adapters = NULL;
+    }
+    if (!adapters || ret != NO_ERROR) {
+        free(adapters);
+        return -1;
+    }
+
+    for (ad = adapters; ad; ad = ad->Next) {
+        if (ad->OperStatus != IfOperStatusUp)
+            continue;
+        if (s_iface) {
+            char friendly[256];
+            WideCharToMultiByte(CP_UTF8, 0, ad->FriendlyName, -1, friendly, sizeof(friendly),
+                                NULL, NULL);
+            if (strcmp(s_iface, friendly) != 0 && strcmp(s_iface, ad->AdapterName) != 0)
+                continue;
+        }
+        for (IP_ADAPTER_UNICAST_ADDRESS * ua = ad->FirstUnicastAddress; ua; ua = ua->Next) {
+            struct sockaddr *sa = ua->Address.lpSockaddr;
+            if (sa->sa_family != af_type)
+                continue;
+            found++;
+            memcpy(p_addr, sa, af_type == AF_INET ? sizeof(struct sockaddr_in)
+                   : sizeof(struct sockaddr_in6));
+            if (!is_localhost(sa))
+                goto done;
+        }
+    }
+  done:
+    free(adapters);
+    return found ? 0 : -1;
+}
+#else
 int MPL_get_sockaddr_iface(const char *s_iface, MPL_sockaddr_t * p_addr)
 {
     struct ifaddrs *ifaddr;
@@ -182,22 +246,39 @@ int MPL_get_sockaddr_iface(const char *s_iface, MPL_sockaddr_t * p_addr)
     }
 }
 
+#endif /* _WIN32 */
+
 int MPL_socket(void)
 {
+#ifdef _WIN32
+    MPL_sock_init();
+    SOCKET s = socket(af_type, SOCK_STREAM, IPPROTO_TCP);
+    return s == INVALID_SOCKET ? MPLI_sock_set_errno() : (int) s;
+#else
     return socket(af_type, SOCK_STREAM, IPPROTO_TCP);
+#endif
 }
 
 int MPL_connect(int sock_fd, MPL_sockaddr_t * p_addr, unsigned short port)
 {
+    int ret;
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) p_addr)->sin_port = htons(port);
-        return connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in));
+        ret = connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) p_addr)->sin6_port = htons(port);
-        return connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in6));
+        ret = connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in6));
     } else {
         return -1;
     }
+#ifdef _WIN32
+    /* a non-blocking connect in progress is reported as WSAEWOULDBLOCK */
+    if (ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
+        errno = EINPROGRESS;
+        return -1;
+    }
+#endif
+    return sock_ret(ret);
 }
 
 void MPL_set_listen_attr(int use_loopback, int max_conn)
@@ -218,17 +299,17 @@ int MPL_listen(int sock_fd, unsigned short port)
     }
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) &addr)->sin_port = htons(port);
-        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+        ret = sock_ret(bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) &addr)->sin6_port = htons(port);
-        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
+        ret = sock_ret(bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6)));
     } else {
         assert(0);
     }
     if (ret) {
         return ret;
     }
-    return listen(sock_fd, _max_conn);
+    return sock_ret(listen(sock_fd, _max_conn));
 }
 
 int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
@@ -243,18 +324,18 @@ int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
     }
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) &addr)->sin_port = 0;
-        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+        ret = sock_ret(bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) &addr)->sin6_port = 0;
-        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
+        ret = sock_ret(bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6)));
     } else {
         assert(0);
     }
     if (ret) {
         return ret;
     }
-    unsigned int n = sizeof(addr);
-    ret = getsockname(sock_fd, (struct sockaddr *) &addr, &n);
+    socklen_t n = sizeof(addr);
+    ret = sock_ret(getsockname(sock_fd, (struct sockaddr *) &addr, &n));
     if (ret) {
         return ret;
     }
@@ -263,7 +344,7 @@ int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
     } else if (af_type == AF_INET6) {
         *p_port = ntohs(((struct sockaddr_in6 *) &addr)->sin6_port);
     }
-    return listen(sock_fd, _max_conn);
+    return sock_ret(listen(sock_fd, _max_conn));
 }
 
 int MPL_listen_portrange(int sock_fd, unsigned short *p_port, int low_port, int high_port)
@@ -291,7 +372,7 @@ int MPL_listen_portrange(int sock_fd, unsigned short *p_port, int low_port, int 
     if (i > high_port) {
         return -2;
     }
-    return listen(sock_fd, _max_conn);
+    return sock_ret(listen(sock_fd, _max_conn));
 }
 
 int MPL_sockaddr_to_str(MPL_sockaddr_t * p_addr, char *str, int maxlen)
