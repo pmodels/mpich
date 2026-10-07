@@ -906,6 +906,14 @@ static int PMII_Set_from_port(int id)
    and sets up the initial KVS connection entry.
 */
 
+#ifdef _WIN32
+/* TODO: start mpiexec with CreateProcess and connect back to it */
+static int PMII_singinit(void)
+{
+    PMIU_printf(1, "PMII_singinit: singleton init is not supported on Windows; use mpiexec\n");
+    return PMI_FAIL;
+}
+#else
 static int PMII_singinit(void)
 {
     int pmi_errno = PMI_SUCCESS;
@@ -1023,6 +1031,7 @@ static int PMII_singinit(void)
   fn_fail:
     goto fn_exit;
 }
+#endif /* _WIN32 */
 
 /* Promote PMI to a fully initialized version if it was started as
    a singleton init */
