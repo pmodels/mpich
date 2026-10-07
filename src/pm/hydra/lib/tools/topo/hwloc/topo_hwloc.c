@@ -123,7 +123,7 @@ static HYD_status handle_user_binding(const char *binding)
     }
 
     HYDT_topo_hwloc_info.num_bitmaps = num_bind_entries;
-    HYDT_topo_hwloc_info.user_binding = 1;
+    HYDT_topo_hwloc_info.has_user_binding = true;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -641,6 +641,7 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
 
 
         /* Memory binding options */
+        HYDT_topo_hwloc_info.has_membind = (membind != NULL);
         if (membind == NULL)
             HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
         else if (!strcmp(membind, "firsttouch"))
@@ -673,7 +674,7 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     HYDU_FUNC_ENTER();
 
     /* For processes where the user did not specify a binding unit, no binding is needed. */
-    if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
+    if (!HYDT_topo_hwloc_info.has_user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
         id = idx % HYDT_topo_hwloc_info.num_bitmaps;
 
         if (HYDT_topo_info.report_bindings) {
@@ -698,10 +699,16 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
         rc = hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
         HYDU_ERR_CHKANDJUMP(status, rc, HYD_INTERNAL_ERROR,
                             "hwloc_set_cpubind failed, rc = %d\n", rc);
-        rc = hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
-                               HYDT_topo_hwloc_info.membind, 0);
-        HYDU_ERR_CHKANDJUMP(status, rc, HYD_INTERNAL_ERROR,
-                            "hwloc_set_membind failed, rc = %d\n", rc);
+        /* Only set memory binding when the user asked for it. Setting the
+         * memory policy may not be permitted (e.g. in containers) even when
+         * cpu binding works. */
+        if (HYDT_topo_hwloc_info.has_membind) {
+            rc = hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
+                                   HYDT_topo_hwloc_info.membind, 0);
+            HYDU_ERR_CHKANDJUMP(status, rc, HYD_INTERNAL_ERROR,
+                                "hwloc_set_membind failed, rc = %d, errno = %s\n", rc,
+                                MPL_strerror(errno));
+        }
     }
 
 
