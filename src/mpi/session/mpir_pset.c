@@ -58,7 +58,7 @@ bool pset_find_by_name(const char *pset_name, MPIR_Pset ** pset)
     *pset = NULL;
     for (unsigned i = 0; i < utarray_len(pset_array); i++) {
         p = (MPIR_Pset *) utarray_eltptr(pset_array, i);
-        if (strncasecmp(pset_name, p->name, MAX(strlen(pset_name), strlen(p->name))) == 0) {
+        if (strncasecmp(pset_name, p->name, MPL_MAX(strlen(pset_name), strlen(p->name))) == 0) {
             found = true;
             *pset = p;
             break;
