@@ -10,6 +10,7 @@
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
+    MPIDI_UCX_AM_REQUEST(req, is_in_send) = false;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)

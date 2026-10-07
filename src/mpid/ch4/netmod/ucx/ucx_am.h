@@ -91,6 +91,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         goto fn_exit;
     }
 
+    /* The send is pending. Before the callback runs, the reply may arrive and
+     * complete the send early (see MPIDI_UCX_am_nbx_handler), after which sreq
+     * could be freed and reused. Hold a reference for the callback. */
+    MPIDI_UCX_AM_REQUEST(sreq, is_in_send) = true;
+    MPIR_Request_add_ref(sreq);
     ucp_request_release(ucp_request);
 
 #else /* !HAVE_UCP_AM_NBX */
