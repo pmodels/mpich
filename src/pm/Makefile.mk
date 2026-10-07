@@ -9,6 +9,7 @@ include $(top_srcdir)/src/pm/util/Makefile.mk
 
 include $(top_srcdir)/src/pm/gforker/Makefile.mk
 include $(top_srcdir)/src/pm/remshell/Makefile.mk
+include $(top_srcdir)/src/pm/winexec/Makefile.mk
 
 # Hydra has its own full automake setup, not Makefile.mk
 if BUILD_PM_HYDRA
