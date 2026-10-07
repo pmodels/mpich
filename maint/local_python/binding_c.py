@@ -2819,7 +2819,9 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
         (sct, rct) = (ct, ct)
-        if RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
+        if not RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
+            G.out.append("MPIR_ERRTEST_COUNT(%s, mpi_errno);" % ct)
+        else:
             dump_validate_get_comm_size(func)
             dump_validate_get_comm_rank(func)
             G.out.append("int sum = 0;")
