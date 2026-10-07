@@ -7,7 +7,9 @@
 #include "mpir_info.h"
 #include "mpi_init.h"
 #include <strings.h>
+#ifdef HAVE_DLOPEN
 #include <dlfcn.h>
+#endif
 #include "mpir_async_things.h"
 
 /*
