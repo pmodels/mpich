@@ -61,7 +61,15 @@ if test "$enable_sock_debug" = yes ; then
     AC_DEFINE(USE_SOCK_VERIFY,1,[Define it the socket verify macros should be enabled])
 fi
 
-AC_CHECK_FUNC([poll],[pac_cv_have_func_poll=yes],[pac_cv_have_func_poll=no])
+case "$host_os" in
+    mingw*)
+        dnl Native Windows: poll() is provided by WSAPoll through mpl_sockcompat.h
+        pac_cv_have_func_poll=winsock
+        ;;
+    *)
+        AC_CHECK_FUNC([poll],[pac_cv_have_func_poll=yes],[pac_cv_have_func_poll=no])
+        ;;
+esac
 if test "X$pac_cv_have_func_poll" = "Xno" ; then
     if test -f /sw/include/sys/poll.h ; then
         dnl This is for Mac OSX (Darwin) which doesn't have a poll function is
@@ -81,6 +89,10 @@ AC_CHECK_HEADERS([poll.h stdlib.h sys/param.h sys/poll.h sys/types.h sys/uio.h u
 
 AC_MSG_CHECKING([if struct poll is defined]);
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #if defined(_WIN32)
+    #include <winsock2.h>
+    #define poll WSAPoll
+    #endif
     #if defined(HAVE_POLL_H)
     #include <poll.h>
     #endif
@@ -99,6 +111,10 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 
 AC_MSG_CHECKING([if a simple program using poll() can be compiled]);
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #if defined(_WIN32)
+    #include <winsock2.h>
+    #define poll WSAPoll
+    #endif
     #if defined(HAVE_POLL_H)
     #include <poll.h>
     #endif
@@ -142,7 +158,10 @@ fi
 AC_CHECK_FUNCS([gethostname])
 if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
-    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#endif],gethostname)
 fi
 
 AC_SEARCH_LIBS([socket],[socket])
@@ -165,6 +184,10 @@ AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)], pac_
         #include <sys/types.h>
         #ifdef HAVE_SYS_SOCKET_H
         #include <sys/socket.h>
+        #endif
+        #ifdef _WIN32
+        #include <winsock2.h>
+        #include <ws2tcpip.h>
         #endif
         typedef struct { double a; int b; } socklen_t;
         ]],[[socklen_t a;a.a=1.0;]])],
