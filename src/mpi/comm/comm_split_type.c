@@ -165,23 +165,31 @@ static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resou
         goto fn_exit;
     }
 
+    if (MPIR_hwtopo_get_type_id(resource_type) == MPIR_HWTOPO_TYPE__NODE) {
+        /* "node" or "machine": the node comm is the result. It does not depend
+         * on hwtopo, e.g. on osx, where the process binding cannot be queried. */
+        *newcomm_ptr = node_comm;
+        node_comm = NULL;
+        goto fn_exit;
+    }
+
     if (!MPIR_hwtopo_is_initialized()) {
         /* if hwtopo is not available, return MPI_COMM_NULL */
         *newcomm_ptr = NULL;
         goto fn_exit;
     }
 
-    /* only proceed when we have a proper gid, i.e. bindset belongs to a
-     * single instance of given resource_type */
+    /* A process that is not within a single instance of the given
+     * resource_type gets MPI_COMM_NULL. Such processes still need to
+     * participate in the split. NOTE: unlike HW_UNGUIDED, the result is
+     * not required to be a proper subset. */
+    int color = MPI_UNDEFINED;
     MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name(resource_type);
-    mpi_errno = MPIR_Comm_split_impl(node_comm, gid, key, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if ((*newcomm_ptr)->remote_size == node_comm->remote_size) {
-        /* failed to result in a proper split */
-        MPIR_Comm_free_impl(*newcomm_ptr);
-        *newcomm_ptr = NULL;
+    if (gid != MPIR_HWTOPO_GID_ROOT) {
+        color = gid;
     }
+    mpi_errno = MPIR_Comm_split_impl(node_comm, color, key, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (node_comm) {
