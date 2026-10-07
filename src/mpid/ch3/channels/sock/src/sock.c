@@ -1697,6 +1697,30 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *use
 #ifndef USHRT_MAX
 #define USHRT_MAX 65535 /* 2^16-1 */
 #endif
+
+/* Whether the interface this process advertises (MPICH_INTERFACE_HOSTNAME
+ * or MPICH_INTERFACE_HOSTNAME_R_<rank>, as in
+ * MPIDI_CH3I_Sock_get_host_description) is a loopback address. Other
+ * processes can then only reach us through loopback anyway. */
+static int interface_is_loopback(void)
+{
+    char namebuf[64];
+    const char *name = getenv("MPICH_INTERFACE_HOSTNAME");
+    MPL_sockaddr_t addr;
+
+    if (!name) {
+        snprintf(namebuf, sizeof(namebuf), "MPICH_INTERFACE_HOSTNAME_R_%d", MPIR_Process.rank);
+        name = getenv(namebuf);
+    }
+    if (!name || MPL_get_sockaddr(name, &addr) != 0)
+        return 0;
+    if (addr.ss_family == AF_INET)
+        return (ntohl(((struct sockaddr_in *) &addr)->sin_addr.s_addr) >> 24) == 127;
+    if (addr.ss_family == AF_INET6)
+        return IN6_IS_ADDR_LOOPBACK(&((struct sockaddr_in6 *) &addr)->sin6_addr);
+    return 0;
+}
+
 int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
                            int *port, struct MPIDI_CH3I_Sock **sockp)
 {
@@ -1778,14 +1802,22 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /*
      * Bind the socket to all interfaces and the specified port.  The port specified by the calling routine may be 0, indicating
      * that the operating system can select an available port in the ephemeral port range.
+     *
+     * If the advertised interface is a loopback address (e.g. set by a
+     * single-node process manager), only listen on loopback.  Besides not
+     * exposing the port, this avoids firewall prompts on Windows.
      */
+    /* see if we actually want to find values within a range */
+    MPIR_ERR_CHKANDJUMP(*port == 0 && (MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
+                                       MPIR_CVAR_CH3_PORT_RANGE.low >
+                                       MPIR_CVAR_CH3_PORT_RANGE.high), mpi_errno,
+                        MPI_ERR_OTHER, "**badportrange");
+
+    int loopback_only = interface_is_loopback();
+    if (loopback_only)
+        MPL_LISTEN_PUSH(1, SOMAXCONN);
     if (*port == 0) {
         unsigned short portnum;
-
-        /* see if we actually want to find values within a range */
-        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
-                            MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
-                            MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
         if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
@@ -1798,6 +1830,8 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     } else {
         rc = MPL_listen(fd, *port);
     }
+    if (loopback_only)
+        MPL_LISTEN_POP;
     /*
      * listening for incoming connections...
      */
