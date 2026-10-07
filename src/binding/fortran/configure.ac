@@ -80,6 +80,8 @@ AM_PROG_CC_C_O
 
 if test "$FROM_MPICH" = "yes" ; then
     PAC_APPEND_FLAG([-I${main_top_builddir}/src/include], [CPPFLAGS])
+    # mpi.h includes mpix.h, which is in the source tree (VPATH builds)
+    PAC_APPEND_FLAG([-I${main_top_srcdir}/src/include], [CPPFLAGS])
     if test "$WITH_MPI" = "mpich" ; then
         mpi_h="$main_top_srcdir/src/include/mpi.h.in"
     elif test "$WITH_MPI" = "abi" ; then
