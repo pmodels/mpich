@@ -13,8 +13,10 @@
 #include <rdma/fi_rma.h>
 #include <rdma/fi_atomic.h>
 #include <rdma/fi_cm.h>
+#include <rdma/fi_eq.h>
 #include <rdma/fi_errno.h>
 #include <rdma/fi_trigger.h>
+#include <rdma/fi_collective.h>
 #include "ofi_capability_sets.h"
 
 /* Defines */
@@ -41,12 +43,21 @@ typedef struct {
     int dummy;
 } MPIDI_OFI_Global_t;
 
+/* per-communicator state for fi_collective offload (see coll/ofi_coll_core.c) */
+typedef struct {
+    int initialized;
+    struct fid_av_set *av_set;
+    struct fid_mc *mc;
+    fi_addr_t coll_addr;
+} MPIDI_OFI_coll_comm_t;
+
 typedef struct {
     /* support for connection */
     int conn_id;
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
+    MPIDI_OFI_coll_comm_t coll;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,

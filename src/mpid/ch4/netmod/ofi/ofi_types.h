@@ -211,6 +211,7 @@ enum {
     MPIDI_OFI_EVENT_CHUNK_DONE,
     MPIDI_OFI_EVENT_INJECT_EMU,
     MPIDI_OFI_EVENT_DYNPROC_DONE,
+    MPIDI_OFI_EVENT_COLL_DONE,
 };
 
 enum {
@@ -411,6 +412,7 @@ typedef struct {
     unsigned enable_pt2pt_nopack:1;
     unsigned enable_triggered:1;
     unsigned enable_hmem:1;
+    unsigned enable_coll:1;
     unsigned enable_mr_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;

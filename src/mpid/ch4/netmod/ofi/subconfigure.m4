@@ -377,6 +377,17 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         AC_DEFINE(HAVE_LIBFABRIC_NIC,1,[Define if libfabric library has nic field in fi_info struct])
     fi
 
+    dnl rdma/fi_collective.h (used for the fi_collective offload) was added in libfabric 1.9
+    AC_MSG_CHECKING([if libfabric is at least version 1.9])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "rdma/fabric.h"],
+                       [#if FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION) < FI_VERSION(1, 9)
+                        #error libfabric is older than 1.9
+                        #endif])],[libfabric_ok=yes],[libfabric_ok=no])
+    AC_MSG_RESULT([$libfabric_ok])
+    if test "$libfabric_ok" = "no" ; then
+        AC_MSG_ERROR([CH4 OFI Netmod requires libfabric 1.9 or newer. Use --with-libfabric=embedded to build with the embedded libfabric.])
+    fi
+
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 

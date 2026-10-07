@@ -7,6 +7,7 @@
 #define OFI_PROGRESS_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "coll/ofi_coll_types.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(int vci)
 {
@@ -75,6 +76,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
     MPIR_FUNC_ENTER;
+
+    if (vci == 0 && MPIDI_OFI_ENABLE_COLL) {
+        mpi_errno = MPIDI_OFI_coll_progress(made_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (vci >= MPIDI_OFI_global.num_vcis) {
         /* The requests generated from ofi will have vci within our range.

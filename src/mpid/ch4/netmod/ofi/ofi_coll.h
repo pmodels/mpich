@@ -7,6 +7,7 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "coll/ofi_coll_types.h"
 #include "coll/ofi_bcast_tree_tagged.h"
 #include "coll/ofi_bcast_tree_rma.h"
 
@@ -70,6 +71,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
 
     MPIR_FUNC_ENTER;
 
+    MPIDI_OFI_COLL_CHECK_AND_FALLBACK(MPIDI_OFI_coll_bcast
+                                      (buffer, count, datatype, root, comm), (void) 0);
     switch (MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM) {
         case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
@@ -123,6 +126,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
 
     MPIR_FUNC_ENTER;
 
+    MPIDI_OFI_COLL_CHECK_AND_FALLBACK(MPIDI_OFI_coll_allreduce
+                                      (sendbuf, recvbuf, count, datatype, op, comm), (void) 0);
     mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_attr);
 
     MPIR_ERR_CHECK(mpi_errno);
