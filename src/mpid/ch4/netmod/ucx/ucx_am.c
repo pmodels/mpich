@@ -46,7 +46,7 @@ void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_gpu_free_host(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
+    MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
     ret = MPIDIG_global.origin_cbs[handler_id] (req);
     MPIR_Assertp(ret == 0);
@@ -72,10 +72,7 @@ void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 }
 
 #ifdef HAVE_UCP_AM_NBX
-/* complete a pending send started by ucp_am_send_nbx in MPIDI_NM_am_isend.
- * note: only difference from MPIDI_UCX_am_isend_callback is we need
- * MPL_free in stead of MPIR_gpu_free_host
- */
+/* complete a pending send started by ucp_am_send_nbx in MPIDI_NM_am_isend */
 static void am_isend_complete(MPIR_Request * req)
 {
     int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
