@@ -6,9 +6,6 @@
 #include "mpiimpl.h"
 #include "mpl.h"
 #include "mpir_csel.h"
-#include <fcntl.h>      /* open */
-#include <sys/mman.h>   /* mmap */
-#include <sys/stat.h>
 #include <json.h>
 
 typedef enum {
@@ -571,22 +568,33 @@ int MPIR_Csel_create_from_file(const char *json_file,
                                void *(*create_container) (struct json_object *), void **csel_)
 {
     int mpi_errno = MPI_SUCCESS;
+    char *json = NULL;
+    long size = -1;
 
     MPIR_Assert(strcmp(json_file, ""));
 
-    int fd = open(json_file, O_RDONLY);
-    MPIR_ERR_CHKANDJUMP1(fd == -1, mpi_errno, MPI_ERR_INTERN, "**opencolltuningfile",
+    FILE *f = fopen(json_file, "rb");
+    MPIR_ERR_CHKANDJUMP1(f == NULL, mpi_errno, MPI_ERR_INTERN, "**opencolltuningfile",
                          "**opencolltuningfile %s", json_file);
 
-    struct stat st;
-    stat(json_file, &st);
-    char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    close(fd);
+    if (fseek(f, 0, SEEK_END) == 0)
+        size = ftell(f);
+    if (size >= 0 && fseek(f, 0, SEEK_SET) == 0)
+        json = MPL_malloc(size + 1, MPL_MEM_COLL);
+    size_t nread = json ? fread(json, 1, size, f) : 0;
+    fclose(f);
+    MPIR_ERR_CHKANDJUMP1(json == NULL || size == 0 || nread != (size_t) size, mpi_errno,
+                         MPI_ERR_INTERN, "**readcolltuningfile", "**readcolltuningfile %s",
+                         json_file);
+    json[size] = '\0';
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
-  fn_fail:
+  fn_exit:
+    MPL_free(json);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
