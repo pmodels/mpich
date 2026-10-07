@@ -146,7 +146,7 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
         PMIU_ERR_POP(pmi_errno);
 
         shutdown(PMI_fd, SHUT_RDWR);
-        close(PMI_fd);
+        MPL_sock_close(PMI_fd);
     }
 
   fn_exit:

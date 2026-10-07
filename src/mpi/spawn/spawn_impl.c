@@ -6,19 +6,8 @@
 #include "mpiimpl.h"
 #include "namepub.h"
 
-#include <fcntl.h>
-
 #ifdef HAVE_ERRNO_H
 #include <errno.h>      /* needed for read/write error codes */
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#define SOCKET_EINTR        WSAEINTR
-#else
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#define SOCKET_EINTR        EINTR
 #endif
 
 int MPIR_Comm_get_parent_impl(MPI_Comm * parent)
@@ -37,21 +26,17 @@ static int MPIR_fd_send(int fd, void *buffer, int length)
     MPIR_FUNC_ENTER;
 
     /* setting socket to nonblocking */
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+    MPL_sock_set_nonblock(fd, 1);
 
     while (length) {
         /* The expectation is that the length of a join message will fit
          * in an int.  For Unixes that define send as returning ssize_t,
          * we can safely cast this to an int. */
-        num_bytes = (int) send(fd, buffer, length, 0);
+        num_bytes = (int) MPL_sock_write(fd, buffer, length);
         /* --BEGIN ERROR HANDLING-- */
         if (num_bytes == -1) {
-#ifdef HAVE_WINDOWS_H
-            result = WSAGetLastError();
-#else
             result = errno;
-#endif
-            if (result == SOCKET_EINTR || result == EAGAIN || result == EWOULDBLOCK) {
+            if (result == EINTR || result == EAGAIN || result == EWOULDBLOCK) {
                 continue;
             } else {
                 MPIR_ERR_SET1(mpi_errno, MPI_ERR_INTERN, "**join_send", "**join_send %d", result);
@@ -80,19 +65,15 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
     MPIR_FUNC_ENTER;
 
     /* setting socket to nonblocking */
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+    MPL_sock_set_nonblock(fd, 1);
 
     while (length) {
         /* See discussion on send above for the cast to int. */
-        num_bytes = (int) recv(fd, buffer, length, 0);
+        num_bytes = (int) MPL_sock_read(fd, buffer, length);
         /* --BEGIN ERROR HANDLING-- */
         if (num_bytes == -1) {
-#ifdef HAVE_WINDOWS_H
-            result = WSAGetLastError();
-#else
             result = errno;
-#endif
-            if (result == SOCKET_EINTR || result == EAGAIN || result == EWOULDBLOCK) {
+            if (result == EINTR || result == EAGAIN || result == EWOULDBLOCK) {
                 /* poll global progress. This is necessary in case the sender is stuck in a barrier
                  * which is waiting for an injected send from this process */
                 mpi_errno = MPID_Progress_test(NULL);

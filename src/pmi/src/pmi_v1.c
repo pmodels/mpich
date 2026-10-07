@@ -28,7 +28,6 @@
 #include "pmi_msg.h"
 #include "pmi_common.h"
 
-#include <sys/socket.h>
 
 #define USE_WIRE_VER  PMIU_WIRE_V1
 static const bool no_static = false;
@@ -428,7 +427,7 @@ PMI_API_PUBLIC int PMI_Finalize(void)
         if (0) {
             /* closing PMI_fd prevents re-init. Disable for now. */
             shutdown(PMI_fd, SHUT_RDWR);
-            close(PMI_fd);
+            MPL_sock_close(PMI_fd);
         }
     }
 
