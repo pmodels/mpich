@@ -76,6 +76,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         .cb.send = &MPIDI_UCX_am_isend_callback_nbx,
         .user_data = sreq,
     };
+    /* the send may complete and invoke the callback at any time once it is
+     * started, so set the fields the callback needs before the call */
+    MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = send_buf;
+    MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nbx(ep, MPIDI_UCX_AM_NBX_HANDLER_ID,
                                                               header, header_size,
                                                               data_ptr, data_sz, &param);
@@ -87,8 +91,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         goto fn_exit;
     }
 
-    MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = send_buf;
-    MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
+    /* The send is pending. Before the callback runs, the reply may arrive and
+     * complete the send early (see MPIDI_UCX_am_nbx_handler), after which sreq
+     * could be freed and reused. Hold a reference for the callback. */
+    MPIDI_UCX_AM_REQUEST(sreq, is_in_send) = true;
+    MPIR_Request_add_ref(sreq);
     ucp_request_release(ucp_request);
 
 #else /* !HAVE_UCP_AM_NBX */

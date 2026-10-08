@@ -59,6 +59,7 @@ typedef union {
 } MPIDI_UCX_request_t;
 
 typedef struct {
+    bool is_in_send;
     union {
         struct {
             int handler_id;
@@ -73,6 +74,7 @@ typedef struct {
     } u;
 } MPIDI_UCX_am_request_t;
 
+#define MPIDI_UCX_AM_REQUEST(req,field) ((req)->dev.ch4.am.netmod_am.ucx.field)
 #define MPIDI_UCX_AM_SEND_REQUEST(req,field) ((req)->dev.ch4.am.netmod_am.ucx.u.send.field)
 #define MPIDI_UCX_AM_RECV_REQUEST(req,field) ((req)->dev.ch4.am.netmod_am.ucx.u.recv.field)
 

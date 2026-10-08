@@ -46,7 +46,7 @@ void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_gpu_free_host(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
+    MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
     MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
     ret = MPIDIG_global.origin_cbs[handler_id] (req);
     MPIR_Assertp(ret == 0);
@@ -72,6 +72,19 @@ void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 }
 
 #ifdef HAVE_UCP_AM_NBX
+/* complete a pending send started by ucp_am_send_nbx in MPIDI_NM_am_isend */
+static void am_isend_complete(MPIR_Request * req)
+{
+    int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
+    int ret;
+
+    MPIDI_UCX_AM_REQUEST(req, is_in_send) = false;
+    MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
+    MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
+    ret = MPIDIG_global.origin_cbs[handler_id] (req);
+    MPIR_Assertp(ret == 0);
+}
+
 /* Called when recv buffer is posted */
 int MPIDI_UCX_do_am_recv(MPIR_Request * rreq)
 {
@@ -145,6 +158,13 @@ ucs_status_t MPIDI_UCX_am_nbx_handler(void *arg, const void *header, size_t head
             /* ignoring data */
             return UCS_OK;
         } else {
+            if (MPIDI_UCX_AM_REQUEST(rreq, is_in_send)) {
+                /* rreq is also the request of a pending send (e.g. RMA GET
+                 * reusing its request for GET_ACK). The reply means the send
+                 * has been delivered, so complete it now before u.recv
+                 * overwrites u.send. The send callback will skip it. */
+                am_isend_complete(rreq);
+            }
             MPIDI_UCX_AM_RECV_REQUEST(rreq, data_desc) = data;
             MPIDI_UCX_AM_RECV_REQUEST(rreq, data_sz) = length;
             if (MPIDIG_recv_initialized(rreq)) {
@@ -185,16 +205,13 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
 
 void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *user_data)
 {
-    /* note: only difference from MPIDI_UCX_am_isend_callback is we need
-     * MPL_free in stead of MPIR_gpu_free_host
-     */
     MPIR_Request *req = user_data;
-    int handler_id = MPIDI_UCX_AM_SEND_REQUEST(req, handler_id);
-    int ret;
 
-    MPL_free(MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer));
-    MPIDI_UCX_AM_SEND_REQUEST(req, pack_buffer) = NULL;
-    ret = MPIDIG_global.origin_cbs[handler_id] (req);
-    MPIR_Assertp(ret == 0);
+    /* skip if the send was already completed when its reply arrived */
+    if (MPIDI_UCX_AM_REQUEST(req, is_in_send)) {
+        am_isend_complete(req);
+    }
+    /* release the reference added in MPIDI_NM_am_isend */
+    MPIDI_CH4_REQUEST_FREE(req);
 }
 #endif
