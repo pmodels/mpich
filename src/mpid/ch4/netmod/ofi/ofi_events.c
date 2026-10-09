@@ -258,7 +258,7 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
                          "Enqueueing it to the queue.\n",
                          expected_seqno, am_hdr->seqno,
                          am_hdr->am_type, (unsigned long) am_hdr->src_id));
-        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, orig_buf);
+        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, am_hdr, orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
