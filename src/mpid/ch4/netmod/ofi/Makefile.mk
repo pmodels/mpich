@@ -30,7 +30,10 @@ mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \
                       src/mpid/ch4/netmod/ofi/init_settings.c \
                       src/mpid/ch4/netmod/ofi/init_addrxchg.c \
                       src/mpid/ch4/netmod/ofi/mr_cache.c \
-                      src/mpid/ch4/netmod/ofi/util.c
+                      src/mpid/ch4/netmod/ofi/util.c \
+                      src/mpid/ch4/netmod/ofi/coll/ofi_coll_core.c \
+                      src/mpid/ch4/netmod/ofi/coll/ofi_coll_bcast.c \
+                      src/mpid/ch4/netmod/ofi/coll/ofi_coll_allreduce.c
 
 errnames_txt_files += src/mpid/ch4/netmod/ofi/errnames.txt
 external_subdirs   += @ofisrcdir@

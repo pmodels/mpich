@@ -94,6 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_ENABLE_PT2PT_NOPACK       Allow sending messages without packing
  * MPIDI_OFI_ENABLE_TRIGGERED          Allow triggered operations-based collectives
  * MPIDI_OFI_ENABLE_HMEM               Support transfers to and from device memory
+ * MPIDI_OFI_ENABLE_COLL               Offload collectives to fi_collective (runtime only, opt-in)
  * MPIDI_OFI_NUM_AM_BUFFERS            Number of buffers available for active messages
  * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
  * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
@@ -722,5 +723,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 /* Some setting should always use runtime setting */
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_global.settings.enable_hmem
 #define MPIDI_OFI_ENABLE_MR_HMEM            MPIDI_OFI_global.settings.enable_mr_hmem
+#define MPIDI_OFI_ENABLE_COLL               MPIDI_OFI_global.settings.enable_coll
 
 #endif /* OFI_CAPABILITY_SETS_H_INCLUDED */

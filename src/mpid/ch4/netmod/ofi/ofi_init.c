@@ -10,6 +10,7 @@
 #include "mpir_hwtopo.h"
 #include "ofi_csel_container.h"
 #include "ofi_init.h"
+#include "coll/ofi_coll_types.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -455,6 +456,26 @@ cvars:
       description : >-
         If true, enable OFI triggered ops for MPI collectives.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_COLL
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+         Enable libfabric collective operations when supported by the selected provider.
+
+    - name        : MPIR_CVAR_CH4_OFI_COLL_VERBOSITY_LEVEL
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_DETAIL
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+         Set the verbosity level for libfabric collective operation diagnostics.
+
     - name        : MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ
       category    : CH4_OFI
       type        : int
@@ -520,6 +541,8 @@ static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
+static int ofi_coll_init_endpoint(struct fid_domain *domain, struct fid_av *av,
+                                  struct fid_ep *ep, struct fid_cq *cq);
 
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
@@ -581,6 +604,21 @@ static int ofi_pvar_init(void)
                                                MPIR_T_PVAR_FLAG_SUM), "CH4",
                                               "number of bytes received through preferred physical NIC using RMA");
     return mpi_errno;
+}
+
+static int ofi_coll_init_endpoint(struct fid_domain *domain, struct fid_av *av,
+                                  struct fid_ep *ep, struct fid_cq *cq)
+{
+    MPIDI_OFI_coll_config_t config = {
+        .fabric = MPIDI_OFI_global.fabric,
+        .domain = domain,
+        .av = av,
+        .ep = ep,
+        .cq = cq,
+        .verbosity_level = MPIR_CVAR_CH4_OFI_COLL_VERBOSITY_LEVEL,
+    };
+
+    return MPIDI_OFI_coll_init(&config);
 }
 
 static void *host_alloc(uintptr_t size)
@@ -661,6 +699,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     struct fi_info *prov = NULL;
     mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_ERR_CHKANDJUMP(MPIDI_OFI_ENABLE_COLL && !(prov->caps & FI_COLLECTIVE),
+                        mpi_errno, MPI_ERR_OTHER, "**ofi_coll_nosupport");
 
     mpi_errno = MPIDI_OFI_fill_prov_use(prov);
     MPIR_ERR_CHECK(mpi_errno);
@@ -782,6 +823,13 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
         MPIDI_OFI_init_per_vci(0);
+    }
+
+    if (MPIDI_OFI_ENABLE_COLL) {
+        mpi_errno = ofi_coll_init_endpoint(MPIDI_OFI_global.ctx[0].domain,
+                                           MPIDI_OFI_global.ctx[0].av,
+                                           MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.ctx[0].cq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIDI_OFI_global.fabric_initialized = true;
@@ -937,6 +985,11 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             }
         }
 
+        if (MPIDI_OFI_ENABLE_COLL) {
+            mpi_errno = MPIDI_OFI_coll_finalize();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
         /* free av entries for multiple vcis and nics */
@@ -1079,6 +1132,10 @@ int MPIDI_OFI_create_vci_context(int vci, int nic)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, &ep, NULL), ep);
         MPIDI_OFI_CALL(fi_scalable_ep_bind(ep, &av->fid, 0), bind);
+        if (MPIDI_OFI_ENABLE_COLL && nic == 0 && vci == 0) {
+            mpi_errno = MPIDI_OFI_coll_pre_enable_bind(ep);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
 
         mpi_errno = create_sep_tx(ep, 0, &tx, cq, rma_cmpl_cntr, nic);
@@ -1090,6 +1147,10 @@ int MPIDI_OFI_create_vci_context(int vci, int nic)
         MPIDI_OFI_CALL(fi_ep_bind(ep, &av->fid, 0), bind);
         MPIDI_OFI_CALL(fi_ep_bind(ep, &cq->fid, FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
         MPIDI_OFI_CALL(fi_ep_bind(ep, &rma_cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
+        if (MPIDI_OFI_ENABLE_COLL && nic == 0 && vci == 0) {
+            mpi_errno = MPIDI_OFI_coll_pre_enable_bind(ep);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         tx = ep;
         rx = ep;
@@ -1126,6 +1187,10 @@ int MPIDI_OFI_create_vci_context(int vci, int nic)
         if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
             MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, &ep, NULL), ep);
             MPIDI_OFI_CALL(fi_scalable_ep_bind(ep, &av->fid, 0), bind);
+            if (MPIDI_OFI_ENABLE_COLL && nic == 0 && vci == 0) {
+                mpi_errno = MPIDI_OFI_coll_pre_enable_bind(ep);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         } else {
             MPIDI_OFI_CALL(fi_endpoint(domain, prov_use, &ep, NULL), ep);
@@ -1133,6 +1198,10 @@ int MPIDI_OFI_create_vci_context(int vci, int nic)
             MPIDI_OFI_CALL(fi_ep_bind(ep, &cq->fid, FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION),
                            bind);
             MPIDI_OFI_CALL(fi_ep_bind(ep, &rma_cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
+            if (MPIDI_OFI_ENABLE_COLL && nic == 0 && vci == 0) {
+                mpi_errno = MPIDI_OFI_coll_pre_enable_bind(ep);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         }
     } else {
@@ -1246,9 +1315,16 @@ static int create_vci_domain(struct fid_domain **p_domain, struct fid_av **p_av,
     int mpi_errno = MPI_SUCCESS;
 
     /* ---- domain ---- */
-    struct fid_domain *domain;
-    MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, MPIDI_OFI_global.prov_use[nic], &domain,
-                             NULL), opendomain);
+    struct fid_domain *domain = NULL;
+    if (MPIDI_OFI_ENABLE_COLL) {
+        /* Some providers (e.g. rxm without the off_coll provider) advertise FI_COLLECTIVE in
+         * getinfo but fail at domain open, and rxm can even return 0 with no domain. */
+        int ret = fi_domain(MPIDI_OFI_global.fabric, MPIDI_OFI_global.prov_use[nic], &domain, NULL);
+        MPIR_ERR_CHKANDJUMP(ret || domain == NULL, mpi_errno, MPI_ERR_OTHER, "**ofi_coll_domain");
+    } else {
+        MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, MPIDI_OFI_global.prov_use[nic], &domain,
+                                 NULL), opendomain);
+    }
     *p_domain = domain;
 
     /* ---- av ---- */
@@ -1316,6 +1392,8 @@ static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
         tx_attr.caps |= FI_RMA;
     if (MPIDI_OFI_ENABLE_ATOMICS)
         tx_attr.caps |= FI_ATOMICS;
+    if (MPIDI_OFI_ENABLE_COLL)
+        tx_attr.caps |= FI_COLLECTIVE;
     /* MSG */
     tx_attr.caps |= FI_MSG;
     tx_attr.caps |= FI_NAMED_RX_CTX;    /* Required for scalable endpoints indexing */
@@ -1349,6 +1427,8 @@ static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struc
         rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
     if (MPIDI_OFI_ENABLE_ATOMICS)
         rx_attr.caps |= FI_ATOMICS;
+    if (MPIDI_OFI_ENABLE_COLL)
+        rx_attr.caps |= FI_COLLECTIVE;
     rx_attr.caps |= FI_MSG;
     rx_attr.caps |= FI_MULTI_RECV;
     rx_attr.caps |= FI_NAMED_RX_CTX;    /* Required for scalable endpoints indexing */

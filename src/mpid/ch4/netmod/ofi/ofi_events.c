@@ -6,6 +6,7 @@
 #include "mpidimpl.h"
 #include "ofi_am_events.h"
 #include "ofi_events.h"
+#include "coll/ofi_coll_types.h"
 
 /* We can use a generic length fi_info.max_err_data returned by fi_getinfo()
  * However, currently we do not use the error data, we set the length to a
@@ -493,6 +494,10 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 mpi_errno = dynproc_done_event(vci, wc, req);
                 break;
 
+            case MPIDI_OFI_EVENT_COLL_DONE:
+                mpi_errno = MPIDI_OFI_coll_cq_event(wc->op_context);
+                break;
+
             case MPIDI_OFI_EVENT_ABORT:
             default:
                 mpi_errno = MPI_SUCCESS;
@@ -528,6 +533,15 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
              *  possible in case of lockless MT model */
             if (ret_cqerr == -FI_EAGAIN)
                 break;
+
+            if (e.flags & FI_COLLECTIVE) {
+                MPIDI_OFI_coll_request_t *coll_request =
+                    MPL_container_of(e.op_context, MPIDI_OFI_coll_request_t, context);
+                if (coll_request->event_id == MPIDI_OFI_EVENT_COLL_DONE) {
+                    mpi_errno = MPIDI_OFI_coll_cq_error(e.op_context, e.err);
+                    break;
+                }
+            }
 
             switch (e.err) {
                 case FI_ETRUNC:
