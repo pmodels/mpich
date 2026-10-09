@@ -183,7 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     MPIDI_OFI_am_request_header_t *sreq_hdr;
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    MPIR_Assert(am_hdr_sz <= MPIDI_OFI_MAX_AM_HDR_SIZE);
 
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         int vci = MPIDI_Request_get_vci(sreq);
@@ -488,7 +488,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
         goto fn_pipeline;
     }
 
-    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
+    /* pad the am header so the payload is aligned */
+    MPI_Aint padding = MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
+    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + padding + data_sz;
     if (total_msg_sz > MPIDI_OFI_AM_MAX_MSG_SIZE) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci_src].pack_buf_pool,
                                            (void **) &pack_buffer);
@@ -500,6 +502,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = pack_buffer;
+    memset((char *) MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr) + am_hdr_sz, 0, padding);
+    am_hdr_sz += padding;
 
     need_packing = dt_contig ? false : true;
 
@@ -601,6 +605,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
+        memset((char *) MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr) + am_hdr_sz, 0,
+               MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz));
 
         MPIDI_Datatype_check_contig(datatype, dt_contig);
 
@@ -624,6 +630,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
         offset = MPIDIG_am_send_async_get_offset(sreq);
         need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
     }
+
+    /* pad the am header so the payload is aligned. A deferred first segment passes the saved
+     * size, which is already padded; later segments pass 0 and get just the padding. */
+    am_hdr_sz += MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
 
     if (!issue_deferred && MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
         /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */

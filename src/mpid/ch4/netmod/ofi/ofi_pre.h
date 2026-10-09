@@ -24,7 +24,21 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
+/* Under strict alignment, the am header is padded so the payload that follows it starts at a
+ * MAX_ALIGNMENT offset from the message start. MPIDI_OFI_AM_PADDING_SZ(offset) is the padding
+ * needed after a message prefix of size offset. MPIDI_OFI_MAX_AM_HDR_SIZE is the largest am
+ * header whose padded size still fits in MPIDI_OFI_am_header_t::am_hdr_sz. */
+#ifdef NEEDS_STRICT_ALIGNMENT
+#define MPIDI_OFI_AM_PADDING_SZ(offset) \
+    ((MPI_Aint) (MPL_ROUND_UP_ALIGN(offset, MAX_ALIGNMENT) - (offset)))
+#define MPIDI_OFI_MAX_AM_HDR_SIZE \
+    ((int) (MPL_ROUND_DOWN_ALIGN(sizeof(MPIDI_OFI_am_header_t) + \
+                                 (1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1, MAX_ALIGNMENT) - \
+            sizeof(MPIDI_OFI_am_header_t)))
+#else
+#define MPIDI_OFI_AM_PADDING_SZ(offset) 0
 #define MPIDI_OFI_MAX_AM_HDR_SIZE      ((1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1)
+#endif
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
@@ -143,7 +157,7 @@ typedef struct {
     /* AM send buffers, must be together so we can send without sendv.
      * Note: since we allocate from genq pool, there may be some additional space
      * to pack a small payload */
-    MPIDI_OFI_am_header_t msg_hdr;
+    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
 } MPIDI_OFI_am_request_header_t;
 
