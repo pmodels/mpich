@@ -400,7 +400,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
-    MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+    if (send_req->am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
+        MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+    }
     MPI_Aint packed_size;
     mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
                                   send_req->am_data, seg_sz, &packed_size, MPIR_TYPEREP_FLAG_NONE);
@@ -628,23 +630,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
         goto fn_deferred;
     }
 
+    /* If the rest of the message fits in the request header cell, i.e. this is the only or the
+     * last segment, build it in place there and skip the pack buffer. Only one segment can do
+     * this, and an earlier segment has already copied the am header into its own pack buffer. */
+    bool in_place = (sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz +
+                     MPIDIG_am_send_async_get_data_sz_left(sreq) <= MPIDI_OFI_AM_MAX_MSG_SIZE);
+
     void *pack_buffer = NULL;
-    ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
+    if (!in_place) {
+        ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
+    }
 
     MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci_src].am_hdr_buf_pool,
                                        (void **) &send_req);
     MPIR_Assert(send_req);
     send_req->sreq = sreq;
     send_req->pack_buffer = pack_buffer;
-    if (!pack_buffer) {
-        send_req->msg_hdr = &send_req->msg_hdr_data;
-        send_req->am_hdr = NULL;
-        send_req->am_data = NULL;
+    if (in_place) {
+        send_req->msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
+        send_req->am_hdr = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
     } else {
         send_req->msg_hdr = pack_buffer;
         send_req->am_hdr = (char *) pack_buffer + sizeof(MPIDI_OFI_am_header_t);
-        send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
     }
+    send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
 
     mpi_errno = MPIDI_OFI_am_isend_pipeline(rank, comm, handler_id, am_hdr_sz,
                                             buf, count, datatype, offset, need_packing,
