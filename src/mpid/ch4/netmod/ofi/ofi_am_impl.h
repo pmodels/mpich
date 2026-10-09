@@ -92,9 +92,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(int vci, uint64_t
                       (void *) (uintptr_t) seqno, MPL_MEM_OTHER);
 }
 
+/* am_hdr: the message header, used for the sizes; it may be an aligned copy.
+ * msg: the whole message in the receive buffer. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(int vci,
                                                                 const MPIDI_OFI_am_header_t *
-                                                                am_hdr)
+                                                                am_hdr, const void *msg)
 {
     MPIDI_OFI_am_unordered_msg_t *uo_msg;
     size_t uo_msg_len, packet_len;
@@ -110,7 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(int vci,
         return MPI_ERR_NO_MEM;
 
     packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
-    MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
+    MPIR_Memcpy(&uo_msg->am_hdr, msg, packet_len);
 
     DL_APPEND(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
 
