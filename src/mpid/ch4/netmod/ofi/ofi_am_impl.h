@@ -452,75 +452,78 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         } \
     } while (0)
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm * comm,
+                                                            int handler_id, const void *am_hdr,
+                                                            size_t am_hdr_sz, const void *buf,
+                                                            size_t count, MPI_Datatype datatype,
+                                                            MPIR_Request * sreq, MPI_Aint data_sz,
+                                                            bool issue_deferred,
+                                                            int vci_src, int vci_dst)
+    MPL_STATIC_INLINE_SUFFIX;
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * comm,
                                                          int handler_id, const void *am_hdr,
                                                          size_t am_hdr_sz, const void *buf,
                                                          size_t count, MPI_Datatype datatype,
-                                                         MPIR_Request * sreq, bool issue_deferred,
+                                                         MPIR_Request * sreq,
                                                          int vci_src, int vci_dst)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint data_sz;
     bool need_packing = false;
+    void *pack_buffer = NULL;
 
     MPIR_FUNC_ENTER;
 
-    /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr is ignored when issue_deferred
-     * is set to true. It should have been saved in the request. */
-
-    if (!issue_deferred) {
-        mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        int dt_contig;
-        MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
-
-        need_packing = dt_contig ? false : true;
-
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(buf, &attr);
-        if (MPL_gpu_attr_is_dev(&attr)) {
-            MPIDI_OFI_register_am_bufs();
-            if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
-                /* Force packing of GPU buffer in host memory */
-                need_packing = true;
-            }
-        }
-    } else {
-        data_sz = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz;
-        need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
-    }
-
-    if (!issue_deferred && MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
-        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        goto fn_deferred;
-    }
-
+    int dt_contig;
+    MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
     MPIR_Assert(data_sz <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+
+    /* Eager is only better when the message can be sent right away. If it has to wait, either
+     * behind deferred ops to maintain ordering or for a pack buffer, it is no different from
+     * pipeline, which already handles deferral. Send it as pipeline instead. */
+    if (MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
+        goto fn_pipeline;
+    }
 
     MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
     if (total_msg_sz > MPIDI_OFI_AM_MAX_MSG_SIZE) {
-        ALLOCATE_PACK_BUFFER_OR_DEFER(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci_src].pack_buf_pool,
+                                           (void **) &pack_buffer);
+        if (pack_buffer == NULL) {
+            goto fn_pipeline;
+        }
+    }
+
+    mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = pack_buffer;
+
+    need_packing = dt_contig ? false : true;
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(buf, &attr);
+    if (MPL_gpu_attr_is_dev(&attr)) {
+        MPIDI_OFI_register_am_bufs();
+        if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
+            /* Force packing of GPU buffer in host memory */
+            need_packing = true;
+        }
     }
 
     mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, am_hdr_sz, buf, count, datatype,
                                          data_sz, need_packing, sreq, vci_src, vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (issue_deferred) {
-        DL_DELETE(MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q,
-                  MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-        MPL_free(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-    }
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-  fn_deferred:
-    DEFER_AM_SEND(MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER);
+  fn_pipeline:
+    mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                               buf, count, datatype, sreq, data_sz, false,
+                                               vci_src, vci_dst);
     goto fn_exit;
 }
 
