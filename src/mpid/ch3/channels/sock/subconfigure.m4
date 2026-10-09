@@ -13,6 +13,9 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
         MPID_CH3I_CH_HCOLL_BCOL="basesmuma,basesmuma,ptpcoll"
 
+        # sock does not support shared memory, treat every process as its own node
+        enable_nolocal=yes
+
         # code that formerly lived in setup_args
         #
         # Variables of interest...
