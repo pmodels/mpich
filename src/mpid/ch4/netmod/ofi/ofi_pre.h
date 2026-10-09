@@ -137,7 +137,6 @@ typedef struct {
     } lmt_u;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
-    uint16_t am_hdr_sz;
     /* used for packing non-contig data or the whole am message when payload doesn't fit */
     void *pack_buffer;
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
@@ -164,6 +163,7 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     size_t count;
     MPI_Datatype datatype;
     MPIR_Request *sreq;
+    size_t am_hdr_sz;
     bool need_packing;
     MPI_Aint data_sz;
     int vci_src;

@@ -193,7 +193,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
         MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) = sreq_hdr;
 
         sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
-        sreq_hdr->am_hdr_sz = am_hdr_sz;
         sreq_hdr->pack_buffer = NULL;
     } else {
         sreq_hdr = MPIDI_OFI_AMREQUEST(sreq, sreq_hdr);
@@ -227,6 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rreq(MPIR_Request * rreq)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm, int handler_id,
+                                                     MPI_Aint am_hdr_sz,
                                                      const void *data, MPI_Aint data_sz,
                                                      MPIR_Request * sreq, int vci_src, int vci_dst)
 {
@@ -240,7 +240,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + sizeof(*lmt_info);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
@@ -302,6 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
+                                                      MPI_Aint am_hdr_sz,
                                                       const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype, MPI_Aint data_sz,
                                                       bool need_packing, MPIR_Request * sreq,
@@ -319,8 +319,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
-    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-
     MPIDI_OFI_am_header_t *msg_hdr;
     if (!MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer)) {
         msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
@@ -332,7 +330,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     }
 
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+    msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->payload_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, vci_src, vci_dst, dst_addr);
@@ -367,6 +365,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * comm, int handler_id,
+                                                         MPI_Aint am_hdr_sz,
                                                          const void *buf, MPI_Aint count,
                                                          MPI_Datatype datatype, MPI_Aint offset,
                                                          int need_packing, MPIR_Request * sreq,
@@ -386,10 +385,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = send_req->msg_hdr;
-    MPI_Aint am_hdr_sz = 0;
-    if (MPIDIG_am_send_async_get_offset(sreq) == 0) {
-        am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-    }
     MPI_Aint seg_sz = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t) - am_hdr_sz;
     seg_sz = MPL_MIN(seg_sz, MPIDIG_am_send_async_get_data_sz_left(sreq));
     MPIR_Assert(seg_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
@@ -437,6 +432,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->am_hdr_sz = am_hdr_sz; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vci_src = vci_src; \
@@ -470,8 +466,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
-     * issue_deferred is set to true. They should have been saved in the request. */
+     * we need to skip some code path in the scenario. Also am_hdr is ignored when issue_deferred
+     * is set to true. It should have been saved in the request. */
 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
@@ -508,7 +504,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
         ALLOCATE_PACK_BUFFER_OR_DEFER(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
     }
 
-    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, buf, count, datatype,
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, am_hdr_sz, buf, count, datatype,
                                          data_sz, need_packing, sreq, vci_src, vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -594,8 +590,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr, am_hdr_sz and data_sz are
-     * ignored when issue_deferred is set to true. They should have been saved in the request. */
+     * we need to skip some code path in the scenario. Also am_hdr and data_sz are ignored when
+     * issue_deferred is set to true. They should have been saved in the request. */
 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
@@ -644,14 +640,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     } else {
         send_req->msg_hdr = pack_buffer;
         send_req->am_hdr = (char *) pack_buffer + sizeof(MPIDI_OFI_am_header_t);
-        if (offset == 0) {
-            send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
-        } else {
-            send_req->am_data = (char *) send_req->am_hdr;
-        }
+        send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
     }
 
-    mpi_errno = MPIDI_OFI_am_isend_pipeline(rank, comm, handler_id,
+    mpi_errno = MPIDI_OFI_am_isend_pipeline(rank, comm, handler_id, am_hdr_sz,
                                             buf, count, datatype, offset, need_packing,
                                             sreq, send_req, vci_src, vci_dst);
 
@@ -695,8 +687,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
     MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
-     * issue_deferred is set to true. They should have been saved in the request. */
+     * we need to skip some code path in the scenario. Also am_hdr is ignored when issue_deferred
+     * is set to true. It should have been saved in the request. */
 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
@@ -750,7 +742,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
                      "send RDMA read for req handle=0x%x send_size %ld", sreq->handle, data_sz));
 
     mpi_errno =
-        MPIDI_OFI_am_isend_long(rank, comm, handler_id, send_buf, data_sz, sreq, vci_src, vci_dst);
+        MPIDI_OFI_am_isend_long(rank, comm, handler_id, am_hdr_sz, send_buf, data_sz, sreq,
+                                vci_src, vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
     if (issue_deferred) {
         DL_DELETE(MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q,
