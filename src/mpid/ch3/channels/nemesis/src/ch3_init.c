@@ -18,56 +18,10 @@ MPIDI_PG_t *MPIDI_CH3I_my_pg = NULL;
 
 int MPIDI_nemesis_initialized = 0;
 
-static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
-                      MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Comm *comm_ptr = NULL;
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, stype == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (stype == MPI_UNDEFINED) {
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
-
-    if (stype == MPI_COMM_TYPE_SHARED) {
-        if (MPIDI_CH3I_Shm_supported()) {
-            mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, key, info_ptr, newcomm_ptr);
-        } else {
-            mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
-        }
-    } else if (stype == MPIX_COMM_TYPE_NEIGHBORHOOD) {
-        mpi_errno = MPIR_Comm_split_type_neighborhood(comm_ptr, stype, key, info_ptr, newcomm_ptr);
-    } else {
-        /* we don't know how to handle other split types; hand it back
-         * to the upper layer */
-        mpi_errno = MPIR_Comm_split_type(comm_ptr, stype, key, info_ptr, newcomm_ptr);
-    }
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    if (comm_ptr)
-        MPIR_Comm_free_impl(comm_ptr);
-    return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
 int MPIDI_CH3I_Shm_supported(void)
 {
     return MPL_proc_mutex_enabled();
 }
-
-static MPIR_Commops comm_fns = {
-    split_type
-};
 
 /* MPIDI_CH3_Init():  Initialize the nemesis channel */
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
@@ -76,9 +30,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     int i;
 
     MPIR_FUNC_ENTER;
-
-    /* Override split_type */
-    MPIR_Comm_fns = &comm_fns;
 
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
