@@ -79,45 +79,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Group ** failed_gr
     return 0;
 }
 
-int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
-                          MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Comm *comm_ptr = NULL;
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_ENTER;
-
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (split_type == MPI_UNDEFINED) {
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
-
-    if (split_type != MPI_COMM_TYPE_SHARED) {
-        /* we don't know how to handle other split types; hand it back
-         * to the upper layer */
-        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-        goto fn_exit;
-    }
-
-    mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, key, info_ptr, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    if (comm_ptr)
-        MPIR_Comm_free_impl(comm_ptr);
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
 /* number of bits to represent 0..number inclusive */
 static int get_num_bits(int number)
 {
