@@ -18,13 +18,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(int vci)
 
     if (dreq) {
         switch (dreq->op) {
-            case MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER:
-                mpi_errno = MPIDI_OFI_do_am_isend_eager(dreq->rank, dreq->comm, dreq->handler_id,
-                                                        NULL, dreq->am_hdr_sz, dreq->buf,
-                                                        dreq->count,
-                                                        dreq->datatype, dreq->sreq, true, vci,
-                                                        dreq->vci_dst);
-                break;
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE:
                 {
                     /* only the first segment carries the am header */
