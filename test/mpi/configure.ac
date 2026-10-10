@@ -470,6 +470,15 @@ if test "$mpi_compile_works" != "yes" ; then
     AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
 fi
 
+# Check whether compiler accepts -mpi-legacy flag
+AC_MSG_CHECKING([whether the compiler accepts -mpi-legacy])
+saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -mpi-legacy"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no])
+     CFLAGS="$saved_CFLAGS"])
+
 # Check whether we are testing MPI derived from MPICH
 MPI_IS_MPICH=no
 AC_MSG_CHECKING([Is the MPI derived from MPICH])
