@@ -205,6 +205,10 @@ static int get_option_no_local(void)
 #ifdef ENABLE_NO_LOCAL
     return 1;
 #else
+    /* shared memory communication is not safe without interprocess mutex */
+    if (!MPL_proc_mutex_enabled()) {
+        MPIR_CVAR_NOLOCAL = true;
+    }
     return MPIR_CVAR_NOLOCAL;
 #endif
 }

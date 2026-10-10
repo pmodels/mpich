@@ -271,7 +271,6 @@ typedef struct MPIDI_CH4_Global_t {
     char pname[MPI_MAX_PROCESSOR_NAME];
     char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
     MPIDIU_avt_manager avt_mgr;
-    MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 

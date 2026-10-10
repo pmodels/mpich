@@ -582,10 +582,6 @@ int MPID_Init(int requested, int *provided)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Override split_type */
-    MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
-    MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
-
     MPIR_Process.attrs.appnum = MPIR_Process.appnum;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 

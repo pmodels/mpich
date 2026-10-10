@@ -21,6 +21,7 @@
 	- [Reporting and Returning Error Codes](Reporting_And_Returning_Error_Codes.md)
 	- [Sharing Blocking Resources](Sharing_Blocking_Resources.md)
 	- [The Progress Engine](The_Progress_Engine.md)
+	- [Topology and Communicator Split Types](Topology.md)
 
 - CH4
     - [Overall Design](CH4_Overall_Design.md)
