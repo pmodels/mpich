@@ -806,12 +806,22 @@ extern int MPII_async_things_pending;
 int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state * state)
 {
     int mpi_errno;
-    if (MPII_async_things_pending)
+    int spinning = 0;
+    if (MPII_async_things_pending && blocking) {
+        /* the caller is going to spin on us instead of blocking */
         blocking = 0;
+        spinning = 1;
+    }
     if (blocking)
         mpi_errno = MPIDI_CH3i_Progress_wait(state);
     else
         mpi_errno = MPIDI_CH3i_Progress_test();
+
+    /* A nonblocking poll keeps the global lock, which would starve other
+     * threads that need it to make the progress the spinning caller waits
+     * for (e.g. concurrent MPI_Comm_idup), so give them a chance. */
+    if (spinning)
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
 }
