@@ -73,9 +73,9 @@ static int finalize_hook(void)
     int rc = YAKSA_SUCCESS;
     cudaError_t cerr;
 
-    for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
+    for (unsigned i = 0; i < yaksuri_cudai_global.ndevices; i++) {
         if (yaksuri_cudai_global.streams[i].created) {
-            cerr = cudaSetDevice(i);
+            cerr = cudaSetDevice((int) i);
             YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
             cerr = cudaStreamDestroy(yaksuri_cudai_global.streams[i].stream);
@@ -93,7 +93,7 @@ static int finalize_hook(void)
     goto fn_exit;
 }
 
-static int get_num_devices(int *ndevices)
+static int get_num_devices(unsigned *ndevices)
 {
     *ndevices = yaksuri_cudai_global.ndevices;
 
@@ -169,21 +169,24 @@ int yaksuri_cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     int rc = YAKSA_SUCCESS;
     cudaError_t cerr;
 
-    cerr = cudaGetDeviceCount(&yaksuri_cudai_global.ndevices);
+    int ndevices;
+    cerr = cudaGetDeviceCount(&ndevices);
     if (cerr == cudaErrorNoDevice || cerr == cudaErrorInsufficientDriver) {
         /* both codes can indicate no devices available on the system */
         goto fn_exit;
     }
     YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+    YAKSU_ERR_CHKANDJUMP(ndevices < 0, rc, YAKSA_ERR__INTERNAL, fn_fail);
+    yaksuri_cudai_global.ndevices = (unsigned) ndevices;
 
     if (getenv("CUDA_VISIBLE_DEVICES") == NULL) {
         /* user did not do any filtering for us; if any of the devices
          * is in exclusive mode, disable GPU support to avoid
          * incorrect device sharing */
         bool excl = false;
-        for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
+        for (unsigned i = 0; i < yaksuri_cudai_global.ndevices; i++) {
             int mode;
-            cerr = cudaDeviceGetAttribute(&mode, cudaDevAttrComputeMode, i);
+            cerr = cudaDeviceGetAttribute(&mode, cudaDevAttrComputeMode, (int) i);
             YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
             if (mode != cudaComputeModeDefault) {
@@ -207,20 +210,20 @@ int yaksuri_cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     yaksuri_cudai_global.streams = calloc(yaksuri_cudai_global.ndevices, sizeof(cudai_stream));
 
     yaksuri_cudai_global.p2p = (int **) malloc(yaksuri_cudai_global.ndevices * sizeof(int *));
-    for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
+    for (unsigned i = 0; i < yaksuri_cudai_global.ndevices; i++) {
         if (yaksuri_global.has_wait_kernel) {
             /* The stream creation will deadlock with wait kernel. Create them now. */
-            yaksuri_cudai_get_stream(i);
+            yaksuri_cudai_get_stream((int) i);
         }
         yaksuri_cudai_global.p2p[i] = (int *) malloc(yaksuri_cudai_global.ndevices * sizeof(int));
         /* mark as unchecked with -1. We will check access and cache the value
          * in check_p2p_comm */
-        for (int j = 0; j < yaksuri_cudai_global.ndevices; j++) {
+        for (unsigned j = 0; j < yaksuri_cudai_global.ndevices; j++) {
             yaksuri_cudai_global.p2p[i][j] = -1;
         }
     }
     /* mark self entries */
-    for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
+    for (unsigned i = 0; i < yaksuri_cudai_global.ndevices; i++) {
         yaksuri_cudai_global.p2p[i][i] = 1;
     }
 
