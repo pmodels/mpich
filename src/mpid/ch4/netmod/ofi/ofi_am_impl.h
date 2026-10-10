@@ -394,14 +394,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     msg_hdr = (MPIDI_OFI_am_header_t *) send_req->msg_hdr;
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = am_hdr_sz;
-    msg_hdr->payload_sz = seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
     MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, vci_src, vci_dst, dst_addr);
 
     MPIR_cc_inc(sreq->cc_ptr);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
-    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
     if (send_req->am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
         MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
     }
@@ -409,12 +407,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
                                   send_req->am_data, seg_sz, &packed_size, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(packed_size == seg_sz);
+    /* the pack never splits a basic element, so it may pack less than seg_sz */
+    MPIR_Assert(packed_size > 0 && packed_size <= seg_sz);
+    msg_hdr->payload_sz = packed_size;
+    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + packed_size;
 
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
                                     NULL, dst_addr, &send_req->context), vci_src, send);
 
-    MPIDIG_am_send_async_issue_seg(sreq, seg_sz);
+    MPIDIG_am_send_async_issue_seg(sreq, packed_size);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
