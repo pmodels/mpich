@@ -4,8 +4,10 @@
 ##
 
 ACLOCAL_AMFLAGS = -I confdb
-AM_CPPFLAGS = @VISIBILITY_CFLAGS@ -I$(top_srcdir)
-AM_FFLAGS =
+# mpif_h/ in the build directory holds the generated mpif.h and
+# mpi_fortran.h, which differs from the source directory in VPATH builds
+AM_CPPFLAGS = @VISIBILITY_CFLAGS@ -I$(top_srcdir) -Impif_h
+AM_FFLAGS = -Impif_h
 AM_FCFLAGS =
 
 mpi_fc_modules =
