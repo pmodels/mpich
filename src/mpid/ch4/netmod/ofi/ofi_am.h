@@ -59,10 +59,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         case MPIDI_AMTYPE_NONE:
             /* if no preselected amtype, do check here */
             MPIDI_Datatype_check_size(datatype, count, data_sz);
-            if (data_sz + am_hdr_sz <= MPIDI_NM_am_eager_limit()) {
+            if (data_sz + am_hdr_sz +
+                MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz)
+                <= MPIDI_NM_am_eager_limit()) {
                 /* EAGER */
                 mpi_errno = MPIDI_OFI_do_am_isend_eager(rank, comm, handler_id, am_hdr, am_hdr_sz,
-                                                        data, count, datatype, sreq, false, vci_src,
+                                                        data, count, datatype, sreq, vci_src,
                                                         vci_dst);
             } else {
                 if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
@@ -84,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
             break;
         case MPIDI_AMTYPE_SHORT:
             mpi_errno = MPIDI_OFI_do_am_isend_eager(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
-                                                    count, datatype, sreq, false, vci_src, vci_dst);
+                                                    count, datatype, sreq, vci_src, vci_dst);
             /* cleanup preselected amtype to avoid problem with reused request */
             MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_NONE;
             break;
@@ -196,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIDI_OFI_AMREQUEST(sreq, data_sz) = data_sz;
-    if ((am_hdr_sz + data_sz)
+    if ((am_hdr_sz + MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz) + data_sz)
         <= (MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t))) {
         MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_SHORT;
         return true;

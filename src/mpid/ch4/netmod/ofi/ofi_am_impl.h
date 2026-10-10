@@ -92,9 +92,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(int vci, uint64_t
                       (void *) (uintptr_t) seqno, MPL_MEM_OTHER);
 }
 
+/* am_hdr: the message header, used for the sizes; it may be an aligned copy.
+ * msg: the whole message in the receive buffer. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(int vci,
                                                                 const MPIDI_OFI_am_header_t *
-                                                                am_hdr)
+                                                                am_hdr, const void *msg)
 {
     MPIDI_OFI_am_unordered_msg_t *uo_msg;
     size_t uo_msg_len, packet_len;
@@ -110,7 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(int vci,
         return MPI_ERR_NO_MEM;
 
     packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
-    MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
+    MPIR_Memcpy(&uo_msg->am_hdr, msg, packet_len);
 
     DL_APPEND(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
 
@@ -183,7 +185,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     MPIDI_OFI_am_request_header_t *sreq_hdr;
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    MPIR_Assert(am_hdr_sz <= MPIDI_OFI_MAX_AM_HDR_SIZE);
 
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         int vci = MPIDI_Request_get_vci(sreq);
@@ -193,7 +195,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
         MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) = sreq_hdr;
 
         sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
-        sreq_hdr->am_hdr_sz = am_hdr_sz;
         sreq_hdr->pack_buffer = NULL;
     } else {
         sreq_hdr = MPIDI_OFI_AMREQUEST(sreq, sreq_hdr);
@@ -227,6 +228,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_rreq(MPIR_Request * rreq)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm, int handler_id,
+                                                     MPI_Aint am_hdr_sz,
                                                      const void *data, MPI_Aint data_sz,
                                                      MPIR_Request * sreq, int vci_src, int vci_dst)
 {
@@ -240,7 +242,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + sizeof(*lmt_info);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
@@ -302,6 +303,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
+                                                      MPI_Aint am_hdr_sz,
                                                       const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype, MPI_Aint data_sz,
                                                       bool need_packing, MPIR_Request * sreq,
@@ -319,8 +321,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
-    MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-
     MPIDI_OFI_am_header_t *msg_hdr;
     if (!MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer)) {
         msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     }
 
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
+    msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->payload_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, vci_src, vci_dst, dst_addr);
@@ -367,6 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * comm, int handler_id,
+                                                         MPI_Aint am_hdr_sz,
                                                          const void *buf, MPI_Aint count,
                                                          MPI_Datatype datatype, MPI_Aint offset,
                                                          int need_packing, MPIR_Request * sreq,
@@ -386,10 +387,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = send_req->msg_hdr;
-    MPI_Aint am_hdr_sz = 0;
-    if (MPIDIG_am_send_async_get_offset(sreq) == 0) {
-        am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-    }
     MPI_Aint seg_sz = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t) - am_hdr_sz;
     seg_sz = MPL_MIN(seg_sz, MPIDIG_am_send_async_get_data_sz_left(sreq));
     MPIR_Assert(seg_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
@@ -397,25 +394,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     msg_hdr = (MPIDI_OFI_am_header_t *) send_req->msg_hdr;
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = am_hdr_sz;
-    msg_hdr->payload_sz = seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
     MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, vci_src, vci_dst, dst_addr);
 
     MPIR_cc_inc(sreq->cc_ptr);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
 
-    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + seg_sz;
-    MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+    if (send_req->am_hdr != MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr)) {
+        MPIR_Memcpy(send_req->am_hdr, MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr), am_hdr_sz);
+    }
     MPI_Aint packed_size;
     mpi_errno = MPIR_Typerep_pack(buf, count, datatype, offset,
                                   send_req->am_data, seg_sz, &packed_size, MPIR_TYPEREP_FLAG_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(packed_size == seg_sz);
+    /* the pack never splits a basic element, so it may pack less than seg_sz */
+    MPIR_Assert(packed_size > 0 && packed_size <= seg_sz);
+    msg_hdr->payload_sz = packed_size;
+    MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + packed_size;
 
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, msg_hdr, total_msg_sz,
                                     NULL, dst_addr, &send_req->context), vci_src, send);
 
-    MPIDIG_am_send_async_issue_seg(sreq, seg_sz);
+    MPIDIG_am_send_async_issue_seg(sreq, packed_size);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -437,6 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->am_hdr_sz = am_hdr_sz; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vci_src = vci_src; \
@@ -456,75 +457,82 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         } \
     } while (0)
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm * comm,
+                                                            int handler_id, const void *am_hdr,
+                                                            size_t am_hdr_sz, const void *buf,
+                                                            size_t count, MPI_Datatype datatype,
+                                                            MPIR_Request * sreq, MPI_Aint data_sz,
+                                                            bool issue_deferred,
+                                                            int vci_src, int vci_dst)
+    MPL_STATIC_INLINE_SUFFIX;
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * comm,
                                                          int handler_id, const void *am_hdr,
                                                          size_t am_hdr_sz, const void *buf,
                                                          size_t count, MPI_Datatype datatype,
-                                                         MPIR_Request * sreq, bool issue_deferred,
+                                                         MPIR_Request * sreq,
                                                          int vci_src, int vci_dst)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint data_sz;
     bool need_packing = false;
+    void *pack_buffer = NULL;
 
     MPIR_FUNC_ENTER;
 
-    /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
-     * issue_deferred is set to true. They should have been saved in the request. */
-
-    if (!issue_deferred) {
-        mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        int dt_contig;
-        MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
-
-        need_packing = dt_contig ? false : true;
-
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(buf, &attr);
-        if (MPL_gpu_attr_is_dev(&attr)) {
-            MPIDI_OFI_register_am_bufs();
-            if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
-                /* Force packing of GPU buffer in host memory */
-                need_packing = true;
-            }
-        }
-    } else {
-        data_sz = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz;
-        need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
-    }
-
-    if (!issue_deferred && MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
-        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        goto fn_deferred;
-    }
-
+    int dt_contig;
+    MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
     MPIR_Assert(data_sz <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
 
-    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + data_sz;
-    if (total_msg_sz > MPIDI_OFI_AM_MAX_MSG_SIZE) {
-        ALLOCATE_PACK_BUFFER_OR_DEFER(MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
+    /* Eager is only better when the message can be sent right away. If it has to wait, either
+     * behind deferred ops to maintain ordering or for a pack buffer, it is no different from
+     * pipeline, which already handles deferral. Send it as pipeline instead. */
+    if (MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
+        goto fn_pipeline;
     }
 
-    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, buf, count, datatype,
+    /* pad the am header so the payload is aligned */
+    MPI_Aint padding = MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
+    MPI_Aint total_msg_sz = sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz + padding + data_sz;
+    if (total_msg_sz > MPIDI_OFI_AM_MAX_MSG_SIZE) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci_src].pack_buf_pool,
+                                           (void **) &pack_buffer);
+        if (pack_buffer == NULL) {
+            goto fn_pipeline;
+        }
+    }
+
+    mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = pack_buffer;
+    memset((char *) MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr) + am_hdr_sz, 0, padding);
+    am_hdr_sz += padding;
+
+    need_packing = dt_contig ? false : true;
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(buf, &attr);
+    if (MPL_gpu_attr_is_dev(&attr)) {
+        MPIDI_OFI_register_am_bufs();
+        if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
+            /* Force packing of GPU buffer in host memory */
+            need_packing = true;
+        }
+    }
+
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, am_hdr_sz, buf, count, datatype,
                                          data_sz, need_packing, sreq, vci_src, vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (issue_deferred) {
-        DL_DELETE(MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q,
-                  MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-        MPL_free(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
-    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-  fn_deferred:
-    DEFER_AM_SEND(MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER);
+  fn_pipeline:
+    mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                               buf, count, datatype, sreq, data_sz, false,
+                                               vci_src, vci_dst);
     goto fn_exit;
 }
 
@@ -594,12 +602,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr, am_hdr_sz and data_sz are
-     * ignored when issue_deferred is set to true. They should have been saved in the request. */
+     * we need to skip some code path in the scenario. Also am_hdr and data_sz are ignored when
+     * issue_deferred is set to true. They should have been saved in the request. */
 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
         MPIR_ERR_CHECK(mpi_errno);
+        memset((char *) MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr) + am_hdr_sz, 0,
+               MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz));
 
         MPIDI_Datatype_check_contig(datatype, dt_contig);
 
@@ -624,34 +634,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
         need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
     }
 
+    /* pad the am header so the payload is aligned. A deferred first segment passes the saved
+     * size, which is already padded; later segments pass 0 and get just the padding. */
+    am_hdr_sz += MPIDI_OFI_AM_PADDING_SZ(sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
+
     if (!issue_deferred && MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q) {
         /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
         goto fn_deferred;
     }
 
+    /* If the rest of the message fits in the request header cell, i.e. this is the only or the
+     * last segment, build it in place there and skip the pack buffer. Only one segment can do
+     * this, and an earlier segment has already copied the am header into its own pack buffer. */
+    bool in_place = (sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz +
+                     MPIDIG_am_send_async_get_data_sz_left(sreq) <= MPIDI_OFI_AM_MAX_MSG_SIZE);
+
     void *pack_buffer = NULL;
-    ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
+    if (!in_place) {
+        ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer);
+    }
 
     MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci_src].am_hdr_buf_pool,
                                        (void **) &send_req);
     MPIR_Assert(send_req);
     send_req->sreq = sreq;
     send_req->pack_buffer = pack_buffer;
-    if (!pack_buffer) {
-        send_req->msg_hdr = &send_req->msg_hdr_data;
-        send_req->am_hdr = NULL;
-        send_req->am_data = NULL;
+    if (in_place) {
+        send_req->msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
+        send_req->am_hdr = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr);
     } else {
         send_req->msg_hdr = pack_buffer;
         send_req->am_hdr = (char *) pack_buffer + sizeof(MPIDI_OFI_am_header_t);
-        if (offset == 0) {
-            send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
-        } else {
-            send_req->am_data = (char *) send_req->am_hdr;
-        }
     }
+    send_req->am_data = (char *) send_req->am_hdr + am_hdr_sz;
 
-    mpi_errno = MPIDI_OFI_am_isend_pipeline(rank, comm, handler_id,
+    mpi_errno = MPIDI_OFI_am_isend_pipeline(rank, comm, handler_id, am_hdr_sz,
                                             buf, count, datatype, offset, need_packing,
                                             sreq, send_req, vci_src, vci_dst);
 
@@ -695,8 +712,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
     MPIR_FUNC_ENTER;
 
     /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
-     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
-     * issue_deferred is set to true. They should have been saved in the request. */
+     * we need to skip some code path in the scenario. Also am_hdr is ignored when issue_deferred
+     * is set to true. It should have been saved in the request. */
 
     if (!issue_deferred) {
         mpi_errno = MPIDI_OFI_am_init_sreq(am_hdr, am_hdr_sz, sreq);
@@ -750,7 +767,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
                      "send RDMA read for req handle=0x%x send_size %ld", sreq->handle, data_sz));
 
     mpi_errno =
-        MPIDI_OFI_am_isend_long(rank, comm, handler_id, send_buf, data_sz, sreq, vci_src, vci_dst);
+        MPIDI_OFI_am_isend_long(rank, comm, handler_id, am_hdr_sz, send_buf, data_sz, sreq,
+                                vci_src, vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
     if (issue_deferred) {
         DL_DELETE(MPIDI_OFI_global.per_vci[vci_src].deferred_am_isend_q,

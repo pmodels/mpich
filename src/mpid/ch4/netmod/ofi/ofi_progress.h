@@ -18,21 +18,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_deferred_ops(int vci)
 
     if (dreq) {
         switch (dreq->op) {
-            case MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER:
-                mpi_errno = MPIDI_OFI_do_am_isend_eager(dreq->rank, dreq->comm, dreq->handler_id,
-                                                        NULL, 0, dreq->buf, dreq->count,
-                                                        dreq->datatype, dreq->sreq, true, vci,
-                                                        dreq->vci_dst);
-                break;
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE:
-                mpi_errno = MPIDI_OFI_do_am_isend_pipeline(dreq->rank, dreq->comm, dreq->handler_id,
-                                                           NULL, 0, dreq->buf, dreq->count,
-                                                           dreq->datatype, dreq->sreq,
-                                                           dreq->data_sz, true, vci, dreq->vci_dst);
+                {
+                    /* only the first segment carries the am header */
+                    size_t am_hdr_sz = (MPIDIG_am_send_async_get_offset(dreq->sreq) == 0) ?
+                        dreq->am_hdr_sz : 0;
+                    mpi_errno = MPIDI_OFI_do_am_isend_pipeline(dreq->rank, dreq->comm,
+                                                               dreq->handler_id, NULL, am_hdr_sz,
+                                                               dreq->buf, dreq->count,
+                                                               dreq->datatype, dreq->sreq,
+                                                               dreq->data_sz, true, vci,
+                                                               dreq->vci_dst);
+                }
                 break;
             case MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ:
                 mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(dreq->rank, dreq->comm,
-                                                            dreq->handler_id, NULL, 0, dreq->buf,
+                                                            dreq->handler_id, NULL,
+                                                            dreq->am_hdr_sz, dreq->buf,
                                                             dreq->count, dreq->datatype, dreq->sreq,
                                                             true, vci, dreq->vci_dst);
                 break;

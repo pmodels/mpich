@@ -198,6 +198,20 @@ static int am_isend_pipeline_event(int vci, struct fi_cq_tagged_entry *wc,
     goto fn_exit;
 }
 
+#ifdef NEEDS_STRICT_ALIGNMENT
+/* Move the payload down to the MAX_ALIGNMENT-aligned address just below it. This is only safe
+ * when the headers have been copied out of the receive buffer, so the bytes being overwritten
+ * (at most MAX_ALIGNMENT - 1 bytes of the header area of the same message) are no longer used. */
+static void *align_payload(void *p_data, MPI_Aint payload_sz)
+{
+    void *aligned = (void *) MPL_ROUND_DOWN_ALIGN((intptr_t) p_data, MAX_ALIGNMENT);
+    if (aligned != p_data) {
+        memmove(aligned, p_data, payload_sz);
+    }
+    return aligned;
+}
+#endif
+
 static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -218,6 +232,8 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     /* if has_alignment_copy is 0 and the message contains extended header, the
      * header needs to be copied out for alignment to access */
     int has_alignment_copy = 0;
+    /* whether the headers are copied to temp, which allows shifting the payload in orig_buf */
+    int hdr_in_temp = 0;
     char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
@@ -226,6 +242,7 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
         }
         memcpy(temp, orig_buf, temp_size);
         am_hdr = (void *) temp;
+        hdr_in_temp = 1;
         /* confirm alignment (in case MPL_ATTR_ALIGNED didn't work) */
         MPIR_Assert(((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) == 0);
     }
@@ -241,7 +258,7 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
                          "Enqueueing it to the queue.\n",
                          expected_seqno, am_hdr->seqno,
                          am_hdr->am_type, (unsigned long) am_hdr->src_id));
-        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, orig_buf);
+        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, am_hdr, orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -264,6 +281,11 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
         case MPIDI_AMTYPE_SHORT:
             /* payload always in orig_buf */
             p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+#ifdef NEEDS_STRICT_ALIGNMENT
+            if (hdr_in_temp) {
+                p_data = align_payload(p_data, am_hdr->payload_sz);
+            }
+#endif
             mpi_errno = MPIDI_OFI_handle_short_am(am_hdr, am_hdr + 1, p_data);
 
             MPIR_ERR_CHECK(mpi_errno);
@@ -271,6 +293,11 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
             break;
         case MPIDI_AMTYPE_PIPELINE:
             p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+#ifdef NEEDS_STRICT_ALIGNMENT
+            if (hdr_in_temp) {
+                p_data = align_payload(p_data, am_hdr->payload_sz);
+            }
+#endif
             mpi_errno = MPIDI_OFI_handle_pipeline(am_hdr, am_hdr + 1, p_data);
             MPIR_ERR_CHECK(mpi_errno);
             break;
@@ -315,6 +342,7 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
         /* alignment is ensured for this unordered message as it copies to a temporary buffer
          * in MPIDI_OFI_am_enqueue_unordered_msg */
         has_alignment_copy = 1;
+        hdr_in_temp = 0;
 #endif
         goto fn_repeat;
     }

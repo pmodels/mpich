@@ -242,11 +242,10 @@ typedef struct MPIDI_OFI_am_send_pipeline_request {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *sreq;
-    void *pack_buffer;          /* always allocated from pack_buf_pool */
+    void *pack_buffer;          /* from pack_buf_pool, NULL if built in place in the sreq header */
     void *msg_hdr;
     void *am_hdr;
     void *am_data;
-    MPIDI_OFI_am_header_t msg_hdr_data MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3];
 } MPIDI_OFI_am_send_pipeline_request_t;

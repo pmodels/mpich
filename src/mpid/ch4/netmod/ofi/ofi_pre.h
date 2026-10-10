@@ -24,7 +24,21 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
+/* Under strict alignment, the am header is padded so the payload that follows it starts at a
+ * MAX_ALIGNMENT offset from the message start. MPIDI_OFI_AM_PADDING_SZ(offset) is the padding
+ * needed after a message prefix of size offset. MPIDI_OFI_MAX_AM_HDR_SIZE is the largest am
+ * header whose padded size still fits in MPIDI_OFI_am_header_t::am_hdr_sz. */
+#ifdef NEEDS_STRICT_ALIGNMENT
+#define MPIDI_OFI_AM_PADDING_SZ(offset) \
+    ((MPI_Aint) (MPL_ROUND_UP_ALIGN(offset, MAX_ALIGNMENT) - (offset)))
+#define MPIDI_OFI_MAX_AM_HDR_SIZE \
+    ((int) (MPL_ROUND_DOWN_ALIGN(sizeof(MPIDI_OFI_am_header_t) + \
+                                 (1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1, MAX_ALIGNMENT) - \
+            sizeof(MPIDI_OFI_am_header_t)))
+#else
+#define MPIDI_OFI_AM_PADDING_SZ(offset) 0
 #define MPIDI_OFI_MAX_AM_HDR_SIZE      ((1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1)
+#endif
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
@@ -57,7 +71,6 @@ enum {
 };
 
 typedef enum {
-    MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER,
     MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE,
     MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ
 } MPIDI_OFI_deferred_am_op_e;
@@ -137,7 +150,6 @@ typedef struct {
     } lmt_u;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
-    uint16_t am_hdr_sz;
     /* used for packing non-contig data or the whole am message when payload doesn't fit */
     void *pack_buffer;
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
@@ -145,7 +157,7 @@ typedef struct {
     /* AM send buffers, must be together so we can send without sendv.
      * Note: since we allocate from genq pool, there may be some additional space
      * to pack a small payload */
-    MPIDI_OFI_am_header_t msg_hdr;
+    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
 } MPIDI_OFI_am_request_header_t;
 
@@ -164,6 +176,7 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     size_t count;
     MPI_Datatype datatype;
     MPIR_Request *sreq;
+    size_t am_hdr_sz;
     bool need_packing;
     MPI_Aint data_sz;
     int vci_src;
