@@ -3634,7 +3634,7 @@ static int MPIDI_CH3I_Socki_handle_read(struct pollfd *const pollfd,
 
     }
     /* --END ERROR HANDLING-- */
-    else if (errno == EAGAIN && errno == EWOULDBLOCK) {
+    else if (errno == EAGAIN || errno == EWOULDBLOCK) {
         /* do nothing... */
         goto fn_exit;
     }
