@@ -185,7 +185,7 @@ generate unattractive and in some cases unreadable manual pages.
 
 ### Code Cleanup Script
 
-This [script](https://github.com/pmodels/mpich/blob/master/maint/code-cleanup.bash)
+This [script](https://github.com/pmodels/mpich/blob/main/maint/code-cleanup.bash)
 can be used to cleanup whitespace, comments, and line-wrapping in
 existing source files. It is a good idea to run it on any newly created
 files in the git repo. Note that the script can be found in the `maint`

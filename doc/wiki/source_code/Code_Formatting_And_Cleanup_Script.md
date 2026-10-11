@@ -1,7 +1,7 @@
-# Code formatting and code-cleanup.sh
+# Code formatting and code-cleanup.bash
 
 To keep our code base with a consistent style, we recommend all commits
-filter through a common code formatter -- \`maint/code-cleanup.sh\`.
+filter through a common code formatter -- \`maint/code-cleanup.bash\`.
 This script uses "GNU Indent" to format the source code with a
 common/enforced set of rules.
 
@@ -68,7 +68,7 @@ distributions is version 2.2.11. The latest version had a few
 improvements, in particular, it is better at detecting pointer type
 declarations and pointer based functions. Because most stable
 distribution is still using version 2.2.11 we require this version in
-\`code-cleanup.sh\`.
+\`code-cleanup.bash\`.
 
 For certain distribution, in particular, Mac using Homebrew, a custom
 version need be installed. One can either install from source tar ball,
