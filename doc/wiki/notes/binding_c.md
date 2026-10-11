@@ -22,7 +22,7 @@ following three files:
 
 ## Master API config file
 
-The master configuration file, `maint/mpi_standards_api.txt` is a direct
+The master configuration file, `src/binding/mpi_standard_api.txt` is a direct
 transcription from the mpi-standard repository. It contains entries as
 follows:
 
@@ -43,7 +43,7 @@ attributes, and finally a description inside the square brackets.
 ## Language specific kind mapping
 
 The mapping from parameter "kind" to language specific type is listed in
-`maint/api_mapping.txt` with a simple format:
+`src/binding/apis_mapping.txt` with a simple format:
 
 ```
 LIS_KIND_MAP:
@@ -67,7 +67,7 @@ listings. `BASE_C_KIND_MAP` is only used to avoid duplication between `SMALL`
 and `BIG` versions.
 
 Typically we should use the exact mapping from the mpi standard, meaning
-`maint/api_mapping.txt` should be kept in-sync with the upstream branch. But
+`src/binding/apis_mapping.txt` should be kept in-sync with the upstream branch. But
 sometimes, e.g. `MPIX` functions, we may need to define our own kind mappings.
 We do that in `src/binding/custom_mapping.txt`.
 

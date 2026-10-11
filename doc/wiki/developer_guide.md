@@ -99,7 +99,7 @@ layer, which widely also apply to the Fortran/CXX bindings.
 Reference:
 * [notes on binding generation](notes/binding_c.md)
 * [mpi_standard_api.txt](../../src/binding/mpi_standard_api.txt)
-  [api_mapping.txt](../../src/binding/api_mapping.txt)
+  [apis_mapping.txt](../../src/binding/apis_mapping.txt)
 * [MPI Specification](https://www.mpi-forum.org/docs/drafts/mpi-2020-draft-report.pdf)
 
 
