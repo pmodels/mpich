@@ -222,7 +222,7 @@ Derived metrics are defined at analysis time (i.e. using the visualizer
 
 In this example, we show how PAPI can be used to find an inefficient use
 of cache in the context of matrix-matrix multiplications. The attached
-[code](../text/Mmult.c) implements the
+[code](../sample_code/Mmult.c) implements the
 [naïve textbook algorithm](http://en.wikipedia.org/wiki/Matrix_multiplication#Matrix_product_.28two_matrices.29),
 which is inefficient in the following sense. Since C/C++ are row-major,
 when calculating $X = AB$, although we conceptually use $B$

@@ -10,10 +10,12 @@
 	- [Fault Tolerance](Fault_Tolerance.md)
 	- [Function Name Prefix Convention](Function_Name_Prefix_Convention.md)
 	- [Include Files in MPICH](Include_Files_in_MPICH.md)
+	- [Internal Datatypes](Internal_Datatypes.md)
 	- [Internal Instrumentation](Internal_Instrumentation.md)
 	- [KVS Caching](KVS_Caching.md)
 	- [Local and Global MPI Process IDs](Local_and_Global_MPI_Process_IDs.md)
 	- [MPICH Architecture Overview](MPICH_Architecture.md)
+	- [MPICH Namespacing](MPICH_Namespacing.md)
 	- [Parameters in MPICH](Parameters_in_MPICH.md)
 	- [Process Groups and Virtual Connections](Process_Groups_and_Virtual_Connections.md)
 	- [Processing MPI Datatypes](Processing_MPI_Datatypes.md)
@@ -64,7 +66,7 @@
 	- [TCP Netmod State Machine](Nemesis_tcp_netmod_state_machine.md)
 
 - PMI
-    - [Process-Management Interface] (PMI.md)
+    - [Process-Management Interface](PMI.md)
     - PMI-v2 notes (outdated)
 	- [Specification](PMI-2_Specification.md)
 	- [API](PMI_v2_API.md)

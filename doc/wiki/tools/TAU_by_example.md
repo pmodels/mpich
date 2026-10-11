@@ -60,7 +60,7 @@ $y$, and time step $t$. The constant $c$ defines the wave's
 propagation speed.
 
 We hence obtain the iterative five-point stencil code
-[wave2d](../text/Wave2d.cpp).
+[wave2d](../sample_code/Wave2d.cpp).
 
 ### Profiling
 

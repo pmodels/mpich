@@ -47,7 +47,7 @@ through MPI-T interfaces.
 
 ## Old MPICH Parameter and MPI_T Control Variable Design
 
-The document [Parameters_in_MPICH](Parameters_in_MPICH "wikilink")
+The document [Parameters_in_MPICH](Parameters_in_MPICH.md)
 describes requirements and a potential design of MPICH parameters.
 However, the current MPICH code doesn't follow this design. Currently,
 all MPICH parameters are declared in mpich/src/util/param/params.yml
@@ -147,7 +147,7 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 ## Old MPICH Instrumentation and MPI_T Performance Variable Design
 
 The document
-[Internal_Instrumentation](Internal_Instrumentation "wikilink")
+[Internal_Instrumentation](Internal_Instrumentation.md)
 describes MPICH instrumentation requirements and a possible design.
 Current code (src/include/mpiinstr.h) loosely implements this design.
 Two types of instrumentation are defined: one is timer and the other is

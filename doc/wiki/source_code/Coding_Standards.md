@@ -912,7 +912,7 @@ definition).
 ## Adding new mpich control variables
 
 See [Tool interfaces (MPI-T), MPICH parameters and
-instrumentation](../misc/Tool_Interfaces.md "wikilink")
+instrumentation](../design/Tool_Interfaces.md)
 
 ## C and POSIX standards
 

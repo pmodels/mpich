@@ -168,7 +168,7 @@ doing what's known as a ["VPATH build"](http://www.gnu.org/software/make/manual/
 Let's assume you have your source in some directory like:
 `/foo/bar/mpich-trunk`. If you are using an git version of the code you
 will need to do an ./autogen.sh in this source directory (see
-[here](Getting_And_Building_MPICH#Setting_up_the_build_environment "wikilink")).
+[here](Github.md)).
 
 Now let's say that you want to build two versions, one with a supported
 thread level of `MPI_THREAD_SINGLE` and one with `MPI_THREAD_MULTIPLE`.
@@ -192,4 +192,4 @@ The following wiki pages contain additional platform-specific build
 information.
 
   - [Blue Gene/Q](BGQ.md)
-  - [x86 and POWER using the Parallel Environment Runtime Edition](PE_RTE)
+  - [x86 and POWER using the Parallel Environment Runtime Edition](PE_RTE.md)

@@ -46,7 +46,6 @@
     - [Rules For Installation Targets](source_code/Rules_For_Installation_Targets.md)
     - [Adding New Error Messages](how_to/Adding_New_Error_Messages.md)
     - [Creating A Release](source_code/Creating_A_Release.md)
-    - [Managing Commits In Trunk And Release Branches](source_code/Managing_Commits_In_Trunk_and_Release_Branches.md)
     - [Proposed MPIEXEC Extensions](design/Proposed_MPIEXEC_Extensions.md)
     - [Compiler Quirks](source_code/Compiler_Quirks.md)
     - [Shifting Towards C99](source_code/Shifting_Toward_C99.md)

@@ -7,7 +7,7 @@ git clone https://github.com/pmodels/mpich.git (for non-core developers wi
 git clone git@github.com:pmodels/mpich.git (for core developers with commit rights)
 ```
 
-See the [Version Control System](Version_Control_System.md) page for more information about using
+See the [Git Workflow](Git_Workflow.md) page for more information about using
 our current version control system.
 
 ## Setting Up The Build Environment
