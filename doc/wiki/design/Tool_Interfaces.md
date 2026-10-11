@@ -538,5 +538,3 @@ handle using one malloc. Consequently, they can be freed in one free().
 
 Pvar sessions are simply a list of pvar handles. Each time we allocate a
 pvar handle, the handle is linked into its session.
-
-[Category:Design Documents](Category:Design_Documents "wikilink")

@@ -11,9 +11,6 @@ A redesign and extension of the CH3 RMA implementation will be (is)
 described below. This will optimize for both short (latency-bound) and
 long (bandwidth bound) RMA operations.
 
-Additional details of the MPI-3 RMA development process are available at
-the [MPI-3 RMA Implementation Timeline](MPI-3_RMA_Implementation_Timeline "wikilink").
-
 ## Design Objectives
 
 The RMA design has many competing requirements. The obvious top-level

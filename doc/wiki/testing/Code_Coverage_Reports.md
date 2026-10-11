@@ -17,5 +17,5 @@ By `--with-device=XXX`:
 ## Generating the Coverage Results
 
 These results are created using `/mcs/mpich/cron/tests/getcoverage`. See
-[Testing Crons](Testing_Crons.md "wikilink") for info on when and where
+[Testing Crons](Testing_Crons.md) for info on when and where
 these results are generated.

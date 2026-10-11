@@ -1,8 +1,5 @@
 # Coding Standards
 
-Many of these standards are automatically checked by the
-[Coding Style Checker](Coding_Style_Checker.md).
-
 Some of the information on this page is out of date (for example, the
 use of the NMPI interface). However, most of the material here is still
 relevant and provides a good guide to coding for MPICH.
@@ -32,7 +29,7 @@ than what you find on any one system.
 
 Code that is critical to performance should be designed and made to be run fast.
 Use the language features such as `const` and [`restrict`](#using-the-restrict-qualifier)
-that can help the compiler generate good code. See also [Performance Tricks](#performance-tricks "wikilink").
+that can help the compiler generate good code. See also [Performance Tricks](#performance-tricks).
 
 ### Flexible And Adaptable
 
