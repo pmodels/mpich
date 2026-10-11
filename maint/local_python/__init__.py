@@ -20,7 +20,7 @@ def get_binding_dir(srcdir):
     if os.path.exists(srcdir + "/src/binding/mpi_standard_api.txt"):
         return srcdir + "/src/binding"
     elif os.path.exists(srcdir + "/maint/mpi_standard_api.txt"):
-        return srcdir + "/src/maint"
+        return srcdir + "/maint"
     else:
         raise Exception("Can't find mpi_standard_api.txt")
 

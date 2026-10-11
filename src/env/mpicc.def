@@ -214,6 +214,7 @@ subcode: parse_args
             $(if:cc=cc or cc=cxx)
                 $call parse_delay_libs
                 $call parse_mpi_abi
+                $call parse_need_legacy
                 $call parse_need_mpix
                 $call parse_need_fortran
             $call parse_arg_help

@@ -32,7 +32,7 @@ cvars:
     - name        : MPIR_CVAR_PMI_DISABLE_GROUP
       category    : PMI
       type        : boolean
-      default     : 0
+      default     : 1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
