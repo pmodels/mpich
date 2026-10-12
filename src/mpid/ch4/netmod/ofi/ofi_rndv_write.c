@@ -84,7 +84,7 @@ int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reque
     p->u.send.write_infly = 0;
 
     /* issue fi_write */
-    mpi_errno = MPIR_Async_things_add(rndvwrite_write_poll, sreq, NULL);
+    mpi_errno = MPIDI_OFI_async_things_add(rndvwrite_write_poll, sreq, NULL, p->vci_local);
 
     return mpi_errno;
 }
