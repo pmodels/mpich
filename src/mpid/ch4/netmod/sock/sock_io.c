@@ -14,6 +14,8 @@
 static int sock_writev(MPIDI_SOCK_conn_t * conn, struct iovec *iov, int iov_cnt,
                        MPI_Aint * p_written);
 static int conn_flush(MPIDI_SOCK_conn_t * conn, int *made_progress);
+static void conn_recv_reset(MPIDI_SOCK_conn_t * conn);
+static int conn_recv_start_data(MPIDI_SOCK_conn_t * conn);
 static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress);
 
 /* Write as much as the socket takes without blocking. *p_written is 0 if the
@@ -204,6 +206,70 @@ static int conn_flush(MPIDI_SOCK_conn_t * conn, int *made_progress)
     goto fn_exit;
 }
 
+/* Start to receive the next message of a connection */
+static void conn_recv_reset(MPIDI_SOCK_conn_t * conn)
+{
+    conn->recv_state = MPIDI_SOCK_RECV_HDR;
+    conn->recv_need = sizeof(MPIDI_SOCK_am_header_t);
+    conn->recv_got = 0;
+    conn->recv_buf = NULL;
+    conn->recv_rreq = NULL;
+    conn->recv_direct = NULL;
+    conn->recv_chunk_len = 0;
+}
+
+/* The am header of a large message is in conn->recv_buf. Run the handler to
+ * get the receive request and decide where to read the data. */
+static int conn_recv_start_data(MPIDI_SOCK_conn_t * conn)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_SOCK_am_header_t *hdr = &conn->recv_hdr;
+
+    MPIR_Request *rreq = NULL;
+    uint32_t attr = MPIDIG_AM_ATTR__IS_ASYNC;   /* is_local = 0 */
+    MPIDIG_AM_ATTR_SET_VCIS(attr, hdr->src_vci, hdr->dst_vci);
+    mpi_errno = MPIDIG_global.target_msg_cbs[hdr->handler_id] (conn->recv_buf, NULL, hdr->data_sz,
+                                                               attr, &rreq);
+    MPL_free(conn->recv_buf);
+    conn->recv_buf = NULL;
+    MPIR_ERR_CHECK(mpi_errno);
+
+    conn->recv_state = MPIDI_SOCK_RECV_DATA;
+    conn->recv_need = hdr->data_sz;
+    conn->recv_got = 0;
+    conn->recv_rreq = rreq;
+    conn->recv_direct = NULL;
+    conn->recv_chunk_len = 0;
+
+    if (rreq) {
+        MPIDIG_recv_setup(rreq);
+
+        void *buf;
+        MPI_Aint buf_sz, in_data_sz;
+        bool is_contig;
+        MPIDIG_get_recv_buffer(&buf, &buf_sz, &is_contig, &in_data_sz, rreq);
+
+        MPL_pointer_attr_t ptr_attr;
+        MPIR_GPU_query_pointer_attr(buf, &ptr_attr);
+        if (is_contig && (MPI_Aint) hdr->data_sz <= buf_sz && !MPL_gpu_attr_is_dev(&ptr_attr)) {
+            /* read into the receive buffer */
+            conn->recv_direct = buf;
+        }
+    }
+
+    if (!conn->recv_direct && !conn->recv_chunk) {
+        /* Read the data in chunks and let MPIDIG unpack them, or drop them if
+         * there is no request. The chunk buffer is kept for later messages. */
+        conn->recv_chunk = MPL_malloc(MPIDI_SOCK_RECV_CHUNK_SIZE, MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP(!conn->recv_chunk, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Read from an incoming connection and run the handler of each complete
  * message. */
 static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
@@ -214,16 +280,27 @@ static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
     int num_msgs = 0;
     while (num_msgs < MAX_RECV_PER_CONN) {
         if (conn->recv_got < conn->recv_need) {
+            /* where to read and how much */
             char *p;
+            MPI_Aint want = conn->recv_need - conn->recv_got;
+            bool is_chunk = false;
             if (conn->recv_state == MPIDI_SOCK_RECV_HDR) {
-                p = (char *) &conn->recv_hdr;
+                p = (char *) &conn->recv_hdr + conn->recv_got;
+            } else if (conn->recv_state == MPIDI_SOCK_RECV_DATA) {
+                if (conn->recv_direct) {
+                    p = conn->recv_direct + conn->recv_got;
+                } else {
+                    is_chunk = true;
+                    p = conn->recv_chunk + conn->recv_chunk_len;
+                    want = MPL_MIN(want, MPIDI_SOCK_RECV_CHUNK_SIZE - conn->recv_chunk_len);
+                }
             } else {
-                p = conn->recv_buf;
+                p = conn->recv_buf + conn->recv_got;
             }
 
             ssize_t n;
             do {
-                n = read(conn->fd, p + conn->recv_got, conn->recv_need - conn->recv_got);
+                n = read(conn->fd, p, want);
             } while (n < 0 && errno == EINTR);
 
             if (n < 0) {
@@ -245,47 +322,88 @@ static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
 
             *made_progress = 1;
             conn->recv_got += n;
+
+            if (is_chunk) {
+                /* hand over a chunk when it is full or it is the last one */
+                conn->recv_chunk_len += n;
+                if (conn->recv_chunk_len == MPIDI_SOCK_RECV_CHUNK_SIZE ||
+                    conn->recv_got == conn->recv_need) {
+                    if (conn->recv_rreq) {
+                        MPIDIG_recv_copy_seg(conn->recv_chunk, conn->recv_chunk_len,
+                                             conn->recv_rreq);
+                    }
+                    conn->recv_chunk_len = 0;
+                }
+            }
+
             if (conn->recv_got < conn->recv_need) {
-                /* we got less than we asked for, there is no more for now */
-                break;
+                if (n < want) {
+                    /* we got less than we asked for, there is no more for now */
+                    break;
+                } else {
+                    continue;
+                }
             }
         }
 
+        /* got all the bytes of the current state */
+        MPIDI_SOCK_am_header_t *hdr = &conn->recv_hdr;
+
         if (conn->recv_state == MPIDI_SOCK_RECV_HDR) {
-            /* got the header, read the am header and data next */
-            MPI_Aint body_sz = conn->recv_hdr.am_hdr_sz + conn->recv_hdr.data_sz;
-            conn->recv_state = MPIDI_SOCK_RECV_BODY;
-            conn->recv_need = body_sz;
+            /* Large messages are received directly. Dynamic messages are not
+             * active messages and are always buffered. */
+            MPI_Aint body_sz = hdr->am_hdr_sz + hdr->data_sz;
+            bool is_direct = (body_sz > MPIDI_SOCK_global.eager_size &&
+                              hdr->handler_id != MPIDI_SOCK_DYNAMIC_HANDLER_ID);
+
+            conn->recv_state = is_direct ? MPIDI_SOCK_RECV_AM_HDR : MPIDI_SOCK_RECV_BODY;
+            conn->recv_need = is_direct ? hdr->am_hdr_sz : body_sz;
             conn->recv_got = 0;
-            if (body_sz > 0) {
-                conn->recv_buf = MPL_malloc(body_sz, MPL_MEM_BUFFER);
+            if (conn->recv_need > 0) {
+                conn->recv_buf = MPL_malloc(conn->recv_need, MPL_MEM_BUFFER);
                 MPIR_ERR_CHKANDJUMP(!conn->recv_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
                 continue;
             }
         }
 
-        /* got a complete message */
-        MPIDI_SOCK_am_header_t *hdr = &conn->recv_hdr;
-        char *buf = conn->recv_buf;
-
-        /* Reset the state before the handler. The handler does not read from
-         * this connection, but keep the connection consistent anyway. */
-        conn->recv_buf = NULL;
-        conn->recv_state = MPIDI_SOCK_RECV_HDR;
-        conn->recv_need = sizeof(MPIDI_SOCK_am_header_t);
-        conn->recv_got = 0;
-
-        if (hdr->handler_id == MPIDI_SOCK_DYNAMIC_HANDLER_ID) {
-            /* the queue takes over buf */
-            mpi_errno = MPIDI_SOCK_dynamic_enqueue(hdr, buf);
+        if (conn->recv_state == MPIDI_SOCK_RECV_AM_HDR) {
+            mpi_errno = conn_recv_start_data(conn);
             MPIR_ERR_CHECK(mpi_errno);
+            continue;
+        }
+
+        /* Got a complete message. Reset the connection before the handler. The
+         * handler does not read from this connection, but keep it consistent. */
+        if (conn->recv_state == MPIDI_SOCK_RECV_DATA) {
+            MPIR_Request *rreq = conn->recv_rreq;
+            bool is_direct = (conn->recv_direct != NULL);
+            conn_recv_reset(conn);
+
+            if (rreq) {
+                if (is_direct) {
+                    /* we did the copy, set the received size */
+                    MPIDIG_recv_done(hdr->data_sz, rreq);
+                }
+                mpi_errno = MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         } else {
-            uint32_t attr = 0;  /* is_local = 0, is_async = 0 */
-            MPIDIG_AM_ATTR_SET_VCIS(attr, hdr->src_vci, hdr->dst_vci);
-            mpi_errno = MPIDIG_global.target_msg_cbs[hdr->handler_id] (buf, buf + hdr->am_hdr_sz,
-                                                                       hdr->data_sz, attr, NULL);
-            MPL_free(buf);
-            MPIR_ERR_CHECK(mpi_errno);
+            char *buf = conn->recv_buf;
+            conn_recv_reset(conn);
+
+            if (hdr->handler_id == MPIDI_SOCK_DYNAMIC_HANDLER_ID) {
+                /* the queue takes over buf */
+                mpi_errno = MPIDI_SOCK_dynamic_enqueue(hdr, buf);
+                MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                uint32_t attr = 0;      /* is_local = 0, is_async = 0 */
+                MPIDIG_AM_ATTR_SET_VCIS(attr, hdr->src_vci, hdr->dst_vci);
+                mpi_errno =
+                    MPIDIG_global.target_msg_cbs[hdr->handler_id] (buf, buf + hdr->am_hdr_sz,
+                                                                   hdr->data_sz, attr, NULL);
+                MPL_free(buf);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
 
         num_msgs++;

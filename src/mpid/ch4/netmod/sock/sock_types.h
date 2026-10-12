@@ -51,10 +51,21 @@ typedef struct MPIDI_SOCK_sendq_elem {
     MPI_Aint offset;            /* bytes already written, counting hdr_buf then data */
 } MPIDI_SOCK_sendq_elem_t;
 
+/* A message is received in one of two ways.
+ *   - buffered: HDR -> BODY. The am header and the data are read into
+ *     recv_buf and the handler gets both.
+ *   - direct: HDR -> AM_HDR -> DATA. Used for messages larger than the eager
+ *     size. The handler is called with the am header only and returns the
+ *     receive request. The data is then read into the receive buffer. */
 typedef enum {
     MPIDI_SOCK_RECV_HDR,        /* reading MPIDI_SOCK_am_header_t */
-    MPIDI_SOCK_RECV_BODY        /* reading the am header and data */
+    MPIDI_SOCK_RECV_BODY,       /* reading the am header and data */
+    MPIDI_SOCK_RECV_AM_HDR,     /* reading the am header */
+    MPIDI_SOCK_RECV_DATA        /* reading the data */
 } MPIDI_SOCK_recv_state_t;
+
+/* size of the buffer for data that can't be read into the receive buffer directly */
+#define MPIDI_SOCK_RECV_CHUNK_SIZE (64 * 1024)
 
 /* A connection is used in one direction only. An outgoing connection is the
  * one we connected; we only send on it. An incoming connection is the one we
@@ -71,9 +82,15 @@ typedef struct MPIDI_SOCK_conn {
     /* incoming: the message being read */
     MPIDI_SOCK_recv_state_t recv_state;
     MPIDI_SOCK_am_header_t recv_hdr;
-    char *recv_buf;             /* am header followed by data */
+    char *recv_buf;             /* am header, followed by data if buffered */
     MPI_Aint recv_need;         /* bytes to read in the current state */
     MPI_Aint recv_got;          /* bytes read so far in the current state */
+
+    /* incoming, in MPIDI_SOCK_RECV_DATA */
+    MPIR_Request *recv_rreq;    /* NULL if the handler does not take the data */
+    char *recv_direct;          /* read the data here if not NULL, otherwise into recv_chunk */
+    char *recv_chunk;           /* MPIDI_SOCK_RECV_CHUNK_SIZE bytes */
+    MPI_Aint recv_chunk_len;    /* bytes in recv_chunk not yet handed to the request */
 } MPIDI_SOCK_conn_t;
 
 typedef struct {

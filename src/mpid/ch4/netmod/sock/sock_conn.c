@@ -82,6 +82,8 @@ void MPIDI_SOCK_conn_close(MPIDI_SOCK_conn_t * conn)
     }
     MPL_free(conn->recv_buf);
     conn->recv_buf = NULL;
+    MPL_free(conn->recv_chunk);
+    conn->recv_chunk = NULL;
     while (conn->sendq_head) {
         MPIDI_SOCK_sendq_elem_t *elem = conn->sendq_head;
         conn->sendq_head = elem->next;
