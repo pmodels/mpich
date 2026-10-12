@@ -9,7 +9,9 @@
 #include "mpidimpl.h"
 
 typedef struct {
-    int dummy;
+    int listen_fd;
+    MPIDI_SOCK_name_t name;     /* address of this process */
+    MPI_Aint eager_size;        /* max size of am header plus data in an eager message */
 } MPIDI_SOCK_global_t;
 
 extern MPIDI_SOCK_global_t MPIDI_SOCK_global;

@@ -8,7 +8,7 @@
 
 #include "sock_impl.h"
 
-/* TODO: the active message functions are not implemented yet */
+/* TODO: am_send_hdr and am_isend are not implemented yet */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr, MPI_Aint am_hdr_sz,
@@ -53,28 +53,24 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(u
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_hdr_max_sz(void)
 {
-    MPIR_Assert(0);
-    return 0;
+    return MPIDI_SOCK_global.eager_size;
 }
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_eager_limit(void)
 {
-    MPIR_Assert(0);
-    return 0;
+    return MPIDI_SOCK_global.eager_size;
 }
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_eager_buf_limit(void)
 {
-    MPIR_Assert(0);
-    return 0;
+    return MPIDI_SOCK_global.eager_size;
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
                                                       const void *data, MPI_Aint count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    MPIR_Assert(0);
-    return false;
+    return (am_hdr_sz + data_sz) <= MPIDI_SOCK_global.eager_size;
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_can_do_tag(MPIR_Request * rreq)

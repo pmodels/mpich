@@ -1,0 +1,3 @@
+**ch4_sock_iface: unable to find a network interface address
+**ch4_sock_nonblock: unable to set a socket to non-blocking
+**ch4_sock_nonblock %s %d: unable to set a socket to non-blocking, %s (errno %d)

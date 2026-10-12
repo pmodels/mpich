@@ -16,4 +16,6 @@ mpi_core_sources   += src/mpid/ch4/netmod/sock/func_table.c \
                       src/mpid/ch4/netmod/sock/sock_part.c \
                       src/mpid/ch4/netmod/sock/globals.c
 
+errnames_txt_files += src/mpid/ch4/netmod/sock/errnames.txt
+
 endif

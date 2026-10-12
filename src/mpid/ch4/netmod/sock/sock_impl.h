@@ -13,4 +13,6 @@
 
 #define MPIDI_SOCK_AV(av)     ((av)->netmod.sock)
 
+int MPIDI_SOCK_comm_addr_exchange(MPIR_Comm * comm);
+
 #endif /* SOCK_IMPL_H_INCLUDED */

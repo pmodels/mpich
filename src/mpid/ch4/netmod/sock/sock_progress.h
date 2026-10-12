@@ -10,8 +10,12 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
 {
-    /* TODO: not implemented yet */
-    MPIR_Assert(0);
+    if (vci != 0) {
+        /* the sock netmod only uses vci 0 */
+        return MPI_SUCCESS;
+    }
+
+    /* TODO: poll the listening socket and the connections */
     return MPI_SUCCESS;
 }
 
