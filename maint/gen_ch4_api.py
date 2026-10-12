@@ -22,7 +22,7 @@ class RE:
 def main():
     load_ch4_api("./src/mpid/ch4/ch4_api.txt")
 
-    os.system("mkdir -p src/mpid/ch4/shm/include")
+    os.makedirs("src/mpid/ch4/shm/include", exist_ok=True)
     dump_netmod_h("src/mpid/ch4/netmod/include/netmod.h")
     dump_shm_h("src/mpid/ch4/shm/include/shm.h")
     dump_netmod_impl_h("src/mpid/ch4/netmod/include/netmod_impl.h")

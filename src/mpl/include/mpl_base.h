@@ -106,12 +106,9 @@
 #define MPL_MIN(a,b)    (((a) < (b)) ? (a) : (b))
 
 /* Use this macro for each parameter to a function that is not referenced in
-   the body of the function */
-#ifdef MPL_HAVE_WINDOWS_H
-#define MPL_UNREFERENCED_ARG(a) a
-#else
-#define MPL_UNREFERENCED_ARG(a)
-#endif
+   the body of the function.  It expands to a use of the argument on all
+   platforms, so that references to nonexistent arguments are caught. */
+#define MPL_UNREFERENCED_ARG(a) (void) (a)
 
 /* macro for finding the enclosing structure of an element */
 #define MPL_container_of(ptr, type, member) (type *)((char *)(ptr) - offsetof(type,member))

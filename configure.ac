@@ -2538,7 +2538,7 @@ case $MPI_AINT in
         MPIR_AINT_MAX="LONG_MAX"
         MPIR_AINT_MIN="LONG_MIN"
         ;;
-    long_long)
+    "long long")
         MPI_AINT_FMT_DEC_SPEC="%lld"
         MPI_AINT_FMT_HEX_SPEC="%llx"
         # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
