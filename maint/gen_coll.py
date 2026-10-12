@@ -21,6 +21,7 @@ def main():
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
+    G.out.append("#include \"coll_csel.h\"")
     for a in coll_names:
         dump_coll(a, "blocking")
         dump_coll(a, "nonblocking")
@@ -100,7 +101,7 @@ def dump_allcomm_auto_blocking(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
@@ -175,7 +176,7 @@ def dump_allcomm_sched_auto(name):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
     G.out.append("")
-    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);")
+    G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
 
@@ -247,7 +248,7 @@ def dump_mpir_impl_blocking(name):
     blocking_type = "blocking"
     func = G.FUNCS["mpi_" + name]
     params, args = get_params_and_args(func)
-    func_params = get_func_params(params, name, "blocking")
+    func_params = get_func_params(params, name, "blocking-impl")
     func_args = get_func_args(args, name, "blocking")
 
     func_name = get_func_name(name, blocking_type)
@@ -294,10 +295,11 @@ def dump_mpir_impl_blocking(name):
 
     # ----------------            
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if not name.startswith('neighbor_'):
+        G.out.append("int coll_attr = 0;")
     G.out.append("")
 
     dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
@@ -428,7 +430,6 @@ def dump_mpir_impl_nonblocking(name):
     NAME = func_name.upper()
 
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
@@ -488,7 +489,6 @@ def dump_mpir_impl_persistent(name):
     NAME = func_name.upper()
 
     G.out.append("")
-    add_prototype("int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
@@ -518,7 +518,10 @@ def dump_mpir(name, blocking_type):
     func = G.FUNCS["mpi_" + name]
     params, args = get_params_and_args(func)
     func_params = get_func_params(params, name, blocking_type)
-    func_args = get_func_args(args, name, blocking_type)
+    if blocking_type == "blocking":
+        func_args = get_func_args(args, name, "blocking-impl")
+    else:
+        func_args = get_func_args(args, name, blocking_type)
 
     func_name = get_func_name(name, blocking_type)
     Name = func_name.capitalize()
@@ -737,6 +740,8 @@ def get_func_params(params, name, kind):
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_params += ", int coll_attr"
+    elif kind == "blocking-impl":
+        pass
     elif kind == "nonblocking":
         func_params += ", MPIR_Request ** request"
     elif kind == "tag":
@@ -759,6 +764,8 @@ def get_func_args(args, name, kind):
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_args += ", coll_attr"
+    elif kind == "blocking-impl":
+        pass
     elif kind == "nonblocking":
         func_args += ", request"
     elif kind == "persistent":

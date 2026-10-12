@@ -14,19 +14,6 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
-/* Define values for collective attribute. Collective attributes pass
- * down contexts including error flags.
- */
-#define MPIR_COLL_ATTR_SYNC  0x1        /* It's an internal collective that focuses
-                                         * on synchronization rather than batch latency.
-                                         * In particular, advise netmod to avoid using
-                                         * injection send. */
-#define MPIR_ERR_PROC_FAILED 0x2
-#define MPIR_ERR_OTHER       0x4
-#define MPIR_COLL_ATTR_ERR_MASK 0x6
-
-#define MPIR_COLL_ATTR_HAS_ERR(coll_attr) ((coll_attr) & MPIR_COLL_ATTR_ERR_MASK)
-
 /*E
   MPIR_Lang_t - Known language bindings for MPI
 

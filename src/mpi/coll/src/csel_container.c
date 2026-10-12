@@ -5,8 +5,9 @@
 
 #include "mpiimpl.h"
 #include "coll_impl.h"
-#include "csel_container.h"
+#include "coll_csel.h"
 #include "mpl.h"
+#include "json.h"
 
 static void parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt)
 {
