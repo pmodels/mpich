@@ -74,7 +74,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         if test "$ucx_happy" = "no" ; then
             AC_MSG_ERROR([UCX installation does not meet minimum version requirement (v1.9.0). Please upgrade your installation, or use --with-ucx=embedded.])
         fi
-        PAC_LIBS_ADD([-lucp -lucs])
+        PAC_LIBS_ADD([-lucp -lucs -luct])
     fi
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_UCX,...)
 ])dnl end _BODY
