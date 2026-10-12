@@ -11,6 +11,10 @@
  *
  * Restrictions: power-of-two no. of processes
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * The permutation is
  * obtained by moving each data block from position 𝑖 to position
  * reverse(v(i)), where reverse denotes the bit-reversal of v(i).
@@ -148,6 +152,10 @@ static inline int MPIR_Reduce_scatter_intra_bine_permute(const void *sendbuf, vo
  * Algorithm: BINE send remap
  *
  * Restrictions: power-of-two no. of processes
+ *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
  *
  * This variant is based on skipping the permutation
  * and letting ranks transmit contiguous data as if the
@@ -290,6 +298,10 @@ static inline int MPIR_Reduce_scatter_intra_bine_send_remap(const void *sendbuf,
  * Algorithm: BINE block by block
  *
  * Restrictions: power-of-two no. of processes
+ *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
  *
  * Each block is transmitted independently. For small
  * and medium-sized vectors, this approach increases the data transmission overhead.

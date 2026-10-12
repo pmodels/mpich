@@ -1693,7 +1693,6 @@ cvars:
         permute            - Force reduce_scatter bine tree permutation algorithm
         send_remap         - Force reduce_scatter bine tree send algorithm
         block_by_block     - Force reduce_scatter bine tree block_by_block algorithm
-        two_blocks         - Force reduce_scatter bine tree two transmissions algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE

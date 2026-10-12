@@ -235,16 +235,6 @@ static inline int MPII_Bine_reorder_blocks(void *buffer, MPI_Aint block_size,
     goto fn_exit;
 }
 
-/*
- * rounddown: Rounds a number down to nearest multiple.
- *     rounddown(10,4) = 8, rounddown(6,3) = 6, rounddown(14,3) = 12
- */
-static inline int MPII_Bine_rounddown(int num, int factor)
-{
-    num /= factor;
-    return num * factor; /* floor(num / factor) * factor */
-}
-
 static inline uint32_t MPII_Bine_binary_to_negabinary(int32_t bin)
 {
     if (unlikely(bin > 0x55555555))
@@ -343,7 +333,7 @@ static inline int MPII_Bine_get_sender_rec(int num_ranks, int rank)
 }
 
 /* Function to calculate a Mersenne number (2^n - 1) */
-static inline uint32_t mersenne(int n)
+static inline uint32_t MPII_Bine_mersenne(int n)
 {
     return (1UL << (n + 1)) - 1;
 }
@@ -365,7 +355,7 @@ static inline int MPII_Bine_remap_distance_doubling(uint32_t num)
         }
 #endif
         remapped ^= (0x1 << k);      /* Set the k-th bit in the remapped number */
-        num ^= mersenne(k); /* XOR the Mersenne number with the remaining number */
+        num ^= MPII_Bine_mersenne(k); /* XOR the Mersenne number with the remaining number */
     }
     return remapped;
 }

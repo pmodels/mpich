@@ -11,6 +11,10 @@
  *
  * Restrictions: power-of-two no. of processes
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * For an allgather, we have a symmetric scenario to reduce-scatter:
  * the permutation is done at the end, after all the ranks have
  * received the entire buffer. The received data is permuted by
@@ -137,6 +141,10 @@ static inline int MPIR_Allgather_intra_bine_permute(const void *sendbuf, MPI_Ain
  * Algorithm: BINE block by block
  *
  * Restrictions: power-of-two no. of processes
+ *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
  *
  * Each block is transmitted independently. For small
  * and medium-sized vectors, this approach increases the data transmission overhead,
@@ -274,6 +282,10 @@ MPIR_Allgather_intra_bine_block_by_block(const void *sendbuf,
  * Algorithm: BINE send remap
  *
  * Restrictions: power-of-two no. of processes
+ *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
  *
  * For an allgather, we have a symmetric scenario to reduce-scatter:
  * the transmission to reorder the blocks is done before the actual
@@ -433,6 +445,10 @@ static inline int MPIR_Allgather_intra_bine_send_remap(const void *sendbuf, MPI_
  * Algorithm: BINE two blocks
  *
  * Restrictions: power-of-two no. of processes
+ *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
  *
  * This approach performs the gather using a distance-halving
  * rather than a distance-doubling butterfly. It simplifies handling
