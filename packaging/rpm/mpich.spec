@@ -12,8 +12,7 @@ Source0:        https://www.mpich.org/static/downloads/%{version}/%{name}-%{vers
 Source1:        mpich.macros
 Source3:        mpich.pth.py3
 
-Patch:          0001-pkgconf-drop-linker-flags.patch
-Patch:          0002-Make-mpich.module-useful.patch
+Patch:          0001-Make-mpich.module-useful.patch
 
 BuildRequires:  make
 BuildRequires:  autoconf
