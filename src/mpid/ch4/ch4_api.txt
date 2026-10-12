@@ -5,8 +5,8 @@
 #
 # This file defines ch4 netmod/shm API. It is used by maint/gen_ch4_api.py
 # to generate a sets of boilerplate headers, including
-#   - src/mpid/ch4/netmod/{ofi,ucx,stubnm}/func_table.c
-#   - src/mpid/ch4/netmod/{ofi,ucx,stubnm}/{ofi,ucx,stubnm}_noinline.h.c
+#   - src/mpid/ch4/netmod/{ofi,ucx,sock,stubnm}/func_table.c
+#   - src/mpid/ch4/netmod/{ofi,ucx,sock,stubnm}/{ofi,ucx,sock,stubnm}_noinline.h.c
 #   - src/mpid/ch4/shm/src/shm_noinline.h
 #   - src/mpid/ch4/shm/posix/posix_noinline.h
 #   - src/mpid/ch4/shm/stubshm/shm_noinline.h
