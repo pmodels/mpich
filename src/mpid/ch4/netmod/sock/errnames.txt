@@ -1,3 +1,15 @@
 **ch4_sock_iface: unable to find a network interface address
 **ch4_sock_nonblock: unable to set a socket to non-blocking
 **ch4_sock_nonblock %s %d: unable to set a socket to non-blocking, %s (errno %d)
+**ch4_sock_connect: unable to connect to a process
+**ch4_sock_connect %s %d %s %d: unable to connect to %s port %d, %s (errno %d)
+**ch4_sock_accept: unable to accept a connection
+**ch4_sock_accept %s %d: unable to accept a connection, %s (errno %d)
+**ch4_sock_poll: poll failed
+**ch4_sock_poll %s %d: poll failed, %s (errno %d)
+**ch4_sock_write: unable to write to a socket
+**ch4_sock_write %s %d: unable to write to a socket, %s (errno %d)
+**ch4_sock_read: unable to read from a socket
+**ch4_sock_read %s %d: unable to read from a socket, %s (errno %d)
+**ch4_sock_closed: a connection was closed by the peer in the middle of a message
+**ch4_sock_noaddr: the address of the process is unknown

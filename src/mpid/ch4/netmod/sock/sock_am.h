@@ -8,14 +8,18 @@
 
 #include "sock_impl.h"
 
-/* TODO: am_send_hdr and am_isend are not implemented yet */
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr, MPI_Aint am_hdr_sz,
                                                   int src_vci, int dst_vci)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_SOCK_send(MPIDIU_comm_rank_to_av(comm, rank), handler_id, am_hdr, am_hdr_sz,
+                                NULL, 0, NULL, src_vci, dst_vci, NULL);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
@@ -24,8 +28,52 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int h
                                                MPI_Datatype datatype, int src_vci, int dst_vci,
                                                MPIR_Request * sreq)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    int dt_contig;
+    MPI_Aint data_sz;
+    MPI_Aint dt_true_lb;
+    MPIR_Datatype *dt_ptr;
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(data, &attr);
+    if (MPL_gpu_attr_is_dev(&attr)) {
+        /* we can't write to a socket from device memory, pack it to host memory */
+        dt_contig = 0;
+    }
+
+    const void *send_data;
+    void *pack_buf = NULL;
+    if (dt_contig || data_sz == 0) {
+        /* send directly from the user buffer */
+        send_data = MPIR_get_contig_ptr(data, dt_true_lb);
+    } else {
+        pack_buf = MPL_malloc(data_sz, MPL_MEM_BUFFER);
+        MPIR_ERR_CHKANDJUMP(!pack_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        MPI_Aint actual_pack_bytes;
+        mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0, pack_buf, data_sz,
+                                      &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
+
+        send_data = pack_buf;
+    }
+
+    /* MPIDI_SOCK_send takes over pack_buf */
+    mpi_errno = MPIDI_SOCK_send(MPIDIU_comm_rank_to_av(comm, rank), handler_id, am_hdr, am_hdr_sz,
+                                send_data, data_sz, pack_buf, src_vci, dst_vci, sreq);
+    pack_buf = NULL;
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    MPL_free(pack_buf);
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm, int src_rank,

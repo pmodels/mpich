@@ -15,8 +15,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
         return MPI_SUCCESS;
     }
 
-    /* TODO: poll the listening socket and the connections */
-    return MPI_SUCCESS;
+    return MPIDI_SOCK_progress(made_progress);
 }
 
 #endif /* SOCK_PROGRESS_H_INCLUDED */

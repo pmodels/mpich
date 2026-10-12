@@ -118,6 +118,9 @@ int MPIDI_SOCK_init_local(int *tag_bits)
     mpi_errno = init_listener();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_SOCK_conn_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* insert self address */
     MPIR_Lpid lpid = MPIR_Process.rank;
     av_insert(MPIDIU_lpid_to_av(lpid), lpid, &MPIDI_SOCK_global.name);
@@ -230,13 +233,20 @@ int MPIDI_SOCK_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* write out everything that is still queued */
+    mpi_errno = MPIDI_SOCK_flush();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (!MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
         /* make sure no process closes its sockets while others may still use them */
         mpi_errno = MPIR_pmi_barrier();
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* TODO: flush the send queues and close the connections */
+    mpi_errno = MPIDI_SOCK_conn_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_SOCK_dynamic_finalize();
 
     if (MPIDI_SOCK_global.listen_fd >= 0) {
         close(MPIDI_SOCK_global.listen_fd);

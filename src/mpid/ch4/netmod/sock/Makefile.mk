@@ -8,6 +8,8 @@ if BUILD_CH4_NETMOD_SOCK
 noinst_HEADERS     +=
 mpi_core_sources   += src/mpid/ch4/netmod/sock/func_table.c \
                       src/mpid/ch4/netmod/sock/sock_init.c \
+                      src/mpid/ch4/netmod/sock/sock_conn.c \
+                      src/mpid/ch4/netmod/sock/sock_io.c \
                       src/mpid/ch4/netmod/sock/sock_comm.c \
                       src/mpid/ch4/netmod/sock/sock_datatype.c \
                       src/mpid/ch4/netmod/sock/sock_op.c \
