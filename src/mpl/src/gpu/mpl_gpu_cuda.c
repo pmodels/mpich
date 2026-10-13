@@ -8,6 +8,36 @@
 #include <dlfcn.h>
 #include <assert.h>
 
+#ifdef MPL_CUDA_DLOPEN
+/* This file is built into a module that is dlopen-ed at runtime rather than
+ * into libmpl, see mpl_gpu_cuda_ops.h. The module does not link with libmpl,
+ * so it cannot call other MPL functions. */
+#include "mpl_gpu_cuda_ops.h"
+
+/* The functions in the ops table are only accessed via the table. Hide them
+ * so that they do not clash with the functions of the same names in libmpl. */
+#define MPL_GPU_CUDA_OPS_HIDE(ret, name, params) \
+    ret MPL_gpu_ ## name params __attribute__ ((visibility("hidden")));
+MPL_GPU_CUDA_OPS(MPL_GPU_CUDA_OPS_HIDE)
+#undef MPL_GPU_CUDA_OPS_HIDE
+#undef malloc
+#undef free
+#undef strdup
+#undef MPL_malloc
+#undef MPL_free
+#undef MPL_strdup
+#define MPL_malloc(size, memclass) malloc(size)
+#define MPL_free(ptr) free(ptr)
+#define MPL_strdup(str) strdup(str)
+static MPL_gpu_info_t *gpu_info_ptr;
+#define MPL_gpu_info (*gpu_info_ptr)
+
+static void set_gpu_info(MPL_gpu_info_t * gpu_info)
+{
+    gpu_info_ptr = gpu_info;
+}
+#endif
+
 // We need to give the pre-processor a chance to replace a function, such as:
 // cuMemFree => cuMemFree_v2
 #define STRINGIFY(x) #x
@@ -19,9 +49,11 @@
 static int gpu_initialized = 0;
 static int device_count = -1;
 static int max_dev_id = -1;
-static char **device_list = NULL;
 #define MAX_GPU_STR_LEN 256
+#ifndef MPL_CUDA_DLOPEN
+static char **device_list = NULL;
 static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
+#endif
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
@@ -39,6 +71,8 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
     return ret;
 }
 
+#ifndef MPL_CUDA_DLOPEN
+/* with MPL_CUDA_DLOPEN, these are in mpl_gpu_cuda_dl.c */
 int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
 {
     int ret = MPL_SUCCESS;
@@ -80,6 +114,7 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     *env = affinity_env;
     return ret;
 }
+#endif
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
@@ -315,10 +350,10 @@ int MPL_gpu_init(int debug_summary)
 
     cudaError_t ret;
     ret = cudaGetDeviceCount(&device_count);
-    if (ret == cudaErrorNoDevice) {
-        /* call cudaGetLastError() to consume the error */
-        ret = cudaGetLastError();
-        assert(ret == cudaErrorNoDevice);
+    if (ret == cudaErrorNoDevice || ret == cudaErrorInsufficientDriver) {
+        /* Both codes can indicate no devices available on the system.
+         * Call cudaGetLastError() to consume the error. */
+        cudaGetLastError();
         device_count = 0;
     } else {
         CUDA_ERR_CHECK(ret);
@@ -545,3 +580,12 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
     result = cudaStreamQuery(stream);
     return (result != cudaErrorInvalidResourceHandle);
 }
+
+#ifdef MPL_CUDA_DLOPEN
+#define MPL_GPU_CUDA_OPS_ENTRY(ret, name, params) .name = MPL_gpu_ ## name,
+__attribute__ ((visibility("default")))
+const MPL_gpu_cuda_ops_t MPL_gpu_cuda_ops = {
+    .set_gpu_info = set_gpu_info,
+    MPL_GPU_CUDA_OPS(MPL_GPU_CUDA_OPS_ENTRY)
+};
+#endif
