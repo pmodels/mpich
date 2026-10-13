@@ -12,48 +12,490 @@ def main():
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
     func_list = load_C_func_list(binding_dir, silent=True)
-    G.algos = load_coll_algos("src/mpi/coll/coll_algorithms.txt")
 
-    coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
+    G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
-    G.out = []
-    G.prototypes_hash = {}
+    # Loading coll_algorithms.txt. It sets -
+    #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
+    #   - G.algos:      a two level array: [func-commkind][algo]
+    load_coll_algos("src/mpi/coll/coll_algorithms.txt")
+    # Prepare a one level algo array for conveninece -
+    #   - G.algo_list:    a one level array [algo]
+    G.algo_list = collect_algo_list()
+
+    G.out = []  # output to mpir_coll.c
+    G.out2 = [] # output to coll_algos.h
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"iallgatherv/iallgatherv.h\"")
     G.out.append("#include \"coll_csel.h\"")
-    for a in coll_names:
+    for a in G.coll_names:
         dump_coll(a, "blocking")
         dump_coll(a, "nonblocking")
         dump_coll(a, "persistent")
-    dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
-    dump_prototypes("src/mpi/coll/include/coll_algos.h", G.prototypes)
 
-def add_prototype(l):
-    if RE.match(r'int\s+(\w+)\(', l):
-        func_name = RE.m.group(1)
-        if func_name not in G.prototypes_hash:
-            G.prototypes_hash[func_name] = 1
-            G.prototypes.append(l)
-        else:
+    # dump the container version of the algorithms
+    dump_algo_cnt_fns()
+    add_algo_prototypes()
+    for a in G.coll_names:
+        add_sched_auto_prototypes(a)
+
+    # initialize MPIR_Coll_cvar_table and MPIR_Coll_type_names
+    dump_MPII_Coll_type_init()
+    # initialize MPIR_Coll_algo_table and MPIR_Coll_algo_names
+    dump_MPII_Coll_algo_init()
+    # initialize MPIR_Coll_condition_names
+    dump_MPII_Csel_init_condition_names()
+    # parsing routines for loading JSONs
+    dump_MPII_Csel_parse_container()
+    dump_MPII_Csel_parse_operator()
+    # check operator condition in Csel search
+    dump_MPII_Csel_run_condition()
+
+    # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
+    dump_MPIR_Csel_coll_type_e()
+    # enum for algorithm id, define MPIR_CSEL_NUM_ALGORITHMS
+    dump_MPIR_Csel_container_type_e()
+    # enum CSEL_NODE_TYPE, define MPIR_CSEL_NUM_CONDITIONS
+    dump_MPIR_Csel_node_type_e()
+    # algorithm container struct
+    dump_MPII_Csel_container()
+    G.out2.append("")
+
+    dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
+    dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
+
+#----------------------------------------
+def collect_algo_list():
+    algo_list = []
+    for coll in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for blocking in (True, False):
+                if blocking:
+                    func_commkind = coll + '-' + commkind
+                else:
+                    func_commkind = 'i' + coll + '-' + commkind
+                if func_commkind in G.algos:
+                    for algo in G.algos[func_commkind]:
+                        if "allcomm" in algo and func_commkind.endswith("inter"):
+                            continue
+                        algo_list.append(algo)
+    for algo in G.algos['general']:
+        algo_list.append(algo)
+    return algo_list
+
+def dump_algo_cnt_fns():
+    def get_coll_args(func, func_name):
+        args = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                args.append("coll_sig->comm_ptr")
+            else:
+                args.append("coll_sig->u.%s.%s" % (func_name, p['name']))
+        return ', '.join(args)
+
+    def get_algo_args(func, func_name, algo):
+        args = get_coll_args(func, func_name)
+        if 'extra_params' in algo:
+            args += ", " + get_algo_extra_args(algo, "csel")
+
+        if func_name.startswith('i'):
+            args += ", coll_sig->sched"
+        elif func_name.startswith('neighbor_'):
             pass
+        else:
+            args += ", 0" # coll_attr
+
+        return args
+
+    def dump_algo_prep(func_name, algo):
+        if func_name.startswith('i'):
+            if algo['name'].startswith('tsp_'):
+                G.out.append("MPII_CSEL_CREATE_TSP_SCHED(coll_sig);")
+            else:
+                G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
+
+    G.out.append("")
+    for algo in G.algo_list:
+        if algo["func-commkind"] != 'general':
+            func_name, commkind = algo['func-commkind'].split("-")
+            if func_name.startswith('i'):
+                # use blocking func for base parameters
+                func = G.FUNCS["mpi_" + func_name[1:]]
+            else:
+                func = G.FUNCS["mpi_" + func_name]
+            algo_funcname = get_algo_funcname(algo)
+            algo_args = get_algo_args(func, func_name, algo)
+            decl = "int %s_cnt(%s)" % (algo_funcname, "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
+            add_prototype(decl)
+            dump_split(0, decl)
+            dump_open('{')
+            G.out.append("int mpi_errno = MPI_SUCCESS;")
+            G.out.append("")
+            dump_algo_prep(func_name, algo)
+            dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
+            G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+            dump_fn_exit()
+            dump_close('}')
+            G.out.append("")
+
+def add_algo_prototypes():
+    def get_coll_params(func):
+        mapping = G.MAPS['SMALL_C_KIND_MAP']
+        params = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                params.append("MPIR_Comm * comm_ptr")
+            else:
+                s = get_C_param(p, func, mapping)
+                if p['kind'].startswith('POLY'):
+                    s = re.sub(r'\bint ', 'MPI_Aint ', s)
+                params.append(s)
+        return ', '.join(params)
+
+    def get_algo_params(func, func_name, algo):
+        params = get_coll_params(func)
+        if 'extra_params' in algo:
+            params += ", " + get_algo_extra_params(algo)
+
+        if func_name.startswith('i'):
+            if algo['name'].startswith('tsp_'):
+                params += ", MPIR_TSP_sched_t s"
+            elif algo['name'].startswith('sched_'):
+                params += ", MPIR_Sched_t s"
+            else:
+                params += ", MPIR_Request **request"
+        elif func_name.startswith('neighbor_'):
+            pass
+        else:
+            params += ", int coll_attr" # coll_attr
+
+        return params
+
+    for algo in G.algo_list:
+        if algo['func-commkind'] == "general":
+            continue
+        func_name, commkind = algo['func-commkind'].split("-")
+        if func_name.startswith('i'):
+            # use blocking func for base parameters
+            func = G.FUNCS["mpi_" + func_name[1:]]
+        else:
+            func = G.FUNCS["mpi_" + func_name]
+
+        algo_funcname = get_algo_funcname(algo)
+        algo_params = get_algo_params(func, func_name, algo)
+        decl = "int %s(%s)" % (algo_funcname, algo_params)
+        add_prototype(decl)
+
+def add_sched_auto_prototypes(name):
+    def get_coll_params(func):
+        mapping = G.MAPS['SMALL_C_KIND_MAP']
+        params = []
+        for p in func['parameters']:
+            if p['name'] == 'comm':
+                params.append("MPIR_Comm * comm_ptr")
+            else:
+                s = get_C_param(p, func, mapping)
+                if p['kind'].startswith('POLY'):
+                    s = re.sub(r'\bint ', 'MPI_Aint ', s)
+                params.append(s)
+        return ', '.join(params)
+
+    func = G.FUNCS["mpi_" + name]
+    params = get_coll_params(func)
+    params += ", MPIR_Sched_t s"
+    add_prototype("int MPIR_I%s_intra_sched_auto(%s)" % (name, params))
+    if not re.match(r'(scan|exscan|neighbor_)', name):
+        add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (name, params))
+
+#---- dumping to G.out (mpir_coll.c) ----
+
+def dump_MPII_Coll_type_init():
+    G.out.append("")
+    decl = "void MPII_Coll_type_init(void)"
+    G.out.append(decl)
+    dump_open('{')
+
+    # populate MPIR_Coll_cvar_table[] with CVAR values at init time
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', a):
+                    # CVARs for these inter-collective does not exist
+                    G.out.append("MPIR_Coll_cvar_table[%s] = 0;" % (coll_type(a, is_blocking, commkind)))
+                else:
+                    G.out.append("MPIR_Coll_cvar_table[%s] = %s;" % (coll_type(a, is_blocking, commkind), cvar_name(a, is_blocking, commkind)))
+
+    # populate MPIR_Coll_type_names[]
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                if is_blocking:
+                    coll_type_name = a + '-' + commkind
+                else:
+                    coll_type_name = 'i' + a + '-' + commkind
+                G.out.append("MPIR_Coll_type_names[%s] = \"%s\";" % (coll_type(a, is_blocking, commkind), coll_type_name))
+
+    dump_close('}')
+
+def dump_MPII_Csel_init_condition_names():
+    G.out.append("")
+    decl = "void MPII_Csel_init_condition_names(void)"
+    G.out.append(decl)
+    dump_open('{')
+    for a in G.conditions:
+        G.out.append("MPIR_Csel_condition_names[%s] = \"%s\";" % (condition_id(a), get_condition_name(a)))
+    dump_close('}')
+
+def dump_MPII_Coll_algo_init():
+    G.out.append("")
+    decl = "void MPII_Coll_algo_init(void)"
+    G.out.append(decl)
+    dump_open('{')
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        idx = algo_id(algo_funcname)
+        if a['func-commkind'] != 'general':
+            algo_funcname += "_cnt"
+        G.out.append("MPIR_Coll_algo_table[%s] = %s;" % (idx, algo_funcname))
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        idx = algo_id(algo_funcname)
+        G.out.append("MPIR_Coll_algo_names[%s] = \"%s\";" % (idx, algo_funcname))
+    dump_close('}')
+
+def dump_MPII_Csel_parse_container():
+    """Generate MPII_Csel_parse_container_params()."""
+    G.out.append("")
+    def dump_json_foreach_open():
+        dump_open("json_object_object_foreach(obj, key, val) {")
+        G.out.append("char *ckey = MPL_strdup_no_spaces(key);")
+
+    def dump_json_foreach_close():
+        G.out.append("MPL_free(ckey);")
+        dump_close("}")
+
+    def dump_parse_params():
+        dump_open("switch (cnt->id) {")
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                struct_name = algo_struct_name(algo)
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+                dump_open('{') # protect json_object_object_foreach
+                G.out.append("int num_params = 0;")
+                num_expect = 0
+                dump_json_foreach_open()
+                ifstr = "if"
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        num_expect += 1
+                        n = len(a) + 1
+                        atoi = "atoi"
+                        if a == "tree_type":
+                            atoi = "get_tree_type_from_string"
+                        G.out.append("%s (!strncmp(ckey, \"%s=\", %d)) {" % (ifstr, a, n))
+                        G.out.append("    cnt->u.%s.%s = %s(ckey + %d);" % (struct_name, a, atoi, n))
+                        G.out.append("    num_params++;")
+                        ifstr = "} else if"
+                G.out.append("}")
+                dump_json_foreach_close();
+                dump_open("if (num_params != %d) {" % num_expect)
+                G.out.append("printf(\"MPII_Csel_parse_container_params: algorithm %s expect %d parameters\\\n\");" % (struct_name, num_expect))
+                dump_close('}')
+                G.out.append("MPIR_Assert(num_params == %d);" % num_expect)
+                dump_close('}')
+                G.out.append("    break;")
+        G.out.append("default:")
+        G.out.append("    break;")
+        dump_close('}') # switch
+
+    decl = "void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s *cnt)"
+    G.out.append(decl)
+    dump_open('{')
+    dump_parse_params()
+    dump_close('}')
+
+def dump_MPII_Csel_run_condition():
+    decl = "MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s *node, MPIR_Csel_coll_sig_s *coll_sig)"
+    G.out.append(decl)
+    dump_open('{')
+    G.out.append("bool cond;")
+    dump_open("switch(node->type) {")
+    for a in G.conditions:
+        has_thresh = condition_has_thresh(a)
+        cond_func = get_condition_function(a)
+        dump_open("case %s:" % condition_id(a))
+        if has_thresh:
+            G.out.append("cond = (%s(coll_sig) <= node->u.condition.thresh);" % cond_func)
+        else:
+            G.out.append("cond = %s(coll_sig);" % cond_func)
+        G.out.append("if (node->u.condition.negate) cond = !cond;")
+        G.out.append("return cond ? node->success : node->failure;")
+        dump_close("")
+    G.out.append("default:")
+    G.out.append("    break;")
+    dump_close('}') # switch
+    G.out.append("return NULL;")
+    dump_close('}')
+
+def dump_MPII_Csel_parse_operator():
+    def dump_static_parse_thresh():
+        # following are interchangeable:
+        #     cond<=thresh is the same as cond(thresh)
+        #     cond<thresh is the same as cond(thresh-1)
+        #     cond>thresh is the same as !cond(thresh)
+        #     cond>=thresh is the same as !cond(thresh-1)
+        G.out.append("static void parse_thresh(const char *ckey, MPIR_Csel_node_s *node)")
+        dump_open('{')
+        G.out.append("if (ckey[0] == '(') {")
+        G.out.append("    node->u.condition.thresh = atoi(ckey + 1);")
+        G.out.append("} else if (ckey[0] == '<' && ckey[1] == '=') {")
+        G.out.append("    node->u.condition.thresh = atoi(ckey + 2);")
+        G.out.append("} else if (ckey[0] == '<') {")
+        G.out.append("    node->u.condition.thresh = atoi(ckey + 1) - 1;")
+        G.out.append("} else if (ckey[0] == '>' && ckey[1] == '=') {")
+        G.out.append("    node->u.condition.thresh = atoi(ckey + 2) - 1;")
+        G.out.append("    node->u.condition.negate = true;")
+        G.out.append("} else if (ckey[0] == '>') {")
+        G.out.append("    node->u.condition.thresh = atoi(ckey + 1);")
+        G.out.append("    node->u.condition.negate = true;")
+        G.out.append("} else {")
+        G.out.append("    MPIR_Assert(0);")
+        G.out.append('}')
+        dump_close('}')
+        G.out.append("")
+
+    dump_static_parse_thresh()
+
+    decl = "int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s *node)"
+    G.out.append(decl)
+    dump_open('{')
+    dump_open("if (ckey[0] == '!') {")
+    G.out.append("node->u.condition.negate = true;")
+    G.out.append("ckey++;")
+    dump_else()
+    G.out.append("node->u.condition.negate = false;")
+    dump_close('}')
+
+    if_clase = "if"
+    for a in G.conditions:
+        name = get_condition_name(a)
+        has_thresh = condition_has_thresh(a)
+        n = len(name)
+        if has_thresh:
+            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, name, n))
+            G.out.append("    node->type = %s;" % condition_id(a))
+            G.out.append("    parse_thresh(ckey + %d, node);" % n)
+        else:
+            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, name))
+            G.out.append("    node->type = %s;" % condition_id(a))
+        if_clase = "} else if"
+    G.out.append("} else {")
+    G.out.append("    MPIR_Assert(0);")
+    G.out.append("    return MPI_ERR_OTHER;")
+    G.out.append("}")
+
+    G.out.append("")
+    G.out.append("return MPI_SUCCESS;")
+    dump_close('}')
+
+#---- dumping to G.out2 (coll_algos.h) ----
+
+# e.g. MPIR_CSEL_COLL_TYPE__BARRIER, etc.
+def dump_MPIR_Csel_coll_type_e():
+    G.out2.append("")
+    G.out2.append("enum MPIR_Csel_coll_type {")
+    # IMPORTANT: MPIR_Coll_nb algorithm relies on that blocking coll_type is even and its
+    #            nonblocking correspondent is coll_type+1.
+    for a in G.coll_names:
+        for commkind in ("intra", "inter"):
+            for is_blocking in (True, False):
+                G.out2.append("    %s," % coll_type(a, is_blocking, commkind))
+    G.out2.append("    %s" % coll_type_END())
+    G.out2.append("};")
+    G.out2.append("")
+    G.out2.append("#define MPIR_CSEL_NUM_COLL_TYPES %s" % coll_type_END())
+
+def dump_MPIR_Csel_container_type_e():
+    G.out2.append("")
+    G.out2.append("enum MPII_Csel_container_type {")
+    for a in G.algo_list:
+        algo_funcname = get_algo_funcname(a)
+        G.out2.append("    %s," % algo_id(algo_funcname))
+    G.out2.append("    %s" % algo_id_END())
+    G.out2.append("};")
+    G.out2.append("")
+    G.out2.append("#define MPIR_CSEL_NUM_ALGORITHMS %s" % algo_id_END())
+
+def dump_MPIR_Csel_node_type_e():
+    """generate condition IDs as CSEL_NODE_TYPE__OPERATOR__XXX."""
+    G.out2.append("")
+    G.out2.append("typedef enum {")
+    for a in G.conditions:
+        G.out2.append("    %s," % condition_id(a))
+    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,")
+    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__ANY,")
+    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__CALL,")
+    G.out2.append("    CSEL_NODE_TYPE__CONTAINER,")
+    G.out2.append("} MPIR_Csel_node_type_e;")
+    G.out2.append("")
+    G.out2.append("#define MPIR_CSEL_NUM_CONDITIONS %s\n" % "CSEL_NODE_TYPE__OPERATOR__COLLECTIVE")
+
+def dump_MPII_Csel_container():
+    """Generate struct MPII_Csel_container."""
+    G.out2.append("")
+    def dump_algo_params():
+        for algo in G.algo_list:
+            if 'extra_params' in algo:
+                extra_params = algo['extra_params'].replace(' ', '').split(',')
+                G.out2.append("        struct {")
+                for a in extra_params:
+                    if re.match(r'\w+=(.+)', a):
+                        # skip constant parameter
+                        continue
+                    else:
+                        G.out2.append("            int %s;" % a)
+                G.out2.append("        } %s;" % algo_struct_name(algo))
+
+    G.out2.append("typedef struct MPII_Csel_container {")
+    G.out2.append("    MPII_Csel_container_type_e id;")
+    G.out2.append("    union {")
+    dump_algo_params()
+    G.out2.append("    } u;")
+    G.out2.append("} MPII_Csel_container_s;")
+
+#----------------------------------------
+def add_prototype(l):
+    G.prototypes.append(l)
 
 def load_coll_algos(algo_txt):
-    All = {}
+    G.algos = {}
+    G.conditions = {}
     with open(algo_txt) as In:
         (func_commkind, algo_list, algo) = (None, None, None)
         for line in In:
-            if RE.match(r'(\w+-(intra|inter)):', line):
+            if RE.match(r'(\w+-(intra|inter)|general|conditions):', line):
                 func_commkind = RE.m.group(1)
-                algo_list = []
-                All[func_commkind] = algo_list
-            elif RE.match(r'\s+(\w+)\s*$', line):
-                algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
-                algo_list.append(algo)
-            elif RE.match(r'\s+(\w+):\s*(.+)', line):
-                (key, value) = RE.m.group(1,2)
-                algo[key] = value
-    return All
+                if func_commkind != "conditions":
+                    algo_list = []
+                    G.algos[func_commkind] = algo_list
+            elif func_commkind == "conditions":
+                if RE.match(r'\s+([\w()-]+):\s*(\w+.*)', line):
+                    G.conditions[RE.m.group(1)] = RE.m.group(2)
+            elif func_commkind:
+                if RE.match(r'\s+(\w+)\s*$', line):
+                    algo = {"name": RE.m.group(1), "func-commkind": func_commkind}
+                    algo_list.append(algo)
+                elif RE.match(r'\s+(\w+):\s*(.+)', line):
+                    algo[RE.m.group(1)] = RE.m.group(2)
+    # temporarily add nb entries
+    for coll in G.coll_names:
+        algo = {"name": "nb", "func-commkind": "%s-intra" % coll, "allcomm": 1}
+        G.algos[algo["func-commkind"]].append(algo)
 
 def dump_coll(name, blocking_type):
     if blocking_type == "blocking":
@@ -94,11 +536,14 @@ def dump_allcomm_auto_blocking(name):
 
     # -- Csel_search
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
-    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
+    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
+    dump_close("};")
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
     dump_close("};")
     G.out.append("")
     G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
@@ -112,7 +557,6 @@ def dump_allcomm_auto_blocking(name):
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     dump_open("switch (cnt->id) {")
@@ -132,11 +576,6 @@ def dump_allcomm_auto_blocking(name):
             G.out.append("break;");
             G.out.append("DEDENT")
             G.out.append("")
-    G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_allcomm_nb:" % Name)
-    add_prototype("int MPIR_%s_allcomm_nb(%s);" % (Name, func_params))
-    dump_split(2, "   mpi_errno = MPIR_%s_allcomm_nb(%s);" % (Name, func_args))
-    G.out.append("   break;");
-    G.out.append("")
     G.out.append("default:")
     G.out.append("    MPIR_Assert(0);")
     dump_close("}")
@@ -169,22 +608,19 @@ def dump_allcomm_sched_auto(name):
 
     # -- Csel_search
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
-    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
+    G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
     dump_close("};")
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {")
+    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
+    dump_close("};")
     G.out.append("")
     G.out.append("MPII_Csel_container_s *cnt = MPIR_Csel_search(MPIR_Csel_selection, &coll_sig);")
     G.out.append("MPIR_Assert(cnt);")
     G.out.append("")
-
-    # -- add shced_auto prototypes
-    sched_auto_params = get_func_params(params, name, "sched_auto")
-    add_prototype("int MPIR_%s_intra_sched_auto(%s)" % (Name, sched_auto_params))
-    if not re.match(r'(scan|exscan|neighbor_)', name):
-        add_prototype("int MPIR_%s_inter_sched_auto(%s)" % (Name, sched_auto_params))
 
     # -- switch
     def dump_cnt_algo_tsp(algo, commkind):
@@ -192,7 +628,6 @@ def dump_allcomm_sched_auto(name):
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_TSP_%s_sched_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_TSP_%s_sched_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_sched(algo, commkind):
@@ -200,7 +635,6 @@ def dump_allcomm_sched_auto(name):
         algo_name = get_algo_name(algo)
         algo_args = get_algo_args(args, algo, "csel")
         algo_params = get_algo_params(params, algo)
-        add_prototype("int MPIR_%s_%s_%s(%s)" % (Name, commkind, algo_name, algo_params))
         dump_split(3, "mpi_errno = MPIR_%s_%s_%s(%s);" % (Name, commkind, algo_name, algo_args))
 
     def dump_cnt_algo_request(algo, commkind):
@@ -223,7 +657,8 @@ def dump_allcomm_sched_auto(name):
                 else:
                     # skip inter since it is covered already
                     continue
-            G.out.append("case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_%s_%s_%s:" % (Name, use_commkind, algo['name']))
+            algo_funcname = get_algo_funcname(algo)
+            G.out.append("case %s:" % algo_id(algo_funcname))
             G.out.append("INDENT")
             if algo['name'].startswith('tsp_'):
                 dump_cnt_algo_tsp(algo, use_commkind)
@@ -593,21 +1028,21 @@ def dump_fallback(algo):
     for a in algo['restrictions'].replace(" ","").split(','):
         if a == "inplace":
             cond_list.append("sendbuf == MPI_IN_PLACE")
-        elif a == "noinplace":
+        elif a == "!inplace":
             cond_list.append("sendbuf != MPI_IN_PLACE")
-        elif a == "power-of-two":
+        elif a == "pof2":
             cond_list.append("MPL_is_pof2(comm_ptr->local_size)")
-        elif a == "size-ge-pof2":
+        elif a == "count_ge_pof2":
             cond_list.append("count >= MPL_pof2(comm_ptr->local_size)")
         elif a == "commutative":
             cond_list.append("MPIR_Op_is_commutative(op)")
-        elif a== "builtin-op":
+        elif a== "builtin_op":
             cond_list.append("HANDLE_IS_BUILTIN(op)")
-        elif a == "parent-comm":
+        elif a == "hierarchical":
             cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
-        elif a == "node-consecutive":
+        elif a == "node_consecutive":
             cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
-        elif a == "displs-ordered":
+        elif a == "displs_ordered":
             # assume it's allgatherv
             cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
         else:
@@ -643,6 +1078,24 @@ def get_params_and_args(func):
 
     return (', '.join(params), ', '.join(args))
 
+def get_algo_funcname(algo):
+    if "func_name" in algo:
+        return algo['func_name']
+    if algo["func-commkind"] == "general":
+        return algo['name']
+
+    func_name, commkind = algo["func-commkind"].split("-")
+    if 'allcomm' in algo:
+        commkind = 'allcomm'
+    Name = func_name.capitalize()
+    if func_name.startswith('i'):
+        if algo['name'].startswith('tsp_'):
+            return "MPIR_TSP_%s_sched_%s_%s" % (Name, commkind, get_algo_name(algo))
+        else:
+            return "MPIR_%s_%s_%s" % (Name, commkind, get_algo_name(algo))
+    else:
+        return "MPIR_%s_%s_%s" % (Name, commkind, get_algo_name(algo))
+
 def get_algo_extra_args(algo, kind):
     (func_name, commkind) = algo['func-commkind'].split('-')
     extra_params = algo['extra_params'].replace(' ', '').split(',')
@@ -657,7 +1110,7 @@ def get_algo_extra_args(algo, kind):
             out_list.append(RE.m.group(1))
         else:
             if kind == "csel":
-                prefix = "cnt->u.%s.%s_%s." % (func_name, commkind, algo['name'])
+                prefix = "cnt->u.%s." % algo_struct_name(algo)
                 out_list.append(prefix + extra_params[i])
             elif kind == "cvar":
                 prefix = "MPIR_CVAR_%s_" % func_name.upper() 
@@ -775,6 +1228,53 @@ def get_func_args(args, name, kind):
     return func_args
 
 # ----------------------
+def coll_type(coll_name, is_blocking, commkind):
+    prefix = "MPIR_CSEL_COLL_TYPE"
+    if is_blocking:
+        return "%s__%s_%s" % (prefix, commkind.upper(), coll_name.upper())
+    else:
+        return "%s__%s_I%s" % (prefix, commkind.upper(), coll_name.upper())
+
+def coll_type_END():
+    return "MPIR_CSEL_COLL_TYPE__END"
+
+def cvar_name(coll_name, is_blocking, commkind):
+    if is_blocking:
+        return "MPIR_CVAR_%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
+    else:
+        return "MPIR_CVAR_I%s_%s_ALGORITHM" % (coll_name.upper(), commkind.upper())
+
+def algo_id(algo_funcname):
+    prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
+    return "%s__%s" % (prefix, algo_funcname)
+
+def algo_id_END():
+    return "MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END"
+
+def algo_struct_name(algo):
+    """Union member name for this algo, i.e. cnt->u.xxx, which is a struct for its extra params."""
+    algo_funcname = get_algo_funcname(algo)
+    struct_name = re.sub(r'MPIR_', '', algo_funcname).lower()
+    return struct_name
+
+def condition_has_thresh(a):
+    return a.endswith('(thresh)')
+
+def get_condition_name(a):
+    name = re.sub(r'\(thresh\)$', '', a)
+    return name
+
+def get_condition_function(a):
+    if RE.match(r'(\w+)\s*$', G.conditions[a]):
+        return RE.m.group(1)
+    else:
+        return "MPIR_CSEL_check_" + get_condition_name(a)
+
+def condition_id(a):
+    prefix = "CSEL_NODE_TYPE__OPERATOR__"
+    return prefix + get_condition_name(a)
+
+# ----------------------
 def dump_c_file(f, lines):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
@@ -798,14 +1298,19 @@ def dump_c_file(f, lines):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
-def dump_prototypes(f, prototypes):
+def dump_coll_algos_h(f, prototypes, extra_lines):
     print("  --> [%s]" % f)
     with open(f, "w") as Out:
         for l in G.copyright_c:
             print(l, file=Out)
+
         print("#ifndef COLL_ALGOS_H_INCLUDED", file=Out)
         print("#define COLL_ALGOS_H_INCLUDED", file=Out)
         print("", file=Out)
+
+        for l in extra_lines:
+            print(l, file=Out)
+
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:

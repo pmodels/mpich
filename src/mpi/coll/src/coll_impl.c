@@ -105,7 +105,7 @@ MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
-void *MPIR_Csel_selection = NULL;
+MPIR_Csel_node_s *MPIR_Csel_selection = NULL;
 
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
@@ -167,9 +167,9 @@ int get_ccl_from_string(const char *ccl_str)
 #define LOAD_CSEL_JSON(csel_var, cvar_name, builtin_str) \
    do { \
         if (!strcmp(cvar_name, "")) { \
-            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_buf(builtin_str, &csel_var); \
         } else { \
-            mpi_errno = MPIR_Csel_create_from_file(cvar_name, MPII_Create_container, &csel_var); \
+            mpi_errno = MPIR_Csel_create_from_file(cvar_name, &csel_var); \
         } \
         MPIR_ERR_CHECK(mpi_errno); \
    } while (0)
@@ -209,11 +209,6 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* FIXME: this is hackish. Define the "num" constants in coll_algos.h (generated) */
-#define MPIR_CSEL_NUM_COLL_TYPES 1
-#define MPIR_CSEL_NUM_ALGORITHMS 1
-#define MPIR_CSEL_NUM_CONDITIONS 1
-
     MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
     MPIR_Coll_type_names = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(char *), MPL_MEM_COLL);
     MPIR_Coll_algo_table =
@@ -222,6 +217,9 @@ int MPII_Coll_init(void)
     MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
 
     /* initialize names and tables */
+    MPII_Coll_type_init();
+    MPII_Coll_algo_init();
+    MPII_Csel_init_condition_names();
 
     /* initialize selection tree */
     LOAD_CSEL_JSON(MPIR_Csel_selection,
@@ -402,4 +400,13 @@ void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, v
         request->u.persist_coll.coll.datatype = datatype;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
     }
+}
+
+int MPIR_Coll_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+
+    return mpi_errno;
 }

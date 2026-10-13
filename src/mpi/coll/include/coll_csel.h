@@ -8,20 +8,38 @@
 
 #include "json.h"
 
+typedef struct MPIR_Csel_node {
+    MPIR_Csel_node_type_e type;
+    union {
+        struct {
+            MPIR_Csel_coll_type_e coll_type;
+        } collective;
+        struct {
+            bool negate;
+            int thresh;
+        } condition;
+        MPII_Csel_container_s *container;
+    } u;
+    struct MPIR_Csel_node *success;
+    struct MPIR_Csel_node *failure;
+} MPIR_Csel_node_s;
+
 extern MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 extern int *MPIR_Coll_cvar_table;
 extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
 
-int MPIR_Csel_create_from_file(const char *json_file,
-                               void *(*create_container) (struct json_object *), void **csel);
-int MPIR_Csel_create_from_buf(const char *json,
-                              void *(*create_container) (struct json_object *), void **csel);
-int MPIR_Csel_free(void *csel);
-void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Csel_create_from_file(const char *json_file, MPIR_Csel_node_s ** csel);
+int MPIR_Csel_create_from_buf(const char *json, MPIR_Csel_node_s ** csel);
+int MPIR_Csel_free(MPIR_Csel_node_s * csel);
+MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
+void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
 
-void *MPII_Create_container(struct json_object *obj);
+/* generated routines by gen_coll.py from coll_algorithms.txt */
+void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt);
+int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s * node);
+MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s * node, MPIR_Csel_coll_sig_s * coll_sig);
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig)
 {
@@ -31,8 +49,10 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig
 }
 
 #define COLL_TYPE_ALL_CASE(NAME) \
-    case MPIR_CSEL_COLL_TYPE__  ## NAME: \
-    case MPIR_CSEL_COLL_TYPE__I ## NAME
+    case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTER_  ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTER_I ## NAME
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_avg_msg_size(MPIR_Csel_coll_sig_s * coll_sig)
 {
