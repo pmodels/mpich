@@ -12,6 +12,8 @@ typedef enum MPII_Csel_container_type MPII_Csel_container_type_e;
 typedef struct MPIR_Csel_coll_sig MPIR_Csel_coll_sig_s;
 typedef struct MPII_Csel_container MPII_Csel_container_s;
 
+typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+
 #include "coll_impl.h"
 #include "coll_algos.h"
 
@@ -166,6 +168,7 @@ enum MPII_Csel_container_type {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_tree,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_ring,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_reduce_scatter_recexch_allgatherv,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_smp,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast,
@@ -193,6 +196,7 @@ enum MPII_Csel_container_type {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_intra_tsp_k_dissemination,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_inter_sched_bcast,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_tree,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_allgatherv,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_ring_allgatherv,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_ring,
@@ -463,6 +467,9 @@ struct MPII_Csel_container {
                 int k;
             } intra_tsp_recexch_multiple_buffer;
             struct {
+                int k;
+            } intra_tsp_recexch;
+            struct {
                 int tree_type;
                 int k;
                 int chunk_size;
@@ -525,10 +532,14 @@ struct MPII_Csel_container {
             struct {
                 int scatterv_k;
                 int allgatherv_k;
-            } intra_tsp_scatterv_recexch_allgatherv;
+            } intra_tsp_scatterv_allgatherv;
             struct {
                 int scatterv_k;
             } intra_tsp_scatterv_ring_allgatherv;
+            struct {
+                int scatterv_k;
+                int allgatherv_k;
+            } intra_tsp_scatterv_recexch_allgatherv;
         } ibcast;
         struct {
             struct {
