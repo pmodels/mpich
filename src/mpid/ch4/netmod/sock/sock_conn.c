@@ -11,6 +11,7 @@
 #include <netinet/tcp.h>
 
 static int add_conn(int fd, bool is_outgoing, MPIDI_SOCK_conn_t ** conn_p);
+static int send_hello(int fd);
 
 int MPIDI_SOCK_set_nonblock(int fd)
 {
@@ -116,8 +117,8 @@ static int add_conn(int fd, bool is_outgoing, MPIDI_SOCK_conn_t ** conn_p)
 
     conn->fd = fd;
     conn->is_outgoing = is_outgoing;
-    conn->recv_state = MPIDI_SOCK_RECV_HDR;
-    conn->recv_need = sizeof(MPIDI_SOCK_am_header_t);
+    conn->recv_state = MPIDI_SOCK_RECV_HELLO;
+    conn->recv_need = sizeof(MPIDI_SOCK_hello_t);
 
     int idx = MPIDI_SOCK_global.num_pollfds++;
     conn->poll_idx = idx;
@@ -136,10 +137,37 @@ static int add_conn(int fd, bool is_outgoing, MPIDI_SOCK_conn_t ** conn_p)
     goto fn_exit;
 }
 
+/* Write the hello message to a socket that was just connected and is still
+ * blocking. Returns 0 on success, with errno set otherwise. */
+static int send_hello(int fd)
+{
+    MPIDI_SOCK_hello_t hello;
+    memset(&hello, 0, sizeof(hello));
+    hello.magic = MPIDI_SOCK_HELLO_MAGIC;
+    hello.version = MPIDI_SOCK_HELLO_VERSION;
+
+    const char *p = (const char *) &hello;
+    size_t left = sizeof(hello);
+    while (left > 0) {
+        ssize_t n = send(fd, p, left, MSG_NOSIGNAL);
+        if (n < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            return -1;
+        }
+        p += n;
+        left -= n;
+    }
+    return 0;
+}
+
 /* Open the outgoing connection to a process.
  *
  * The connect is blocking. It completes once the connection is in the listen
- * queue of the peer, so it does not depend on the peer calling accept. */
+ * queue of the peer, so it does not depend on the peer calling accept. The
+ * hello message is written before the socket is made non-blocking; it always
+ * fits in the empty socket buffer. */
 int MPIDI_SOCK_conn_connect(MPIDI_av_entry_t * av, MPIDI_SOCK_conn_t ** conn_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,13 +181,17 @@ int MPIDI_SOCK_conn_connect(MPIDI_av_entry_t * av, MPIDI_SOCK_conn_t ** conn_p)
     MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d",
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+    char addr_str[MPIDI_SOCK_PEER_STR_LEN - 16];
+    MPL_sockaddr_to_str(&name->saddr, addr_str, sizeof(addr_str));
+
     int ret;
     do {
         ret = MPL_connect(fd, &name->saddr, name->port);
     } while (ret != 0 && errno == EINTR);
+    if (ret == 0) {
+        ret = send_hello(fd);
+    }
     if (ret != 0) {
-        char addr_str[100];
-        MPL_sockaddr_to_str(&name->saddr, addr_str, sizeof(addr_str));
         MPIR_ERR_SETANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ch4_sock_connect",
                              "**ch4_sock_connect %s %d %s %d", addr_str, name->port,
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
@@ -176,6 +208,7 @@ int MPIDI_SOCK_conn_connect(MPIDI_av_entry_t * av, MPIDI_SOCK_conn_t ** conn_p)
 
     mpi_errno = add_conn(fd, true, conn_p);
     MPIR_ERR_CHECK(mpi_errno);
+    snprintf((*conn_p)->peer, MPIDI_SOCK_PEER_STR_LEN, "%s port %d", addr_str, name->port);
 
     MPIDI_SOCK_AV(av).conn = *conn_p;
 
@@ -195,7 +228,10 @@ int MPIDI_SOCK_conn_accept(void)
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
 
     while (true) {
-        int fd = accept(MPIDI_SOCK_global.listen_fd, NULL, NULL);
+        MPL_sockaddr_t addr;
+        socklen_t addr_len = sizeof(addr);
+        memset(&addr, 0, sizeof(addr));
+        int fd = accept(MPIDI_SOCK_global.listen_fd, (struct sockaddr *) &addr, &addr_len);
         if (fd < 0) {
             if (errno == EINTR || errno == ECONNABORTED) {
                 continue;
@@ -219,6 +255,7 @@ int MPIDI_SOCK_conn_accept(void)
             close(fd);
             MPIR_ERR_POP(mpi_errno);
         }
+        MPL_sockaddr_to_str(&addr, conn->peer, MPIDI_SOCK_PEER_STR_LEN);
     }
 
   fn_exit:

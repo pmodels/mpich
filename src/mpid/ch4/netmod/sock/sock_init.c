@@ -29,6 +29,29 @@ cvars:
         sock netmod sends as an eager message. Larger messages use the
         rendezvous protocol. It is capped by MPIR_CVAR_CH4_PACK_BUFFER_SIZE.
 
+    - name        : MPIR_CVAR_CH4_SOCK_IFACE
+      category    : CH4_SOCK
+      type        : string
+      default     : NULL
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If non-NULL, the name of the network interface (e.g. "eth1") whose
+        address other processes use to connect to this process. By default
+        it is the first interface that is not the loopback.
+
+    - name        : MPIR_CVAR_CH4_SOCK_PORT_RANGE
+      category    : CH4_SOCK
+      type        : range
+      default     : "0:0"
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The range of TCP ports, in the format <low>:<high>, that the sock
+        netmod listens on. The default 0:0 is any available port.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -67,9 +90,20 @@ static int init_listener(void)
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
     MPIDI_SOCK_global.listen_fd = fd;
 
+    int low = MPIR_CVAR_CH4_SOCK_PORT_RANGE.low;
+    int high = MPIR_CVAR_CH4_SOCK_PORT_RANGE.high;
+    MPIR_ERR_CHKANDJUMP(low < 0 || low > high || high > 65535, mpi_errno, MPI_ERR_OTHER,
+                        "**badportrange");
+
     unsigned short port;
-    int ret = MPL_listen_anyport(fd, &port);
-    MPIR_ERR_CHKANDJUMP2(ret != 0, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d",
+    int ret;
+    if (low == 0) {
+        ret = MPL_listen_anyport(fd, &port);
+    } else {
+        ret = MPL_listen_portrange(fd, &port, low, high);
+    }
+    MPIR_ERR_CHKANDJUMP4(ret != 0, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_listen",
+                         "**ch4_sock_listen %d %d %s %d", low, high,
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
     int flags = fcntl(fd, F_GETFL, 0);
@@ -80,7 +114,11 @@ static int init_listener(void)
 
     /* The name is compared as bytes. MPL_get_sockaddr_iface zeros saddr. */
     memset(&MPIDI_SOCK_global.name, 0, sizeof(MPIDI_SOCK_name_t));
-    ret = MPL_get_sockaddr_iface(NULL, &MPIDI_SOCK_global.name.saddr);
+    ret = MPL_get_sockaddr_iface(MPIR_CVAR_CH4_SOCK_IFACE, &MPIDI_SOCK_global.name.saddr);
+    if (ret != 0 && MPIR_CVAR_CH4_SOCK_IFACE) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch4_sock_iface", "**ch4_sock_iface %s",
+                             MPIR_CVAR_CH4_SOCK_IFACE);
+    }
     MPIR_ERR_CHKANDJUMP(ret != 0, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_iface");
     MPIDI_SOCK_global.name.port = port;
 

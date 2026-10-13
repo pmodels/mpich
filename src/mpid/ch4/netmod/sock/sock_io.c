@@ -13,6 +13,7 @@
 
 static int sock_writev(MPIDI_SOCK_conn_t * conn, struct iovec *iov, int iov_cnt,
                        MPI_Aint * p_written);
+static void conn_fail(MPIDI_SOCK_conn_t * conn, int mpi_errno);
 static int conn_flush(MPIDI_SOCK_conn_t * conn, int *made_progress);
 static void conn_recv_reset(MPIDI_SOCK_conn_t * conn);
 static int conn_recv_start_data(MPIDI_SOCK_conn_t * conn);
@@ -38,8 +39,8 @@ static int sock_writev(MPIDI_SOCK_conn_t * conn, struct iovec *iov, int iov_cnt,
     } while (n < 0 && errno == EINTR);
 
     if (n < 0) {
-        MPIR_ERR_CHKANDJUMP2(errno != EAGAIN && errno != EWOULDBLOCK, mpi_errno, MPI_ERR_OTHER,
-                             "**ch4_sock_write", "**ch4_sock_write %s %d",
+        MPIR_ERR_CHKANDJUMP3(errno != EAGAIN && errno != EWOULDBLOCK, mpi_errno, MPI_ERR_OTHER,
+                             "**ch4_sock_write", "**ch4_sock_write %s %s %d", conn->peer,
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
         n = 0;
     }
@@ -49,6 +50,35 @@ static int sock_writev(MPIDI_SOCK_conn_t * conn, struct iovec *iov, int iov_cnt,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* An outgoing connection got an error. Close it and complete the requests of
+ * its queued messages with the error. Later sends on it fail. */
+static void conn_fail(MPIDI_SOCK_conn_t * conn, int mpi_errno)
+{
+    /* Take the queue first. The callbacks may send on this connection. */
+    MPIDI_SOCK_sendq_elem_t *elem = conn->sendq_head;
+    conn->sendq_head = NULL;
+    conn->sendq_tail = NULL;
+    MPIDI_SOCK_conn_close(conn);
+
+    while (elem) {
+        MPIDI_SOCK_sendq_elem_t *next = elem->next;
+        MPIR_Request *sreq = elem->sreq;
+        int handler_id = elem->handler_id;
+        MPL_free(elem->hdr_buf);
+        MPL_free(elem->pack_buf);
+        MPL_free(elem);
+
+        if (sreq) {
+            /* Only the class: the error code refers to an entry in the error
+             * ring, which does not last for many requests. The caller that
+             * ran into the error returns the full one. */
+            sreq->status.MPI_ERROR = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIDIG_global.origin_cbs[handler_id] (sreq);
+        }
+        elem = next;
+    }
 }
 
 /* Send an active message. Write it right away if the connection has nothing
@@ -74,6 +104,8 @@ int MPIDI_SOCK_send(MPIDI_av_entry_t * av, int handler_id, const void *am_hdr, M
         mpi_errno = MPIDI_SOCK_conn_connect(av, &conn);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    MPIR_ERR_CHKANDJUMP1(conn->fd < 0, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_connfailed",
+                         "**ch4_sock_connfailed %s", conn->peer);
 
     MPIDI_SOCK_am_header_t hdr;
     hdr.handler_id = handler_id;
@@ -94,7 +126,10 @@ int MPIDI_SOCK_send(MPIDI_av_entry_t * av, int handler_id, const void *am_hdr, M
         iov[2].iov_len = data_sz;
 
         mpi_errno = sock_writev(conn, iov, 3, &written);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (mpi_errno) {
+            conn_fail(conn, mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
+        }
 
         if (written == hdr_len + data_sz) {
             /* all sent */
@@ -169,7 +204,10 @@ static int conn_flush(MPIDI_SOCK_conn_t * conn, int *made_progress)
 
         MPI_Aint written;
         mpi_errno = sock_writev(conn, iov, iov_cnt, &written);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (mpi_errno) {
+            conn_fail(conn, mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
+        }
 
         if (written > 0) {
             *made_progress = 1;
@@ -284,7 +322,9 @@ static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
             char *p;
             MPI_Aint want = conn->recv_need - conn->recv_got;
             bool is_chunk = false;
-            if (conn->recv_state == MPIDI_SOCK_RECV_HDR) {
+            if (conn->recv_state == MPIDI_SOCK_RECV_HELLO) {
+                p = (char *) &conn->recv_hello + conn->recv_got;
+            } else if (conn->recv_state == MPIDI_SOCK_RECV_HDR) {
                 p = (char *) &conn->recv_hdr + conn->recv_got;
             } else if (conn->recv_state == MPIDI_SOCK_RECV_DATA) {
                 if (conn->recv_direct) {
@@ -307,16 +347,23 @@ static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
                     break;
                 }
-                MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ch4_sock_read",
-                                     "**ch4_sock_read %s %d",
-                                     MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE),
-                                     errno);
+                /* close it so that the error is reported once */
+                int err = errno;
+                bool is_peer = (conn->recv_state != MPIDI_SOCK_RECV_HELLO);
+                MPIDI_SOCK_conn_close(conn);
+                MPIR_ERR_CHKANDJUMP3(is_peer, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_read",
+                                     "**ch4_sock_read %s %s %d", conn->peer,
+                                     MPIR_Strerror(err, strerrbuf, MPIR_STRERROR_BUF_SIZE), err);
+                break;
             } else if (n == 0) {
                 /* The peer closed the connection. That is expected between
-                 * messages, when the peer finalizes. */
-                bool in_msg = (conn->recv_state != MPIDI_SOCK_RECV_HDR || conn->recv_got > 0);
+                 * messages, when the peer finalizes. Before the hello message
+                 * it is not a peer. */
+                bool in_msg = (conn->recv_state != MPIDI_SOCK_RECV_HELLO &&
+                               (conn->recv_state != MPIDI_SOCK_RECV_HDR || conn->recv_got > 0));
                 MPIDI_SOCK_conn_close(conn);
-                MPIR_ERR_CHKANDJUMP(in_msg, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_closed");
+                MPIR_ERR_CHKANDJUMP1(in_msg, mpi_errno, MPI_ERR_OTHER, "**ch4_sock_closed",
+                                     "**ch4_sock_closed %s", conn->peer);
                 break;
             }
 
@@ -347,6 +394,17 @@ static int conn_recv(MPIDI_SOCK_conn_t * conn, int *made_progress)
         }
 
         /* got all the bytes of the current state */
+        if (conn->recv_state == MPIDI_SOCK_RECV_HELLO) {
+            if (conn->recv_hello.magic != MPIDI_SOCK_HELLO_MAGIC ||
+                conn->recv_hello.version != MPIDI_SOCK_HELLO_VERSION) {
+                /* not one of us, drop it */
+                MPIDI_SOCK_conn_close(conn);
+                break;
+            }
+            conn_recv_reset(conn);
+            continue;
+        }
+
         MPIDI_SOCK_am_header_t *hdr = &conn->recv_hdr;
 
         if (conn->recv_state == MPIDI_SOCK_RECV_HDR) {

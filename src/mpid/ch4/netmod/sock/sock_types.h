@@ -20,6 +20,17 @@ typedef struct {
     uint64_t data_sz;
 } MPIDI_SOCK_am_header_t;
 
+/* The first thing sent on a connection. An incoming connection that does not
+ * start with it is not from a sock netmod of the same version and is dropped. */
+#define MPIDI_SOCK_HELLO_MAGIC 0x4d50495f534f434bULL    /* "MPI_SOCK" */
+#define MPIDI_SOCK_HELLO_VERSION 1
+
+typedef struct {
+    uint64_t magic;
+    uint32_t version;
+    uint32_t reserved;
+} MPIDI_SOCK_hello_t;
+
 /* handler_id of the messages of MPIDI_SOCK_dynamic_{send,recv,sendrecv}. They
  * are not active messages. Their am header is MPIDI_SOCK_dynamic_hdr_t. */
 #define MPIDI_SOCK_DYNAMIC_HANDLER_ID 0xffff
@@ -51,13 +62,15 @@ typedef struct MPIDI_SOCK_sendq_elem {
     MPI_Aint offset;            /* bytes already written, counting hdr_buf then data */
 } MPIDI_SOCK_sendq_elem_t;
 
-/* A message is received in one of two ways.
+/* An incoming connection starts in HELLO. After that, a message is received in
+ * one of two ways.
  *   - buffered: HDR -> BODY. The am header and the data are read into
  *     recv_buf and the handler gets both.
  *   - direct: HDR -> AM_HDR -> DATA. Used for messages larger than the eager
  *     size. The handler is called with the am header only and returns the
  *     receive request. The data is then read into the receive buffer. */
 typedef enum {
+    MPIDI_SOCK_RECV_HELLO,      /* reading MPIDI_SOCK_hello_t */
     MPIDI_SOCK_RECV_HDR,        /* reading MPIDI_SOCK_am_header_t */
     MPIDI_SOCK_RECV_BODY,       /* reading the am header and data */
     MPIDI_SOCK_RECV_AM_HDR,     /* reading the am header */
@@ -67,6 +80,8 @@ typedef enum {
 /* size of the buffer for data that can't be read into the receive buffer directly */
 #define MPIDI_SOCK_RECV_CHUNK_SIZE (64 * 1024)
 
+#define MPIDI_SOCK_PEER_STR_LEN 64
+
 /* A connection is used in one direction only. An outgoing connection is the
  * one we connected; we only send on it. An incoming connection is the one we
  * accepted; we only receive on it. */
@@ -74,6 +89,7 @@ typedef struct MPIDI_SOCK_conn {
     int fd;
     bool is_outgoing;
     int poll_idx;               /* index in MPIDI_SOCK_global.pollfds */
+    char peer[MPIDI_SOCK_PEER_STR_LEN]; /* address of the peer, for error messages */
 
     /* outgoing: messages waiting to be written, in order */
     MPIDI_SOCK_sendq_elem_t *sendq_head;
@@ -81,6 +97,7 @@ typedef struct MPIDI_SOCK_conn {
 
     /* incoming: the message being read */
     MPIDI_SOCK_recv_state_t recv_state;
+    MPIDI_SOCK_hello_t recv_hello;
     MPIDI_SOCK_am_header_t recv_hdr;
     char *recv_buf;             /* am header, followed by data if buffered */
     MPI_Aint recv_need;         /* bytes to read in the current state */
