@@ -70,7 +70,7 @@ int MPIDI_OFI_pipeline_send(MPIR_Request * sreq, int tag)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPIR_Async_things_add(pipeline_send_poll, sreq, NULL);
+    mpi_errno = MPIDI_OFI_async_things_add(pipeline_send_poll, sreq, NULL, p->vci_local);
     /* poke progress? */
 
   fn_exit:
@@ -98,7 +98,7 @@ int MPIDI_OFI_pipeline_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_d
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPIR_Async_things_add(pipeline_recv_poll, rreq, NULL);
+    mpi_errno = MPIDI_OFI_async_things_add(pipeline_recv_poll, rreq, NULL, p->vci_local);
     /* poke progress? */
 
   fn_exit:
@@ -455,7 +455,8 @@ static void add_recv_copy(MPIR_Request * rreq, MPIR_gpu_req * areq,
     p->chunk_buf = chunk_buf;
     p->chunk_sz = chunk_sz;
 
-    MPIR_Async_things_add(recv_copy_poll, p, NULL);
+    int vci = MPIDI_OFI_AMREQ_PIPELINE(rreq).vci_local;
+    MPIDI_OFI_async_things_add(recv_copy_poll, p, NULL, vci);
 }
 
 static int recv_copy_poll(MPIX_Async_thing thing)

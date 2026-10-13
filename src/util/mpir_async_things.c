@@ -76,6 +76,21 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
     return MPI_SUCCESS;
 }
 
+/* Same as MPIR_Async_things_add, but to be called from inside a VCI lock.
+ * We need ensure the async lock always precedes vci lock to prevent lock inversion deadlocks.
+ */
+int MPIR_Async_things_add_in_vci(int (*poll_fn) (struct MPIR_Async_thing * entry), void *state,
+                                 MPIR_Stream * stream_ptr, int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[vci]);
+    mpi_errno = MPIR_Async_things_add(poll_fn, state, stream_ptr);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[vci]);
+
+    return mpi_errno;
+}
+
 /* If we allow async callbacks to call MPI progress, e.g. make blocking MPI calls,
  * we need prevent recursively entering async progress or invoking recursive CS lock.
  */

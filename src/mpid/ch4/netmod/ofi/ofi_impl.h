@@ -197,6 +197,19 @@ int MPIDI_OFI_mr_cache_finalize(void);
         }                                                   \
     } while (0)
 
+/* Add an async thing from an event handler. The event handlers run inside the
+ * vci critical section unless the vci lock is optional (explicit vci or lockless). */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_async_things_add(MPIX_Async_poll_function poll_fn,
+                                                        void *state,
+                                                        MPIR_Stream * stream_ptr, int vci)
+{
+    if (!MPIDI_VCI_IS_EXPLICIT(vci) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {
+        return MPIR_Async_things_add_in_vci(poll_fn, state, stream_ptr, vci);
+    } else {
+        return MPIR_Async_things_add(poll_fn, state, stream_ptr);
+    }
+}
+
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
             (_ret) = FUNC;                                              \
