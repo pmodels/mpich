@@ -714,7 +714,20 @@ AM_MAINTAINER_MODE([enable])
 
 AM_PROG_AR
 
+AC_ARG_ENABLE([dlopen],
+              [AS_HELP_STRING([--enable-dlopen],
+                              [Do not link the CUDA libraries directly. Build the CUDA
+                               support into a separate module, libmpich_cuda.so, that is
+                               loaded at runtime if the CUDA libraries are available.
+                               Requires shared libraries and a non-embedded libfabric.])],
+              [], [enable_dlopen=no])
+# LT_INIT uses and resets the shell variable enable_dlopen, save ours
+pac_enable_dlopen=$enable_dlopen
+
 LT_INIT()
+if test "$pac_enable_dlopen" = "yes" -a "$enable_shared" = "no" ; then
+    AC_MSG_ERROR([--enable-dlopen requires building shared libraries])
+fi
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -3080,7 +3093,13 @@ fi
 # CCLs
 have_ccl=no
 
-if test "$GPU_SUPPORT" = "CUDA" ; then
+if test "$GPU_SUPPORT" = "CUDA" -a "$pac_enable_dlopen" = "yes" ; then
+    # libnccl depends on the CUDA libraries.
+    # TODO: build the nccl collectives into the CUDA module
+    if test -n "$with_nccl" -a "$with_nccl" != "no" ; then
+        AC_MSG_ERROR([--with-nccl is not supported with --enable-dlopen])
+    fi
+elif test "$GPU_SUPPORT" = "CUDA" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
     if test "$pac_have_nccl" = "yes" ; then
         have_ccl=yes
@@ -3131,6 +3150,21 @@ fi
 
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
+
+# With --enable-dlopen, the CUDA support in mpl and yaksa is built into
+# separate convenience libraries. Link them into a module to be loaded at
+# runtime.
+mpl_cuda_lib=""
+yaksa_cuda_lib=""
+if test "$MPL_CUDA_DLOPEN" = "yes" ; then
+    mpl_cuda_lib="src/mpl/libmpl_cuda.la"
+fi
+if test "$YAKSA_CUDA_DLOPEN" = "yes" ; then
+    yaksa_cuda_lib="src/mpi/datatype/typerep/yaksa/libyaksa_cuda.la"
+fi
+AC_SUBST([mpl_cuda_lib])
+AC_SUBST([yaksa_cuda_lib])
+AM_CONDITIONAL([BUILD_CUDA_MODULE], [test -n "$mpl_cuda_lib$yaksa_cuda_lib"])
 
 # now configure any actual recursively configures subsystems, such as ROMIO and
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet

@@ -281,6 +281,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     if test "$with_libfabric" = "embedded" || test "$with_libfabric" = "install"; then
         ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
+        if test "$pac_enable_dlopen" = "yes" ; then
+            AC_MSG_ERROR([--enable-dlopen is not supported with the embedded libfabric. Use --with-libfabric=PATH to build with an external libfabric.])
+        fi
         if test "$with_libfabric" = "embedded" ; then
             ofi_subdir_args="--enable-embedded"
         fi
