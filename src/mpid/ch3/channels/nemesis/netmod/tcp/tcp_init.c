@@ -39,16 +39,16 @@ cvars:
         MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
         both.
 
-    - name        : MPIR_CVAR_CH3_PORT_RANGE
+    - name        : MPIR_CVAR_PORT_RANGE
       category    : CH3
-      alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_PORT_RANGE
+      alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_CH3_PORT_RANGE, MPIR_CVAR_CH4_PORT_RANGE
       type        : range
       default     : "0:0"
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
+        The MPIR_CVAR_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
         manager and the MPICH library. The format of this variable is
         <low>:<high>.  To specify any available port, use 0:0.
@@ -590,18 +590,18 @@ int MPID_nem_tcp_listen(int sockfd)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
-                        MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
+    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_PORT_RANGE.low < 0 ||
+                        MPIR_CVAR_PORT_RANGE.low > MPIR_CVAR_PORT_RANGE.high, mpi_errno,
                         MPI_ERR_OTHER, "**badportrange");
 
     /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
+    if (MPIR_CVAR_PORT_RANGE.low == 0) {
         ret = MPL_listen_anyport(sockfd, &port);
     } else {
         ret =
-            MPL_listen_portrange(sockfd, &port, MPIR_CVAR_CH3_PORT_RANGE.low,
-                                 MPIR_CVAR_CH3_PORT_RANGE.high);
+            MPL_listen_portrange(sockfd, &port, MPIR_CVAR_PORT_RANGE.low,
+                                 MPIR_CVAR_PORT_RANGE.high);
     }
     if (ret == -2) {
         /* check if an available port was found */

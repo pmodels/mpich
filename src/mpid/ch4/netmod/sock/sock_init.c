@@ -41,17 +41,6 @@ cvars:
         address other processes use to connect to this process. By default
         it is the first interface that is not the loopback.
 
-    - name        : MPIR_CVAR_CH4_SOCK_PORT_RANGE
-      category    : CH4_SOCK
-      type        : range
-      default     : "0:0"
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        The range of TCP ports, in the format <low>:<high>, that the sock
-        netmod listens on. The default 0:0 is any available port.
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -90,8 +79,8 @@ static int init_listener(void)
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
     MPIDI_SOCK_global.listen_fd = fd;
 
-    int low = MPIR_CVAR_CH4_SOCK_PORT_RANGE.low;
-    int high = MPIR_CVAR_CH4_SOCK_PORT_RANGE.high;
+    int low = MPIR_CVAR_PORT_RANGE.low;
+    int high = MPIR_CVAR_PORT_RANGE.high;
     MPIR_ERR_CHKANDJUMP(low < 0 || low > high || high > 65535, mpi_errno, MPI_ERR_OTHER,
                         "**badportrange");
 

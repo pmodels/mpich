@@ -118,7 +118,7 @@ bytes.
 | CVAR | Default | Meaning |
 |---|---|---|
 | `MPIR_CVAR_CH4_SOCK_IFACE` | Not set | Name of the network interface whose address is advertised. By default it is the first interface that is not the loopback, or the loopback if there is no other. |
-| `MPIR_CVAR_CH4_SOCK_PORT_RANGE` | `0:0` | Range of ports to listen on, as `<low>:<high>`. The default is any free port. |
+| `MPIR_CVAR_PORT_RANGE` | `0:0` | Range of ports to listen on, as `<low>:<high>`. The default is any free port. It is shared with the ch3 tcp and sock channels, and `mpiexec` reads the same environment variable for its own port. |
 
 The socket listens on all interfaces; the interface only selects the address
 that peers connect to.

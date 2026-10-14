@@ -1829,16 +1829,16 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
         unsigned short portnum;
 
         /* see if we actually want to find values within a range */
-        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
-                            MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
+        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_PORT_RANGE.low < 0 ||
+                            MPIR_CVAR_PORT_RANGE.low > MPIR_CVAR_PORT_RANGE.high, mpi_errno,
                             MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
-        if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
+        if (MPIR_CVAR_PORT_RANGE.low == 0) {
             rc = MPL_listen_anyport(fd, &portnum);
         } else {
-            rc = MPL_listen_portrange(fd, &portnum, MPIR_CVAR_CH3_PORT_RANGE.low,
-                                      MPIR_CVAR_CH3_PORT_RANGE.high);
+            rc = MPL_listen_portrange(fd, &portnum, MPIR_CVAR_PORT_RANGE.low,
+                                      MPIR_CVAR_PORT_RANGE.high);
         }
         *port = portnum;
     } else {
