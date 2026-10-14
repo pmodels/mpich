@@ -1213,6 +1213,11 @@ if test -z "$pkgconfigdir" ; then
 fi
 AC_SUBST(pkgconfigdir)
 
+AC_ARG_ENABLE(generic-pkgconfig,
+        AS_HELP_STRING([--disable-generic-pkgconfig], [Do not install the generic pkg-config
+                        file mpi-fort.pc, which links to mpich-fortran.pc]),,[enable_generic_pkgconfig=yes])
+AC_SUBST(enable_generic_pkgconfig)
+
 # Same as WRAPPER_C_DYNAMIC_LOADING_FLAGS in the top-level configure, but
 # from $fc_shlib_conf. Source it in a subshell, since it sets libtool
 # variables (e.g. library_names_spec) that AC_OUTPUT still needs.

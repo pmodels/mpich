@@ -276,7 +276,10 @@ uninstall-local:
 	done ; \
 	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
-	done
+	done ; \
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+		rm -f ${DESTDIR}${pkgconfigdir}/mpi-c.pc ${DESTDIR}${pkgconfigdir}/mpi-cxx.pc ; \
+	fi
 
 # --------------------------------------------------------------------------
 #  coverage rules
