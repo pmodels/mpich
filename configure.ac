@@ -3367,6 +3367,7 @@ AC_CONFIG_FILES([Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests \
           packaging/pkgconfig/mpich.pc \
+          packaging/pkgconfig/mpich-cxx.pc \
           packaging/envmods/mpich.module])
 AC_OUTPUT
 
