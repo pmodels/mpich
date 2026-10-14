@@ -1683,7 +1683,7 @@ PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
 # We need variables from $cc_shlib_conf to set `WRAPPER_C_DYNAMIC_LOADING_FLAGS`, which 
-#    is used in `packaging/pkgconfig/mpich.pc.in`
+#    is used in `packaging/pkgconfig/mpich-*.pc.in`
 # However, libtool's $library_names_spec is more than what's given in $cc_shlib_conf, so
 #    we need protect it. 
 # FIXME: potentially, there are more variable collisions. Need better plan.
@@ -3331,6 +3331,22 @@ else
 fi
 export mpi_libs mpi_dependency_libs WRAPPER_DEPENDENCY_LDFLAGS
 
+# mpich-mpich-abi.pc and mpich-mpi-abi.pc are installed for the ABIs that
+# are built; mpich.pc links to the one mpicc uses by default.
+# mpich-cxx.pc follows the same default, like mpicxx.
+if test "$DEFAULT_MPI_ABI" = "yes" ; then
+    PC_DEFAULT_ABI=mpich-mpi-abi.pc
+else
+    PC_DEFAULT_ABI=mpich-mpich-abi.pc
+fi
+AC_SUBST(PC_DEFAULT_ABI)
+AC_SUBST(mpi_dependency_libs)
+PC_MPI_CPPFLAGS=
+if test "$WITH_MPI" = "abi" ; then
+    PC_MPI_CPPFLAGS="-DMPI_ABI"
+fi
+AC_SUBST(PC_MPI_CPPFLAGS)
+
 MPICH_COMPILER_CC="$CC $MPICH_MPICC_CPPFLAGS $MPICH_MPICC_CFLAGS $WRAPPER_CFLAGS"
 MPICH_COMPILER_CXX="$CXX $MPICH_MPICXX_CPPFLAGS $MPICH_MPICXX_CXXFLAGS $WRAPPER_CXXFLAGS"
 AC_SUBST(MPICH_COMPILER_CC)
@@ -3372,7 +3388,8 @@ AC_CONFIG_FILES([Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests \
-          packaging/pkgconfig/mpich.pc \
+          packaging/pkgconfig/mpich-mpich-abi.pc \
+          packaging/pkgconfig/mpich-mpi-abi.pc \
           packaging/pkgconfig/mpich-cxx.pc \
           packaging/envmods/mpich.module])
 AC_OUTPUT

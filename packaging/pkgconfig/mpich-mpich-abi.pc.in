@@ -1,11 +1,11 @@
-# this gives access to the mpich header files
+# this gives access to the mpich header files (MPICH ABI, libmpi)
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
 Name: mpich
-Description: High Performance and portable MPI
+Description: High Performance and portable MPI (MPICH ABI)
 Version: @MPICH_VERSION@
 URL: http://www.mcs.anl.gov/research/projects/mpich
 Requires:

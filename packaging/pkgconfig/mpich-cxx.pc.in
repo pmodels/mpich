@@ -9,6 +9,6 @@ Description: High Performance and portable MPI (C++)
 Version: @MPICH_VERSION@
 URL: http://www.mcs.anl.gov/research/projects/mpich
 Requires:
-Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} @LMPICXXLIBNAME@ -l@MPILIBNAME@ @LPMPILIBNAME@
+Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} @LMPICXXLIBNAME@ @mpi_dependency_libs@
 Libs.private: @EXTERNAL_LIB_PATHS@ @EXTERNAL_LIBS@
-Cflags: @WRAPPER_CPPFLAGS@ @WRAPPER_CXXFLAGS@ -I${includedir}
+Cflags: @PC_MPI_CPPFLAGS@ @WRAPPER_CPPFLAGS@ @WRAPPER_CXXFLAGS@ -I${includedir}
