@@ -43,12 +43,12 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Reset link flags
 PAC_RESET_LINK_FLAGS()
-WRAPPER_LIBS=""
-export WRAPPER_LIBS
-AC_SUBST(WRAPPER_LIBS)
+EXTERNAL_LIBS=""
+export EXTERNAL_LIBS
+AC_SUBST(EXTERNAL_LIBS)
 
-# let confdb macro know that we are using WRAPPER FLAGS
-m4_define([use_wrapper_flags], [1])
+# let confdb macros add libraries to EXTERNAL_LIBS instead of LIBS
+m4_define([use_external_libs], [1])
 
 # Look for perl.  The absolute path of perl is required in hydra-doxygen.cfg.
 AC_PATH_PROG(PERL,perl)

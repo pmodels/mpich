@@ -85,7 +85,7 @@ dnl NOTE: This macro expects a corresponding PAC_SET_HEADER_LIB_PATH
 dnl macro (or equivalent logic) to be used before this macro is used.
 dnl
 dnl NOTE: since setting LIBS may break runtime checks (e.g. AC_CHECK_SIZEOF), we
-dnl prepend the library to WRAPPER_LIBS instead.
+dnl prepend the library to EXTERNAL_LIBS instead.
 
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
@@ -104,9 +104,9 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB],[
 ])
 
 dnl PAC_LIBS_ADD(libname)
-dnl Explicitly add -llibname to LIBS or WRAPPER_LIBS
+dnl Explicitly add -llibname to LIBS or EXTERNAL_LIBS
 AC_DEFUN([PAC_LIBS_ADD], [
-    m4_ifdef([use_wrapper_flags],[PAC_APPEND_FLAG([$1],[WRAPPER_LIBS])],[PAC_APPEND_FLAG([$1],[LIBS])])
+    m4_ifdef([use_external_libs],[PAC_APPEND_FLAG([$1],[EXTERNAL_LIBS])],[PAC_APPEND_FLAG([$1],[LIBS])])
 ])
 
 dnl PAC_CHECK_HEADER_LIB_OPTIONAL(with_option, header.h, libname, function)

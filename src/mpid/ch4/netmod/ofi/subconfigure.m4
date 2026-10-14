@@ -349,7 +349,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     fi
     PAC_LIB_DEPS(fabric, $pcdir)
     if test "x$ac_libfabric_deps" != "x"; then
-        PAC_APPEND_FLAG([${ac_libfabric_deps}],[WRAPPER_LIBS])
+        PAC_APPEND_FLAG([${ac_libfabric_deps}],[EXTERNAL_LIBS])
     fi
 
     AC_ARG_ENABLE(ofi-domain, [

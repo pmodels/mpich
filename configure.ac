@@ -251,18 +251,22 @@ export FROM_MPICH
 # WRAPPER_CFLAGS and other compile flags are used for compile options
 # that are added by MPICH, but should be used by applications (such
 # as include paths).
-#
-# All libraries that are detected by MPICH as needed for some of its
-# functionality (such as -lpthread) should be added to WRAPPER_LIBS
-# so executables built within MPICH use them.  If inter-library
-# dependencies are not supported on the platform, these libraries are
-# added to the MPICH wrappers (mpicc and friends) as well.
 # Initialize all WRAPPER flags to empty string.
 PAC_INIT_ALL_FLAGS(WRAPPER)
 
+# All external libraries that are detected by MPICH as needed for some
+# of its functionality (such as -lpthread) should be added to
+# EXTERNAL_LIBS, which is used to link libmpi. Applications only need
+# them when inter-library dependencies are not available (e.g. static
+# linking); the wrappers get them from libmpi.la and mpich.pc lists
+# them in Libs.private.
+EXTERNAL_LIBS=""
+export EXTERNAL_LIBS
+AC_SUBST(EXTERNAL_LIBS)
+
 # confdb routines are used in multiple components. Let the macros know
-# whether WRAPPER FLAGS are used.
-m4_define([use_wrapper_flags], [1])
+# to add libraries to EXTERNAL_LIBS instead of LIBS.
+m4_define([use_external_libs], [1])
 
 # MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
 # WRAPPER flags, but these are provided by the user.
@@ -1560,14 +1564,14 @@ case "$with_pmilib" in
         AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
         AC_CHECK_LIB([pmi], [PMI_Init],
                     [PAC_PREPEND_FLAG([-lpmi],[LIBS])
-                     PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                     PAC_PREPEND_FLAG([-lpmi], [EXTERNAL_LIBS])],
                     [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
         AC_DEFINE([USE_PMI1_SLURM], 1, [Define if using Slurm PMI 1])
     elif test "$with_pmi" = "pmi2" ; then
         AC_CHECK_HEADER([slurm/pmi2.h], [], [AC_MSG_ERROR([could not find slurm/pmi2.h.  Configure aborted])])
         AC_CHECK_LIB([pmi2], [PMI2_Init],
                     [PAC_PREPEND_FLAG([-lpmi2],[LIBS])
-                     PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
+                     PAC_PREPEND_FLAG([-lpmi2], [EXTERNAL_LIBS])],
                     [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
         AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
     fi
@@ -1609,7 +1613,7 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
     AC_DEFINE([PMI_FROM_3RD_PARTY], 1, [define if PMI is supplied from 3rd party (thus we should limit usage of MPICH extensions)])
     # detect
     PAC_PUSH_FLAG([LIBS])
-    LIBS=$WRAPPER_LIBS
+    LIBS=$EXTERNAL_LIBS
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
     AC_CHECK_FUNCS([PMI_Barrier_group])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
