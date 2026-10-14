@@ -276,4 +276,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitsome(int incount, MPIR_Request * request_p
     return MPIR_Waitsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPID_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
+{
+}
+
 #endif /* MPIDPOST_H_INCLUDED */
