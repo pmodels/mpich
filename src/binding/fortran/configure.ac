@@ -1087,10 +1087,10 @@ if test "$enable_gen_bindings" = "yes" ; then
     if test -e "$main_top_srcdir/maint/gen_binding_f77.py" ; then
         # when build FROM_MPICH, we don't require local copy of maint folder
         maintdir="$main_top_srcdir/maint"
-    elif test -e "../../../maint/gen_binding_f77.py" ; then
-        maintdir="../../../maint"
-    elif test -e "maint/gen_binding_f77.py" ; then
-        maintdir="maint"
+    elif test -e "$srcdir/../../../maint/gen_binding_f77.py" ; then
+        maintdir="$srcdir/../../../maint"
+    elif test -e "$srcdir/maint/gen_binding_f77.py" ; then
+        maintdir="$srcdir/maint"
     else
         AC_MSG_ERROR([Can't find gen_binding_f77.py])
     fi
