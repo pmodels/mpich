@@ -3283,6 +3283,19 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+# -L paths of external libraries (e.g. from --with-hwloc=PATH), needed
+# with EXTERNAL_LIBS for static linking. RPATHS has them as -R paths.
+# Skip the ones EXTERNAL_LIBS already has (e.g. from MPL).
+EXTERNAL_LIB_PATHS=
+for flag in $RPATHS ; do
+    libpath=${flag#-R}
+    case " $EXTERNAL_LIBS " in
+        *" -L$libpath "*) ;;
+        *) PAC_APPEND_FLAG([-L$libpath], [EXTERNAL_LIB_PATHS]) ;;
+    esac
+done
+AC_SUBST(EXTERNAL_LIB_PATHS)
+
 case "$host_os" in
     freebsd*)
         AC_DEFINE(DELAY_SHM_MUTEX_DESTROY, 1, [Define to workaround interprocess mutex issue on FreeBSD])
