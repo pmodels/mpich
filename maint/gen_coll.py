@@ -25,6 +25,7 @@ def main():
 
     G.out = []  # output to mpir_coll.c
     G.out2 = [] # output to coll_algos.h
+    G.out3 = [] # output to coll_autogen.h, included in coll_csel.h, after mpidpost.h
     G.prototypes = []
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("#include \"coll_csel.h\"")
@@ -71,10 +72,13 @@ def main():
     dump_MPIR_Csel_node_type_e()
     # algorithm container struct
     dump_MPII_Csel_container()
+    # conditional conditions (conditions with #if-guard)
+    dump_conditional_conditions(G.out3)
     G.out2.append("")
 
     dump_c_file("src/mpi/coll/mpir_coll.c", G.out)
     dump_coll_algos_h("src/mpi/coll/include/coll_algos.h", G.prototypes, G.out2)
+    dump_coll_autogen_h("src/mpi/coll/include/coll_autogen.h", G.out3)
 
 #----------------------------------------
 def collect_algo_list():
@@ -141,6 +145,8 @@ def dump_algo_cnt_fns():
             add_prototype(decl)
             dump_split(0, decl)
             dump_open('{')
+            if 'macro_guard' in algo:
+                G.out.append("#if %s" % algo['macro_guard'])
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
             dump_algo_prep(func_name, algo)
@@ -148,6 +154,10 @@ def dump_algo_cnt_fns():
             dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
             G.out.append("MPIR_ERR_CHECK(mpi_errno);")
             dump_fn_exit()
+            if 'macro_guard' in algo:
+                G.out.append("#else")
+                G.out.append("return MPI_ERR_OTHER;")
+                G.out.append("#endif")
             dump_close('}')
             G.out.append("")
 
@@ -185,7 +195,10 @@ def add_algo_prototypes():
         return params
 
     for algo in G.algo_list:
-        if algo['func-commkind'] == "general":
+        if 'inline' in algo:
+            # inline functions are already defined in headers, do not need prototypes
+            continue
+        elif algo['func-commkind'] == "general":
             continue
         func_name, commkind = algo['func-commkind'].split("-")
         if func_name.startswith('i'):
@@ -596,6 +609,13 @@ def dump_MPII_Csel_container():
     G.out2.append("} MPII_Csel_container_s;")
 
 #----------------------------------------
+def dump_conditional_conditions(out):
+    out.append("")
+    out.append("/* conditional CSEL conditions */")
+    for a in G.conditions:
+        if condition_need_wrapper(a):
+            dump_condition_wrapper(a, out)
+
 def add_prototype(l):
     G.prototypes.append(l)
 
@@ -650,10 +670,9 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
     dump_close('}')
     G.out.append("coll_sig.comm_ptr = comm_ptr;")
+    G.out.append("coll_sig.flags = 0;")
     if blocking_type == "persistent":
-        G.out.append("coll_sig.is_persistent = true;")
-    else:
-        G.out.append("coll_sig.is_persistent = false;")
+        G.out.append("coll_sig.flags |= MPIR_COLL_SIG_FLAG__PERSISTENT;")
     if blocking_type == "nonblocking_tag":
         G.out.append("coll_sig.tag = tag;")
     else:
@@ -879,6 +898,26 @@ def condition_id(a):
     prefix = "CSEL_NODE_TYPE__OPERATOR__"
     return prefix + get_condition_name(a)
 
+def condition_need_wrapper(a):
+    return re.match(r'(\w+) #if (.+)', G.conditions[a])
+
+def dump_condition_wrapper(a, out):
+    if RE.match(r'(\w+) #if (.+)', G.conditions[a]):
+        (actual_func, macro_guard) = RE.m.group(1, 2)
+        cond_func = get_condition_function(a)
+        out.append("")
+        out.append("MPL_STATIC_INLINE_PREFIX bool %s(MPIR_Csel_coll_sig_s * coll_sig)" % cond_func)
+        out.append("{")
+        out.append("#if " + macro_guard)
+        out.append("    return %s(coll_sig);" % actual_func)
+        out.append("#else")
+        # always false, i.e. never select this algorithm/subtree
+        out.append("    return false;")
+        out.append("#endif")
+        out.append("}")
+    else:
+        raise Exception("Does not need condition wrapper")
+
 # ----------------------
 def dump_c_file(f, lines):
     print("  --> [%s]" % f)
@@ -899,7 +938,7 @@ def dump_c_file(f, lines):
                 print("  %s:" % RE.m.group(1), file=Out)
             else:
                 # print the line with correct indentations
-                if indent > 0 and not RE.match(r'#(if|endif)', l):
+                if indent > 0 and not RE.match(r'#(if|else|endif)', l):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
@@ -916,11 +955,24 @@ def dump_coll_algos_h(f, prototypes, extra_lines):
         for l in extra_lines:
             print(l, file=Out)
 
+        print("\n/* function prototypes */\n", file=Out)
         for l in prototypes:
             lines = split_line_with_break(l + ';', '', 80)
             for l2 in lines:
                 print(l2, file=Out)
         print("#endif /* COLL_ALGOS_H_INCLUDED */", file=Out)
+
+def dump_coll_autogen_h(f, lines):
+    print("  --> [%s]" % f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef COLL_AUTOGEN_H_INCLUDED", file=Out)
+        print("#define COLL_AUTOGEN_H_INCLUDED", file=Out)
+        print("", file=Out)
+        for l in lines:
+            print(l, file=Out)
+        print("#endif /* COLL_AUTOGEN_H_INCLUDED */", file=Out)
 
 def dump_open(line):
     G.out.append(line)

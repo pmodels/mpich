@@ -6,11 +6,7 @@
 #ifndef POSIX_COLL_H_INCLUDED
 #define POSIX_COLL_H_INCLUDED
 
-#include "posix_impl.h"
-#include "ch4_impl.h"
 #include "posix_coll_release_gather.h"
-#include "posix_coll_gpu_ipc.h"
-#include "posix_csel_container.h"
 
 
 /*

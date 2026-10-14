@@ -26,6 +26,8 @@
 #   - condition_name(thresh): func
 #         This condition calls a query function that returns a value: int (*func)(coll_sig)
 #         The thresh marks the upper limit (inclusive) of the condition.
+#   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
+#         A wrapper checker function will be generated that wraps the "func" within macro-guard.
 # The conditions are used in specifying both algorithm restrictions and CSEL conditions.
 # Example usage in restriction list or JSON file: inplace, !inplace, avg_msg_size(1024), etc.
 # Most of the checker functions should be inlined to minimize function call overhead.
@@ -68,6 +70,9 @@ conditions:
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     total_msg_size(thresh): MPIR_Csel_total_msg_size
 
+    # conditional conditions - only call the condition function under macro_guard
+    MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+
 # ----
 general:
     MPIR_Coll_auto
@@ -83,6 +88,11 @@ barrier-intra:
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
         restrictions: hierarchical
+    release_gather
+        func_name: MPIDI_POSIX_mpi_barrier_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 barrier-inter:
     bcast
 ibarrier-intra:
@@ -109,6 +119,11 @@ bcast-intra:
     pipelined_tree
         extra_params: tree_type, k, is_non_blocking, chunk_size, recv_pre_posted
         cvar_params: TREE_TYPE, TREE_KVAL, IS_NON_BLOCKING, TREE_PIPELINE_CHUNK_SIZE, RECV_PRE_POST 
+    release_gather
+        func_name: MPIDI_POSIX_mpi_bcast_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 ibcast-intra:
     sched_binomial
     sched_smp
@@ -349,6 +364,11 @@ reduce-intra:
         restrictions: commutative, hierarchical
     reduce_scatter_gather
         restrictions: count_ge_pof2, builtin_op
+    release_gather
+        func_name: MPIDI_POSIX_mpi_reduce_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 reduce-inter:
     local_reduce_remote_send
 ireduce-intra:
@@ -392,6 +412,11 @@ allreduce-intra:
     ccl
         extra_params: ccl
         cvar_params: CCL
+    release_gather
+        func_name: MPIDI_POSIX_mpi_allreduce_release_gather
+        inline: 1
+        macro_guard: defined(MPIDI_CH4_SHM_POSIX)
+        restrictions: MPIDI_CH4_release_gather
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:
