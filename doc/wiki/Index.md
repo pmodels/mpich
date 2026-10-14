@@ -18,6 +18,7 @@
     - [Alternate Process Managers](how_to/Alternate_Process_Managers.md)
     - [Alternate Channels and Devices](how_to/Alternate_Channels_and_Devices.md)
     - [Using the CH3 Device](how_to/Using_CH3_device.md)
+    - [MPI ABI Build Interface](how_to/MPI_ABI_Build_Interface.md)
     - [Fault Tolerance](how_to/Fault_Tolerance.md)
     - [Adding New Error Messages](how_to/Adding_New_Error_Messages.md)
     - [Using csh and tcsh Shells](how_to/Using_csh_tcsh_shells.md)
