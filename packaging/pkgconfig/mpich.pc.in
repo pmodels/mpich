@@ -12,10 +12,3 @@ Requires:
 Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} -l@MPILIBNAME@ @LPMPILIBNAME@
 Libs.private: @EXTERNAL_LIB_PATHS@ @EXTERNAL_LIBS@
 Cflags: @WRAPPER_CPPFLAGS@ @WRAPPER_CFLAGS@ -I${includedir}
-
-# pkg-config does not understand Cxxflags, etc. So we allow users to
-# query them using the --variable option
-
-cxxflags=@WRAPPER_CPPFLAGS@ @WRAPPER_CXXFLAGS@ -I${includedir}
-fflags=@WRAPPER_FFLAGS@ -I${includedir}
-fcflags=@WRAPPER_FCFLAGS@ -I${includedir}
