@@ -1244,6 +1244,15 @@ else
 fi
 AC_SUBST(PC_FCMODINC)
 
+# mpich-fortran.pc requires the pkg-config file of the C library that
+# libmpifort links, which is installed whether or not the generic mpi-c.pc is
+if test "$WITH_MPI" = "abi" ; then
+    PC_REQUIRES_MPI=mpich-mpi-abi
+else
+    PC_REQUIRES_MPI=mpich-mpich-abi
+fi
+AC_SUBST(PC_REQUIRES_MPI)
+
 # ---------------------------------------------
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])
