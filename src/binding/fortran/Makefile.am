@@ -23,6 +23,9 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
+pkgconfigdir = @pkgconfigdir@
+nodist_pkgconfig_DATA = mpich-fortran.pc
+
 include $(srcdir)/mpif_h/Makefile.mk
 include $(srcdir)/use_mpi/Makefile.mk
 include $(srcdir)/use_mpi_f08/Makefile.mk
