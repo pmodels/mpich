@@ -10,5 +10,6 @@ Description: High Performance and portable MPI (Fortran)
 Version: @MPICH_VERSION@
 URL: http://www.mcs.anl.gov/research/projects/mpich
 Requires:
+Requires.private: mpi-c
 Libs: @WRAPPER_FC_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} -l@MPIFCLIBNAME@ @mpi_dependency_libs@
 Cflags: -I${includedir} @PC_FCMODINC@
