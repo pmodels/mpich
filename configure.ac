@@ -455,6 +455,12 @@ dnl interfaces including mpif.h, use mpi, and use_mpi_f08.
 AC_ARG_ENABLE(fortran,
         AS_HELP_STRING([--disable-fortran], [Whether to disable Fortran bindings]),,[enable_fortran=yes])
 
+AC_ARG_ENABLE(generic-pkgconfig,
+        AS_HELP_STRING([--disable-generic-pkgconfig], [Do not install the generic pkg-config
+                        files mpi-c.pc, mpi-cxx.pc and mpi-fort.pc, which link to
+                        mpich.pc, mpich-cxx.pc and mpich-fortran.pc]),,[enable_generic_pkgconfig=yes])
+AC_SUBST(enable_generic_pkgconfig)
+
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
