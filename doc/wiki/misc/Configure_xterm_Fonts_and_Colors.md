@@ -1,13 +1,7 @@
 # Configure Xterm Fonts And Colors
 
-## Screenshot
-
-If you want a xterm like
-
-![xterm-color-zenburn.png](xterm-color-zenburn.png
-"xterm-color-zenburn.png")
-
-Do the following steps:
+To set up xterm with the Bitstream Vera font and the Zenburn color
+scheme, do the following steps:
 
   - Create or update your `.Xresources` as
 
