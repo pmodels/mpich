@@ -42,6 +42,7 @@
 
 - Language Bindings
     - [Fortran Bindings](Fortran_Binding.md)
+    - [Stand-Alone Fortran Binding](Standalone_Fortran_Binding.md)
 
 - Debugging
     - [Debug Event Logging](Debug_Event_Logging.md)
