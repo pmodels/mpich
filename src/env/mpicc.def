@@ -105,7 +105,6 @@ subcode: description
     \x23    $(CC)                 - $(C) compiler
     \x23    WRAPPER_$(CFLAGS)     - Any special flags needed to compile
     \x23    WRAPPER_LDFLAGS    - Any special flags needed to link
-    \x23    WRAPPER_LIBS       - Any special libraries needed in order to link
     $(if:cc=fc)
         \x23    FC_OTHER_LIBS       - Yet more libraries, needed just with FC
 

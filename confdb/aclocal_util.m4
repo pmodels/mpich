@@ -80,8 +80,9 @@ AC_DEFUN([PAC_PREFIX_ALL_FLAGS],[
 	PAC_PREFIX_FLAG($1, EXTRA_LIBS)
 ])
 
-dnl PAC_INIT_ALL_FLAG - Initialize all flags with a prefix
+dnl PAC_INIT_ALL_FLAG - Initialize all compile and link flags with a prefix
 dnl Usage: PAC_INIT_ALL_FLAGS(PREFIX)
+dnl Libraries are not included; external libraries go to EXTERNAL_LIBS.
 AC_DEFUN([PAC_INIT_ALL_FLAGS],[
 	PAC_INIT_FLAG($1, CFLAGS)
 	PAC_INIT_FLAG($1, CPPFLAGS)
@@ -91,8 +92,6 @@ AC_DEFUN([PAC_INIT_ALL_FLAGS],[
             PAC_INIT_FLAG($1, FCFLAGS)
         ])
 	PAC_INIT_FLAG($1, LDFLAGS)
-	PAC_INIT_FLAG($1, LIBS)
-	PAC_INIT_FLAG($1, EXTRA_LIBS)
 ])
 
 dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user

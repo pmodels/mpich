@@ -5,6 +5,6 @@
 ##
 
 # Append ROMIO library dependencies to the global list
-WRAPPER_LIBS="$WRAPPER_LIBS @LIBS@"
+EXTERNAL_LIBS="$EXTERNAL_LIBS @LIBS@"
 
 MPI_OFFSET_TYPE="@MPI_OFFSET_TYPE@"
