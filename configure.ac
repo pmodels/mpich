@@ -3305,7 +3305,8 @@ esac
 
 # export to binding subconfigure
 # - mpi_libs is used in building libmpifort
-# - mpi_dependency_libs is used in mpifort if $interlib_deps is "no"
+# - mpi_dependency_libs is the MPI libraries the mpifort wrapper links
+# - WRAPPER_DEPENDENCY_LDFLAGS is added by mpifort only if $interlib_deps is "no"
 #
 if test "$WITH_MPI" = "mpich" ; then
     mpi_libs="$main_top_builddir/lib/lib${MPILIBNAME}.la"
@@ -3322,8 +3323,7 @@ else
         mpi_dependency_libs="$mpi_dependency_libs -l${PMPIABILIBNAME}"
     fi
 fi
-mpi_dependency_libs="$mpi_dependency_libs $WRAPPER_DEPENDENCY_LDFLAGS"
-export mpi_libs mpi_dependency_libs
+export mpi_libs mpi_dependency_libs WRAPPER_DEPENDENCY_LDFLAGS
 
 MPICH_COMPILER_CC="$CC $MPICH_MPICC_CPPFLAGS $MPICH_MPICC_CFLAGS $WRAPPER_CFLAGS"
 MPICH_COMPILER_CXX="$CXX $MPICH_MPICXX_CPPFLAGS $MPICH_MPICXX_CXXFLAGS $WRAPPER_CXXFLAGS"

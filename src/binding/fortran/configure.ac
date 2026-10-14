@@ -1194,7 +1194,10 @@ if test -z "$INTERLIB_DEPS" ; then
 fi
 AC_SUBST(INTERLIB_DEPS)
 
-WRAPPER_DEPENDENCY_LDFLAGS=""
+# User LDFLAGS, needed by mpifort only if $interlib_deps is "no"
+if test "$FROM_MPICH" != "yes" ; then
+    WRAPPER_DEPENDENCY_LDFLAGS=""
+fi
 AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 
 # generate rpath-related macros, needed for substitute with_wrapper_dl_type
