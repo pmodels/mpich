@@ -424,6 +424,9 @@ def dump_MPIR_Coll_cvar_to_algo_id():
         G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_auto:" % (name.upper(), commkind.upper()))
         G.out.append("    MPIR_Assert(0); /* auto cvar_val should be 0 and shouldn't be called here */")
         G.out.append("    return %s;" % algo_id_END())
+        if commkind == "intra" and not name.startswith('i'):
+            G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_nb:" % (name.upper(), commkind.upper()))
+            G.out.append("    return %s__%s;" % (algo_id_prefix, "MPIR_Coll_nb"))
 
         func_commkind = name + '-' + commkind
         for algo in G.algos[func_commkind]:
@@ -616,10 +619,6 @@ def load_coll_algos(algo_txt):
                     algo_list.append(algo)
                 elif RE.match(r'\s+(\w+):\s*(.+)', line):
                     algo[RE.m.group(1)] = RE.m.group(2)
-    # temporarily add nb entries
-    for coll in G.coll_names:
-        algo = {"name": "nb", "func-commkind": "%s-intra" % coll, "allcomm": 1}
-        G.algos[algo["func-commkind"]].append(algo)
 
 def dump_coll_impl(name, blocking_type):
     func = G.FUNCS["mpi_" + name]
