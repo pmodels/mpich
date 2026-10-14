@@ -1212,6 +1212,34 @@ AC_ARG_ENABLE([doc],
 AM_CONDITIONAL([INSTALL_DOCS],[test "X$enable_doc" = "Xyes"])
 
 # ---------------------------------------------
+# Substitutions for mpich-fortran.pc
+
+if test -z "$pkgconfigdir" ; then
+    pkgconfigdir=$libdir/pkgconfig
+fi
+AC_SUBST(pkgconfigdir)
+
+# Same as WRAPPER_C_DYNAMIC_LOADING_FLAGS in the top-level configure, but
+# from $fc_shlib_conf. Source it in a subshell, since it sets libtool
+# variables (e.g. library_names_spec) that AC_OUTPUT still needs.
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"`
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"`
+else
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=""
+fi
+AC_SUBST(WRAPPER_FC_DYNAMIC_LOADING_FLAGS)
+
+# Fortran modules may be installed outside of includedir
+if test "$modincdir" != "$includedir" ; then
+    PC_FCMODINC="${FCMODINCFLAG}\${modincdir}"
+else
+    PC_FCMODINC=""
+fi
+AC_SUBST(PC_FCMODINC)
+
+# ---------------------------------------------
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])
 
@@ -1222,5 +1250,6 @@ AC_CONFIG_FILES([Makefile \
                  mpif_h/mpi_fortran.h \
                  env/mpifort.sh \
                  env/mpifort.bash \
+                 mpich-fortran.pc \
                  localdefs])
 AC_OUTPUT
