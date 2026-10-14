@@ -13,7 +13,6 @@
 #include "sock_am.h"
 #include "sock_progress.h"
 #include "sock_request.h"
-#include "sock_proc.h"
 
 /* Not-inlined SOCK netmod functions */
 #include "sock_noinline.h"

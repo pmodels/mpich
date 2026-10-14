@@ -53,7 +53,6 @@ more than one VCI, and peers with a different byte order.
 | `am_can_do_tag` | Always false |
 | `am_get_data_copy_cb` | Always NULL |
 | `progress` | One non-blocking `poll`; see [Progress](#progress) |
-| `rank_is_local` | Node-map locality, `MPIDIU_av_is_local` |
 | `comm_set_vcis` | One VCI for every process |
 | window, partitioned, `alloc_mem` functions | Thin wrappers that call `MPIDIG_*` |
 | communicator, datatype and op hooks | Empty, except for the address exchange in the commit pre-hook |

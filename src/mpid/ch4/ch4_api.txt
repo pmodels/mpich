@@ -276,8 +276,6 @@ Native API:
      SHM*: origin_addr, origin_count, origin_datatype, result_addr, result_count, result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, winattr
   mpi_win_lock_all : int
       NM*: assert, win
-  rank_is_local : int
-      NM*: target, comm
   mpi_type_commit_hook : int
       NM : datatype_p
      SHM : type
