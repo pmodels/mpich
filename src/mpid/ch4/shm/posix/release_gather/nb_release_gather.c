@@ -114,12 +114,6 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 (MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE * 1024)) {
                 /* cannot create more shm, fallback to MPIR level algorithms, and broadcast the
                  * decision to other ranks */
-                if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) {
-                    fprintf(stderr,
-                            "Intra-node collectives about to allocate more shared memory than \
-                            the specified limit through MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE. Fallback \
-                            to other algorithms.\n");
-                }
                 fallback = 1;
                 MPIR_Bcast_fallback(&fallback, 1, MPIR_INT_INTERNAL, 0, comm_ptr, coll_attr);
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");

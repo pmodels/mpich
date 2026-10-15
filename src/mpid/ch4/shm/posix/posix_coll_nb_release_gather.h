@@ -38,8 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_nb_release_gather_comm_init(comm_ptr, MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
-                                   "release_gather ibcast cannot create more shared memory. Falling back to pt2pt algorithms.\n");
+    MPII_COLLECTIVE_FALLBACK_CHECK(!mpi_errno, mpi_errno);
 
     mpi_errno =
         MPIDI_POSIX_nb_release_gather_ibcast_impl(buffer, count, datatype, root, comm_ptr, sched);
@@ -94,8 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ireduce_release_gather(const void *send
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_nb_release_gather_comm_init(comm_ptr, MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
-                                   "release_gather ibcast cannot create more shared memory. Falling back to pt2pt algorithms.\n");
+    MPII_COLLECTIVE_FALLBACK_CHECK(!mpi_errno, mpi_errno);
 
     mpi_errno =
         MPIDI_POSIX_nb_release_gather_ireduce_impl((void *) sendbuf, recvbuf, count, datatype, op,

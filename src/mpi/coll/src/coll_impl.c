@@ -28,7 +28,6 @@ cvars:
         user-specified collective algorithm does not work for the
         arguments passed in by the user.
         error   - throw an error
-        print   - print an error message and fallback to the internally selected algorithm
         silent  - silently fallback to the internally selected algorithm
 
     - name        : MPIR_CVAR_COLL_SELECTION_JSON_FILE

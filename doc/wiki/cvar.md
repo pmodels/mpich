@@ -931,13 +931,12 @@ Used in functions: `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`,
 
 ### MPIR_CVAR_COLLECTIVE_FALLBACK
 
-Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, when POSIX release-gather intra-node collectives would exceed `MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE`, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path, optionally with a diagnostic message.
+Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path.
 
 * error - throw an error.
-* print - print an error message and fallback to the internally selected algorithm.
 * silent - default, silently fallback to the internally selected algorithm.
 
-Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_tree`, `MPIDI_POSIX_mpi_release_gather_comm_init`, `MPIDI_POSIX_nb_release_gather_comm_init`
+Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_tree`
 
 ### MPIR_CVAR_COLL_ALIAS_CHECK
 
@@ -977,7 +976,7 @@ Used in functions: `MPII_Coll_init`
 
 ### MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE
 
-Sets the maximum shared memory per node that POSIX shared-memory release-gather collectives may allocate for optimized intranode collectives. It is checked when blocking release-gather communicator state needs flags, broadcast buffers, or reduce buffers, and when nonblocking release-gather communicator state needs broadcast or reduce flags and buffers. The requested allocation depends on the current per-node shared-memory counter, communicator size, page-aligned flag storage, `MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE`, `MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE`, and, for nonblocking flag storage, `MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS` or `MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS`. If the request would exceed this limit, initialization fails and the collective falls back; `MPIR_CVAR_COLLECTIVE_FALLBACK` controls whether a diagnostic message is printed. When active, this CVAR sets the shared-memory allocation cap used by POSIX release-gather collective initialization.
+Sets the maximum shared memory per node that POSIX shared-memory release-gather collectives may allocate for optimized intranode collectives. It is checked when blocking release-gather communicator state needs flags, broadcast buffers, or reduce buffers, and when nonblocking release-gather communicator state needs broadcast or reduce flags and buffers. The requested allocation depends on the current per-node shared-memory counter, communicator size, page-aligned flag storage, `MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE`, `MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE`, and, for nonblocking flag storage, `MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS` or `MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS`. If the request would exceed this limit, initialization fails and the collective falls back. When active, this CVAR sets the shared-memory allocation cap used by POSIX release-gather collective initialization.
 
 * integer - default is 65536, represents the per-node shared-memory allocation limit in KB.
 
