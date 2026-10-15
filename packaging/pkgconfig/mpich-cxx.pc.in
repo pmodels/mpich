@@ -1,0 +1,14 @@
+# this gives access to the mpich header files for C++
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: mpich-cxx
+Description: High Performance and portable MPI (C++)
+Version: @MPICH_VERSION@
+URL: http://www.mcs.anl.gov/research/projects/mpich
+Requires:
+Libs: @WRAPPER_C_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} @LMPICXXLIBNAME@ @mpi_dependency_libs@
+Libs.private: @EXTERNAL_LIB_PATHS@ @EXTERNAL_LIBS@
+Cflags: @PC_MPI_CPPFLAGS@ @WRAPPER_CPPFLAGS@ @WRAPPER_CXXFLAGS@ -I${includedir}

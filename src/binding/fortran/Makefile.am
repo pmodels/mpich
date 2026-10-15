@@ -23,6 +23,20 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
+pkgconfigdir = @pkgconfigdir@
+nodist_pkgconfig_DATA = mpich-fortran.pc
+
+# generic name used by e.g. CMake's FindMPI
+install-data-hook:
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+	    cd ${DESTDIR}${pkgconfigdir} && ln -f -s mpich-fortran.pc mpi-fort.pc ; \
+	fi
+
+uninstall-local:
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+	    rm -f ${DESTDIR}${pkgconfigdir}/mpi-fort.pc ; \
+	fi
+
 include $(srcdir)/mpif_h/Makefile.mk
 include $(srcdir)/use_mpi/Makefile.mk
 include $(srcdir)/use_mpi_f08/Makefile.mk

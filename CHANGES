@@ -73,6 +73,11 @@
 
 # Allow generalized request callbacks to be NULL.
 
+# Added pkg-config files mpich-cxx.pc and mpich-fortran.pc, the per-ABI
+  files mpich-mpich-abi.pc and mpich-mpi-abi.pc (mpich.pc links to the
+  default one), and the generic links mpi-c.pc, mpi-cxx.pc and mpi-fort.pc
+  used by CMake's FindMPI.
+
 
 ===============================================================================
                                Changes in 5.0

@@ -47,7 +47,7 @@ errnames_txt_files =
 
 external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @json_srcdir@ @yaksa_srcdir@ @pmi_srcdir@
 external_ldflags = @RPATHS@
-external_libs = @WRAPPER_LIBS@
+external_libs = @EXTERNAL_LIBS@
 
 # convenience libs that do not depend on MPI
 pmpi_convenience_libs = @mpl_lib@ @hwloc_lib@ @json_lib@ @yaksa_lib@ @pmi_lib@
@@ -276,7 +276,11 @@ uninstall-local:
 	done ; \
 	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
-	done
+	done ; \
+	rm -f ${DESTDIR}${pkgconfigdir}/mpich.pc ; \
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+		rm -f ${DESTDIR}${pkgconfigdir}/mpi-c.pc ${DESTDIR}${pkgconfigdir}/mpi-cxx.pc ; \
+	fi
 
 # --------------------------------------------------------------------------
 #  coverage rules

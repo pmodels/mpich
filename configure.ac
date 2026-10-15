@@ -251,18 +251,22 @@ export FROM_MPICH
 # WRAPPER_CFLAGS and other compile flags are used for compile options
 # that are added by MPICH, but should be used by applications (such
 # as include paths).
-#
-# All libraries that are detected by MPICH as needed for some of its
-# functionality (such as -lpthread) should be added to WRAPPER_LIBS
-# so executables built within MPICH use them.  If inter-library
-# dependencies are not supported on the platform, these libraries are
-# added to the MPICH wrappers (mpicc and friends) as well.
 # Initialize all WRAPPER flags to empty string.
 PAC_INIT_ALL_FLAGS(WRAPPER)
 
+# All external libraries that are detected by MPICH as needed for some
+# of its functionality (such as -lpthread) should be added to
+# EXTERNAL_LIBS, which is used to link libmpi. Applications only need
+# them when inter-library dependencies are not available (e.g. static
+# linking); the wrappers get them from libmpi.la and mpich.pc lists
+# them in Libs.private.
+EXTERNAL_LIBS=""
+export EXTERNAL_LIBS
+AC_SUBST(EXTERNAL_LIBS)
+
 # confdb routines are used in multiple components. Let the macros know
-# whether WRAPPER FLAGS are used.
-m4_define([use_wrapper_flags], [1])
+# to add libraries to EXTERNAL_LIBS instead of LIBS.
+m4_define([use_external_libs], [1])
 
 # MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
 # WRAPPER flags, but these are provided by the user.
@@ -450,6 +454,12 @@ dnl Whether to disable the Fortran bindings. By default, we'll probe and build a
 dnl interfaces including mpif.h, use mpi, and use_mpi_f08.
 AC_ARG_ENABLE(fortran,
         AS_HELP_STRING([--disable-fortran], [Whether to disable Fortran bindings]),,[enable_fortran=yes])
+
+AC_ARG_ENABLE(generic-pkgconfig,
+        AS_HELP_STRING([--disable-generic-pkgconfig], [Do not install the generic pkg-config
+                        files mpi-c.pc, mpi-cxx.pc and mpi-fort.pc, which link to
+                        mpich.pc, mpich-cxx.pc and mpich-fortran.pc]),,[enable_generic_pkgconfig=yes])
+AC_SUBST(enable_generic_pkgconfig)
 
 AC_ARG_ENABLE(cxx,
 	AS_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
@@ -1560,14 +1570,14 @@ case "$with_pmilib" in
         AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
         AC_CHECK_LIB([pmi], [PMI_Init],
                     [PAC_PREPEND_FLAG([-lpmi],[LIBS])
-                     PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
+                     PAC_PREPEND_FLAG([-lpmi], [EXTERNAL_LIBS])],
                     [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
         AC_DEFINE([USE_PMI1_SLURM], 1, [Define if using Slurm PMI 1])
     elif test "$with_pmi" = "pmi2" ; then
         AC_CHECK_HEADER([slurm/pmi2.h], [], [AC_MSG_ERROR([could not find slurm/pmi2.h.  Configure aborted])])
         AC_CHECK_LIB([pmi2], [PMI2_Init],
                     [PAC_PREPEND_FLAG([-lpmi2],[LIBS])
-                     PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
+                     PAC_PREPEND_FLAG([-lpmi2], [EXTERNAL_LIBS])],
                     [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
         AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
     fi
@@ -1609,7 +1619,7 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
     AC_DEFINE([PMI_FROM_3RD_PARTY], 1, [define if PMI is supplied from 3rd party (thus we should limit usage of MPICH extensions)])
     # detect
     PAC_PUSH_FLAG([LIBS])
-    LIBS=$WRAPPER_LIBS
+    LIBS=$EXTERNAL_LIBS
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
     AC_CHECK_FUNCS([PMI_Barrier_group])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
@@ -1673,7 +1683,7 @@ PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
 # We need variables from $cc_shlib_conf to set `WRAPPER_C_DYNAMIC_LOADING_FLAGS`, which 
-#    is used in `packaging/pkgconfig/mpich.pc.in`
+#    is used in `packaging/pkgconfig/mpich-*.pc.in`
 # However, libtool's $library_names_spec is more than what's given in $cc_shlib_conf, so
 #    we need protect it. 
 # FIXME: potentially, there are more variable collisions. Need better plan.
@@ -3284,6 +3294,15 @@ fi
 AC_SUBST(pkgconfigdir)
 export pkgconfigdir
 
+# -L paths of external libraries (e.g. from --with-hwloc=PATH), needed
+# with EXTERNAL_LIBS for static linking. RPATHS has them as -R paths.
+EXTERNAL_LIB_PATHS=
+for flag in $RPATHS ; do
+    libpath=${flag#-R}
+    PAC_APPEND_FLAG([-L$libpath], [EXTERNAL_LIB_PATHS])
+done
+AC_SUBST(EXTERNAL_LIB_PATHS)
+
 case "$host_os" in
     freebsd*)
         AC_DEFINE(DELAY_SHM_MUTEX_DESTROY, 1, [Define to workaround interprocess mutex issue on FreeBSD])
@@ -3292,7 +3311,8 @@ esac
 
 # export to binding subconfigure
 # - mpi_libs is used in building libmpifort
-# - mpi_dependency_libs is used in mpifort if $interlib_deps is "no"
+# - mpi_dependency_libs is the MPI libraries the mpifort wrapper links
+# - WRAPPER_DEPENDENCY_LDFLAGS is added by mpifort only if $interlib_deps is "no"
 #
 if test "$WITH_MPI" = "mpich" ; then
     mpi_libs="$main_top_builddir/lib/lib${MPILIBNAME}.la"
@@ -3309,8 +3329,23 @@ else
         mpi_dependency_libs="$mpi_dependency_libs -l${PMPIABILIBNAME}"
     fi
 fi
-mpi_dependency_libs="$mpi_dependency_libs $WRAPPER_DEPENDENCY_LDFLAGS"
-export mpi_libs mpi_dependency_libs
+export mpi_libs mpi_dependency_libs WRAPPER_DEPENDENCY_LDFLAGS
+
+# mpich-mpich-abi.pc and mpich-mpi-abi.pc are installed for the ABIs that
+# are built; mpich.pc links to the one mpicc uses by default.
+# mpich-cxx.pc follows the same default, like mpicxx.
+if test "$DEFAULT_MPI_ABI" = "yes" ; then
+    PC_DEFAULT_ABI=mpich-mpi-abi.pc
+else
+    PC_DEFAULT_ABI=mpich-mpich-abi.pc
+fi
+AC_SUBST(PC_DEFAULT_ABI)
+AC_SUBST(mpi_dependency_libs)
+PC_MPI_CPPFLAGS=
+if test "$WITH_MPI" = "abi" ; then
+    PC_MPI_CPPFLAGS="-DMPI_ABI"
+fi
+AC_SUBST(PC_MPI_CPPFLAGS)
 
 MPICH_COMPILER_CC="$CC $MPICH_MPICC_CPPFLAGS $MPICH_MPICC_CFLAGS $WRAPPER_CFLAGS"
 MPICH_COMPILER_CXX="$CXX $MPICH_MPICXX_CPPFLAGS $MPICH_MPICXX_CXXFLAGS $WRAPPER_CXXFLAGS"
@@ -3353,7 +3388,9 @@ AC_CONFIG_FILES([Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests \
-          packaging/pkgconfig/mpich.pc \
+          packaging/pkgconfig/mpich-mpich-abi.pc \
+          packaging/pkgconfig/mpich-mpi-abi.pc \
+          packaging/pkgconfig/mpich-cxx.pc \
           packaging/envmods/mpich.module])
 AC_OUTPUT
 

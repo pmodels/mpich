@@ -1,0 +1,15 @@
+# this gives access to the mpich header files and modules for Fortran
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+modincdir=@modincdir@
+
+Name: mpich-fortran
+Description: High Performance and portable MPI (Fortran)
+Version: @MPICH_VERSION@
+URL: http://www.mcs.anl.gov/research/projects/mpich
+Requires:
+Requires.private: mpi-c
+Libs: @WRAPPER_FC_DYNAMIC_LOADING_FLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} -l@MPIFCLIBNAME@ @mpi_dependency_libs@
+Cflags: -I${includedir} @PC_FCMODINC@

@@ -1194,13 +1194,49 @@ if test -z "$INTERLIB_DEPS" ; then
 fi
 AC_SUBST(INTERLIB_DEPS)
 
-WRAPPER_DEPENDENCY_LDFLAGS=""
+# User LDFLAGS, needed by mpifort only if $interlib_deps is "no"
+if test "$FROM_MPICH" != "yes" ; then
+    WRAPPER_DEPENDENCY_LDFLAGS=""
+fi
 AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 
 # generate rpath-related macros, needed for substitute with_wrapper_dl_type
 fc_shlib_conf=fc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
 AC_SUBST_FILE([fc_shlib_conf])
+
+# ---------------------------------------------
+# Substitutions for mpich-fortran.pc
+
+if test -z "$pkgconfigdir" ; then
+    pkgconfigdir=$libdir/pkgconfig
+fi
+AC_SUBST(pkgconfigdir)
+
+AC_ARG_ENABLE(generic-pkgconfig,
+        AS_HELP_STRING([--disable-generic-pkgconfig], [Do not install the generic pkg-config
+                        file mpi-fort.pc, which links to mpich-fortran.pc]),,[enable_generic_pkgconfig=yes])
+AC_SUBST(enable_generic_pkgconfig)
+
+# Same as WRAPPER_C_DYNAMIC_LOADING_FLAGS in the top-level configure, but
+# from $fc_shlib_conf. Source it in a subshell, since it sets libtool
+# variables (e.g. library_names_spec) that AC_OUTPUT still needs.
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"`
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"`
+else
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=""
+fi
+AC_SUBST(WRAPPER_FC_DYNAMIC_LOADING_FLAGS)
+
+# Fortran modules may be installed outside of includedir
+if test "$modincdir" != "$includedir" ; then
+    PC_FCMODINC="${FCMODINCFLAG}\${modincdir}"
+else
+    PC_FCMODINC=""
+fi
+AC_SUBST(PC_FCMODINC)
 
 
 
@@ -1215,5 +1251,6 @@ AC_CONFIG_FILES([Makefile \
                  mpif_h/mpi_fortran.h \
                  env/mpifort.sh \
                  env/mpifort.bash \
+                 mpich-fortran.pc \
                  localdefs])
 AC_OUTPUT

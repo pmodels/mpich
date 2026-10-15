@@ -12,6 +12,10 @@ AC_CONFIG_SRCDIR([src/str/mpl_str.c])
 
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
+
+# LDFLAGS as given by the user (or the parent configure). Only the flags
+# added by this configure are passed back through localdefs.
+mpl_orig_LDFLAGS="$LDFLAGS"
 AM_INIT_AUTOMAKE([subdir-objects] [-Wall -Werror foreign 1.12.3])
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
@@ -1335,5 +1339,15 @@ AC_SUBST([NO_OPT_CFLAGS])
 AC_SUBST(SUMMARY_MESSAGE)
 
 dnl Final output
+# LDFLAGS added by this configure, e.g. -L paths from --with-cuda
+MPL_ADDED_LDFLAGS=
+for flag in $LDFLAGS ; do
+    case " $mpl_orig_LDFLAGS " in
+        *" $flag "*) ;;
+        *) MPL_ADDED_LDFLAGS="$MPL_ADDED_LDFLAGS $flag" ;;
+    esac
+done
+AC_SUBST(MPL_ADDED_LDFLAGS)
+
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
 AC_OUTPUT
