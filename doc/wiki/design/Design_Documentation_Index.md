@@ -36,7 +36,6 @@
     - [Changes and ADI3](Changes_to_CH3_and_ADI3.md)
 
 - Collectives
-    - [Collective Selection Framework](Collective_Selection_Framework.md)
     - [Collectives Framework](Collectives_framework.md)
     - [Overriding Collective Functions](Overriding_Collective_Functions.md)
 
