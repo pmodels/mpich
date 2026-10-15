@@ -8,6 +8,10 @@
 
 /* Algorithm: BINE Bandwidth
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * For large messages, we use a BINE algorithm implemented with a scatter
  * followed by an allgather.
  * We first scatter using a recursive doubling BINE tree. This costs

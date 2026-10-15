@@ -9,8 +9,12 @@
 /*
  * Algorithm: BINE Latency
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * For small vectors, we employ a standard
- * recursive doubling allreduce using Bine butterflies.
+ * recursive doubling allreduce using BINE butterflies.
  *
  * Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
  */

@@ -8,6 +8,10 @@
 
 /* Algorithm: Bine tree Latency
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * For short messages, we use a Bine tree algorithm implemented with distance
  * halving Bine trees for broadcasting data from the root to the leaves.
  *

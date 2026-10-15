@@ -9,6 +9,10 @@
 /*
  * Algorithm: BINE Bandwidth
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * For large vectors, we
  * uses a distance-doubling Bine butterfly for the reduce-scatter and
  * a distance-halving Bine tree for the gather.

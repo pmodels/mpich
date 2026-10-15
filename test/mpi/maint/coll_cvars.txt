@@ -194,7 +194,7 @@ algorithms:
                 .MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=2,3,4
                 .MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV=0,1
             bine
-                .MPIR_CVAR_ALLGATHER_BINE_TYPE=permute,send_remap_block_by_block,two_blocks
+                .MPIR_CVAR_ALLGATHER_BINE_TYPE=permute,send_remap,block_by_block,two_blocks
         intra-nonblocking:
             sched_ring
             sched_brucks
@@ -508,7 +508,7 @@ algorithms:
             recursive_halving
             recursive_doubling
             bine
-                .MPIR_CVAR_REDUCE_SCATTER_BINE_TYPE=permute,send_remap_block_by_block
+                .MPIR_CVAR_REDUCE_SCATTER_BINE_TYPE=permute,send_remap,block_by_block
         intra-nonblocking:
             sched_noncommutative
             sched_pairwise

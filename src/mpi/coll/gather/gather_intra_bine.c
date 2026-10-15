@@ -10,6 +10,10 @@
  *
  * Restrictions: power-of-two no. of processes
  *
+ * Based on "BINE Trees: Enhancing Collective Operations
+ * by Optimizing Communication Locality" Nov 2025
+ * paper: https://doi.org/10.1145/3712285.3759835
+ *
  * We use a BINE tree algorithm for both short and long messages. At nodes
  * other than leaf nodes we need to allocate a temporary buffer to store the
  * incoming message.
