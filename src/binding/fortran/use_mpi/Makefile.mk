@@ -23,9 +23,10 @@ if BUILD_FC_BINDING
 # in a VPATH build)
 AM_FCFLAGS += @FCINCFLAG@use_mpi
 
+# for mpifnoext.h
+AM_FCFLAGS += @FCINCFLAG@mpif_h
+
 AM_CPPFLAGS += -Iuse_mpi
-noinst_HEADERS +=                     \
-    use_mpi/mpifnoext.h
 
 # cause any .$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
@@ -49,7 +50,7 @@ lib_libf90_mpi_la_SOURCES = \
 # We need the MPI constants in a separate module for some of the
 # interface definitions (the ones that need MPI_ADDRESS_KIND or
 # MPI_OFFSET_KIND)
-use_mpi/mpi.$(MOD)-stamp: use_mpi/$(MPICONSTMOD).$(MOD) use_mpi/$(MPISIZEOFMOD).$(MOD) use_mpi/$(MPIBASEMOD).$(MOD) use_mpi/$(PMPIBASEMOD).$(MOD) $(srcdir)/use_mpi/mpi.f90 use_mpi/mpifnoext.h
+use_mpi/mpi.$(MOD)-stamp: use_mpi/$(MPICONSTMOD).$(MOD) use_mpi/$(MPISIZEOFMOD).$(MOD) use_mpi/$(MPIBASEMOD).$(MOD) use_mpi/$(PMPIBASEMOD).$(MOD) $(srcdir)/use_mpi/mpi.f90 mpif_h/mpifnoext.h
 	@rm -f use_mpi/mpi-tmp
 	@touch use_mpi/mpi-tmp
 	@( cd use_mpi && \
@@ -85,7 +86,7 @@ use_mpi/mpi.lo use_mpi/$(MPIMOD).$(MOD): use_mpi/mpi.$(MOD)-stamp
 CLEANFILES += use_mpi/mpi.$(MOD)-stamp use_mpi/$(MPIMOD).$(MOD) use_mpi/mpi.lo use_mpi/mpi-tmp
 
 
-use_mpi/mpi_constants.$(MOD)-stamp: use_mpi/mpi_constants.f90 use_mpi/mpifnoext.h
+use_mpi/mpi_constants.$(MOD)-stamp: use_mpi/mpi_constants.f90 mpif_h/mpifnoext.h
 	@rm -f use_mpi/mpi_constants-tmp
 	@touch use_mpi/mpi_constants-tmp
 	@( cd use_mpi && \
@@ -121,7 +122,7 @@ use_mpi/mpi_constants.lo use_mpi/$(MPICONSTMOD).$(MOD): use_mpi/mpi_constants.$(
 CLEANFILES += use_mpi/mpi_constants.$(MOD)-stamp use_mpi/$(MPICONSTMOD).$(MOD) use_mpi/mpi_constants.lo use_mpi/mpi_constants-tmp
 
 
-use_mpi/mpi_sizeofs.$(MOD)-stamp: use_mpi/mpi_sizeofs.f90 use_mpi/mpifnoext.h
+use_mpi/mpi_sizeofs.$(MOD)-stamp: use_mpi/mpi_sizeofs.f90 mpif_h/mpifnoext.h
 	@rm -f use_mpi/mpi_sizeofs-tmp
 	@touch use_mpi/mpi_sizeofs-tmp
 	@( cd use_mpi && \
@@ -234,17 +235,6 @@ mpi_fc_modules += \
     use_mpi/$(MPICONSTMOD).$(MOD) \
     use_mpi/$(MPIBASEMOD).$(MOD) \
     use_mpi/$(PMPIBASEMOD).$(MOD)
-
-# We need a free-format version of mpif.h with no external commands,
-# including declarations such as `REAL*8 MPI_WTIME, PMPI_WTIME`.
-# Filtering on `PMPI_` covers those lines.
-# NOTE: do not use extended regex to allow posix sed.
-use_mpi/mpifnoext.h: mpif_h/mpif.h
-	rm -f $@
-	sed -e 's/^C/\!/g' -e '/EXTERNAL/d' \
-	-e '/PMPI_/d' mpif_h/mpif.h > $@
-
-CLEANFILES += use_mpi/mpifnoext.h
 
 MAINTAINERCLEANFILES += $(mpi_sources) fproto.h
 CLEANFILES += $(mpi_fc_modules)

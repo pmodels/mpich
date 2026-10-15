@@ -6,6 +6,7 @@
 /mpif_h/mpif77
 /mpif_h/fproto.h
 /mpif_h/mpif.h
+/mpif_h/mpifnoext.h
 /mpif_h/mpif.h.in
 /mpif_h/fortran_profile.h
 /mpif_h/fortran_binding.c
@@ -22,7 +23,6 @@
 /use_mpi/pmpi_base.f90
 /use_mpi/mpif90type.h
 /use_mpi/mpi_constants.f90
-/use_mpi/mpifnoext.h
 
 /use_mpi/mpi.mod-stamp
 /use_mpi/mpi_base.mod-stamp
