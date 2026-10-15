@@ -520,6 +520,21 @@ def dump_f08_wrappers_f(func, is_large):
                 convert_list_pre.append("do i = 1, %s" % p['length'])
                 convert_list_pre.append("    %s(i) = %s(%s(i)%%MPI_VAL)" % (arg_c, f2c, p['name']))
                 convert_list_pre.append("end do")
+            elif RE.match(r'MPI_Type_get_contents(_c)?$', func['name'], re.IGNORECASE):
+                # It may return fewer than max_datatypes entries. Mark the rest
+                # with MPI_DATATYPE_NULL so we won't convert or touch them.
+                uses[f2c] = 1
+                uses['MPI_DATATYPE_NULL'] = 1
+                c_decl_list.append("INTEGER(c_Datatype) :: datatype_null_c")
+                convert_list_pre.append("datatype_null_c = %s(MPI_DATATYPE_NULL%%MPI_VAL)" % f2c)
+                convert_list_pre.append("%s = datatype_null_c" % arg_c)
+                uses[c2f] = 1
+                convert_list_post.append("do i = 1, %s" % p['length'])
+                convert_list_post.append("    if (%s(i) /= datatype_null_c) then" % arg_c)
+                convert_list_post.append("        %s(i)%%MPI_VAL = %s(%s(i))" % (p['name'], c2f, arg_c))
+                convert_list_post.append("    end if")
+                convert_list_post.append("end do")
+                return arg_c
             if RE.match(r'out|inout', p['param_direction']):
                 uses[c2f] = 1
                 convert_list_post.append("do i = 1, %s" % p['length'])

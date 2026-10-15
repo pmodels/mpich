@@ -281,6 +281,19 @@ def dump_f77_c_func(func, is_cptr=False):
                 code_list_common.append("for (int i = 0; i < %s; i++) {" % incount)
                 code_list_common.append("    %s_i[i] = %s_fromint(%s[i]);" % (v, G.handle_conversions[c_type], v))
                 code_list_common.append("}")
+            elif RE.match(r'MPI_Type_get_contents(_c)?$', func['name'], re.IGNORECASE):
+                # It may return fewer than max_datatypes entries. Mark the rest
+                # with MPI_DATATYPE_NULL so we won't convert or touch them.
+                code_list_common.append("for (int i = 0; i < %s; i++) {" % incount)
+                code_list_common.append("    %s_i[i] = MPI_DATATYPE_NULL;" % v)
+                code_list_common.append("}")
+                end_list_common.append("for (int i = 0; i < %s; i++) {" % outcount)
+                end_list_common.append("    if (%s_i[i] != MPI_DATATYPE_NULL) {" % v)
+                end_list_common.append("        %s[i] = MPI_Type_toint(%s_i[i]);" % (v, v))
+                end_list_common.append("    }")
+                end_list_common.append("}")
+                end_list_common.append("free(%s_i);" % v)
+                return
 
             if is_out:
                 end_list_common.append("for (int i = 0; i < %s; i++) {" % outcount)
