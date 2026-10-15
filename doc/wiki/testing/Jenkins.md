@@ -32,7 +32,7 @@ Below are our intended goals by using Jenkins or other
 - Reduce average build times, partly by tracking this information
   historically
 
-Some of this is handled by the existing [Nightly Tests](Nightly_Tests.md "wikilink") infrastructure, though the "old
+Some of this is handled by the existing [Nightly Tests](Nightly_Tests.md) infrastructure, though the "old
 nightlies" have a number of problems:
 
 - They are fragile. They are a cobbled together series of numerous

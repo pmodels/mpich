@@ -10,6 +10,6 @@ be found below.
 ## Submitting Changes to MPICH
 Below are two pages that cover how to use our current version control system and
 how to format code written for the MPICH repository.
-  - [Version Control Systems & Git](Version_Control_System.md)
+  - [Version Control Systems & Git](Git_Workflow.md)
   - [Coding Standards](Coding_Standards.md)
 

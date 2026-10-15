@@ -3,8 +3,8 @@
 - [Getting And Building MPICH](source_code/Github.md)
     - [Building MPICH For Development](source_code/Building_MPICH_For_Development.md)
         - [Blue Gene/Q](source_code/BGQ.md)
-        - [XC40](source_code/Cray.md)
-        - [UCX](source_code/Summit.md)
+        - [Cray](source_code/Cray.md)
+        - [Summit](source_code/Summit.md)
 
 - [Contributing To MPICH](source_code/Contributing_to_MPICH.md)
     - [Git Workflow](source_code/Git_Workflow.md)
@@ -13,7 +13,17 @@
     - [Developer Guide](developer_guide.md)
 
 - [Creating New Bug Reports](source_code/Bug_Tickets.md)
-- [Using the Hydra Process Manager](how_to/Using_the_Hydra_Process_Manager.md)
+- How To
+    - [Using the Hydra Process Manager](how_to/Using_the_Hydra_Process_Manager.md)
+    - [Alternate Process Managers](how_to/Alternate_Process_Managers.md)
+    - [Alternate Channels and Devices](how_to/Alternate_Channels_and_Devices.md)
+    - [Using the CH3 Device](how_to/Using_CH3_device.md)
+    - [MPI ABI Build Interface](how_to/MPI_ABI_Build_Interface.md)
+    - [Fault Tolerance](how_to/Fault_Tolerance.md)
+    - [Adding New Error Messages](how_to/Adding_New_Error_Messages.md)
+    - [Using csh and tcsh Shells](how_to/Using_csh_tcsh_shells.md)
+    - [Using MPICH In Amazon EC2](how_to/Using_MPICH_In_Amazon_EC2.md)
+    - [Measuring Nemesis Performance](how_to/Measuring_Nemesis_Performance.md)
 
 - Tools
     - [MPE](tools/MPE_by_example.md)
@@ -24,8 +34,8 @@
 - [ABI Compatibility Initiative](testing/ABI_Compatibility_Initiative.md)
 
 - Testing
+    - [Testing MPICH](testing/Testing_MPICH.md)
     - [Nightly Tests](testing/Nightly_Tests.md) (Out Of Date)
-    - [Special Tests](https://www.mpich.org/static/cron/specialtests/index.htm) (Out Of Date)
     - [Jenkins](testing/Jenkins.md)
     - [Writing New Tests](testing/Writing_New_Tests.md)
     - [Testing Crons](testing/Testing_Crons.md)
@@ -44,9 +54,7 @@
     - [Using etags On The MPICH Source Tree](source_code/Etags.md)
     - [Mailing Lists](https://www.mpich.org/support/mailing-lists/)
     - [Rules For Installation Targets](source_code/Rules_For_Installation_Targets.md)
-    - [Adding New Error Messages](how_to/Adding_New_Error_Messages.md)
     - [Creating A Release](source_code/Creating_A_Release.md)
-    - [Managing Commits In Trunk And Release Branches](source_code/Managing_Commits_In_Trunk_and_Release_Branches.md)
     - [Proposed MPIEXEC Extensions](design/Proposed_MPIEXEC_Extensions.md)
     - [Compiler Quirks](source_code/Compiler_Quirks.md)
     - [Shifting Towards C99](source_code/Shifting_Toward_C99.md)

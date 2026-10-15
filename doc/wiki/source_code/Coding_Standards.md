@@ -1,8 +1,5 @@
 # Coding Standards
 
-Many of these standards are automatically checked by the
-[Coding Style Checker](Coding_Style_Checker.md).
-
 Some of the information on this page is out of date (for example, the
 use of the NMPI interface). However, most of the material here is still
 relevant and provides a good guide to coding for MPICH.
@@ -32,7 +29,7 @@ than what you find on any one system.
 
 Code that is critical to performance should be designed and made to be run fast.
 Use the language features such as `const` and [`restrict`](#using-the-restrict-qualifier)
-that can help the compiler generate good code. See also [Performance Tricks](#performance-tricks "wikilink").
+that can help the compiler generate good code. See also [Performance Tricks](#performance-tricks).
 
 ### Flexible And Adaptable
 
@@ -188,7 +185,7 @@ generate unattractive and in some cases unreadable manual pages.
 
 ### Code Cleanup Script
 
-This [script](https://github.com/pmodels/mpich/blob/master/maint/code-cleanup.bash)
+This [script](https://github.com/pmodels/mpich/blob/main/maint/code-cleanup.bash)
 can be used to cleanup whitespace, comments, and line-wrapping in
 existing source files. It is a good idea to run it on any newly created
 files in the git repo. Note that the script can be found in the `maint`
@@ -912,7 +909,7 @@ definition).
 ## Adding new mpich control variables
 
 See [Tool interfaces (MPI-T), MPICH parameters and
-instrumentation](../misc/Tool_Interfaces.md "wikilink")
+instrumentation](../design/Tool_Interfaces.md)
 
 ## C and POSIX standards
 

@@ -21,7 +21,7 @@ use.
 In the implementation of MPICH, two different approaches are used for
 mediating the access to shared structures.
 
-1.  [Critical sections](#critical-sections "wikilink"). These are used
+1.  [Critical sections](#critical-sections). These are used
     to guard shared data structures and system calls, such as queue
     updates and reads and writes to sockets.
 2.  [Atomic update and access](#atomic-reference-and-update").
@@ -117,7 +117,7 @@ to describe thread-synchronization points within MPICH:
     would not need a critical section, such as code that only references
     data such as `MPI_Comm_rank`, the error code routines have their own
     thread-safe support. This will be discussed
-    [later](#Error_Codes "wikilink").
+    [later](#Error_Codes).
 2.  Per module and/or per object critical sections (and atomic update
     operations). This is a more complex approach but it can offer
     greater performance by avoiding unnecessary critical sections and by

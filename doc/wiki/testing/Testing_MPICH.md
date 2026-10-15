@@ -259,7 +259,7 @@ performed by `updatetodo` and placed into
 as [2](http://www.mcs.anl.gov/mpi/mpich/todo/coding-problems.txt)).
 
 An explanation of some of the rules that are applied by the style
-checker are in the [Coding Standards](Coding_Standards "wikilink").
+checker are in the [Coding Standards](../source_code/Coding_Standards.md).
 
 ### Finding Specific Classes Of Problems
 

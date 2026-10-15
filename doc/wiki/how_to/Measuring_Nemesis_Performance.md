@@ -5,8 +5,6 @@ always easy. This page provides a number of techniques and suggestions
 for obtaining accurate, high performance benchmark results on your
 platform.
 
-__TOC__
-
 ## General Caveats and Suggestions
 
 Good benchmarking is difficult. Good benchmark results are repeatable by

@@ -179,6 +179,6 @@ If migrating from other MPI implementations:
 
 ## References
 
-- [Using the Hydra Process Manager](https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md)
-- [MPICH Installation Guide](../../../installguide/install.pdf)
+- [Using the Hydra Process Manager](Using_the_Hydra_Process_Manager.md)
+- [MPICH Installation Guide](https://www.mpich.org/documentation/guides/)
 - Resource manager documentation (SLURM, PBS, etc.)

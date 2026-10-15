@@ -112,8 +112,8 @@ point until the one denoted as the "injection point", whereupon it
 enters the ring and loops a stated amount of times (from one ring
 element to the next).
 
-The source code can be downloaded [here](../text/Ring.c)
-([makefile](../text/Makefile.ring)). The default
+The source code can be downloaded [here](../sample_code/Ring.c)
+([makefile](../sample_code/Makefile.ring)). The default
 *Makefile* should do the link-time instrumentation explained above, so a
 simple `make` suffices to get an executable which generates basic
 profiling information for MPI calls. You can then run the program with
@@ -196,8 +196,8 @@ chosen range:
 The implementation for a simple k-means clustering algorithm is
 surprisingly small (the main class has \~50 lines), which is one of the
 reasons why it was chosen. It may be downloaded
-[here](../text/Kmeans.cpp)
-([makefile](../text/Makefile.kmeans)).
+[here](../sample_code/Kmeans.cpp)
+([makefile](../sample_code/Makefile.kmeans)).
 
 The gist of the algorithm is the following: for every one of $k$
 *cluster centroids*, assign to its class all training points that are

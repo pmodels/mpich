@@ -318,8 +318,6 @@ put operation, then sends a DONE message to the receiver. When the
 receiver receives the DONE message, the receiver knows the transfer has
 completed and completes the request.
 
-[xfig source of image](Media:put.fig.txt "wikilink")
-
 
 
 #### Get
@@ -337,8 +335,6 @@ message is matched on the receiver, this retrieves the data from the
 source buffer, e.g., using an RDMA get operation, then sends a DONE
 message to the sender. When the sender receives the DONE message, the
 sender knows the transfer has completed and completes the request.
-
-[xfig source of image](Media:get.fig.txt "wikilink")
 
 
 
@@ -362,8 +358,6 @@ receives the CTS message, it would mmap the file, and start copying the
 data. The sender and receiver would alternate copying in and out until
 the entire data is transferred. At that point, both sides know that the
 transfer has completed, so no DONE messages need to be sent.
-
-[xfig source of image](Media:coop.fig.txt "wikilink")
 
 
 

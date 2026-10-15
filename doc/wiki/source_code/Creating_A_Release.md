@@ -88,7 +88,7 @@ Notes:
 
 *(NOTE: below are the notes from when we managed our source in SVN and
 the project was still called "MPICH2", though they never 100% accurately
-reflected reality. Since the switch to [Git](Git.md), we haven't
+reflected reality. Since the switch to [Git](Git_Workflow.md), we haven't
 been following this model quite as closely. Also, some of the
 instructions below don't make as much sense in Git. These instructions
 are helpful history, but not how we do things now.)*
