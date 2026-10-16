@@ -53,6 +53,23 @@ cvars:
         manager and the MPICH library. The format of this variable is
         <low>:<high>.  To specify any available port, use 0:0.
 
+    - name        : MPIR_CVAR_SOCKET_BUFFER_SIZE
+      category    : CH3
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If greater than 0, the size in bytes of the send and receive buffers
+        (SO_SNDBUF and SO_RCVBUF) of each tcp socket, used by both the
+        nemesis tcp netmod and the sock channel. The default, 0, keeps the
+        operating system's buffer sizes. A fixed size can help on systems
+        with a small network buffer pool, e.g. in VMs, where the kernel
+        growing the buffers of many connections can exhaust the pool and
+        make writes fail with ENOBUFS (seen on macOS with 256 KB as a
+        working value).
+
     - name        : MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE
       category    : NEMESIS
       alt-env     : MPIR_CVAR_NETWORK_IFACE

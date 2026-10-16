@@ -89,9 +89,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
             MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
             MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                           vc->pg_rank);
+            /* this vc is closed now; return the error so it is not lost */
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-            MPIR_ERR_CHECK(mpi_errno);
-            goto fn_exit;       /* this vc is closed now, just bail out */
+            MPIR_ERR_ADD(mpi_errno, req_errno);
+            goto fn_fail;
         }
         if (offset == -1) {
             if (errno == EAGAIN) {
@@ -104,9 +105,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
                               MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
                 MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                               vc->pg_rank);
+                /* this vc is closed now; return the error so it is not lost */
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;   /* this vc is closed now, just bail out */
+                MPIR_ERR_ADD(mpi_errno, req_errno);
+                goto fn_fail;
             }
         }
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
@@ -220,8 +222,9 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const struct iovec * iov, in
         MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
         MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                       vc->pg_rank);
+        /* this vc is closed now; return the error so it is not lost */
         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_ERR_ADD(mpi_errno, req_errno);
         goto fn_fail;
     }
     if (*offset_ptr == -1) {
@@ -233,8 +236,9 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const struct iovec * iov, in
                           MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
             MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail",
                           "**comm_fail %d", vc->pg_rank);
+            /* this vc is closed now; return the error so it is not lost */
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_ERR_ADD(mpi_errno, req_errno);
             goto fn_fail;
         }
     }

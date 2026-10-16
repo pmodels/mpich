@@ -126,8 +126,8 @@ opminloc 4
 opmax 5
 opmaxloc 5
 uoplong 4
-uoplong 11
-uoplong 16 mem=1.4
+uoplong 11 env=MPIR_CVAR_SOCKET_BUFFER_SIZE=262144
+uoplong 16 mem=1.4 env=MPIR_CVAR_SOCKET_BUFFER_SIZE=262144
 nonblocking 4
 nonblocking 5
 nonblocking 10
