@@ -16,7 +16,10 @@ int strerror_r(int errnum, char *buf, size_t buflen);
 /* wrapper for strerror_r to return the buffer used */
 const char *MPIR_Strerror(int errnum, char *buf, size_t buflen)
 {
-#if defined(STRERROR_R_CHAR_P)
+#if defined(_WIN32)
+    strerror_s(buf, buflen, errnum);
+    return buf;
+#elif defined(STRERROR_R_CHAR_P)
     return strerror_r(errnum, buf, buflen);
 #else
     strerror_r(errnum, buf, buflen);

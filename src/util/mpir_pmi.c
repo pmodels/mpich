@@ -333,6 +333,12 @@ void MPIR_pmi_finalize(void)
 
     /* delay PMI_Finalize to the exit hook */
     finalize_pending++;
+#ifdef _WIN32
+    /* An atexit handler registered from a DLL runs at DLL detach, when
+     * Winsock may already be gone, so finalize the PM connection now. */
+    MPIR_pmi_finalize_on_exit();
+    finalize_pending--;
+#endif
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)

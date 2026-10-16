@@ -25,7 +25,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <poll.h>
 #include <errno.h>
 
 #include "pmi.h"
@@ -156,7 +155,7 @@ int PMIU_readline(int fd, char *buf, int maxlen)
         if (nextChar == lastChar) {
             lastfd = fd;
             do {
-                n = read(fd, readbuf, sizeof(readbuf) - 1);
+                n = MPL_sock_read(fd, readbuf, sizeof(readbuf) - 1);
             } while (n == -1 && errno == EINTR);
             if (n == 0) {
                 /* EOF */
@@ -251,7 +250,7 @@ bool PMIU_poll(int fd)
     fds[0].events = POLLIN;
 
     int ret;
-    ret = poll(fds, 1, timeout_msecs);
+    ret = MPL_sock_poll(fds, 1, timeout_msecs);
     if (ret == 1) {
         return true;
     } else {
@@ -302,7 +301,7 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
                     bufsize += MAX_READLINE;
                     PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
                 }
-                n = read(fd, buf + buflen, bufsize - buflen - 1);
+                n = MPL_sock_read(fd, buf + buflen, bufsize - buflen - 1);
             } while (n == -1 && errno == EINTR);
             if (n == 0) {
                 /* EOF */
@@ -388,7 +387,7 @@ int PMIU_write(int fd, char *buf, int buflen)
 
     while (rem > 0) {
         do {
-            n = write(fd, p, rem);
+            n = MPL_sock_write(fd, p, rem);
         } while (n == -1 && errno == EINTR);
 
         if (n < 0) {
@@ -416,7 +415,7 @@ int PMIU_writeline(int fd, char *buf)
         PMIU_printf(1, "write_line: message string doesn't end in newline: :%s:\n", buf);
     else {
         do {
-            n = write(fd, buf, size);
+            n = MPL_sock_write(fd, buf, size);
         } while (n == -1 && errno == EINTR);
 
         if (n < 0) {
@@ -558,7 +557,7 @@ static int connect_to_pm(char *hostname, int portnum)
                 PMIU_printf(1, "connect failed with connection refused\n");
                 /* (close socket, get new socket, try again) */
                 if (q_wait)
-                    close(fd);
+                    MPL_sock_close(fd);
                 return -1;
 
             case EINPROGRESS:  /*  (nonblocking) - select for writing. */

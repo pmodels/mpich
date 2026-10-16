@@ -9,6 +9,13 @@
 #include <winsock2.h>
 #include <windows.h>
 
+/* Shared memory segments are named, pagefile-backed file mappings.  The
+ * global handle is the mapping name; the local handle is the mapping handle.
+ *
+ * A mapping is destroyed when its last handle and view are gone, so the local
+ * handle is kept open until the shm handle is finalized (MPL_shm_hnd_finalize)
+ * rather than closed right after creation as on POSIX. */
+
 typedef HANDLE MPLI_shm_lhnd_t;
 
 typedef char *MPLI_shm_ghnd_t;
@@ -27,45 +34,11 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 
 #define MPL_SHM_SEG_NAME_LEN   70
 #define MPLI_SHM_GHND_SZ       MPL_SHM_SEG_NAME_LEN
-#define MPLI_SHM_LHND_INVALID  INVALID_HANDLE_VALUE
-#define MPLI_SHM_LHND_INIT_VAL INVALID_HANDLE_VALUE
+#define MPLI_SHM_LHND_INVALID  NULL
+#define MPLI_SHM_LHND_INIT_VAL NULL
 
-#define MPL_shm_SEG_ALREADY_EXISTS ERROR_ALREADY_EXISTS
+#define MPL_SHM_SEG_ALREADY_EXISTS ERROR_ALREADY_EXISTS
 
-/* Returns MPL_SUCCESS on success, MPL_ERR_SHM_INTERN on error */
-#define MPLI_shm_lhnd_close(hnd)(\
-    (CloseHandle(MPLI_shm_lhnd_get(hnd)) != 0) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN  \
-)
-
-#if defined (HAVE_QUERYPERFORMANCECOUNTER)
-/*
- * Returns size of uniqStr, 0 on error
- */
-static inline int MPL_shm_get_uniq_str(char *str, int strlen)
-{
-    LARGE_INTEGER perfCnt;
-    QueryPerformanceCounter(&perfCnt);
-    return (snprintf(str, strlen, "MPICH_NEM_%lu_%I64d", GetCurrentThreadId(), (perfCnt.QuadPart)));
-}
-#endif
-
-/* Returns MPL_SUCCESS on success, MPL_ERR_SHM_INTERN on error */
-static inline int MPLI_shm_ghnd_set_uniq(MPL_shm_hnd_t hnd)
-{
-    if (MPL_shm_hnd_ref_alloc(hnd) == MPL_SUCCESS) {
-        if (MPLI_shm_get_uniq_str(hnd->ghnd, MPLI_SHM_GHND_SZ) != 0) {
-            return MPL_ERR_SHM_INTERN;
-        }
-    } else {
-        return MPL_ERR_SHM_INTERN;
-    }
-    return MPL_SUCCESS;
-}
-
-/* Nothing to be done when removing an SHM segment */
-static inline int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
-{
-    return MPL_SUCCESS;
-}
+int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd);
 
 #endif /* MPL_SHM_WIN_H_INCLUDED */

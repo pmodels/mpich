@@ -486,8 +486,8 @@ static void trfree(void *a_ptr, int line, const char file[])
     /* Cast to (void*) to avoid false warning about alignment */
     nend = (unsigned long *) (void *) ((char *) a_ptr + head->size);
 /* Check that nend is properly aligned */
-    if ((sizeof(long) == 4 && ((long) nend & 0x3) != 0) ||
-        (sizeof(long) == 8 && ((long) nend & 0x7) != 0)) {
+    if ((sizeof(long) == 4 && ((uintptr_t) nend & 0x3) != 0) ||
+        (sizeof(long) == 8 && ((uintptr_t) nend & 0x7) != 0)) {
         MPL_error_printf
             ("[%d] Block at address %p is corrupted (invalid address or header)\n"
              "called in %p at line %d\n", world_rank, a_ptr, file, line);
@@ -887,9 +887,14 @@ static void *trmmap(void *addr, size_t length, int prot, int flags, int fd, off_
 {
     char *new = NULL;
 
+#ifdef MPL_HAVE_SYS_MMAN_H
     new = (char *) mmap(addr, length, prot, flags, fd, offset);
     if (new == MAP_FAILED)
         goto fn_exit;
+#else
+    /* no mmap (e.g. native Windows); callers there use MPL_shm instead */
+    goto fn_exit;
+#endif
 
     if (TRlevel & TR_MMAP) {
         MPL_error_printf("[%d] Mmapping %ld(%ld) bytes at %p in %s[%d]\n",
@@ -924,7 +929,9 @@ static void trmunmap(void *addr, size_t length, MPL_memory_class class, int line
 {
     allocation_classes[class].curr_allocated_mem -= length;
 
+#ifdef MPL_HAVE_SYS_MMAN_H
     munmap(addr, length);
+#endif
 }
 
 void MPL_trmunmap(void *addr, size_t length, MPL_memory_class class, int lineno, const char fname[])
