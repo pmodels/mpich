@@ -154,7 +154,11 @@ static int find_provider(struct fi_info **prov_out)
         mpi_errno = MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
-
+        if (MPIDI_OFI_ENABLE_COLL) {
+            hints->caps |= FI_COLLECTIVE;
+            hints->tx_attr->caps |= FI_COLLECTIVE;
+            hints->rx_attr->caps |= FI_COLLECTIVE;
+        }
 
         /* Now we have the hints with best matched provider, get the new prov_list */
         struct fi_info *old_prov_list = prov_list;
@@ -173,14 +177,21 @@ static int find_provider(struct fi_info **prov_out)
         }
         /* free the old one, the new one will be freed in MPIDI_OFI_find_provider_cleanup */
         fi_freeinfo(old_prov_list);
+        /* No fallback without FI_COLLECTIVE: the user explicitly asked for it. */
+        MPIR_ERR_CHKANDJUMP(prov_list == NULL && MPIDI_OFI_ENABLE_COLL,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_coll_nosupport");
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     } else {
         /* Make sure that the user-specified provider matches the configure-specified provider. */
         /* Initialize hints based on configure time macros) */
+        MPIDI_OFI_global.settings.enable_coll = MPIR_CVAR_CH4_OFI_ENABLE_COLL;
         mpi_errno = MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(MPIDI_OFI_PROV_NAME);
 
         ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
+        /* No fallback without FI_COLLECTIVE: the user explicitly asked for it. */
+        MPIR_ERR_CHKANDJUMP(prov_list == NULL && MPIDI_OFI_ENABLE_COLL,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_coll_nosupport");
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
         int set_number = MPIDI_OFI_get_set_number(prov_list->fabric_attr->prov_name);
