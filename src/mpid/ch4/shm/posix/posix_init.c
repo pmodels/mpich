@@ -17,26 +17,6 @@ cvars:
       description : >-
         If non-empty, this cvar specifies which shm posix eager module to use
 
-    - name        : MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE
-      category    : COLLECTIVE
-      type        : string
-      default     : ""
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Defines the location of tuning file.
-
-    - name        : MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU
-      category    : COLLECTIVE
-      type        : string
-      default     : ""
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Defines the location of tuning file for GPU.
-
     - name        : MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE
       category    : CH4
       type        : boolean

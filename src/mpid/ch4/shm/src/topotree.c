@@ -68,10 +68,6 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
             if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
                 /* No fallback */
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nosupport");
-            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) {
-                /* Fallback with print */
-                fprintf(stderr, "Intra-node topology aware trees does not have support for \
-                        knomial_2 trees. Falling back to knomial_1 trees.\n");
             }
         }
         /* Generate knomial_1 tree */

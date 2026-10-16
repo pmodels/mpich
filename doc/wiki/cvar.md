@@ -68,15 +68,6 @@ Sets the target pipeline message size, in bytes, for chunking data in Allgatherv
 
 Used in functions: `MPIR_Allgatherv_intra_ring`, `MPIR_Iallgatherv_intra_sched_ring`
 
-### MPIR_CVAR_ALLGATHERV_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode allgatherv. It is used in the POSIX allgatherv implementation and does not use automatic collective selection or depend on another CVAR in `src/mpid/ch4/shm/posix/posix_coll.h`. When active, this CVAR sets whether POSIX intranode allgatherv uses MPIR fallback or the POSIX GPU IPC read allgatherv path.
-
-* mpir - default, use the MPIR allgatherv implementation.
-* ipc_read - use the POSIX GPU IPC read allgatherv path.
-
-Used in functions: `MPIDI_POSIX_mpi_allgatherv`
-
 ### MPIR_CVAR_ALLGATHER_BRUCKS_KVAL
 
 Sets the radix value for the generic transport Brucks-based Allgather algorithm. It is used when the Allgather radix-k Brucks algorithm is selected, such as by forcing `MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM` to `k_brucks` or by internal collective selection. When active, it controls the radix used by the Brucks-based Allgather implementation.
@@ -154,15 +145,6 @@ Sets the Allgather and Allgatherv long-message threshold, in bytes, used by sche
 * integer - default is 524288, represents the Allgather and Allgatherv long-message threshold in bytes.
 
 Used in functions: `MPIR_Iallgather_intra_sched_auto`, `MPIR_Iallgatherv_intra_sched_auto`
-
-### MPIR_CVAR_ALLGATHER_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode allgather. It is used in the POSIX allgather implementation and does not use automatic collective selection or depend on another CVAR in `src/mpid/ch4/shm/posix/posix_coll.h`. When active, this CVAR sets whether POSIX intranode allgather uses MPIR fallback or the POSIX GPU IPC read allgather path.
-
-* mpir - default, use the MPIR allgather implementation.
-* ipc_read - use the POSIX GPU IPC read allgather path.
-
-Used in functions: `MPIDI_POSIX_mpi_allgather`
 
 ### MPIR_CVAR_ALLGATHER_RECEXCH_KVAL
 
@@ -284,16 +266,6 @@ Sets the number of offsets used by the CH4 allreduce multi-leader delta composit
 * positive integer greater than 1 - split the final local copy into the specified number of offset segments when the current chunk can be evenly divided that way; otherwise use a single offset segment.
 
 Used in functions: `MPIDI_Allreduce_intra_composition_delta`
-
-### MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode allreduce. It is used in the POSIX allreduce implementation; automatic selection consults the POSIX collective-selection table and can fall back to the MPIR allreduce implementation when no POSIX selection is found. The shared-memory release-gather path is used only when MPICH is not threaded and the reduction operation is commutative. When active, this CVAR sets whether POSIX intranode allreduce uses MPIR fallback, shared-memory release-gather allreduce, or internal POSIX collective selection.
-
-* auto - default, use internal POSIX collective selection.
-* mpir - use the MPIR allreduce implementation.
-* release_gather - use the POSIX shared-memory release-gather allreduce path when threading and operation-commutativity conditions allow it.
-
-Used in functions: `MPIDI_POSIX_mpi_allreduce`
 
 ### MPIR_CVAR_ALLREDUCE_RECEXCH_KVAL
 
@@ -583,15 +555,6 @@ Sets the per-destination medium-message threshold, in bytes, used by sched-auto 
 
 Used in functions: `MPIR_Ialltoall_intra_sched_auto`
 
-### MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode alltoall. It is used in the POSIX alltoall implementation and does not use automatic collective selection or depend on another CVAR in `src/mpid/ch4/shm/posix/posix_coll.h`. When active, this CVAR sets whether POSIX intranode alltoall uses MPIR fallback or the POSIX GPU IPC read alltoall path.
-
-* mpir - default, use the MPIR alltoall implementation.
-* ipc_read - use the POSIX GPU IPC read alltoall path.
-
-Used in functions: `MPIDI_POSIX_mpi_alltoall`
-
 ### MPIR_CVAR_ALLTOALL_SHM_PER_RANK
 
 Sets the per-rank shared-memory buffer size used by the CH4 alltoall multi-leader composition. This CVAR is used when `MPIR_CVAR_ALLTOALL_COMPOSITION` forces the multi-leader composition or when automatic CH4 collective selection chooses that composition. The multi-leader composition also requires an intracommunicator whose ranks are node-canonical, and the per-rank alltoall message data must fit within this limit. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_coll_impl.h` or `src/mpid/ch4/src/ch4_coll.h`. When active, this CVAR sets both the per-rank shared-memory allocation size for the node-local staging buffer and the per-rank message-size limit for using the CH4 alltoall multi-leader composition.
@@ -675,18 +638,6 @@ Selects the intra-communicator Barrier algorithm. It is used for `MPI_Barrier` o
 * recexch - Forces the recursive-exchange Barrier algorithm.
 
 Used in functions: `MPI_Barrier`
-
-### MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode barrier. It is used in the POSIX barrier implementation; automatic selection consults the POSIX collective-selection table and can fall back to the MPIR barrier implementation when no POSIX selection is found. The shared-memory release-gather path is used only when MPICH is not threaded. When active, this CVAR sets whether POSIX intranode barrier uses MPIR fallback, shared-memory release-gather barrier, or internal POSIX collective selection.
-
-* auto - default, use internal POSIX collective selection.
-* mpir - use the MPIR barrier implementation.
-* release_gather - use the POSIX shared-memory release-gather barrier path when threading conditions allow it.
-
-Alternate name: MPIR_CVAR_GROUP_COLL_ALGO
-
-Used in functions: `MPIDI_POSIX_mpi_barrier`
 
 ### MPIR_CVAR_BARRIER_RECEXCH_KVAL
 
@@ -839,17 +790,6 @@ Selects the CH4 OFI netmod intra-communicator Bcast path. It is used by the OFI 
 
 Used in functions: `MPIDI_NM_mpi_bcast`
 
-### MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode broadcast. It is used in the POSIX broadcast implementation; automatic selection consults the POSIX collective-selection tables, and when hybrid memory support is disabled it first queries the broadcast buffer memory type so GPU device buffers can use the GPU-specific selection table. Automatic selection can fall back to the MPIR broadcast implementation when no POSIX selection is found. The shared-memory release-gather path is used only when MPICH is not threaded. When active, this CVAR sets whether POSIX intranode broadcast uses MPIR fallback, shared-memory release-gather broadcast, GPU IPC read broadcast, or internal POSIX collective selection.
-
-* auto - default, use internal POSIX collective selection, with GPU-device-buffer selection when hybrid memory support is disabled.
-* mpir - use the MPIR broadcast implementation.
-* release_gather - use the POSIX shared-memory release-gather broadcast path when threading conditions allow it.
-* ipc_read - use the POSIX GPU IPC read broadcast path.
-
-Used in functions: `MPIDI_POSIX_mpi_bcast`
-
 ### MPIR_CVAR_BCAST_RECV_PRE_POST
 
 Controls receive pre-posting for the pipelined-tree Bcast algorithm. It is used only when the pipelined-tree Bcast path runs with nonblocking sends enabled, such as by forcing `MPIR_CVAR_BCAST_INTRA_ALGORITHM` to `pipelined_tree` or by internal collective/tuning selection. When active, it sets whether receives for all pipeline chunks are posted up front or whether only the initial receives are pre-posted for larger chunk counts.
@@ -955,24 +895,6 @@ Sets the tuning JSON source used to initialize the CH4 GPU collective-selection 
 
 Used in functions: `MPID_Init`
 
-### MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE
-
-Sets the source for the POSIX collective-selection tuning table used by CH4 shared-memory POSIX collectives. It is used during POSIX local initialization to create the non-GPU collective-selection tree; POSIX barrier, broadcast, allreduce, and reduce consult that tree only when their POSIX intranode algorithm CVARs are set to automatic selection. Broadcast also chooses between the non-GPU and GPU selection trees based on `MPIR_CVAR_COLL_HYBRID_MEMORY` and the buffer memory type; the GPU selection tree is configured by `MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU`. When active through automatic POSIX collective selection, this CVAR sets whether POSIX collectives use the built-in generic tuning table or a tuning table loaded from a JSON file.
-
-* "" - default, use the built-in generic POSIX collective-selection tuning table.
-* string - use the specified JSON file as the POSIX collective-selection tuning table.
-
-Used in functions: `posix_coll_init`
-
-### MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU
-
-Sets the source for the GPU POSIX collective-selection tuning table used by CH4 shared-memory POSIX collectives. It is used during POSIX local initialization to create the GPU collective-selection tree. In `src/mpid/ch4/shm/posix/posix_init.c`, this initialization is unconditional alongside the non-GPU collective-selection tree and does not rely on another CVAR or mode being active. When active, this CVAR sets whether the GPU POSIX collective-selection tree uses the built-in generic tuning table or a tuning table loaded from a JSON file.
-
-* "" - default, use the built-in generic POSIX collective-selection tuning table for GPU collective selection.
-* string - use the specified JSON file as the GPU POSIX collective-selection tuning table.
-
-Used in functions: `posix_coll_init`
-
 ### MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
 
 Sets the chunk size, in bytes, for circ_graph collective pipeline data transfer. It is used when initializing circ_graph broadcast, allgather, and reduce queues after a circ_graph collective algorithm is selected. It determines how data is split into blocks for broadcast and allgather, determines reduction block sizes rounded to whole datatype elements, and controls whether the registered host chunk-buffer pool is created for pack buffers. The chunk-buffer pool sizing also depends on `MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS` and `MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS`, and pack buffers are used only when the queue needs packing for non-contiguous datatypes or GPU buffers.
@@ -1009,13 +931,12 @@ Used in functions: `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`,
 
 ### MPIR_CVAR_COLLECTIVE_FALLBACK
 
-Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, when POSIX release-gather intra-node collectives would exceed `MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE`, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path, optionally with a diagnostic message.
+Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path.
 
 * error - throw an error.
-* print - print an error message and fallback to the internally selected algorithm.
 * silent - default, silently fallback to the internally selected algorithm.
 
-Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_tree`, `MPIDI_POSIX_mpi_release_gather_comm_init`, `MPIDI_POSIX_nb_release_gather_comm_init`
+Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_tree`
 
 ### MPIR_CVAR_COLL_ALIAS_CHECK
 
@@ -1055,7 +976,7 @@ Used in functions: `MPII_Coll_init`
 
 ### MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE
 
-Sets the maximum shared memory per node that POSIX shared-memory release-gather collectives may allocate for optimized intranode collectives. It is checked when blocking release-gather communicator state needs flags, broadcast buffers, or reduce buffers, and when nonblocking release-gather communicator state needs broadcast or reduce flags and buffers. The requested allocation depends on the current per-node shared-memory counter, communicator size, page-aligned flag storage, `MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE`, `MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE`, and, for nonblocking flag storage, `MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS` or `MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS`. If the request would exceed this limit, initialization fails and the collective falls back; `MPIR_CVAR_COLLECTIVE_FALLBACK` controls whether a diagnostic message is printed. When active, this CVAR sets the shared-memory allocation cap used by POSIX release-gather collective initialization.
+Sets the maximum shared memory per node that POSIX shared-memory release-gather collectives may allocate for optimized intranode collectives. It is checked when blocking release-gather communicator state needs flags, broadcast buffers, or reduce buffers, and when nonblocking release-gather communicator state needs broadcast or reduce flags and buffers. The requested allocation depends on the current per-node shared-memory counter, communicator size, page-aligned flag storage, `MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE`, `MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE`, and, for nonblocking flag storage, `MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS` or `MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS`. If the request would exceed this limit, initialization fails and the collective falls back. When active, this CVAR sets the shared-memory allocation cap used by POSIX release-gather collective initialization.
 
 * integer - default is 65536, represents the per-node shared-memory allocation limit in KB.
 
@@ -1707,16 +1628,6 @@ Selects the intra-communicator nonblocking Bcast algorithm for generic transport
 
 Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
 
-### MPIR_CVAR_IBCAST_POSIX_INTRA_ALGORITHM
-
-Defines the algorithm selector for POSIX shared-memory intranode nonblocking broadcast. In `src/mpid/ch4/shm/posix/posix_coll.h`, the POSIX nonblocking broadcast implementation does not read this CVAR and instead calls the MPIR nonblocking broadcast implementation directly. No alternate CVAR name, dependency on another CVAR, or active mode requirement is visible in this file. As implemented in this file, this CVAR does not enable or set POSIX nonblocking broadcast behavior.
-
-* auto - default, represent internal POSIX collective selection, which the CVAR description says can be overridden by `MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE`.
-* mpir - represent fallback to MPIR collectives.
-* release_gather - represent the POSIX shared-memory release-gather path.
-
-Used in functions: `none in `src/mpid/ch4/shm/posix/posix_coll.h``
-
 ### MPIR_CVAR_IBCAST_RING_CHUNK_SIZE
 
 Sets the maximum chunk size, in bytes, for pipelining in the generic transport ring intra-communicator Ibcast algorithm. It is used when `MPIR_CVAR_IBCAST_INTRA_ALGORITHM` forces `tsp_ring`; when automatic collective selection chooses the TSP ring Ibcast path, the selected container supplies the chunk size instead of this CVAR. When active, the ring schedule is created through the generic transport tree scheduler with a k-ary tree type and radix 1.
@@ -2043,16 +1954,6 @@ Selects the intra-communicator Ireduce algorithm. It is used by the generic tran
 * tsp_ring - forces the generic transport ring algorithm.
 
 Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
-
-### MPIR_CVAR_IREDUCE_POSIX_INTRA_ALGORITHM
-
-Defines the algorithm selector for POSIX shared-memory intranode nonblocking reduce. In `src/mpid/ch4/shm/posix/posix_coll.h`, the POSIX nonblocking reduce implementation does not read this CVAR and instead calls the MPIR nonblocking reduce implementation directly. No alternate CVAR name, dependency on another CVAR, or active mode requirement is visible in this file. As implemented in this file, this CVAR does not enable or set POSIX nonblocking reduce behavior.
-
-* auto - default, represent internal POSIX collective selection, which the CVAR description says can be overridden by `MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE`.
-* mpir - represent fallback to MPIR collectives.
-* release_gather - represent the POSIX shared-memory release-gather path.
-
-Used in functions: `none in `src/mpid/ch4/shm/posix/posix_coll.h``
 
 ### MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE
 
@@ -2669,16 +2570,6 @@ Selects the intra-communicator Reduce algorithm. It is used for `MPI_Reduce` on 
 * reduce_scatter_gather - Forces the reduce-scatter-gather Reduce algorithm.
 
 Used in functions: `MPI_Reduce`
-
-### MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
-
-Selects the algorithm used for POSIX shared-memory intranode reduce. It is used in the POSIX reduce implementation; automatic selection consults the POSIX collective-selection table and can fall back to the MPIR reduce implementation when no POSIX selection is found. The shared-memory release-gather path is used only when MPICH is not threaded and the reduction operation is commutative. When active, this CVAR sets whether POSIX intranode reduce uses MPIR fallback, shared-memory release-gather reduce, or internal POSIX collective selection.
-
-* auto - default, use internal POSIX collective selection.
-* mpir - use the MPIR reduce implementation.
-* release_gather - use the POSIX shared-memory release-gather reduce path when threading and operation-commutativity conditions allow it.
-
-Used in functions: `MPIDI_POSIX_mpi_reduce`
 
 ### MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
 
