@@ -80,22 +80,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
      * started, so set the fields the callback needs before the call */
     MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = send_buf;
     MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nbx(ep, MPIDI_UCX_AM_NBX_HANDLER_ID,
-                                                              header, header_size,
-                                                              data_ptr, data_sz, &param);
-    MPIDI_UCX_CHK_REQUEST(ucp_request);
-    /* if send is done, free all resources and complete the request */
-    if (ucp_request == NULL) {
-        MPL_free(send_buf);
-        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
-        goto fn_exit;
-    }
-
     /* The send is pending. Before the callback runs, the reply may arrive and
      * complete the send early (see MPIDI_UCX_am_nbx_handler), after which sreq
      * could be freed and reused. Hold a reference for the callback. */
     MPIDI_UCX_AM_REQUEST(sreq, is_in_send) = true;
     MPIR_Request_add_ref(sreq);
+
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_am_send_nbx(ep, MPIDI_UCX_AM_NBX_HANDLER_ID,
+                                                              header, header_size,
+                                                              data_ptr, data_sz, &param);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
+    /* completed inline; UCX won't invoke the callback, so call it here */
+    if (ucp_request == NULL) {
+        MPIDI_UCX_am_isend_callback_nbx(NULL, UCS_OK, sreq);
+        goto fn_exit;
+    }
+
     ucp_request_release(ucp_request);
 
 #else /* !HAVE_UCP_AM_NBX */
