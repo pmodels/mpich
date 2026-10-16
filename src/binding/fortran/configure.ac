@@ -47,17 +47,26 @@ AC_ARG_ENABLE(mpi-abi,
         AS_HELP_STRING([--enable-mpi-abi], [Build with libmpi_abi]),,
         enable_mpi_abi=no)
 
-case "$enable_mpi_abi" in
-  yes|mpi|mpi,mpich)
-    enable_mpi_abi=yes
-    ;;
-  no|mpich|both|dual|mpich,mpi)
-    enable_mpi_abi=no
-    ;;
-  *)
-    AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
-    ;;
-esac
+# A Fortran binding is built on a single ABI, so the dual values accepted
+# by the top-level configure are an error here. When built FROM_MPICH, the
+# top-level configure picks the ABI in $WITH_MPI (the MPICH ABI for a dual
+# build) and this option is ignored.
+if test "$FROM_MPICH" != "yes" ; then
+    case "$enable_mpi_abi" in
+      yes|mpi)
+        enable_mpi_abi=yes
+        ;;
+      no|mpich)
+        enable_mpi_abi=no
+        ;;
+      both|dual|mpich,mpi|mpi,mpich)
+        AC_MSG_ERROR([The Fortran binding does not support --enable-mpi-abi=$enable_mpi_abi. Use --enable-mpi-abi or --disable-mpi-abi.])
+        ;;
+      *)
+        AC_MSG_ERROR([Error option --enable-mpi-abi=$enable_mpi_abi])
+        ;;
+    esac
+fi
 
 
 # $mpi_h is needed for python scripts gen_binding_{f77,f90,f08}.py
@@ -1087,10 +1096,10 @@ if test "$enable_gen_bindings" = "yes" ; then
     if test -e "$main_top_srcdir/maint/gen_binding_f77.py" ; then
         # when build FROM_MPICH, we don't require local copy of maint folder
         maintdir="$main_top_srcdir/maint"
-    elif test -e "../../../maint/gen_binding_f77.py" ; then
-        maintdir="../../../maint"
-    elif test -e "maint/gen_binding_f77.py" ; then
-        maintdir="maint"
+    elif test -e "$srcdir/../../../maint/gen_binding_f77.py" ; then
+        maintdir="$srcdir/../../../maint"
+    elif test -e "$srcdir/maint/gen_binding_f77.py" ; then
+        maintdir="$srcdir/maint"
     else
         AC_MSG_ERROR([Can't find gen_binding_f77.py])
     fi

@@ -496,8 +496,7 @@ AC_SUBST([DEFAULT_MPI_ABI])
 # Pass to subpackage such as the Fortran binding on which ABI we are building
 WITH_MPI=mpich
 if test "$enable_mpich_abi" = "no" ; then
-    # currently CXX and Fortran binding only works on MPICH ABI.
-    # TODO: make CXX and Fortran binding work on MPI ABI
+    # The C++ binding only works on the MPICH ABI.
     enable_cxx=no
     WITH_MPI=abi
 fi
