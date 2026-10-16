@@ -4,7 +4,7 @@
 
 - [Collective Algorithms](#collective-algorithms) (301)
 - [CH4 Device Layer](#ch4-device-layer) (96)
-- [CH3 Device Layer](#ch3-device-layer) (25)
+- [CH3 Device Layer](#ch3-device-layer) (26)
 - [Process Management](#process-management) (7)
 - [Debugging and Development](#debugging-and-development) (15)
 - [Other](#other) (25)
@@ -4073,6 +4073,15 @@ Sets how many busy-wait loop iterations MPICH performs before yielding the proce
 * 0 - disable yielding from the busy-wait macro.
 
 Used in functions: `MPID_nem_mpich_blocking_recv`
+
+### MPIR_CVAR_SOCKET_BUFFER_SIZE
+
+Sets the send and receive buffer sizes (`SO_SNDBUF` and `SO_RCVBUF`) of the TCP sockets used by the CH3 nemesis TCP netmod and the CH3 sock channel. It is applied when each socket is set up: the nemesis TCP listener, outgoing, and accepted sockets, and every socket the sock channel creates or accepts. The kernel may cap the requested size (on macOS at `kern.ipc.maxsockbuf`); the sock channel warns when the size it gets is well below the request. When active, this CVAR replaces the operating system's buffer sizing, including automatic tuning, with a fixed size. That can help on systems with a small network buffer pool, such as VMs, where many concurrent large transfers can exhaust the pool and make socket writes fail with `ENOBUFS`.
+
+* 0 - default, keep the operating system's buffer sizes.
+* positive integer - set both buffers of each socket to this many bytes, e.g. 262144.
+
+Used in functions: `MPID_nem_tcp_set_sockopts`, `MPIDI_CH3I_Sock_SetSockBufferSize`
 
 ## Process Management
 

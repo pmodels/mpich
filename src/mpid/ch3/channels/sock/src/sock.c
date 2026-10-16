@@ -1105,7 +1105,7 @@ static void MPIDI_CH3I_Socki_free_eventq_mem(void)
 static int sockBufSize = -1;
 
 /* Set the socket buffer sizes on fd to the standard values (this is controlled
-   by the parameter MPICH_SOCK_BUFSIZE).  If "firm" is true, require that the
+   by MPIR_CVAR_SOCKET_BUFFER_SIZE).  If "firm" is true, require that the
    sockets actually accept that buffer size.  */
 int MPIDI_CH3I_Sock_SetSockBufferSize(int fd, int firm)
 {
@@ -1117,10 +1117,8 @@ int MPIDI_CH3I_Sock_SetSockBufferSize(int fd, int firm)
 
     /* Get the socket buffer size if we haven't yet acquired it */
     if (sockBufSize < 0) {
-        /* FIXME: Is this the name that we want to use (this was chosen
-         * to match the original, undocumented name) */
-        rc = MPL_env2int("MPICH_SOCKET_BUFFER_SIZE", &sockBufSize);
-        if (rc <= 0) {
+        sockBufSize = MPIR_CVAR_SOCKET_BUFFER_SIZE;
+        if (sockBufSize < 0) {
             sockBufSize = 0;
         }
         MPL_DBG_MSG_D(MPIDI_CH3I_DBG_SOCK_CONNECT, TYPICAL, "Sock buf size = %d", sockBufSize);

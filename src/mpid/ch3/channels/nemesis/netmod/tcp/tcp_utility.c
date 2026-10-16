@@ -73,6 +73,17 @@ int MPID_nem_tcp_set_sockopts(int fd)
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
+    if (MPIR_CVAR_SOCKET_BUFFER_SIZE > 0) {
+        option = MPIR_CVAR_SOCKET_BUFFER_SIZE;
+        len = sizeof(int);
+        ret = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &option, len);
+        MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        ret = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &option, len);
+        MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+    }
+
     flags = fcntl(fd, F_GETFL, 0);
     MPIR_ERR_CHKANDJUMP2(flags == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
