@@ -991,10 +991,13 @@ static void free_hwloc_topology(void)
         got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
     }
 #ifdef HAVE_PMIX_LOAD_TOPOLOGY
+/* starting pmix 6.1.0, the topology are freed in pmix_finalize. */
+#if !(PMIX_VERSION_MAJOR > 6 || (PMIX_VERSION_MAJOR == 6 && PMIX_VERSION_MINOR >= 1))
     if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_PMIX) {
         PMIX_TOPOLOGY_DESTRUCT(&ptopo);
         got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
     }
+#endif
 #endif
 }
 
