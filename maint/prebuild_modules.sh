@@ -27,14 +27,6 @@ make
 make_it_lean
 popd
 
-pushd modules/json-c
-extra_option=$JSONC_EXTRA
-./autogen.sh
-./configure --enable-embedded --disable-werror $extra_option
-make
-make_it_lean
-popd
-
 pushd modules/yaksa
 extra_option=$YAKSA_EXTRA
 ./autogen.sh

@@ -158,7 +158,6 @@ jobs:
               --enable-mpi-abi=dual
               --with-mpl=embedded
               --with-ucx=embedded
-              --with-json=embedded
               --with-hwloc=embedded
               --with-yaksa=embedded
               --with-libfabric=embedded

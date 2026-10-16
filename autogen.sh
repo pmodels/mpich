@@ -63,7 +63,6 @@ do_subcfg_m4=yes
 do_hwloc=yes
 do_ofi=yes
 do_ucx=yes
-do_json=yes
 do_yaksa=yes
 do_test=yes
 do_hydra=yes
@@ -79,7 +78,6 @@ for arg in "$@" ; do
     if test $arg = "-quick"; then
         do_quick=yes
         do_hwloc=no
-        do_json=no
         do_ofi=no
         do_ucx=no
         do_yaksa=no
@@ -201,11 +199,6 @@ set_externals() {
         if [ "yes" = "$do_ofi" ] ; then
             check_submodule_presence modules/libfabric
             externals="${externals} modules/libfabric"
-        fi
-
-        if [ "yes" = "$do_json" ] ; then
-            check_submodule_presence "modules/json-c"
-            externals="${externals} modules/json-c"
         fi
 
         if [ "yes" = "$do_yaksa" ] ; then
@@ -551,7 +544,7 @@ autogen_external() {
         echo "------------------------------------------------------------------------"
         echo "running third-party initialization in $_dir"
         if test "$need_libtoolize" = "yes" ; then
-            # external modules (e.g. hwloc/libfabric/ucx/json-c) need run libtoolize separately
+            # external modules (e.g. hwloc/libfabric/ucx) need run libtoolize separately
             case "$_dir" in
                 modules/*)
                     echo "== running libtoolize in $_dir =="
