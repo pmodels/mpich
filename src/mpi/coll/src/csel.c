@@ -19,7 +19,7 @@ struct csel_subtree_hash_item {
 
 struct csel_subtree {
     MPIR_Csel_node_s *node;
-    struct json_object *json_obj;
+    const MPII_Csel_json_s *json_obj;   /* valid only while loading */
 };
 
 /* a dictionary maps subtree name to index into the utarray csel_subtree */
@@ -31,8 +31,8 @@ int csel_main_idx = -1;
 
 static int csel_name_to_idx(const char *name);
 static MPIR_Csel_node_s *csel_get_tree_by_idx(int idx);
-static void add_named_tree(const char *name, struct json_object *obj);
-static void replace_named_tree(int idx, struct json_object *obj);
+static void add_named_tree(const char *name, const MPII_Csel_json_s * obj);
+static void replace_named_tree(int idx, const MPII_Csel_json_s * obj);
 static int parse_named_trees(void);
 static void free_tree(MPIR_Csel_node_s * node);
 
@@ -45,13 +45,10 @@ static bool key_is_any(const char *ckey)
     }
 }
 
-static MPIR_Csel_node_s *parse_json_tree(struct json_object *obj)
+static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
 {
-    enum json_type type;
-    type = json_object_get_type(obj);
-
-    if (type == json_type_string) {
-        const char *ckey = json_object_get_string(obj);
+    if (obj->str) {
+        const char *ckey = obj->str;
 
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
@@ -67,11 +64,10 @@ static MPIR_Csel_node_s *parse_json_tree(struct json_object *obj)
         }
     }
 
-    MPIR_Assert(type == json_type_object);
     MPIR_Csel_node_s *prevnode = NULL, *node = NULL;
 
-    json_object_object_foreach(obj, key, val) {
-        const char *ckey = key;
+    MPII_CSEL_JSON_FOREACH(obj, val) {
+        const char *ckey = val->key;
 
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
@@ -97,7 +93,7 @@ static MPIR_Csel_node_s *parse_json_tree(struct json_object *obj)
         }
 
         /* this node must be an operator type */
-        tmp->success = parse_json_tree(json_object_object_get(obj, key));
+        tmp->success = parse_json_tree(val);
         tmp->failure = NULL;
 
         if (node == NULL)
@@ -145,7 +141,7 @@ static void csel_subtree_dtor(void *item)
     }
 }
 
-static int parse_json_names(struct json_object *obj)
+static int parse_json_names(const MPII_Csel_json_s * obj)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -157,15 +153,15 @@ static int parse_json_names(struct json_object *obj)
 
     int num_names = 0;
     bool unexpected = false;
-    json_object_object_foreach(obj, key, val) {
-        if (strncmp(key, "name=", 5) == 0) {
-            const char *name = key + 5;
+    MPII_CSEL_JSON_FOREACH(obj, val) {
+        if (strncmp(val->key, "name=", 5) == 0) {
+            const char *name = val->key + 5;
 
             int idx = csel_name_to_idx(name);
             if (idx >= 0) {
-                replace_named_tree(idx, json_object_get(val));
+                replace_named_tree(idx, val);
             } else {
-                add_named_tree(name, json_object_get(val));
+                add_named_tree(name, val);
             }
             num_names++;
         } else {
@@ -176,7 +172,7 @@ static int parse_json_names(struct json_object *obj)
     if (unexpected) {
         MPIR_Assert(num_names == 0);
         /* pass the whole tree as "name=main" */
-        add_named_tree("main", json_object_get(obj));
+        add_named_tree("main", obj);
     }
 
     MPIR_Assert(csel_main_idx >= 0);
@@ -193,16 +189,15 @@ int MPIR_Csel_load_buf(const char *json_str)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    struct json_object *tree;
-    tree = json_tokener_parse(json_str);
-    if (tree == NULL)
-        goto fn_exit;
+    MPII_Csel_json_s *tree;
+    mpi_errno = MPII_Csel_json_parse(json_str, &tree);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = parse_json_names(tree);
 
-    json_object_put(tree);
+    MPII_Csel_json_free(tree);
 
-  fn_exit:
+  fn_fail:
     return mpi_errno;
 }
 
@@ -376,7 +371,7 @@ static MPIR_Csel_node_s *csel_get_tree_by_idx(int idx)
     return p->node;
 }
 
-static void add_named_tree(const char *name, struct json_object *obj)
+static void add_named_tree(const char *name, const MPII_Csel_json_s * obj)
 {
     struct csel_subtree item = { NULL, obj };
     utarray_push_back(csel_subtrees, &item, MPL_MEM_COLL);
@@ -394,7 +389,7 @@ static void add_named_tree(const char *name, struct json_object *obj)
     }
 }
 
-static void replace_named_tree(int idx, struct json_object *obj)
+static void replace_named_tree(int idx, const MPII_Csel_json_s * obj)
 {
     struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, idx);
     MPIR_Assert(p);
@@ -413,7 +408,6 @@ static int parse_named_trees(void)
         if (!p->node && p->json_obj) {
             p->node = parse_json_tree(p->json_obj);
             MPIR_Assert(p->node);
-            json_object_put(p->json_obj);
             p->json_obj = NULL;
         }
     }
