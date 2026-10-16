@@ -212,31 +212,6 @@ AC_DEFUN([PAC_CONFIG_PMI],[
     ])
 ])
 
-dnl ==== json-c ====
-
-AC_DEFUN([PAC_CONFIG_JSON],[
-    json_srcdir=""
-    json_lib=""
-    AC_SUBST([json_srcdir])
-    AC_SUBST([json_lib])
-
-    PAC_CHECK_HEADER_LIB_EXPLICIT([json],[json.h],[json-c],[json_token_parse])
-    if test "$with_json" = "embedded" ; then
-        json_lib="modules/json-c/libjson-c.la"
-        if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$json_lib"; then
-            json_srcdir=""
-        else
-            PAC_PUSH_ALL_FLAGS()
-            PAC_RESET_ALL_FLAGS()
-            PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-            PAC_POP_ALL_FLAGS()
-            json_srcdir="${main_top_builddir}/modules/json-c"
-        fi
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
-        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
-    fi
-])
-
 dnl ==== yaksa ====
 
 AC_DEFUN([PAC_CONFIG_YAKSA],[

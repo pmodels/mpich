@@ -1043,10 +1043,6 @@ AC_SEARCH_LIBS([dlopen],[dl dld],
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL
 
-# json-c
-m4_define([json_embedded_dir],[modules/json-c])
-PAC_CONFIG_JSON
-
 # ----------------------------------------------------------------------------
 # HWLOC / NETLOC
 # ----------------------------------------------------------------------------
