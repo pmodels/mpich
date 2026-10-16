@@ -246,6 +246,8 @@ A memory object id was expected but a non-memory object id was passed instead
 **opencolltuningfile %s: Unable to open collective tuning file %s.\nCheck the file or unset MPIR_CVAR_COLL_SELECTION_JSON_FILE to use the default settings.
 **readcolltuningfile: Unable to read collective tuning file
 **readcolltuningfile %s: Unable to read collective tuning file %s, or the file is empty.\nCheck the file or unset MPIR_CVAR_COLL_SELECTION_JSON_FILE to use the default settings.
+**colljson: Invalid collective tuning JSON
+**colljson %d %d %s: Invalid collective tuning JSON at line %d, column %d: %s
 
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.

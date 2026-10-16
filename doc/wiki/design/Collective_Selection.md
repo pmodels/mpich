@@ -154,6 +154,16 @@ algorithms whose restrictions hold on that branch, for example by guarding
 `MPIR_Allreduce_intra_reduce_scatter_allgather` with `builtin_op` and
 `count_ge_pof2`.
 
+The files are read by a small built-in parser (`csel_json.c`) that accepts
+only the JSON subset the tree needs:
+
+- The top level is an object, and every value is an object or a string.
+  Numbers, arrays, `true`, `false`, and `null` are rejected.
+- Strings are printable ASCII without escape sequences. Spaces inside a string
+  are dropped, so `"comm_size < 8"` is read as `comm_size<8`.
+- Keys within an object must be unique. Objects nest at most 64 levels.
+- A syntax error stops `MPI_Init` with the line and column of the error.
+
 ## Runtime selection
 
 ```
