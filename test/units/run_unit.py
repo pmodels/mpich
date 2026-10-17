@@ -7,6 +7,8 @@ class G:
     unit_name = None
     template_lines = []
     tests = []
+    num_tests = 0
+    num_failed = 0
 
 class RE:
     m = None
@@ -36,10 +38,18 @@ def main():
             run_tests()
         os.chdir("..")
 
+    # TAP plan and summary
+    print("1..%d" % G.num_tests)
+    if G.num_failed:
+        print("# FAILED %d of %d" % (G.num_failed, G.num_tests))
+        sys.exit(1)
+    else:
+        print("# all %d passed" % G.num_tests)
+
 def load_test_units():
     files = os.listdir()
     units = []
-    for f in files:
+    for f in sorted(files):
         if RE.match(r'(\w+)\.unit', f):
             units.append(RE.m.group(1))
     return units
@@ -90,30 +100,40 @@ def build_unit():
     else:
         cc = 'gcc'
 
-    os.system(cc + " -o t t.c")
-
-    return os.path.exists("t")
-
+    ret = subprocess.run(cc + " -o t t.c", shell=True, encoding='ascii', errors='replace',
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ok = ret.returncode == 0 and os.path.exists("t")
+    report(ok, "%s: build" % G.unit_name, ret.stdout)
+    return ok
 
 def run_tests():
-    errs = 0
-    print("Test - %s" % G.unit_name)
-    for i, test in enumerate(G.tests):
-        print("  %d:" % (i + 1))
-        print("    %s" % test['cmd'])
-        ret = subprocess.run(test['cmd'], shell=True, encoding='ascii', capture_output=True)
+    for test in G.tests:
+        ret = subprocess.run(test['cmd'], shell=True, encoding='ascii', errors='replace',
+                             capture_output=True)
+        output = ret.stdout.strip()
+        diag = ""
         if ret.returncode:
-            print("    not ok, exit code = %d" % ret.returncode)
-            print(ret.stdout)
+            ok = False
+            diag = "exit code = %d\n" % ret.returncode
+        elif test['expect'] is not None and test['expect'] != output:
+            ok = False
+            diag = "expect: %s\n" % test['expect']
         else:
-            output = ret.stdout.strip()
-            print("    %s" % output)
-            if test['expect'] and test['expect'] != output:
-                print("    not ok, expect: %s" % test['expect'])
-                errs += 1
-            else:
-                print("    ok");
-    return errs
+            ok = True
+        if not ok:
+            diag += "got: %s\n%s" % (output, ret.stderr)
+        report(ok, "%s: %s" % (G.unit_name, test['cmd']), diag)
+
+def report(ok, desc, diag=""):
+    """Print one TAP test line, with diagnostics as '#' lines when it fails"""
+    G.num_tests += 1
+    if ok:
+        print("ok %d - %s" % (G.num_tests, desc))
+    else:
+        G.num_failed += 1
+        print("not ok %d - %s" % (G.num_tests, desc))
+        for line in diag.rstrip().split("\n"):
+            print("#   %s" % line)
 
 #---------------------------------------- 
 if __name__ == "__main__":

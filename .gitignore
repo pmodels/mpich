@@ -513,6 +513,9 @@ Makefile.am-stamp
 # /test/mpid/ch3/
 /test/mpid/ch3/reorder
 
+# /test/units/
+/test/units/out/
+
 # /test/util/info/
 /test/util/info/infotest
 /test/util/info/infomany
