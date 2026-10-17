@@ -4,6 +4,7 @@ import re
 import subprocess
 import shlex
 import argparse
+import signal
 
 class G:
     unit_name = None
@@ -17,6 +18,7 @@ class G:
     top_srcdir = None
     cc = []
     cflags = []
+    timeout = 60
     num_tests = 0
     num_failed = 0
 
@@ -35,7 +37,10 @@ def main():
     parser.add_argument("units", nargs="*", help="units to run (default: all *.unit files)")
     parser.add_argument("--no-sanitize", action="store_true",
                         help="do not build with -fsanitize=address,undefined")
+    parser.add_argument("--timeout", type=int, default=60,
+                        help="seconds before a test is killed (default: 60)")
     opts = parser.parse_args()
+    G.timeout = opts.timeout
 
     if not os.path.exists("out"):
         os.mkdir("out")
@@ -178,11 +183,13 @@ def probe_sanitizers():
 
 def run_tests():
     for test in G.tests:
-        ret = subprocess.run(test['cmd'], shell=True, encoding='utf-8', errors='replace',
-                             capture_output=True)
+        ret = run_cmd(test['cmd'])
         output = ret.stdout.strip()
         diag = ""
-        if re.search(r'ERROR: \w+Sanitizer|runtime error:', ret.stderr):
+        if ret.returncode is None:
+            ok = False
+            diag = "timed out after %d seconds\n" % G.timeout
+        elif re.search(r'ERROR: \w+Sanitizer|runtime error:', ret.stderr):
             # a sanitizer report fails the test even if a failure is expected
             ok = False
         elif test['expect_err'] is not None:
@@ -201,6 +208,19 @@ def run_tests():
         if not ok:
             diag += "got: %s\n%s" % (output, ret.stderr)
         report(ok, "%s: %s" % (G.unit_name, test['cmd']), diag)
+
+def run_cmd(cmd):
+    """Run a test command in its own process group; returncode is None if it timed out"""
+    proc = subprocess.Popen(cmd, shell=True, encoding='utf-8', errors='replace',
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            start_new_session=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=G.timeout)
+        return subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        stdout, stderr = proc.communicate()
+        return subprocess.CompletedProcess(cmd, None, stdout, stderr)
 
 def report(ok, desc, diag=""):
     """Print one TAP test line, followed by diagnostics as '#' lines"""
