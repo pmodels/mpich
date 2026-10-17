@@ -3,6 +3,7 @@ import sys
 import re
 import subprocess
 import shlex
+import argparse
 
 class G:
     unit_name = None
@@ -14,6 +15,8 @@ class G:
     shims = []
     unit_dir = None
     top_srcdir = None
+    cc = []
+    cflags = []
     num_tests = 0
     num_failed = 0
 
@@ -28,12 +31,26 @@ def main():
     G.top_srcdir = os.path.dirname(os.path.dirname(G.unit_dir))
     os.chdir(G.unit_dir)
 
+    parser = argparse.ArgumentParser(description="Build and run the unit tests in test/units")
+    parser.add_argument("units", nargs="*", help="units to run (default: all *.unit files)")
+    parser.add_argument("--no-sanitize", action="store_true",
+                        help="do not build with -fsanitize=address,undefined")
+    opts = parser.parse_args()
+
     if not os.path.exists("out"):
         os.mkdir("out")
 
-    argc = len(sys.argv)
-    if argc > 1:
-        args = sys.argv[1:]
+    G.cc = shlex.split(os.environ.get('CC', 'gcc'))
+    G.cflags = ["-g", "-Wall"]
+    if not opts.no_sanitize:
+        os.chdir("out")
+        G.cflags += probe_sanitizers()
+        os.chdir("..")
+    G.cflags += shlex.split(os.environ.get('UNIT_CFLAGS', ''))
+    print("# %s" % ' '.join(G.cc + G.cflags))
+
+    if opts.units:
+        args = opts.units
     else:
         args = load_test_units()
     for a in args:
@@ -118,14 +135,9 @@ def build_unit():
     if os.path.exists("t"):
         os.remove("t")
 
-    if 'CC' in os.environ:
-        cc = os.environ['CC']
-    else:
-        cc = 'gcc'
-
     # shim dirs go first so that their headers replace the real ones; any .c
     # file in a shim dir is compiled in as well
-    cmd = shlex.split(cc)
+    cmd = G.cc + G.cflags
     srcs = ["t.c"]
     for a in G.shims:
         shim_dir = os.path.join(G.unit_dir, "shim", a)
@@ -143,8 +155,26 @@ def build_unit():
     ret = subprocess.run(cmd, encoding='utf-8', errors='replace',
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     ok = ret.returncode == 0 and os.path.exists("t")
-    report(ok, "%s: build" % G.unit_name, ' '.join(cmd) + "\n" + ret.stdout)
+    if ok:
+        # show warnings, if any
+        report(ok, "%s: build" % G.unit_name, ret.stdout)
+    else:
+        report(ok, "%s: build" % G.unit_name, ' '.join(cmd) + "\n" + ret.stdout)
     return ok
+
+def probe_sanitizers():
+    """Return the sanitizer flags if a test program builds and runs with them"""
+    flags = ["-fsanitize=address,undefined", "-fno-sanitize-recover=all"]
+    with open("probe.c", "w") as Out:
+        Out.write("int main(void) { return 0; }\n")
+    ret = subprocess.run(G.cc + flags + ["-o", "probe", "probe.c"], capture_output=True)
+    if ret.returncode == 0:
+        ret = subprocess.run(["./probe"], capture_output=True)
+    if ret.returncode == 0:
+        return flags
+    else:
+        print("# sanitizers are not available, building without them")
+        return []
 
 def run_tests():
     for test in G.tests:
@@ -152,7 +182,10 @@ def run_tests():
                              capture_output=True)
         output = ret.stdout.strip()
         diag = ""
-        if test['expect_err'] is not None:
+        if re.search(r'ERROR: \w+Sanitizer|runtime error:', ret.stderr):
+            # a sanitizer report fails the test even if a failure is expected
+            ok = False
+        elif test['expect_err'] is not None:
             # expect a failure exit and the error message in stdout
             ok = ret.returncode > 0 and test['expect_err'] in output
             if not ok:
@@ -170,13 +203,14 @@ def run_tests():
         report(ok, "%s: %s" % (G.unit_name, test['cmd']), diag)
 
 def report(ok, desc, diag=""):
-    """Print one TAP test line, with diagnostics as '#' lines when it fails"""
+    """Print one TAP test line, followed by diagnostics as '#' lines"""
     G.num_tests += 1
     if ok:
         print("ok %d - %s" % (G.num_tests, desc))
     else:
         G.num_failed += 1
         print("not ok %d - %s" % (G.num_tests, desc))
+    if diag.strip():
         for line in diag.rstrip().split("\n"):
             print("#   %s" % line)
 

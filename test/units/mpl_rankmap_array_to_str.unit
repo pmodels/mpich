@@ -41,6 +41,7 @@ template:
         }
 
         printf("%s\n", str);
+        MPL_free(str);
 
         return 0;
     }

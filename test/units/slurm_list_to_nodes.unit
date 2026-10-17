@@ -12,7 +12,7 @@ template:
     #define MPL_strdup strdup
     #define MPL_snprintf_nowarn snprintf
     #define MAX_HOSTNAME_LEN 256
-    #define HYDU_ERR_POP(status,msg) if (status) return 1
+    #define HYDU_ERR_POP(status,msg) do { if (status) goto fn_fail; } while (0)
 
     struct HYD_node {
         char *hostname;
