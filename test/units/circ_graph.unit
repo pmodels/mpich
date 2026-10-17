@@ -1,0 +1,189 @@
+sources:
+    src/mpi/coll/algorithms/circ_graph/circ_graph.c
+
+include:
+    src/mpi/coll/algorithms/circ_graph
+    src/mpid/common/genq
+
+shim:
+    core
+
+template:
+    #include "mpiimpl.h"
+    #include "circ_graph.h"
+
+    /* ./t show p           - print the Skip, R and S schedules for p processes
+     * ./t check pmax nmax  - simulate bcast for every 2 <= p <= pmax and n <= nmax blocks
+     */
+
+    static void show(int p)
+    {
+        MPII_circ_graph all;
+        MPII_circ_graph_create_all(&all, p);
+        int q = all.q;
+
+        printf("Skip:");
+        for (int k = 0; k <= q; k++) {
+            printf(" %d", all.Skip[k]);
+        }
+        printf("\n");
+        for (int k = 0; k < q; k++) {
+            printf("R[%d]:", k);
+            for (int r = 0; r < p; r++) {
+                printf(" %d", all.R[r * q + k]);
+            }
+            printf("\n");
+        }
+        for (int k = 0; k < q; k++) {
+            printf("S[%d]:", k);
+            for (int r = 0; r < p; r++) {
+                printf(" %d", all.S[r * q + k]);
+            }
+            printf("\n");
+        }
+        MPII_circ_graph_free(&all);
+    }
+
+    /* Run the bcast schedule the way MPIR_Bcast_intra_circ_graph does, with
+     * root 0, and check that every send matches the peer's receive, that a
+     * process only sends blocks it already has, that no block is received
+     * twice except the clamped last block, and that all processes end up
+     * with all n blocks. */
+    static int check_bcast(MPII_circ_graph * cga, int p, int n, bool * has)
+    {
+        int q = cga[0].q;
+        int x = (q - ((n - 1) % q)) % q;
+        int offset = -x;
+
+        memset(has, 0, p * n * sizeof(bool));
+        for (int b = 0; b < n; b++) {
+            has[b] = true;
+        }
+
+        for (int i = x; i < n - 1 + q + x; i++) {
+            int k = i % q;
+            int skip = cga[0].Skip[k];
+            for (int r = 0; r < p; r++) {
+                int peer = (r + skip) % p;
+                int send_block = cga[r].S[k] + offset;
+                int recv_block = cga[peer].R[k] + offset;
+                bool do_send = (send_block >= 0 && peer != 0);
+                bool do_recv = (recv_block >= 0 && peer != 0);
+                if (do_send != do_recv || (do_send && send_block != recv_block)) {
+                    printf("p=%d n=%d round %d: %d sends %d but %d receives %d\n",
+                           p, n, i, r, do_send ? send_block : -1, peer, do_recv ? recv_block : -1);
+                    return 1;
+                }
+                if (!do_send) {
+                    continue;
+                }
+                int b = send_block >= n ? n - 1 : send_block;
+                if (!has[r * n + b]) {
+                    printf("p=%d n=%d round %d: %d sends block %d it does not have\n",
+                           p, n, i, r, b);
+                    return 1;
+                }
+                if (has[peer * n + b] && send_block < n) {
+                    printf("p=%d n=%d round %d: %d receives block %d twice\n", p, n, i, peer, b);
+                    return 1;
+                }
+            }
+            /* receives complete at the end of the round */
+            for (int r = 0; r < p; r++) {
+                int peer = (r + skip) % p;
+                int send_block = cga[r].S[k] + offset;
+                if (send_block >= 0 && peer != 0) {
+                    has[peer * n + (send_block >= n ? n - 1 : send_block)] = true;
+                }
+            }
+            if (k == q - 1) {
+                offset += q;
+            }
+        }
+
+        for (int r = 0; r < p; r++) {
+            for (int b = 0; b < n; b++) {
+                if (!has[r * n + b]) {
+                    printf("p=%d n=%d: %d is missing block %d\n", p, n, r, b);
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+
+    static int check(int pmax, int nmax)
+    {
+        MPII_circ_graph *cga = malloc(pmax * sizeof(MPII_circ_graph));
+        bool *has = malloc(pmax * nmax * sizeof(bool));
+        int err = 0;
+
+        for (int p = 2; p <= pmax && !err; p++) {
+            for (int r = 0; r < p; r++) {
+                MPII_circ_graph_create(&cga[r], p, r);
+            }
+
+            /* create_all must agree with create for every rank */
+            MPII_circ_graph all;
+            MPII_circ_graph_create_all(&all, p);
+            for (int r = 0; r < p && !err; r++) {
+                for (int k = 0; k < all.q; k++) {
+                    if (all.R[r * all.q + k] != cga[r].R[k] || all.S[r * all.q + k] != cga[r].S[k]) {
+                        printf("p=%d: create_all differs from create at r=%d k=%d\n", p, r, k);
+                        err = 1;
+                        break;
+                    }
+                }
+            }
+            MPII_circ_graph_free(&all);
+
+            for (int n = 1; n <= nmax && !err; n++) {
+                err = check_bcast(cga, p, n, has);
+            }
+
+            for (int r = 0; r < p; r++) {
+                MPII_circ_graph_free(&cga[r]);
+            }
+        }
+
+        free(cga);
+        free(has);
+        if (!err) {
+            printf("ok\n");
+        }
+        return err;
+    }
+
+    int main(int argc, char **argv)
+    {
+        if (argc == 3 && strcmp(argv[1], "show") == 0) {
+            show(atoi(argv[2]));
+            return 0;
+        } else if (argc == 4 && strcmp(argv[1], "check") == 0) {
+            return check(atoi(argv[2]), atoi(argv[3]));
+        }
+        printf("usage: t show p | t check pmax nmax\n");
+        return 1;
+    }
+
+TESTS:
+    # the p=17 example in the comment of circ_graph.c, with [b] written as b
+    cmd: ./t show 17
+    expect:
+        Skip: 1 2 3 5 9 17
+        R[0]: -4 0 -5 -4 -3 -5 -2 -5 -4 -3 -1 -5 -4 -3 -5 -2 -5
+        R[1]: -5 -4 1 -5 -4 -3 -3 -2 -5 -4 -3 -1 -5 -4 -3 -3 -2
+        R[2]: -2 -2 -2 2 0 -4 -4 -3 -2 -2 -4 -3 -1 -1 -4 -4 -3
+        R[3]: -1 -3 -3 -2 -2 3 0 1 2 -5 -2 -2 -2 -2 -1 -1 -1
+        R[4]: -3 -1 -1 -1 -1 -1 -1 -1 -1 4 0 1 2 0 3 0 1
+        S[0]: 0 -5 -4 -3 -5 -2 -5 -4 -3 -1 -5 -4 -3 -5 -2 -5 -4
+        S[1]: 1 -5 -4 -3 -3 -2 -5 -4 -3 -1 -5 -4 -3 -3 -2 -5 -4
+        S[2]: 2 0 -4 -4 -3 -2 -2 -4 -3 -1 -1 -4 -4 -3 -2 -2 -2
+        S[3]: 3 0 1 2 -5 -2 -2 -2 -2 -1 -1 -1 -1 -3 -3 -2 -2
+        S[4]: 4 0 1 2 0 3 0 1 -3 -1 -1 -1 -1 -1 -1 -1 -1
+
+    # every p up to 32 with up to 40 blocks. Larger p is not checked yet: for
+    # some p >= 33 (33, 65-73, 129-153, ...) the schedules break the
+    # correctness conditions in circ_graph.c, which is being fixed separately.
+    cmd: ./t check 32 40
+    expect: ok

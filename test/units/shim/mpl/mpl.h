@@ -28,6 +28,12 @@
 #define MPL_strdup(s) strdup(s)
 #define MPL_free(p) free(p)
 
+/* Types that headers under test only mention. The layout is a placeholder,
+ * NOT the real one, so units must not depend on their contents. */
+typedef struct {
+    int placeholder;
+} MPL_pointer_attr_t;
+
 /* src/mpl/src/mpl_rankmap.c */
 int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_nodemap);
 int MPL_rankmap_array_to_str(int *nodemap, int sz, char **out_mapping_str);
