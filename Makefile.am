@@ -197,6 +197,10 @@ testconfig:
 test-clean:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) clean )
 
+# unit tests of internal routines, see doc/wiki/testing/Unit_Tests.md
+unit-testing:
+	CC="$(CC)" python3 $(top_srcdir)/test/units/run_unit.py
+
 ## FIXME: this should live in src/env/Makefile.mk. Moving it there
 ## will not cause a problem, but it will break the build if another
 ## Makefile.mk also decides to create a install-exec-hook target. A

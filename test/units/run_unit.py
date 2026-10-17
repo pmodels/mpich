@@ -16,6 +16,7 @@ class G:
     shims = []
     unit_dir = None
     top_srcdir = None
+    outdir = None
     cc = []
     cflags = []
     timeout = 60
@@ -31,6 +32,13 @@ class RE:
 def main():
     G.unit_dir = os.path.abspath(sys.path[0])
     G.top_srcdir = os.path.dirname(os.path.dirname(G.unit_dir))
+    # build under test/units/out of the current directory, e.g. the build tree
+    # for "make unit-testing", or under out/ when started from test/units
+    cwd = os.path.realpath(os.getcwd())
+    if cwd == os.path.realpath(G.unit_dir):
+        G.outdir = os.path.join(G.unit_dir, "out")
+    else:
+        G.outdir = os.path.join(cwd, "test", "units", "out")
     os.chdir(G.unit_dir)
 
     parser = argparse.ArgumentParser(description="Build and run the unit tests in test/units")
@@ -42,15 +50,14 @@ def main():
     opts = parser.parse_args()
     G.timeout = opts.timeout
 
-    if not os.path.exists("out"):
-        os.mkdir("out")
+    os.makedirs(G.outdir, exist_ok=True)
 
     G.cc = shlex.split(os.environ.get('CC', 'gcc'))
     G.cflags = ["-g", "-Wall"]
     if not opts.no_sanitize:
-        os.chdir("out")
+        os.chdir(G.outdir)
         G.cflags += probe_sanitizers()
-        os.chdir("..")
+        os.chdir(G.unit_dir)
     G.cflags += shlex.split(os.environ.get('UNIT_CFLAGS', ''))
     print("# %s" % ' '.join(G.cc + G.cflags))
 
@@ -59,6 +66,7 @@ def main():
     else:
         args = load_test_units()
     for a in args:
+        a = re.sub(r'\.unit$', '', os.path.basename(a))
         G.unit_name = a
         G.template_lines = []
         G.tests = []
@@ -67,10 +75,13 @@ def main():
         G.shims = []
         load_unit(a + '.unit')
 
-        os.chdir("out")
+        # build and run each unit in its own directory
+        unit_out = os.path.join(G.outdir, a)
+        os.makedirs(unit_out, exist_ok=True)
+        os.chdir(unit_out)
         if build_unit():
             run_tests()
-        os.chdir("..")
+        os.chdir(G.unit_dir)
 
     # TAP plan and summary
     print("1..%d" % G.num_tests)
