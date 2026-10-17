@@ -273,7 +273,7 @@ int MPL_rankmap_array_to_str(int *rankmap, int sz, char **out_mapping_str)
                 struct node_block *p1 = &node_blocks[i_blk - 1];
                 if (p0->num_ranks == p1->num_ranks && p0->start_id + p0->num_nodes == p1->start_id) {
                     p0->num_nodes++;
-                    node_markers[p1->start_id] = -1;
+                    node_markers[p1->start_id - min_id] = -1;
                     i_blk--;
                 }
             }
@@ -312,7 +312,7 @@ int MPL_rankmap_array_to_str(int *rankmap, int sz, char **out_mapping_str)
             node_blocks[i_blk].num_nodes = 1;
             node_blocks[i_blk].num_ranks = 1;
             node_blocks[i_blk].start_repeat = false;
-            node_markers[node_id] = i_blk;
+            node_markers[node_id - min_id] = i_blk;
             i_blk++;
         }
     }
