@@ -91,6 +91,7 @@ def load_test_units():
 def load_unit(file_spec):
     cur_block = None
     cur_test = None
+    in_expect = False
 
     with open(file_spec, "r") as In:
         for line in In:
@@ -103,12 +104,21 @@ def load_unit(file_spec):
                     # trim the leading indentation
                     G.template_lines.append(re.sub('^    ', '', line))
             elif cur_block == 'TESTS':
+                if in_expect and RE.match(r'        \s*(\S.*)', line):
+                    # a line indented deeper than "expect:" continues it
+                    if cur_test['expect']:
+                        cur_test['expect'] += "\n" + RE.m.group(1).rstrip()
+                    else:
+                        cur_test['expect'] = RE.m.group(1).rstrip()
+                    continue
+                in_expect = False
                 if RE.match(r'\s+cmd:\s*(.+)', line):
                     cmd = RE.m.group(1).replace('$top_srcdir', shlex.quote(G.top_srcdir))
                     cur_test = {'cmd': cmd, 'expect': None, 'expect_err': None}
                     G.tests.append(cur_test)
                 elif RE.match(r'\s+expect:\s*(.*)', line):
                     cur_test['expect'] = RE.m.group(1).rstrip()
+                    in_expect = True
                 elif RE.match(r'\s+expect_err:\s*(.*)', line):
                     cur_test['expect_err'] = RE.m.group(1).rstrip()
             elif cur_block in ('sources', 'include', 'shim'):
@@ -184,7 +194,8 @@ def probe_sanitizers():
 def run_tests():
     for test in G.tests:
         ret = run_cmd(test['cmd'])
-        output = ret.stdout.strip()
+        # ignore trailing whitespace on each line
+        output = '\n'.join(l.rstrip() for l in ret.stdout.strip().split('\n'))
         diag = ""
         if ret.returncode is None:
             ok = False
