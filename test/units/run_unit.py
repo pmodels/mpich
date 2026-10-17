@@ -5,6 +5,8 @@ import subprocess
 import shlex
 import argparse
 import signal
+import time
+import xml.etree.ElementTree as ET
 
 class G:
     unit_name = None
@@ -22,6 +24,8 @@ class G:
     timeout = 60
     num_tests = 0
     num_failed = 0
+    # (unit, name, ok, diag, seconds) of every reported test, for --junit
+    results = []
 
 class RE:
     m = None
@@ -39,7 +43,6 @@ def main():
         G.outdir = os.path.join(G.unit_dir, "out")
     else:
         G.outdir = os.path.join(cwd, "test", "units", "out")
-    os.chdir(G.unit_dir)
 
     parser = argparse.ArgumentParser(description="Build and run the unit tests in test/units")
     parser.add_argument("units", nargs="*", help="units to run (default: all *.unit files)")
@@ -47,10 +50,13 @@ def main():
                         help="do not build with -fsanitize=address,undefined")
     parser.add_argument("--timeout", type=int, default=60,
                         help="seconds before a test is killed (default: 60)")
+    parser.add_argument("--junit", metavar="FILE", help="also write the results as JUnit XML to FILE")
     opts = parser.parse_args()
     G.timeout = opts.timeout
-
+    # resolve the --junit path before leaving the current directory
+    junit_file = os.path.abspath(opts.junit) if opts.junit else None
     os.makedirs(G.outdir, exist_ok=True)
+    os.chdir(G.unit_dir)
 
     G.cc = shlex.split(os.environ.get('CC', 'gcc'))
     G.cflags = ["-g", "-Wall"]
@@ -82,6 +88,9 @@ def main():
         if build_unit():
             run_tests()
         os.chdir(G.unit_dir)
+
+    if junit_file:
+        write_junit(junit_file)
 
     # TAP plan and summary
     print("1..%d" % G.num_tests)
@@ -168,7 +177,7 @@ def build_unit():
     for a in G.shims:
         shim_dir = os.path.join(G.unit_dir, "shim", a)
         if not os.path.isdir(shim_dir):
-            report(False, "%s: build" % G.unit_name, "shim %s not found" % a)
+            report(False, "build", "shim %s not found" % a)
             return False
         cmd.append("-I" + shim_dir)
         srcs += sorted(os.path.join(shim_dir, f) for f in os.listdir(shim_dir) if f.endswith(".c"))
@@ -178,14 +187,15 @@ def build_unit():
         srcs.append(os.path.join(G.top_srcdir, a))
     cmd += ["-o", "t"] + srcs
 
+    t0 = time.time()
     ret = subprocess.run(cmd, encoding='utf-8', errors='replace',
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     ok = ret.returncode == 0 and os.path.exists("t")
     if ok:
         # show warnings, if any
-        report(ok, "%s: build" % G.unit_name, ret.stdout)
+        report(ok, "build", ret.stdout, time.time() - t0)
     else:
-        report(ok, "%s: build" % G.unit_name, ' '.join(cmd) + "\n" + ret.stdout)
+        report(ok, "build", ' '.join(cmd) + "\n" + ret.stdout, time.time() - t0)
     return ok
 
 def probe_sanitizers():
@@ -204,7 +214,9 @@ def probe_sanitizers():
 
 def run_tests():
     for test in G.tests:
+        t0 = time.time()
         ret = run_cmd(test['cmd'])
+        seconds = time.time() - t0
         # ignore trailing whitespace on each line
         output = '\n'.join(l.rstrip() for l in ret.stdout.strip().split('\n'))
         diag = ""
@@ -229,7 +241,7 @@ def run_tests():
             ok = True
         if not ok:
             diag += "got: %s\n%s" % (output, ret.stderr)
-        report(ok, "%s: %s" % (G.unit_name, test['cmd']), diag)
+        report(ok, test['cmd'], diag, seconds)
 
 def run_cmd(cmd):
     """Run a test command in its own process group; returncode is None if it timed out"""
@@ -244,9 +256,11 @@ def run_cmd(cmd):
         stdout, stderr = proc.communicate()
         return subprocess.CompletedProcess(cmd, None, stdout, stderr)
 
-def report(ok, desc, diag=""):
+def report(ok, name, diag="", seconds=0):
     """Print one TAP test line, followed by diagnostics as '#' lines"""
     G.num_tests += 1
+    G.results.append((G.unit_name, name, ok, diag, seconds))
+    desc = "%s: %s" % (G.unit_name, name)
     if ok:
         print("ok %d - %s" % (G.num_tests, desc))
     else:
@@ -255,6 +269,30 @@ def report(ok, desc, diag=""):
     if diag.strip():
         for line in diag.rstrip().split("\n"):
             print("#   %s" % line)
+
+def write_junit(file):
+    """Write the results as JUnit XML: a testsuite per unit, a testcase per TAP line"""
+    def xml_text(s):
+        # drop characters that XML 1.0 does not allow
+        return re.sub(r'[^\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd]', '?', s)
+
+    root = ET.Element("testsuites", name="test/units", tests=str(G.num_tests),
+                      failures=str(G.num_failed))
+    suites = {}
+    for unit, name, ok, diag, seconds in G.results:
+        if unit not in suites:
+            suites[unit] = ET.SubElement(root, "testsuite", name=unit, tests="0", failures="0")
+        suite = suites[unit]
+        suite.set("tests", str(int(suite.get("tests")) + 1))
+        case = ET.SubElement(suite, "testcase", classname="units." + unit,
+                             name=xml_text(name), time="%.3f" % seconds)
+        if not ok:
+            suite.set("failures", str(int(suite.get("failures")) + 1))
+            failure = ET.SubElement(case, "failure", message=xml_text(diag.strip().split("\n")[0]))
+            failure.text = xml_text(diag)
+        elif diag.strip():
+            ET.SubElement(case, "system-out").text = xml_text(diag)
+    ET.ElementTree(root).write(file, encoding="utf-8", xml_declaration=True)
 
 #---------------------------------------- 
 if __name__ == "__main__":

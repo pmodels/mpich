@@ -29,6 +29,7 @@ python3 test/units/run_unit.py --no-sanitize   # build without sanitizers
 | Option or variable | Meaning |
 |---|---|
 | `--timeout SEC` | Kill a test that runs longer than this (default 60). |
+| `--junit FILE` | Also write the results as JUnit XML, for CI result publishers: a test suite per unit, a test case per TAP line. |
 | `--no-sanitize` | Don't build with AddressSanitizer and UndefinedBehaviorSanitizer. |
 | `CC` | Compiler (default `gcc`). `make unit-testing` passes the configured `$(CC)`. |
 | `UNIT_CFLAGS` | Extra compiler flags, e.g. `-Werror`. |
