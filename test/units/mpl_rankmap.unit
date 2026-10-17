@@ -1,0 +1,158 @@
+sources:
+    src/mpl/src/mpl_rankmap.c
+
+shim:
+    mpl
+
+template:
+    #include "mpl.h"
+
+    #define MAX_SZ 100
+    int map[MAX_SZ];
+    int map2[MAX_SZ];
+
+    /* ./t str2array sz mapping - parse a rankmap string and print the map
+     * ./t array2str id id ...  - print the rankmap string of a map
+     * ./t roundtrip id id ...  - array2str followed by str2array, which must give back the map
+     */
+    int main(int argc, char **argv)
+    {
+        int err;
+
+        if (argc < 2) {
+            printf("usage: t str2array|array2str|roundtrip ...\n");
+            return 1;
+        }
+
+        if (strcmp(argv[1], "str2array") == 0) {
+            int sz = atoi(argv[2]);
+            if (sz > MAX_SZ) {
+                printf("sz exceeds limit (%d > %d)\n", sz, MAX_SZ);
+                return 1;
+            }
+
+            err = MPL_rankmap_str_to_array(argv[3], sz, map);
+            if (err) {
+                printf("err = 0x%x\n", err);
+                return 1;
+            }
+
+            for (int i = 0; i < sz; i++) {
+                printf("%d ", map[i]);
+            }
+            printf("\n");
+            return 0;
+        }
+
+        int sz = argc - 2;
+        if (sz > MAX_SZ) {
+            printf("sz exceeds limit (%d > %d)\n", sz, MAX_SZ);
+            return 1;
+        }
+        for (int i = 0; i < sz; i++) {
+            map[i] = atoi(argv[2 + i]);
+        }
+
+        char *str;
+        err = MPL_rankmap_array_to_str(map, sz, &str);
+        if (err) {
+            printf("err = 0x%x\n", err);
+            return 1;
+        }
+        if (str == NULL) {
+            printf("str is NULL\n");
+            return 1;
+        }
+        printf("%s\n", str);
+
+        if (strcmp(argv[1], "roundtrip") == 0) {
+            err = MPL_rankmap_str_to_array(str, sz, map2);
+            if (err) {
+                printf("str2array err = 0x%x\n", err);
+                MPL_free(str);
+                return 1;
+            }
+            for (int i = 0; i < sz; i++) {
+                if (map2[i] != map[i]) {
+                    printf("mismatch at rank %d: %d != %d\n", i, map2[i], map[i]);
+                    MPL_free(str);
+                    return 1;
+                }
+            }
+        }
+
+        MPL_free(str);
+        return 0;
+    }
+
+TESTS:
+    cmd: ./t str2array 4 '(vector,1,2,3,0)'
+    expect: 1 2 3 0
+
+    cmd: ./t str2array 12 '(vector,(0,3,4))'
+    expect: 0 0 0 0 1 1 1 1 2 2 2 2
+
+    cmd: ./t str2array 12 '(vector,[(0,3,1)]x4)'
+    expect: 0 1 2 0 1 2 0 1 2 0 1 2
+
+    cmd: ./t str2array 12 '(vector,[(0,3,1)]x3,(0,3,1))'
+    expect: 0 1 2 0 1 2 0 1 2 0 1 2
+
+    cmd: ./t str2array 12 '(vector,[(0,2,1),2]x3,(0,3,1))'
+    expect: 0 1 2 0 1 2 0 1 2 0 1 2
+
+    cmd: ./t str2array 4 ' ( vector , 1 , 2 , 3 , 0 ) '
+    expect: 1 2 3 0
+
+    # legacy with default repeats from node 0
+
+    cmd: ./t str2array 12 '(vector,(1,3,1),(0,4,1))'
+    expect: 1 2 3 0 1 2 3 0 1 2 3 0
+
+    # malformed strings
+
+    cmd: ./t str2array 4 ''
+    expect_err: err = 0x1
+
+    cmd: ./t str2array 4 'vector,1,2,3,0'
+    expect_err: err = 0x1
+
+    cmd: ./t str2array 4 '(vectors,1,2,3,0)'
+    expect_err: err = 0x1
+
+    cmd: ./t str2array 4 '(vector,1;2,3,0)'
+    expect_err: err = 0x1
+
+    cmd: ./t str2array 4 '(vector,(0,2))'
+    expect_err: err = 0x1
+
+    cmd: ./t str2array 4 '(vector,1]x2)'
+    expect_err: err = 0x1
+
+    cmd: ./t array2str 3 2 1 0
+    expect: (vector,3,2,1,0)
+
+    cmd: ./t array2str 1 2 3 0
+    expect: (vector,(1,3,1),0)
+
+    cmd: ./t array2str 0 0 0 0 1 1 1 1 2 2 2 2
+    expect: (vector,(0,3,4))
+
+    cmd: ./t array2str 0 1 2 0 1 2 0 1 2 0 1 2
+    expect: (vector,[(0,3,1)]x4)
+
+    cmd: ./t array2str 1 2 3 0 1 2 3 0 1 2 3 0
+    expect: (vector,[(1,3,1),0]x3)
+
+    # array2str output must parse back to the same map
+
+    cmd: ./t roundtrip 0
+    cmd: ./t roundtrip 0 0 0 0 0 0 0 0
+    cmd: ./t roundtrip 0 1 2 3 4 5 6 7
+    cmd: ./t roundtrip 7 6 5 4 3 2 1 0
+    cmd: ./t roundtrip 0 0 1 1 2 2 0 0 1 1 2 2
+    cmd: ./t roundtrip 0 1 0 1 0 1 2 2 3 3
+    cmd: ./t roundtrip 3 1 4 1 5 9 2 6 5 3 5 8 9 7 9
+    cmd: ./t roundtrip 5 6 7 5 6 7 5 6 7
+    cmd: ./t roundtrip 4 5 4 5 6 7 6 7
+    cmd: ./t roundtrip 0 0 0 1 1 1 2 2 2 0 0 0 1 1 1 2 2 2 3

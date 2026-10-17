@@ -30,8 +30,6 @@
  * A block_repeat repeats the bracketed block list by num of times.
  */
 
-/* START UNIT - MPL_rankmap_str_to_array */
-
 #define RANKMAP_PARSE_ERROR() do { goto fn_fail; } while (0)
 
 /* advance _c until we find a non whitespace character */
@@ -172,9 +170,6 @@ int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_rankmap)
     return MPL_ERR_FAIL;
 }
 
-/* END UNIT - MPL_rankmap_str_to_array */
-
-/* START UNIT - MPL_rankmap_array_to_str */
 /* Generate a string from the rankmap array */
 
 #define MAPSTR_GROW(n) do { \
@@ -347,5 +342,3 @@ int MPL_rankmap_array_to_str(int *rankmap, int sz, char **out_mapping_str)
 
     return MPL_SUCCESS;
 }
-
-/* END UNIT - MPL_rankmap_array_to_str */
