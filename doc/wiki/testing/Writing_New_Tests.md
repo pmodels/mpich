@@ -27,6 +27,10 @@ within this process, it must do the following:
 In addition, to make it easier to diagnose any failures, a good test
 will write detailed diagnostic information about any failure.
 
+Internal routines that can be tested without MPI, such as parsers and
+schedule generators, can instead get a unit test in `test/units/`; see
+[Unit Tests](Unit_Tests.md).
+
 To aid in writing tests, there are a set of utility routines in
 `test/util/mtest.c` (with corresponding versions for Fortran and C++).
 These routines include ones to print the required output, check the
