@@ -60,10 +60,14 @@ def main():
 
     G.cc = shlex.split(os.environ.get('CC', 'gcc'))
     G.cflags = ["-g", "-Wall"]
+    os.chdir(G.outdir)
+    # the units are C99, which older compilers such as gcc 4.8 do not default to
+    c99 = "int main(void) { for (int i = 0; i < 1; i++) {} return 0; }\n"
+    if not probe([], c99) and probe(["-std=gnu99"], c99):
+        G.cflags.append("-std=gnu99")
     if not opts.no_sanitize:
-        os.chdir(G.outdir)
         G.cflags += probe_sanitizers()
-        os.chdir(G.unit_dir)
+    os.chdir(G.unit_dir)
     G.cflags += shlex.split(os.environ.get('UNIT_CFLAGS', ''))
     print("# %s" % ' '.join(G.cc + G.cflags))
 
@@ -198,15 +202,20 @@ def build_unit():
         report(ok, "build", ' '.join(cmd) + "\n" + ret.stdout, time.time() - t0)
     return ok
 
+def probe(flags, src="int main(void) { return 0; }\n"):
+    """Return True if a test program builds and runs with the extra flags"""
+    with open("probe.c", "w") as Out:
+        Out.write(src)
+    ret = subprocess.run(G.cc + G.cflags + flags + ["-o", "probe", "probe.c"],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if ret.returncode == 0:
+        ret = subprocess.run(["./probe"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return ret.returncode == 0
+
 def probe_sanitizers():
     """Return the sanitizer flags if a test program builds and runs with them"""
     flags = ["-fsanitize=address,undefined", "-fno-sanitize-recover=all"]
-    with open("probe.c", "w") as Out:
-        Out.write("int main(void) { return 0; }\n")
-    ret = subprocess.run(G.cc + flags + ["-o", "probe", "probe.c"], capture_output=True)
-    if ret.returncode == 0:
-        ret = subprocess.run(["./probe"], capture_output=True)
-    if ret.returncode == 0:
+    if probe(flags):
         return flags
     else:
         print("# sanitizers are not available, building without them")
