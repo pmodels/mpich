@@ -99,12 +99,6 @@ cvars:
 
 int MPIR_Nbc_progress_hook_id = 0;
 
-MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
-MPIR_Tree_type_t MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KARY;
-MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
-MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
-MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
-
 MPIR_Csel_node_s *csel_tree_main;
 MPIR_Csel_node_s *csel_tree_auto;
 
@@ -122,38 +116,33 @@ const char **MPIR_Csel_condition_names;
 /* algorithm counters */
 int *MPIR_Coll_algo_counters;
 
-MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
-{
-    MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
-    if (0 == strcmp(tree_str, "kary"))
-        tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(tree_str, "knomial_1"))
-        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(tree_str, "knomial_2"))
-        tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else
-        tree_type = MPIR_TREE_TYPE_KARY;
-    return tree_type;
-}
+/* the casts avoid -Wenum-compare between the two enum types */
+#define CHECK_TREE_TYPE_CVAR(cvar) \
+    MPL_COMPILE_TIME_ASSERT((int) cvar##_kary == MPIR_TREE_TYPE_KARY && \
+                            (int) cvar##_knomial_1 == MPIR_TREE_TYPE_KNOMIAL_1 && \
+                            (int) cvar##_knomial_2 == MPIR_TREE_TYPE_KNOMIAL_2)
+#define CHECK_TREE_TYPE_CVAR_TOPO(cvar) \
+    MPL_COMPILE_TIME_ASSERT((int) cvar##_topology_aware == MPIR_TREE_TYPE_TOPOLOGY_AWARE && \
+                            (int) cvar##_topology_aware_k == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K && \
+                            (int) cvar##_topology_wave == MPIR_TREE_TYPE_TOPOLOGY_WAVE)
 
-static MPIR_Tree_type_t get_tree_type_from_string_with_topo(const char *tree_str)
+/* Returns the tree type named tree_str, or -1 if the name is unknown */
+int get_tree_type_from_string(const char *tree_str)
 {
-    MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
     if (0 == strcmp(tree_str, "kary"))
-        tree_type = MPIR_TREE_TYPE_KARY;
+        return MPIR_TREE_TYPE_KARY;
     else if (0 == strcmp(tree_str, "knomial_1"))
-        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+        return MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(tree_str, "knomial_2"))
-        tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+        return MPIR_TREE_TYPE_KNOMIAL_2;
     else if (0 == strcmp(tree_str, "topology_aware"))
-        tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+        return MPIR_TREE_TYPE_TOPOLOGY_AWARE;
     else if (0 == strcmp(tree_str, "topology_aware_k"))
-        tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+        return MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
     else if (0 == strcmp(tree_str, "topology_wave"))
-        tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
+        return MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
-        tree_type = MPIR_TREE_TYPE_KARY;
-    return tree_type;
+        return -1;
 }
 
 int get_ccl_from_string(const char *ccl_str)
@@ -172,20 +161,16 @@ int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Iallreduce */
-    MPIR_Iallreduce_tree_type = get_tree_type_from_string(MPIR_CVAR_IALLREDUCE_TREE_TYPE);
-
-    /* Allreduce */
-    MPIR_Allreduce_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_ALLREDUCE_TREE_TYPE);
-
-    /* Ibcast */
-    MPIR_Ibcast_tree_type = get_tree_type_from_string(MPIR_CVAR_IBCAST_TREE_TYPE);
-
-    /* Bcast */
-    MPIR_Bcast_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_BCAST_TREE_TYPE);
-
-    /* Ireduce */
-    MPIR_Ireduce_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_IREDUCE_TREE_TYPE);
+    /* The TREE_TYPE CVARs are passed as MPIR_Tree_type_t, so their enum values must
+     * list the tree types in the same order */
+    CHECK_TREE_TYPE_CVAR(MPIR_CVAR_IALLREDUCE_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR(MPIR_CVAR_IBCAST_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR(MPIR_CVAR_ALLREDUCE_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR_TOPO(MPIR_CVAR_ALLREDUCE_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR(MPIR_CVAR_BCAST_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR_TOPO(MPIR_CVAR_BCAST_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR(MPIR_CVAR_IREDUCE_TREE_TYPE);
+    CHECK_TREE_TYPE_CVAR_TOPO(MPIR_CVAR_IREDUCE_TREE_TYPE);
 
     /* register non blocking collectives progress hook */
     mpi_errno = MPIR_Progress_hook_register(-1, MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);

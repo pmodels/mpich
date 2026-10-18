@@ -492,9 +492,7 @@ def dump_MPIR_Coll_init_algo_container():
                     continue
                 else:
                     cvar_param = "MPIR_CVAR_%s_%s" % (coll_name.upper(), cvar_params[i])
-                    if a == "tree_type":
-                        cvar_param = "get_tree_type_from_string(%s)" % cvar_param
-                    elif cvar_params[i] == "THROTTLE":
+                    if cvar_params[i] == "THROTTLE":
                         cvar_param = "MPIR_CVAR_ALLTOALL_THROTTLE"
                     G.out.append("    cnt->u.%s.%s = %s;" % (struct_name, a, cvar_param))
             G.out.append("    break;")
@@ -791,10 +789,7 @@ def get_algo_extra_args(algo, kind):
             elif kind == "cvar":
                 prefix = "MPIR_CVAR_%s_" % func_name.upper()
                 tmp = prefix + cvar_params[i]
-                if re.match(r"%sTREE_TYPE" % prefix, tmp):
-                    newname = "MPIR_%s_tree_type" % func_name.capitalize()
-                    tmp = re.sub(r"%sTREE_TYPE" % prefix, newname, tmp)
-                elif re.match(r"%sTHROTTLE" % prefix, tmp):
+                if re.match(r"%sTHROTTLE" % prefix, tmp):
                     newname = "MPIR_CVAR_ALLTOALL_THROTTLE"
                     tmp = re.sub(r"%sTHROTTLE" % prefix, newname, tmp)
                 out_list.append(tmp)
