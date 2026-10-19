@@ -112,6 +112,7 @@ int *MPIR_Coll_cvar_table;
 const char **MPIR_Coll_type_names;
 const char **MPIR_Coll_algo_names;
 const char **MPIR_Csel_condition_names;
+bool *MPIR_Csel_condition_has_thresh;
 
 /* algorithm counters */
 int *MPIR_Coll_algo_counters;
@@ -163,6 +164,8 @@ int MPII_Coll_init(void)
         MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
     MPIR_Coll_algo_names = MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(char *), MPL_MEM_COLL);
     MPIR_Csel_condition_names = MPL_malloc(MPIR_CSEL_NUM_CONDITIONS * sizeof(char *), MPL_MEM_COLL);
+    MPIR_Csel_condition_has_thresh =
+        MPL_calloc(MPIR_CSEL_NUM_CONDITIONS, sizeof(bool), MPL_MEM_COLL);
 
     MPIR_Coll_algo_counters = MPL_calloc(MPIR_CSEL_NUM_ALGORITHMS, sizeof(int), MPL_MEM_COLL);
 
@@ -231,6 +234,7 @@ int MPII_Coll_finalize(void)
     MPL_free(MPIR_Coll_algo_names);
     MPL_free(MPIR_Coll_type_names);
     MPL_free(MPIR_Csel_condition_names);
+    MPL_free(MPIR_Csel_condition_has_thresh);
     MPL_free(MPIR_Coll_algo_counters);
 
     mpi_errno = MPIR_cga_finalize();

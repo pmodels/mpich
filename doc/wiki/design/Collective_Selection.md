@@ -263,8 +263,8 @@ Rules that follow:
 | Output | Generated items |
 |---|---|
 | Types | `MPIR_Csel_coll_type_e`, `MPII_Csel_container_type_e`, `MPIR_Csel_node_type_e`, `MPII_Csel_container_s` |
-| Tables | `MPII_Coll_type_init` (`MPIR_Coll_type_names`, `MPIR_Coll_cvar_table`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` |
-| JSON parsing | `MPII_Csel_parse_operator`, `MPII_Csel_parse_container_params` |
+| Tables | `MPII_Coll_type_init` (`MPIR_Coll_type_names`, `MPIR_Coll_cvar_table`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` (`MPIR_Csel_condition_names`, `MPIR_Csel_condition_has_thresh`) |
+| JSON parsing | `MPII_Csel_parse_container_params` |
 | Search | `MPII_Csel_run_condition` |
 | CVAR path | `MPIR_Coll_cvar_to_algo_id`, `MPIR_Coll_init_algo_container`, `MPIR_Coll_check_algo_restriction` |
 | Dispatch | the `<algo>_cnt` wrappers and every `MPIR_Xxx_impl` |

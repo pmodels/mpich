@@ -32,6 +32,7 @@ extern int *MPIR_Coll_cvar_table;
 extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
+extern bool *MPIR_Csel_condition_has_thresh;
 extern int *MPIR_Coll_algo_counters;
 
 int MPIR_Csel_load_file(const char *json_file);
@@ -44,7 +45,6 @@ int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig)
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 int MPII_Csel_parse_container_params(const MPII_Csel_json_s * obj, MPII_Csel_container_s * cnt);
-int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s * node);
 MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s * node, MPIR_Csel_coll_sig_s * coll_sig);
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig)

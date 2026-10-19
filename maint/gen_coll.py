@@ -55,11 +55,10 @@ def main():
     dump_MPII_Coll_type_init()
     # initialize MPIR_Coll_algo_table and MPIR_Coll_algo_names
     dump_MPII_Coll_algo_init()
-    # initialize MPIR_Coll_condition_names
+    # initialize MPIR_Csel_condition_names and MPIR_Csel_condition_has_thresh
     dump_MPII_Csel_init_condition_names()
     # parsing routines for loading JSONs
     dump_MPII_Csel_parse_container()
-    dump_MPII_Csel_parse_operator()
     # check operator condition in Csel search
     dump_MPII_Csel_run_condition()
     # routines for checking algorithm CVARs
@@ -273,6 +272,8 @@ def dump_MPII_Csel_init_condition_names():
     dump_open('{')
     for a in G.conditions:
         G.out.append("MPIR_Csel_condition_names[%s] = \"%s\";" % (condition_id(a), get_condition_name(a)))
+        if condition_has_thresh(a):
+            G.out.append("MPIR_Csel_condition_has_thresh[%s] = true;" % condition_id(a))
     dump_close('}')
 
 def dump_MPII_Coll_algo_init():
@@ -403,67 +404,6 @@ def dump_MPII_Csel_run_condition():
     G.out.append("    break;")
     dump_close('}') # switch
     G.out.append("return NULL;")
-    dump_close('}')
-
-def dump_MPII_Csel_parse_operator():
-    def dump_static_parse_thresh():
-        # following are interchangeable:
-        #     cond<=thresh is the same as cond(thresh)
-        #     cond<thresh is the same as cond(thresh-1)
-        #     cond>thresh is the same as !cond(thresh)
-        #     cond>=thresh is the same as !cond(thresh-1)
-        G.out.append("static void parse_thresh(const char *ckey, MPIR_Csel_node_s *node)")
-        dump_open('{')
-        G.out.append("if (ckey[0] == '(') {")
-        G.out.append("    node->u.condition.thresh = atoi(ckey + 1);")
-        G.out.append("} else if (ckey[0] == '<' && ckey[1] == '=') {")
-        G.out.append("    node->u.condition.thresh = atoi(ckey + 2);")
-        G.out.append("} else if (ckey[0] == '<') {")
-        G.out.append("    node->u.condition.thresh = atoi(ckey + 1) - 1;")
-        G.out.append("} else if (ckey[0] == '>' && ckey[1] == '=') {")
-        G.out.append("    node->u.condition.thresh = atoi(ckey + 2) - 1;")
-        G.out.append("    node->u.condition.negate = true;")
-        G.out.append("} else if (ckey[0] == '>') {")
-        G.out.append("    node->u.condition.thresh = atoi(ckey + 1);")
-        G.out.append("    node->u.condition.negate = true;")
-        G.out.append("} else {")
-        G.out.append("    MPIR_Assert(0);")
-        G.out.append('}')
-        dump_close('}')
-        G.out.append("")
-
-    dump_static_parse_thresh()
-
-    decl = "int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s *node)"
-    G.out.append(decl)
-    dump_open('{')
-    dump_open("if (ckey[0] == '!') {")
-    G.out.append("node->u.condition.negate = true;")
-    G.out.append("ckey++;")
-    dump_else()
-    G.out.append("node->u.condition.negate = false;")
-    dump_close('}')
-
-    if_clase = "if"
-    for a in G.conditions:
-        name = get_condition_name(a)
-        has_thresh = condition_has_thresh(a)
-        n = len(name)
-        if has_thresh:
-            G.out.append("%s (strncmp(ckey, \"%s\", %d) == 0) {" % (if_clase, name, n))
-            G.out.append("    node->type = %s;" % condition_id(a))
-            G.out.append("    parse_thresh(ckey + %d, node);" % n)
-        else:
-            G.out.append("%s (strcmp(ckey, \"%s\") == 0) {" % (if_clase, name))
-            G.out.append("    node->type = %s;" % condition_id(a))
-        if_clase = "} else if"
-    G.out.append("} else {")
-    G.out.append("    MPIR_Assert(0);")
-    G.out.append("    return MPI_ERR_OTHER;")
-    G.out.append("}")
-
-    G.out.append("")
-    G.out.append("return MPI_SUCCESS;")
     dump_close('}')
 
 def dump_MPIR_Coll_cvar_to_algo_id():

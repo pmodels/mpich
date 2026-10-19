@@ -45,6 +45,57 @@ static bool key_is_any(const char *ckey)
     }
 }
 
+/* Parse the threshold that follows a condition name. "(N)" means the value is
+ * at most N. The others are aliases: cond<=N is cond(N), cond<N is cond(N-1),
+ * cond>N is !cond(N), and cond>=N is !cond(N-1). */
+static void parse_thresh(const char *s, MPIR_Csel_node_s * node)
+{
+    if (s[0] == '(') {
+        node->u.condition.thresh = atoi(s + 1);
+    } else if (s[0] == '<' && s[1] == '=') {
+        node->u.condition.thresh = atoi(s + 2);
+    } else if (s[0] == '<') {
+        node->u.condition.thresh = atoi(s + 1) - 1;
+    } else if (s[0] == '>' && s[1] == '=') {
+        node->u.condition.thresh = atoi(s + 2) - 1;
+        node->u.condition.negate = true;
+    } else if (s[0] == '>') {
+        node->u.condition.thresh = atoi(s + 1);
+        node->u.condition.negate = true;
+    } else {
+        MPIR_Assert(0);
+    }
+}
+
+/* parse a condition key, e.g. "pof2", "!pof2", or "comm_size<8", into node */
+static int parse_condition(const char *ckey, MPIR_Csel_node_s * node)
+{
+    if (ckey[0] == '!') {
+        node->u.condition.negate = true;
+        ckey++;
+    } else {
+        node->u.condition.negate = false;
+    }
+
+    for (int i = 0; i < MPIR_CSEL_NUM_CONDITIONS; i++) {
+        const char *name = MPIR_Csel_condition_names[i];
+        if (MPIR_Csel_condition_has_thresh[i]) {
+            int n = strlen(name);
+            if (strncmp(ckey, name, n) == 0) {
+                node->type = i;
+                parse_thresh(ckey + n, node);
+                return MPI_SUCCESS;
+            }
+        } else if (strcmp(ckey, name) == 0) {
+            node->type = i;
+            return MPI_SUCCESS;
+        }
+    }
+
+    MPIR_Assert(0);
+    return MPI_ERR_OTHER;
+}
+
 static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -130,7 +181,7 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
         } else if (key_is_any(ckey)) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
         } else {
-            mpi_errno = MPII_Csel_parse_operator(ckey, tmp);
+            mpi_errno = parse_condition(ckey, tmp);
             if (mpi_errno != MPI_SUCCESS) {
                 printf("parse_json_tree: unknown key %s\n", ckey);
                 MPIR_Assert(0);
