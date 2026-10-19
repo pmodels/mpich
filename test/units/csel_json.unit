@@ -1,0 +1,257 @@
+sources:
+    src/mpi/coll/src/csel_json.c
+
+include:
+    src/mpi/coll/include
+
+shim:
+    core
+
+template:
+    #include "mpiimpl.h"
+    #include "csel_json.h"
+
+    /* ./t < input     - parse the input and print the tree as compact JSON
+     * ./t -f file     - parse a file and print "ok"
+     * ./t depth n     - parse n nested objects, {"a":{"a":...{}...}}, and print "ok"
+     * On a parse error, print the error message and return 1.
+     */
+
+    static void print_object(const MPII_Csel_json_s * obj)
+    {
+        printf("{");
+        MPII_CSEL_JSON_FOREACH(obj, p) {
+            printf("\"%s\":", p->key);
+            if (p->str) {
+                printf("\"%s\"", p->str);
+            } else {
+                print_object(p);
+            }
+            if (p->next) {
+                printf(",");
+            }
+        }
+        printf("}");
+    }
+
+    static char *read_all(FILE * f)
+    {
+        size_t len = 0, cap = 1024;
+        char *buf = malloc(cap);
+        size_t n;
+        while ((n = fread(buf + len, 1, cap - len - 1, f)) > 0) {
+            len += n;
+            if (len + 1 == cap) {
+                cap *= 2;
+                buf = realloc(buf, cap);
+            }
+        }
+        buf[len] = '\0';
+        return buf;
+    }
+
+    static char *make_nested(int n)
+    {
+        char *buf = malloc(n * 6 + 1);
+        char *s = buf;
+        for (int i = 1; i < n; i++) {
+            s += sprintf(s, "{\"a\":");
+        }
+        s += sprintf(s, "{}");
+        for (int i = 1; i < n; i++) {
+            s += sprintf(s, "}");
+        }
+        return buf;
+    }
+
+    int main(int argc, char **argv)
+    {
+        char *json_str;
+        bool print_tree = false;
+        if (argc == 1) {
+            json_str = read_all(stdin);
+            print_tree = true;
+        } else if (argc == 3 && strcmp(argv[1], "-f") == 0) {
+            FILE *f = fopen(argv[2], "r");
+            if (!f) {
+                printf("cannot open %s\n", argv[2]);
+                return 1;
+            }
+            json_str = read_all(f);
+            fclose(f);
+        } else if (argc == 3 && strcmp(argv[1], "depth") == 0) {
+            json_str = make_nested(atoi(argv[2]));
+        } else {
+            printf("usage: t [-f file | depth n] < input\n");
+            return 1;
+        }
+
+        MPII_Csel_json_s *root;
+        int mpi_errno = MPII_Csel_json_parse(json_str, &root);
+        free(json_str);
+        if (mpi_errno) {
+            printf("error: %s\n", unit_last_error);
+            return 1;
+        }
+
+        if (print_tree) {
+            print_object(root);
+            printf("\n");
+        } else {
+            printf("ok\n");
+        }
+        MPII_Csel_json_free(root);
+        return 0;
+    }
+
+TESTS:
+    # The input comes through printf, which turns \t, \r, \n, \\ and octal
+    # escapes into the raw characters.
+
+    # accepted input
+
+    cmd: printf '{}' | ./t
+    expect: {}
+
+    cmd: printf '{"a": "1"}' | ./t
+    expect: {"a":"1"}
+
+    cmd: printf '{"a": {}}' | ./t
+    expect: {"a":{}}
+
+    cmd: printf '{"a": {"b": {"c": "1"}, "d": "2"}, "e": "3"}' | ./t
+    expect: {"a":{"b":{"c":"1"},"d":"2"},"e":"3"}
+
+    # members keep the file order
+    cmd: printf '{"z": "1", "a": "2", "m": "3"}' | ./t
+    expect: {"z":"1","a":"2","m":"3"}
+
+    # the same key in different objects
+    cmd: printf '{"a": {"a": "1"}, "b": {"a": "2"}}' | ./t
+    expect: {"a":{"a":"1"},"b":{"a":"2"}}
+
+    # spaces inside keys and values are removed
+    cmd: printf '{"comm_size < 8": "call = bcast intra binomial"}' | ./t
+    expect: {"comm_size<8":"call=bcastintrabinomial"}
+
+    # whitespace between tokens
+    cmd: printf ' \t\r\n{ \t\r\n"a" \t\r\n: \t\r\n"1" \t\r\n, \t\r\n"b" \t\r\n: \t\r\n{ \t\r\n} \t\r\n} \t\r\n' | ./t
+    expect: {"a":"1","b":{}}
+
+    cmd: printf '{\r\n    "a": "1"\r\n}\r\n' | ./t
+    expect: {"a":"1"}
+
+    # nesting limit
+    cmd: ./t depth 64
+    expect: ok
+
+    cmd: ./t depth 65
+    expect_err: **colljson 1 321 objects are nested too deep
+
+    # the selection file in the tree
+    cmd: ./t -f $top_srcdir/src/mpi/coll/coll_selection.json
+    expect: ok
+
+    # top level
+
+    cmd: printf '' | ./t
+    expect_err: **colljson 1 1 expect '{' at the top level
+
+    cmd: printf '  \n  ' | ./t
+    expect_err: **colljson 2 3 expect '{' at the top level
+
+    cmd: printf '[]' | ./t
+    expect_err: **colljson 1 1 expect '{' at the top level
+
+    cmd: printf '"a"' | ./t
+    expect_err: **colljson 1 1 expect '{' at the top level
+
+    cmd: printf '{} x' | ./t
+    expect_err: **colljson 1 4 unexpected content after the top-level object
+
+    cmd: printf '{}{}' | ./t
+    expect_err: **colljson 1 3 unexpected content after the top-level object
+
+    # object syntax
+
+    cmd: printf '{a: "1"}' | ./t
+    expect_err: **colljson 1 2 expect a key string
+
+    cmd: printf '{"a" "1"}' | ./t
+    expect_err: **colljson 1 6 expect ':'
+
+    cmd: printf '{"a": "1" "b": "2"}' | ./t
+    expect_err: **colljson 1 11 expect ',' or '}'
+
+    cmd: printf '{"a": "1",}' | ./t
+    expect_err: **colljson 1 11 expect a key string
+
+    cmd: printf '{"a": "1"' | ./t
+    expect_err: **colljson 1 10 expect ',' or '}'
+
+    # values other than objects and strings
+
+    cmd: printf '{"a": 1}' | ./t
+    expect_err: **colljson 1 7 expect an object or a string
+
+    cmd: printf '{"a": true}' | ./t
+    expect_err: **colljson 1 7 expect an object or a string
+
+    cmd: printf '{"a": null}' | ./t
+    expect_err: **colljson 1 7 expect an object or a string
+
+    cmd: printf '{"a": ["1"]}' | ./t
+    expect_err: **colljson 1 7 expect an object or a string
+
+    # strings
+
+    cmd: printf '{"a": "1' | ./t
+    expect_err: **colljson 1 9 unterminated string
+
+    cmd: printf '{"a": "x\\"y"}' | ./t
+    expect_err: **colljson 1 9 escape sequences are not supported
+
+    cmd: printf '{"a": "x\ty"}' | ./t
+    expect_err: **colljson 1 9 only printable ASCII characters are allowed in a string
+
+    cmd: printf '{"a": "x\ny"}' | ./t
+    expect_err: **colljson 1 9 only printable ASCII characters are allowed in a string
+
+    cmd: printf '{"a": "x\177y"}' | ./t
+    expect_err: **colljson 1 9 only printable ASCII characters are allowed in a string
+
+    cmd: printf '{"a": "x\303\251y"}' | ./t
+    expect_err: **colljson 1 9 only printable ASCII characters are allowed in a string
+
+    cmd: printf '{"a": ""}' | ./t
+    expect_err: **colljson 1 7 empty string
+
+    cmd: printf '{"a": "   "}' | ./t
+    expect_err: **colljson 1 7 empty string
+
+    cmd: printf '{"": "1"}' | ./t
+    expect_err: **colljson 1 2 empty string
+
+    # duplicate keys, reported at the second key
+
+    cmd: printf '{"a": "1",\n "a": "2"}' | ./t
+    expect_err: **colljson 2 2 duplicate key
+
+    cmd: printf '{"a b": "1", "ab": "2"}' | ./t
+    expect_err: **colljson 1 14 duplicate key
+
+    # line and column: a tab is one column, CRLF ends a line
+
+    cmd: printf '{\n"a": "1",\n\t"b" "2"}' | ./t
+    expect_err: **colljson 3 6 expect ':'
+
+    cmd: printf '{\r\n"a": "1",\r\n"b" "2"}' | ./t
+    expect_err: **colljson 3 5 expect ':'
+
+    # errors deep in a partly built tree, which must be freed
+
+    cmd: printf '{"a": "1", "b": {"c": "2", "d": {"e": "3", "f": 4}}, "g": "5"}' | ./t
+    expect_err: **colljson 1 49 expect an object or a string
+
+    cmd: printf '{"a": {"b": "1", "c": "2", "b": "3"}}' | ./t
+    expect_err: **colljson 1 28 duplicate key

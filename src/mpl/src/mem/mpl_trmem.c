@@ -981,21 +981,6 @@ void MPL_trcategorydump(FILE * fp)
     }
 }
 
-
-char *MPL_strdup_no_spaces(const char *str)
-{
-    char *newstr = MPL_malloc(strlen(str) + 1, MPL_MEM_COLL);
-
-    int j = 0;
-    for (int i = 0; i < strlen(str); i++) {
-        if (str[i] != ' ')
-            newstr[j++] = str[i];
-    }
-    newstr[j] = 0;
-
-    return newstr;
-}
-
 #ifdef MPL_USE_MEMORY_TRACING
 /* Direct functions. */
 void *MPL_direct_malloc(size_t size)

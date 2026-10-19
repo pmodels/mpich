@@ -173,7 +173,6 @@ dependencies of the current main branch.
 | Library   | Repository                           | Location in MPICH source |
 | --------- | ------------------------------------ | ------------------------ |
 | hwloc     | <https://github.com/open-mpi/hwloc>  | `modules/hwloc`          |
-| json-c    | <https://github.com/pmodels/json-c>  | `modules/json-c`         |
 | Libfabric | <https://github.com/ofiwg/libfabric> | `modules/libfabric`      |
 | UCX       | <https://github.com/openucx/ucx>     | `modules/ucx`            |
 | Yaksa     | <https://github.com/pmodels/yaksa>   | `modules/yaksa`          |

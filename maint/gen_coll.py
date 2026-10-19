@@ -293,11 +293,10 @@ def dump_MPII_Csel_parse_container():
     """Generate MPII_Csel_parse_container_params()."""
     G.out.append("")
     def dump_json_foreach_open():
-        dump_open("json_object_object_foreach(obj, key, val) {")
-        G.out.append("char *ckey = MPL_strdup_no_spaces(key);")
+        dump_open("MPII_CSEL_JSON_FOREACH(obj, p) {")
+        G.out.append("const char *ckey = p->key;")
 
     def dump_json_foreach_close():
-        G.out.append("MPL_free(ckey);")
         dump_close("}")
 
     def dump_parse_params():
@@ -307,7 +306,7 @@ def dump_MPII_Csel_parse_container():
                 struct_name = algo_struct_name(algo)
                 extra_params = algo['extra_params'].replace(' ', '').split(',')
                 G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
-                dump_open('{') # protect json_object_object_foreach
+                dump_open('{') # scope num_params in the case
                 G.out.append("int num_params = 0;")
                 num_expect = 0
                 dump_json_foreach_open()
@@ -338,7 +337,7 @@ def dump_MPII_Csel_parse_container():
         G.out.append("    break;")
         dump_close('}') # switch
 
-    decl = "void MPII_Csel_parse_container_params(struct json_object *obj, MPII_Csel_container_s *cnt)"
+    decl = "void MPII_Csel_parse_container_params(const MPII_Csel_json_s *obj, MPII_Csel_container_s *cnt)"
     G.out.append(decl)
     dump_open('{')
     dump_parse_params()
