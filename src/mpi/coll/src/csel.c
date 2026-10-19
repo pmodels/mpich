@@ -47,8 +47,8 @@ static bool key_is_any(const char *ckey)
 
 static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
 {
-    if (obj->str) {
-        const char *ckey = obj->str;
+    if (obj->type == MPII_CSEL_JSON_STRING) {
+        const char *ckey = obj->u.str;
 
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
@@ -63,6 +63,7 @@ static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
             return NULL;
         }
     }
+    MPIR_Assert(obj->type == MPII_CSEL_JSON_OBJECT);
 
     MPIR_Csel_node_s *prevnode = NULL, *node = NULL;
 
@@ -144,6 +145,9 @@ static void csel_subtree_dtor(void *item)
 static int parse_json_names(const MPII_Csel_json_s * obj)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    /* the parser always makes the root an object */
+    MPIR_Assert(obj->type == MPII_CSEL_JSON_OBJECT);
 
     if (!csel_subtrees) {
         static UT_icd csel_subtree_icd =
