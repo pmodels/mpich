@@ -212,6 +212,14 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
             goto fn_exit;
         }
 
+        /* "any" ends every list of cases, so a search never falls off the end */
+        if (key_is_any(ckey) != (val->next == NULL)) {
+            MPL_free(tmp);
+            mpi_errno = MPII_Csel_json_error(val, val->next ? "\"any\" must be the last key" :
+                                             "expect \"any\" as the last key");
+            goto fn_fail;
+        }
+
         /* this node must be an operator type */
         mpi_errno = parse_json_tree(val, &tmp->success);
         if (mpi_errno) {

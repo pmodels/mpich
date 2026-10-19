@@ -111,7 +111,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `pof2`, `!pof2` | Boolean condition, optionally negated. |
 | `comm_size(8)` | Canonical threshold form: `comm_size <= 8`. |
 | `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. A leading `!` is an error with these; write `!comm_size(8)` or flip the comparison. |
-| `any` | Always true. Used as the last sibling. |
+| `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
 | `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
@@ -125,6 +125,7 @@ The file is a dictionary of named subtrees:
         "collective=bcast-intra": "call=bcast-intra-auto",
         "collective=allreduce-intra": "call=allreduce-intra-auto",
         ...
+        "any": "error"
     },
     "name=bcast-intra-auto": {
         "MPIDI_CH4_release_gather": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
@@ -182,8 +183,8 @@ only the JSON subset the tree needs:
   are dropped, so `"comm_size < 8"` is read as `comm_size<8`.
 - Keys within an object must be unique. Objects nest at most 64 levels.
 - A syntax error, an unknown subtree, collective, algorithm, or condition, a
-  malformed threshold, or a bad algorithm parameter stops `MPI_Init` with the
-  line and column of the error.
+  malformed threshold, an object that doesn't end with `any`, or a bad
+  algorithm parameter stops `MPI_Init` with the line and column of the error.
 
 ## Runtime selection
 
