@@ -114,6 +114,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `any` | Always true. Used as the last sibling. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
+| `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
 
@@ -221,7 +222,9 @@ MPI_Bcast
    `MPII_Csel_run_condition`, which evaluates the predicate (or `<= thresh`),
    then applies `negate`. `any` always passes. A match moves to `success`, a
    miss to `failure` (the next sibling). A `call` node continues in the named
-   subtree. The search ends at a container.
+   subtree. The search ends at a container, or at an `error` node, which
+   makes the collective return "Collective selection failed to find an
+   algorithm".
 5. **Run.** `MPIR_Coll_algo_table[cnt->id](coll_sig, cnt)` calls the `_cnt`
    wrapper. It increments `MPIR_Coll_algo_counters[id]`, creates the schedule
    for a nonblocking algorithm (`MPII_CSEL_CREATE_SCHED` or

@@ -554,6 +554,7 @@ def dump_MPIR_Csel_node_type_e():
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__ANY,")
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__CALL,")
     G.out2.append("    CSEL_NODE_TYPE__CONTAINER,")
+    G.out2.append("    CSEL_NODE_TYPE__ERROR,")
     G.out2.append("} MPIR_Csel_node_type_e;")
     G.out2.append("")
     G.out2.append("#define MPIR_CSEL_NUM_CONDITIONS %s\n" % "CSEL_NODE_TYPE__OPERATOR__COLLECTIVE")

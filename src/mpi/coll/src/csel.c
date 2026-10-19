@@ -135,9 +135,18 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* "error" ends the search without an algorithm */
+    if (obj->type == MPII_CSEL_JSON_STRING && strcmp(obj->u.str, "error") == 0) {
+        MPIR_Csel_node_s *tmp;
+        tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
+        tmp->type = CSEL_NODE_TYPE__ERROR;
+        *node_out = tmp;
+        return MPI_SUCCESS;
+    }
+
     if (obj->type != MPII_CSEL_JSON_OBJECT) {
         if (obj->type != MPII_CSEL_JSON_STRING || strncmp(obj->u.str, "call=", 5) != 0) {
-            return MPII_Csel_json_error(obj, "expect an object or a \"call=\" string");
+            return MPII_Csel_json_error(obj, "expect an object, a \"call=\" string, or \"error\"");
         }
 
         int idx = csel_name_to_idx(obj->u.str + 5);
@@ -395,6 +404,8 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level)
         printf("Collective: %s\n", MPIR_Coll_type_names[node->u.collective.coll_type]);
     } else if (node->type == CSEL_NODE_TYPE__OPERATOR__ANY) {
         printf("ANY\n");
+    } else if (node->type == CSEL_NODE_TYPE__ERROR) {
+        printf("ERROR\n");
     } else {
         if (!node->u.condition.negate) {
             if (!node->u.condition.thresh) {
@@ -448,6 +459,9 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
 
             case CSEL_NODE_TYPE__CONTAINER:
                 return node->u.container;
+
+            case CSEL_NODE_TYPE__ERROR:
+                return NULL;
 
             default:
                 node = MPII_Csel_run_condition(node, coll_sig);
