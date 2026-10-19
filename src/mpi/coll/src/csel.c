@@ -444,15 +444,19 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
 {
     MPIR_Assert(csel);
 
+    /* A search follows the same path whenever it enters a subtree, so one that
+     * makes more call= jumps than there are subtrees loops forever. */
+    unsigned ncalls = 0;
+
     MPIR_Csel_node_s *node = csel;
     while (node) {
         switch (node->type) {
             case CSEL_NODE_TYPE__OPERATOR__CALL:
-                MPIR_Csel_node_s * tree = csel_get_tree_by_idx(node->u.call.idx);
-                if (!tree) {
-                    goto fn_fail;
+                if (++ncalls > utarray_len(csel_subtrees)) {
+                    return NULL;
                 }
-                return MPIR_Csel_search(tree, coll_sig);
+                node = csel_get_tree_by_idx(node->u.call.idx);
+                break;
 
             case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
                 if (node->u.collective.coll_type == coll_sig->coll_type)
@@ -478,7 +482,7 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
         }
     }
 
-  fn_fail:
+    /* unreachable, since every object ends with "any" */
     MPIR_Assert(0 && "MPIR_Csel_search failed to find an algorithm");
     return NULL;
 }

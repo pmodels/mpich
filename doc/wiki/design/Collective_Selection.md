@@ -225,7 +225,9 @@ MPI_Bcast
    miss to `failure` (the next sibling). A `call` node continues in the named
    subtree. The search ends at a container, or at an `error` node, which
    makes the collective return "Collective selection failed to find an
-   algorithm".
+   algorithm". A search that makes more `call=` jumps than there are
+   subtrees is looping, e.g. `auto` → `x` → `auto` for the same collective,
+   and returns the same error.
 5. **Run.** `MPIR_Coll_algo_table[cnt->id](coll_sig, cnt)` calls the `_cnt`
    wrapper. It increments `MPIR_Coll_algo_counters[id]`, creates the schedule
    for a nonblocking algorithm (`MPII_CSEL_CREATE_SCHED` or
