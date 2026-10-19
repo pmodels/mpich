@@ -19,6 +19,9 @@ def main():
     #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
     #   - G.algos:      a two level array: [func-commkind][algo]
     load_coll_algos("src/mpi/coll/coll_algorithms.txt")
+    # Loading the collective CVARs, for the types of the algorithm parameters -
+    #   - G.cvars:      {name: {'type': type, 'enum': [names]}}
+    load_cvars("src/mpi/coll")
     # Prepare a one level algo array for conveninece -
     #   - G.algo_list:    a one level array [algo]
     G.algo_list = collect_algo_list()
@@ -290,14 +293,35 @@ def dump_MPII_Coll_algo_init():
     dump_close('}')
 
 def dump_MPII_Csel_parse_container():
-    """Generate MPII_Csel_parse_container_params()."""
-    G.out.append("")
-    def dump_json_foreach_open():
-        dump_open("MPII_CSEL_JSON_FOREACH(obj, p) {")
-        G.out.append("const char *ckey = p->key;")
+    """Generate MPII_Csel_parse_container_params().
 
-    def dump_json_foreach_close():
-        dump_close("}")
+    Each parameter is a JSON member "name": value, where the value type follows
+    the type of the parameter's CVAR: an integer for int, true or false for
+    boolean, and one of the CVAR's names for enum.
+    """
+    def dump_get_param(struct_name, a, cvar):
+        field = "cnt->u.%s.%s" % (struct_name, a)
+        cvar_type = G.cvars[cvar]['type']
+        if cvar_type == "int":
+            G.out.append("mpi_errno = MPII_Csel_json_get_int(p, &%s);" % field)
+            G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+        elif cvar_type == "boolean":
+            G.out.append("bool val;")
+            G.out.append("mpi_errno = MPII_Csel_json_get_bool(p, &val);")
+            G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+            G.out.append("%s = val;" % field)
+        elif cvar_type == "enum":
+            enum = G.cvars[cvar]['enum']
+            if not enum:
+                raise Exception("%s: failed to parse the enum names" % cvar)
+            G.out.append("static const char *const names[] = { %s };" % ', '.join('"%s"' % e for e in enum))
+            G.out.append("static const int values[] = { %s };" % ', '.join("%s_%s" % (cvar, e) for e in enum))
+            G.out.append("int idx;")
+            G.out.append("mpi_errno = MPII_Csel_json_get_enum(p, names, %d, &idx);" % len(enum))
+            G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+            G.out.append("%s = values[idx];" % field)
+        else:
+            raise Exception("%s: parameter type %s is not supported" % (cvar, cvar_type))
 
     def dump_parse_params():
         dump_open("switch (cnt->id) {")
@@ -305,42 +329,57 @@ def dump_MPII_Csel_parse_container():
             if 'extra_params' in algo:
                 struct_name = algo_struct_name(algo)
                 extra_params = algo['extra_params'].replace(' ', '').split(',')
+                cvar_params = algo['cvar_params'].replace(' ', '').split(',')
+                params = []
+                for i, a in enumerate(extra_params):
+                    # skip constant parameters
+                    if not re.match(r'\w+=(.+)', a):
+                        params.append((a, get_algo_cvar_name(algo, cvar_params[i])))
+                if not params:
+                    continue
                 G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
                 dump_open('{') # scope num_params in the case
                 G.out.append("int num_params = 0;")
-                num_expect = 0
-                dump_json_foreach_open()
+                dump_open("MPII_CSEL_JSON_FOREACH(obj, p) {")
                 ifstr = "if"
-                for a in extra_params:
-                    if re.match(r'\w+=(.+)', a):
-                        # skip constant parameter
-                        continue
-                    else:
-                        num_expect += 1
-                        n = len(a) + 1
-                        atoi = "atoi"
-                        if a == "tree_type":
-                            atoi = "get_tree_type_from_string"
-                        G.out.append("%s (!strncmp(ckey, \"%s=\", %d)) {" % (ifstr, a, n))
-                        G.out.append("    cnt->u.%s.%s = %s(ckey + %d);" % (struct_name, a, atoi, n))
-                        G.out.append("    num_params++;")
-                        ifstr = "} else if"
-                G.out.append("}")
-                dump_json_foreach_close();
-                dump_open("if (num_params != %d) {" % num_expect)
-                G.out.append("printf(\"MPII_Csel_parse_container_params: algorithm %s expect %d parameters\\\n\");" % (struct_name, num_expect))
+                for (a, cvar) in params:
+                    dump_open("%s (strcmp(p->key, \"%s\") == 0) {" % (ifstr, a))
+                    dump_get_param(struct_name, a, cvar)
+                    G.out.append("DEDENT")
+                    ifstr = "} else if"
+                G.out.append("} else {")
+                G.out.append("INDENT")
+                G.out.append("mpi_errno = MPII_Csel_json_error(p, \"unknown parameter\");")
+                G.out.append("goto fn_fail;")
+                dump_close("}")
+                G.out.append("num_params++;")
+                dump_close("}")
+                dump_open("if (num_params != %d) {" % len(params))
+                G.out.append("mpi_errno = MPII_Csel_json_error(obj, \"missing parameters, expect %s\");" % ', '.join(a for (a, cvar) in params))
+                G.out.append("goto fn_fail;")
+                dump_close("}")
+                G.out.append("break;")
                 dump_close('}')
-                G.out.append("MPIR_Assert(num_params == %d);" % num_expect)
-                dump_close('}')
-                G.out.append("    break;")
         G.out.append("default:")
-        G.out.append("    break;")
+        G.out.append("INDENT")
+        dump_open("if (obj->u.child) {")
+        G.out.append("mpi_errno = MPII_Csel_json_error(obj->u.child, \"the algorithm takes no parameters\");")
+        G.out.append("goto fn_fail;")
+        dump_close("}")
+        G.out.append("break;")
+        G.out.append("DEDENT")
         dump_close('}') # switch
 
-    decl = "void MPII_Csel_parse_container_params(const MPII_Csel_json_s *obj, MPII_Csel_container_s *cnt)"
+    G.out.append("")
+    decl = "int MPII_Csel_parse_container_params(const MPII_Csel_json_s *obj, MPII_Csel_container_s *cnt)"
     G.out.append(decl)
     dump_open('{')
+    G.out.append("int mpi_errno = MPI_SUCCESS;")
+    G.out.append("")
+    G.out.append("/* the caller checks that obj is an object */")
+    G.out.append("MPIR_Assert(obj->type == MPII_CSEL_JSON_OBJECT);")
     dump_parse_params()
+    dump_fn_exit()
     dump_close('}')
 
 def dump_MPII_Csel_run_condition():
@@ -484,16 +523,13 @@ def dump_MPIR_Coll_init_algo_container():
             struct_name = algo_struct_name(algo)
             extra_params = algo['extra_params'].replace(' ', '').split(',')
             cvar_params = algo['cvar_params'].replace(' ', '').split(',')
-            coll_name = algo['func-commkind'].split('-')[0]
             G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
             for i, a in enumerate(extra_params):
                 if re.match(r'\w+=(.+)', a):
                     # skip constant parameter
                     continue
                 else:
-                    cvar_param = "MPIR_CVAR_%s_%s" % (coll_name.upper(), cvar_params[i])
-                    if cvar_params[i] == "THROTTLE":
-                        cvar_param = "MPIR_CVAR_ALLTOALL_THROTTLE"
+                    cvar_param = get_algo_cvar_name(algo, cvar_params[i])
                     G.out.append("    cnt->u.%s.%s = %s;" % (struct_name, a, cvar_param))
             G.out.append("    break;")
     G.out.append("default:")
@@ -615,6 +651,37 @@ def dump_conditional_conditions(out):
 
 def add_prototype(l):
     G.prototypes.append(l)
+
+def load_cvars(top_dir):
+    """Load the type, and the names of an enum, of each CVAR declared in the
+    files under top_dir."""
+    G.cvars = {}
+    for (root, dirs, files) in os.walk(top_dir):
+        for f in sorted(files):
+            if RE.match(r'.*\.(c|h|txt)$', f):
+                load_cvar_file(os.path.join(root, f))
+
+def load_cvar_file(path):
+    with open(path) as In:
+        (cvar, in_description) = (None, False)
+        for line in In:
+            if RE.match(r'\s*- name\s*:\s*(MPIR_CVAR_\w+)', line):
+                cvar = {'type': None, 'enum': []}
+                G.cvars[RE.m.group(1)] = cvar
+                in_description = False
+            elif not cvar:
+                continue
+            elif not line.strip() or RE.match(r'.*END_MPI_T_CVAR_INFO_BLOCK', line):
+                # a blank line ends the declaration
+                (cvar, in_description) = (None, False)
+            elif RE.match(r'\s*description\s*:', line):
+                in_description = True
+            elif in_description:
+                # same as maint/extractcvars: a leading word followed with ' - '
+                if RE.match(r'\s*(\w+)\s+-\s', line):
+                    cvar['enum'].append(RE.m.group(1))
+            elif RE.match(r'\s*type\s*:\s*(\w+)', line):
+                cvar['type'] = RE.m.group(1)
 
 def load_coll_algos(algo_txt):
     G.algos = {}
@@ -797,6 +864,17 @@ def get_algo_extra_args(algo, kind):
                 raise Exception("Wrong kind!")
 
     return ', '.join(out_list)
+
+def get_algo_cvar_name(algo, cvar_param):
+    # the full name of a CVAR listed in cvar_params
+    if cvar_param == "THROTTLE":
+        name = "MPIR_CVAR_ALLTOALL_THROTTLE"
+    else:
+        coll_name = algo['func-commkind'].split('-')[0]
+        name = "MPIR_CVAR_%s_%s" % (coll_name.upper(), cvar_param)
+    if name not in G.cvars:
+        raise Exception("algorithm %s-%s: CVAR %s is not declared" % (algo['func-commkind'], algo['name'], name))
+    return name
 
 def get_algo_extra_params(algo):
     extra_params = algo['extra_params'].replace(' ', '').split(',')

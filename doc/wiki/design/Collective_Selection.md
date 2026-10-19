@@ -89,7 +89,8 @@ bcast-intra:
       Prefix with `!` to negate. Threshold conditions are not allowed here.
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
-      forced by CVAR. `name=value` fixes a constant, with `-` as its
+      forced by CVAR. The CVAR's type is also the parameter's type in the
+      JSON (see below). `name=value` fixes a constant, with `-` as its
       `cvar_params` placeholder.
     - `func_name`, `inline`, `macro_guard`: for device algorithms that are
       inline in device headers and exist only in some builds.
@@ -111,7 +112,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `comm_size(8)` | Canonical threshold form: `comm_size <= 8`. |
 | `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. |
 | `any` | Always true. Used as the last sibling. |
-| `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds extra parameters as keys, e.g. `{"k=2": {}}`. `tree_type=` takes a name such as `kary`. |
+| `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
 
 The file is a dictionary of named subtrees:
@@ -149,6 +150,22 @@ The file is a dictionary of named subtrees:
 - `call=` targets are resolved by name at search time, so a subtree replaced
   by the user file is the one used.
 
+An algorithm leaf lists every non-constant parameter in its `extra_params`
+as `"name": value`, and nothing else. The value's type follows the type of the
+parameter's CVAR in `cvar_params`:
+
+| CVAR type | JSON value | Example |
+|---|---|---|
+| `int` | an integer | `"k": 4`, `"chunk_size": 8192` |
+| `boolean` | `true` or `false` | `"is_non_blocking": true` |
+| `enum` | one of the CVAR's value names, as a string | `"tree_type": "knomial_1"`, `"ccl": "nccl"` |
+
+```json
+"algorithm=MPIR_Bcast_intra_tree": { "tree_type": "kary", "k": 4, "is_non_blocking": false }
+```
+
+A missing, unknown, or mistyped parameter is an error.
+
 The tree does not check algorithm restrictions. A tree must pick only
 algorithms whose restrictions hold on that branch, for example by guarding
 `MPIR_Allreduce_intra_reduce_scatter_allgather` with `builtin_op` and
@@ -157,12 +174,14 @@ algorithms whose restrictions hold on that branch, for example by guarding
 The files are read by a small built-in parser (`csel_json.c`) that accepts
 only the JSON subset the tree needs:
 
-- The top level is an object, and every value is an object or a string.
-  Numbers, arrays, `true`, `false`, and `null` are rejected.
+- The top level is an object, and every value is an object, a string, an
+  integer (fits in an `int`), `true`, or `false`. Floats, arrays, and `null`
+  are rejected.
 - Strings are printable ASCII without escape sequences. Spaces inside a string
   are dropped, so `"comm_size < 8"` is read as `comm_size<8`.
 - Keys within an object must be unique. Objects nest at most 64 levels.
-- A syntax error stops `MPI_Init` with the line and column of the error.
+- A syntax error, or a bad algorithm parameter, stops `MPI_Init` with the
+  line and column of the error.
 
 ## Runtime selection
 

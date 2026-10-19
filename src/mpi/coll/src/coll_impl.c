@@ -126,37 +126,6 @@ int *MPIR_Coll_algo_counters;
                             (int) cvar##_topology_aware_k == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K && \
                             (int) cvar##_topology_wave == MPIR_TREE_TYPE_TOPOLOGY_WAVE)
 
-/* Returns the tree type named tree_str, or -1 if the name is unknown */
-int get_tree_type_from_string(const char *tree_str)
-{
-    if (0 == strcmp(tree_str, "kary"))
-        return MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(tree_str, "knomial_1"))
-        return MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(tree_str, "knomial_2"))
-        return MPIR_TREE_TYPE_KNOMIAL_2;
-    else if (0 == strcmp(tree_str, "topology_aware"))
-        return MPIR_TREE_TYPE_TOPOLOGY_AWARE;
-    else if (0 == strcmp(tree_str, "topology_aware_k"))
-        return MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
-    else if (0 == strcmp(tree_str, "topology_wave"))
-        return MPIR_TREE_TYPE_TOPOLOGY_WAVE;
-    else
-        return -1;
-}
-
-int get_ccl_from_string(const char *ccl_str)
-{
-    int ccl = -1;
-    if (0 == strcmp(ccl_str, "auto"))
-        ccl = MPIR_CVAR_ALLREDUCE_CCL_auto;
-    else if (0 == strcmp(ccl_str, "nccl"))
-        ccl = MPIR_CVAR_ALLREDUCE_CCL_nccl;
-    else if (0 == strcmp(ccl_str, "rccl"))
-        ccl = MPIR_CVAR_ALLREDUCE_CCL_rccl;
-    return ccl;
-}
-
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

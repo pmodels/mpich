@@ -30,9 +30,6 @@ extern int MPIR_Nbc_progress_hook_id;
 extern MPIR_Csel_node_s *MPIR_Csel_selection;
 extern char MPII_coll_selection_json[];
 
-int get_tree_type_from_string(const char *tree_str);
-int get_ccl_from_string(const char *ccl_str);
-
 /* Function to initialize communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm);
 

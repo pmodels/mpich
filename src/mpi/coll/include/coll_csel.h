@@ -43,7 +43,7 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
 int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
-void MPII_Csel_parse_container_params(const MPII_Csel_json_s * obj, MPII_Csel_container_s * cnt);
+int MPII_Csel_parse_container_params(const MPII_Csel_json_s * obj, MPII_Csel_container_s * cnt);
 int MPII_Csel_parse_operator(const char *ckey, MPIR_Csel_node_s * node);
 MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s * node, MPIR_Csel_coll_sig_s * coll_sig);
 

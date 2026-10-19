@@ -369,7 +369,7 @@
             "any":
             {
                 "algorithm=MPIR_Barrier_intra_k_dissemination":{
-                    "k=2": {}
+                    "k": 2
                 }
             }
     },

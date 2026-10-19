@@ -45,25 +45,23 @@ static bool key_is_any(const char *ckey)
     }
 }
 
-static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
+static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
 {
-    if (obj->type == MPII_CSEL_JSON_STRING) {
-        const char *ckey = obj->u.str;
+    int mpi_errno = MPI_SUCCESS;
+
+    if (obj->type != MPII_CSEL_JSON_OBJECT) {
+        if (obj->type != MPII_CSEL_JSON_STRING || strncmp(obj->u.str, "call=", 5) != 0) {
+            return MPII_Csel_json_error(obj, "expect an object or a \"call=\" string");
+        }
 
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
-
-        if (!strncmp(ckey, "call=", 5)) {
-            tmp->type = CSEL_NODE_TYPE__OPERATOR__CALL;
-            tmp->u.call.idx = csel_name_to_idx(ckey + 5);
-            MPIR_Assert(tmp->u.call.idx >= 0);
-            return tmp;
-        } else {
-            MPIR_Assert(0);
-            return NULL;
-        }
+        tmp->type = CSEL_NODE_TYPE__OPERATOR__CALL;
+        tmp->u.call.idx = csel_name_to_idx(obj->u.str + 5);
+        MPIR_Assert(tmp->u.call.idx >= 0);
+        *node_out = tmp;
+        return MPI_SUCCESS;
     }
-    MPIR_Assert(obj->type == MPII_CSEL_JSON_OBJECT);
 
     MPIR_Csel_node_s *prevnode = NULL, *node = NULL;
 
@@ -77,6 +75,9 @@ static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
             const char *s = ckey + strlen("algorithm=");
 
             MPII_Csel_container_s *cnt = MPL_calloc(sizeof(MPII_Csel_container_s), 1, MPL_MEM_COLL);
+            tmp->type = CSEL_NODE_TYPE__CONTAINER;
+            tmp->u.container = cnt;
+
             cnt->id = MPIR_CSEL_NUM_ALGORITHMS;
             for (int i = 0; i < MPIR_CSEL_NUM_ALGORITHMS; i++) {
                 if (!strcmp(s, MPIR_Coll_algo_names[i])) {
@@ -86,15 +87,26 @@ static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
             }
             /* TODO: process error */
             MPIR_Assert(cnt->id != MPIR_CSEL_NUM_ALGORITHMS);
-            MPII_Csel_parse_container_params(val, cnt);
+            if (val->type != MPII_CSEL_JSON_OBJECT) {
+                mpi_errno = MPII_Csel_json_error(val, "expect an object of parameters");
+            } else {
+                mpi_errno = MPII_Csel_parse_container_params(val, cnt);
+            }
+            if (mpi_errno) {
+                free_tree(tmp);
+                goto fn_fail;
+            }
 
-            tmp->type = CSEL_NODE_TYPE__CONTAINER;
-            tmp->u.container = cnt;
-            return tmp;
+            node = tmp;
+            goto fn_exit;
         }
 
         /* this node must be an operator type */
-        tmp->success = parse_json_tree(val);
+        mpi_errno = parse_json_tree(val, &tmp->success);
+        if (mpi_errno) {
+            MPL_free(tmp);
+            goto fn_fail;
+        }
         tmp->failure = NULL;
 
         if (node == NULL)
@@ -118,7 +130,7 @@ static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
         } else if (key_is_any(ckey)) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
         } else {
-            int mpi_errno = MPII_Csel_parse_operator(ckey, tmp);
+            mpi_errno = MPII_Csel_parse_operator(ckey, tmp);
             if (mpi_errno != MPI_SUCCESS) {
                 printf("parse_json_tree: unknown key %s\n", ckey);
                 MPIR_Assert(0);
@@ -126,7 +138,15 @@ static MPIR_Csel_node_s *parse_json_tree(const MPII_Csel_json_s * obj)
         }
     }
 
-    return node;
+  fn_exit:
+    *node_out = node;
+    return mpi_errno;
+  fn_fail:
+    if (node) {
+        free_tree(node);
+    }
+    node = NULL;
+    goto fn_exit;
 }
 
 /* parse the json_object assuming it is a list of "name=xxx": subtree.
@@ -410,10 +430,20 @@ static int parse_named_trees(void)
     for (p = (struct csel_subtree *) utarray_front(csel_subtrees); p;
          p = (struct csel_subtree *) utarray_next(csel_subtrees, p)) {
         if (!p->node && p->json_obj) {
-            p->node = parse_json_tree(p->json_obj);
-            MPIR_Assert(p->node);
+            mpi_errno = parse_json_tree(p->json_obj, &p->node);
             p->json_obj = NULL;
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Assert(p->node);
         }
     }
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    /* the JSON tree is freed after loading, so drop the remaining references */
+    for (p = (struct csel_subtree *) utarray_front(csel_subtrees); p;
+         p = (struct csel_subtree *) utarray_next(csel_subtrees, p)) {
+        p->json_obj = NULL;
+    }
+    goto fn_exit;
 }
