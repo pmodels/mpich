@@ -153,6 +153,10 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
         return MPI_SUCCESS;
     }
 
+    if (obj->u.child == NULL) {
+        return MPII_Csel_json_error(obj, "expect a condition or an \"algorithm=\" key");
+    }
+
     MPIR_Csel_node_s *prevnode = NULL, *node = NULL;
 
     MPII_CSEL_JSON_FOREACH(obj, val) {
