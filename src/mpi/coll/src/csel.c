@@ -164,6 +164,14 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
         if (!strncmp(ckey, "algorithm=", strlen("algorithm="))) {
             const char *s = ckey + strlen("algorithm=");
 
+            /* an algorithm is a leaf, so it cannot have siblings */
+            if (val != obj->u.child || val->next) {
+                MPL_free(tmp);
+                mpi_errno = MPII_Csel_json_error(val, "an \"algorithm=\" key must be the only key "
+                                                 "in its object");
+                goto fn_fail;
+            }
+
             MPII_Csel_container_s *cnt = MPL_calloc(sizeof(MPII_Csel_container_s), 1, MPL_MEM_COLL);
             tmp->type = CSEL_NODE_TYPE__CONTAINER;
             tmp->u.container = cnt;
@@ -276,6 +284,9 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         } else if (is_name != has_names) {
             return MPII_Csel_json_error(val, has_names ? "expect a \"name=\" key" :
                                         "\"name=\" keys must not mix with other keys");
+        }
+        if (is_name && strlen(val->key + 5) >= CSEL_MAX_NAME) {
+            return MPII_Csel_json_error(val, "subtree name is too long");
         }
     }
 
@@ -498,7 +509,7 @@ static void add_named_tree(const char *name, const MPII_Csel_json_s * obj)
     /* map the name to idx */
     struct csel_subtree_hash_item *h;
     h = MPL_malloc(sizeof(*h), MPL_MEM_OTHER);
-    strncpy(h->name, name, CSEL_MAX_NAME - 1);
+    MPL_strncpy(h->name, name, CSEL_MAX_NAME);
     h->idx = utarray_len(csel_subtrees) - 1;
     HASH_ADD_STR(csel_subtree_hash, name, h, MPL_MEM_COLL);
 
