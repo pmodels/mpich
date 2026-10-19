@@ -6,6 +6,8 @@
 #include "mpiimpl.h"
 #include "mpl.h"
 #include "coll_csel.h"
+#include <errno.h>
+#include <limits.h>
 
 #include "uthash.h"
 #include "utarray.h"
@@ -47,29 +49,56 @@ static bool key_is_any(const char *ckey)
 
 /* Parse the threshold that follows a condition name. "(N)" means the value is
  * at most N. The others are aliases: cond<=N is cond(N), cond<N is cond(N-1),
- * cond>N is !cond(N), and cond>=N is !cond(N-1). */
-static void parse_thresh(const char *s, MPIR_Csel_node_s * node)
+ * cond>N is !cond(N), and cond>=N is !cond(N-1). Return false if the threshold
+ * is malformed or does not fit in an int. */
+static bool parse_thresh(const char *s, MPIR_Csel_node_s * node)
 {
+    bool paren = false;
+    int adjust = 0;
     if (s[0] == '(') {
-        node->u.condition.thresh = atoi(s + 1);
+        paren = true;
+        s += 1;
     } else if (s[0] == '<' && s[1] == '=') {
-        node->u.condition.thresh = atoi(s + 2);
+        s += 2;
     } else if (s[0] == '<') {
-        node->u.condition.thresh = atoi(s + 1) - 1;
+        adjust = -1;
+        s += 1;
     } else if (s[0] == '>' && s[1] == '=') {
-        node->u.condition.thresh = atoi(s + 2) - 1;
+        adjust = -1;
         node->u.condition.negate = true;
+        s += 2;
     } else if (s[0] == '>') {
-        node->u.condition.thresh = atoi(s + 1);
         node->u.condition.negate = true;
+        s += 1;
     } else {
-        MPIR_Assert(0);
+        return false;
     }
+
+    char *end;
+    errno = 0;
+    long long val = strtoll(s, &end, 10);
+    if (end == s || errno == ERANGE) {
+        return false;
+    }
+    if (paren) {
+        if (*end != ')') {
+            return false;
+        }
+        end++;
+    }
+    val += adjust;
+    if (*end != '\0' || val < INT_MIN || val > INT_MAX) {
+        return false;
+    }
+
+    node->u.condition.thresh = (int) val;
+    return true;
 }
 
 /* parse a condition key, e.g. "pof2", "!pof2", or "comm_size<8", into node */
-static int parse_condition(const char *ckey, MPIR_Csel_node_s * node)
+static int parse_condition(const MPII_Csel_json_s * obj, MPIR_Csel_node_s * node)
 {
+    const char *ckey = obj->key;
     if (ckey[0] == '!') {
         node->u.condition.negate = true;
         ckey++;
@@ -83,7 +112,14 @@ static int parse_condition(const char *ckey, MPIR_Csel_node_s * node)
             int n = strlen(name);
             if (strncmp(ckey, name, n) == 0) {
                 node->type = i;
-                parse_thresh(ckey + n, node);
+                /* "!cond<N" is ambiguous to read, so "!" only goes with "(N)" */
+                if (node->u.condition.negate && (ckey[n] == '<' || ckey[n] == '>')) {
+                    return MPII_Csel_json_error(obj, "'!' cannot be used with <, <=, >, or >=");
+                }
+                if (!parse_thresh(ckey + n, node)) {
+                    return MPII_Csel_json_error(obj,
+                                                "bad threshold, expect (N), <N, <=N, >N, or >=N");
+                }
                 return MPI_SUCCESS;
             }
         } else if (strcmp(ckey, name) == 0) {
@@ -92,8 +128,7 @@ static int parse_condition(const char *ckey, MPIR_Csel_node_s * node)
         }
     }
 
-    MPIR_Assert(0);
-    return MPI_ERR_OTHER;
+    return MPII_Csel_json_error(obj, "unknown condition");
 }
 
 static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
@@ -105,11 +140,15 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
             return MPII_Csel_json_error(obj, "expect an object or a \"call=\" string");
         }
 
+        int idx = csel_name_to_idx(obj->u.str + 5);
+        if (idx < 0) {
+            return MPII_Csel_json_error(obj, "unknown subtree name");
+        }
+
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
         tmp->type = CSEL_NODE_TYPE__OPERATOR__CALL;
-        tmp->u.call.idx = csel_name_to_idx(obj->u.str + 5);
-        MPIR_Assert(tmp->u.call.idx >= 0);
+        tmp->u.call.idx = idx;
         *node_out = tmp;
         return MPI_SUCCESS;
     }
@@ -136,9 +175,9 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
                     break;
                 }
             }
-            /* TODO: process error */
-            MPIR_Assert(cnt->id != MPIR_CSEL_NUM_ALGORITHMS);
-            if (val->type != MPII_CSEL_JSON_OBJECT) {
+            if (cnt->id == MPIR_CSEL_NUM_ALGORITHMS) {
+                mpi_errno = MPII_Csel_json_error(val, "unknown algorithm");
+            } else if (val->type != MPII_CSEL_JSON_OBJECT) {
                 mpi_errno = MPII_Csel_json_error(val, "expect an object of parameters");
             } else {
                 mpi_errno = MPII_Csel_parse_container_params(val, cnt);
@@ -177,14 +216,16 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
                     break;
                 }
             }
-            MPIR_Assertp(flag);
+            if (!flag) {
+                mpi_errno = MPII_Csel_json_error(val, "unknown collective");
+                goto fn_fail;
+            }
         } else if (key_is_any(ckey)) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
         } else {
-            mpi_errno = parse_condition(ckey, tmp);
+            mpi_errno = parse_condition(val, tmp);
             if (mpi_errno != MPI_SUCCESS) {
-                printf("parse_json_tree: unknown key %s\n", ckey);
-                MPIR_Assert(0);
+                goto fn_fail;
             }
         }
     }
@@ -226,10 +267,20 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         utarray_new(csel_subtrees, &csel_subtree_icd, MPL_MEM_COLL);
     }
 
-    int num_names = 0;
-    bool unexpected = false;
+    /* the keys are either all "name=", or none is and the whole tree is "name=main" */
+    bool has_names = false;
     MPII_CSEL_JSON_FOREACH(obj, val) {
-        if (strncmp(val->key, "name=", 5) == 0) {
+        bool is_name = (strncmp(val->key, "name=", 5) == 0);
+        if (val == obj->u.child) {
+            has_names = is_name;
+        } else if (is_name != has_names) {
+            return MPII_Csel_json_error(val, has_names ? "expect a \"name=\" key" :
+                                        "\"name=\" keys must not mix with other keys");
+        }
+    }
+
+    if (has_names) {
+        MPII_CSEL_JSON_FOREACH(obj, val) {
             const char *name = val->key + 5;
 
             int idx = csel_name_to_idx(name);
@@ -238,15 +289,8 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
             } else {
                 add_named_tree(name, val);
             }
-            num_names++;
-        } else {
-            unexpected = true;
-            break;
         }
-    }
-    if (unexpected) {
-        MPIR_Assert(num_names == 0);
-        /* pass the whole tree as "name=main" */
+    } else {
         add_named_tree("main", obj);
     }
 

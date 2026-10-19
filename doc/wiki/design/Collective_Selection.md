@@ -110,7 +110,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `collective=bcast-intra` | Matches the `coll_type` (names from `MPIR_Coll_type_names`). |
 | `pof2`, `!pof2` | Boolean condition, optionally negated. |
 | `comm_size(8)` | Canonical threshold form: `comm_size <= 8`. |
-| `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. |
+| `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. A leading `!` is an error with these; write `!comm_size(8)` or flip the comparison. |
 | `any` | Always true. Used as the last sibling. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
@@ -180,7 +180,8 @@ only the JSON subset the tree needs:
 - Strings are printable ASCII without escape sequences. Spaces inside a string
   are dropped, so `"comm_size < 8"` is read as `comm_size<8`.
 - Keys within an object must be unique. Objects nest at most 64 levels.
-- A syntax error, or a bad algorithm parameter, stops `MPI_Init` with the
+- A syntax error, an unknown subtree, collective, algorithm, or condition, a
+  malformed threshold, or a bad algorithm parameter stops `MPI_Init` with the
   line and column of the error.
 
 ## Runtime selection
