@@ -95,9 +95,9 @@ int MPIDI_XPMEM_comm_bootstrap(MPIR_Comm * comm)
         xpmem_segid_t *all_segids;
         MPIR_CHKLMEM_MALLOC(all_segids, local_size * sizeof(xpmem_segid_t));
 
-        mpi_errno = MPIR_Allgather_impl(&MPIDI_XPMEMI_global.segid, sizeof(xpmem_segid_t),
-                                        MPIR_BYTE_INTERNAL, all_segids, sizeof(xpmem_segid_t),
-                                        MPIR_BYTE_INTERNAL, node_comm, MPIR_COLL_ATTR_SYNC);
+        mpi_errno = MPIR_Allgather_fallback(&MPIDI_XPMEMI_global.segid, sizeof(xpmem_segid_t),
+                                            MPIR_BYTE_INTERNAL, all_segids, sizeof(xpmem_segid_t),
+                                            MPIR_BYTE_INTERNAL, node_comm, MPIR_COLL_ATTR_SYNC);
         MPIR_ERR_CHECK(mpi_errno);
 
         int num_disabled = 0;
