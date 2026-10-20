@@ -40,8 +40,11 @@ static int read_config_files(const char *fname)
             force = true;
             *spot = '\0';
         }
-
+#ifdef _WIN32
+        if ((force || !getenv(key)) && _putenv_s(key, val)) {
+#else
         if (setenv(key, val, force)) {
+#endif
             fprintf(stderr, "Error setting %s from config file %s to %s\n", key, fname, val);
             goto err;
         }

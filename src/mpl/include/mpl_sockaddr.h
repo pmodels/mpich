@@ -6,7 +6,7 @@
 #ifndef MPL_SOCKADDR_H_INCLUDED
 #define MPL_SOCKADDR_H_INCLUDED
 
-#include <sys/socket.h>
+#include "mpl_sock.h"
 
 #define MPL_SOCKADDR_ANY 0
 #define MPL_SOCKADDR_LOOPBACK 1

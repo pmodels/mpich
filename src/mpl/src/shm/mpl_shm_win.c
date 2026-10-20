@@ -12,62 +12,74 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <winsock2.h>
 #include <windows.h>
 
+/* Returns MPL_SUCCESS on success, MPL_ERR_SHM_INTERN on error */
+int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd)
+{
+    HANDLE lhnd = MPLI_shm_lhnd_get(hnd);
+    if (lhnd == MPLI_SHM_LHND_INVALID)
+        return MPL_SUCCESS;
+    MPLI_shm_lhnd_set(hnd, MPLI_SHM_LHND_INVALID);
+    return CloseHandle(lhnd) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN;
+}
+
+/* Generate a name for a new mapping that is unique within the session */
+static int shm_ghnd_set_uniq(MPL_shm_hnd_t hnd)
+{
+    static volatile LONG counter = 0;
+    LARGE_INTEGER perf_cnt;
+    int rc;
+
+    rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
+    if (rc != MPL_SUCCESS)
+        return rc;
+    QueryPerformanceCounter(&perf_cnt);
+    snprintf(MPLI_shm_ghnd_get_by_ref(hnd), MPLI_SHM_GHND_SZ, "Local\\mpich_shm_%lu_%ld_%lld",
+             (unsigned long) GetCurrentProcessId(), (long) InterlockedIncrement(&counter),
+             (long long) perf_cnt.QuadPart);
+    return MPL_SUCCESS;
+}
+
 /* A template function which creates/attaches shm seg handle
  * to the shared memory. Used by user-exposed functions below
  */
-static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                                  void **shm_addr_ptr, int offset, int flag)
+static int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                           void **shm_addr_ptr, int offset, int flag)
 {
-    HANDLE lhnd = INVALID_HANDLE_VALUE;
-    int rc = MPL_SUCCESS;
+    HANDLE lhnd;
     ULARGE_INTEGER seg_sz_large;
+    int rc = MPL_SUCCESS;
+
     seg_sz_large.QuadPart = seg_sz;
 
-    if (!MPLI_shm_ghnd_is_valid(hnd)) {
-        rc = MPLI_shm_ghnd_set_uniq(hnd);
-        if (rc) {
-            goto fn_exit;
-        }
-    }
-
     if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
-        lhnd = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
-                                 PAGE_READWRITE, seg_sz_large.HighPart, seg_sz_large.LowPart,
-                                 MPLI_shm_ghnd_get_by_ref(hnd));
+        rc = shm_ghnd_set_uniq(hnd);
+        if (rc != MPL_SUCCESS)
+            goto fn_exit;
+        lhnd = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                  seg_sz_large.HighPart, seg_sz_large.LowPart,
+                                  MPLI_shm_ghnd_get_by_ref(hnd));
         if (lhnd == NULL) {
             rc = MPL_ERR_SHM_INTERN;
             goto fn_exit;
         }
         MPLI_shm_lhnd_set(hnd, lhnd);
-    } else {
-        if (!MPLI_shm_lhnd_is_valid(hnd)) {
-            /* Strangely OpenFileMapping() returns NULL on error! */
-            lhnd = OpenFileMapping(FILE_MAP_WRITE, FALSE, MPLI_shm_ghnd_get_by_ref(hnd));
-            if (lhnd == NULL) {
-                rc = MPL_ERR_SHM_INTERN;
-                goto fn_exit;
-            }
-
-            MPLI_shm_lhnd_set(hnd, lhnd);
+    } else if (!MPLI_shm_lhnd_is_valid(hnd)) {
+        lhnd = OpenFileMappingA(FILE_MAP_WRITE, FALSE, MPLI_shm_ghnd_get_by_ref(hnd));
+        if (lhnd == NULL) {
+            rc = MPL_ERR_SHM_INTERN;
+            goto fn_exit;
         }
+        MPLI_shm_lhnd_set(hnd, lhnd);
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
-        if (flag & MPLI_SHM_FLAG_FIXED_ADDR) {
-            void *start_addr = (void *) *shm_addr_ptr;
-            /* The start_addr must be a multiple of the system's memory allocation granularity,
-             * or the function fails. To determine the memory allocation granularity of the system,
-             * use the GetSystemInfo function. If there is not enough address space at the
-             * specified address, the function fails.
-             * If the function fails, the return value is NULL.*/
-            *shm_addr_ptr = MapViewOfFileEx(MPLI_shm_lhnd_get(hnd),
-                                            FILE_MAP_WRITE, 0, offset, 0, start_addr);
-        } else {
-            *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
-        }
-        if (*shm_addr_ptr == NULL) {
+        void *start_addr = (flag & MPLI_SHM_FLAG_FIXED_ADDR) ? *shm_addr_ptr : NULL;
+        /* For a fixed address, start_addr must be a multiple of the allocation
+         * granularity and the range must be free, otherwise this fails. */
+        *shm_addr_ptr = MapViewOfFileEx(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset,
+                                        seg_sz, start_addr);
+        if (*shm_addr_ptr == NULL)
             rc = MPL_ERR_SHM_INVAL;
-        }
     }
 
   fn_exit:
@@ -132,7 +144,7 @@ int MPL_shm_fixed_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
 {
     return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
                                            MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH |
-                                           MPLI_SHM_FLAG_FIXED_ADDR, MPL_MEM_SHM);
+                                           MPLI_SHM_FLAG_FIXED_ADDR);
 }
 
 /* Attach to an existing SHM segment with specified starting address
@@ -149,11 +161,9 @@ int MPL_shm_fixed_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr
 }
 
 /* Detach from an attached SHM segment */
-static inline int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
+int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 {
-    int rc = -1;
-
-    rc = UnmapViewOfFile(*shm_addr_ptr);
+    int rc = UnmapViewOfFile(*shm_addr_ptr);
     *shm_addr_ptr = NULL;
 
     /* If the function succeeds, the return value is nonzero,
@@ -161,5 +171,10 @@ static inline int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, int
     return (rc != 0) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN;
 }
 
+/* Nothing to remove: the mapping goes away with its last handle and view */
+int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
+{
+    return MPL_SUCCESS;
+}
 
 #endif /* MPL_USE_NT_SHM */

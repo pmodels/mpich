@@ -93,7 +93,10 @@ AC_CHECK_FUNCS(inet_pton)
 AC_CHECK_FUNCS(gethostname)
 if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
-    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#endif],gethostname)
 fi
 
 AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)

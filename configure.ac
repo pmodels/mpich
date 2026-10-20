@@ -776,6 +776,22 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 # TARGET not needed, MPICH isn't a compiler
 
+# Native Windows (MinGW-w64): sockets come from Winsock, interface
+# enumeration from the IP Helper API.
+case "$host_os" in
+    mingw*)
+        PAC_APPEND_FLAG([-lws2_32 -liphlpapi], [LIBS])
+        PAC_APPEND_FLAG([-lws2_32 -liphlpapi], [WRAPPER_LIBS])
+        # libtool only builds DLLs when told every symbol is resolved
+        PAC_APPEND_FLAG([-no-undefined], [ABIVERSIONFLAGS])
+        PAC_APPEND_FLAG([-no-undefined], [ABI_ABIVERSIONFLAGS])
+        # Depending on the binutils version, "#pragma weak" may compile and
+        # link, but weak aliases are not exported from a DLL, so MPI_* would
+        # be missing.  Build the separate profiling library instead.
+        enable_weak_symbols=no
+        ;;
+esac
+
 # Enable better caching control
 PAC_ARG_CACHING
 
@@ -1462,7 +1478,10 @@ if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
    if test ! -z "$MPID_DEFAULT_PM" ; then
       with_pm=${MPID_DEFAULT_PM}
    else
-      with_pm=hydra
+      case "$host_os" in
+          mingw*) with_pm=winexec ;;
+          *)      with_pm=hydra ;;
+      esac
    fi
 fi
 
@@ -1484,6 +1503,14 @@ for pm_name in $pm_names ; do
     case "$pm_name" in
       gforker)
         build_gforker=yes
+        if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
+            with_pmi=pmi1
+        else
+            AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
+        fi
+        ;;
+      winexec)
+        build_winexec=yes
         if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
             with_pmi=pmi1
         else
@@ -1538,6 +1565,7 @@ dnl gforker and remshell does not use separate configure.
 dnl
 AM_CONDITIONAL([BUILD_PM_GFORKER],[test "X$build_gforker" = "Xyes"])
 AM_CONDITIONAL([BUILD_PM_REMSHELL],[test "X$build_refshell" = "Xyes"])
+AM_CONDITIONAL([BUILD_PM_WINEXEC],[test "X$build_winexec" = "Xyes"])
 AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
 AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
@@ -2966,6 +2994,10 @@ AC_SUBST(LMPICXXLIBNAME)
 
 # with MPI_AINT defined, now we can
 # Get the size for the bsendoverhead
+# (pass the directory via -I rather than an absolute #include path, which
+# a native Windows compiler cannot resolve when configure runs under MSYS)
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_APPEND_FLAG([-I${main_top_srcdir}/src/include], [CPPFLAGS])
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
 #define MPI_Datatype int
 typedef $MPI_AINT MPI_Aint;
@@ -2983,8 +3015,9 @@ typedef struct MPIR_Comm MPIR_Comm;
 #include <stdint.h>
 #endif
 
-#include "${main_top_srcdir}/src/include/mpir_bsend.h"]
+#include "mpir_bsend.h"]
 )
+PAC_POP_FLAG([CPPFLAGS])
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
     # In the past, a default of 128 was used (still likely good enough),

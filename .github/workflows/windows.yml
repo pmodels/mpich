@@ -1,0 +1,111 @@
+name: windows
+
+# Native Windows build (MSYS2/MinGW-w64 UCRT64, ch3:sock, winexec) and a
+# subset of test/mpi on a single node.
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - "main"
+      - "[0-9]+.[0-9]+.x"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      TESTDIRS: basic,init,group,pt2pt,comm,coll
+    steps:
+
+    # autotools and shell scripts need LF line endings; .gitattributes has
+    # "text=auto", which checks out CRLF on Windows by default
+    - name: Use LF line endings
+      shell: bash
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+
+    - uses: actions/checkout@v6
+      with:
+        submodules: false
+
+    - name: Checkout required submodules
+      shell: bash
+      run: git submodule update --init modules/mydef_boot
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          autotools
+          make
+          patch
+          perl
+          git
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-python
+
+    - name: Autogen
+      run: ./autogen.sh -without-ucx -without-ofi -without-hwloc
+
+    - name: Configure
+      run: |
+        mkdir build && cd build
+        ../configure --prefix="$PWD/../install" \
+            --with-device=ch3:sock --with-pm=winexec --without-hwloc \
+            --disable-fortran --disable-cxx --disable-romio --disable-doc \
+            --enable-shared --disable-static
+
+    - name: Build
+      run: |
+        cd build
+        make -j"$(nproc)"
+        make install
+
+    - name: Build tests
+      run: |
+        export PATH="$PWD/install/bin:$PATH"
+        mkdir build-test && cd build-test
+        ../test/mpi/configure --with-mpi="$PWD/../install" \
+            --disable-fortran --disable-cxx --disable-romio --disable-ft-tests --disable-spawn
+        make -C util
+        for d in ${TESTDIRS//,/ }; do make -j"$(nproc)" -C "$d"; done
+        cp ../test/mpi/coll/coords-*.txt coll/
+
+    - name: Run tests
+      run: |
+        export PATH="$PWD/install/bin:$PATH"
+        export MPITEST_RUN_INDIVIDUAL=1
+        cd build-test
+        ../test/mpi/runtests -srcdir=../test/mpi -tests=testlist -testdirs="$TESTDIRS" \
+            -mpiexec="$PWD/../install/bin/mpiexec.exe" -junitfile=summary.junit.xml | tee runtests.log
+        # runtests exits with 0 even when tests fail
+        if ! grep -qE "All [0-9]+ tests passed" runtests.log; then
+            grep -E "tests failed out of" runtests.log
+            exit 1
+        fi
+
+    - uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: test-results
+        path: |
+          build-test/summary.junit.xml
+          build-test/runtests.log
+          build/config.log
+        if-no-files-found: ignore
