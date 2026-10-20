@@ -54,7 +54,7 @@ static int read_config_files(const char *fname)
 
 static inline void MPIR_T_enum_env_init(void)
 {
-    static const UT_icd enum_table_entry_icd = { sizeof(MPIR_T_enum_t), NULL, NULL, NULL };
+    static const UT_icd enum_table_entry_icd = { sizeof(MPIR_T_enum_t *), NULL, NULL, NULL };
 
     utarray_new(enum_table, &enum_table_entry_icd, MPL_MEM_MPIT);
 }

@@ -249,6 +249,7 @@ int ${fn_ns}_init(void)
     int mpi_errno = MPI_SUCCESS;
     int rc, got_rc;
     const char *tmp_str;
+    MPI_T_enum enum_handle;
     MPIR_T_cvar_value_t defaultval;
 
     int debug = 0;
@@ -287,15 +288,26 @@ foreach my $p (@cvars) {
         print OUTPUT_C "    $dftvar = $dftval;\n";
     }
 
+    # Create the MPI_T enum that names the values of an enum cvar
+    my $etype = "MPI_T_ENUM_NULL";
+    if ($p->{type} eq 'enum') {
+        print OUTPUT_C qq(    MPIR_T_enum_create("${uc_ns}_$p->{name}", &enum_handle);\n);
+        foreach my $a (@{$p->{enum}}) {
+            print OUTPUT_C qq(    MPIR_T_enum_add_item(enum_handle, "$a", ${uc_ns}_$p->{name}_$a);\n);
+        }
+        $etype = "enum_handle";
+    }
+
     # Register the cvar
     my $desc = $p->{description};
     $desc =~ s/"/\\"/g;
     $desc =~ s/\n/\\n"\n"/g;
-    printf OUTPUT_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
+    printf OUTPUT_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
         qq(        $mpi_dtype,),
         qq(        ${uc_ns}_$p->{name}, /* name */),
         qq(        &${uc_ns}_$p->{name}, /* address */),
         qq(        $count, /* count */),
+        qq(        $etype,),
         qq(        $p->{verbosity},),
         qq(        $p->{scope},),
         qq(        defaultval,),

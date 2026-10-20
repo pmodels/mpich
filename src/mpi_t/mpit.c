@@ -36,8 +36,10 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum * handle)
     MPIT_Assert(enum_name);
     MPIT_Assert(handle);
 
-    utarray_extend_back(enum_table, MPL_MEM_MPIT);
-    e = (MPIR_T_enum_t *) utarray_back(enum_table);
+    /* enum_table holds pointers, so a handle stays valid when the table grows */
+    e = MPL_malloc(sizeof(MPIR_T_enum_t), MPL_MEM_MPIT);
+    MPIT_Assert(e);
+    utarray_push_back(enum_table, &e, MPL_MEM_MPIT);
     e->name = MPL_strdup(enum_name);
     MPIT_Assert(e->name);
 #ifdef HAVE_ERROR_CHECKING
@@ -345,6 +347,7 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
             }
         }
         cvar->count = count;
+        cvar->enumtype = etype;
         cvar->verbosity = verb;
         cvar->bind = binding;
         cvar->scope = scope;

@@ -17,8 +17,9 @@ extern int cat_stamp;
 
 /* Tables to store enums, categories, cvars, pvars.
  * All tables need random access except enum_table. But we still implement
- * enum_table as an array, since it is handy and element size of
- * enum_table (i.e., sizeof(enum_item_t)) is small.
+ * enum_table as an array, since it is handy. It holds pointers to the enums,
+ * because an MPI_T_enum handle is the enum's address and must stay valid
+ * when the table grows.
  */
 extern UT_array *enum_table;
 extern UT_array *cat_table;
@@ -102,11 +103,11 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
  * and count are known at registration time.
  * Attention: name_ is a token not a string
 */
-#define MPIR_T_CVAR_REGISTER_STATIC(dtype_, name_, addr_, count_, verb_, \
+#define MPIR_T_CVAR_REGISTER_STATIC(dtype_, name_, addr_, count_, etype_, verb_, \
             scope_, default_, cat_, desc_) \
     do { \
         MPIR_Assert(count_ > 0); \
-        MPIR_T_CVAR_REGISTER_impl(dtype_, #name_, addr_, count_, MPI_T_ENUM_NULL, \
+        MPIR_T_CVAR_REGISTER_impl(dtype_, #name_, addr_, count_, etype_, \
             verb_, MPI_T_BIND_NO_OBJECT, scope_, NULL, NULL, default_, cat_, desc_); \
     } while (0)
 
