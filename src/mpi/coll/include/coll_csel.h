@@ -295,6 +295,8 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_op_is_commutative(MPIR_Csel_coll_sig_s *
             return MPIR_Op_is_commutative(coll_sig->u.reduce_scatter.op);
           COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
             return MPIR_Op_is_commutative(coll_sig->u.reduce_scatter_block.op);
+          COLL_TYPE_ALL_CASE(SCAN):
+            return MPIR_Op_is_commutative(coll_sig->u.scan.op);
         default:
             fprintf(stderr, "is_commutative not defined for coll_type %d\n", coll_sig->coll_type);
             MPIR_Assert(0);
