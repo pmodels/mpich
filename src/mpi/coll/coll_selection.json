@@ -74,7 +74,8 @@
         "collective=ineighbor_allgatherv-intra": "call=ineighbor_allgatherv-intra-auto",
         "collective=ineighbor_alltoall-intra": "call=ineighbor_alltoall-intra-auto",
         "collective=ineighbor_alltoallv-intra": "call=ineighbor_alltoallv-intra-auto",
-        "collective=ineighbor_alltoallw-intra": "call=ineighbor_alltoallw-intra-auto"
+        "collective=ineighbor_alltoallw-intra": "call=ineighbor_alltoallw-intra-auto",
+        "any": "error"
     },
     "name=bcast-intra-auto":
     {
@@ -133,7 +134,7 @@
                 {
                     "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
                 },
-                "builtin_op":
+                "any":
                 {
                     "!count_ge_pof2":
                     {
@@ -231,7 +232,7 @@
                         "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
                     }
                 },
-                "!builtin_op":
+                "any":
                 {
                     "algorithm=MPIR_Reduce_intra_binomial":{}
                 }
@@ -369,7 +370,7 @@
             "any":
             {
                 "algorithm=MPIR_Barrier_intra_k_dissemination":{
-                    "k=2": {}
+                    "k": 2
                 }
             }
     },
@@ -487,7 +488,7 @@
                 {
                     "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
                 },
-                "builtin_op":
+                "any":
                 {
                     "!count_ge_pof2":
                     {
@@ -621,7 +622,7 @@
                         "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
                     }
                 },
-                "!builtin_op":
+                "any":
                 {
                     "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
                 }

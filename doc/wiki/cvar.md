@@ -379,7 +379,7 @@ Used in functions: `MPIR_Allreduce_intra_tree`
 
 ### MPIR_CVAR_ALLREDUCE_TREE_TYPE
 
-Sets the tree type for tree-based Allreduce. It is initialized during collective setup and used when the tree Allreduce algorithm is selected, such as by forcing `MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM` to `tree` or by internal collective selection. The tree path also relies on the Allreduce tree k value, tree pipeline chunk size, and tree buffer-per-child CVARs; topology-aware tree choices also rely on the Allreduce topology CVARs for leader reordering and topology cost settings.
+Sets the tree type for tree-based Allreduce. It is used when the tree Allreduce algorithm is selected, such as by forcing `MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM` to `tree` or by internal collective selection. The tree path also relies on the Allreduce tree k value, tree pipeline chunk size, and tree buffer-per-child CVARs; topology-aware tree choices also rely on the Allreduce topology CVARs for leader reordering and topology cost settings.
 
 * kary - represents a k-ary tree.
 * knomial_1 - default, represents a knomial_1 tree and supports both commutative and non-commutative reduce operations.
@@ -388,7 +388,7 @@ Sets the tree type for tree-based Allreduce. It is initialized during collective
 * topology_aware_k - represents a topology-aware tree with branching factor k.
 * topology_wave - represents a topology-wave tree.
 
-Used in functions: `MPII_Coll_init`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
 
@@ -866,7 +866,7 @@ Used in functions: `MPIR_Bcast_intra_pipelined_tree`
 
 ### MPIR_CVAR_BCAST_TREE_TYPE
 
-Sets the tree type used by tree-based Bcast algorithms. It is read during collective initialization and stored as the global Bcast tree type. It is used when a tree-based Bcast path is selected, such as by forcing `MPIR_CVAR_BCAST_INTRA_ALGORITHM` to `tree` or `pipelined_tree`, or by internal collective/tuning selection. The tree construction also uses the Bcast tree k value, and topology-based tree types rely on the Bcast topology CVARs for reordering and topology cost parameters.
+Sets the tree type used by tree-based Bcast algorithms. It is used when a tree-based Bcast path is selected, such as by forcing `MPIR_CVAR_BCAST_INTRA_ALGORITHM` to `tree` or `pipelined_tree`, or by internal collective/tuning selection. The tree construction also uses the Bcast tree k value, and topology-based tree types rely on the Bcast topology CVARs for reordering and topology cost parameters.
 
 * kary - default, represents a k-ary tree type.
 * knomial_1 - represents a knomial tree type that grows starting from the left of the root.
@@ -875,7 +875,7 @@ Sets the tree type used by tree-based Bcast algorithms. It is read during collec
 * topology_aware_k - represents a topology-aware tree type with branching factor k.
 * topology_wave - represents a topology-wave tree type.
 
-Used in functions: `MPII_Coll_init`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
 
@@ -1379,13 +1379,13 @@ Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_TYPE
 
-Sets the tree type for the generic transport tree-based intra-communicator Iallreduce algorithm. It is initialized during collective initialization and is used when `MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM` forces `tsp_tree`; that path also uses the Iallreduce tree k value, pipeline chunk size, and buffer-per-child CVARs. The forced tree path is applied only for commutative operations or when the selected tree type permits non-commutative operations; otherwise it falls back to a recursive-exchange Iallreduce path. When automatic collective selection chooses the TSP tree Iallreduce path, the selected container may supply the tree type instead of this CVAR.
+Sets the tree type for the generic transport tree-based intra-communicator Iallreduce algorithm. It is used when `MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM` forces `tsp_tree`; that path also uses the Iallreduce tree k value, pipeline chunk size, and buffer-per-child CVARs. The forced tree path is applied only for commutative operations or when the selected tree type permits non-commutative operations; otherwise it falls back to a recursive-exchange Iallreduce path. When automatic collective selection chooses the TSP tree Iallreduce path, the selected container may supply the tree type instead of this CVAR.
 
 * kary - default, represents a k-ary tree type.
 * knomial_1 - represents a knomial_1 tree type.
 * knomial_2 - represents a knomial_2 tree type.
 
-Used in functions: `MPII_Coll_init`, `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE
 
@@ -1664,13 +1664,13 @@ Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
 
 ### MPIR_CVAR_IBCAST_TREE_TYPE
 
-Sets the tree type used by the generic transport tree-based intra-communicator Ibcast algorithm. It is read during collective initialization and stored as the global Ibcast tree type. It is used when `MPIR_CVAR_IBCAST_INTRA_ALGORITHM` forces `tsp_tree`, and may also be used when internal collective selection chooses the TSP tree Ibcast path. The tree schedule also uses `MPIR_CVAR_IBCAST_TREE_KVAL` for the tree k value and `MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE` for pipeline chunking.
+Sets the tree type used by the generic transport tree-based intra-communicator Ibcast algorithm. It is used when `MPIR_CVAR_IBCAST_INTRA_ALGORITHM` forces `tsp_tree`, and may also be used when internal collective selection chooses the TSP tree Ibcast path. The tree schedule also uses `MPIR_CVAR_IBCAST_TREE_KVAL` for the tree k value and `MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE` for pipeline chunking.
 
 * kary - default, represents a k-ary tree type.
 * knomial_1 - represents a knomial tree type.
 * knomial_2 - represents a knomial tree type.
 
-Used in functions: `MPII_Coll_init`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
 
@@ -2124,7 +2124,7 @@ Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
 
 ### MPIR_CVAR_IREDUCE_TREE_TYPE
 
-Sets the tree type for tree-based Ireduce. It is initialized during collective setup and used for generic transport tree-based Ireduce when `MPIR_CVAR_IREDUCE_INTRA_ALGORITHM` selects the tree path or when internal collective selection chooses that path. Topology-aware tree choices also rely on the Ireduce topology CVARs for leader reordering and topology cost settings.
+Sets the tree type for tree-based Ireduce. It is used for generic transport tree-based Ireduce when `MPIR_CVAR_IREDUCE_INTRA_ALGORITHM` selects the tree path or when internal collective selection chooses that path. Topology-aware tree choices also rely on the Ireduce topology CVARs for leader reordering and topology cost settings.
 
 * kary - default, represents a k-ary tree.
 * knomial_1 - represents a knomial_1 tree.
@@ -2133,7 +2133,7 @@ Sets the tree type for tree-based Ireduce. It is initialized during collective s
 * topology_aware_k - represents a topology-aware tree with branching factor k.
 * topology_wave - represents a topology-wave tree.
 
-Used in functions: `MPII_Coll_init`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
 

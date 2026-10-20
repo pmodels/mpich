@@ -207,16 +207,16 @@ cvars:
 
     - name        : MPIR_CVAR_BCAST_TREE_TYPE
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : kary
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Tree type for tree based bcast
         kary      - kary tree type
-        knomial_1 - knomial_1 tree type
-        knomial_2 - knomial_2 tree type
+        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
+        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
         topology_aware - topology_aware tree type
         topology_aware_k - topology_aware tree type with branching factor k
         topology_wave - topology_wave tree type
@@ -327,12 +327,12 @@ cvars:
 
     - name        : MPIR_CVAR_IBCAST_TREE_TYPE
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : kary
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Tree type for tree based ibcast
         kary      - kary tree type
         knomial_1 - knomial_1 tree type
@@ -414,19 +414,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_flat - Force flat algorithm
-
-    - name        : MPIR_CVAR_BCAST_TREE_TYPE
-      category    : COLLECTIVE
-      type        : string
-      default     : kary
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Tree type for tree based bcast
-        kary      - kary tree type
-        knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
-        knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
 
     - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -1215,12 +1202,12 @@ cvars:
 
     - name        : MPIR_CVAR_IREDUCE_TREE_TYPE
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : kary
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Tree type for tree based ireduce
         kary      - kary tree
         knomial_1 - knomial_1 tree
@@ -1392,12 +1379,12 @@ cvars:
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_TYPE
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : knomial_1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Tree type for tree based allreduce
         knomial_1 is default as it supports both commutative and non-commutative reduce operations
         kary      - kary tree type
@@ -1553,12 +1540,12 @@ cvars:
 
     - name        : MPIR_CVAR_IALLREDUCE_TREE_TYPE
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : kary
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Tree type for tree based ibcast
         kary      - kary tree type
         knomial_1 - knomial_1 tree type

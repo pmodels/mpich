@@ -14,16 +14,46 @@ template:
     /* ./t < input     - parse the input and print the tree as compact JSON
      * ./t -f file     - parse a file and print "ok"
      * ./t depth n     - parse n nested objects, {"a":{"a":...{}...}}, and print "ok"
-     * On a parse error, print the error message and return 1.
+     * ./t get T < input - get each top-level member as T (int, bool, or enum,
+     *                   with names "kary", "knomial_1", "knomial_2") and print
+     *                   the values
+     * On an error, print the error message and return 1.
      */
+
+    static int get_values(const MPII_Csel_json_s * root, const char *type)
+    {
+        static const char *const names[] = { "kary", "knomial_1", "knomial_2" };
+        MPII_CSEL_JSON_FOREACH(root, p) {
+            int mpi_errno, val = 0;
+            if (strcmp(type, "int") == 0) {
+                mpi_errno = MPII_Csel_json_get_int(p, &val);
+            } else if (strcmp(type, "bool") == 0) {
+                bool b = false;
+                mpi_errno = MPII_Csel_json_get_bool(p, &b);
+                val = b;
+            } else {
+                mpi_errno = MPII_Csel_json_get_enum(p, names, 3, &val);
+            }
+            if (mpi_errno) {
+                return mpi_errno;
+            }
+            printf("%s=%d ", p->key, val);
+        }
+        printf("\n");
+        return 0;
+    }
 
     static void print_object(const MPII_Csel_json_s * obj)
     {
         printf("{");
         MPII_CSEL_JSON_FOREACH(obj, p) {
             printf("\"%s\":", p->key);
-            if (p->str) {
-                printf("\"%s\"", p->str);
+            if (p->type == MPII_CSEL_JSON_STRING) {
+                printf("\"%s\"", p->u.str);
+            } else if (p->type == MPII_CSEL_JSON_INT) {
+                printf("%d", p->u.ival);
+            } else if (p->type == MPII_CSEL_JSON_BOOL) {
+                printf("%s", p->u.bval ? "true" : "false");
             } else {
                 print_object(p);
             }
@@ -68,9 +98,13 @@ template:
     {
         char *json_str;
         bool print_tree = false;
+        const char *get_type = NULL;
         if (argc == 1) {
             json_str = read_all(stdin);
             print_tree = true;
+        } else if (argc == 3 && strcmp(argv[1], "get") == 0) {
+            json_str = read_all(stdin);
+            get_type = argv[2];
         } else if (argc == 3 && strcmp(argv[1], "-f") == 0) {
             FILE *f = fopen(argv[2], "r");
             if (!f) {
@@ -82,7 +116,7 @@ template:
         } else if (argc == 3 && strcmp(argv[1], "depth") == 0) {
             json_str = make_nested(atoi(argv[2]));
         } else {
-            printf("usage: t [-f file | depth n] < input\n");
+            printf("usage: t [-f file | depth n | get type] < input\n");
             return 1;
         }
 
@@ -94,7 +128,14 @@ template:
             return 1;
         }
 
-        if (print_tree) {
+        if (get_type) {
+            mpi_errno = get_values(root, get_type);
+            if (mpi_errno) {
+                printf("error: %s\n", unit_last_error);
+                MPII_Csel_json_free(root);
+                return 1;
+            }
+        } else if (print_tree) {
             print_object(root);
             printf("\n");
         } else {
@@ -189,19 +230,74 @@ TESTS:
     cmd: printf '{"a": "1"' | ./t
     expect_err: **colljson 1 10 expect ',' or '}'
 
-    # values other than objects and strings
+    # integers and booleans
 
-    cmd: printf '{"a": 1}' | ./t
-    expect_err: **colljson 1 7 expect an object or a string
+    cmd: printf '{"a": 0, "b": 12, "c": -3, "d": true, "e": false}' | ./t
+    expect: {"a":0,"b":12,"c":-3,"d":true,"e":false}
 
-    cmd: printf '{"a": true}' | ./t
-    expect_err: **colljson 1 7 expect an object or a string
+    cmd: printf '{"a": 2147483647, "b": -2147483648}' | ./t
+    expect: {"a":2147483647,"b":-2147483648}
+
+    cmd: printf '{"a": 2147483648}' | ./t
+    expect_err: **colljson 1 7 integer out of range
+
+    cmd: printf '{"a": -2147483649}' | ./t
+    expect_err: **colljson 1 7 integer out of range
+
+    cmd: printf '{"a": 99999999999999999999}' | ./t
+    expect_err: **colljson 1 7 integer out of range
+
+    cmd: printf '{"a": 01}' | ./t
+    expect_err: **colljson 1 7 leading zeros are not allowed
+
+    cmd: printf '{"a": -}' | ./t
+    expect_err: **colljson 1 8 expect a digit
+
+    cmd: printf '{"a": 1.5}' | ./t
+    expect_err: **colljson 1 8 only integers are supported
+
+    cmd: printf '{"a": 1e3}' | ./t
+    expect_err: **colljson 1 8 only integers are supported
+
+    cmd: printf '{"a": 12x}' | ./t
+    expect_err: **colljson 1 9 expect ',' or '}'
+
+    cmd: printf '{"a": truex}' | ./t
+    expect_err: **colljson 1 11 expect ',' or '}'
+
+    # unsupported values
 
     cmd: printf '{"a": null}' | ./t
-    expect_err: **colljson 1 7 expect an object or a string
+    expect_err: **colljson 1 7 expect an object, a string, an integer, true, or false
 
     cmd: printf '{"a": ["1"]}' | ./t
-    expect_err: **colljson 1 7 expect an object or a string
+    expect_err: **colljson 1 7 expect an object, a string, an integer, true, or false
+
+    cmd: printf '{"a": True}' | ./t
+    expect_err: **colljson 1 7 expect an object, a string, an integer, true, or false
+
+    # typed getters, with errors reported at the key
+
+    cmd: printf '{"k": 2, "n": -1}' | ./t get int
+    expect: k=2 n=-1
+
+    cmd: printf '{"a": true, "b": false}' | ./t get bool
+    expect: a=1 b=0
+
+    cmd: printf '{"t": "kary", "u": "knomial_2"}' | ./t get enum
+    expect: t=0 u=2
+
+    cmd: printf '{"k": 2,\n  "n": "2"}' | ./t get int
+    expect_err: **colljson 2 3 expect an integer
+
+    cmd: printf '{"a": 1}' | ./t get bool
+    expect_err: **colljson 1 2 expect true or false
+
+    cmd: printf '{"t": 1}' | ./t get enum
+    expect_err: **colljson 1 2 expect a string
+
+    cmd: printf '{"t": "binary"}' | ./t get enum
+    expect_err: **colljson 1 2 unknown name
 
     # strings
 
@@ -250,8 +346,8 @@ TESTS:
 
     # errors deep in a partly built tree, which must be freed
 
-    cmd: printf '{"a": "1", "b": {"c": "2", "d": {"e": "3", "f": 4}}, "g": "5"}' | ./t
-    expect_err: **colljson 1 49 expect an object or a string
+    cmd: printf '{"a": "1", "b": {"c": "2", "d": {"e": "3", "f": null}}, "g": "5"}' | ./t
+    expect_err: **colljson 1 49 expect an object, a string, an integer, true, or false
 
     cmd: printf '{"a": {"b": "1", "c": "2", "b": "3"}}' | ./t
     expect_err: **colljson 1 28 duplicate key

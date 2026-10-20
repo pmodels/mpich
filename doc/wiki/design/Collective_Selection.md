@@ -89,7 +89,8 @@ bcast-intra:
       Prefix with `!` to negate. Threshold conditions are not allowed here.
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
-      forced by CVAR. `name=value` fixes a constant, with `-` as its
+      forced by CVAR. The CVAR's type is also the parameter's type in the
+      JSON (see below). `name=value` fixes a constant, with `-` as its
       `cvar_params` placeholder.
     - `func_name`, `inline`, `macro_guard`: for device algorithms that are
       inline in device headers and exist only in some builds.
@@ -109,10 +110,11 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `collective=bcast-intra` | Matches the `coll_type` (names from `MPIR_Coll_type_names`). |
 | `pof2`, `!pof2` | Boolean condition, optionally negated. |
 | `comm_size(8)` | Canonical threshold form: `comm_size <= 8`. |
-| `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. |
-| `any` | Always true. Used as the last sibling. |
-| `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds extra parameters as keys, e.g. `{"k=2": {}}`. `tree_type=` takes a name such as `kary`. |
+| `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. A leading `!` is an error with these; write `!comm_size(8)` or flip the comparison. |
+| `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
+| `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
+| `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
 
@@ -123,6 +125,7 @@ The file is a dictionary of named subtrees:
         "collective=bcast-intra": "call=bcast-intra-auto",
         "collective=allreduce-intra": "call=allreduce-intra-auto",
         ...
+        "any": "error"
     },
     "name=bcast-intra-auto": {
         "MPIDI_CH4_release_gather": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
@@ -149,6 +152,22 @@ The file is a dictionary of named subtrees:
 - `call=` targets are resolved by name at search time, so a subtree replaced
   by the user file is the one used.
 
+An algorithm leaf lists every non-constant parameter in its `extra_params`
+as `"name": value`, and nothing else. The value's type follows the type of the
+parameter's CVAR in `cvar_params`:
+
+| CVAR type | JSON value | Example |
+|---|---|---|
+| `int` | an integer | `"k": 4`, `"chunk_size": 8192` |
+| `boolean` | `true` or `false` | `"is_non_blocking": true` |
+| `enum` | one of the CVAR's value names, as a string | `"tree_type": "knomial_1"`, `"ccl": "nccl"` |
+
+```json
+"algorithm=MPIR_Bcast_intra_tree": { "tree_type": "kary", "k": 4, "is_non_blocking": false }
+```
+
+A missing, unknown, or mistyped parameter is an error.
+
 The tree does not check algorithm restrictions. A tree must pick only
 algorithms whose restrictions hold on that branch, for example by guarding
 `MPIR_Allreduce_intra_reduce_scatter_allgather` with `builtin_op` and
@@ -157,12 +176,15 @@ algorithms whose restrictions hold on that branch, for example by guarding
 The files are read by a small built-in parser (`csel_json.c`) that accepts
 only the JSON subset the tree needs:
 
-- The top level is an object, and every value is an object or a string.
-  Numbers, arrays, `true`, `false`, and `null` are rejected.
+- The top level is an object, and every value is an object, a string, an
+  integer (fits in an `int`), `true`, or `false`. Floats, arrays, and `null`
+  are rejected.
 - Strings are printable ASCII without escape sequences. Spaces inside a string
   are dropped, so `"comm_size < 8"` is read as `comm_size<8`.
 - Keys within an object must be unique. Objects nest at most 64 levels.
-- A syntax error stops `MPI_Init` with the line and column of the error.
+- A syntax error, an unknown subtree, collective, algorithm, or condition, a
+  malformed threshold, an object that doesn't end with `any`, or a bad
+  algorithm parameter stops `MPI_Init` with the line and column of the error.
 
 ## Runtime selection
 
@@ -201,7 +223,11 @@ MPI_Bcast
    `MPII_Csel_run_condition`, which evaluates the predicate (or `<= thresh`),
    then applies `negate`. `any` always passes. A match moves to `success`, a
    miss to `failure` (the next sibling). A `call` node continues in the named
-   subtree. The search ends at a container.
+   subtree. The search ends at a container, or at an `error` node, which
+   makes the collective return "Collective selection failed to find an
+   algorithm". A search that makes more `call=` jumps than there are
+   subtrees is looping, e.g. `auto` → `x` → `auto` for the same collective,
+   and returns the same error.
 5. **Run.** `MPIR_Coll_algo_table[cnt->id](coll_sig, cnt)` calls the `_cnt`
    wrapper. It increments `MPIR_Coll_algo_counters[id]`, creates the schedule
    for a nonblocking algorithm (`MPII_CSEL_CREATE_SCHED` or
@@ -244,8 +270,8 @@ Rules that follow:
 | Output | Generated items |
 |---|---|
 | Types | `MPIR_Csel_coll_type_e`, `MPII_Csel_container_type_e`, `MPIR_Csel_node_type_e`, `MPII_Csel_container_s` |
-| Tables | `MPII_Coll_type_init` (`MPIR_Coll_type_names`, `MPIR_Coll_cvar_table`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` |
-| JSON parsing | `MPII_Csel_parse_operator`, `MPII_Csel_parse_container_params` |
+| Tables | `MPII_Coll_type_init` (`MPIR_Coll_type_names`, `MPIR_Coll_cvar_table`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` (`MPIR_Csel_condition_names`, `MPIR_Csel_condition_has_thresh`) |
+| JSON parsing | `MPII_Csel_parse_container_params` |
 | Search | `MPII_Csel_run_condition` |
 | CVAR path | `MPIR_Coll_cvar_to_algo_id`, `MPIR_Coll_init_algo_container`, `MPIR_Coll_check_algo_restriction` |
 | Dispatch | the `<algo>_cnt` wrappers and every `MPIR_Xxx_impl` |
