@@ -14,7 +14,7 @@ static void MPIR_T_enum_env_finalize(void)
     if (enum_table) {
         /* Free all entries */
         for (i = 0; i < utarray_len(enum_table); i++) {
-            e = (MPIR_T_enum_t *) utarray_eltptr(enum_table, i);
+            e = *(MPIR_T_enum_t **) utarray_eltptr(enum_table, i);
             MPL_free((void *) e->name);
 
             /* Free items in this enum */
@@ -24,6 +24,7 @@ static void MPIR_T_enum_env_finalize(void)
             }
 
             utarray_free(e->items);
+            MPL_free(e);
         }
 
         /* Free enum_table itself */
