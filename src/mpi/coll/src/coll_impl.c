@@ -105,9 +105,6 @@ MPIR_Csel_node_s *csel_tree_auto;
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 
-/* table of collective algorithm cvars */
-int *MPIR_Coll_cvar_table;
-
 /* string tables to facilitate parsing and debugging */
 const char **MPIR_Coll_type_names;
 const char **MPIR_Coll_algo_names;
@@ -158,7 +155,6 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Coll_cvar_table = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(int), MPL_MEM_COLL);
     MPIR_Coll_type_names = MPL_malloc(MPIR_CSEL_NUM_COLL_TYPES * sizeof(char *), MPL_MEM_COLL);
     MPIR_Coll_algo_table =
         MPL_malloc(MPIR_CSEL_NUM_ALGORITHMS * sizeof(MPIR_Coll_algo_fn), MPL_MEM_COLL);
@@ -230,7 +226,6 @@ int MPII_Coll_finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIR_Coll_algo_table);
-    MPL_free(MPIR_Coll_cvar_table);
     MPL_free(MPIR_Coll_algo_names);
     MPL_free(MPIR_Coll_type_names);
     MPL_free(MPIR_Csel_condition_names);
@@ -411,10 +406,14 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
 
     /* First check whether user has set an algorithm CVAR */
     int coll_type = coll_sig->coll_type;
-    int cvar_val = MPIR_Coll_cvar_table[coll_type];
+    int cvar_val = *MPIR_Coll_cvar_table[coll_type];
     if (cvar_val) {
         coll_sig->flags |= MPIR_COLL_SIG_FLAG__CVAR;
         int algo_id = MPIR_Coll_cvar_to_algo_id(coll_type, cvar_val);
+        /* only an MPI_T write can set a value that is not one of the algorithms */
+        MPIR_ERR_CHKANDJUMP2(algo_id == MPII_CSEL_CONTAINER_TYPE__ALGORITHM__END, mpi_errno,
+                             MPI_ERR_OTHER, "**collcvarval", "**collcvarval %s %d",
+                             MPIR_Coll_type_names[coll_type], cvar_val);
         bool restriction_ok = MPIR_Coll_check_algo_restriction(coll_sig, algo_id);
 
         if (restriction_ok) {

@@ -28,7 +28,7 @@ typedef struct MPIR_Csel_node {
 } MPIR_Csel_node_s;
 
 extern MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
-extern int *MPIR_Coll_cvar_table;
+extern const int *const MPIR_Coll_cvar_table[];
 extern const char **MPIR_Coll_type_names;
 extern const char **MPIR_Coll_algo_names;
 extern const char **MPIR_Csel_condition_names;
