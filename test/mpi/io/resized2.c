@@ -9,11 +9,16 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_resized2
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test file views with MPI_Type_create_resized";
 */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, nprocs, len, mpi_errno, buf[2], newbuf[4];
     int errs = 0;
@@ -23,7 +28,6 @@ int main(int argc, char **argv)
     char *filename;
     MPI_Datatype newtype, newtype1;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (nprocs != 1) {
@@ -31,25 +35,13 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    i = 1;
-    while ((i < argc) && strcmp("-fname", *argv)) {
-        i++;
-        argv++;
-    }
-    if (i >= argc) {
-        len = 8;
-        filename = (char *) malloc(len + 10);
-        strcpy(filename, "testfile");
-        /*
-         * fprintf(stderr, "\n*#  Usage: resized -fname filename\n\n");
-         * MPI_Abort(MPI_COMM_WORLD, 1);
-         */
-    } else {
-        argv++;
-        len = (int) strlen(*argv);
-        filename = (char *) malloc(len + 1);
-        strcpy(filename, *argv);
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    const char *fname = MTestArgListGetString_with_default(head, "fname", "testfile");
+    len = (int) strlen(fname);
+    filename = (char *) malloc(len + 10);
+    memset(filename, 0, len + 10);
+    strcpy(filename, fname);
+    MTestArgListDestroy(head);
 
     MPI_File_delete(filename, MPI_INFO_NULL);
 
@@ -131,6 +123,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&newtype1);
     MPI_Type_free(&newtype);
     free(filename);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -4,6 +4,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_i_coll_test
+int run(const char *arg);
+#endif
 #include "mpi.h"
 #include <stdlib.h>
 #include <string.h>
@@ -17,9 +22,9 @@
 
 /* Note that the file access pattern is noncontiguous. */
 
-void handle_error(int errcode, const char *str);
+static void handle_error(int errcode, const char *str);
 
-void handle_error(int errcode, const char *str)
+static void handle_error(int errcode, const char *str)
 {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;
@@ -28,7 +33,7 @@ void handle_error(int errcode, const char *str)
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype newtype;
     int i, ndims, array_of_gsizes[3], array_of_distribs[3];
@@ -44,7 +49,6 @@ int main(int argc, char **argv)
     MPI_Info info = MPI_INFO_NULL;
     int errcode;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -193,6 +197,5 @@ int main(int argc, char **argv)
     free(writebuf);
     free(filename);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

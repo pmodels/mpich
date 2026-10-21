@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 
 ## for all programs that are just built from the single corresponding source
@@ -49,4 +50,4 @@ noinst_PROGRAMS +=      \
     i_types_with_zeros
 
 clean-local:
-	-rm -f testfile testfile.*
+	-rm -f testfile testfile.* test.txt

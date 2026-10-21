@@ -10,6 +10,11 @@
 /* Uses nonblocking collective I/O.*/
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_i_aggregation1
+int run(const char *arg);
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <mpi.h>
@@ -19,25 +24,10 @@
 #define NUM_OBJS 4
 #define OBJ_SIZE 1048576
 
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-
-char *prog = NULL;
-int debug = 0;
-
-static void Usage(int line)
-{
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank == 0) {
-        fprintf(stderr,
-                "Usage (line %d): %s [-d] [-h] -f filename\n"
-                "\t-d for debugging\n"
-                "\t-h to turn on the hints to force collective aggregation\n", line, prog);
-    }
-    exit(0);
-}
+/* Arguments: -d for debugging, -h to turn on the hints to force collective
+ * aggregation, and -f=filename. Without arguments, the test uses "testfile"
+ * and turns on the hints. */
+static int debug = 0;
 
 static void fatal_error(int mpi_ret, MPI_Status * mpi_stat, const char *msg)
 {
@@ -233,16 +223,14 @@ set_hints(MPI_Info *info, char *hints) {
 }
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int nproc = 1, rank = 0;
-    const char *target = NULL;
-    int c;
+    char target[1024];
     MPI_Info info;
     int mpi_ret;
     int corrupt_blocks = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -251,38 +239,19 @@ int main(int argc, char *argv[])
             fatal_error(mpi_ret, NULL, "MPI_info_create.\n");
     }
 
-    prog = strdup(argv[0]);
-
-    if (argc > 1) {
-        while ((c = getopt(argc, argv, "df:h")) != EOF) {
-            switch (c) {
-                case 'd':
-                    debug = 1;
-                    break;
-                case 'f':
-                    target = strdup(optarg);
-                    break;
-                case 'h':
-                    set_hints(&info);
-                    break;
-                default:
-                    Usage(__LINE__);
-            }
-        }
-        if (!target) {
-            Usage(__LINE__);
-        }
-    } else {
-        target = "testfile";
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    debug = MTestArgListGetInt_with_default(head, "d", 0);
+    const char *fname = MTestArgListGetString_with_default(head, "f", "testfile");
+    snprintf(target, sizeof(target), "%s", fname);
+    if (!arg || !*arg || MTestArgListGetInt_with_default(head, "h", 0)) {
         set_hints(&info);
     }
+    MTestArgListDestroy(head);
 
     write_file(target, rank, &info);
     read_file(target, rank, &info, &corrupt_blocks);
 
     MPI_Info_free(&info);
 
-    MTest_Finalize(corrupt_blocks);
-    free(prog);
-    return MTestReturnValue(corrupt_blocks);
+    return corrupt_blocks;
 }

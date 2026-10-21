@@ -4,6 +4,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_i_noncontig_coll2
+int run(const char *arg);
+#endif
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,8 +28,8 @@
 /* we are going to muck with this later to make it evenly divisible by however many compute nodes we have */
 #define STARTING_SIZE 5000
 
-int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
-              int verbose);
+static int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+                     int verbose);
 
 #define ADIOI_Free free
 #define ADIOI_Malloc malloc
@@ -38,15 +43,15 @@ struct ADIO_cb_name_arrayD {
 };
 typedef struct ADIO_cb_name_arrayD *ADIO_cb_name_array;
 
-void handle_error(int errcode, const char *str);
-int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp);
-void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
-void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
-void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
-void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
+static void handle_error(int errcode, const char *str);
+static int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp);
+static void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
+static void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
+static void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
+static void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest);
 
 
-void handle_error(int errcode, const char *str)
+static void handle_error(int errcode, const char *str)
 {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;
@@ -68,7 +73,7 @@ void handle_error(int errcode, const char *str)
  *
  * NOTE: Needs some work to cleanly handle out of memory cases!
  */
-int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
+static int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
 {
     /* this is copied from ROMIO, but since this test is for correctness,
      * not performance, note that we have removed the parts where ROMIO
@@ -168,7 +173,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
     return 0;
 }
 
-void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
+static void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
     int i, p;
@@ -184,7 +189,7 @@ void default_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
     MPI_Bcast(dest, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 }
 
-void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
+static void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
     int i, p;
@@ -199,7 +204,7 @@ void reverse_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
     MPI_Bcast(dest, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 }
 
-void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
+static void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
     int i, p;
@@ -220,7 +225,7 @@ void reverse_alternating_str(int mynod, int len, ADIO_cb_name_array array, char 
     MPI_Bcast(dest, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 }
 
-void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
+static void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest)
 {
     char *ptr;
     int i, p;
@@ -239,7 +244,7 @@ void simple_shuffle_str(int mynod, int len, ADIO_cb_name_array array, char *dest
     MPI_Bcast(dest, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, mynod, nprocs, len, errs = 0, verbose = 0;
     char *filename = NULL;
@@ -248,7 +253,6 @@ int main(int argc, char **argv)
     ADIO_cb_name_array array;
 
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
 
@@ -319,14 +323,13 @@ int main(int argc, char **argv)
         free(array->names);
     }
     free(array);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
 
-int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
-              int verbose)
+static int test_file(const char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg,
+                     int verbose)
 {
     MPI_Datatype typevec, typevec2, newtype;
     int *buf, i, blocklength, errcode, errors = 0;

@@ -19,6 +19,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_simple_collective
+int run(const char *arg);
+#endif
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,12 +35,6 @@
 #include <sys/time.h>
 #include <mpi.h>
 #include <errno.h>
-#include <getopt.h>
-
-static char *opt_file = NULL;
-
-static int parse_args(int rank, int argc, char **argv);
-static void usage(const char *prog);
 
 static int test_write(char *file, int nprocs, int rank, MPI_Info info)
 {
@@ -87,7 +86,7 @@ static int test_write(char *file, int nprocs, int rank, MPI_Info info)
     return 0;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank = -1;
     int nprocs;
@@ -95,14 +94,15 @@ int main(int argc, char **argv)
     MPI_Info info;
     int nr_errors = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    /* parse the command line arguments */
-    parse_args(rank, argc, argv);
+    /* -fname=<file name> */
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(file, sizeof(file), "%s",
+             MTestArgListGetString_with_default(head, "fname", "simple_collective.testfile"));
+    MTestArgListDestroy(head);
 
-    sprintf(file, "%s", opt_file);
     MPI_Info_create(&info);
     nr_errors += test_write(file, nprocs, rank, info);
     /* actual value does not matter.  test only writes a small amount of data */
@@ -110,44 +110,5 @@ int main(int argc, char **argv)
     nr_errors += test_write(file, nprocs, rank, info);
     MPI_Info_free(&info);
 
-    MTest_Finalize(nr_errors);
-    return MTestReturnValue(nr_errors);
-}
-
-static int parse_args(int rank, int argc, char **argv)
-{
-    int c;
-
-    while ((c = getopt(argc, argv, "e")) != EOF) {
-        switch (c) {
-            case 'h':
-                if (rank == 0)
-                    usage(argv[0]);
-                exit(0);
-            case '?':  /* unknown */
-                if (rank == 0)
-                    usage(argv[0]);
-                exit(1);
-            default:
-                break;
-        }
-    }
-
-    if (argc - optind != 1) {
-        if (rank == 0)
-            usage(argv[0]);
-        exit(1);
-    }
-
-    opt_file = strdup(argv[optind]);
-    assert(opt_file);
-
-    return (0);
-}
-
-static void usage(const char *prog)
-{
-    printf("Usage: %s [<OPTIONS>...] <FILE NAME>\n", prog);
-    printf("\n<OPTIONS> is one or more of\n");
-    printf(" -h       print this help\n");
+    return nr_errors;
 }

@@ -6,16 +6,21 @@
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_userioerr
+int run(const char *arg);
+#endif
 #include "mpitestconf.h"
 
-int verbose = 0;
+static int verbose = 0;
 
-int handlerCalled = 0;
+static int handlerCalled = 0;
 
 /* Prototype to suppress compiler warnings */
-void user_handler(MPI_File * fh, int *errcode, ...);
+static void user_handler(MPI_File * fh, int *errcode, ...);
 
-void user_handler(MPI_File * fh, int *errcode, ...)
+static void user_handler(MPI_File * fh, int *errcode, ...)
 {
     if (*errcode != MPI_SUCCESS) {
         handlerCalled++;
@@ -25,7 +30,7 @@ void user_handler(MPI_File * fh, int *errcode, ...)
     }
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, errs = 0, rc;
     MPI_Errhandler ioerr_handler;
@@ -33,8 +38,7 @@ int main(int argc, char *argv[])
     MPI_File fh;
     char inbuf[80];
 
-    MTest_Init(&argc, &argv);
-
+    handlerCalled = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* Create a file to which to attach the handler */
@@ -78,6 +82,5 @@ int main(int argc, char *argv[])
         printf("MPI_File_close returned an error code: %d\n", rc);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

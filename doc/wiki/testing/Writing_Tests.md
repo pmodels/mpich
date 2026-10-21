@@ -11,8 +11,8 @@ A test in `test/mpi/` takes one of two forms:
   of `main`. `runtests` runs many test functions inside one `run_mpitests`
   process, between a single `MPI_Init` and `MPI_Finalize`, which saves the
   startup cost of each test. Most C tests in `attr`, `coll`, `comm`,
-  `datatype`, `errhan`, `group`, `info`, `part`, `pt2pt`, `rma` and `topo`
-  are written this way. Use this
+  `datatype`, `errhan`, `group`, `info`, `io`, `part`, `pt2pt`, `rma` and
+  `topo` are written this way. Use this
   form for a new C test unless it needs one of the exceptions listed in
   [Tests that run individually](#tests-that-run-individually).
 - A **standalone program** with its own `main`. Fortran and C++ tests,
@@ -187,6 +187,10 @@ Because many tests share one process, a test function must:
   `run_mpitests` resets it to `MPI_ERRORS_ARE_FATAL` before each test.
 - Avoid names that clash with other tests. Make helper functions and
   file-scope variables `static`.
+- Delete the files it creates. Inside `run_mpitests`, a test runs in the
+  directory where `runtests` runs (`test/mpi`), not in its own directory,
+  so take a file name as an argument (e.g. `-fname=`) instead of from the
+  command line, and don't rely on files next to the test.
 
 ### Arguments
 

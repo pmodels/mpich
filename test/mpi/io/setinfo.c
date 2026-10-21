@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_setinfo
+int run(const char *arg);
+#endif
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -22,7 +27,7 @@ static char MTEST_Descrip[] = "Test file_set_view";
  *
  *
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int buf[10];
@@ -34,7 +39,6 @@ int main(int argc, char *argv[])
     char value[1024];
     int flag, count;
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
@@ -108,6 +112,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

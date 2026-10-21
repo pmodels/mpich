@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_rdwrzero
+int run(const char *arg);
+#endif
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -19,7 +24,7 @@
 static char MTEST_Descrip[] = "Test reading and writing zero bytes (set status correctly)";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank, i, *buf, count, rc;
@@ -27,7 +32,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Status status;
 
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     rc = MPI_File_open(comm, (char *) "test.ord",
@@ -113,6 +117,5 @@ int main(int argc, char *argv[])
     MPI_File_close(&fh);
 
   fn_fail:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

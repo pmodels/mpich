@@ -13,12 +13,17 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_hindexed
+int run(const char *arg);
+#endif
+
 #define YLEN 5
 #define XLEN 10
 #define SUB_XLEN 3
 
 /* rjl: I was just too lazy to compute this at run-time */
-char compare_buf[XLEN * 4][YLEN * 4] = {
+static char compare_buf[XLEN * 4][YLEN * 4] = {
     {'0', '1', '2', 0, 0, '3', '4', '5', 0, 0, 'D', 'E', 'F', 0, 0, 'G', 'H', 'I'},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {'6', '7', '8', 0, 0, '9', ':', ';', 0, 0, 'J', 'K', 'L', 0, 0, 'M', 'N', 'O'},
@@ -56,11 +61,11 @@ char compare_buf[XLEN * 4][YLEN * 4] = {
     }
 
 /*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, j, err, rank, np, num_io;
     char *buf;
-    const char *filename;
+    char filename[1024];
     int rank_dim[2], array_of_sizes[2];
     int array_of_subsizes[2];
     int count, *blocklengths, global_array_size;
@@ -77,7 +82,6 @@ int main(int argc, char **argv)
     int k;
 #endif
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
@@ -87,7 +91,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    filename = (argc > 1) ? argv[1] : "testfile";
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(filename, sizeof(filename), "%s",
+             MTestArgListGetString_with_default(head, "fname", "testfile"));
+    MTestArgListDestroy(head);
 
     num_io = 2;
 
@@ -176,7 +183,6 @@ int main(int argc, char **argv)
     if (err != MPI_SUCCESS) {
         printf("Error: MPI_File_open() filename %s\n", filename);
         MPI_Abort(MPI_COMM_WORLD, -1);
-        exit(1);
     }
 
     /* MPI nonblocking collective write */
@@ -252,8 +258,7 @@ int main(int argc, char **argv)
     free(request);
     free(statuses);
     MPI_Type_free(&ftype);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* command-line outputs are: (the global array is written twice)

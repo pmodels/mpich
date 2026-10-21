@@ -8,11 +8,16 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_rdwrord
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test reading and writing ordered output";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank, i, *buf, rc;
@@ -21,7 +26,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Request request;
 
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_File_open(comm, (char *) "test.ord",
@@ -67,6 +71,5 @@ int main(int argc, char *argv[])
     free(buf);
     MPI_File_close(&fh);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

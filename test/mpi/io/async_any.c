@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_async_any
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test asynchronous I/O w/ multiple completion";
 */
@@ -20,7 +25,7 @@ static char MTEST_Descrip[] = "Test asynchronous I/O w/ multiple completion";
    reads them back. The file name is taken as a command-line argument,
    and the process rank is appended to it.*/
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int *buf, i, rank, nints, len;
     char *filename, *tmp;
@@ -29,34 +34,18 @@ int main(int argc, char **argv)
     MPI_Status statuses[NUMOPS];
     MPI_Request requests[NUMOPS];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 /* process 0 takes the file name as a command-line argument and
    broadcasts it to other processes */
     if (!rank) {
-        i = 1;
-        while ((i < argc) && strcmp("-fname", *argv)) {
-            i++;
-            argv++;
-        }
-        if (i >= argc) {
-            /* Use a default filename of testfile */
-            len = 8;
-            filename = (char *) malloc(len + 10);
-            memset(filename, 0, (len + 10) * sizeof(char));
-            strcpy(filename, "testfile");
-            /*
-             * fprintf(stderr, "\n*#  Usage: async_any -fname filename\n\n");
-             * MPI_Abort(MPI_COMM_WORLD, 1);
-             */
-        } else {
-            argv++;
-            len = (int) strlen(*argv);
-            filename = (char *) malloc(len + 10);
-            MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
-            strcpy(filename, *argv);
-        }
+        MTestArgList *head = MTestArgListCreate_arg(arg);
+        const char *fname = MTestArgListGetString_with_default(head, "fname", "testfile");
+        len = (int) strlen(fname);
+        filename = (char *) malloc(len + 10);
+        memset(filename, 0, len + 10);
+        strcpy(filename, fname);
+        MTestArgListDestroy(head);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
     } else {
@@ -110,6 +99,5 @@ int main(int argc, char **argv)
     free(filename);
     free(tmp);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
