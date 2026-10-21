@@ -47,7 +47,7 @@ static void send_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_buf) {
-        MPIR_gpu_free_host(p->host_buf);
+        MPL_free(p->host_buf);
     }
     MPIR_Comm_release(p->comm_ptr);
     MPL_free(data);
@@ -76,7 +76,8 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIR_Typerep_pack_stream(buf, count, datatype, 0, p->host_buf, p->data_sz,
                                              &p->actual_pack_bytes, &gpu_stream);
@@ -145,7 +146,7 @@ static void recv_stream_cleanup_cb(void *data)
     struct recv_data *p = data;
     MPIR_Assertp(p->actual_unpack_bytes == p->data_sz);
 
-    MPIR_gpu_free_host(p->host_buf);
+    MPL_free(p->host_buf);
     MPIR_Comm_release(p->comm_ptr);
     MPL_free(p);
 }
@@ -174,7 +175,8 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         MPL_gpu_launch_hostfn(gpu_stream, recv_enqueue_cb, p);
 
@@ -250,7 +252,8 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIR_Typerep_pack_stream(buf, count, datatype, 0, p->host_buf, p->data_sz,
                                              &p->actual_pack_bytes, &gpu_stream);
@@ -324,7 +327,8 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         MPL_gpu_launch_hostfn(gpu_stream, irecv_enqueue_cb, p);
     } else {
@@ -355,7 +359,7 @@ static void wait_enqueue_cb(void *data)
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
         if (p->host_buf) {
-            MPIR_gpu_free_host(p->host_buf);
+            MPL_free(p->host_buf);
         }
         MPIR_Comm_release(p->comm_ptr);
         MPL_free(p);
@@ -434,7 +438,7 @@ static void waitall_enqueue_cb(void *data)
         if (enqueue_req->u.enqueue.is_send) {
             struct send_data *p2 = enqueue_req->u.enqueue.data;
             if (p2->host_buf) {
-                MPIR_gpu_free_host(p2->host_buf);
+                MPL_free(p2->host_buf);
             }
             MPIR_Comm_release(p2->comm_ptr);
             MPL_free(p2);
