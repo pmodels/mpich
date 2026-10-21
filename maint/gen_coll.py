@@ -51,7 +51,9 @@ def main():
     for a in G.coll_names:
         add_sched_auto_prototypes(a)
 
-    # initialize MPIR_Coll_cvar_table and MPIR_Coll_type_names
+    # MPIR_Coll_cvar_table, pointers to the algorithm CVARs
+    dump_MPIR_Coll_cvar_table()
+    # initialize MPIR_Coll_type_names
     dump_MPII_Coll_type_init()
     # initialize MPIR_Coll_algo_table and MPIR_Coll_algo_names
     dump_MPII_Coll_algo_init()
@@ -237,21 +239,28 @@ def add_sched_auto_prototypes(name):
 
 #---- dumping to G.out (mpir_coll.c) ----
 
-def dump_MPII_Coll_type_init():
+def dump_MPIR_Coll_cvar_table():
+    # Pointers rather than values, so that a CVAR written through MPI_T takes effect
+    # in the next collective call
     G.out.append("")
-    decl = "void MPII_Coll_type_init(void)"
-    G.out.append(decl)
-    dump_open('{')
-
-    # populate MPIR_Coll_cvar_table[] with CVAR values at init time
+    G.out.append("static const int MPII_Coll_no_cvar = 0;")
+    G.out.append("const int *const MPIR_Coll_cvar_table[MPIR_CSEL_NUM_COLL_TYPES] = {")
     for a in G.coll_names:
         for commkind in ("intra", "inter"):
             for is_blocking in (True, False):
                 if commkind == "inter" and re.match(r'(scan|exscan|neighbor_)', a):
                     # CVARs for these inter-collective does not exist
-                    G.out.append("MPIR_Coll_cvar_table[%s] = 0;" % (coll_type(a, is_blocking, commkind)))
+                    cvar = "MPII_Coll_no_cvar"
                 else:
-                    G.out.append("MPIR_Coll_cvar_table[%s] = %s;" % (coll_type(a, is_blocking, commkind), cvar_name(a, is_blocking, commkind)))
+                    cvar = cvar_name(a, is_blocking, commkind)
+                G.out.append("    [%s] = &%s," % (coll_type(a, is_blocking, commkind), cvar))
+    G.out.append("};")
+
+def dump_MPII_Coll_type_init():
+    G.out.append("")
+    decl = "void MPII_Coll_type_init(void)"
+    G.out.append(decl)
+    dump_open('{')
 
     # populate MPIR_Coll_type_names[]
     for a in G.coll_names:
@@ -412,9 +421,6 @@ def dump_MPIR_Coll_cvar_to_algo_id():
         algo_id_prefix = "MPII_CSEL_CONTAINER_TYPE__ALGORITHM"
 
         dump_open("switch (cvar_val) {")
-        G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_auto:" % (name.upper(), commkind.upper()))
-        G.out.append("    MPIR_Assert(0); /* auto cvar_val should be 0 and shouldn't be called here */")
-        G.out.append("    return %s;" % algo_id_END())
         if commkind == "intra" and not name.startswith('i'):
             G.out.append("case MPIR_CVAR_%s_%s_ALGORITHM_nb:" % (name.upper(), commkind.upper()))
             G.out.append("    return %s__%s;" % (algo_id_prefix, "MPIR_Coll_nb"))
@@ -425,11 +431,12 @@ def dump_MPIR_Coll_cvar_to_algo_id():
             G.out.append("    return %s__%s;" % (algo_id_prefix, get_algo_funcname(algo)))
         dump_close("}")
 
+    # Returns the END id for auto (0) or any value that is not an algorithm of
+    # coll_type, e.g. an out-of-range value written through MPI_T
     decl = "int MPIR_Coll_cvar_to_algo_id(int coll_type, int cvar_val)"
     add_prototype(decl)
     G.out.append(decl)
     dump_open("{")
-    G.out.append("MPIR_Assert(cvar_val > 0);")
     dump_open("switch (coll_type) {")
     for coll in G.coll_names:
         for commkind in ("intra", "inter"):
@@ -446,8 +453,7 @@ def dump_MPIR_Coll_cvar_to_algo_id():
                 G.out.append("break;")
                 G.out.append("DEDENT")
     dump_close("}")
-    G.out.append("MPIR_Assert(0);")
-    G.out.append("return 0;")
+    G.out.append("return %s;" % algo_id_END())
     dump_close("}")
 
 def dump_MPIR_Coll_init_algo_container():

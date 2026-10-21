@@ -210,14 +210,17 @@ MPI_Bcast
    `flags` (`MPIR_COLL_SIG_FLAG__PERSISTENT` for `_init` calls), `tag`,
    `sched = NULL`, and the arguments. It then calls
    `MPID_Init_coll_sig(&coll_sig)` so the device can add its own fields.
-3. **CVAR.** `MPIR_Coll_json` reads `MPIR_Coll_cvar_table[coll_type]`; 0 means
-   `auto`. Otherwise it sets `MPIR_COLL_SIG_FLAG__CVAR`, maps the value to an
-   algorithm ID (`MPIR_Coll_cvar_to_algo_id`), and checks
-   `MPIR_Coll_check_algo_restriction`. If the check passes, it fills a
-   container from the CVAR parameters (`MPIR_Coll_init_algo_container`) and
-   runs the algorithm. If it fails, it returns an error when
-   `MPIR_CVAR_COLLECTIVE_FALLBACK=error` and falls through to the tree
-   otherwise.
+3. **CVAR.** `MPIR_Coll_json` reads the algorithm CVAR through
+   `MPIR_Coll_cvar_table[coll_type]`, a table of pointers to the CVARs, so a
+   value written with `MPI_T_cvar_write` applies from the next call; 0 means
+   `auto`. Otherwise it sets `MPIR_COLL_SIG_FLAG__CVAR` and maps the value to
+   an algorithm ID (`MPIR_Coll_cvar_to_algo_id`). A value that is not one of
+   the collective's algorithms, which only an MPI_T write can set, is an
+   error. It then checks `MPIR_Coll_check_algo_restriction`. If the check
+   passes, it fills a container from the CVAR parameters
+   (`MPIR_Coll_init_algo_container`) and runs the algorithm. If it fails, it
+   returns an error when `MPIR_CVAR_COLLECTIVE_FALLBACK=error` and falls
+   through to the tree otherwise.
 4. **Search.** `MPIR_Csel_search` walks the tree from `main`. A `collective`
    node compares `coll_type`. A condition node calls the generated
    `MPII_Csel_run_condition`, which evaluates the predicate (or `<= thresh`),
@@ -270,7 +273,7 @@ Rules that follow:
 | Output | Generated items |
 |---|---|
 | Types | `MPIR_Csel_coll_type_e`, `MPII_Csel_container_type_e`, `MPIR_Csel_node_type_e`, `MPII_Csel_container_s` |
-| Tables | `MPII_Coll_type_init` (`MPIR_Coll_type_names`, `MPIR_Coll_cvar_table`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` (`MPIR_Csel_condition_names`, `MPIR_Csel_condition_has_thresh`) |
+| Tables | `MPIR_Coll_cvar_table` (constant initializer), `MPII_Coll_type_init` (`MPIR_Coll_type_names`), `MPII_Coll_algo_init` (`MPIR_Coll_algo_table`, `MPIR_Coll_algo_names`), `MPII_Csel_init_condition_names` (`MPIR_Csel_condition_names`, `MPIR_Csel_condition_has_thresh`) |
 | JSON parsing | `MPII_Csel_parse_container_params` |
 | Search | `MPII_Csel_run_condition` |
 | CVAR path | `MPIR_Coll_cvar_to_algo_id`, `MPIR_Coll_init_algo_container`, `MPIR_Coll_check_algo_restriction` |
