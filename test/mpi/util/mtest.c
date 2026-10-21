@@ -215,16 +215,23 @@ void MTest_Finalize(int errs)
     if (usageOutput)
         MTestResourceSummary(stdout);
 
-    /* Clean up any comms from MTestCommRandomize() */
-    MTestCommRandomize_cleanup();
-
-    /* Clean up any persistent objects that we allocated */
-    MTestRMACleanup();
+    MTest_Cleanup();
 
     MPI_Finalize();
 
     MTest_finalize_thread_pkg();
     MTest_finalize_gpu();
+}
+
+/* Free the objects that MTest helpers keep between calls. run_mpitests calls
+ * this after each test, since it runs many tests before MPI_Finalize. */
+void MTest_Cleanup(void)
+{
+    /* Clean up any comms from MTestCommRandomize() */
+    MTestCommRandomize_cleanup();
+
+    /* Clean up any persistent objects that we allocated */
+    MTestRMACleanup();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1057,6 +1064,7 @@ static void MTestCommRandomize_cleanup(void)
     for (int i = 0; i < num_self_dups; i++) {
         MPI_Comm_free(&comm_self_dups[i]);
     }
+    num_self_dups = 0;
 }
 
 /* ------------------------------------------------------------------------ */
