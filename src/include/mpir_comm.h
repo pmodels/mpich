@@ -230,6 +230,9 @@ struct MPIR_Comm {
         int topo_wave_tree_lat_diff_switches;
         int topo_wave_tree_lat_same_switches;
         MPIR_Treealgo_tree_t *topo_wave_tree;
+#ifdef ENABLE_CNC
+        void *cnc_priv;
+#endif
     } coll;
 
 #if defined HAVE_HCOLL
