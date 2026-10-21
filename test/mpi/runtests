@@ -709,15 +709,16 @@ sub run_mpitests {
 
     # run_mpitests is located in the same path as runtests
     my $run = "$g_topsrcdir/run_mpitests";
-    for (my $np = 1; $np <= 10; $np++) {
+    my %np_hash;
+    foreach my $test_opt (@$all_tests) {
+        $np_hash{$test_opt->{np}} = 1;
+    }
+    foreach my $np (sort { $a <=> $b } keys %np_hash) {
         my @tests;
         foreach my $test_opt (@$all_tests) {
             if ($test_opt->{np} == $np) {
                 push @tests, $test_opt;
             }
-        }
-        if (!@tests) {
-            next;
         }
         my $num_tests = @tests;
         my $idx = 0;
