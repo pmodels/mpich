@@ -560,7 +560,10 @@ sub Run_all_tests {
         my $mpitest_hash = load_all_mpitests_txt();
         foreach my $test (@$all_tests) {
             my $key = get_mpitest_key($test);
-            if ($mpitest_hash->{$key} and !$test->{need_init_envs}) {
+            # run_mpitests cannot set init-time CVARs, pass mpiexec arguments,
+            # or check the output with a custom resultTest
+            if ($mpitest_hash->{$key} and !$test->{need_init_envs}
+                and !@{$test->{mpiexecargs}} and !$test->{resultTest}) {
                 push @all_mpitests, $test;
             } else {
                 push @all_remaining, $test
