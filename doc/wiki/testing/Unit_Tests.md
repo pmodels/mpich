@@ -5,7 +5,7 @@ building MPICH or starting MPI processes. They suit code that can be tested
 from its inputs and outputs alone: string parsers and printers, map and
 schedule generators, small algorithms.
 
-Use a [test/mpi test](Writing_New_Tests.md) instead when the behavior needs a
+Use a [test/mpi test](Writing_Tests.md) instead when the behavior needs a
 running MPI library, such as communication, progress, or anything that
 depends on the device.
 

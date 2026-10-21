@@ -261,7 +261,7 @@ every build on macOS.
 
 The build log lists every rule that was applied.
 
-See [Writing New Tests](Writing_New_Tests.md) and
+See [Writing Tests](Writing_Tests.md) and
 [Testing MPICH](Testing_MPICH.md) for the testlist format and for
 running the test suite yourself.
 

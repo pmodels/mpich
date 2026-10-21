@@ -48,5 +48,5 @@ website:
 
 ## See Also
 
-- [Writing New Tests](Writing_New_Tests.md)
+- [Writing Tests](Writing_Tests.md)
 - [Testing Crons](Testing_Crons.md)
