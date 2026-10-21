@@ -363,21 +363,24 @@ static void list_del(int e, int *next, int *prev)
  *    - let's call this exception entry a "violation"
  *
  * Now start with r'(q-1) = r, recursively set r'(k - 1) = (r'(k) >= Skip[k]) ? (r'(k) - Skip[k]) : r'(k)
+ * Along with r', track e(k), the end of the region r' is in. It starts as p, and it shrinks to
+ * Skip[k] in the lower part and shifts by Skip[k] in the upper part along with r'.
  *
  *    4. if r'(k) > Skip[k] (upper), S[k] = k - q
  *       - recall R(r)[k] is the maximum b in (r-Skip[k+1], r-Skip[k]], which includes Skip[k], thus R(r)[k] = k.
+ *       - also when k = 1, or when e - Skip[k] < Skip[k-1], or when r' + Skip[k] <= e.
  *
- *    5. if r'(k) < Skip[k] (lower) and r'[k] + Skip[k] < Skip[k+1], we are sending to the next region
+ *    5. if r'(k) < Skip[k] (lower) and r'[k] + Skip[k] < e, we are sending inside the region
  *         * if r=r', k>b, S[k] = b. Because r + Skip[k] receives its baseblock in this round.
  *         * otherwise, S[k]=S[k-1], which follows the same logic in rule 4.
+ *       - also when e < Skip[k-1], or when k = 1 and b > 0.
  *
  *    6. Look up the remaining case from receive schedule: S(r)[k] = R(r+Skip[k])[k]
- *       - r'(k) = Skip[k]
- *       - r'(k) = Skip[k]-1 and Skip[k+1] is odd.
  */
 
-/* determine send schedule according to above rules. The rules leaves the "violation" cases unresolved,
- * we simply call gen_rsched() to look it up. The "violation" cases are limited to less than 4.
+/* determine send schedule according to above rules. This is Algorithm 6 (sendschedule) in the paper.
+ * The rules leaves the "violation" cases unresolved, we simply call gen_rsched() to look it up.
+ * The paper shows there are at most 4 "violation" cases.
  */
 
 #define FROM_RSCHED() \
@@ -399,25 +402,33 @@ static void gen_ssched(int r, int S[], int p, int q, int Skip[],
         int b = get_baseblock(r, Skip, q);
         /* recursively map r to rt into region k */
         int rt = r;
+        /* the end of the region that rt is in */
+        int end = p;
         /* Rule 5 - set cur_block to S[k+1], starting as the baseblock */
         int cur_block = b;
         for (int k = q - 1; k > 0; k--) {
             if (rt < Skip[k]) {
                 /* lower part */
-                if (rt + Skip[k] < Skip[k + 1]) {
+                if (rt + Skip[k] < end || end < Skip[k - 1] || (k == 1 && b > 0)) {
                     S[k] = cur_block;
                 } else {
                     FROM_RSCHED();
+                }
+                if (end > Skip[k]) {
+                    end = Skip[k];
                 }
             } else {
                 /* upper part */
                 cur_block = k - q;
-                if (rt > Skip[k]) {
+                if (k == 1 || rt > Skip[k] || end - Skip[k] < Skip[k - 1]) {
                     S[k] = cur_block;
-                } else {
+                } else if (rt + Skip[k] > end) {
                     FROM_RSCHED();
+                } else {
+                    S[k] = cur_block;
                 }
                 rt -= Skip[k];
+                end -= Skip[k];
             }
         }
         S[0] = b - q;
