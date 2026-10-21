@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run comm_dupic
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Comm comm, dupcomm, dupcomm2;
@@ -16,8 +19,6 @@ int main(int argc, char *argv[])
     int indices[2];
     int r1buf, r2buf, s1buf, s2buf;
     int rank, isLeft;
-
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntercomm(&comm, &isLeft, 2)) {
         if (comm == MPI_COMM_NULL)
@@ -83,6 +84,5 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&dupcomm);
         MTestFreeComm(&comm);
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

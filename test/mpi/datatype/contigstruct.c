@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_contigstruct
+int run(const char *arg);
+#endif
 
 /*
  * This test checks to see if we can create a simple datatype
@@ -14,14 +17,13 @@
  * avoid any struct->contig optimizations.
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int blocklens[8], psize, i, rank;
     MPI_Aint displs[8];
     MPI_Datatype oldtypes[8];
     MPI_Datatype ntype1, ntype2;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for (i = 0; i < 8; i++) {
@@ -38,6 +40,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&ntype2);
     MPI_Type_free(&ntype1);
 
-    MTest_Finalize(0);
     return 0;
 }

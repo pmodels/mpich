@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_tresized2
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test of type resized with non-zero LB";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, i;
     int rank, size, source, dest;
@@ -21,8 +23,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Status status;
     MPI_Datatype newtype;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -76,6 +76,5 @@ int main(int argc, char *argv[])
     }
     MPI_Type_free(&newtype);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

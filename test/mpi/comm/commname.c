@@ -3,22 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run comm_commname
+int run(const char *arg);
+#endif
 #endif
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Comm comm;
     int cnt, rlen;
     char name[MPI_MAX_OBJECT_NAME], nameout[MPI_MAX_OBJECT_NAME];
-    MTest_Init(&argc, &argv);
 
     /* Check world and self first */
     nameout[0] = 0;
@@ -62,6 +63,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run datatype_zeroblks
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int position, pack_size, i;
@@ -16,8 +19,6 @@ int main(int argc, char *argv[])
     int send_buffer[60];
     int recv_buffer[60];
     int pack_buffer[1000];
-
-    MTest_Init(&argc, &argv);
 
     /* Initialize data in the buffers */
     for (i = 0; i < 60; i++) {
@@ -58,6 +59,5 @@ int main(int argc, char *argv[])
     }
     MPI_Type_free(&type);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

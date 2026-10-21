@@ -37,7 +37,7 @@ static MPI_Datatype mpi_type = MPI_DATATYPE_NULL;
 static int type_size = 0;
 
 static void *local_buf, *result_buf, *compare_buf;
-int exp_target_val = 0;
+static int exp_target_val = 0;
 
 static const int verbose = 0;
 

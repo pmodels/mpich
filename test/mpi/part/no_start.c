@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run part_no_start
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test for a partitioned request that is never started";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
 
     int size;
     int rank;
@@ -38,6 +42,5 @@ int main(int argc, char *argv[])
         MPI_Request_free(&request);
     }
     MPI_Barrier(MPI_COMM_WORLD);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

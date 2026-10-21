@@ -14,9 +14,12 @@
  * in [0...OP_COUNT-1].
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_atomic_rmw_gacc
+int run(const char *arg);
+#endif
 
 #define OP_COUNT 10
 #define AM_BUF_NUM  10
@@ -26,10 +29,10 @@
 #define LOOP_SIZE 15
 #define CHECK_TAG 123
 
-int rank, size;
-int dest, origin_shm, origin_am;
-int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
-MPI_Win win;
+static int rank, size;
+static int dest, origin_shm, origin_am;
+static int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
+static MPI_Win win;
 
 static void checkResults(int loop_k, int *errors)
 {
@@ -260,15 +263,12 @@ static int test_atomic_rmw_gacc(void)
     return errors;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errors = 0;
 
-    MTest_Init(&argc, &argv);
-
     errors += test_atomic_rmw_gacc();
     errors += test_atomic_rmw_gacc();
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

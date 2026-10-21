@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run comm_comm_info2
+int run(const char *arg);
+#endif
 
 /*
   This program provides tests cases for the functional evaluation
   of the MPI communicator info hints infrastructure.
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank;
     MPI_Info info_in, info_out;
@@ -31,12 +33,10 @@ int main(int argc, char **argv)
     MPI_Info info_out5;
     MPI_Info info_in3;
 
-
     /* Read arguments: info key and value */
     snprintf(query_key, MPI_MAX_INFO_KEY, "arbitrary_key");
     snprintf(val, MPI_MAX_INFO_VAL, "arbitrary_val");
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* Goal of the test is only to make sure that MPI does not break */
@@ -98,6 +98,5 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_in);
     MPI_Comm_free(&comm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

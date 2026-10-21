@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allred4
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defined operations using matrix rotations";
@@ -39,9 +41,7 @@ static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defi
    for all values of k, p, and j.
  */
 
-void matmult(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype);
-
-void matmult(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
+static void matmult(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
 {
     const int *cin = (const int *) cinPtr;
     int *cout = (int *) coutPtr;
@@ -154,7 +154,7 @@ static int checkResult(int nmat, int mat[], const char *msg)
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank;
@@ -164,8 +164,6 @@ int main(int argc, char *argv[])
     MPI_Op op;
     MPI_Datatype mattype;
     int i;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Op_create(matmult, 0, &op);
 
@@ -231,6 +229,5 @@ int main(int argc, char *argv[])
     MPI_Op_free(&op);
     MPI_Type_free(&mattype);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

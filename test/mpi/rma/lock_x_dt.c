@@ -4,12 +4,14 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
+
+#ifdef MULTI_TESTS
+#define run rma_lock_x_dt
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test for streaming ACC-like operations with lock";
@@ -20,10 +22,31 @@ enum acc_type {
     ACC_TYPE__GACC,
 };
 
-struct mtest_obj orig, target, result;
-static MPI_Aint base_type_size;
+enum {
+    LOCK_TYPE__LOCK,
+    LOCK_TYPE__LOCKALL,
+};
 
-int world_rank, world_size;
+enum {
+    FLUSH_TYPE__NONE,
+    FLUSH_TYPE__FLUSH,
+    FLUSH_TYPE__FLUSH_ALL,
+};
+
+enum {
+    FLUSH_LOCAL_TYPE__NONE,
+    FLUSH_LOCAL_TYPE__FLUSH_LOCAL,
+    FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL,
+};
+
+static int do_multi_origin = 0;
+static int do_multi_target = 0;
+
+static int flush_type = FLUSH_TYPE__NONE;
+static int flush_local_type = FLUSH_LOCAL_TYPE__NONE;
+
+static struct mtest_obj orig, target, result;
+static MPI_Aint base_type_size;
 
 static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
 {
@@ -31,72 +54,43 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
     int target_start_idx, target_end_idx;
     MPI_Datatype origtype, targettype, resulttype;
     MPI_Aint origcount, targetcount, resultcount;
-    enum {
-        LOCK_TYPE__LOCK,
-        LOCK_TYPE__LOCKALL,
-    } lock_type;
-    enum {
-        FLUSH_TYPE__NONE,
-        FLUSH_TYPE__FLUSH,
-        FLUSH_TYPE__FLUSH_ALL,
-    } flush_type;
-    enum {
-        FLUSH_LOCAL_TYPE__NONE,
-        FLUSH_LOCAL_TYPE__FLUSH_LOCAL,
-        FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL,
-    } flush_local_type;
     int errs = 0;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-#if defined(SINGLE_ORIGIN) && defined(SINGLE_TARGET)
-    orig_rank = 0;
-    target_rank = size - 1;
-    target_start_idx = target_rank;
-    target_end_idx = target_rank;
-    lock_type = LOCK_TYPE__LOCK;
-#elif defined(SINGLE_ORIGIN) && defined(MULTI_TARGET)
-    orig_rank = 0;
-    if (rank == orig_rank)
-        target_rank = size - 1;
-    else
-        target_rank = rank;
-    target_start_idx = orig_rank + 1;
-    target_end_idx = target_rank;
-    lock_type = LOCK_TYPE__LOCKALL;
-#elif defined(MULTI_ORIGIN) && defined(SINGLE_TARGET)
-    target_rank = size - 1;
-    if (rank == target_rank)
+    int lock_type = LOCK_TYPE__LOCK;
+    if (!do_multi_origin && !do_multi_target) {
+        /* default */
         orig_rank = 0;
-    else
-        orig_rank = rank;
-    target_start_idx = target_rank;
-    target_end_idx = target_rank;
-    lock_type = LOCK_TYPE__LOCK;
-#else
-#error "SINGLE|MULTI_ORIGIN and SINGLE|MULTI_TARGET not defined"
-#endif
-
-#if defined(USE_FLUSH)
-    flush_type = FLUSH_TYPE__FLUSH;
-#elif defined(USE_FLUSH_ALL)
-    flush_type = FLUSH_TYPE__FLUSH_ALL;
-#elif defined(USE_FLUSH_NONE)
-    flush_type = FLUSH_TYPE__NONE;
-#else
-#error "FLUSH_TYPE not defined"
-#endif
-
-#if defined(USE_FLUSH_LOCAL)
-    flush_local_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL;
-#elif defined(USE_FLUSH_LOCAL_ALL)
-    flush_local_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL;
-#elif defined(USE_FLUSH_LOCAL_NONE)
-    flush_local_type = FLUSH_LOCAL_TYPE__NONE;
-#else
-#error "FLUSH_LOCAL_TYPE not defined"
-#endif
+        target_rank = size - 1;
+        target_start_idx = target_rank;
+        target_end_idx = target_rank;
+        lock_type = LOCK_TYPE__LOCK;
+    } else if (!do_multi_origin && do_multi_target) {
+        /* lockall */
+        orig_rank = 0;
+        if (rank == orig_rank)
+            target_rank = size - 1;
+        else
+            target_rank = rank;
+        target_start_idx = orig_rank + 1;
+        target_end_idx = target_rank;
+        lock_type = LOCK_TYPE__LOCKALL;
+    } else if (do_multi_origin && !do_multi_target) {
+        /* contention */
+        target_rank = size - 1;
+        if (rank == target_rank)
+            orig_rank = 0;
+        else
+            orig_rank = rank;
+        target_start_idx = target_rank;
+        target_end_idx = target_rank;
+        lock_type = LOCK_TYPE__LOCK;
+    } else {
+        printf("Unsupported MULTI_ORIGIN and MULTI_TARGET combination!\n");
+        return 1;
+    }
 
     /* we do two barriers: the first one informs the target(s) that
      * the RMA operation should be visible at the target, and the
@@ -126,9 +120,10 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
                                targetcount, targettype, MPI_REPLACE, win);
             }
         } else {
-#if !defined(MULTI_ORIGIN) && !defined(MULTI_TARGET)
-            MTest_dtp_init(&result, -1, -1, count);
-#endif
+            if (!do_multi_origin && !do_multi_target) {
+                /* default */
+                MTest_dtp_init(&result, -1, -1, count);
+            }
 
             for (t = target_start_idx; t <= target_end_idx; t++) {
                 MPI_Get_accumulate((char *) orig.buf + orig.dtp_obj.DTP_buf_offset, origcount,
@@ -173,13 +168,13 @@ static int run_test(MPI_Comm comm, MPI_Win win, int count, enum acc_type acc)
         }
 
         if (acc != ACC_TYPE__ACC) {
-#if !defined(MULTI_ORIGIN) && !defined(MULTI_TARGET)
             /* check get results */
             /* this check is not valid for multi-origin tests, as some
              * origins might receive the value that has already been
              * overwritten by other origins */
-            errs += MTest_dtp_check(&result, 1, 2, count, &orig, errs < 10);
-#endif
+            if (!do_multi_origin && !do_multi_target) {
+                errs += MTest_dtp_check(&result, 1, 2, count, &orig, errs < 10);
+            }
         }
     } else if (rank == target_rank) {
         MPI_Barrier(comm);
@@ -209,6 +204,9 @@ static int lock_dt_test(int seed, int testsize, int count, const char *basic_typ
     MPI_Comm comm;
     MPI_Win win;
     DTP_pool_s dtp;
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -283,16 +281,35 @@ static int lock_dt_test(int seed, int testsize, int count, const char *basic_typ
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "contention", 0)) {
+        do_multi_origin = 1;
+        do_multi_target = 0;
+    }
+    if (MTestArgListGetInt_with_default(head, "lockall", 0)) {
+        do_multi_origin = 0;
+        do_multi_target = 1;
+    }
+    if (MTestArgListGetInt_with_default(head, "flush", 0)) {
+        flush_type = FLUSH_TYPE__FLUSH;
+    }
+    if (MTestArgListGetInt_with_default(head, "flushall", 0)) {
+        flush_type = FLUSH_TYPE__FLUSH_ALL;
+    }
+    if (MTestArgListGetInt_with_default(head, "flushlocal", 0)) {
+        flush_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL;
+    }
+    if (MTestArgListGetInt_with_default(head, "flushlocalall", 0)) {
+        flush_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL;
+    }
+    MTestArgListDestroy(head);
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_GACC, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_GACC, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += lock_dt_test(dtp_args.seed, dtp_args.testsize,
                              dtp_args.count, dtp_args.basic_type,
@@ -302,6 +319,5 @@ int main(int argc, char *argv[])
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

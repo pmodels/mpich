@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_pack_external
+int run(const char *arg);
+#endif
 
 /* #define TEST_COMPLEX */
 /* #define TEST_LONG_DOUBLE */
@@ -77,31 +79,31 @@ static struct dt dt_list[] = {
 #define FLOAT_DATA {1.0, 2.0}
 #define COMPLEX_DATA {1.0, 2.0 + I}
 
-int int_data[COUNT] = INT_DATA;
-char int_pack[8] = { 0, 0, 0, 1, 0xff, 0xff, 0xff, 0xfe };
+static int int_data[COUNT] = INT_DATA;
+static char int_pack[8] = { 0, 0, 0, 1, 0xff, 0xff, 0xff, 0xfe };
 
-long long_data[COUNT] = INT_DATA;
-char long_pack[16] = { 0, 0, 0, 1, 0xff, 0xff, 0xff, 0xfe };
+static long long_data[COUNT] = INT_DATA;
+static char long_pack[16] = { 0, 0, 0, 1, 0xff, 0xff, 0xff, 0xfe };
 
-long long long_long_data[COUNT] = INT_DATA;
-char long_long_pack[16] =
+static long long long_long_data[COUNT] = INT_DATA;
+static char long_long_pack[16] =
     { 0, 0, 0, 0, 0, 0, 0, 1, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe };
 
-float float_data[COUNT] = FLOAT_DATA;
-char float_pack[8] = { 0x3f, 0x80, 0, 0, 0x40, 0, 0, 0 };
+static float float_data[COUNT] = FLOAT_DATA;
+static char float_pack[8] = { 0x3f, 0x80, 0, 0, 0x40, 0, 0, 0 };
 
-long double long_double_data[COUNT] = FLOAT_DATA;
-char long_double_pack[32] = {
+static long double long_double_data[COUNT] = FLOAT_DATA;
+static char long_double_pack[32] = {
     0x3f, 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-bool bool_data[COUNT] = BOOL_DATA;
-char bool_pack[2] = { 1, 0 };
+static bool bool_data[COUNT] = BOOL_DATA;
+static char bool_pack[2] = { 1, 0 };
 
 #ifdef TEST_COMPLEX
-float complex complex_data[COUNT] = COMPLEX_DATA;
-char complex_pack[16] = {
+static float complex complex_data[COUNT] = COMPLEX_DATA;
+static char complex_pack[16] = {
     0x3f, 0x80, 0, 0, 0, 0, 0, 0,
     0x40, 0, 0, 0, 0x3f, 0x80, 0, 0
 };
@@ -200,11 +202,9 @@ static void get_elem_dump(const void *buf, int dt_size, char *str_out)
     *s = '\0';
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     for (int i = 0; i < N_DT; i++) {
         const void *buf = get_in_buffer(dt_list[i]);
@@ -294,6 +294,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

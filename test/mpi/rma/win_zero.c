@@ -5,19 +5,20 @@
 
 /* test MPI_WIN_ALLOCATE_SHARED when size of total shared memory region is 0. */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run rma_win_zero
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Win win;
     void *win_buf = NULL;
     int world_rank, shm_rank;
     MPI_Comm shm_comm;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, world_rank, MPI_INFO_NULL, &shm_comm);
@@ -57,8 +58,6 @@ int main(int argc, char **argv)
     MPI_Win_free(&win);
 
     MPI_Comm_free(&shm_comm);
-
-    MTest_Finalize(0);
 
     return 0;
 }

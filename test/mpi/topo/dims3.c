@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run topo_dims3
+int run(const char *arg);
+#endif
+
 static inline void print_err(int *dims, int ndims)
 {
     int i;
@@ -17,12 +22,11 @@ static inline void print_err(int *dims, int ndims)
     printf("] Suboptimal distribution!\n");
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int dims[4], ndims, nnodes;
 
-    MTest_Init(&argc, &argv);
 
     for (ndims = 3; ndims <= 4; ndims++) {
         for (nnodes = 2; nnodes <= 4096; nnodes *= 2) {
@@ -42,7 +46,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

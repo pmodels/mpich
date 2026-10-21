@@ -3,22 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-
-#include <mpi.h>
 #include "mpitest.h"
 
-int sizes[] = { 64, 32768, 2000000 };
+#ifdef MULTI_TESTS
+#define run pt2pt_precv_anysrc_exp
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static int sizes[] = { 64, 32768, 2000000 };
+
+int run(const char *arg)
 {
     int errs = 0;
     int rank, i, j, msg_size;
     char *buf;
     MPI_Request req;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for (i = 0; i < 3; i++) {
@@ -50,6 +50,5 @@ int main(int argc, char **argv)
         free(buf);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

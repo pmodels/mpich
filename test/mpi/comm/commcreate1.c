@@ -3,19 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_commcreate1
+int run(const char *arg);
+#endif
 
 /* Check that Communicators can be created from various subsets of the
    processes in the communicator.
 */
 
-void abortMsg(const char *, int);
-int BuildComm(MPI_Comm, MPI_Group, const char[]);
+static void abortMsg(const char *, int);
+static int BuildComm(MPI_Comm, MPI_Group, const char[]);
 
-void abortMsg(const char *str, int code)
+static void abortMsg(const char *str, int code)
 {
     char msg[MPI_MAX_ERROR_STRING];
     int class, resultLen;
@@ -26,14 +29,12 @@ void abortMsg(const char *str, int code)
     MPI_Abort(MPI_COMM_WORLD, code);
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm dupWorld;
     int wrank, wsize, gsize, err, errs = 0;
     int ranges[1][3];
     MPI_Group wGroup, godd, ghigh, geven;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -95,12 +96,10 @@ int main(int argc, char *argv[])
     MPI_Group_free(&geven);
     MPI_Group_free(&wGroup);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int BuildComm(MPI_Comm oldcomm, MPI_Group group, const char gname[])
+static int BuildComm(MPI_Comm oldcomm, MPI_Group group, const char gname[])
 {
     MPI_Comm newcomm;
     int grank, gsize, rank, size, errs = 0;

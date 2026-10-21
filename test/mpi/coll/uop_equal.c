@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_uop_equal
+int run(const char *arg);
+#endif
 
 /*
  * Test user-defined operations that uses MPI_Type_get_envelope and MPI_Type_get_contents.
@@ -20,12 +22,10 @@ struct string_int {
     int is_equal;
 };
 
-void myop(void *in, void *out, int *count, MPI_Datatype * dtype);
-
 /*
  * myop takes a datatype that is of struct string_int and compares the string.
  */
-void myop(void *in, void *out, int *count, MPI_Datatype * dtype)
+static void myop(void *in, void *out, int *count, MPI_Datatype * dtype)
 {
     int n_ints, n_aints, n_datatypes, combiner;
     MPI_Type_get_envelope(*dtype, &n_ints, &n_aints, &n_datatypes, &combiner);
@@ -45,14 +45,13 @@ void myop(void *in, void *out, int *count, MPI_Datatype * dtype)
     }
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int wsize, wrank;
     MPI_Datatype eq_type;
     MPI_Op op;
 
-    MTest_Init(&argc, &argv);
     MPI_Op_create(myop, 0, &op);
 
     MPI_Datatype types[2] = { MPI_CHAR, MPI_INT };
@@ -74,6 +73,6 @@ int main(int argc, char *argv[])
     }
     MPI_Op_free(&op);
     MPI_Type_free(&eq_type);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

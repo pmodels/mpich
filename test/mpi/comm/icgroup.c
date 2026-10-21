@@ -3,23 +3,24 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_icgroup
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Get the group of an intercommunicator";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, grank, gsize;
     int minsize = 2, isleft;
     MPI_Comm comm;
     MPI_Group group;
-
-    MTest_Init(&argc, &argv);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -46,6 +47,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

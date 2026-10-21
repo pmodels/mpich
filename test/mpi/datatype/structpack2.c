@@ -3,14 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
 /* The next is for isprint */
 #include <ctype.h>
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run datatype_structpack2
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     struct a {
         int i;
@@ -26,8 +28,6 @@ int main(int argc, char *argv[])
     MPI_Datatype str, con;
     char *buffer;
     int bufsize, position, insize;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -107,6 +107,5 @@ int main(int argc, char *argv[])
     free(buffer);
     MPI_Type_free(&str);
     MPI_Type_free(&con);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

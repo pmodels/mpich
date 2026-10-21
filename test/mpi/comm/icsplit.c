@@ -3,22 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_icsplit
+int run(const char *arg);
+#endif
 
 /*
  * This program tests that MPI_Comm_split applies to intercommunicators;
  * this is an extension added in MPI-2
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, isLeft;
     MPI_Comm intercomm, newcomm;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 4) {
@@ -106,8 +106,5 @@ int main(int argc, char *argv[])
             MPI_Comm_free(&newcomm);
         MPI_Comm_free(&intercomm);
     }
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

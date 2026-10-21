@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include <stddef.h>
 #include <assert.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_get_elements
+int run(const char *arg);
+#endif
 
 /* Tests MPI_Get_elements with a contiguous datatype that triggered a bug in
  * past versions of MPICH.  See ticket #1467 for more info. */
@@ -18,7 +21,7 @@ struct test_struct {
     int c;
 };
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, count;
     struct test_struct sendbuf, recvbuf;
@@ -29,7 +32,6 @@ int main(int argc, char **argv)
     MPI_Status status;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* We use a contig of a struct in order to satisfy two properties:
@@ -78,6 +80,5 @@ int main(int argc, char **argv)
         errs++;
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,18 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_win_shared_create
+int run(const char *arg);
+#endif
 
 #define ELEM_PER_PROC 4
-int local_buf[ELEM_PER_PROC];
+static int local_buf[ELEM_PER_PROC];
 
-const int verbose = 0;
+static const int verbose = 0;
+static int use_alloc_shm = 0;
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, rank, nproc;
     int shm_rank, shm_nproc;
@@ -28,7 +31,9 @@ int main(int argc, char **argv)
     int dst_shm_rank, dst_world_rank;
     MPI_Info create_info = MPI_INFO_NULL;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_alloc_shm = MTestArgListGetInt_with_default(head, "use-alloc-shm", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -65,12 +70,12 @@ int main(int argc, char **argv)
                    shm_rank, i, bases[i], size, disp_unit);
     }
 
-#ifdef USE_INFO_ALLOC_SHM
-    MPI_Info_create(&create_info);
-    MPI_Info_set(create_info, "alloc_shm", "true");
-#else
-    create_info = MPI_INFO_NULL;
-#endif
+    if (use_alloc_shm) {
+        MPI_Info_create(&create_info);
+        MPI_Info_set(create_info, "alloc_shm", "true");
+    } else {
+        create_info = MPI_INFO_NULL;
+    }
 
     /* Reset data */
     for (i = 0; i < ELEM_PER_PROC; i++) {
@@ -80,6 +85,10 @@ int main(int argc, char **argv)
 
     MPI_Win_create(my_base, sizeof(int) * ELEM_PER_PROC, sizeof(int), create_info, MPI_COMM_WORLD,
                    &win);
+
+    if (create_info != MPI_INFO_NULL) {
+        MPI_Info_free(&create_info);
+    }
 
     /* Do RMA through global window, then check value through shared window */
     MPI_Win_lock_all(0, win);
@@ -125,10 +134,8 @@ int main(int argc, char **argv)
     if (world_group != MPI_GROUP_NULL)
         MPI_Group_free(&world_group);
 
-    MTest_Finalize(errors);
-
     if (bases)
         free(bases);
 
-    return MTestReturnValue(errors);
+    return errors;
 }

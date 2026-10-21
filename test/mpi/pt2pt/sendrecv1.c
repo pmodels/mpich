@@ -4,18 +4,18 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
 
+#ifdef MULTI_TESTS
+#define run pt2pt_sendrecv1
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Send-Recv";
 */
-
-int world_rank, world_size;
 
 static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const char *basic_type,
                      mtest_mem_type_e sendmem, mtest_mem_type_e recvmem, int source)
@@ -28,6 +28,9 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
     MPI_Datatype sendtype, recvtype;
     DTP_pool_s dtp;
     struct mtest_obj send, recv;
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -122,12 +125,12 @@ static int sendrecv1(int seed, int testsize, int sendcnt, int recvcnt, const cha
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
+
+    int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     if (world_size < 2) {
         printf("This test requires 2 processes\n");
         errs++;
@@ -135,7 +138,7 @@ int main(int argc, char *argv[])
     }
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_PT2PT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         for (int source_rank = 0; source_rank < 2; source_rank++) {
             MTestPrintfMsg(1, "Test with source rank = %d\n", source_rank);
@@ -148,6 +151,5 @@ int main(int argc, char *argv[])
     dtp_args_finalize(&dtp_args);
 
   fn_exit:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

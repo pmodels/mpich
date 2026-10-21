@@ -3,15 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_idup_nb
+int run(const char *arg);
+#endif
 
 #define ITERS 5
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i, isleft;
@@ -21,7 +23,6 @@ int main(int argc, char **argv)
     MPI_Request sreq[ITERS * 2];
     int root;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -175,6 +176,5 @@ int main(int argc, char **argv)
         }
         MTestFreeComm(&test_comm);
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

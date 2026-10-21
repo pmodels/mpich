@@ -10,20 +10,25 @@
 #include <assert.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run topo_distgraph1
+int run(const char *arg);
+#endif
+
 #define NUM_GRAPHS 10
 #define MAX_WEIGHT 100
 
 /* convenience globals */
-int size, rank;
+static int size, rank;
 
 /* We need MPI 2.2 to be able to compile the following routines. */
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
 
 /* Maybe use a bit vector instead? */
-int **layout;
+static int **layout;
 
 #define MAX_LAYOUT_NAME_LEN 256
-char graph_layout_name[MAX_LAYOUT_NAME_LEN] = { '\0' };
+static char graph_layout_name[MAX_LAYOUT_NAME_LEN] = { '\0' };
 
 static void create_graph_layout(int graph_num)
 {
@@ -216,7 +221,7 @@ static int verify_comm(MPI_Comm comm)
 
 #endif /* At least MPI 2.2 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int i, j, k, p;
@@ -225,7 +230,6 @@ int main(int argc, char *argv[])
     int *sources, *sweights, *destinations, *dweights, *degrees;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -566,7 +570,5 @@ int main(int argc, char *argv[])
     free(degrees);
 #endif
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,22 +3,30 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_transpose_pack
+int run(const char *arg);
+#endif
 #endif
 
 static int verbose = 0;
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
 
-int main(int argc, char *argv[])
+
+int run(const char *arg)
 {
     /* Variable declarations */
     int a[100][100], b[100][100];
@@ -40,8 +48,7 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     MPI_Type_get_extent(MPI_INT, &tmp_lb, &sizeofint);
 
@@ -78,26 +85,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&row);
 
     free(buffer);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
-}
-
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
+    return errs;
 }

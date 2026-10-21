@@ -10,11 +10,13 @@
 /* FIXME: we should merge this into a comprehensive test for RMA
  * operations + MPI_Win_flush_local. */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_derived_acc_flush_local
+int run(const char *arg);
+#endif
 
 #define DATA_SIZE 1000000
 #define COUNT 5000
@@ -22,7 +24,7 @@
 #define STRIDE BLOCKLENGTH
 #define OPS_NUM 500
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nproc;
     int i;
@@ -31,8 +33,6 @@ int main(int argc, char *argv[])
     int *orig_buf = NULL;
     MPI_Datatype derived_dtp;
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -125,7 +125,5 @@ int main(int argc, char *argv[])
     MPI_Free_mem(orig_buf);
     MPI_Free_mem(tar_buf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

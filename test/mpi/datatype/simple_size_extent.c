@@ -5,19 +5,28 @@
 
 /* Tests that Type_get_extent of a couple of basic types succeeds. */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run datatype_simple_size_extent
+int run(const char *arg);
+#endif
+
 static int verbose = 0;
 
-int parse_args(int argc, char **argv);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int mpi_err, errs = 0, size;
     MPI_Aint lb, extent;
@@ -28,8 +37,7 @@ int main(int argc, char **argv)
         int b;
     } foo;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -116,25 +124,5 @@ int main(int argc, char **argv)
         errs++;
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
-}
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
+    return errs;
 }

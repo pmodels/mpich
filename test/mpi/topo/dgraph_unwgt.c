@@ -9,6 +9,11 @@
 #include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run topo_dgraph_unwgt
+int run(const char *arg);
+#endif
+
 #define RING_NUM_NEIGHBORS   2
 
 static int validate_dgraph(MPI_Comm dgraph_comm)
@@ -106,7 +111,7 @@ static int validate_dgraph(MPI_Comm dgraph_comm)
    Specify a distributed graph of a bidirectional ring of the MPI_COMM_WORLD,
    i.e. everyone only talks to left and right neighbors.
 */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm dgraph_comm;
     int world_size, world_rank, ierr;
@@ -116,7 +121,6 @@ int main(int argc, char *argv[])
     int degs[1];
     int srcs[RING_NUM_NEIGHBORS], dests[RING_NUM_NEIGHBORS];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
@@ -161,6 +165,5 @@ int main(int argc, char *argv[])
     }
     MPI_Comm_free(&dgraph_comm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_sendall
+int run(const char *arg);
+#endif
 
 /*
  * This test makes sure that each process can send to each other process.
@@ -21,7 +23,7 @@ static int buffer[MAXPES][MYBUFSIZE];
 
 #define NUM_RUNS 10
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i;
     int count, size;
@@ -30,7 +32,6 @@ int main(int argc, char *argv[])
     MPI_Request request[MAXPES];
     MPI_Status status;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &self);
     MPI_Comm_size(MPI_COMM_WORLD, &npes);
 
@@ -70,8 +71,6 @@ int main(int argc, char *argv[])
     }
 
     /* Simple completion is all that we normally ask of this program */
-
-    MTest_Finalize(0);
 
     return 0;
 }

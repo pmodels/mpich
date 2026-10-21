@@ -11,10 +11,12 @@
  * does not result in an error or segfault. */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_nonblocking2
+int run(const char *arg);
+#endif
 
 #define COUNT (10)
 #define PRIME (17)
@@ -52,28 +54,27 @@ static void sum_fn(void *invec, void *inoutvec, int *len, MPI_Datatype * datatyp
     }
 }
 
-int *buf = NULL;
-int *recvbuf = NULL;
-int *sendcounts = NULL;
-int *recvcounts = NULL;
-int *sdispls = NULL;
-int *rdispls = NULL;
-MPI_Datatype *sendtypes = NULL;
-MPI_Datatype *recvtypes = NULL;
-signed char *buf_alias = NULL;
-MPI_Request req;
+static int *buf = NULL;
+static int *recvbuf = NULL;
+static int *sendcounts = NULL;
+static int *recvcounts = NULL;
+static int *sdispls = NULL;
+static int *rdispls = NULL;
+static MPI_Datatype *sendtypes = NULL;
+static MPI_Datatype *recvtypes = NULL;
+static signed char *buf_alias = NULL;
+static MPI_Request req;
 
-int test_icoll_with_root(int rank, int size, int root, MPI_Datatype datatype,
-                         int stride, MPI_Op op_user);
+static int test_icoll_with_root(int rank, int size, int root, MPI_Datatype datatype,
+                                int stride, MPI_Op op_user);
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
     int noncontig_stride = 2;
     MPI_Datatype dt_noncontig;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -102,7 +103,6 @@ int main(int argc, char **argv)
 
     MPI_Type_free(&dt_noncontig);
     MPI_Op_free(&op);
-    MTest_Finalize(errs);
     free(buf);
     free(recvbuf);
     free(sendcounts);
@@ -111,11 +111,11 @@ int main(int argc, char **argv)
     free(sdispls);
     free(recvtypes);
     free(sendtypes);
-    return 0;
+    return errs;
 }
 
-int test_icoll_with_root(int rank, int size, int root, MPI_Datatype datatype,
-                         int stride, MPI_Op op_user)
+static int test_icoll_with_root(int rank, int size, int root, MPI_Datatype datatype,
+                                int stride, MPI_Op op_user)
 {
     int errs = 0;
     int i, j;

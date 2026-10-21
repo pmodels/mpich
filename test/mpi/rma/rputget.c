@@ -7,6 +7,11 @@
 #include <assert.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run rma_rputget
+int run(const char *arg);
+#endif
+
 /* This test is adapted from the reproducer by Jeff Hammond via Github issue #7890 */
 
 /* Target expose a contiguous buffer of 2N size. Origin rput or rget using a datatype
@@ -24,7 +29,7 @@ enum op {
     RGET,
 };
 
-int test_rputget(enum op op_type, int N, int rank)
+static int test_rputget(enum op op_type, int N, int rank)
 {
     int errs = 0;
 
@@ -87,12 +92,11 @@ int test_rputget(enum op op_type, int N, int rank)
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
     int rank, nproc;
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -110,7 +114,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

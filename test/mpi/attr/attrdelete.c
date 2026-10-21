@@ -7,19 +7,22 @@
   Having attr delete function to delete another attribute.
  */
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run attr_attrdelete
+int run(const char *arg);
+#endif
 #include <stdio.h>
 
-int key1, key2, key3;
+static int key1, key2, key3;
 
-int test_communicator(MPI_Comm comm);
+static int test_communicator(MPI_Comm comm);
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs;
-    MTest_Init(&argc, &argv);
     errs = test_communicator(MPI_COMM_WORLD);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 static int key2_delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
@@ -29,7 +32,7 @@ static int key2_delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *
     return MPI_SUCCESS;
 }
 
-int test_communicator(MPI_Comm comm)
+static int test_communicator(MPI_Comm comm)
 {
     int errs = 0;
     int rank, size;

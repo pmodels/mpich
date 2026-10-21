@@ -3,18 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_subarray
+int run(const char *arg);
+#endif
 
 #define X 64
 #define Y 8
 #define Z 512
 
-double array[X][Y][Z];
+static double array[X][Y][Z];
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int myrank;
     MPI_Datatype subarray;
@@ -24,7 +27,6 @@ int main(int argc, char *argv[])
     int i, j, k;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     for (i = 0; i < X; ++i) {
@@ -58,7 +60,5 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&subarray);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

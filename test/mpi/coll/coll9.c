@@ -3,20 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-void addem(int *, int *, int *, MPI_Datatype *);
+#ifdef MULTI_TESTS
+#define run coll_coll9
+int run(const char *arg);
+#endif
 
-void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
+static void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {
     int i;
     for (i = 0; i < *len; i++)
         inoutvec[i] += invec[i];
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, i;
     int data;
@@ -25,7 +26,6 @@ int main(int argc, char **argv)
     int correct_result;
     MPI_Op op;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -40,6 +40,5 @@ int main(int argc, char **argv)
     if (result != correct_result)
         errors++;
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

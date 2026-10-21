@@ -16,6 +16,11 @@
 #include <limits.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run mpi_t_mpi_t_str
+int run(const char *arg);
+#endif
+
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
     do {                                                                          \
@@ -30,7 +35,7 @@
 /* the usual multiple-evaluation caveats apply to this routine */
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i, j;
@@ -46,7 +51,6 @@ int main(int argc, char **argv)
     int scope;
     int provided;
 
-    MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -211,7 +215,5 @@ int main(int argc, char **argv)
     }
 
     MPI_T_finalize();
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

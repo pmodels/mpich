@@ -6,12 +6,14 @@
 /* test based on a bug report from Lisandro Dalcin:
  * http://lists.mcs.anl.gov/pipermail/mpich-dev/2012-October/000978.html */
 
-#include <mpi.h>
-#include <stdlib.h>
-#include <stdio.h>
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_hindexed_block_contents
+int run(const char *arg);
+#endif
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -24,7 +26,7 @@
         }                                                                         \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int rank;
@@ -33,7 +35,6 @@ int main(int argc, char **argv)
     int blocklength = 2;
     MPI_Aint displacements[] = { 0, 8, 16, 24 };
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (!rank) {
@@ -63,6 +64,5 @@ int main(int argc, char **argv)
         MPI_Type_free(&t);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

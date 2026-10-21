@@ -3,10 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_transpose3
+int run(const char *arg);
+#endif
 
 /* transposes a matrix using post/start/complete/wait and derived
    datatypes. Uses  vector and hvector (Example 3.32 from MPI 1.1
@@ -15,7 +18,9 @@
 #define NROWS 100
 #define NCOLS 100
 
-int main(int argc, char *argv[])
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     int rank, nprocs, i, j, destrank;
     MPI_Comm CommDeuce;
@@ -24,7 +29,10 @@ int main(int argc, char *argv[])
     MPI_Group comm_group, group;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -51,12 +59,12 @@ int main(int argc, char *argv[])
             MPI_Type_create_hvector(NCOLS, 1, sizeof(int), column, &xpose);
             MPI_Type_commit(&xpose);
 
-#ifdef USE_WIN_ALLOCATE
-            int *base_ptr = NULL;
-            MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
-#else
-            MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
-#endif
+            if (use_win_allocate) {
+                int *base_ptr = NULL;
+                MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
+            } else {
+                MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+            }
 
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
@@ -70,14 +78,14 @@ int main(int argc, char *argv[])
             MPI_Win_complete(win);
         } else {        /* rank=1 */
             int *A;
-#ifdef USE_WIN_ALLOCATE
-            MPI_Win_allocate(NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &A,
-                             &win);
-#else
-            MPI_Alloc_mem(NROWS * NCOLS * sizeof(int), MPI_INFO_NULL, &A);
-            MPI_Win_create(A, NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce,
-                           &win);
-#endif
+            if (use_win_allocate) {
+                MPI_Win_allocate(NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce,
+                                 &A, &win);
+            } else {
+                MPI_Alloc_mem(NROWS * NCOLS * sizeof(int), MPI_INFO_NULL, &A);
+                MPI_Win_create(A, NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL,
+                               CommDeuce, &win);
+            }
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             for (i = 0; i < NROWS; i++)
                 for (j = 0; j < NCOLS; j++)
@@ -103,16 +111,17 @@ int main(int argc, char *argv[])
             if (errs >= 50) {
                 printf("Total number of errors: %d\n", errs);
             }
-#ifndef USE_WIN_ALLOCATE
-            MPI_Free_mem(A);
-#endif
+            if (!use_win_allocate) {
+                MPI_Free_mem(A);
+            }
         }
 
         MPI_Group_free(&group);
         MPI_Group_free(&comm_group);
         MPI_Win_free(&win);
     }
+
     MPI_Comm_free(&CommDeuce);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

@@ -3,40 +3,47 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_get_flushlocal
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Get with Flush_local";
 */
 
-int errs = 0;
-const int NITER = 1000;
+static int errs = 0;
+static const int NITER = 1000;
 #define BUFCNT 1024
 
-int main(int argc, char **argv)
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     int rank, nproc, x, i, target_rank;
     int *winbuf = NULL, *locbuf = NULL;
     MPI_Win win;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     locbuf = malloc(BUFCNT * sizeof(int));
 
-#ifdef USE_WIN_ALLOCATE
-    MPI_Win_allocate(BUFCNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &winbuf,
-                     &win);
-#else
-    winbuf = malloc(BUFCNT * sizeof(int));
-    MPI_Win_create(winbuf, BUFCNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-#endif
+    if (use_win_allocate) {
+        MPI_Win_allocate(BUFCNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &winbuf,
+                         &win);
+    } else {
+        winbuf = malloc(BUFCNT * sizeof(int));
+        MPI_Win_create(winbuf, BUFCNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD,
+                       &win);
+    }
 
     /* Initialize window buffer */
     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
@@ -69,12 +76,10 @@ int main(int argc, char **argv)
     MPI_Win_unlock_all(win);
     MPI_Win_free(&win);
 
-#ifndef USE_WIN_ALLOCATE
-    free(winbuf);
-#endif
+    if (!use_win_allocate) {
+        free(winbuf);
+    }
     free(locbuf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

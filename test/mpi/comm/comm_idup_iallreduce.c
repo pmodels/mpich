@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_idup_iallreduce
+int run(const char *arg);
+#endif
 
 #define ITERS 10
 
@@ -29,7 +31,7 @@
  *  9.) Communicate on the merge communicator, while duplicating COMM_WORLD
 */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -39,7 +41,6 @@ int main(int argc, char **argv)
     MPI_Comm newcomm, newcomm_v[ITERS], dup_comm, split, ic, merge;
     MPI_Request sreq[ITERS * 2];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -143,7 +144,6 @@ int main(int argc, char **argv)
     MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, ic, &sreq[0]);
     MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
 
-
     if (sol != out)
         errs++;;
     /* Test new inter communicator */
@@ -182,7 +182,6 @@ int main(int argc, char **argv)
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
 
-
     if (sol != out)
         errs++;;
     /* Test new communicator */
@@ -205,6 +204,5 @@ int main(int argc, char **argv)
     MPI_Comm_free(&split);
     MPI_Comm_free(&ic);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

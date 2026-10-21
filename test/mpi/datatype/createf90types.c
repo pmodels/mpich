@@ -3,12 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_createf90types
+int run(const char *arg);
+#endif
 
 static int cases[6][2] = { {3, 10}, {3, MPI_UNDEFINED}, {MPI_UNDEFINED, 10},
 {7, 30}, {7, MPI_UNDEFINED}, {MPI_UNDEFINED, 30}
@@ -126,7 +128,7 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int p, r;
     int errs = 0;
@@ -134,18 +136,15 @@ int main(int argc, char *argv[])
     int i, j, nLoop = 1;
     MPI_Datatype newtype;
 
-    MTest_Init(0, 0);
-
-    if (argc > 1) {
-        nLoop = atoi(argv[1]);
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    nLoop = MTestArgListGetInt_with_default(head, "loop", nLoop);
+    MTestArgListDestroy(head);
     /* Set the handler to errors return, since according to the
      * standard, it is invalid to provide p and/or r that are unsupported */
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     for (i = 0; i < nLoop; i++) {
-
         /* These should be a valid type similar to MPI_REAL and MPI_REAL8 */
         for (j = 0; j < 6; j++) {
             p = cases[j][0];
@@ -169,6 +168,5 @@ int main(int argc, char *argv[])
         errs += checkType("INTEGER", p, r, MPI_COMBINER_F90_INTEGER, err, newtype);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

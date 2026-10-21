@@ -3,35 +3,43 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitestconf.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_contents
+int run(const char *arg);
+#endif
 
 static int verbose = 0;
 
 /* tests */
-int builtin_float_test(void);
-int vector_of_vectors_test(void);
-int optimizable_vector_of_basics_test(void);
-int indexed_of_basics_test(void);
-int indexed_of_vectors_test(void);
-int struct_of_basics_test(void);
+static int builtin_float_test(void);
+static int vector_of_vectors_test(void);
+static int optimizable_vector_of_basics_test(void);
+static int indexed_of_basics_test(void);
+static int indexed_of_vectors_test(void);
+static int struct_of_basics_test(void);
 
 /* helper functions */
-char *combiner_to_string(int combiner);
-int parse_args(int argc, char **argv);
+static char *combiner_to_string(int combiner);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -72,8 +80,7 @@ int main(int argc, char **argv)
     errs += err;
 #endif
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* builtin_float_test()
@@ -82,7 +89,7 @@ int main(int argc, char **argv)
  *
  * Returns the number of errors encountered.
  */
-int builtin_float_test(void)
+static int builtin_float_test(void)
 {
     int nints, nadds, ntypes, combiner;
 
@@ -107,7 +114,7 @@ int builtin_float_test(void)
  *
  * Returns the number of errors encountered.
  */
-int vector_of_vectors_test(void)
+static int vector_of_vectors_test(void)
 {
     MPI_Datatype inner_vector, inner_vector_copy;
     MPI_Datatype outer_vector;
@@ -273,7 +280,7 @@ int vector_of_vectors_test(void)
     MPI_Type_free(&inner_vector);
     MPI_Type_free(&outer_vector);
 
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* optimizable_vector_of_basics_test()
@@ -284,7 +291,7 @@ int vector_of_vectors_test(void)
  *
  * Returns the number of errors encountered.
  */
-int optimizable_vector_of_basics_test(void)
+static int optimizable_vector_of_basics_test(void)
 {
     MPI_Datatype parent_type;
 
@@ -357,14 +364,13 @@ int optimizable_vector_of_basics_test(void)
     return errs;
 }
 
-
 /* indexed_of_basics_test(void)
  *
  * Simple indexed type.
  *
  * Returns number of errors encountered.
  */
-int indexed_of_basics_test(void)
+static int indexed_of_basics_test(void)
 {
     MPI_Datatype parent_type;
     int s_count = 3, s_blocklengths[3] = { 3, 2, 1 };
@@ -460,7 +466,7 @@ int indexed_of_basics_test(void)
  *
  * Returns the number of errors encountered.
  */
-int indexed_of_vectors_test(void)
+static int indexed_of_vectors_test(void)
 {
     MPI_Datatype inner_vector, inner_vector_copy;
     MPI_Datatype outer_indexed;
@@ -646,9 +652,8 @@ int indexed_of_vectors_test(void)
     MPI_Type_free(&inner_vector);
     MPI_Type_free(&outer_indexed);
 
-    return MTestReturnValue(errs);
+    return errs;
 }
-
 
 #ifdef HAVE_MPI_TYPE_CREATE_STRUCT
 /* struct_of_basics_test(void)
@@ -659,7 +664,7 @@ int indexed_of_vectors_test(void)
  *
  * NOT TESTED.
  */
-int struct_of_basics_test(void)
+static int struct_of_basics_test(void)
 {
     MPI_Datatype parent_type;
     int s_count = 3, s_blocklengths[3] = { 3, 2, 1 };
@@ -762,7 +767,7 @@ int struct_of_basics_test(void)
  *
  * Converts a numeric combiner into a pointer to a string used for printing.
  */
-char *combiner_to_string(int combiner)
+static char *combiner_to_string(int combiner)
 {
     static char c_named[] = "named";
     static char c_contig[] = "contig";
@@ -825,21 +830,4 @@ char *combiner_to_string(int combiner)
 #endif
 
     return NULL;
-}
-
-int parse_args(int argc, char **argv)
-{
-#ifdef HAVE_GET_OPT
-    int ret;
-
-    while ((ret = getopt(argc, argv, "v")) >= 0) {
-        switch (ret) {
-            case 'v':
-                verbose = 1;
-                break;
-        }
-    }
-#else
-#endif
-    return 0;
 }

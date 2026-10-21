@@ -7,13 +7,17 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run topo_dims4
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int nproc = (1000 * 1000 * 1000);
     int ret[3] = { 0, 0, 0 };
     int errs = 0, i, rank;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Dims_create(nproc, 3, ret);
@@ -22,6 +26,5 @@ int main(int argc, char **argv)
         if (ret[i] != 1000)
             errs++;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

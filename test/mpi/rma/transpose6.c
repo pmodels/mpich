@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_transpose6
+int run(const char *arg);
+#endif
 
 /* This does a local transpose-cum-accumulate operation. Uses
    vector and hvector datatypes (Example 3.32 from MPI 1.1
@@ -14,14 +17,13 @@
 #define NROWS 100
 #define NCOLS 100
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, A[NROWS][NCOLS], B[NROWS][NCOLS], i, j;
     MPI_Win win;
     MPI_Datatype column, xpose;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -65,6 +67,5 @@ int main(int argc, char *argv[])
 
         MPI_Win_free(&win);
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

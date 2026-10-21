@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_win_flavors
+int run(const char *arg);
+#endif
 
 #define ELEM_SIZE 8
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank;
     int errors = 0, all_errors = 0;
@@ -17,7 +20,6 @@ int main(int argc, char *argv[])
     void *buf;
     MPI_Win window;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /** Create using MPI_Win_create() **/
@@ -110,7 +112,5 @@ int main(int argc, char *argv[])
 
     MPI_Win_free(&window);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(all_errors);
+    return all_errors;
 }

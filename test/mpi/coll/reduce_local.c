@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_reduce_local
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "A simple test of MPI_Reduce_local";
@@ -15,9 +17,6 @@ static char MTEST_Descrip[] = "A simple test of MPI_Reduce_local";
 #define MAX_BUF_ELEMENTS (65000)
 
 static int uop_errs = 0;
-
-/* prototype to keep the compiler happy */
-static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype);
 
 static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
 {
@@ -36,7 +35,7 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * dataty
     }
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -45,7 +44,6 @@ int main(int argc, char *argv[])
     int count = -1;
     MPI_Op uop = MPI_OP_NULL;
 
-    MTest_Init(&argc, &argv);
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     /* this function was added in MPI-2.2 */
 
@@ -88,6 +86,5 @@ int main(int argc, char *argv[])
     free(inoutbuf);
 #endif
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

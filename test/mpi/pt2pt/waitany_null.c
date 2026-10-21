@@ -3,30 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpitestconf.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#include "mpi.h"
 #include "mpitest.h"
+#include <string.h>
 
-static int verbose = 0;
+#ifdef MULTI_TESTS
+#define run pt2pt_waitany_null
+int run(const char *arg);
+#endif
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
-
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, err, errs = 0, rank;
 
     int index;
     MPI_Request requests[10];
     MPI_Status statuses[10];
-
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
 
     for (i = 0; i < 10; i++) {
         requests[i] = MPI_REQUEST_NULL;
@@ -53,25 +44,6 @@ int main(int argc, char *argv[])
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
-}
 
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
+    return errs;
 }

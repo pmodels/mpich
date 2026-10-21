@@ -8,12 +8,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run mpi_t_cvarwrite
+int run(const char *arg);
+#endif
 #include "mpitestconf.h"
 
 #define MAX_STR_CVAR_LEN 512
 #define MAX_VAR_NAME_LEN 128
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i;
     int required, provided;
@@ -33,7 +38,6 @@ int main(int argc, char *argv[])
     required = MPI_THREAD_SINGLE;
     namelen = sizeof(name);
 
-    MTest_Init(&argc, &argv);
     MPI_T_init_thread(required, &provided);
 
     MPI_T_cvar_get_num(&num_cvar);
@@ -104,6 +108,5 @@ int main(int argc, char *argv[])
     }
 
     MPI_T_finalize();
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

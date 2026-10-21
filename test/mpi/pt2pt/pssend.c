@@ -9,14 +9,18 @@
 
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run pt2pt_pssend
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank;
     MPI_Request req;
     int flag;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -47,7 +51,5 @@ int main(int argc, char *argv[])
         MPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    MTest_Finalize(errs);
-
-    return 0;
+    return errs;
 }

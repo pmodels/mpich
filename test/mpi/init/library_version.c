@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run init_library_version
+int run(const char *arg);
+#endif
+
 static int verbose = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, resultlen = -1;
     char version[MPI_MAX_LIBRARY_VERSION_STRING];
 
-    MTest_Init(&argc, &argv);
 
     MPI_Get_library_version(version, &resultlen);
     if (resultlen < 0) {
@@ -25,6 +29,5 @@ int main(int argc, char *argv[])
             printf("%s\n", version);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

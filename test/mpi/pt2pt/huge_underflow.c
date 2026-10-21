@@ -9,21 +9,21 @@
  * message
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <memory.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_huge_underflow
+int run(const char *arg);
+#endif
 
 #define HUGE_SIZE (10*1024*1024)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int size, rank;
     int dest;
     char *buff;
-
-    MTest_Init(&argc, &argv);
 
     buff = malloc(HUGE_SIZE);
     buff[0] = 0;
@@ -44,8 +44,6 @@ int main(int argc, char *argv[])
     free(buff);
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    MTest_Finalize(0);
 
     return 0;
 }

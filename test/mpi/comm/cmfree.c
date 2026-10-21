@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_cmfree
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test that communicators have reference count semantics";
@@ -15,7 +17,7 @@ static char MTEST_Descrip[] = "Test that communicators have reference count sema
 #define NELM 128
 #define NCOMM 1020
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source, dest, i;
@@ -24,8 +26,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Request req;
     int *buf = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
@@ -110,6 +110,5 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

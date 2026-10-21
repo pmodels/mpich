@@ -7,11 +7,16 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int prodof(int, const int[]);
+#ifdef MULTI_TESTS
+#define run topo_dims2
+int run(const char *arg);
+#endif
+
+static int prodof(int, const int[]);
 /*
  * Test edge cases of Dims_create
  */
-int prodof(int ndims, const int dims[])
+static int prodof(int ndims, const int dims[])
 {
     int i, prod = 1;
     for (i = 0; i < ndims; i++)
@@ -19,12 +24,11 @@ int prodof(int ndims, const int dims[])
     return prod;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int dims[4], nnodes;
 
-    MTest_Init(&argc, &argv);
 
     /* 2 dimensional tests */
     for (nnodes = 1; nnodes <= 32; nnodes = nnodes * 2) {
@@ -80,6 +84,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

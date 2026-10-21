@@ -3,15 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_fence_shm
+int run(const char *arg);
+#endif
 
 #define ELEM_PER_PROC 1
 
 static int errs = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs;
     int shm_rank, shm_nprocs;
@@ -20,8 +23,6 @@ int main(int argc, char *argv[])
     int *my_base;
     int one = 1;
     int result_data;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -97,6 +98,5 @@ int main(int argc, char *argv[])
 
     MPI_Comm_free(&shm_comm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

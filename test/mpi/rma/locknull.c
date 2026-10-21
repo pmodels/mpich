@@ -3,25 +3,25 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_locknull
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Locks with no RMA operations";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, i;
     MPI_Comm comm;
     MPI_Win win;
     int *winbuf, count;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
     /* If this test completes, no error has been found */
     /* A more complete test may ensure that local locks in fact block
      * remote, exclusive locks */
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

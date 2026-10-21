@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allred_derived
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with commutative user-defined operations";
@@ -19,14 +21,13 @@ static char MTEST_Descrip[] = "Test MPI_Allreduce with commutative user-defined 
 /* We make the error count global so that we can easily control the output
    of error information (in particular, limiting it after the first 10
    errors */
-int errs = 0;
+static int errs = 0;
 
 /* parameter for a vector type of MPI_INT */
-int g_blocklen = 1;
-int g_stride = 1;
+static int g_blocklen = 1;
+static int g_stride = 1;
 
-void uop(void *, void *, int *, MPI_Datatype *);
-void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
+static void uop(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
 {
     const int *cin = (const int *) cinPtr;
     int *cout = (int *) coutPtr;
@@ -75,14 +76,14 @@ static int check_result(void *buf, int count, int size)
     return lerrs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm comm;
     void *buf, *bufout;
     MPI_Op op;
     MPI_Datatype datatype;
 
-    MTest_Init(&argc, &argv);
+    errs = 0;
 
     MPI_Op_create(uop, IS_COMMUTATIVE, &op);
 
@@ -130,6 +131,5 @@ int main(int argc, char *argv[])
 
     MPI_Op_free(&op);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

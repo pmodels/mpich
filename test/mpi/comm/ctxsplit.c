@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_ctxsplit
+int run(const char *arg);
+#endif
 
 /*
  * This check is intended to fail if there is a leak of context ids.
@@ -17,9 +19,8 @@
  * available).
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-
     int i = 0;
     int randval;
     int rank;
@@ -28,22 +29,14 @@ int main(int argc, char **argv)
     double startTime;
     int nLoop = 100000;
 
-    MTest_Init(&argc, &argv);
-
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--loopcount") == 0) {
-            i++;
-            nLoop = atoi(argv[i]);
-        } else {
-            fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
-        }
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    nLoop = MTestArgListGetInt_with_default(head, "loopcount", nLoop);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     startTime = MPI_Wtime();
     for (i = 0; i < nLoop; i++) {
-
         if (rank == 0 && (i % 100 == 0)) {
             double rate = MPI_Wtime() - startTime;
             if (rate > 0) {
@@ -69,7 +62,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

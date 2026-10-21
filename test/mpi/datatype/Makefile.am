@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 
 ## for all programs that are just built from the single corresponding source
@@ -98,6 +99,4 @@ LDADDDATA = $(top_builddir)/util/libdtypes.la
 $(top_builddir)/util/libdtypes.la:
 	(cd $(top_builddir)/util && $(MAKE))
 
-sendrecvt2_LDADD = $(LDADD) $(LDADDDATA)
-sendrecvt4_LDADD = $(LDADD) $(LDADDDATA)
 typename_LDFLAGS = -mpi-fortran

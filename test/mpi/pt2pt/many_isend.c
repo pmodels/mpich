@@ -3,26 +3,26 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_many_isend
+int run(const char *arg);
+#endif
 
 #define ITER 5
 #define BUF_COUNT (16*1024/sizeof(int))
 
-int rank, nprocs;
-int recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
+static int rank, nprocs;
+static int recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int x, i, j, errs = 0;
     MPI_Status *sendstats = NULL;
     MPI_Request *sendreqs = NULL;
     MPI_Status recvstatus;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -67,7 +67,5 @@ int main(int argc, char *argv[])
     free(sendreqs);
     free(sendstats);
 
-    MTest_Finalize(errs);
-
-    return 0;
+    return errs;
 }

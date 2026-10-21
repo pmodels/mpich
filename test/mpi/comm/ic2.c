@@ -7,12 +7,14 @@
  *
  * Based on test code from N. Radclif @ Cray. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run comm_ic2
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Comm c0, c1, ic;
     MPI_Group g0, g1, gworld;
@@ -24,8 +26,6 @@ int main(int argc, char **argv)
     tag = 5;
     c0 = c1 = ic = MPI_COMM_NULL;
     g0 = g1 = gworld = MPI_GROUP_NULL;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -94,7 +94,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&g1);
     MPI_Group_free(&gworld);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

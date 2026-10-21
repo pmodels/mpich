@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_cartsuball
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int size, dims[2], periods[2], remain[2];
     int result, rank;
     MPI_Comm comm, newcomm;
 
-    MTest_Init(&argc, &argv);
 
     /* First, create a 1-dim cartesian communicator */
     periods[0] = 0;
@@ -57,6 +61,5 @@ int main(int argc, char *argv[])
      * be happy */
     MPI_Comm_free(&comm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

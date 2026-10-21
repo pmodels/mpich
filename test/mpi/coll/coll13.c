@@ -3,24 +3,26 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-
 /*
  * Adapted from the code provided by hook@nas.nasa.gov (Edward C. Hook)
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
 
 #include <string.h>
 #include <errno.h>
+
+#ifdef MULTI_TESTS
+#define run coll_coll13
+int run(const char *arg);
+#endif
+
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 #endif
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, size;
     int chunk = 128;
@@ -29,22 +31,12 @@ int main(int argc, char *argv[])
     int *rb;
     int status;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    for (i = 1; i < argc; ++i) {
-        if (argv[i][0] != '-')
-            continue;
-        switch (argv[i][1]) {
-            case 'm':
-                chunk = atoi(argv[++i]);
-                break;
-            default:
-                fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
-                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-        }
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    chunk = MTestArgListGetInt_with_default(head, "chunk", 128);
+    MTestArgListDestroy(head);
 
     sb = (int *) malloc(size * chunk * sizeof(int));
     if (!sb) {
@@ -70,11 +62,8 @@ int main(int argc, char *argv[])
 
     /* fputs("Before MPI_Allreduce\n",stdout); */
 
-    MTest_Finalize(status);
-
     free(sb);
     free(rb);
 
-
-    return MTestReturnValue(status);
+    return status;
 }

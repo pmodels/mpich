@@ -10,9 +10,14 @@
 #include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run mpi_t_getindex
+int run(const char *arg);
+#endif
+
 static int verbose = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i;
     int required, provided, namelen;
@@ -24,7 +29,6 @@ int main(int argc, char *argv[])
 
     required = MPI_THREAD_SINGLE;
     MPI_T_init_thread(required, &provided);
-    MTest_Init(&argc, &argv);
 
     /* Test MPI_T_cvar_get_index with both valid and bogus names */
     MPI_T_cvar_get_num(&num_cvar);
@@ -111,7 +115,5 @@ int main(int argc, char *argv[])
 #endif
 
     MPI_T_finalize();
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

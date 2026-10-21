@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 
 ## for all programs that are just built from the single corresponding source
@@ -62,7 +63,6 @@ noinst_PROGRAMS =  \
     multi_psend_derived  \
     dtype_send		 \
     recv_any		\
-    irecv_any   \
     large_tag \
     pingping  \
     sendrecv1 \
@@ -74,6 +74,3 @@ noinst_PROGRAMS =  \
     mprobe_self_free \
     pssend \
     pipeline
-
-irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
-irecv_any_SOURCES  = recv_any.c

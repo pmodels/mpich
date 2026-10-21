@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run part_multipart
+int run(const char *arg);
+#endif
+
 /* Checks message matching with multiple partitioned calls.
  *
  * It checks three types of matching scenarios:
@@ -273,11 +278,10 @@ static int test_same_comm_same_tag(void)
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -287,6 +291,5 @@ int main(int argc, char *argv[])
 
     errs += test_diff_comm();
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

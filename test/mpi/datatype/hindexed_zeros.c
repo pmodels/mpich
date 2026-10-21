@@ -4,30 +4,37 @@
  */
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_hindexed_zeros
+int run(const char *arg);
+#endif
 
 static int verbose = 0;
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
-int hindexed_zerotype_test(void);
-int hindexed_sparsetype_test(void);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+static int hindexed_zerotype_test(void);
+static int hindexed_sparsetype_test(void);
 
 struct test_struct_1 {
     int a, b, c, d;
 };
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int err, errs = 0;
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -43,12 +50,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "error in hindexed_sparsetype_test\n");
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* tests with an hindexed type with all zero length blocks */
-int hindexed_zerotype_test(void)
+static int hindexed_zerotype_test(void)
 {
     int err, errs = 0;
     int count, elements;
@@ -131,7 +137,7 @@ int hindexed_zerotype_test(void)
  * length block in it.  sort of eccentric, but we've got the basic
  * stuff covered with other tests.
  */
-int hindexed_sparsetype_test(void)
+static int hindexed_sparsetype_test(void)
 {
     int err, errs = 0;
     int i, count, elements;
@@ -227,24 +233,4 @@ int hindexed_sparsetype_test(void)
     MPI_Type_free(&mytype);
 
     return errs;
-}
-
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

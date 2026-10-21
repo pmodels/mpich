@@ -12,14 +12,16 @@
  * appends N new elements to the list when the tail reaches process p-1.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
-#include <assert.h>
 #include "mpitest.h"
+#include <assert.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef MULTI_TESTS
+#define run rma_linked_list_bench_lock_shr
+int run(const char *arg);
 #endif
 
 #define NUM_ELEMS 1000
@@ -44,6 +46,7 @@ typedef struct {
 
 static const llist_ptr_t nil = { -1, (MPI_Aint) MPI_BOTTOM };
 
+static int use_mode_nocheck = 0;
 static const int verbose = 0;
 static const int print_perf = 0;
 
@@ -76,7 +79,7 @@ static MPI_Aint alloc_elem(int value, MPI_Win win)
     return disp;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int procid, nproc, i, j, my_nelem;
     int pollint = 0;
@@ -85,7 +88,9 @@ int main(int argc, char **argv)
     llist_ptr_t head_ptr, tail_ptr;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_mode_nocheck = MTestArgListGetInt_with_default(head, "use-mode-nocheck", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &procid);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -136,11 +141,11 @@ int main(int argc, char **argv)
                     printf("%d: Appending to <%d, %p>\n", procid, tail_ptr.rank,
                            (void *) tail_ptr.disp);
 
-#ifdef USE_MODE_NOCHECK
-                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
-#else
-                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
-#endif
+                if (use_mode_nocheck) {
+                    MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
+                } else {
+                    MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
+                }
                 MPI_Accumulate(&new_elem_ptr, sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next),
                                sizeof(llist_ptr_t), MPI_BYTE, MPI_REPLACE, llist_win);
@@ -154,11 +159,11 @@ int main(int argc, char **argv)
             else {
                 llist_ptr_t next_tail_ptr;
 
-#ifdef USE_MODE_NOCHECK
-                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
-#else
-                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
-#endif
+                if (use_mode_nocheck) {
+                    MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
+                } else {
+                    MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
+                }
                 MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, &next_tail_ptr,
                                    sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                    (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next),
@@ -263,6 +268,5 @@ int main(int argc, char **argv)
     for (; my_elems_count > 0; my_elems_count--)
         MPI_Free_mem(my_elems[my_elems_count - 1]);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

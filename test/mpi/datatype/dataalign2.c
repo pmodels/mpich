@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
 #include <stddef.h>
-#include <stdio.h>
 #include <complex.h>
 #include <stdbool.h>
 #include <inttypes.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_dataalign2
+int run(const char *arg);
+#endif
 
 struct C_BOOL {
     char a;
@@ -100,11 +103,9 @@ struct C_LONG_DOUBLE_COMPLEX {
         MPI_Type_free(&newtype); \
     } while (0)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     int blklens[2] = { 1, 1 };
     MPI_Aint displs[2];
@@ -135,6 +136,5 @@ int main(int argc, char *argv[])
     TEST_TYPE(C_DOUBLE_COMPLEX);
     TEST_TYPE(C_LONG_DOUBLE_COMPLEX);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

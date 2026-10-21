@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run errhan_adderr
+int run(const char *arg);
+#endif
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -16,14 +21,13 @@
 #define NCLASSES 32
 #define NCODES   5
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     char string[MPI_MAX_ERROR_STRING], outstring[MPI_MAX_ERROR_STRING];
     int newclass[NCLASSES], newcode[NCLASSES][NCODES];
     int i, j, slen, outclass;
 
-    MTest_Init(&argc, &argv);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(4,1)
     /* add and delete a bunch of times */
@@ -78,6 +82,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

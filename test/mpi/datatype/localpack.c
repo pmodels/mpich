@@ -6,24 +6,32 @@
 /* based on the pack.c test in the mpich suite.
  */
 
-#include "mpi.h"
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_localpack
+int run(const char *arg);
+#endif
 #endif
 
 static int verbose = 0;
 
 #define BUF_SIZE 16384
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
 
-int main(int argc, char *argv[])
+
+int run(const char *arg)
 {
     int errs = 0;
     char buffer[BUF_SIZE];
@@ -32,8 +40,7 @@ int main(int argc, char *argv[])
     int pos;
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     pos = 0;
     n = 10;
@@ -70,25 +77,5 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Wrong value for b; got %f expected %f\n", b, 2.2);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
-}
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
+    return errs;
 }

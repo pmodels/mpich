@@ -3,19 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitestconf.h"
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run comm_comm_group_half
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int rank, size;
     MPI_Group full_group, half_group;
     int range[1][3];
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -33,8 +35,6 @@ int main(int argc, char **argv)
 
     MPI_Group_free(&half_group);
     MPI_Group_free(&full_group);
-
-    MTest_Finalize(0);
 
     return 0;
 }

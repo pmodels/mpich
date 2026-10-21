@@ -8,14 +8,18 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run group_grouptest
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Group g1, g2, g4, g5, g45, selfgroup, g6;
     int ranks[16], size, rank, myrank, range[1][3];
     int errs = 0;
     int i, rin[16], rout[16], result;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_group(MPI_COMM_WORLD, &g1);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -165,6 +169,5 @@ int main(int argc, char *argv[])
     MPI_Group_free(&g45);
     MPI_Group_free(&g1);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

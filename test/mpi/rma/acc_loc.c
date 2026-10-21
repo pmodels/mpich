@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_acc_loc
+int run(const char *arg);
+#endif
 
 typedef struct {
     int val;
@@ -15,14 +17,12 @@ typedef struct {
 
 static int errs = 0;
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int me, nproc;
     twoint_t *data = NULL;
     twoint_t mine;
     MPI_Win win;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -137,6 +137,5 @@ int main(int argc, char **argv)
         MPI_Free_mem(data);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

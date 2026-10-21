@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run topo_cartzero
+int run(const char *arg);
+#endif
+
 /*
     Check that the MPI implementation properly handles zero-dimensional
     Cartesian communicators - the original standard implies that these
@@ -14,13 +19,12 @@
     these should work with any MPI implementation.  MPI 2.1 made this
     requirement explicit.
 */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank, ndims;
     MPI_Comm comm, newcomm;
 
-    MTest_Init(&argc, &argv);
 
     /* Create a new cartesian communicator in a subset of the processes */
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -79,8 +83,5 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Communicator returned is null!");
     }
 
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

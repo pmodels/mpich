@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run part_nonblocking_pready
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test to confirm MPI_PREADY does not block";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
 
     int size;
     int rank;
@@ -44,6 +48,5 @@ int main(int argc, char *argv[])
     if (rank < 2) {
         MPI_Request_free(&request);
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

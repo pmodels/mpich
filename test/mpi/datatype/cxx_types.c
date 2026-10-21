@@ -7,10 +7,12 @@
  * that should be accessible from C (and Fortran, not tested here). */
 
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_cxx_types
+int run(const char *arg);
+#endif
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -23,13 +25,12 @@
         }                                                                         \
     } while (0)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int wrank, wsize;
     int size;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -50,7 +51,5 @@ int main(int argc, char *argv[])
     check_type(MPI_CXX_DOUBLE_COMPLEX);
     check_type(MPI_CXX_LONG_DOUBLE_COMPLEX);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

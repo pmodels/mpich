@@ -4,18 +4,18 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
 
+#ifdef MULTI_TESTS
+#define run pt2pt_pingping
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Send flood test";
 */
-
-int world_rank, world_size;
 
 #define MAX_TOTAL_MSG_SIZE (32 * 1024 * 1024)
 #define MAXMSG (4096)
@@ -32,6 +32,9 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
     MPI_Datatype sendtype, recvtype;
     DTP_pool_s dtp;
     struct mtest_obj send, recv;
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -147,22 +150,18 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_PT2PT, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_PT2PT, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += pingping(dtp_args.seed, dtp_args.testsize,
                          dtp_args.count, dtp_args.u.pt2pt.recvcnt,
                          dtp_args.basic_type, dtp_args.u.pt2pt.sendmem, dtp_args.u.pt2pt.recvmem);
     }
     dtp_args_finalize(&dtp_args);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

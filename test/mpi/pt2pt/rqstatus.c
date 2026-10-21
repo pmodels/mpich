@@ -3,15 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_rqstatus
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test Request_get_status";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source, dest;
@@ -19,8 +22,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Status status, status2;
     MPI_Request req;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     /* Determine the sender and receiver */
@@ -105,6 +106,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

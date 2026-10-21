@@ -3,14 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 #include "mpitest.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_pairtype_size_extent
+int run(const char *arg);
+#endif
 
 static int verbose = 1;
 
@@ -26,11 +29,9 @@ MPI_LONG_DOUBLE, MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT"}, {
 (MPI_Datatype) - 1, (MPI_Datatype) - 1, "end"}
 };
 
-int parse_args(int argc, char **argv);
+static MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p);
 
-MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p);
-
-MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p)
+static MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p)
 {
     MPI_Aint disp;
 
@@ -77,7 +78,15 @@ MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p)
     return disp;
 }
 
-int main(int argc, char *argv[])
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int errs = 0;
 
@@ -87,8 +96,7 @@ int main(int argc, char *argv[])
     MPI_Datatype types[2] = { MPI_INT, MPI_INT };
     MPI_Datatype stype;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     for (i = 0; pairtypes[i].atype != (MPI_Datatype) - 1; i++) {
         int atype_size, ptype_size, stype_size, handbuilt_extent;
@@ -132,16 +140,5 @@ int main(int argc, char *argv[])
         MPI_Type_free(&stype);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
-}
-
-int parse_args(int argc, char **argv)
-{
-    /* We use a simple test because getopt isn't universally available */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    if (argc > 1 && strcmp(argv[1], "-nov") == 0)
-        verbose = 0;
-    return 0;
+    return errs;
 }

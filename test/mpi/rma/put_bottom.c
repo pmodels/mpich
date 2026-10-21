@@ -17,11 +17,13 @@
  * RMA implementation's ability to perform the correct transfer.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_put_bottom
+int run(const char *arg);
+#endif
 
 #define XDIM 1024
 #define YDIM 1024
@@ -29,13 +31,11 @@
 #define SUB_YDIM 1024
 #define ITERATIONS 10
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, j, rank, nranks, peer, bufsize, errs;
     double *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
@@ -132,7 +132,5 @@ int main(int argc, char **argv)
     MPI_Free_mem(src_buf);
     MPI_Free_mem(dst_buf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

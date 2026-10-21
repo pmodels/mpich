@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_coll10
+int run(const char *arg);
+#endif
 
 #define BAD_ANSWER 100000
 
@@ -30,7 +33,7 @@ static void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size;
     int data;
@@ -38,7 +41,6 @@ int main(int argc, char **argv)
     int result = -100;
     MPI_Op op;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -51,6 +53,5 @@ int main(int argc, char **argv)
     if (result == BAD_ANSWER)
         errors++;
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

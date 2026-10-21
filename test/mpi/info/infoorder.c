@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run info_infoorder
+int run(const char *arg);
+#endif
 #endif
 
 #define NKEYS 3
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Info info;
@@ -24,8 +26,6 @@ int main(int argc, char *argv[])
 
     char value[MPI_MAX_INFO_VAL];
     int i, flag;
-
-    MTest_Init(&argc, &argv);
 
     /* 1,2,3 */
     MPI_Info_create(&info);
@@ -159,6 +159,5 @@ int main(int argc, char *argv[])
     }
     MPI_Info_free(&info);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

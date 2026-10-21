@@ -3,25 +3,33 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include <math.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_slice_pack
+int run(const char *arg);
+#endif
 #endif
 
 static int verbose = 0;
-int a[100][100][100], e[9][9][9];
+static int a[100][100][100], e[9][9][9];
 
-int main(int argc, char *argv[]);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
 
 /* helper functions */
-static int parse_args(int argc, char **argv);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     /* Variable declarations */
     MPI_Datatype oneslice, twoslice, threeslice;
@@ -43,10 +51,9 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
     MPI_Type_get_extent(MPI_INT, &tmp_lb, &sizeofint);
 
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* Create data types. */
     /* NOTE: This differs from the way that it's done on the sheet. */
@@ -93,27 +100,8 @@ int main(int argc, char *argv[])
     MPI_Type_free(&twoslice);
     MPI_Type_free(&threeslice);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* parse_args()
  */
-static int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
-}

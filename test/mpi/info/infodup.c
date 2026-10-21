@@ -3,24 +3,24 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run info_infodup
+int run(const char *arg);
+#endif
 #endif
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Info info1, infodup;
     int nkeys, nkeysdup, i, vallen, flag, flagdup;
     char key[MPI_MAX_INFO_KEY], keydup[MPI_MAX_INFO_KEY];
     char value[MPI_MAX_INFO_VAL], valdup[MPI_MAX_INFO_VAL];
-
-    MTest_Init(&argc, &argv);
 
     MPI_Info_create(&info1);
     /* Use only named keys in case the info implementation only supports
@@ -72,6 +72,5 @@ int main(int argc, char *argv[])
     MPI_Info_free(&info1);
     MPI_Info_free(&infodup);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

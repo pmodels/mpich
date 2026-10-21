@@ -10,26 +10,26 @@
 /* FIXME: we should merge this into a comprehensive test for RMA
  * operations + MPI_Win_flush_local. */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include "mpitest.h"
+#include <time.h>
+
+#ifdef MULTI_TESTS
+#define run rma_large_acc_flush_local
+int run(const char *arg);
+#endif
 
 #define MIN_DATA_SIZE (262144)
 #define MAX_DATA_SIZE (8 * 262144)
 #define OPS_NUM 10
 #define LOOP 500
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nproc, i, j;
     MPI_Win win;
     int *tar_buf = NULL;
     int *orig_buf = NULL;
     int data_size;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -63,8 +63,6 @@ int main(int argc, char *argv[])
 
     MPI_Free_mem(orig_buf);
     MPI_Free_mem(tar_buf);
-
-    MTest_Finalize(0);
 
     return 0;
 }

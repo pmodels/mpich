@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_lockcontention
+int run(const char *arg);
+#endif
 
 /* This is a modified version of test4.c. Sent by Liwei Peng, Microsoft. */
 
@@ -17,7 +19,7 @@
 #define SIZE1 100
 #define SIZE2 200
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, A[SIZE2], B[SIZE2], i;
     MPI_Comm CommThree;
@@ -25,7 +27,6 @@ int main(int argc, char *argv[])
     int errs = 0;
     int trank = 1;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -92,6 +93,5 @@ int main(int argc, char *argv[])
     }
     MPI_Comm_free(&CommThree);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

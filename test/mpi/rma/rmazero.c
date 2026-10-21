@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_rmazero
+int run(const char *arg);
+#endif
 
 #define TARGET 0
 
@@ -94,7 +96,7 @@
 static char MTEST_Descrip[] = "Test handling of zero-byte transfers";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int rank, size;
@@ -105,8 +107,6 @@ int main(int argc, char *argv[])
     MPI_Win win;
     MPI_Request req;
     MPI_Datatype derived_dtp;
-
-    MTest_Init(&argc, &argv);
 
     bufsize = 256 * sizeof(int);
     buf = (int *) malloc(bufsize);
@@ -219,6 +219,6 @@ int main(int argc, char *argv[])
     free(result);
     free(buf);
     free(rmabuf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

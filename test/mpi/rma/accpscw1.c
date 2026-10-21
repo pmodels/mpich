@@ -4,18 +4,18 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
 
+#ifdef MULTI_TESTS
+#define run rma_accpscw1
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Accumulate/replace with Post/Start/Complete/Wait";
 */
-
-int world_rank, world_size;
 
 static int accpscw_test(int seed, int testsize, int count, const char *basic_type,
                         mtest_mem_type_e origmem, mtest_mem_type_e targetmem)
@@ -32,6 +32,9 @@ static int accpscw_test(int seed, int testsize, int count, const char *basic_typ
     MPI_Datatype origtype, targettype;
     DTP_pool_s dtp;
     struct mtest_obj orig, target;
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -153,16 +156,12 @@ static int accpscw_test(int seed, int testsize, int count, const char *basic_typ
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_RMA, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += accpscw_test(dtp_args.seed, dtp_args.testsize,
                              dtp_args.count, dtp_args.basic_type,
@@ -171,6 +170,5 @@ int main(int argc, char *argv[])
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

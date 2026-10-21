@@ -23,7 +23,12 @@ MPI_Group_union
 #include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run group_grouptest2
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Group basegroup;
@@ -35,7 +40,6 @@ int main(int argc, char **argv)
     int range[1][3];
     int worldrank;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);
 
     comm = MPI_COMM_WORLD;
@@ -200,6 +204,5 @@ int main(int argc, char **argv)
 
     free(ranks);
     free(ranks_out);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,13 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
 #include "mpitest.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#ifdef MULTI_TESTS
+#define run datatype_struct_pack_mpi_bottom
+int run(const char *arg);
+#endif
 
 #define my_assert(cond_)                                                  \
     do {                                                                  \
@@ -76,10 +77,8 @@ static void create_and_pack_datatype(void *outbuf, int blocks[2],
 
 }
 
-
-static
-void alloc_and_init_buffers(void *inbufs[2][2], MPI_Aint displs[2], int blocks[2],
-                            mtest_mem_type_e memtypes[2])
+static void alloc_and_init_buffers(void *inbufs[2][2], MPI_Aint displs[2], int blocks[2],
+                                   mtest_mem_type_e memtypes[2])
 {
     for (int inbuf = 0; inbuf < 2; ++inbuf) {
         MTestCalloc(blocks[inbuf], memtypes[inbuf],
@@ -94,10 +93,8 @@ void alloc_and_init_buffers(void *inbufs[2][2], MPI_Aint displs[2], int blocks[2
     }
 }
 
-
-static
-void free_and_check_buffers(void *inbufs[2][2], mtest_mem_type_e memtypes[2],
-                            void *outbufs[2], mtest_mem_type_e outb_memtype, int *errs)
+static void free_and_check_buffers(void *inbufs[2][2], mtest_mem_type_e memtypes[2],
+                                   void *outbufs[2], mtest_mem_type_e outb_memtype, int *errs)
 {
     char *check_buf = (char *) outbufs[STAGE_BUF];
 
@@ -132,7 +129,6 @@ void free_and_check_buffers(void *inbufs[2][2], mtest_mem_type_e memtypes[2],
     MTestCopyContent(outbufs[STAGE_BUF], outbufs[MAIN_BUF], BUF_LEN_TOTAL, outb_memtype);
 }
 
-
 static const char *memtype_str(mtest_mem_type_e memtype)
 {
     static char buf[64];
@@ -156,8 +152,7 @@ static const char *memtype_str(mtest_mem_type_e memtype)
     return buf;
 }
 
-
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int verbose = 0;
@@ -170,8 +165,6 @@ int main(int argc, char *argv[])
     MPI_Aint displs[2] = { 0, 0 };
     mtest_mem_type_e inbuf_mtypes[2];
     mtest_mem_type_e outb_memtype;
-
-    MTest_Init(&argc, &argv);
 
     mtest_mem_type_e memtypes[2] = {
         MTEST_MEM_TYPE__UNREGISTERED_HOST,
@@ -211,7 +204,5 @@ int main(int argc, char *argv[])
         MTestFree(outb_memtype, outbufs[STAGE_BUF], outbufs[MAIN_BUF]);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
