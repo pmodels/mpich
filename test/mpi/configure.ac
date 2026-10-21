@@ -935,9 +935,17 @@ if test $enable_collalgo_tests = "yes" ; then
 fi
 # handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
-    AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+    AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA, LevelZero, or HIP)])
 elif test $enable_gpu_tests_only = "yes" ; then
     default_testdirs=coll,pt2pt,rma
+    if test "$enable_strictmpi" != "yes" -a "$MPI_IS_MPICH" = "yes" ; then
+        if test -n "$cudadir" ; then
+            default_testdirs="${default_testdirs},impls/mpich/${cudadir}"
+        fi
+        if test -n "$hipdir" ; then
+            default_testdirs="${default_testdirs},impls/mpich/${hipdir}"
+        fi
+    fi
     default_testlist=testlist.gpu
 fi
 AC_SUBST([default_testdirs])
