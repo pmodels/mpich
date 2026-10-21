@@ -218,14 +218,24 @@ static int get_baseblock(int r, int *Skip, int q)
 }
 
 /* receive schedule:
- * for k = 0 to q-1, find the unique maximum baseblock from r-Skip[k+1] to r-Skip[k].
+ * for k = 0 to q-1, R[k] is the block that r receives from rank s = r-Skip[k]. As the normal
+ * rule, we pick the maximum baseblock within the half-open range (r-Skip[k+1], r-Skip[k]].
  * Use a doubly-linked list to track to avoid reusing the same baseblock.
+ *
+ * We can do that because, as a rule, every baseblock in (r-Skip[k+1], r-Skip[k]] that r does
+ * not have yet, rank s either has received in the previous k rounds or holds as its own
+ * baseblock.
+ *
+ * The exception is when Skip[k+1] is odd, i.e. Skip[k+1] = 2*Skip[k]-1. The half-open range may
+ * have no unused baseblock left, then we fall back to the lower boundary x = r-Skip[k+1]. Since
+ * x = s-Skip[k]+1 falls inside the range (s-Skip[k], s-Skip[k-1]] of s for round k-1, the
+ * baseblock of x is also within the available baseblocks of s, and can be selected as a fallback.
  *
  * Instead of repeatedly call get_baseblock() for every rank to find the maximum baseblock,
  * recall that -
  *        r = Skip[e1] + Skip[e2] + ... + Skip[b], where e1>e2>...>b
  * we will try all e1, e2, ..., b in decreasing order (e1, e2, ..., b alphabetically), and when
- *        r' = Skip[e1] + Skip[e2] + ... + Skip[b], and r' falls inside [r-Skip[k+1], r-Skip[k]],
+ *        r' = Skip[e1] + Skip[e2] + ... + Skip[b], and r' falls inside (r-Skip[k+1], r-Skip[k]],
  * we know b is the largest baseblock within that range.
  *
  * There is an implied MOD(p) for expression such as r-Skip[k]. To avoid the MOD,
@@ -234,6 +244,17 @@ static int get_baseblock(int r, int *Skip, int q)
  * However, as a result of including Skip[q], q will always be selected in place of the
  * baseblock. To see this, if r is in region i, then rank 0 (or p) is always in the range of
  * (r-Skip[i+1], r-Skip[i]], thus will be selected in R[i].
+ *
+ * This is an iterative form of allblocks() (Algorithm 4) in the paper, and it produces the same
+ * schedule. Note that r' is not necessarily the canonical path. Because the list excludes
+ * the used baseblocks, the path to r' may only use the skips that are not yet picked.
+ *
+ * When p is not a power of 2, the skip sequence for a given r' may not be unique, e.g.
+ * 31 = 17+9+5 = 17+9+3+2 at p=33. Also, due to the fallback, the ranges of adjacent rounds
+ * overlap on the boundary r-Skip[k+1]. Thus the r' picked in round k may be reached again in
+ * round k+1 via a different path, which ends with a block that r' does not have yet. It is
+ * critical to check and avoid reusing the same r' as we descend in k, i.e. the picked r' must
+ * strictly decrease.
  *
  * TODO: show this rule to generate receive schedule is consistent with rules used to generate
  *       send schedule, and it fulfills the correctness conditions.
@@ -279,14 +300,19 @@ static void gen_rsched(int r, int R[], int p, int q, int Skip[],
         if (rt < low || (rt == low && next[e] > -1)) {
             e = next[e];
             PUSH;
-        } else if (rt > high) {
+        } else if (rt > high || rt - Skip[stack[sp - 1]] > low) {
+            /* Back off if rt is too far, or if rt without its last skip is still in range.
+             * The shorter path ends with a larger skip, thus a larger baseblock. */
             POP;
         } else {
-            /* low < rt <= high */
+            /* low < rt <= high, or rt == low in a fallback */
             /* e may not reflect the baseblock for rt especially after a POP, thus we need reload it from the stack. */
             e = stack[sp - 1];
             R[k++] = e;
-            high = low;
+            /* The picked r' must strictly decrease. Otherwise, after picking r-Skip[k+1], the
+             * next round may pick the same r' again via a different path, which ends with
+             * a block that r' does not have yet. */
+            high = (rt == low) ? rt - 1 : low;
             low = r + p - Skip[k + 1];
             list_del(e, next, prev);
             POP;
