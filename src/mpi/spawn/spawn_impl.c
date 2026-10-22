@@ -21,6 +21,27 @@
 #define SOCKET_EINTR        EINTR
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_COMM_CONNECT_TIMEOUT
+      category    : COMMUNICATOR
+      alt-env     : MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT, MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT
+      type        : int
+      default     : 180
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP_EQ
+      description : >-
+        The default time out period in seconds for a connection attempt to the
+        server communicator where the named port exists but no pending accept.
+        User can change the value for a specified connection through its info
+        argument.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 int MPIR_Comm_get_parent_impl(MPI_Comm * parent)
 {
     *parent = (MPIR_Process.comm_parent == NULL) ? MPI_COMM_NULL :

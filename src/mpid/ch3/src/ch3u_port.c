@@ -7,26 +7,6 @@
 #include "mpid_port.h"
 
 /*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT
-      category    : CH3
-      type        : int
-      default     : 180
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_GROUP_EQ
-      description : >-
-        The default time out period in seconds for a connection attempt to the
-        server communicator where the named port exists but no pending accept.
-        User can change the value for a specified connection through its info
-        argument.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
-/*
  * This file replaces ch3u_comm_connect.c and ch3u_comm_accept.c .  These
  * routines need to be used together, particularly since they must exchange
  * information.  In addition, many of the steps that the take are identical,
@@ -600,7 +580,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     if (rank == root)
     {
-        int timeout = MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT;
+        int timeout = MPIR_CVAR_COMM_CONNECT_TIMEOUT;
 
         /* Check if user specifies timeout threshold. */
         if (info != NULL) {

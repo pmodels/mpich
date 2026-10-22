@@ -7,26 +7,6 @@
 
 #define MPIDI_DYNPROC_NAME_MAX MPID_MAX_BC_SIZE
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT
-      category    : CH4
-      type        : int
-      default     : 180
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_GROUP_EQ
-      description : >-
-        The default time out period in seconds for a connection attempt to the
-        server communicator where the named port exists but no pending accept.
-        User can change the value for a specified connection through its info
-        argument.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
                              MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
                              MPIR_Comm ** intercomm, int errcodes[])
@@ -439,7 +419,7 @@ int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Co
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    int timeout = MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT;
+    int timeout = MPIR_CVAR_COMM_CONNECT_TIMEOUT;
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
