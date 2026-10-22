@@ -103,7 +103,8 @@ static void get_chunk_offsets(MPI_Aint chunk_index, int num_nics, MPI_Aint chunk
         *nic_offset_out = *total_offset_out = chunk_index * chunk_sz;
     } else {
         int nic = chunk_index % num_nics;
-        MPI_Aint nic_chunk_index = chunk_index / chunks_per_nic;
+        MPI_Aint nic_chunk_index = chunk_index / num_nics;
+        *nic_out = nic;
         *total_offset_out = (nic * chunks_per_nic + nic_chunk_index) * chunk_sz;
         *nic_offset_out = nic_chunk_index * chunk_sz;
     }
