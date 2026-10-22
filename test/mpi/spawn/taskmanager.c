@@ -9,7 +9,8 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-#define DEFAULT_TASKS 128
+#define DEFAULT_TASKS 16
+#define DEFAULT_TASKS_STRESS 128
 #define DEFAULT_TASK_WINDOW 2
 /* #define USE_THREADS */
 
@@ -95,7 +96,8 @@ int main(int argc, char *argv[])
         if (argc == 2) {
             tasks = atoi(argv[1]);
         } else if (argc == 1) {
-            tasks = DEFAULT_TASKS;
+            /* Read MPITEST_STRESS directly since this test does not call MTest_Init */
+            tasks = getenv("MPITEST_STRESS") ? DEFAULT_TASKS_STRESS : DEFAULT_TASKS;
         } else {
             fprintf(stderr, "Usage: %s {number_of_tasks}\n", argv[0]);
             MPI_Abort(MPI_COMM_WORLD, -1);
