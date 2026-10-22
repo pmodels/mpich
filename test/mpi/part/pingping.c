@@ -26,7 +26,8 @@ static char MTEST_Descrip[] = "Pingping test with partitioned point-to-point rou
 */
 
 #define MAX_TOTAL_MSG_SIZE (32 * 1024 * 1024)
-#define MAXMSG (4096)
+#define MAXMSG (16)
+#define MAXMSG_STRESS (4096)
 
 /* Used on both sender and receiver sides. If the total count of datatype elements
  * cannot be completely divided, we set local partitions to 1. */
@@ -108,8 +109,9 @@ static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
     MPI_Type_size(dtp.DTP_base_type, &nbytes);
     nbytes *= sendcnt;
     maxmsg = MAX_TOTAL_MSG_SIZE / nbytes;
-    if (maxmsg > MAXMSG)
-        maxmsg = MAXMSG;
+    int max_nmsg = MTestGetStressLevel()? MAXMSG_STRESS : MAXMSG;
+    if (maxmsg > max_nmsg)
+        maxmsg = max_nmsg;
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
