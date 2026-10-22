@@ -499,6 +499,7 @@ mpi_t/cvarwrite
 mpi_t/getindex
 
 part/start_pready
+part/pingping
 part/parrived
 part/multipart
 part/nonblocking_pready

@@ -4,12 +4,14 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include "mtest_dtp.h"
 #include "dtpools.h"
+#include "mtest_dtp.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run part_pingping
+int run(const char *arg);
+#endif
 
 /* Extended from src/pt2pt/pingping.c with partitioned APIs. */
 
@@ -71,37 +73,33 @@ static void recv_test(void *rbuf, int partitions, MPI_Count count, MPI_Datatype 
     MPI_Request_free(&req);
 }
 
-int main(int argc, char *argv[])
+static int pingping(int seed, int testsize, int sendcnt, int recvcnt,
+                    const char *basic_type, mtest_mem_type_e sendmem, mtest_mem_type_e recvmem)
 {
     int errs = 0, err;
     int rank, size, source, dest;
     int minsize = 2, nmsg, maxmsg;
-    int seed, testsize;
-    MPI_Aint sendcnt, recvcnt;
     MPI_Comm comm;
     DTP_pool_s dtp;
     struct mtest_obj send, recv;
-    mtest_mem_type_e sendmem, recvmem;
-    char *basic_type;
 
-    MTest_Init(&argc, &argv);
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-    seed = MTestArgListGetInt(head, "seed");
-    testsize = MTestArgListGetInt(head, "testsize");
-    sendcnt = MTestArgListGetLong(head, "sendcnt");
-    recvcnt = MTestArgListGetLong(head, "recvcnt");
-    basic_type = MTestArgListGetString(head, "type");
-    sendmem = MTestArgListGetMemType(head, "sendmem");
-    recvmem = MTestArgListGetMemType(head, "recvmem");
+    static char test_desc[200];
+    snprintf(test_desc, 200,
+             "./pingping -seed=%d -testsize=%d -type=%s -sendcnt=%d -recvcnt=%d -sendmem=%s -recvmem=%s",
+             seed, testsize, basic_type, sendcnt, recvcnt, MTest_memtype_name(sendmem),
+             MTest_memtype_name(recvmem));
+    if (world_rank == 0) {
+        MTestPrintfMsg(1, " %s\n", test_desc);
+    }
 
     err = DTP_pool_create(basic_type, sendcnt, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        fprintf(stderr, "Error while creating send pool (%s,%ld)\n", basic_type, sendcnt);
+        fprintf(stderr, "Error while creating send pool (%s,%d)\n", basic_type, sendcnt);
         fflush(stderr);
     }
-
-    MTestArgListDestroy(head);
 
     MTest_dtp_obj_start(&send, "send", dtp, sendmem, 0, false);
     MTest_dtp_obj_start(&recv, "recv", dtp, recvmem, 0, false);
@@ -197,7 +195,21 @@ int main(int argc, char *argv[])
     MTest_dtp_obj_finish(&send);
     MTest_dtp_obj_finish(&recv);
     DTP_pool_free(dtp);
+    return errs;
+}
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+int run(const char *arg)
+{
+    int errs = 0;
+
+    struct dtp_args dtp_args;
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_PT2PT, arg);
+    while (dtp_args_get_next(&dtp_args)) {
+        errs += pingping(dtp_args.seed, dtp_args.testsize,
+                         dtp_args.count, dtp_args.u.pt2pt.recvcnt,
+                         dtp_args.basic_type, dtp_args.u.pt2pt.sendmem, dtp_args.u.pt2pt.recvmem);
+    }
+    dtp_args_finalize(&dtp_args);
+
+    return errs;
 }
