@@ -13,6 +13,11 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_types_with_zeros
+int run(const char *arg);
+#endif
+
 #define MAXLEN 9
 
 static void handle_error(int errcode, const char *str)
@@ -28,7 +33,7 @@ enum {
     INDEXED,
     HINDEXED,
     STRUCT
-} testcases;
+};
 
 static int test_indexed_with_zeros(const char *filename, int testcase)
 {
@@ -138,14 +143,16 @@ static int test_indexed_with_zeros(const char *filename, int testcase)
     return errs;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs, rank, np;
-    const char *filename = NULL;
+    char filename[1024];
 
-    filename = (argc > 1) ? argv[1] : "testfile";
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(filename, sizeof(filename), "%s",
+             MTestArgListGetString_with_default(head, "fname", "testfile"));
+    MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
@@ -158,6 +165,5 @@ int main(int argc, char **argv)
     errs += test_indexed_with_zeros(filename, HINDEXED);
     errs += test_indexed_with_zeros(filename, STRUCT);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

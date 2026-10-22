@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_eagerdt
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test of a large number of derived-datatype messages eagerly, with no preposted receive so that an MPI implementation may have to queue up messages on the sending side";
@@ -14,7 +16,7 @@ static char MTEST_Descrip[] = "Test of a large number of derived-datatype messag
 
 #define MAX_MSGS 30
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, dest, source;
@@ -24,8 +26,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype dtype;
     MPI_Request req[MAX_MSGS];
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -73,6 +73,6 @@ int main(int argc, char *argv[])
         free(bufs[i]);
     }
     free(buf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

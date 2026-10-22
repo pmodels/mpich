@@ -3,22 +3,24 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <assert.h>
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_racc_local_comp
+int run(const char *arg);
+#endif
 
 #define ITER 100
 #define MAX_SIZE 65536
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nproc, i;
     int errors = 0, all_errors = 0;
     int *buf = NULL, *winbuf = NULL;
     MPI_Win window;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -120,7 +122,5 @@ int main(int argc, char *argv[])
     if (winbuf)
         MPI_Free_mem(winbuf);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(all_errors);
+    return all_errors;
 }

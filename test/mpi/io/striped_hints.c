@@ -1,4 +1,9 @@
-#include <mpitest.h>
+#include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_striped_hints
+int run(const char *arg);
+#endif
 #include <stdio.h>
 
 #define CHECK(errcode, fn) if (errcode != MPI_SUCCESS) handle_error(errcode, fn)
@@ -13,7 +18,7 @@ static void handle_error(int errcode, char *str)
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rc;
@@ -22,7 +27,6 @@ int main(int argc, char *argv[])
     MPI_Info info_used;
     MPI_File fh;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -63,7 +67,6 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&info);
 
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

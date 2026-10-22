@@ -25,10 +25,13 @@
  * multiplicity index.
  */
 
-#include <stdio.h>
 #include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_neighb_dup_edges
+int run(const char *arg);
+#endif
 
 #define NDIMS 3
 #define NSLOT (2 * NDIMS)
@@ -49,7 +52,7 @@ static int check(const char *what, const int *got, const int *exp)
     return errs;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size;
@@ -61,7 +64,6 @@ int main(int argc, char *argv[])
     MPI_Comm cart, dgraph;
     MPI_Request req;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -147,6 +149,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&dgraph);
     MPI_Comm_free(&cart);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

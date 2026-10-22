@@ -17,14 +17,17 @@
  *
  * All other results are not correct. */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_atomic_rmw_cas
+int run(const char *arg);
+#endif
 
 #define LOOP_SIZE 10000
 #define CHECK_TAG 123
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, size, k;
     int errs = 0;
@@ -33,8 +36,6 @@ int main(int argc, char *argv[])
         *target_buf = NULL, *check_buf = NULL;
     int target_value = 0;
     MPI_Win win;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -125,6 +126,5 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

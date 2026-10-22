@@ -3,15 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
 
-int AllocateGrid(int nx, int ny, int **srcArray, int **destArray);
-int PackUnpack(MPI_Datatype, const int[], int[], int);
+#ifdef MULTI_TESTS
+#define run datatype_darray_cyclic
+int run(const char *arg);
+#endif
 
-int main(int argc, char *argv[])
+static int AllocateGrid(int nx, int ny, int **srcArray, int **destArray);
+static int PackUnpack(MPI_Datatype, const int[], int[], int);
+
+int run(const char *arg)
 {
     int errs = 0;
     int wrank, wsize;
@@ -21,7 +24,6 @@ int main(int argc, char *argv[])
     int i, j, ii, jj, loc;
     MPI_Datatype darraytype;
 
-    MTest_Init(0, 0);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -193,12 +195,10 @@ int main(int argc, char *argv[])
     free(destArray);
     MPI_Type_free(&darraytype);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int AllocateGrid(int nx, int ny, int **srcArray, int **destArray)
+static int AllocateGrid(int nx, int ny, int **srcArray, int **destArray)
 {
     int *src, *dest;
     int i;
@@ -219,7 +219,7 @@ int AllocateGrid(int nx, int ny, int **srcArray, int **destArray)
 
 /* Extract the source array into the dest array using the DARRAY datatype.
    "count" integers are returned in destArray */
-int PackUnpack(MPI_Datatype darraytype, const int srcArray[], int destArray[], int count)
+static int PackUnpack(MPI_Datatype darraytype, const int srcArray[], int destArray[], int count)
 {
     int packsize, position;
     int *packArray;

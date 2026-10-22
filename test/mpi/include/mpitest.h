@@ -43,6 +43,7 @@ struct mpitest {
 void MTest_Init(int *, char ***);
 void MTest_Init_thread(int *, char ***, int, int *);
 void MTest_Finalize(int);
+void MTest_Cleanup(void);
 void MTestPrintError(int);
 void MTestPrintErrorMsg(const char[], int);
 void MTestPrintfMsg(int, const char[], ...);

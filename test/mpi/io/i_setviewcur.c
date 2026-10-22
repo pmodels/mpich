@@ -8,11 +8,16 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_setviewcur
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test set_view with DISPLACEMENT_CURRENT";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int size, rank, *buf;
@@ -22,7 +27,6 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Request request;
 
-    MTest_Init(&argc, &argv);
 
     /* This test reads a header then sets the view to every "size" int,
      * using set view and current displacement.  The file is first written
@@ -122,6 +126,5 @@ int main(int argc, char *argv[])
         MTestPrintErrorMsg("Close(2)", err);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

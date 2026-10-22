@@ -7,7 +7,12 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_cartshift1
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank;
@@ -15,7 +20,6 @@ int main(int argc, char *argv[])
     int dims[2], periods[2];
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -84,6 +88,5 @@ int main(int argc, char *argv[])
     }
     MPI_Comm_free(&comm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

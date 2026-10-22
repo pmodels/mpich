@@ -3,14 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_hindexed_block
+int run(const char *arg);
+#endif
 
 #if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_HINDEXED_BLOCK 1
@@ -19,22 +21,28 @@
 static int verbose = 0;
 
 /* tests */
-int hindexed_block_contig_test(void);
-int hindexed_block_vector_test(void);
+static int hindexed_block_contig_test(void);
+static int hindexed_block_vector_test(void);
 
 /* helper functions */
-int parse_args(int argc, char **argv);
 static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int typebufsz);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
     int rank;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(TEST_HINDEXED_BLOCK)
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -52,8 +60,7 @@ int main(int argc, char **argv)
     errs += err;
 #endif /*defined(TEST_HINDEXED_BLOCK) */
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 #if defined(TEST_HINDEXED_BLOCK)
@@ -65,7 +72,7 @@ int main(int argc, char **argv)
  *
  * Returns the number of errors encountered.
  */
-int hindexed_block_contig_test(void)
+static int hindexed_block_contig_test(void)
 {
     int buf[4] = { 7, -1, -2, -3 };
     int err, errs = 0;
@@ -157,7 +164,7 @@ int hindexed_block_contig_test(void)
  *
  * Returns the number of errors encountered.
  */
-int hindexed_block_vector_test(void)
+static int hindexed_block_vector_test(void)
 {
 #define NELT (18)
     int buf[NELT] = {
@@ -250,7 +257,6 @@ int hindexed_block_vector_test(void)
     return errs;
 }
 
-
 /* pack_and_unpack()
  *
  * Perform packing and unpacking of a buffer for the purposes of checking
@@ -329,10 +335,4 @@ static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int 
     return errs;
 }
 
-int parse_args(int argc, char **argv)
-{
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
-}
 #endif /*defined(TEST_HINDEXED_BLOCK) */

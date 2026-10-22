@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run errhan_commcall
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test comm_call_errhandler";
 */
@@ -14,8 +19,7 @@ static char MTEST_Descrip[] = "Test comm_call_errhandler";
 static int calls = 0;
 static int errs = 0;
 static MPI_Comm mycomm;
-void eh(MPI_Comm * comm, int *err, ...);
-void eh(MPI_Comm * comm, int *err, ...)
+static void eh(MPI_Comm * comm, int *err, ...)
 {
     if (*err != MPI_ERR_OTHER) {
         errs++;
@@ -29,15 +33,15 @@ void eh(MPI_Comm * comm, int *err, ...)
     return;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm comm;
     MPI_Errhandler newerr;
     int i;
     int reset_handler;
 
-    MTest_Init(&argc, &argv);
-
+    calls = 0;
+    errs = 0;
     comm = MPI_COMM_WORLD;
     mycomm = comm;
 
@@ -87,6 +91,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

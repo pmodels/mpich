@@ -9,16 +9,19 @@
  *
  * Should be run with 1 process. */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_struct_verydeep
+int run(const char *arg);
+#endif
 
 /* uncomment to use debugging routine in MPICH
 extern int MPIR_Datatype_debug(MPI_Datatype type, int depth);
 */
 
-int makeHDF5type0(MPI_Datatype * type);
-int makeHDF5type0(MPI_Datatype * type)
+static int makeHDF5type0(MPI_Datatype * type);
+static int makeHDF5type0(MPI_Datatype * type)
 {
     MPI_Datatype ctg, vect, structype, vec2, structype2, vec3, structype3, vec4, structype4, vec5;
 
@@ -71,8 +74,8 @@ int makeHDF5type0(MPI_Datatype * type)
     return 0;
 }
 
-int makeHDF5type1(MPI_Datatype * type);
-int makeHDF5type1(MPI_Datatype * type)
+static int makeHDF5type1(MPI_Datatype * type);
+static int makeHDF5type1(MPI_Datatype * type)
 {
     MPI_Datatype ctg, vect, structype, vec2, structype2, vec3, structype3, vec4, structype4, vec5;
 
@@ -125,8 +128,8 @@ int makeHDF5type1(MPI_Datatype * type)
     return 0;
 }
 
-int makeHDF5type(MPI_Datatype * type);
-int makeHDF5type(MPI_Datatype * type)
+static int makeHDF5type(MPI_Datatype * type);
+static int makeHDF5type(MPI_Datatype * type)
 {
     int i;
 
@@ -153,17 +156,14 @@ int makeHDF5type(MPI_Datatype * type)
     return 0;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype hdf5type;
 
-    MTest_Init(&argc, &argv);
     makeHDF5type(&hdf5type);
 
     /*MPIR_Datatype_debug(hdf5type, 32); */
 
     MPI_Type_free(&hdf5type);
-    MTest_Finalize(0);
-
     return 0;
 }

@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_icm
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test intercomm merge, including the choice of the high value";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, rsize;
@@ -20,8 +22,6 @@ int main(int argc, char *argv[])
     int minsize = 2;
     int isLeft;
     MPI_Comm comm, comm1, comm2, comm3, comm4;
-
-    MTest_Init(&argc, &argv);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
             }
         }
 
-
         MPI_Intercomm_merge(comm, 0, &comm3);
 
         MPI_Intercomm_merge(comm, 1, &comm4);
@@ -93,6 +92,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

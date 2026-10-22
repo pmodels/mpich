@@ -10,6 +10,11 @@
 #include <unistd.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_hindexed_io
+int run(const char *arg);
+#endif
+
 #define DATA_SIZE 324*4
 #define PAD 256
 #define HEADER 144
@@ -26,7 +31,7 @@ static void handle_error(int errcode, const char *str)
 
 #define CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
 
     MPI_File fh;
@@ -36,9 +41,8 @@ int main(int argc, char **argv)
     int data_size = DATA_SIZE;
     int i, j, k, errs = 0;
     MPI_Aint disp[BLK_COUNT];
-    const char *filename = "unnamed.dat";
+    char filename[1024];
 
-    MTest_Init(&argc, &argv);
     disp[0] = (MPI_Aint) (PAD);
     disp[1] = (MPI_Aint) (data_size * 1 + PAD);
     disp[2] = (MPI_Aint) (data_size * 2 + PAD);
@@ -54,8 +58,10 @@ int main(int argc, char **argv)
     MPI_Type_create_hvector(BLK_COUNT, data_size, 0, MPI_BYTE, &mem_type);
     MPI_Type_commit(&mem_type);
 
-    if (1 < argc)
-        filename = argv[1];
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(filename, sizeof(filename), "%s",
+             MTestArgListGetString_with_default(head, "fname", "unnamed.dat"));
+    MTestArgListDestroy(head);
 
     CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
                         MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE,
@@ -95,9 +101,8 @@ int main(int argc, char **argv)
     MPI_Type_free(&mem_type);
     MPI_Type_free(&file_type);
 
-    MTest_Finalize(errs);
 
     free(data);
     free(verify);
-    return MTestReturnValue(errs);
+    return errs;
 }

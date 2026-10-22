@@ -3,22 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_cmsplit
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test comm split";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, color, srank;
     MPI_Comm comm, scomm;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
@@ -48,6 +48,5 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Comm_free(&comm);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

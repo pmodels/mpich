@@ -3,23 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_exscan2
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Exscan (simple test)";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
     int sendbuf[1], recvbuf[1];
     MPI_Comm comm;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -48,6 +48,5 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error in recvbuf on zero, is %d\n", recvbuf[0]);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_accfence2_am
+int run(const char *arg);
+#endif
 
 #ifndef MAX_INT
 #define MAX_INT 0x7fffffff
@@ -18,7 +20,7 @@ static char MTEST_Descrip[] = "Test MPI_Accumulate with fence";
 
 /* same as accfence2.c, but uses alloc_mem */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source;
@@ -26,8 +28,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Win win;
     int *winbuf, *sbuf;
-
-    MTest_Init(&argc, &argv);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -90,6 +90,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

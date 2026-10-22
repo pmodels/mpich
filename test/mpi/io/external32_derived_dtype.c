@@ -8,6 +8,11 @@
 #include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_external32_derived_dtype
+int run(const char *arg);
+#endif
+
 #define HANDLE_ERROR(err) \
     if (err != MPI_SUCCESS) { \
         char msg[MPI_MAX_ERROR_STRING]; \
@@ -89,7 +94,7 @@ static void write_file(const char *name, void *buf, MPI_Datatype dt)
 
 /* write and read a file in which each process writes one int
  * in rank order */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
 
     char buf[2] = "a";
@@ -97,7 +102,6 @@ int main(int argc, char *argv[])
     int blocks[2] = { 1, 1 };
     int disps[2] = { 0, 1 };
 
-    MTest_Init(&argc, &argv);
     MPI_Type_indexed(2, blocks, disps, MPI_CHAR, &dt);
     MPI_Type_commit(&dt);
 
@@ -107,7 +111,6 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&dt);
 
-    MTest_Finalize(0);
 
     return 0;
 }

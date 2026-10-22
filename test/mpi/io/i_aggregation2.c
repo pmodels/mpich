@@ -20,6 +20,11 @@
 #include <string.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_aggregation2
+int run(const char *arg);
+#endif
+
 #define BUFSIZE 512
 
 static void handle_error(int errcode, const char *str)
@@ -31,7 +36,7 @@ static void handle_error(int errcode, const char *str)
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Info info = MPI_INFO_NULL;
     MPI_File fh;
@@ -40,11 +45,13 @@ int main(int argc, char **argv)
     int errcode;
     int i, rank, errs = 0, buffer[BUFSIZE], buf2[BUFSIZE];
     MPI_Request request;
-    const char *filename = NULL;
+    char filename[1024];
 
-    filename = (argc > 1) ? argv[1] : "testfile";
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(filename, sizeof(filename), "%s",
+             MTestArgListGetString_with_default(head, "fname", "testfile"));
+    MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -84,7 +91,6 @@ int main(int argc, char **argv)
             errs++;
     }
     MPI_Info_free(&info);
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

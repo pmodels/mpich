@@ -3,19 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <assert.h>
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run pt2pt_cancelanysrc
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int size, rank, msg, cancelled;
     MPI_Request request;
     MPI_Status status;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -43,5 +44,5 @@ int main(int argc, char **argv)
         MPI_Send(&msg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    MTest_Finalize(0);
+    return 0;
 }

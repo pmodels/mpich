@@ -4,6 +4,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_send_tests
+int run(const char *arg);
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -21,16 +26,15 @@
 static MPI_Comm comm = MPI_COMM_WORLD;
 static int buf[MAX_SIZE];
 
-int test_send(int rank, int src, int dst, int count, int flag);
+static int test_send(int rank, int src, int dst, int count, int flag);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int elems = 20;
     int rank, size;
     MPI_Request *reqs;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -50,8 +54,7 @@ int main(int argc, char *argv[])
     }
 
   fn_exit:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 #define DUMP_TEST_SUBJECT \
@@ -76,7 +79,7 @@ do { \
 } while (0)
 
 
-int test_send(int rank, int src, int dst, int count, int flag)
+static int test_send(int rank, int src, int dst, int count, int flag)
 {
     int errs = 0;
 

@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_test3
+int run(const char *arg);
+#endif
 
 /* Tests the example in Fig 6.8, pg 142, MPI-2 standard. Process 1 has
    a blocking MPI_Recv between the Post and Wait. Therefore, this
@@ -18,7 +20,9 @@
 
 #define SIZE 1048576
 
-int main(int argc, char *argv[])
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     int rank, destrank, nprocs, *A, *B, i;
     MPI_Comm CommDeuce;
@@ -26,7 +30,10 @@ int main(int argc, char *argv[])
     MPI_Win win;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -57,12 +64,12 @@ int main(int argc, char *argv[])
                 A[i] = i;
                 B[i] = SIZE + i;
             }
-#ifdef USE_WIN_ALLOCATE
-            char *base_ptr;
-            MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
-#else
-            MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
-#endif
+            if (use_win_allocate) {
+                char *base_ptr;
+                MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
+            } else {
+                MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+            }
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_start(group, 0, win);
@@ -74,16 +81,17 @@ int main(int argc, char *argv[])
         }
 
         else if (rank == 1) {
-#ifdef USE_WIN_ALLOCATE
-            MPI_Win_allocate(SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
-#else
-            B = (int *) malloc(SIZE * sizeof(int));
-            if (!B) {
-                printf("Can't allocate memory in test program\n");
-                MPI_Abort(MPI_COMM_WORLD, 1);
+            if (use_win_allocate) {
+                MPI_Win_allocate(SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B,
+                                 &win);
+            } else {
+                B = (int *) malloc(SIZE * sizeof(int));
+                if (!B) {
+                    printf("Can't allocate memory in test program\n");
+                    MPI_Abort(MPI_COMM_WORLD, 1);
+                }
+                MPI_Win_create(B, SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
             }
-            MPI_Win_create(B, SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
-#endif
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             for (i = 0; i < SIZE; i++)
                 A[i] = B[i] = (-4) * i;
@@ -107,9 +115,9 @@ int main(int argc, char *argv[])
                     errs++;
                 }
             }
-#ifndef USE_WIN_ALLOCATE
-            free(B);
-#endif
+            if (!use_win_allocate) {
+                free(B);
+            }
         }
 
         MPI_Group_free(&group);
@@ -118,6 +126,6 @@ int main(int argc, char *argv[])
         free(A);
     }
     MPI_Comm_free(&CommDeuce);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

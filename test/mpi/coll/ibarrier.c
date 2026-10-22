@@ -7,16 +7,18 @@
  * hanging indefinitely under a buggy version of ch3:sock. */
 
 #include "mpitest.h"
-#include <mpi.h>
-#include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run coll_ibarrier
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Request barrier;
     int rank, i, done;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Ibarrier(MPI_COMM_WORLD, &barrier);
     for (i = 0, done = 0; !done; i++) {
@@ -25,6 +27,5 @@ int main(int argc, char *argv[])
         MPI_Test(&barrier, &done, MPI_STATUS_IGNORE);
     }
 
-    MTest_Finalize(0);
     return 0;
 }

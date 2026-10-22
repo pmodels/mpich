@@ -3,17 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_getpartelm
+int run(const char *arg);
+#endif
 
 /*
 static char MTest_descrip[] = "Receive partial datatypes and check that\
 MPI_Getelements gives the correct version";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Datatype outtype, oldtypes[2];
@@ -21,8 +24,6 @@ int main(int argc, char *argv[])
     int blklens[2];
     MPI_Comm comm;
     int size, rank, src, dest, tag;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -113,6 +114,5 @@ int main(int argc, char *argv[])
         MPI_Type_free(&outtype);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

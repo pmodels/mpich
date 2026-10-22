@@ -7,10 +7,15 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int prodof(int ndims, const int dims[]);
-int increasing(int ndims, const int dims[]);
+#ifdef MULTI_TESTS
+#define run topo_dims1
+int run(const char *arg);
+#endif
 
-int prodof(int ndims, const int dims[])
+static int prodof(int ndims, const int dims[]);
+static int increasing(int ndims, const int dims[]);
+
+static int prodof(int ndims, const int dims[])
 {
     int i, prod = 1;
     for (i = 0; i < ndims; i++)
@@ -18,7 +23,7 @@ int prodof(int ndims, const int dims[])
     return prod;
 }
 
-int increasing(int ndims, const int dims[])
+static int increasing(int ndims, const int dims[])
 {
     int i, err = 0;
     for (i = 1; i < ndims; i++) {
@@ -30,12 +35,11 @@ int increasing(int ndims, const int dims[])
     return err;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int dims[4], nnodes, ndims;
 
-    MTest_Init(&argc, &argv);
 
     /* Test multiple dims create values.  For each, make sure that the
      * product of dims is the number of input nodes */
@@ -131,6 +135,5 @@ int main(int argc, char *argv[])
         printf("dims create returned the wrong decomposition for %d in %d dims\n", nnodes, ndims);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

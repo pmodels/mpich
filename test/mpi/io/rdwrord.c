@@ -7,13 +7,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_rdwrord
+int run(const char *arg);
+#endif
 #include <limits.h>
 
 /*
 static char MTEST_Descrip[] = "Test reading and writing ordered output";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank, i, rc;
@@ -25,16 +30,15 @@ int main(int argc, char *argv[])
     int do_large_count = 0;
     MPI_Count count, total_count;
 
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-large-count") == 0) {
-            do_large_count = 1;
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    do_large_count = MTestArgListGetInt_with_default(head, "large-count", 0);
+    MTestArgListDestroy(head);
 #if MPI_VERSION < 4
-            printf("Large count test only available with MPI_VERSION >= 4\n");
-            return 1;
-#endif
-        }
+    if (do_large_count) {
+        printf("Large count test only available with MPI_VERSION >= 4\n");
+        return 1;
     }
-    MTest_Init(&argc, &argv);
+#endif
 
     comm = MPI_COMM_WORLD;
     MPI_File_open(comm, (char *) "test.ord",
@@ -117,6 +121,5 @@ int main(int argc, char *argv[])
     free(buf);
     MPI_File_close(&fh);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

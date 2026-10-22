@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "mpitestconf.h"
-#include <stdio.h>
-#include <string.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run coll_opmaxloc
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_MAXLOC operations on datatypes dupported by MPICH";
@@ -21,13 +23,11 @@ static char MTEST_Descrip[] = "Test MPI_MAXLOC operations on datatypes dupported
  * The rule on max loc is that if there is a tie in the value, the minimum
  * rank is used (see 4.9.3 in the MPI-1 standard)
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
     MPI_Comm comm;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -322,6 +322,5 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

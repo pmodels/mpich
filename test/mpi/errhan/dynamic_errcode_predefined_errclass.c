@@ -7,11 +7,15 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run errhan_dynamic_errcode_predefined_errclass
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errcode, errclass, errs = 0;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Add_error_code(MPI_ERR_ARG, &errcode);
     MPI_Error_class(errcode, &errclass);
@@ -21,6 +25,5 @@ int main(int argc, char **argv)
         errs++;
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

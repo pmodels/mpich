@@ -3,9 +3,6 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -13,6 +10,11 @@
 #include <assert.h>
 #include <limits.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_indexed_misc
+int run(const char *arg);
+#endif
 
 static int verbose = 1;
 
@@ -37,23 +39,29 @@ static int verbose = 1;
     } while (0)
 
 /* tests */
-int indexed_contig_test(void);
-int indexed_zeroblock_first_test(void);
-int indexed_zeroblock_middle_test(void);
-int indexed_zeroblock_last_test(void);
-int indexed_contig_leading_zero_test(void);
-int indexed_same_lengths(void);
+static int indexed_contig_test(void);
+static int indexed_zeroblock_first_test(void);
+static int indexed_zeroblock_middle_test(void);
+static int indexed_zeroblock_last_test(void);
+static int indexed_contig_leading_zero_test(void);
+static int indexed_same_lengths(void);
 
 /* helper functions */
-int parse_args(int argc, char **argv);
 static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int typebufsz);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -90,11 +98,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in indexed_contig_leading_zero_test.\n", err);
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int indexed_zeroblock_first_test(void)
+static int indexed_zeroblock_first_test(void)
 {
     int err, errs = 0;
 
@@ -132,7 +139,7 @@ int indexed_zeroblock_first_test(void)
     return errs;
 }
 
-int indexed_zeroblock_middle_test(void)
+static int indexed_zeroblock_middle_test(void)
 {
     int err, errs = 0;
 
@@ -170,7 +177,7 @@ int indexed_zeroblock_middle_test(void)
     return errs;
 }
 
-int indexed_zeroblock_last_test(void)
+static int indexed_zeroblock_last_test(void)
 {
     int err, errs = 0;
 
@@ -215,7 +222,7 @@ int indexed_zeroblock_last_test(void)
  *
  * Returns the number of errors encountered.
  */
-int indexed_contig_test(void)
+static int indexed_contig_test(void)
 {
     int buf[9] = { -1, 1, 2, 3, -2, 4, 5, -3, 6 };
     int err, errs = 0;
@@ -302,7 +309,7 @@ int indexed_contig_test(void)
 
 /* very similar to indexed_zeroblock_first_test, but only has a single contig in
  * order to catch a particular optimization path in MPICH */
-int indexed_contig_leading_zero_test(void)
+static int indexed_contig_leading_zero_test(void)
 {
     int err, errs = 0;
 
@@ -433,7 +440,6 @@ int indexed_contig_leading_zero_test(void)
     }
     free(buf);
 
-
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the hindexed type.  Use a hard-to-optimize struct
      * type to force a more complicated datatype processing path */
@@ -480,7 +486,7 @@ int indexed_contig_leading_zero_test(void)
  * converted to a vector type.  It is also important to add a dummy element at
  * the beginning in order to cause int/MPI_Aint misalignment for the
  * displacement of the first non-zero-width component. */
-int indexed_same_lengths(void)
+static int indexed_same_lengths(void)
 {
     int err, errs = 0;
 
@@ -651,23 +657,4 @@ static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int 
     }
 
     return errs;
-}
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

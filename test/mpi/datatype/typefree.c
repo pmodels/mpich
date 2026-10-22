@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_typefree
+int run(const char *arg);
+#endif
 
 /*
  * This test may be used to confirm that memory is properly recovered from
@@ -21,14 +23,12 @@
  * to turn on MPICH's internal memory checking.
  */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Datatype type;
 
-    MTest_Init(&argc, &argv);
     MPI_Type_dup(MPI_INT, &type);
     MPI_Type_free(&type);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

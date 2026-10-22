@@ -3,20 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpi.h"
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_struct_ezhov
+int run(const char *arg);
+#endif
 
 #define COUNT		2
 #define SIZE		340
 #define EL_COUNT	1131
 
-char s_buf[EL_COUNT * SIZE];
-char r_buf[EL_COUNT * SIZE];
+static char s_buf[EL_COUNT * SIZE];
+static char r_buf[EL_COUNT * SIZE];
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, ret;
     MPI_Status Status;
@@ -25,7 +27,6 @@ int main(int argc, char **argv)
     MPI_Aint disp1[COUNT] = { 0, 332 };
     int block1[COUNT] = { 56, 2 };
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -50,8 +51,6 @@ int main(int argc, char **argv)
     MPI_Wait(&request, &Status);
 
     MPI_Type_free(&struct_type);
-
-    MTest_Finalize(0);
 
     return 0;
 }

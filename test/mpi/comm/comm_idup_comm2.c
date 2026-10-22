@@ -5,15 +5,17 @@
 
 /* This test tests overlapping of Comm_idups with other comm. generations calls */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_idup_comm2
+int run(const char *arg);
+#endif
 
 #define NUM_IDUPS 5
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -26,7 +28,6 @@ int main(int argc, char **argv)
     MPI_Comm idupcomms[NUM_IDUPS];
     MPI_Request reqs[NUM_IDUPS];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_dup(MPI_COMM_WORLD, &dupcomm);
@@ -114,6 +115,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&dup_group);
     MPI_Comm_free(&dupcomm);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

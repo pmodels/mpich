@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 /* The next is for isprint */
 #include <ctype.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run datatype_dataalign
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     struct a {
         int i;
@@ -24,8 +27,6 @@ int main(int argc, char *argv[])
     MPI_Datatype bases[2];
     MPI_Datatype str, con;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -97,6 +98,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&str);
     MPI_Type_free(&con);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

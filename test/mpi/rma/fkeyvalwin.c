@@ -3,13 +3,15 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitestconf.h"
 #include "mpitest.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+
+#ifdef MULTI_TESTS
+#define run rma_fkeyvalwin
+int run(const char *arg);
 #endif
 
 /*
@@ -20,10 +22,8 @@ executed";
 
 /* Copy increments the attribute value */
 /* Note that we can really ignore this because there is no win dup */
-int copy_fn(MPI_Win oldwin, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag);
-int copy_fn(MPI_Win oldwin, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copy_fn(MPI_Win oldwin, int keyval, void *extra_state,
+                   void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Copy the address of the attribute */
     *(void **) attribute_val_out = attribute_val_in;
@@ -34,20 +34,18 @@ int copy_fn(MPI_Win oldwin, int keyval, void *extra_state,
 }
 
 /* Delete decrements the attribute value */
-int delete_fn(MPI_Win win, int keyval, void *attribute_val, void *extra_state);
-int delete_fn(MPI_Win win, int keyval, void *attribute_val, void *extra_state)
+static int delete_fn(MPI_Win win, int keyval, void *attribute_val, void *extra_state)
 {
     *(int *) attribute_val = *(int *) attribute_val - 1;
     return MPI_SUCCESS;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int attrval;
     int i, key[32], keyval;
     MPI_Win win;
-    MTest_Init(&argc, &argv);
 
     while (MTestGetWin(&win, 0)) {
         if (win == MPI_WIN_NULL)
@@ -79,7 +77,6 @@ int main(int argc, char *argv[])
             MPI_Win_free_keyval(&key[i]);
         }
     }
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

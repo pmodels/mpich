@@ -3,10 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_get_struct
+int run(const char *arg);
+#endif
 
 /* Communicating a datatype built out of structs
  * This test was motivated by the failure of an example program for
@@ -27,14 +30,14 @@ typedef struct {
     Rptr next;
     char key[MAX_KEY_SIZE], value[MAX_VALUE_SIZE];
 } ListElm;
-Rptr nullDptr = { 0, -1, 0 };
+static Rptr nullDptr = { 0, -1, 0 };
 
-int testCases = -1;
+static int testCases = -1;
 #define BYTE_ONLY 0x1
 #define TWO_STRUCT 0x2
-int isOneLevel = 0;
+static int isOneLevel = 0;
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errors = 0;
     Rptr headDptr;
@@ -43,20 +46,19 @@ int main(int argc, char **argv)
     MPI_Datatype dptrType, listelmType;
     MPI_Win listwin;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-byteonly") == 0) {
-            testCases = BYTE_ONLY;
-        } else if (strcmp(argv[i], "-twostruct") == 0) {
-            testCases = TWO_STRUCT;
-        } else if (strcmp(argv[i], "-onelevel") == 0) {
-            isOneLevel = 1;
-        } else {
-            printf("Unrecognized argument %s\n", argv[i]);
-        }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "byteonly", 0)) {
+        testCases = BYTE_ONLY;
     }
+    if (MTestArgListGetInt_with_default(head, "twostruct", 0)) {
+        testCases = TWO_STRUCT;
+    }
+    if (MTestArgListGetInt_with_default(head, "onelevel", 0)) {
+        isOneLevel = 1;
+    }
+    MTestArgListDestroy(head);
 
     /* Create the datatypes that we will use to move the data */
     {
@@ -163,6 +165,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&dptrType);
     MPI_Type_free(&listelmType);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

@@ -9,11 +9,13 @@
   * every other process.
   */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_contention_put
+int run(const char *arg);
+#endif
 
 #define MAXELEMS      6400
 #define COUNT         1000
@@ -21,9 +23,7 @@
 static int me, nproc;
 static const int verbose = 0;
 
-int test_put(void);
-
-int test_put(void)
+static int test_put(void)
 {
     MPI_Win dst_win;
     double *dst_buf;
@@ -81,11 +81,10 @@ int test_put(void)
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
 
@@ -100,6 +99,5 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

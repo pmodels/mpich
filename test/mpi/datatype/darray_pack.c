@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_darray_pack
+int run(const char *arg);
+#endif
 
 /*
    The default behavior of the test routines should be to briefly indicate
@@ -18,19 +20,25 @@
 static int verbose = 1;
 
 /* tests */
-int darray_2d_c_test1(void);
-int darray_4d_c_test1(void);
+static int darray_2d_c_test1(void);
+static int darray_4d_c_test1(void);
 
 /* helper functions */
-static int parse_args(int argc, char **argv);
 static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int typebufsz);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -52,8 +60,7 @@ int main(int argc, char **argv)
      * (including IBM's) check that the number of processes given to
      * Type_create_darray is no larger than MPI_COMM_WORLD */
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* darray_2d_test1()
@@ -64,7 +71,7 @@ int main(int argc, char **argv)
  *
  * Returns the number of errors encountered.
  */
-int darray_2d_c_test1(void)
+static int darray_2d_c_test1(void)
 {
     MPI_Datatype darray;
     int array[9];               /* initialized below */
@@ -134,7 +141,7 @@ int darray_2d_c_test1(void)
  *
  * Returns the number of errors encountered.
  */
-int darray_4d_c_test1(void)
+static int darray_4d_c_test1(void)
 {
     MPI_Datatype darray;
     int array[72];
@@ -305,23 +312,4 @@ static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int 
     }
 
     return errs;
-}
-
-static int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

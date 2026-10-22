@@ -3,20 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_rma_contig
+int run(const char *arg);
+#endif
 
 #define MAX_DATA_SIZE   (1024*128*16)
 #define MAX_NUM_ITERATIONS (8192*4)
 #define MIN_NUM_ITERATIONS 8
 #define NUM_WARMUP_ITER 1
 
-int max_num_iterations = MAX_NUM_ITERATIONS;
-const int verbose = 0;
+static int max_num_iterations = MAX_NUM_ITERATIONS;
+static const int verbose = 0;
 static int rank;
 
 static void run_test(int lock_mode, int lock_assert)
@@ -121,19 +123,16 @@ static void run_test(int lock_mode, int lock_assert)
     MPI_Free_mem(buf);
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
     max_num_iterations = MTestArgListGetInt_with_default(head, "iter", MAX_NUM_ITERATIONS);
     MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
     run_test(MPI_LOCK_EXCLUSIVE, 0);
     run_test(MPI_LOCK_EXCLUSIVE, MPI_MODE_NOCHECK);
     run_test(MPI_LOCK_SHARED, 0);
     run_test(MPI_LOCK_SHARED, MPI_MODE_NOCHECK);
-
-    MTest_Finalize(0);
 
     return 0;
 }

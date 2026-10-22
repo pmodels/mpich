@@ -136,18 +136,11 @@ noinst_PROGRAMS =      \
     neighb_alltoallw2  \
     neighb_dup_edges   \
     bcast              \
-    bcast_comm_world_only \
     bcast_gpu          \
     coll_large	       \
     ring_neighbor_alltoall \
     allgather_gpu \
     allgatherv_gpu
-
-bcast_CPPFLAGS = $(AM_CPPFLAGS)
-bcast_SOURCES = bcast.c
-
-bcast_comm_world_only_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)
-bcast_comm_world_only_SOURCES = bcast.c
 
 uoplong_large_SOURCES = uoplong.c
 uoplong_large_CPPFLAGS = -DOP_LARGE $(AM_CPPFLAGS)

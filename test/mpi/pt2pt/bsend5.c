@@ -3,19 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run pt2pt_bsend5
+int run(const char *arg);
+#endif
+
 #define BUFSIZE 2000
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Status status;
     MPI_Comm comm, scomm;
     int a[10], b[10];
     int buf[BUFSIZE], *bptr, bl, i, j, rank, size, color, errs = 0;
 
-    MTest_Init(0, 0);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     color = rank % 2;
     MPI_Comm_split(MPI_COMM_WORLD, color, rank, &scomm);
@@ -61,7 +63,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&scomm);
     MPI_Comm_free(&comm);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

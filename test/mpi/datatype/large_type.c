@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_large_type
+int run(const char *arg);
+#endif
 
 static MPI_Datatype make_largexfer_type_struct(MPI_Offset nbytes)
 {
@@ -68,7 +70,6 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
     blocklens = calloc(count, sizeof(int));
     disp = calloc(count, sizeof(MPI_Aint));
 
-
     for (i = 0; i < (count - 1); i++) {
         blocklens[i] = chunk_size;
         disp[i] = (MPI_Aint) chunk_size *i;
@@ -83,7 +84,6 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
     free(disp);
     return memtype;
 }
-
 
 static int testtype(MPI_Datatype type, MPI_Offset expected)
 {
@@ -115,13 +115,10 @@ static int testtype(MPI_Datatype type, MPI_Offset expected)
     return errs;
 }
 
-
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-
     int errs = 0, i;
     int rank, size;
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -151,7 +148,5 @@ int main(int argc, char **argv)
     }
 
   epilogue:
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

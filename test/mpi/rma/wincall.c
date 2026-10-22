@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_wincall
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test win_call_errhandler";
@@ -14,8 +17,8 @@ static char MTEST_Descrip[] = "Test win_call_errhandler";
 static int calls = 0;
 static int errs = 0;
 static MPI_Win mywin;
-void eh(MPI_Win * win, int *err, ...);
-void eh(MPI_Win * win, int *err, ...)
+
+static void eh(MPI_Win * win, int *err, ...)
 {
     if (*err != MPI_ERR_OTHER) {
         errs++;
@@ -29,14 +32,12 @@ void eh(MPI_Win * win, int *err, ...)
     return;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int buf[2];
     MPI_Win win;
     MPI_Errhandler newerr;
     int i;
-
-    MTest_Init(&argc, &argv);
 
     /* Run this test multiple times to expose storage leaks (we found a leak
      * of error handlers with this test) */
@@ -58,6 +59,5 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -7,13 +7,17 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_graphmap1
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int newrank, merr, rank;
     int index[2], edges[2];
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     /* Graph map where there are no nodes for this process */
@@ -32,6 +36,5 @@ int main(int argc, char *argv[])
         printf("Graph map with no local nodes did not return MPI_UNDEFINED\n");
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

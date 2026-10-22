@@ -4,6 +4,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_i_noncontig_coll
+int run(const char *arg);
+#endif
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +29,7 @@
         MPI_Abort(MPI_COMM_WORLD, 1); \
     }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int *buf, i, mynod, nprocs, len, blocklength;
     int errs = 0, err = MPI_SUCCESS;
@@ -35,7 +40,6 @@ int main(int argc, char **argv)
     char *filename = NULL;
     MPI_Datatype typevec, typevec2, newtype;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
 
@@ -243,6 +247,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&newtype);
     free(buf);
     free(filename);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

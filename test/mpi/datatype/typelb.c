@@ -3,18 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run datatype_typelb
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int blockcnt[2], rank;
     MPI_Aint offsets[2], lb, ub, extent;
     MPI_Datatype tmp_type, newtype;
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     /* Set some values in locations that should not be accessed */
     blockcnt[1] = -1;
@@ -48,6 +49,5 @@ int main(int argc, char **argv)
         MPI_Type_free(&newtype);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

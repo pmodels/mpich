@@ -3,22 +3,23 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitestconf.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run comm_comm_group_rand
+int run(const char *arg);
+#endif
+
 #define LOOPS 100
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, i, j, count;
     MPI_Group full_group, sub_group;
     int *included, *ranks;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -53,7 +54,5 @@ int main(int argc, char **argv)
 
     free(ranks);
     free(included);
-    MTest_Finalize(0);
-
     return 0;
 }

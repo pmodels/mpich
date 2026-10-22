@@ -3,17 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpitest.h>
-#include <mpi.h>
+#include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_mprobe_self_free
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Isend to self with MPI_Request_free + Mprobe/Mrecv";
 */
 
-int main(void)
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(NULL, NULL);
 
     const int dummy_data = 42;
 
@@ -32,7 +35,5 @@ int main(void)
         errs++;
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

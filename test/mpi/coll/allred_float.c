@@ -4,8 +4,11 @@
  */
 
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allred_float
+int run(const char *arg);
+#endif
 
 /* MPI_Allreduce need produce identical results on all ranks. This is
  * particular challenging for floating point datatypes since computer
@@ -23,7 +26,7 @@
 
 #define N 8
 
-float buf[N];
+static float buf[N];
 
 static void init_buf(int rank, int pos1, int pos2)
 {
@@ -43,11 +46,9 @@ static void init_buf(int rank, int pos1, int pos2)
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -93,6 +94,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

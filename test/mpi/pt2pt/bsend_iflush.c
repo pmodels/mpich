@@ -5,13 +5,18 @@
 
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run pt2pt_bsend_iflush
+int run(const char *arg);
+#endif
+
 /* Test MPI_Bsend_iflush. */
 
 /* NOTE: this test send self messages for more predictable behavior. */
 
 #define MSG_SIZE 100000
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     char send_buf[MSG_SIZE];
@@ -21,7 +26,6 @@ int main(int argc, char *argv[])
 
     MPI_Comm comm = MPI_COMM_WORLD;
 
-    MTest_Init(&argc, &argv);
 
     int rank;
     MPI_Comm_rank(comm, &rank);
@@ -93,7 +97,5 @@ int main(int argc, char *argv[])
     }
     free(buf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

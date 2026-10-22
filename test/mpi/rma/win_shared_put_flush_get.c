@@ -3,18 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_win_shared_put_flush_get
+int run(const char *arg);
+#endif
 
 #define ITER 100
 #define BUF_CNT 4
-double local_buf[BUF_CNT], check_buf[BUF_CNT];
+static double local_buf[BUF_CNT], check_buf[BUF_CNT];
 
-const int verbose = 0;
+static const int verbose = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nproc, i, x;
     int errors = 0;
@@ -34,7 +36,6 @@ int main(int argc, char *argv[])
     int shm_root_rank_in_world;
     int origin = -1, put_target, get_target;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);
@@ -186,7 +187,5 @@ int main(int argc, char *argv[])
     if (world_group != MPI_GROUP_NULL)
         MPI_Group_free(&world_group);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(errors);
+    return errors;
 }

@@ -13,14 +13,16 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef MULTI_TESTS
+#define run coll_nonblocking3
+int run(const char *arg);
 #endif
 
 static int errs = 0;
@@ -799,7 +801,7 @@ static void complete_something_somehow(unsigned int rndnum, int numreqs, MPI_Req
 #undef COMPLETION_CASES
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, num_posted, num_completed;
     int wrank, wsize;
@@ -812,7 +814,6 @@ int main(int argc, char **argv)
     MPI_Comm comms[NUM_COMMS];
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -874,7 +875,5 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[i]);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -63,6 +63,7 @@ int main(int argc, char **argv)
 
             int ret = fn(args);
             alarm(0);   /* cancel timeout */
+            MTest_Cleanup();
             int toterrs;
             MPI_Reduce(&ret, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
             if (wrank == 0) {
@@ -78,6 +79,7 @@ int main(int argc, char **argv)
     }
 #else
     ret = run(args);
+    MTest_Cleanup();
     int toterrs;
     MPI_Reduce(&ret, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (wrank == 0) {

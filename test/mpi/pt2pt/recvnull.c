@@ -7,19 +7,23 @@
 #include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run pt2pt_recvnull
+int run(const char *arg);
+#endif
+
 /*
  * This program checks that MPI_Irecv and MPI_Recv correctly handle
  * a source of MPI_PROC_NULL
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int flag;
     int errs = 0;
     MPI_Status status;
     MPI_Request req;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Irecv(NULL, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, 10, MPI_COMM_WORLD, &req);
     MPI_Waitall(1, &req, &status);
@@ -46,6 +50,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

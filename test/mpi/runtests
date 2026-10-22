@@ -560,7 +560,10 @@ sub Run_all_tests {
         my $mpitest_hash = load_all_mpitests_txt();
         foreach my $test (@$all_tests) {
             my $key = get_mpitest_key($test);
-            if ($mpitest_hash->{$key} and !$test->{need_init_envs}) {
+            # run_mpitests cannot set init-time CVARs, pass mpiexec arguments,
+            # or check the output with a custom resultTest
+            if ($mpitest_hash->{$key} and !$test->{need_init_envs}
+                and !@{$test->{mpiexecargs}} and !$test->{resultTest}) {
                 push @all_mpitests, $test;
             } else {
                 push @all_remaining, $test
@@ -709,15 +712,16 @@ sub run_mpitests {
 
     # run_mpitests is located in the same path as runtests
     my $run = "$g_topsrcdir/run_mpitests";
-    for (my $np = 1; $np <= 10; $np++) {
+    my %np_hash;
+    foreach my $test_opt (@$all_tests) {
+        $np_hash{$test_opt->{np}} = 1;
+    }
+    foreach my $np (sort { $a <=> $b } keys %np_hash) {
         my @tests;
         foreach my $test_opt (@$all_tests) {
             if ($test_opt->{np} == $np) {
                 push @tests, $test_opt;
             }
-        }
-        if (!@tests) {
-            next;
         }
         my $num_tests = @tests;
         my $idx = 0;

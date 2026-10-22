@@ -5,21 +5,23 @@
 
 /* test/wait on an inactive persistent collective operation. */
 
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_p_inactive
+int run(const char *arg);
+#endif
 
 static void init_status(MPI_Status * status);
 static int check_empty_status(MPI_Status status);
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Status status;
     MPI_Request req;
     int flag;
     int errs = 0;
     int a;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Bcast_init(&a, 1, MPI_INT, 0, MPI_COMM_WORLD, MPI_INFO_NULL, &req);
 
@@ -38,8 +40,7 @@ int main(int argc, char **argv)
 
     MPI_Request_free(&req);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* static routines to init and verify status object */

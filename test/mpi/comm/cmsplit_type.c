@@ -3,16 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_cmsplit_type
+int run(const char *arg);
+#endif
 
 /* FIXME: This test only checks that the MPI_Comm_split_type routine
    doesn't fail.  It does not check for correct behavior */
-
 
 static const char *split_topo[] = {
     "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "l1cache",
@@ -26,15 +27,13 @@ static const char *split_topo_network[] = {
     "torus_dimension:2", NULL
 };
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, size, verbose = 0, errs = 0, tot_errs = 0;
     int wrank, i;
     MPI_Comm comm;
     MPI_Info info;
     int world_size;
-
-    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -170,7 +169,6 @@ int main(int argc, char *argv[])
     }
     MPI_Info_free(&info);
 
-
     /* test for topology hints: pass info value to some processes, but
      * not others. */
     if (rank % 2 == 0) {
@@ -193,7 +191,6 @@ int main(int argc, char *argv[])
     if (rank % 2 == 0)
         MPI_Info_free(&info);
 
-
     /* test for topology hints: pass an invalid info value and make
      * sure the behavior is as if no info key was passed.  */
     MPI_Info_create(&info);
@@ -212,10 +209,10 @@ int main(int argc, char *argv[])
     /* test #1: expected behavior -- user provided a directory, and we
      * determine which processes share access to it */
     MPI_Info_create(&info);
-    if (argc == 2)
-        MPI_Info_set(info, "nbhd_common_dirname", argv[1]);
-    else
-        MPI_Info_set(info, "nbhd_common_dirname", ".");
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    MPI_Info_set(info, "nbhd_common_dirname",
+                 MTestArgListGetString_with_default(head, "dirname", "."));
+    MTestArgListDestroy(head);
     MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
     if (comm == MPI_COMM_NULL) {
         printf("MPIX_COMM_TYPE_NEIGHBORHOOD: got MPI_COMM_NULL\n");
@@ -295,7 +292,5 @@ int main(int argc, char *argv[])
     }
     MPI_Reduce(&errs, &tot_errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

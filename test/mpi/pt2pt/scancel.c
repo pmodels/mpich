@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_scancel
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test of various send cancel calls";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, dest;
@@ -26,8 +28,6 @@ int main(int argc, char *argv[])
                                  * a tricky part of cancel */
 #endif
     int cs, flag, n;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -241,6 +241,5 @@ int main(int argc, char *argv[])
         MPI_Barrier(comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

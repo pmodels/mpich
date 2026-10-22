@@ -4,15 +4,18 @@
  */
 
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_vecblklen
+int run(const char *arg);
+#endif
 
 /* Inspired by the Intel MPI_Type_vector_blklen test.
    Added to include a test of a typerep optimization that failed.
 */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Datatype dt, dt2, newtype;
     int position, psize, insize, outsize;
@@ -21,7 +24,6 @@ int main(int argc, char *argv[])
     int errs = 0;
     int veccount = 16, stride = 16;
 
-    MTest_Init(&argc, &argv);
     /*
      * Create a type with some padding
      */
@@ -52,7 +54,6 @@ int main(int argc, char *argv[])
     psize = position;
     position = 0;
     MPI_Unpack(pbuf, psize, &position, outbuf, 1, newtype, MPI_COMM_WORLD);
-
 
     /* Check the output */
     p = outbuf;
@@ -88,7 +89,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&dt);
     MPI_Type_free(&dt2);
     MPI_Type_free(&newtype);
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -7,13 +7,17 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run topo_dims0
+int run(const char *arg);
+#endif
+
 /*
  * Test a corner case. See https://github.com/mpi-forum/mpi-issues/issues/72
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int mpi_error, errs = 0;
-    MTest_Init(&argc, &argv);
 
     /* 0 dimensional test */
     mpi_error = MPI_Dims_create(1, 0, NULL);
@@ -22,6 +26,5 @@ int main(int argc, char *argv[])
         printf("Dims_create should succeed if nnodes = 1 and ndims = 0\n");
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

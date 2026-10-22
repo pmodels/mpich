@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_noncontig
+int run(const char *arg);
+#endif
+
 /* tests noncontiguous reads/writes using nonblocking I/O */
 
 /*
@@ -28,7 +33,7 @@ static char MTEST_Descrip[] = "Test nonblocking I/O";
         MPI_Abort(MPI_COMM_WORLD, 1); \
     }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int *buf, i, mynod, nprocs, len, blocklength;
     int err, errs = 0;
@@ -39,7 +44,6 @@ int main(int argc, char **argv)
     MPI_Datatype typevec, typevec2, newtype;
     MPI_Request req;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
 
@@ -51,25 +55,13 @@ int main(int argc, char **argv)
 /* process 0 takes the file name as a command-line argument and
    broadcasts it to other processes */
     if (!mynod) {
-        i = 1;
-        while ((i < argc) && strcmp("-fname", *argv)) {
-            i++;
-            argv++;
-        }
-        if (i >= argc) {
-            len = 8;
-            filename = (char *) malloc(len + 10);
-            strcpy(filename, "testfile");
-            /*
-             * fprintf(stderr, "\n*#  Usage: i_noncontig -fname filename\n\n");
-             * MPI_Abort(MPI_COMM_WORLD, 1);
-             */
-        } else {
-            argv++;
-            len = (int) strlen(*argv);
-            filename = (char *) malloc(len + 1);
-            strcpy(filename, *argv);
-        }
+        MTestArgList *head = MTestArgListCreate_arg(arg);
+        const char *fname = MTestArgListGetString_with_default(head, "fname", "testfile");
+        len = (int) strlen(fname);
+        filename = (char *) malloc(len + 10);
+        memset(filename, 0, len + 10);
+        strcpy(filename, fname);
+        MTestArgListDestroy(head);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     } else {
@@ -267,6 +259,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&newtype);
     free(buf);
     free(filename);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

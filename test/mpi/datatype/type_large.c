@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_type_large
+int run(const char *arg);
+#endif
 
 /* Basic test to test MPI 4.0 large API */
 
@@ -66,7 +68,6 @@ static MPI_Datatype make_large_hindexed(MPI_Count nbytes)
     return newtype;
 }
 
-
 static int testtype(MPI_Datatype type, MPI_Count expected)
 {
     MPI_Count size, lb, extent;
@@ -97,13 +98,10 @@ static int testtype(MPI_Datatype type, MPI_Count expected)
     return errs;
 }
 
-
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-
     int errs = 0;
     int rank, size;
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -132,7 +130,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

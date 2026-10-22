@@ -8,10 +8,12 @@
  * have better defined behavior when an "int" quantity would overflow. */
 
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_large_count
+int run(const char *arg);
+#endif
 
 static int errs;
 
@@ -77,7 +79,7 @@ static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count e
 #endif
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int wrank, wsize;
     int size, elements, count;
@@ -91,7 +93,6 @@ int main(int argc, char *argv[])
     MPI_Datatype four_struct = MPI_DATATYPE_NULL;
     MPI_Status status;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -249,7 +250,6 @@ int main(int argc, char *argv[])
     check(lb_x == 0);
     check(extent == four_struct_true_extent);
 
-
     /* MPI_{Status_set_elements,Get_elements}{,_x} */
 
     /* set simple */
@@ -288,7 +288,5 @@ int main(int argc, char *argv[])
     if (four_struct != MPI_DATATYPE_NULL)
         MPI_Type_free(&four_struct);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "mpitestconf.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_oplor
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_LOR operations on optional datatypes dupported by MPICH";
@@ -17,7 +19,7 @@ static char MTEST_Descrip[] = "Test MPI_LOR operations on optional datatypes dup
  * integers or are not required integers (e.g., long long).  MPICH allows
  * these as well.  A strict MPI test should not include this test.
  */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int rank, size;
@@ -25,8 +27,6 @@ int main(int argc, char *argv[])
     char cinbuf[3], coutbuf[3];
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -170,6 +170,5 @@ int main(int argc, char *argv[])
 #endif
 
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_ARE_FATAL);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

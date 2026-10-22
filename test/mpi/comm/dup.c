@@ -3,18 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run comm_dup
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, wrank, wsize, dest, a, b;
     MPI_Comm newcomm;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     /* Can we run comm dup at all? */
     MPI_Comm_dup(MPI_COMM_WORLD, &newcomm);
@@ -67,8 +68,5 @@ int main(int argc, char **argv)
 
     MPI_Comm_free(&newcomm);
 
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

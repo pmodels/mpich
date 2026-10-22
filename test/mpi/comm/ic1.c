@@ -6,16 +6,17 @@
 /*
  * A simple test of the intercomm create routine, with a communication test
  */
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run comm_ic1
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Comm intercomm;
     int remote_rank, rank, size, errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 2) {
@@ -70,7 +71,5 @@ int main(int argc, char *argv[])
     /* The next test should create an intercomm with groups of different
      * sizes FIXME */
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

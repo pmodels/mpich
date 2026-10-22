@@ -10,11 +10,13 @@
  *    (In CH4/OFI, REPLACE may go through OFI but MIN_LOC/MAX_LOC has to go through active message.)
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include <limits.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_acc_ordering
+int run(const char *arg);
+#endif
 
 typedef struct {
     int val;
@@ -55,7 +57,7 @@ static void verify_nondeterministic_result(twoint_t * data,
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int me, nproc, i;
     twoint_t *data;
@@ -64,8 +66,6 @@ int main(int argc, char **argv)
     twoint_t *expected = NULL;
     MPI_Win win;
     MPI_Info info_in;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -264,8 +264,7 @@ int main(int argc, char **argv)
     if (me == 0)
         free(expected);
 
-    MTest_Finalize(errs);
     free(data);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

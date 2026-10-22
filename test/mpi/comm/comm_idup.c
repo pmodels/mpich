@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_idup
+int run(const char *arg);
+#endif
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -20,7 +22,7 @@
         }                                                                         \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     int i;
@@ -28,8 +30,6 @@ int main(int argc, char **argv)
     int buf[2];
     MPI_Comm newcomm, ic, localcomm, stagger_comm;
     MPI_Request rreq;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -118,7 +118,5 @@ int main(int argc, char **argv)
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&ic);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

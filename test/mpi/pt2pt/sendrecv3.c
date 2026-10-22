@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_sendrecv3
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Head to head send-recv to test backoff in device when large messages are being transferred";
 */
 
 #define  MAX_NMSGS 100
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source, dest, partner;
@@ -24,17 +26,15 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     int use_isendrecv = 0;
 
-    if (argc > 1 && strcmp(argv[1], "-isendrecv") == 0) {
-        use_isendrecv = 1;
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_isendrecv = MTestArgListGetInt_with_default(head, "isendrecv", 0);
+    MTestArgListDestroy(head);
 
     /* skip the test if MPI_Isendrecv is not available */
     if (use_isendrecv && !MTEST_HAVE_MIN_MPI_VERSION(4, 0)) {
         printf("Test Skipped\n");
         return 0;
     }
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -123,6 +123,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -20,7 +20,7 @@ probe_intercomm 2
 # to a common file system. argument is a directory whose presence or
 # non-presence will determine the communicator split.   the other split_type
 # cases will ignore the argument
-cmsplit_type 4 arg=.
+cmsplit_type 4 arg=-dirname=.
 comm_create_group 4
 comm_create_group 8
 comm_group_half 2

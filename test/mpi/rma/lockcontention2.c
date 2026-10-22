@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_lockcontention2
+int run(const char *arg);
+#endif
 
 /*
  * Tests for lock contention, including special cases within the MPICH code
@@ -45,9 +47,9 @@
 
 static int toterrs = 0;
 
-int testValues(int, int, int, int *, const char *);
+static int testValues(int, int, int, int *, const char *);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, wsize, i, j, cnt;
     int *rmabuf, *localbuf, *localbuf2, *vals;
@@ -55,7 +57,6 @@ int main(int argc, char *argv[])
     int trank = 0;
     int windowsize;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -261,13 +262,12 @@ int main(int argc, char *argv[])
     free(localbuf2);
     free(vals);
 
-    MTest_Finalize(toterrs);
-    return MTestReturnValue(toterrs);
+    return toterrs;
 }
 
 /* Test the values in the rmabuf against the expected values.  Return the
    number of errors */
-int testValues(int nb, int nelm, int wsize, int *rmabuf, const char *msg)
+static int testValues(int nb, int nelm, int wsize, int *rmabuf, const char *msg)
 {
     int i, errs = 0;
 

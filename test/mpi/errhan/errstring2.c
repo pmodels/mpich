@@ -8,20 +8,23 @@
 #include <string.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run errhan_errstring2
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errorclass;
     char errorstring[MPI_MAX_ERROR_STRING] = { 64, 0 };
     int slen;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Add_error_class(&errorclass);
     MPI_Error_string(errorclass, errorstring, &slen);
     if (strncmp(errorstring, "", 1)) {
         fprintf(stderr, "errorclass:%d errorstring:'%s' len:%d\n", errorclass, errorstring, slen);
         errs++;
     }
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

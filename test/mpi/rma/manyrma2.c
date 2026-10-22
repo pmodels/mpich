@@ -9,11 +9,13 @@
    This is one of the ways that RMA may be used, and is used in the
    reference implementation of the graph500 benchmark.
 */
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_manyrma2
+int run(const char *arg);
+#endif
 
 #define MAX_COUNT 65536*4/16
 #define MAX_RMA_SIZE 2  /* 16 in manyrma performance test */
@@ -28,21 +30,22 @@ typedef enum { RMA_NONE = 0, RMA_ALL = -1, RMA_PUT = 1, RMA_ACC = 2, RMA_GET = 4
 /* By default, run only a subset of the available tests, to keep the
    total runtime reasonably short.  Command line arguments may be used
    to run other tests. */
-sync_t syncChoice = SYNC_FENCE;
-rma_t rmaChoice = RMA_ACC;
+static sync_t syncChoice = SYNC_FENCE;
+static rma_t rmaChoice = RMA_ACC;
 
 static int verbose = 0;
+static int use_win_allocate = 0;
 
-void RunAccFence(MPI_Win win, int destRank, int cnt, int sz);
-void RunAccLock(MPI_Win win, int destRank, int cnt, int sz);
-void RunPutFence(MPI_Win win, int destRank, int cnt, int sz);
-void RunPutLock(MPI_Win win, int destRank, int cnt, int sz);
-void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
-                MPI_Group exposureGroup, MPI_Group accessGroup);
-void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
-                MPI_Group exposureGroup, MPI_Group accessGroup);
+static void RunAccFence(MPI_Win win, int destRank, int cnt, int sz);
+static void RunAccLock(MPI_Win win, int destRank, int cnt, int sz);
+static void RunPutFence(MPI_Win win, int destRank, int cnt, int sz);
+static void RunPutLock(MPI_Win win, int destRank, int cnt, int sz);
+static void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
+                       MPI_Group exposureGroup, MPI_Group accessGroup);
+static void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
+                       MPI_Group exposureGroup, MPI_Group accessGroup);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int arraysize, i, cnt, sz, maxCount = MAX_COUNT, *arraybuffer;
     int wrank, wsize, destRank, srcRank;
@@ -51,43 +54,36 @@ int main(int argc, char *argv[])
     int maxSz = MAX_RMA_SIZE;
     double start, end;
 
-    MTest_Init(&argc, &argv);
+    if (rmaChoice == RMA_ALL)
+        rmaChoice = RMA_NONE;
+    if (syncChoice == SYNC_ALL)
+        syncChoice = SYNC_NONE;
 
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-put") == 0) {
-            if (rmaChoice == RMA_ALL)
-                rmaChoice = RMA_NONE;
-            rmaChoice |= RMA_PUT;
-        } else if (strcmp(argv[i], "-acc") == 0) {
-            if (rmaChoice == RMA_ALL)
-                rmaChoice = RMA_NONE;
-            rmaChoice |= RMA_ACC;
-        } else if (strcmp(argv[i], "-fence") == 0) {
-            if (syncChoice == SYNC_ALL)
-                syncChoice = SYNC_NONE;
-            syncChoice |= SYNC_FENCE;
-        } else if (strcmp(argv[i], "-lock") == 0) {
-            if (syncChoice == SYNC_ALL)
-                syncChoice = SYNC_NONE;
-            syncChoice |= SYNC_LOCK;
-        } else if (strcmp(argv[i], "-pscw") == 0) {
-            if (syncChoice == SYNC_ALL)
-                syncChoice = SYNC_NONE;
-            syncChoice |= SYNC_PSCW;
-        } else if (strcmp(argv[i], "-maxsz") == 0) {
-            i++;
-            maxSz = atoi(argv[i]);
-        } else if (strcmp(argv[i], "-maxcount") == 0) {
-            i++;
-            maxCount = atoi(argv[i]);
-        } else {
-            fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
-            fprintf(stderr,
-                    "%s [ -put ] [ -acc ] [ -lock ] [ -fence ] [ -pscw ] [ -maxsz msgsize ]\n",
-                    argv[0]);
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    if (MTestArgListGetInt_with_default(head, "put", 0)) {
+        rmaChoice |= RMA_PUT;
     }
+    if (MTestArgListGetInt_with_default(head, "acc", 0)) {
+        rmaChoice |= RMA_ACC;
+    }
+    if (MTestArgListGetInt_with_default(head, "fence", 0)) {
+        syncChoice |= SYNC_FENCE;
+    }
+    if (MTestArgListGetInt_with_default(head, "lock", 0)) {
+        syncChoice |= SYNC_LOCK;
+    }
+    if (MTestArgListGetInt_with_default(head, "pscw", 0)) {
+        syncChoice |= SYNC_PSCW;
+    }
+    maxSz = MTestArgListGetInt_with_default(head, "maxsz", MAX_RMA_SIZE);
+    maxCount = MTestArgListGetInt_with_default(head, "maxcount", MAX_COUNT);
+    MTestArgListDestroy(head);
+
+    if (rmaChoice == RMA_NONE)
+        rmaChoice = RMA_ALL;
+    if (syncChoice == SYNC_NONE)
+        syncChoice = SYNC_ALL;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
@@ -105,23 +101,23 @@ int main(int argc, char *argv[])
     MPI_Group_free(&wgroup);
 
     arraysize = maxSz * MAX_COUNT;
-#ifdef USE_WIN_ALLOCATE
-    MPI_Win_allocate(arraysize * sizeof(int), (int) sizeof(int), MPI_INFO_NULL,
-                     MPI_COMM_WORLD, &arraybuffer, &win);
-    if (!arraybuffer) {
-        fprintf(stderr, "Unable to allocate %d words\n", arraysize);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-#else
-    arraybuffer = (int *) malloc(arraysize * sizeof(int));
-    if (!arraybuffer) {
-        fprintf(stderr, "Unable to allocate %d words\n", arraysize);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
+    if (use_win_allocate) {
+        MPI_Win_allocate(arraysize * sizeof(int), (int) sizeof(int), MPI_INFO_NULL,
+                         MPI_COMM_WORLD, &arraybuffer, &win);
+        if (!arraybuffer) {
+            fprintf(stderr, "Unable to allocate %d words\n", arraysize);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    } else {
+        arraybuffer = (int *) malloc(arraysize * sizeof(int));
+        if (!arraybuffer) {
+            fprintf(stderr, "Unable to allocate %d words\n", arraysize);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
 
-    MPI_Win_create(arraybuffer, arraysize * sizeof(int), (int) sizeof(int),
-                   MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-#endif
+        MPI_Win_create(arraybuffer, arraysize * sizeof(int), (int) sizeof(int),
+                       MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    }
 
     if (maxCount > MAX_COUNT) {
         fprintf(stderr, "MaxCount must not exceed %d\n", MAX_COUNT);
@@ -214,19 +210,18 @@ int main(int argc, char *argv[])
 
     MPI_Win_free(&win);
 
-#ifndef USE_WIN_ALLOCATE
-    free(arraybuffer);
-#endif
+    if (!use_win_allocate) {
+        free(arraybuffer);
+    }
 
     MPI_Group_free(&accessGroup);
     MPI_Group_free(&exposureGroup);
 
-    MTest_Finalize(0);
     return 0;
 }
 
 
-void RunAccFence(MPI_Win win, int destRank, int cnt, int sz)
+static void RunAccFence(MPI_Win win, int destRank, int cnt, int sz)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
@@ -249,7 +244,7 @@ void RunAccFence(MPI_Win win, int destRank, int cnt, int sz)
     free(buf);
 }
 
-void RunAccLock(MPI_Win win, int destRank, int cnt, int sz)
+static void RunAccLock(MPI_Win win, int destRank, int cnt, int sz)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
@@ -272,7 +267,7 @@ void RunAccLock(MPI_Win win, int destRank, int cnt, int sz)
     free(buf);
 }
 
-void RunPutFence(MPI_Win win, int destRank, int cnt, int sz)
+static void RunPutFence(MPI_Win win, int destRank, int cnt, int sz)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
@@ -291,7 +286,7 @@ void RunPutFence(MPI_Win win, int destRank, int cnt, int sz)
     free(buf);
 }
 
-void RunPutLock(MPI_Win win, int destRank, int cnt, int sz)
+static void RunPutLock(MPI_Win win, int destRank, int cnt, int sz)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
@@ -310,8 +305,8 @@ void RunPutLock(MPI_Win win, int destRank, int cnt, int sz)
     free(buf);
 }
 
-void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
-                MPI_Group exposureGroup, MPI_Group accessGroup)
+static void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
+                       MPI_Group exposureGroup, MPI_Group accessGroup)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
@@ -332,8 +327,8 @@ void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
     free(buf);
 }
 
-void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
-                MPI_Group exposureGroup, MPI_Group accessGroup)
+static void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
+                       MPI_Group exposureGroup, MPI_Group accessGroup)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));

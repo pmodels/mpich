@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_tmatchsize
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test of type_match_size";
@@ -17,13 +19,11 @@ static char MTEST_Descrip[] = "Test of type_match_size";
  * be present in
  */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int dsize;
     MPI_Datatype newtype;
-
-    MTest_Init(&argc, &argv);
 
     /* Check the most likely cases.  Note that it is an error to
      * free the type returned by MPI_Type_match_size.  Also note
@@ -154,6 +154,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

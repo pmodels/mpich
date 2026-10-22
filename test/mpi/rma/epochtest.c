@@ -20,12 +20,14 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run rma_epochtest
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
@@ -33,9 +35,7 @@ static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
 
 #define MAX_PERR 10
 
-int world_rank, world_size;
-
-int PrintRecvedError(const char *, const char *, const char *);
+static int PrintRecvedError(const char *, const char *, const char *);
 
 static int epoch_test(int seed, int testsize, int count, const char *basic_type,
                       mtest_mem_type_e origmem, mtest_mem_type_e targetmem)
@@ -52,6 +52,9 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
     MPI_Datatype origtype, targettype;
     DTP_pool_s dtp;
     struct mtest_obj orig, target;
+
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     static char test_desc[200];
     snprintf(test_desc, 200,
@@ -218,7 +221,7 @@ static int epoch_test(int seed, int testsize, int count, const char *basic_type,
     return errs;
 }
 
-int PrintRecvedError(const char *msg, const char *orig_name, const char *target_name)
+static int PrintRecvedError(const char *msg, const char *orig_name, const char *target_name)
 {
     printf
         ("At step %s, Data in target buffer did not match for destination datatype %s (put with orig datatype %s)\n",
@@ -226,16 +229,12 @@ int PrintRecvedError(const char *msg, const char *orig_name, const char *target_
     return 0;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_RMA, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_RMA, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += epoch_test(dtp_args.seed, dtp_args.testsize,
                            dtp_args.count, dtp_args.basic_type,
@@ -244,6 +243,5 @@ int main(int argc, char *argv[])
     }
     dtp_args_finalize(&dtp_args);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -8,6 +8,11 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_i_darray_read
+int run(const char *arg);
+#endif
+
 #define NSIDE 5
 #define NBLOCK 3
 #define NPROC 2
@@ -24,7 +29,7 @@ static void handle_error(int errcode, const char *str)
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, j, nerrors = 0, total_errors = 0;
 
@@ -47,13 +52,15 @@ int main(int argc, char *argv[])
     double *ldata, *pdata;
 
     int tsize, nelem;
-    const char *filename;
+    char filename[1024];
 
     MPI_File dfile;
 
-    filename = (argc > 1) ? argv[1] : "testfile";
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    snprintf(filename, sizeof(filename), "%s",
+             MTestArgListGetString_with_default(head, "fname", "testfile"));
+    MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -125,7 +132,6 @@ int main(int argc, char *argv[])
     free(ldata);
     free(pdata);
     MPI_Type_free(&darray);
-    MTest_Finalize(nerrors);
 
-    return MTestReturnValue(total_errors);
+    return total_errors;
 }

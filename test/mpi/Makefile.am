@@ -20,3 +20,7 @@ DISTCLEANFILES = config.system
 ## here are automakefile entries for the test/mpi/include dir
 noinst_HEADERS = include/mpitest.h include/mpicolltest.h include/mpitestcxx.h include/mpithreadtest.h include/dtypes.h rma/squelch.h errors/rma/win_sync.h
 nodist_noinst_HEADERS = include/mpitestconf.h
+
+# files left in the current directory by the io tests run through run_mpitests
+clean-local:
+	-rm -f testfile testfile.* test.txt

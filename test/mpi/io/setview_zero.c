@@ -4,6 +4,11 @@
  */
 
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run io_setview_zero
+int run(const char *arg);
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,10 +16,9 @@
 
 /* The test is contributed Eric Chamberland. Reference issue #6222 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
-    MTest_Init(&argc, &argv);
 
     int rank, size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -22,7 +26,6 @@ int main(int argc, char *argv[])
 
     if (size != 3) {
         printf("Please run with 3 processes.\n");
-        MPI_Finalize();
         return 1;
     }
 
@@ -99,6 +102,5 @@ int main(int argc, char *argv[])
         MPI_File_delete((char *) "testfile", MPI_INFO_NULL);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

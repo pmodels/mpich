@@ -1,5 +1,5 @@
 rdwrord 4
-rdwrord 2 -large-count
+rdwrord 2 arg=-large-count
 rdwrzero 4
 rd_end 2
 getextent 2
@@ -16,7 +16,7 @@ bigtype 1 mem=6.5
 hindexed_io 1
 tst_fileview 1
 zero_count 4
-simple_collective 1 arg=simple_collective.testfile
+simple_collective 1 arg=-fname=simple_collective.testfile
 external32_derived_dtype 1
 i_bigtype 1 mem=6.5
 i_hindexed_io 1

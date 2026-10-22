@@ -3,10 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <assert.h>
-#include <stdio.h>
 #include "mpitest.h"
+#include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_big_count_status
+int run(const char *arg);
+#endif
 
 static int test_count(MPI_Count count)
 {
@@ -33,11 +36,10 @@ static int test_count(MPI_Count count)
     return nerrs;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     /* baseline: this tiny value should pose no problems */
     errs += test_count(60);
     /* one with no next-to-high-bits set */
@@ -48,6 +50,5 @@ int main(int argc, char **argv)
     /* original problematic count reported by Artem Yalozo */
     errs += test_count(0x7654321ff1234567);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

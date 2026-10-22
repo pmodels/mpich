@@ -7,12 +7,19 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run part_start_pready
+int run(const char *arg);
+#endif
+
 /* Demonstrate send-side partitioned data transfer.
  * - The send-side calls pready for partial partitions; the receive-side wait for entire message.
  * - Both sides use basic datatype.
  *
  * How to use the test:
- * - Separate tests are generated for wait|test, and for pready|pready_range|pready_list.
+ * - Use -wait to complete with MPI_Wait instead of MPI_Test, and
+ *   -pready=range|list|list_non_consecutive to test MPI_Pready_range or MPI_Pready_list
+ *   instead of MPI_Pready.
  * - The send/receive partitions, total count of basic elements, range of partitions
  *   processed by each pready_range|pready_list, and iteration of start-test|wait periods
  *   are set by input parameters.
@@ -21,6 +28,8 @@
 
 /* Input parameters */
 static int spart = 0, rpart = 0, iteration = 0, range = 0;
+static bool use_wait;
+static enum { PREADY, PREADY_RANGE, PREADY_LIST, PREADY_LIST_NON_CONSECUTIVE } pready_mode;
 static MPI_Count tot_count = 0;
 /* Internal variables */
 static double *buf = NULL;
@@ -65,7 +74,6 @@ static int check_recv_buf(int iter)
 }
 
 /* Test subroutines */
-#ifdef TEST_PREADY_RANGE
 static void test_pready_range(int iter, MPI_Request req)
 {
     for (int lo = 0; lo < spart; lo += range) {
@@ -81,9 +89,7 @@ static void test_pready_range(int iter, MPI_Request req)
         MPI_Pready_range(lo, high, req);
     }
 }
-#endif
 
-#ifdef TEST_PREADY_LIST
 static void test_pready_list(int iter, MPI_Request req)
 {
     int *arrayp = calloc(range, sizeof(int));
@@ -107,9 +113,7 @@ static void test_pready_list(int iter, MPI_Request req)
 
     free(arrayp);
 }
-#endif
 
-#ifdef TEST_PREADY_LIST_NON_CONSECUTIVE
 static void test_pready_list_non_consecutive(int iter, MPI_Request req)
 {
     int *arrayp = calloc(range, sizeof(int));
@@ -144,14 +148,24 @@ static void test_pready_list_non_consecutive(int iter, MPI_Request req)
     }
     free(arrayp);
 }
-#endif
 
-int main(int argc, char *argv[])
+static void complete_req(MPI_Request * req)
+{
+    if (use_wait) {
+        MPI_Wait(req, MPI_STATUS_IGNORE);
+    } else {
+        int flag = 0;
+        do {
+            MPI_Test(req, &flag, MPI_STATUS_IGNORE);
+        } while (!flag);
+    }
+}
+
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -161,12 +175,23 @@ int main(int argc, char *argv[])
     }
 
     /* Setup input parameters and internal variables */
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
     spart = MTestArgListGetInt_with_default(head, "spart", 8);
     rpart = MTestArgListGetInt_with_default(head, "rpart", 8);
     tot_count = MTestArgListGetLong_with_default(head, "tot_count", 64);
     range = MTestArgListGetInt_with_default(head, "range", 2);  /* valid only for pready_list|range */
     iteration = MTestArgListGetInt_with_default(head, "iteration", 5);
+    use_wait = MTestArgListGetInt_with_default(head, "wait", 0);
+    const char *pready = MTestArgListGetString_with_default(head, "pready", "single");
+    if (strcmp(pready, "range") == 0) {
+        pready_mode = PREADY_RANGE;
+    } else if (strcmp(pready, "list") == 0) {
+        pready_mode = PREADY_LIST;
+    } else if (strcmp(pready, "list_non_consecutive") == 0) {
+        pready_mode = PREADY_LIST_NON_CONSECUTIVE;
+    } else {
+        pready_mode = PREADY;
+    }
     MTestArgListDestroy(head);
 
     /* Send buffer size and receive buffer size must be identical */
@@ -188,30 +213,24 @@ int main(int argc, char *argv[])
             reset_buf();
             MPI_Start(&req);
 
-#ifdef TEST_PREADY_RANGE
-            test_pready_range(iter, req);
-#elif defined(TEST_PREADY_LIST)
-            test_pready_list(iter, req);
-#elif defined(TEST_PREADY_LIST_NON_CONSECUTIVE)
-            test_pready_list_non_consecutive(iter, req);
-#else /* default test pready */
-            for (int i = 0; i < spart; i++) {
-                fill_send_partition(i, iter);
+            if (pready_mode == PREADY_RANGE) {
+                test_pready_range(iter, req);
+            } else if (pready_mode == PREADY_LIST) {
+                test_pready_list(iter, req);
+            } else if (pready_mode == PREADY_LIST_NON_CONSECUTIVE) {
+                test_pready_list_non_consecutive(iter, req);
+            } else {
+                for (int i = 0; i < spart; i++) {
+                    fill_send_partition(i, iter);
 
-                MTestPrintfMsg(1, "Rank %d sends partition %d with count %ld of basic elements\n",
-                               rank, i, scount);
-                MPI_Pready(i, req);
+                    MTestPrintfMsg(1,
+                                   "Rank %d sends partition %d with count %ld of basic elements\n",
+                                   rank, i, scount);
+                    MPI_Pready(i, req);
+                }
             }
-#endif
 
-#ifdef TEST_WAIT
-            MPI_Wait(&req, MPI_STATUS_IGNORE);
-#else
-            int flag = 0;
-            do {
-                MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
-            } while (!flag);
-#endif
+            complete_req(&req);
         }
         MPI_Request_free(&req);
     } else if (rank == 1) {
@@ -221,14 +240,7 @@ int main(int argc, char *argv[])
             reset_buf();
             MPI_Start(&req);
 
-#ifdef TEST_WAIT
-            MPI_Wait(&req, MPI_STATUS_IGNORE);
-#else
-            int flag = 0;
-            do {
-                MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
-            } while (!flag);
-#endif
+            complete_req(&req);
             MTestPrintfMsg(1, "Rank %d received entire message with partitions %d "
                            "and count %ld of basic elements\n", rank, rpart, rcount);
 
@@ -238,6 +250,5 @@ int main(int argc, char *argv[])
     }
 
     free(buf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

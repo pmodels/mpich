@@ -8,7 +8,12 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_topodup
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0, i, k;
     int dims[2], periods[2], wsize;
@@ -17,7 +22,6 @@ int main(int argc, char *argv[])
     int *index, *edges, *outindex, *outedges;
     MPI_Comm comm1, comm2;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -114,6 +118,5 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm1);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

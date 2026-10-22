@@ -3,21 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_concurrent_irecv
+int run(const char *arg);
+#endif
 
 #define BLKLEN (1024)
 #define NUM_BLKS (64)
 
-double large_buf[(BLKLEN + 1) * NUM_BLKS];
-double large_buf1[(BLKLEN + 1) * NUM_BLKS];
+static double large_buf[(BLKLEN + 1) * NUM_BLKS];
+static double large_buf1[(BLKLEN + 1) * NUM_BLKS];
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, nranks, rank, i, j, r = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
@@ -52,6 +53,5 @@ int main(int argc, char *argv[])
         MPI_Send(large_buf, BLKLEN * NUM_BLKS, MPI_DOUBLE, 0, 111, MPI_COMM_WORLD);
     }
 
-    MTest_Finalize(errs);
-    return 0;
+    return errs;
 }

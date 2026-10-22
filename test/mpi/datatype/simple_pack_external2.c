@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
 
-const char *datarep = "external32";
+#ifdef MULTI_TESTS
+#define run datatype_simple_pack_external2
+int run(const char *arg);
+#endif
+
+static const char *datarep = "external32";
 
 #define UINT_COUNT (2)
 #define DBLE_COUNT (24)
 
-int main(void)
+int run(const char *arg)
 {
     unsigned *uint_data = calloc(UINT_COUNT, sizeof(unsigned));
     double *dble_data = calloc(DBLE_COUNT, sizeof(double));
@@ -21,8 +23,6 @@ int main(void)
     MPI_Aint pack_size;
     void *pack_buffer;
     MPI_Aint position = 0;
-
-    MTest_Init(NULL, NULL);
 
     MPI_Pack_external_size(datarep, UINT_COUNT, MPI_UNSIGNED, &uint_pack_size);
     MPI_Pack_external_size(datarep, DBLE_COUNT, MPI_DOUBLE, &dble_pack_size);
@@ -38,8 +38,6 @@ int main(void)
     free(pack_buffer);
     free(dble_data);
     free(uint_data);
-
-    MTest_Finalize(0);
 
     return 0;
 }

@@ -11,13 +11,17 @@
  * reverses its start/post calls.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
 #include "squelch.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run rma_pscw_ordering
+int run(const char *arg);
+#endif
+
+static int use_win_allocate = 0;
+
+int run(const char *arg)
 {
     int i, rank, nproc, errors = 0;
 
@@ -28,7 +32,9 @@ int main(int argc, char **argv)
     int *odd_ranks, *even_ranks;
     MPI_Group odd_group, even_group, world_group;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    use_win_allocate = MTestArgListGetInt_with_default(head, "use-win-allocate", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -59,13 +65,14 @@ int main(int argc, char **argv)
 
     /* Create the window */
 
-#ifdef USE_WIN_ALLOCATE
-    MPI_Win_allocate(nproc * sizeof(int), sizeof(int), MPI_INFO_NULL,
-                     MPI_COMM_WORLD, &win_buf, &win);
-#else
-    MPI_Alloc_mem(nproc * sizeof(int), MPI_INFO_NULL, &win_buf);
-    MPI_Win_create(win_buf, nproc * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-#endif
+    if (use_win_allocate) {
+        MPI_Win_allocate(nproc * sizeof(int), sizeof(int), MPI_INFO_NULL,
+                         MPI_COMM_WORLD, &win_buf, &win);
+    } else {
+        MPI_Alloc_mem(nproc * sizeof(int), MPI_INFO_NULL, &win_buf);
+        MPI_Win_create(win_buf, nproc * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD,
+                       &win);
+    }
     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
     for (i = 0; i < nproc; i++)
         win_buf[i] = -1;
@@ -125,9 +132,9 @@ int main(int argc, char **argv)
     }
 
     MPI_Win_free(&win);
-#ifndef USE_WIN_ALLOCATE
-    MPI_Free_mem(win_buf);
-#endif
+    if (!use_win_allocate) {
+        MPI_Free_mem(win_buf);
+    }
 
     MPI_Group_free(&world_group);
     MPI_Group_free(&odd_group);
@@ -136,6 +143,5 @@ int main(int argc, char **argv)
     free(odd_ranks);
     free(even_ranks);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

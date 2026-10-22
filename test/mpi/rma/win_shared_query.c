@@ -9,35 +9,37 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run rma_win_shared_query
+int run(const char *arg);
+#endif
+
 #define ELEM_PER_PROC 100
 #define ELEM_SIZE sizeof(int)
 #define SIZE (ELEM_PER_PROC * ELEM_SIZE)
-
-const int verbose = 0;
 
 enum {
     CREATE,
     ALLOCATE,
     ALLOCATE_SHARED,
-} opt_win_flavor = ALLOCATE;
+};
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errors = 0;
     MPI_Comm comm;
     MPI_Win win;
 
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-flavor=create") == 0) {
-            opt_win_flavor = CREATE;
-        } else if (strcmp(argv[i], "-flavor=allocate") == 0) {
-            opt_win_flavor = ALLOCATE;
-        } else if (strcmp(argv[i], "-flavor=allocate_shared") == 0) {
-            opt_win_flavor = ALLOCATE_SHARED;
-        }
+    int opt_win_flavor = ALLOCATE;
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    const char *flavor = MTestArgListGetString_with_default(head, "flavor", "allocate");
+    if (strcmp(flavor, "create") == 0) {
+        opt_win_flavor = CREATE;
+    } else if (strcmp(flavor, "allocate_shared") == 0) {
+        opt_win_flavor = ALLOCATE_SHARED;
     }
+    MTestArgListDestroy(head);
 
-    MTest_Init(&argc, &argv);
 
     if (opt_win_flavor == CREATE) {
         MTestPrintfMsg(1, "TEST MPI_Win_create\n");
@@ -85,7 +87,5 @@ int main(int argc, char **argv)
     }
 
   fn_exit:
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(errors);
+    return errors;
 }

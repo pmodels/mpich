@@ -7,19 +7,21 @@
  * Test creating multiple communicators with MPI_Comm_idup.
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_idup_mul
+int run(const char *arg);
+#endif
 
 #define NUM_ITER    10
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, rank;
     MPI_Comm comms[NUM_ITER];
     MPI_Request req[NUM_ITER];
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for (i = 0; i < NUM_ITER; i++)
@@ -29,8 +31,6 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NUM_ITER; i++)
         MPI_Comm_free(&comms[i]);
-
-    MTest_Finalize(0);
 
     return 0;
 }

@@ -3,13 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
 #include "mpitest.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#ifdef MULTI_TESTS
+#define run datatype_struct_unpack_mpi_bottom
+int run(const char *arg);
+#endif
 
 #define my_assert(cond_)                                                  \
     do {                                                                  \
@@ -76,10 +77,8 @@ static void create_and_unpack_datatype(void *inbuf, int blocks[2],
 
 }
 
-
-static
-void alloc_buffers(void *outbufs[2][2], MPI_Aint displs[2], int blocks[2],
-                   mtest_mem_type_e memtypes[2])
+static void alloc_buffers(void *outbufs[2][2], MPI_Aint displs[2], int blocks[2],
+                          mtest_mem_type_e memtypes[2])
 {
     for (int outbuf = 0; outbuf < 2; ++outbuf) {
         MTestCalloc(blocks[outbuf], memtypes[outbuf],
@@ -89,10 +88,8 @@ void alloc_buffers(void *outbufs[2][2], MPI_Aint displs[2], int blocks[2],
     }
 }
 
-
-static
-void free_and_check_buffers(void *outbufs[2][2], mtest_mem_type_e memtypes[2],
-                            int blocks[2], int *errs)
+static void free_and_check_buffers(void *outbufs[2][2], mtest_mem_type_e memtypes[2],
+                                   int blocks[2], int *errs)
 {
     /* check the output buffer */
     for (int cur_outbuf = 0; cur_outbuf < 2; ++cur_outbuf) {
@@ -115,7 +112,6 @@ void free_and_check_buffers(void *outbufs[2][2], mtest_mem_type_e memtypes[2],
                   outbufs[cur_outbuf][MAIN_BUF]);
     }
 }
-
 
 static const char *memtype_str(mtest_mem_type_e memtype)
 {
@@ -140,8 +136,7 @@ static const char *memtype_str(mtest_mem_type_e memtype)
     return buf;
 }
 
-
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int verbose = 0;
@@ -154,8 +149,6 @@ int main(int argc, char *argv[])
     MPI_Aint displs[2] = { 0, 0 };
     mtest_mem_type_e outbuf_mtypes[2];
     mtest_mem_type_e inbuf_mtype;
-
-    MTest_Init(&argc, &argv);
 
     /* iterate all combinations of input and output memory types */
     for (int h = 0; h < MEMTYPE_COUNT; ++h) {
@@ -195,7 +188,5 @@ int main(int argc, char *argv[])
         MTestFree(inbuf_mtype, inbufs[STAGE_BUF], inbufs[MAIN_BUF]);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,17 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_test1_dt
+int run(const char *arg);
+#endif
 
 /* tests a series of puts, gets, and accumulate on 2 processes using fence */
 /* Same as test1.c but uses derived datatypes to receive data */
 
 #define SIZE 100
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, A[SIZE], B[SIZE], i;
     MPI_Comm CommDeuce;
@@ -21,7 +24,6 @@ int main(int argc, char *argv[])
     MPI_Datatype contig_2ints;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -82,6 +84,5 @@ int main(int argc, char *argv[])
         MPI_Type_free(&contig_2ints);
     }
     MPI_Comm_free(&CommDeuce);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

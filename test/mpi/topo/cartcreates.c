@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_cartcreates
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int size, rank;
     int dims[2], periods[2];
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
 
     /* Create a new cartesian communicator in a subset of the processes */
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -43,8 +47,5 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Communicator returned is null!");
     }
 
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

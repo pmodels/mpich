@@ -3,19 +3,21 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_isendrecv_replace
+int run(const char *arg);
+#endif
 
 /* Similar test as isendirecv.c, but use MPI_Isendrecv_replace */
 
-int errs = 0;
-int elems = 20;
-int rank, nproc, dest;
-float *buf;
-MPI_Comm comm;
-MPI_Request *reqs;
+static int errs = 0;
+static int elems = 20;
+static int rank, nproc, dest;
+static float *buf;
+static MPI_Comm comm;
+static MPI_Request *reqs;
 
 static void test_sendrecv(int offset)
 {
@@ -48,10 +50,8 @@ static void test_sendrecv(int offset)
 /* sendrecv may use the same or different source and destination,
  * offset defines the offset between them */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
-    MTest_Init(&argc, &argv);
-
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nproc);
@@ -65,6 +65,6 @@ int main(int argc, char *argv[])
 
     free(reqs);
     free(buf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

@@ -7,7 +7,7 @@
 #define BADDIMS_H_INCLUDED
 
 /* *INDENT-OFF* */
-DimsTestVal_t tests[] = {
+static DimsTestVal_t tests[] = {
     { 72, 2, { 9, 8 } },
     { 180, 2, { 15, 12 } },
     { 240, 2, { 16, 15 } },

@@ -5,19 +5,19 @@
 
 /* Based on code from Jeff Parker at IBM. */
 
-#include <stdio.h>
-
-#include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run datatype_struct_derived_zeros
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Datatype mystruct, vecs[3];
     MPI_Aint stride = 5, displs[3];
     int i = 0, blockcount[3];
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     for (i = 0; i < 3; i++) {
         MPI_Type_create_hvector(i, 1, stride, MPI_INT, &vecs[i]);
@@ -54,7 +54,5 @@ int main(int argc, char *argv[])
         MPI_Type_free(&vecs[i]);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

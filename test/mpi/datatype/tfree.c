@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_tfree
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test that freed datatypes have reference count semantics";
@@ -15,7 +17,7 @@ static char MTEST_Descrip[] = "Test that freed datatypes have reference count se
 #define VEC_NELM 128
 #define VEC_STRIDE 8
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source, dest, i;
@@ -25,8 +27,6 @@ int main(int argc, char *argv[])
     MPI_Datatype strideType;
     MPI_Datatype tmpType[1024];
     int *buf = 0;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -95,7 +95,5 @@ int main(int argc, char *argv[])
         MPI_Type_free(&strideType);
     }
 
-
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

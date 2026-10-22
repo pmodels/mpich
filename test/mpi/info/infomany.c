@@ -4,13 +4,15 @@
  */
 
 /* Test of info that makes use of the extended handles */
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run info_infomany
+int run(const char *arg);
+#endif
 #endif
 
 #ifndef MAX_INFOS
@@ -20,14 +22,12 @@
 #define info_list 16
 /* #define DBG  */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Info infos[MAX_INFOS];
     char key[64], value[64];
     int errs = 0;
     int i, j;
-
-    MTest_Init(&argc, &argv);
 
     for (i = 0; i < MAX_INFOS; i++) {
         MPI_Info_create(&infos[i]);
@@ -99,6 +99,5 @@ int main(int argc, char *argv[])
         MPI_Info_free(&infos[i]);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

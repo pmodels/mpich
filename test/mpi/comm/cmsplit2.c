@@ -10,10 +10,13 @@
  * It checks all sizes from 1..comm_size(world)-1, so this test does not need to
  * be run multiple times at process counts from a higher-level test driver. */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_cmsplit2
+int run(const char *arg);
+#endif
 
 #define ERRLIMIT (10)
 
@@ -26,7 +29,7 @@
         }                                                    \
     } while (0)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, j, pos, modulus, cs, rank, size;
     int wrank, wsize;
@@ -38,8 +41,6 @@ int main(int argc, char **argv)
     int verbose = 0;
     MPI_Comm comm, splitcomm;
     MPI_Group wgroup, newgroup;
-
-    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -125,6 +126,5 @@ int main(int argc, char **argv)
     if (identity != NULL)
         free(identity);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

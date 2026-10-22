@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_adlb_mimic1
+int run(const char *arg);
+#endif
 
 #define NUM_TIMES 500
 #define MAX_BUF_SIZE (400 * 1024 * 1024)        /* 400 MB */
@@ -44,7 +46,7 @@ static char MTEST_Descrip[] = "ADLB mimic test";
  *
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int comm_size, comm_rank, i, by_rank, errs = 0;
     int rc;
@@ -54,7 +56,6 @@ int main(int argc, char **argv)
     MPI_Status status;
     int max_buf_size = 0, put_size = PUT_SIZE;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
 
@@ -156,7 +157,5 @@ int main(int argc, char **argv)
     MPI_Free_mem(rma_win_addr);
     MPI_Free_mem(local_buf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -7,13 +7,17 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run topo_topotest
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int topo_type, size, dims[1], periods[1];
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
 
     /* Check that topo test returns the correct type, including
      * MPI_UNDEFINED */
@@ -37,6 +41,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&comm);
     /* FIXME: still need graph example */
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

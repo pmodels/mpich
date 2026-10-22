@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run comm_comm_info
+int run(const char *arg);
+#endif
 
 #define VERBOSE 0
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank;
     MPI_Info info_in, info_out;
@@ -18,8 +21,6 @@ int main(int argc, char **argv)
     char invalid_key[] = "invalid_test_key";
     char buf[MPI_MAX_INFO_VAL];
     int flag;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -48,7 +49,5 @@ int main(int argc, char **argv)
 
     MPI_Reduce(&errors, &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

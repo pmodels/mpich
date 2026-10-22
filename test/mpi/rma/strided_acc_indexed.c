@@ -14,12 +14,14 @@
  * using an MPI indexed type.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-#include <mpi.h>
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_strided_acc_indexed
+int run(const char *arg);
+#endif
 
 #define XDIM 16
 #define YDIM 16
@@ -27,13 +29,11 @@
 #define SUB_YDIM 8
 #define ITERATIONS 1
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int itr, i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *src_buf;
     MPI_Win buf_win;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
@@ -137,6 +137,5 @@ int main(int argc, char **argv)
     MPI_Free_mem(win_buf);
     MPI_Free_mem(src_buf);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

@@ -11,9 +11,12 @@
  * to P2 via SHM and AM respectively. The correct results should be that the
  * results on P0 and P1 never be the same. */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_atomic_rmw_fop
+int run(const char *arg);
+#endif
 
 #define AM_BUF_SIZE  10
 #define SHM_BUF_SIZE 1000
@@ -22,7 +25,7 @@
 #define LOOP_SIZE 15
 #define CHECK_TAG 123
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, size, i, j, k;
     int errors = 0;
@@ -31,8 +34,6 @@ int main(int argc, char *argv[])
     int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
     MPI_Win win;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -129,7 +130,5 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

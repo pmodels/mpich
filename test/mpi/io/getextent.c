@@ -7,18 +7,22 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run io_getextent
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test file_get_extent";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_File fh;
     MPI_Comm comm;
     MPI_Aint extent, nextent, tmp_lb;
 
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_File_open(comm, (char *) "test.ord",
@@ -33,6 +37,5 @@ int main(int argc, char *argv[])
     }
     MPI_File_close(&fh);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

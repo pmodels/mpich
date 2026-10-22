@@ -5,19 +5,20 @@
 
 /* Test code provided by Hajime Fujita. See Trac ticket #2225. */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 #include <string.h>
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run info_infoget
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Info info;
     const char *key = "key", *val = "val";
     char buff[3 + 1];           /* strlen("val") + 1 */
     int flag, errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Info_create(&info);
     MPI_Info_set(info, key, val);
@@ -33,7 +34,5 @@ int main(int argc, char *argv[])
     }
     MPI_Info_free(&info);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

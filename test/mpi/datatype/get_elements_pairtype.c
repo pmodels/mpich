@@ -3,26 +3,34 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_get_elements_pairtype
+int run(const char *arg);
+#endif
 
 static int verbose = 0;
 
 /* tests */
-int double_int_test(void);
+static int double_int_test(void);
 
 /* helper functions */
-int parse_args(int argc, char **argv);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -34,15 +42,14 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in double_int test.\n", err);
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* send a { double, int, double} tuple and receive as a pair of
  * MPI_DOUBLE_INTs. this should (a) be valid, and (b) result in an
  * element count of 3.
  */
-int double_int_test(void)
+static int double_int_test(void)
 {
     int err, errs = 0, count;
 
@@ -99,11 +106,4 @@ int double_int_test(void)
     MPI_Type_free(&stype);
 
     return errs;
-}
-
-int parse_args(int argc, char **argv)
-{
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

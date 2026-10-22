@@ -5,11 +5,13 @@
 
 #include <math.h>
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_unusual_noncontigs
+int run(const char *arg);
+#endif
 
 /*
    The default behavior of the test routines should be to briefly indicate
@@ -19,24 +21,29 @@
 */
 static int verbose = 1;
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
-int struct_negdisp_test(void);
-int vector_negstride_test(void);
-int indexed_negdisp_test(void);
-int struct_struct_test(void);
-int flatten_test(void);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
 
-int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend,
-                             MPI_Datatype * datatype);
+static int struct_negdisp_test(void);
+static int vector_negstride_test(void);
+static int indexed_negdisp_test(void);
+static int struct_struct_test(void);
+static int flatten_test(void);
 
-int main(int argc, char *argv[])
+static int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend,
+                                    MPI_Datatype * datatype);
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -67,14 +74,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "error in flatten_test\n");
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* test uses a struct type that describes data that is contiguous,
  * but processed in a noncontiguous way.
  */
-int struct_negdisp_test(void)
+static int struct_negdisp_test(void)
 {
     int err, errs = 0;
     int sendbuf[6] = { 1, 2, 3, 4, 5, 6 };
@@ -168,7 +174,7 @@ int struct_negdisp_test(void)
  * but processed in a noncontiguous way.  this is effectively the
  * same type as in the struct_negdisp_test above.
  */
-int vector_negstride_test(void)
+static int vector_negstride_test(void)
 {
     int err, errs = 0;
     int sendbuf[6] = { 1, 2, 3, 4, 5, 6 };
@@ -258,7 +264,7 @@ int vector_negstride_test(void)
  * but processed in a noncontiguous way.  this is effectively the same
  * type as in the two tests above.
  */
-int indexed_negdisp_test(void)
+static int indexed_negdisp_test(void)
 {
     int err, errs = 0;
     int sendbuf[6] = { 1, 2, 3, 4, 5, 6 };
@@ -364,12 +370,11 @@ int indexed_negdisp_test(void)
  *
  * Thanks to Matthias Lieber for reporting the bug and providing a good test
  * program. */
-int struct_struct_test(void)
+static int struct_struct_test(void)
 {
     int err, errs = 0;
     int i, j, dt_size = 0;
     MPI_Request req[2];
-
 
 #define COUNT (2)
     MPI_Aint displ[COUNT];
@@ -431,7 +436,6 @@ int struct_struct_test(void)
             fprintf(stderr, "unexpected type size\n");
     }
 
-
     /* send the type to ourselves to make sure that the type describes data correctly */
     for (i = 0; i < (N * M); ++i)
         seq_array[i] = i + 1;   /* source values 1..(N*M) */
@@ -482,7 +486,8 @@ int struct_struct_test(void)
      1D array   ###############################
      datatype   LB      ###########             UB
  */
-int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend, MPI_Datatype * datatype)
+static int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend,
+                                    MPI_Datatype * datatype)
 {
     int err, errs = 0;
     MPI_Aint displ;
@@ -561,7 +566,7 @@ static int pack_and_check_expected(MPI_Datatype type, const char *name,
 
 /* regression for tt#1030, checks for bad offset math in the
  * blockindexed and indexed typerep flattening code */
-int flatten_test(void)
+static int flatten_test(void)
 {
     int err, errs = 0;
 #define ARR_SIZE (9)
@@ -635,22 +640,3 @@ int flatten_test(void)
 }
 
 #undef check_err
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
-}

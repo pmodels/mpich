@@ -7,9 +7,14 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run group_gtranks
+int run(const char *arg);
+#endif
+
 #define MAX_WORLD_SIZE 1024
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int ranks[MAX_WORLD_SIZE], ranksout[MAX_WORLD_SIZE], ranksin[MAX_WORLD_SIZE];
@@ -18,7 +23,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     int rank, size, i, nelms;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_group(MPI_COMM_SELF, &gself);
 
@@ -150,7 +154,5 @@ int main(int argc, char *argv[])
     MPI_Group_free(&galt);
     MPI_Group_free(&ngroup);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

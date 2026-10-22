@@ -3,33 +3,41 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_subarray_pack
+int run(const char *arg);
+#endif
 
 static int verbose = 0;
 
 /* tests */
-int subarray_1d_c_test1(void);
-int subarray_1d_fortran_test1(void);
-int subarray_2d_c_test1(void);
-int subarray_4d_c_test1(void);
-int subarray_2d_c_test2(void);
-int subarray_2d_fortran_test1(void);
-int subarray_4d_fortran_test1(void);
+static int subarray_1d_c_test1(void);
+static int subarray_1d_fortran_test1(void);
+static int subarray_2d_c_test1(void);
+static int subarray_4d_c_test1(void);
+static int subarray_2d_c_test2(void);
+static int subarray_2d_fortran_test1(void);
+static int subarray_4d_fortran_test1(void);
 
 /* helper functions */
-static int parse_args(int argc, char **argv);
 static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int typebufsz);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -71,15 +79,14 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in 4d subarray fortran test 1.\n", err);
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* subarray_1d_c_test1()
  *
  * Returns the number of errors encountered.
  */
-int subarray_1d_c_test1(void)
+static int subarray_1d_c_test1(void)
 {
     MPI_Datatype subarray;
     int array[9] = { -1, 1, 2, 3, -2, -3, -4, -5, -6 };
@@ -145,7 +152,7 @@ int subarray_1d_c_test1(void)
  *
  * Returns the number of errors encountered.
  */
-int subarray_1d_fortran_test1(void)
+static int subarray_1d_fortran_test1(void)
 {
     MPI_Datatype subarray;
     int array[9] = { -1, 1, 2, 3, -2, -3, -4, -5, -6 };
@@ -208,12 +215,11 @@ int subarray_1d_fortran_test1(void)
     return errs;
 }
 
-
 /* subarray_2d_test()
  *
  * Returns the number of errors encountered.
  */
-int subarray_2d_c_test1(void)
+static int subarray_2d_c_test1(void)
 {
     MPI_Datatype subarray;
     int array[9] = { -1, -2, -3,
@@ -285,7 +291,7 @@ int subarray_2d_c_test1(void)
  *
  * Returns the number of errors encountered.
  */
-int subarray_2d_c_test2(void)
+static int subarray_2d_c_test2(void)
 {
     MPI_Datatype subarray;
     int array[12] = { -1, -2, -3, -4, 1, 2,
@@ -350,7 +356,7 @@ int subarray_2d_c_test2(void)
  *
  * Returns the number of errors encountered.
  */
-int subarray_4d_c_test1(void)
+static int subarray_4d_c_test1(void)
 {
     MPI_Datatype subarray;
     int array[] = {
@@ -439,7 +445,7 @@ int subarray_4d_c_test1(void)
  *
  * Returns the number of errors encountered.
  */
-int subarray_4d_fortran_test1(void)
+static int subarray_4d_fortran_test1(void)
 {
     MPI_Datatype subarray;
     int array[] = {
@@ -525,12 +531,11 @@ int subarray_4d_fortran_test1(void)
     return errs;
 }
 
-
 /* subarray_2d_fortran_test1()
  *
  * Returns the number of errors encountered.
  */
-int subarray_2d_fortran_test1(void)
+static int subarray_2d_fortran_test1(void)
 {
     MPI_Datatype subarray;
     int array[12] = { -1, -2, -3, -4, 1, 2,
@@ -670,23 +675,4 @@ static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int 
     }
 
     return errs;
-}
-
-static int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

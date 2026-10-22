@@ -4,11 +4,13 @@
  */
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_lots_of_types
+int run(const char *arg);
+#endif
 
 /*
    The default behavior of the test routines should be to briefly indicate
@@ -18,21 +20,26 @@
 */
 static int verbose = 1;
 
-int main(int argc, char *argv[]);
-int parse_args(int argc, char **argv);
-int lots_of_types_test(void);
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+static int lots_of_types_test(void);
 
 struct test_struct_1 {
     int a, b, c, d;
 };
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int err, errs = 0;
 
     /* Initialize MPI */
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -44,9 +51,7 @@ int main(int argc, char *argv[])
     errs += err;
 
     /* print message and exit */
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* this test allocates 1024 indexed datatypes with 1024 distinct blocks
@@ -56,7 +61,7 @@ int main(int argc, char *argv[])
  */
 #define NUM_DTYPES 1024
 #define NUM_BLOCKS 1024
-int lots_of_types_test(void)
+static int lots_of_types_test(void)
 {
     int err, errs = 0;
     int i;
@@ -175,24 +180,4 @@ int lots_of_types_test(void)
     }
 
     return errs;
-}
-
-
-int parse_args(int argc, char **argv)
-{
-    /*
-     * int ret;
-     *
-     * while ((ret = getopt(argc, argv, "v")) >= 0)
-     * {
-     * switch (ret) {
-     * case 'v':
-     * verbose = 1;
-     * break;
-     * }
-     * }
-     */
-    if (argc > 1 && strcmp(argv[1], "-v") == 0)
-        verbose = 1;
-    return 0;
 }

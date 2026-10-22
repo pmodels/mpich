@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
-#include <stdlib.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run datatype_unpack
+int run(const char *arg);
+#endif
 
 /* Test sent in by Avery Ching to report a bug in MPICH.
    Adding it as a regression test. */
@@ -30,7 +32,7 @@ static void print_char_buf(char *buf_name, char *buf, int buf_len)
 }
 */
 
-char correct_buf[] = { 'a', '_', 'b', 'c', '_', '_', '_', '_', 'd', '_',
+static char correct_buf[] = { 'a', '_', 'b', 'c', '_', '_', '_', '_', 'd', '_',
     'e', 'f', 'g', '_', 'h', 'i', 'j', '_', 'k', 'l',
     '_', '_', '_', '_', 'm', '_', 'n', 'o', 'p', '_',
     'q', 'r'
@@ -38,7 +40,7 @@ char correct_buf[] = { 'a', '_', 'b', 'c', '_', '_', '_', '_', 'd', '_',
 
 #define COUNT 2
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int myid, numprocs, i;
     char *mem_buf = NULL, *unpack_buf = NULL;
@@ -51,7 +53,6 @@ int main(int argc, char **argv)
     int dsp_arr[COUNT] = { 0, 2 };
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 
@@ -101,7 +102,5 @@ int main(int argc, char **argv)
 
     free(mem_buf);
     free(unpack_buf);
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

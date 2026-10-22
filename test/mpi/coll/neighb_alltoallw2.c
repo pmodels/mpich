@@ -4,20 +4,22 @@
  */
 
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run coll_neighb_alltoallw2
+int run(const char *arg);
+#endif
 
 /* Test MPI_Neighbor_alltoallw with different indegree and outdegree */
 
 /* Reference issue #6233. Credit: tjahns */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -69,6 +71,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&neigh_comm);
 
   fn_exit:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -9,7 +9,12 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run group_groupcreate
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int i, n, n_goal = 2048, n_all, rc, n_ranks, *ranks, rank, size, len;
     int group_size;
@@ -17,7 +22,6 @@ int main(int argc, char **argv)
     char msg[MPI_MAX_ERROR_STRING];
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     n = n_goal;
@@ -82,6 +86,5 @@ implementation\n");
     free(group_array);
     free(ranks);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

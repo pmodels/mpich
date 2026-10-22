@@ -3,12 +3,15 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
 
-void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype);
-void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype)
+#ifdef MULTI_TESTS
+#define run datatype_typecommit
+int run(const char *arg);
+#endif
+
+static void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype);
+static void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype)
 {
     int blocks[2];
     MPI_Aint struct_displs[2];
@@ -26,11 +29,9 @@ void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvt
     MPI_Type_free(&tmp_type);
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     foo((void *) 0x1, MPI_FLOAT_INT, (void *) 0x2, MPI_BYTE);
     foo((void *) 0x1, MPI_DOUBLE_INT, (void *) 0x2, MPI_BYTE);
@@ -44,7 +45,5 @@ int main(int argc, char **argv)
     }
 #endif
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

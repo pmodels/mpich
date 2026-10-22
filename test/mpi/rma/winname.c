@@ -3,23 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpitestconf.h"
 #include "mpitest.h"
-#ifdef HAVE_STRING_H
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_winname
+int run(const char *arg);
 #endif
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Win win;
     int cnt, namelen;
     char name[MPI_MAX_OBJECT_NAME], nameout[MPI_MAX_OBJECT_NAME];
-
-    MTest_Init(&argc, &argv);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(4,1)
     int rlen;
@@ -49,6 +46,5 @@ int main(int argc, char *argv[])
         MTestFreeWin(&win);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

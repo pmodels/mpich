@@ -3,30 +3,38 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run datatype_simple_pack_external
+int run(const char *arg);
+#endif
 
 static int verbose = 0;
 
 /* tests */
-int builtin_float_test(void);
-int vector_of_vectors_test(void);
-int optimizable_vector_of_basics_test(void);
-int struct_of_basics_test(void);
+static int builtin_float_test(void);
+static int vector_of_vectors_test(void);
+static int optimizable_vector_of_basics_test(void);
+static int struct_of_basics_test(void);
 
 /* helper functions */
-int parse_args(int argc, char **argv);
 
-int main(int argc, char **argv)
+static int parse_args(const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "v", verbose);
+    MTestArgListDestroy(head);
+    return 0;
+}
+
+int run(const char *arg)
 {
     int err, errs = 0;
 
-    MTest_Init(&argc, &argv);
-    parse_args(argc, argv);
+    parse_args(arg);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -53,8 +61,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in struct of basics test.\n", err);
     errs += err;
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* builtin_float_test()
@@ -63,7 +70,7 @@ int main(int argc, char **argv)
  *
  * Returns the number of errors encountered.
  */
-int builtin_float_test(void)
+static int builtin_float_test(void)
 {
     int nints, nadds, ntypes, combiner;
 
@@ -86,7 +93,7 @@ int builtin_float_test(void)
  *
  * Returns the number of errors encountered.
  */
-int vector_of_vectors_test(void)
+static int vector_of_vectors_test(void)
 {
     MPI_Datatype inner_vector;
     MPI_Datatype outer_vector;
@@ -190,7 +197,7 @@ int vector_of_vectors_test(void)
  *
  * Returns the number of errors encountered.
  */
-int optimizable_vector_of_basics_test(void)
+static int optimizable_vector_of_basics_test(void)
 {
     MPI_Datatype parent_type;
     int array[20] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -216,7 +223,6 @@ int optimizable_vector_of_basics_test(void)
     MPI_Type_commit(&parent_type);
 
     MPI_Pack_external_size((char *) "external32", 1, parent_type, &sizeoftype);
-
 
     if (sizeoftype != 20 * sizeofint) {
         errs++;
@@ -268,7 +274,7 @@ int optimizable_vector_of_basics_test(void)
  *
  * Returns the number of errors encountered.
  */
-int struct_of_basics_test(void)
+static int struct_of_basics_test(void)
 {
     MPI_Datatype parent_type;
     int array[20] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -347,18 +353,4 @@ int struct_of_basics_test(void)
     free(buf);
     MPI_Type_free(&parent_type);
     return errs;
-}
-
-int parse_args(int argc, char **argv)
-{
-    int ret;
-
-    while ((ret = getopt(argc, argv, "v")) >= 0) {
-        switch (ret) {
-            case 'v':
-                verbose = 1;
-                break;
-        }
-    }
-    return 0;
 }

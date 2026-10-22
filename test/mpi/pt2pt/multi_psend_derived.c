@@ -8,22 +8,22 @@
  * persistent communication calls with a derived datatype
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_multi_psend_derived
+int run(const char *arg);
+#endif
 
 #define ITER 16
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int size, rank;
     int i;
     MPI_Request req;
     MPI_Datatype int_dup;
     int v = 1, errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -84,6 +84,5 @@ int main(int argc, char *argv[])
         MPI_Request_free(&req);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

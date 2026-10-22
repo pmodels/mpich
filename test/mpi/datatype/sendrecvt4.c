@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
 #include "dtypes.h"
 
+#ifdef MULTI_TESTS
+#define run datatype_sendrecvt4
+int run(const char *arg);
+#endif
 
 /*
    This program is derived from one in the MPICH-1 test suite
@@ -15,7 +17,7 @@
    This version sends and receives EVERYTHING from MPI_BOTTOM, by putting
    the data into a structure.
  */
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Datatype *types;
     void **inbufs, **outbufs;
@@ -30,8 +32,6 @@ int main(int argc, char **argv)
     MPI_Aint displ, extent, natural_extent, tmp_lb;
     char myname[MPI_MAX_OBJECT_NAME];
     int mynamelen;
-
-    MTest_Init(&argc, &argv);
 
     MTestDatatype2Allocate(&types, &inbufs, &outbufs, &counts, &bytesize, &ntype);
     MTestDatatype2Generate(types, inbufs, outbufs, counts, bytesize, &ntype);
@@ -141,6 +141,5 @@ int main(int argc, char **argv)
     }
 
     MTestDatatype2Free(types, inbufs, outbufs, counts, bytesize, ntype);
-    MTest_Finalize(err);
-    return MTestReturnValue(err);
+    return err;
 }
