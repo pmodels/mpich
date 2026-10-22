@@ -3,11 +3,11 @@
 ## Table of Contents
 
 - [Collective Algorithms](#collective-algorithms) (301)
-- [CH4 Device Layer](#ch4-device-layer) (96)
-- [CH3 Device Layer](#ch3-device-layer) (26)
+- [CH4 Device Layer](#ch4-device-layer) (95)
+- [CH3 Device Layer](#ch3-device-layer) (25)
 - [Process Management](#process-management) (7)
 - [Debugging and Development](#debugging-and-development) (15)
-- [Other](#other) (25)
+- [Other](#other) (26)
 
 ## Collective Algorithms
 
@@ -2807,16 +2807,6 @@ Controls whether the CH4 CMA shared-memory IPC path may be selected for intranod
 
 Used in functions: `MPIDI_CMA_init_local`, `MPIDI_CMA_get_ipc_attr`
 
-### MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT
-
-Sets the default timeout period for CH4 dynamic-process connection attempts. It is used by the root process in `MPI_Comm_connect` when connecting to a server communicator whose named port exists but has no pending accept, and the per-call MPI info key `timeout` overrides this CVAR when provided. It does not rely on another CVAR being enabled. When active, this CVAR sets how long the connecting side waits for the accept-side handshake before returning a port error.
-
-* 180 - default, wait up to 180 seconds for the accept-side handshake.
-* positive integer - wait up to the specified number of seconds for the accept-side handshake.
-* 0 or negative integer - do not continue waiting after the initial progress check.
-
-Used in functions: `MPID_Comm_connect`, `dynamic_intercomm_create`, `establish_peer_conn`
-
 ### MPIR_CVAR_CH4_ENABLE_STREAM_WORKQ
 
 Controls whether CH4 stream enqueue operations use the stream work queue path. It is used by send, receive, nonblocking send, nonblocking receive, wait, and waitall enqueue operations; when disabled, those operations call the regular enqueue implementation instead. When enabled, the communicator or enqueue request must be associated with an MPIX GPU stream and that stream must provide the work queue, with progress supplied by the corresponding stream progress thread. When active, this CVAR enables deferring stream enqueue operations through the stream work queue using GPU trigger and completion events.
@@ -3726,16 +3716,6 @@ Used in functions: `MPIDI_UCX_recv`
 
 ## CH3 Device Layer
 
-### MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT
-
-Sets the default timeout period for CH3 dynamic-process connection attempts. It is used by the root process in `MPI_Comm_connect` when connecting to a server communicator whose named port exists but has no pending accept, and the per-call MPI info key `timeout` overrides this CVAR when provided. It does not rely on another CVAR being enabled, but it is active only for CH3 builds with dynamic-process support. When active, this CVAR sets how long the connecting side waits for the accept-side handshake before revoking the connection request and returning a port error.
-
-* 180 - default, wait up to 180 seconds for the accept-side handshake.
-* positive integer - wait up to the specified number of seconds for the accept-side handshake.
-* 0 or negative integer - do not continue waiting after the initial progress check.
-
-Used in functions: `MPIDI_Comm_connect`, `MPIDI_Create_inter_root_communicator_connect`
-
 ### MPIR_CVAR_CH3_EAGER_MAX_MSG_SIZE
 
 Sets the eager-send message-size threshold for CH3 virtual connections. It is used when a CH3 virtual connection is initialized, after the ready-send eager threshold is set to no limit and before channel-specific virtual-connection initialization runs. It does not rely on another CVAR or mode being active. When active, this CVAR sets the maximum CH3 message size sent eagerly before switching to rendezvous mode.
@@ -4228,6 +4208,18 @@ Controls the line width used when formatting MPI error stack output. It is used 
 * positive integer - chop long error stack message lines to the requested width.
 
 Used in functions: `MPIR_Err_stack_init`, `MPIR_Err_print_stack_string`
+
+### MPIR_CVAR_COMM_CONNECT_TIMEOUT
+
+Sets the default timeout period for dynamic-process connection attempts. It is used by the root process in `MPI_Comm_connect` when connecting to a server communicator whose named port exists but has no pending accept, and the per-call MPI info key `timeout` overrides this CVAR when provided. It does not rely on another CVAR being enabled, and both the CH3 and CH4 devices use it. When active, this CVAR sets how long the connecting side waits for the accept-side handshake before returning a port error.
+
+* 180 - default, wait up to 180 seconds for the accept-side handshake.
+* positive integer - wait up to the specified number of seconds for the accept-side handshake.
+* 0 or negative integer - do not continue waiting after the initial progress check.
+
+Alternate names: MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT, MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT
+
+Used in functions: `MPID_Comm_connect`, `dynamic_intercomm_create`, `establish_peer_conn`, `MPIDI_Comm_connect`, `MPIDI_Create_inter_root_communicator_connect`
 
 ### MPIR_CVAR_COMM_SPLIT_USE_QSORT
 

@@ -12,7 +12,12 @@
 #define IF_VERBOSE(cond, a) if (verbose && (cond)) { printf a ; fflush(stdout); }
 #define SERVER_GID 0
 #define CLIENT_GID 1
-#define TIMEOUT "5"
+/* Connect timeouts in seconds: the default (set through the CVAR) and the one
+ * passed in the info argument. MPITEST_STRESS selects the longer values. */
+#define DEFAULT_TIMEOUT 3
+#define INFO_TIMEOUT "1"
+#define DEFAULT_TIMEOUT_STRESS 20
+#define INFO_TIMEOUT_STRESS "5"
 
 /* This test checks whether a MPI_COMM_CONNECT can eventually time out and return
  * an error of class MPI_ERR_PORT when the named port exists but no pending
@@ -45,6 +50,7 @@
 
 int rank, nproc;
 int verbose = 0;
+const char *info_timeout;
 
 int test_mismatched_accept(MPI_Comm intra_comm, int gid);
 int test_no_accept(MPI_Comm intra_comm, int gid);
@@ -143,7 +149,7 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
             errs += check_errno(mpi_errno2, MPI_SUCCESS);
         }
     } else if (gid == SERVER_GID) {
-        /* NOTE: if accept hangs, try increase MPIR_CVAR_CH3_COMM_CONN_TIMEOUT. */
+        /* NOTE: if accept hangs, try increase MPIR_CVAR_COMM_CONNECT_TIMEOUT. */
         IF_VERBOSE(intra_rank == 0, ("server: accepting connection to <%s>.\n", port));
         mpi_errno = MPI_Comm_accept(port, MPI_INFO_NULL, 0, intra_comm, &comm);
         if (mpi_errno == MPI_SUCCESS) {
@@ -187,11 +193,11 @@ int test_no_accept(MPI_Comm intra_comm, int gid)
         errs += check_errno(mpi_errno, MPI_ERR_PORT);
 
         MPI_Info_create(&info);
-        MPI_Info_set(info, "timeout", TIMEOUT);
+        MPI_Info_set(info, "timeout", info_timeout);
 
         IF_VERBOSE(intra_rank == 0,
                    ("client: case 2 - connecting to <%s> with specified timeout <%s>s.\n", port,
-                    TIMEOUT));
+                    info_timeout));
         mpi_errno = MPI_Comm_connect(port, info, 0, intra_comm, &comm);
         errs += check_errno(mpi_errno, MPI_ERR_PORT);
 
@@ -209,6 +215,21 @@ int test_no_accept(MPI_Comm intra_comm, int gid)
     return errs;
 }
 
+/* Set the default connect timeout through MPICH's CVAR. Other MPI
+ * implementations keep their own default. */
+static void set_default_timeout(int timeout)
+{
+    int provided, cvar_index, count;
+    MPI_T_cvar_handle handle;
+
+    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    if (MPI_T_cvar_get_index("MPIR_CVAR_COMM_CONNECT_TIMEOUT", &cvar_index) == MPI_SUCCESS) {
+        MPI_T_cvar_handle_alloc(cvar_index, NULL, &handle, &count);
+        MPI_T_cvar_write(handle, &timeout);
+        MPI_T_cvar_handle_free(&handle);
+    }
+    MPI_T_finalize();
+}
 
 int main(int argc, char *argv[])
 {
@@ -222,6 +243,14 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (MTestGetStressLevel()) {
+        set_default_timeout(DEFAULT_TIMEOUT_STRESS);
+        info_timeout = INFO_TIMEOUT_STRESS;
+    } else {
+        set_default_timeout(DEFAULT_TIMEOUT);
+        info_timeout = INFO_TIMEOUT;
+    }
 
     if (nproc < 2) {
         printf("At least two processes needed to run this test.\n");
