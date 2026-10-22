@@ -74,10 +74,9 @@ int MPIDI_OFI_rndvwrite_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reque
         p->u.send.rkeys[i] = hdr->rkeys[i];
     }
 
-    MPL_free(r);
-
     /* setup chunks */
-    p->u.send.chunks_per_nic = get_chunks_per_nic(p->remote_data_sz, num_nics);
+    p->u.send.chunks_per_nic = get_chunks_per_nic(hdr->data_sz, num_nics);
+    MPL_free(r);
     p->u.send.chunks_remain = p->u.send.chunks_per_nic * num_nics;
 
     p->u.send.cur_chunk_index = 0;
