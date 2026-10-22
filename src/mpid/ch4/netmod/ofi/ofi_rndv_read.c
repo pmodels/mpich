@@ -76,6 +76,8 @@ int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r
 
     int num_nics = MPIDI_OFI_global.num_nics;
     for (int i = 0; i < num_nics; i++) {
+        if (!p->u.send.mrs[i])
+            continue;
         uint64_t key = fi_mr_key(p->u.send.mrs[i]);
         MPIDI_OFI_CALL(fi_close(&p->u.send.mrs[i]->fid), mr_unreg);
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {

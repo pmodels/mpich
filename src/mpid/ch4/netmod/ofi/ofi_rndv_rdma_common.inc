@@ -44,13 +44,27 @@ static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint da
     for (int i = 0; i < num_nics; i++) {
         MPIDI_OFI_context_t *ctx = &MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci, i)];
         /* note: fi_mr_reg is expensive, distribute over num_nics */
-        void *nic_data = (char *) data + i * sz_per_nic;
-        MPI_Aint sz = (i != num_nics - 1) ? sz_per_nic : (data_sz - i * sz_per_nic);
-        MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, nic_data, sz, access, 0ULL,
-                                 rkeys[i], 0ULL, &mrs[i], NULL), mr_reg);
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mrs[i], ctx->ep,
-                                      NULL);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPI_Aint nic_start = i * sz_per_nic;
+        MPI_Aint nic_end = MPL_MIN(nic_start + sz_per_nic, data_sz);
+        MPI_Aint sz = MPL_MAX(0, nic_end - nic_start);
+        if (sz > 0) {
+            void *nic_data = (char *) data + nic_start;
+            MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, nic_data, sz, access, 0ULL,
+                                     rkeys[i], 0ULL, &mrs[i], NULL), mr_reg);
+            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mrs[i], ctx->ep,
+                                          NULL);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* we over-provisioned a key above, are skipping the MR, and will not be
+             * binding it. To avoid a leak in the teardown, free the key early
+             * TODO: restructure to avoid the unnecessary key alloc in the first place.
+             */
+            if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+                MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, rkeys[i]);
+            }
+            rkeys[i] = 0;
+            mrs[i] = NULL;
+        }
     }
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         for (int i = 0; i < num_nics; i++) {
