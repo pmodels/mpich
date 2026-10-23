@@ -132,7 +132,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
-| `"dispatch=bcast-intra(0x820)"` | A string value in place of an object: evaluate the restrictions whose bits are in the mask (here `hierarchical` and `MPIDI_CH4_release_gather`) in one call, `MPIR_Csel_restriction_mask`, and continue in the subtree `bcast-intra-<mask that holds, in hex>`, e.g. `bcast-intra-800`. A combination without a subtree uses that of its largest subset (fewer bits; between equal counts, the lower mask), down to `bcast-intra-0`, which must exist. |
+| `"dispatch=bcast-intra(0x820)"` | A string value in place of an object: evaluate the restrictions whose bits are in the mask (here `hierarchical` and `MPIDI_CH4_release_gather`) in one call, `MPIR_Csel_restriction_mask`, and continue in the subtree `bcast-intra-<mask that holds, in hex>`, e.g. `bcast-intra-800`. A combination without a subtree uses that of its largest subset (fewer bits; between equal counts, the lower mask), down to `bcast-intra-0`, which must exist. See "Restriction sets and `dispatch=`" below. |
 | `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
@@ -174,6 +174,50 @@ The file is a dictionary of named subtrees:
   when the file is loaded, from the subtree names known then; a later file
   that replaces one of those subtrees is used, but a subtree name added only
   by a later file is not.
+
+**Restriction sets and `dispatch=`.** A `dispatch=<prefix>(<bits>)` node
+selects among subtrees named by convention `<prefix>-<m>`, where `m` is a
+mask of restriction indices (bit k is the restriction with index k in the
+`restrictions:` section of `coll_algorithms.txt`) written in lowercase hex
+without `0x` or leading zeros: `bcast-intra-0`, `bcast-intra-800`, not
+`bcast-intra-0x800` or `bcast-intra-0800`. A subtree spelled otherwise is not
+found, and the dispatch falls back as below. `<prefix>` is free-form, e.g.
+`bcast-intra`.
+
+At a call, MPICH evaluates the restrictions in `bits`, takes the mask `m` of
+those that hold, and continues in `<prefix>-<m>`. If that subtree does not
+exist, it continues in the subtree of the largest subset of `m` that does
+(fewer bits; between equal counts, the lower mask), down to `<prefix>-0`,
+which must exist. Restrictions are positive conditions, so the algorithms a
+subset's subtree may select also run under `m`.
+
+The names are only a convention: the loader treats them as ordinary subtrees.
+Each subtree must itself select only algorithms whose restrictions hold under
+its mask. `<prefix>-800` may select `release_gather` (restriction 11,
+`MPIDI_CH4_release_gather`), `<prefix>-0` may not; an algorithm selected where
+its restriction does not hold can fail or hang (e.g. `release_gather` before
+its shared memory exists).
+
+```json
+{
+    "name=bcast-intra-auto": "dispatch=bcast-intra(0x820)",
+    "name=bcast-intra-0":    { "avg_msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
+                               "any": { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} } },
+    "name=bcast-intra-800":  { "avg_msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
+                               "any": "call=bcast-intra-0" },
+    "name=bcast-intra-20":   { "avg_msg_size(65536)": "call=bcast-intra-0",
+                               "any": { "algorithm=MPIR_Bcast_intra_smp": {} } }
+}
+```
+
+Here `0x820` is `hierarchical` (bit 5, `0x20`) and `MPIDI_CH4_release_gather`
+(bit 11, `0x800`). A comm on one node where release_gather can run gets mask
+`800`; a comm on several nodes with several ranks per node gets `20`; any
+other comm, e.g. one rank per node or release_gather unavailable under
+`MPI_THREAD_MULTIPLE`, gets `0`. Both bits holding at once has no subtree, and
+would use the lower of `20` and `800`. csel_tuner
+(https://github.com/hzhou-muse/csel_tuner) writes files of this shape, with
+one subtree per restriction set it measured.
 
 An algorithm leaf lists every non-constant parameter in its `extra_params`
 as `"name": value`, and nothing else. The value's type follows the type of the
