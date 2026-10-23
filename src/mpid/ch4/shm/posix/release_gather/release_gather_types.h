@@ -24,6 +24,7 @@ typedef enum MPIDI_POSIX_release_gather_tree_type_t {
 typedef struct MPIDI_POSIX_release_gather_comm_t {
     int is_initialized;
     int num_collective_calls;
+    int init_failed;            /* bit (1 << opcode) set when its initialization failed */
 
     MPIR_Treealgo_tree_t bcast_tree, reduce_tree, reduce_tree_large;
     /* shm mem allocated to this comm */

@@ -736,7 +736,11 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__PARENT;
+    /* hierarchical (two-level) algorithms apply only when the comm spans several nodes; a
+     * single-node comm keeps its subcomms (e.g. for shared memory) but is not a parent */
+    if (comm->num_external > 1) {
+        comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__PARENT;
+    }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

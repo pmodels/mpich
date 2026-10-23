@@ -921,7 +921,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
+        if (comm_ptr->node_comm) {
             /* node_comm pt2pt */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 
@@ -949,7 +949,9 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
                     continue;
                 }
             }
+        }
 
+        if (comm_ptr->node_roots_comm) {
             /* node_roots_comm pt2pt */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
 
@@ -1014,8 +1016,8 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
-            /* node_comm coll */
+        if (comm_ptr->node_comm) {
+            /* node_comm pt2pt */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
@@ -1042,7 +1044,9 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
                     continue;
                 }
             }
+        }
 
+        if (comm_ptr->node_roots_comm) {
             /* node_roots_comm pt2pt */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
 

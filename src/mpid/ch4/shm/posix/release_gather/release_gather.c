@@ -184,12 +184,64 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
 
     RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
     RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
+    RELEASE_GATHER_FIELD(comm_ptr, init_failed) = 0;
 
     NB_RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
     NB_RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
+}
+
+/* Whether the algorithm CVAR of the collective forces release_gather */
+static bool cvar_forces_release_gather(int coll_type)
+{
+    switch (coll_type) {
+        case MPIR_CSEL_COLL_TYPE__INTRA_BCAST:
+            return MPIR_CVAR_BCAST_INTRA_ALGORITHM ==
+                MPIR_CVAR_BCAST_INTRA_ALGORITHM_release_gather;
+        case MPIR_CSEL_COLL_TYPE__INTRA_REDUCE:
+            return MPIR_CVAR_REDUCE_INTRA_ALGORITHM ==
+                MPIR_CVAR_REDUCE_INTRA_ALGORITHM_release_gather;
+        case MPIR_CSEL_COLL_TYPE__INTRA_ALLREDUCE:
+            return MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM ==
+                MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_release_gather;
+        case MPIR_CSEL_COLL_TYPE__INTRA_BARRIER:
+            return MPIR_CVAR_BARRIER_INTRA_ALGORITHM ==
+                MPIR_CVAR_BARRIER_INTRA_ALGORITHM_release_gather;
+        default:
+            return false;
+    }
+}
+
+/* Called for every collective before the algorithm selection, so that the condition
+ * MPIDI_CH4_release_gather has no side effects. Counts the calls on an eligible comm and,
+ * past MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD calls or when the algorithm CVAR forces
+ * release_gather, creates the shared memory the collective needs. A failed creation (e.g.
+ * over MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE) is not retried; the condition stays false. */
+void MPIDI_POSIX_release_gather_prepare(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    MPIDI_POSIX_release_gather_opcode_t opcode;
+    if (!MPIDI_POSIX_release_gather_eligible(coll_sig, &opcode)) {
+        return;
+    }
+
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls)++;
+    if (MPIDI_POSIX_release_gather_is_ready(comm_ptr, opcode) ||
+        (RELEASE_GATHER_FIELD(comm_ptr, init_failed) & (1 << opcode))) {
+        return;
+    }
+
+    if (RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) < MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD
+        && !cvar_forces_release_gather(coll_sig->coll_type)) {
+        return;
+    }
+
+    int mpi_errno = MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr, opcode);
+    if (mpi_errno != MPI_SUCCESS) {
+        RELEASE_GATHER_FIELD(comm_ptr, init_failed) |= (1 << opcode);
+    }
 }
 
 /* Initialize the data structures and allocate the shared memory (flags, bcast buffer and reduce

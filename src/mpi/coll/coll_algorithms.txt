@@ -19,17 +19,22 @@
 # "func-commkind" may be "general", under which the "algorithm_name" is the full name of the
 # algorithm function. General algorithm functions takes (coll_sig, cnt) parameters.
 #
-# In addition, "conditions" list all conditions and their corresponding checkers. There are
-# a few types of conditions distinguished by the format:
-#   - conidtion_name: func
-#         The condition calls checker function with signature: bool (*func)(coll_sig).
-#   - condition_name(thresh): func
-#         This condition calls a query function that returns a value: int (*func)(coll_sig)
-#         The thresh marks the upper limit (inclusive) of the condition.
+# In addition, "restrictions" and "conditions" list the CSEL conditions and their checkers,
+# in two sections, restrictions first. Together they form one condition table, in file order.
+#   - restrictions: "index - name: func", a condition whose checker returns bool:
+#     bool (*func)(coll_sig). These are the conditions that can be used as algorithm
+#     restrictions. The index is the condition's position in the table, starting at 0, and
+#     gen_coll.py checks it. It is also the restriction's bit in the masks that tuning tools
+#     use, e.g. in subtree names of a tuning file, so the indices of existing restrictions
+#     must not change: add new ones at the end.
+#   - conditions: "name(thresh): func", a threshold condition whose checker returns a value:
+#     int (*func)(coll_sig). The thresh marks the upper limit (inclusive) of the condition.
 #   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
 #         A wrapper checker function will be generated that wraps the "func" within macro-guard.
-# The conditions are used in specifying both algorithm restrictions and CSEL conditions.
-# Example usage in restriction list or JSON file: inplace, !inplace, avg_msg_size(1024), etc.
+# Both kinds are used as CSEL conditions in JSON files, e.g. inplace, !inplace,
+# avg_msg_size(1024). Algorithm restrictions take only restrictions, without negation: a
+# restriction that needs a condition to be false uses its own condition (e.g. not_inplace), so
+# that every restriction is a condition that must hold.
 # Most of the checker functions should be inlined to minimize function call overhead.
 #
 # Notes:
@@ -53,25 +58,36 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
+#   * inner:
+#         The collectives a compositional algorithm calls through the selection, as a
+#         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The
+#         section is one of this file's; the communicator is the field of the comm the call
+#         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
+#         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
+#         after the collectives it depends on; gen_coll.py only checks it.
 
 # ----
+restrictions:
+    0  - inplace:                  MPIR_Csel_sendbuf_inplace
+    1  - not_inplace:              MPIR_Csel_sendbuf_not_inplace
+    2  - pof2:                     MPIR_Csel_comm_size_is_pof2
+    3  - commutative:              MPIR_Csel_op_is_commutative
+    4  - builtin_op:               MPIR_Csel_op_is_builtin
+    5  - hierarchical:             MPIR_Csel_is_hierarchical
+    6  - node_consecutive:         MPIR_Csel_is_node_consecutive
+    7  - node_regular:             MPIR_Csel_is_node_canonical
+    8  - count_ge_pof2:            MPIR_Csel_count_ge_pof2
+    9  - displs_ordered:           MPIR_Csel_displs_ordered
+    10 - block_regular:            MPIR_Csel_block_regular
+    # conditional conditions - only call the condition function under macro_guard
+    11 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+
 conditions:
-    inplace:          MPIR_Csel_sendbuf_inplace
-    pof2:             MPIR_Csel_comm_size_is_pof2
-    commutative:      MPIR_Csel_op_is_commutative
-    builtin_op:       MPIR_Csel_op_is_builtin
-    hierarchical:     MPIR_Csel_is_hierarchical
-    node_consecutive: MPIR_Csel_is_node_consecutive
-    node_regular:     MPIR_Csel_is_node_canonical
-    count_ge_pof2:    MPIR_Csel_count_ge_pof2
-    displs_ordered:   MPIR_Csel_displs_ordered
-    block_regular:    MPIR_Csel_block_regular
     comm_size(thresh):      MPIR_Csel_comm_size
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     total_msg_size(thresh): MPIR_Csel_total_msg_size
-
-    # conditional conditions - only call the condition function under macro_guard
-    MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+    num_nodes(thresh):      MPIR_Csel_num_nodes
+    ppn(thresh):            MPIR_Csel_ppn
 
 # ----
 general:
@@ -87,6 +103,7 @@ barrier-intra:
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     smp
         restrictions: hierarchical
+        inner: barrier-intra@node_comm, barrier-intra@node_roots_comm, bcast-intra@node_comm
     release_gather
         func_name: MPIDI_POSIX_mpi_barrier_release_gather
         inline: 1
@@ -112,6 +129,7 @@ bcast-intra:
     circ_graph
     smp
         restrictions: hierarchical
+        inner: bcast-intra@node_comm, bcast-intra@node_roots_comm
     tree
         extra_params: tree_type, k, is_non_blocking
         cvar_params: TREE_TYPE, TREE_KVAL, IS_NON_BLOCKING
@@ -277,28 +295,28 @@ iallgatherv-inter:
 
 alltoall-intra:
     brucks
-        restrictions: !inplace
+        restrictions: not_inplace
     k_brucks
-        restrictions: !inplace
+        restrictions: not_inplace
         extra_params: k
         cvar_params: BRUCKS_KVAL
     pairwise
-        restrictions: !inplace
+        restrictions: not_inplace
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: !inplace
+        restrictions: not_inplace
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
     sched_brucks
-        restrictions: !inplace
+        restrictions: not_inplace
     sched_inplace
         restrictions: inplace
     sched_pairwise
-        restrictions: !inplace
+        restrictions: not_inplace
     sched_permuted_sendrecv
-        restrictions: !inplace
+        restrictions: not_inplace
     tsp_ring
     tsp_brucks
         extra_params: k, buffer_per_phase
@@ -313,20 +331,20 @@ alltoallv-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: !inplace
+        restrictions: not_inplace
 alltoallv-inter:
     pairwise_exchange
 ialltoallv-intra:
     sched_blocked
-        restrictions: !inplace
+        restrictions: not_inplace
     sched_inplace
         restrictions: inplace
     tsp_scattered
-        restrictions: !inplace
+        restrictions: not_inplace
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
     tsp_blocked
-        restrictions: !inplace
+        restrictions: not_inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -338,16 +356,16 @@ alltoallw-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: !inplace
+        restrictions: not_inplace
 alltoallw-inter:
     pairwise_exchange
 ialltoallw-intra:
     sched_blocked
-        restrictions: !inplace
+        restrictions: not_inplace
     sched_inplace
         restrictions: inplace
     tsp_blocked
-        restrictions: !inplace
+        restrictions: not_inplace
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -361,6 +379,7 @@ reduce-intra:
         restrictions: commutative
     smp
         restrictions: commutative, hierarchical
+        inner: reduce-intra@node_comm, reduce-intra@node_roots_comm
     reduce_scatter_gather
         restrictions: count_ge_pof2, builtin_op
     release_gather
@@ -389,6 +408,7 @@ ireduce-inter:
 allreduce-intra:
     smp
         restrictions: commutative, hierarchical
+        inner: reduce-intra@node_comm, allreduce-intra@node_roots_comm, bcast-intra@node_comm
     recursive_doubling
     recursive_multiplying
         extra_params: k
@@ -498,6 +518,7 @@ ireduce_scatter_block-inter:
 scan-intra:
     smp
         restrictions: commutative, node_consecutive
+        inner: scan-intra@node_comm, scan-intra@node_roots_comm, bcast-intra@node_comm
     recursive_doubling
 iscan-intra:
     sched_smp

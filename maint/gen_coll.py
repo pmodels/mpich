@@ -16,9 +16,12 @@ def main():
     G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
     # Loading coll_algorithms.txt. It sets -
-    #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
+    #   - G.conditions: the condition table, restrictions first, then threshold conditions;
+    #                   all are used in JSON tuning files, restrictions also by algorithms
+    #   - G.restrictions: the names of the restrictions, in index order
     #   - G.algos:      a two level array: [func-commkind][algo]
     load_coll_algos("src/mpi/coll/coll_algorithms.txt")
+    check_inner()
     # Loading the collective CVARs, for the types of the algorithm parameters -
     #   - G.cvars:      {name: {'type': type, 'enum': [names]}}
     load_cvars("src/mpi/coll")
@@ -485,41 +488,54 @@ def dump_MPIR_Coll_init_algo_container():
 
 def dump_MPIR_Coll_check_algo_restriction():
     G.out.append("")
-    def dump_check_restriction(restriction):
+    def restriction_bit(restriction):
         r = restriction
-        negate = False
-        if restriction.startswith('!'):
-            r = restriction[1:]
-            negate = True
+        if r.startswith('!'):
+            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition (e.g. not_inplace)" % r)
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
-        if r in G.conditions:
-            # We assume we can directly call conditional condition since we are inside the algorithm macro_guard
-            cond = "%s(coll_sig)" % get_condition_function(r)
-            if negate:
-                G.out.append("    if (%s) return false;" % cond)
-            else:
-                G.out.append("    if (!%s) return false;" % cond)
-        else:
+        if r + "(thresh)" in G.conditions:
+            raise Exception("Threshold condition %s cannot be used as a restriction" % r)
+        if r in G.conditions and r not in G.restrictions:
+            raise Exception("Restriction %s is not listed under restrictions:" % r)
+        if r not in G.conditions:
             raise Exception("Restriction %s not listed" % restriction)
+        return G.restrictions.index(r)
 
+    if len(G.restrictions) > 32:
+        raise Exception("more than 32 restrictions do not fit the restriction mask")
+
+    # the restrictions that hold, among the requested bits (bit k: restriction k)
+    decl = "unsigned MPIR_Csel_restriction_mask(MPIR_Csel_coll_sig_s * coll_sig, unsigned bits)"
+    add_prototype(decl)
+    G.out.append(decl)
+    dump_open("{")
+    G.out.append("unsigned mask = 0;")
+    for k, r in enumerate(G.restrictions):
+        G.out.append("if ((bits & (1u << %d)) && %s(coll_sig)) mask |= 1u << %d;" % (k, get_condition_function(r), k))
+    G.out.append("return mask;")
+    dump_close("}")
+    G.out.append("")
 
     decl = "bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_type_e algo_id)"
     G.out.append(decl)
     dump_open("{")
+    G.out.append("unsigned need;")
     dump_open("switch (algo_id) {")
     for algo in G.algo_list:
         if "restrictions" in algo:
             restrictions = algo['restrictions'].replace(' ', '').split(',')
-            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            need = 0
             for r in restrictions:
-                dump_check_restriction(r)
+                need |= 1 << restriction_bit(r)
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            G.out.append("    need = 0x%x;    /* %s */" % (need, ', '.join(restrictions)))
             G.out.append("    break;")
     G.out.append("default:")
     G.out.append("    return true;")
     dump_close("}")
-    G.out.append("return true;")
+    G.out.append("return MPIR_Csel_restriction_mask(coll_sig, need) == need;")
     dump_close("}")
 
 #---- dumping to G.out2 (coll_algos.h) ----
@@ -559,6 +575,7 @@ def dump_MPIR_Csel_node_type_e():
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,")
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__ANY,")
     G.out2.append("    CSEL_NODE_TYPE__OPERATOR__CALL,")
+    G.out2.append("    CSEL_NODE_TYPE__OPERATOR__DISPATCH,")
     G.out2.append("    CSEL_NODE_TYPE__CONTAINER,")
     G.out2.append("    CSEL_NODE_TYPE__ERROR,")
     G.out2.append("} MPIR_Csel_node_type_e;")
@@ -630,19 +647,49 @@ def load_cvar_file(path):
             elif RE.match(r'\s*type\s*:\s*(\w+)', line):
                 cvar['type'] = RE.m.group(1)
 
+def check_inner():
+    """The "inner" key: <section>@<communicator>, an existing section and a known communicator."""
+    for func_commkind, algo_list in G.algos.items():
+        for algo in algo_list:
+            if "inner" not in algo:
+                continue
+            for item in algo["inner"].replace(' ', '').split(','):
+                if not RE.match(r'([\w-]+)@(\w+)$', item):
+                    raise Exception("%s %s: inner %s is not <section>@<communicator>" % (func_commkind, algo['name'], item))
+                section, comm = RE.m.group(1), RE.m.group(2)
+                if section not in G.algos:
+                    raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, section))
+                if comm not in ("node_comm", "node_roots_comm"):
+                    raise Exception("%s %s: inner %s: unknown communicator %s" % (func_commkind, algo['name'], item, comm))
+
 def load_coll_algos(algo_txt):
     G.algos = {}
     G.conditions = {}
+    G.restrictions = []
     with open(algo_txt) as In:
         (func_commkind, algo_list, algo) = (None, None, None)
         for line in In:
-            if RE.match(r'(\w+-(intra|inter)|general|conditions):', line):
+            if RE.match(r'(\w+-(intra|inter)|general|restrictions|conditions):', line):
                 func_commkind = RE.m.group(1)
-                if func_commkind != "conditions":
+                if func_commkind == "restrictions" and G.conditions:
+                    raise Exception("restrictions: must come before conditions:")
+                if func_commkind not in ("restrictions", "conditions"):
                     algo_list = []
                     G.algos[func_commkind] = algo_list
+            elif func_commkind == "restrictions":
+                if RE.match(r'\s+(\d+)\s+-\s+(\w+):\s*(\w+.*)', line):
+                    (idx, name, func) = (int(RE.m.group(1)), RE.m.group(2), RE.m.group(3))
+                    # the index is the condition's position in the table: the restriction's bit
+                    if idx != len(G.conditions):
+                        raise Exception("restriction %s: index %d, but it is condition %d" % (name, idx, len(G.conditions)))
+                    G.conditions[name] = func
+                    G.restrictions.append(name)
+                elif line.strip() and not line.strip().startswith('#'):
+                    raise Exception("restriction entry is not \"index - name: func\": %s" % line.strip())
             elif func_commkind == "conditions":
                 if RE.match(r'\s+([\w()-]+):\s*(\w+.*)', line):
+                    if not RE.m.group(1).endswith("(thresh)"):
+                        raise Exception("condition %s: list non-threshold conditions under restrictions:" % RE.m.group(1))
                     G.conditions[RE.m.group(1)] = RE.m.group(2)
             elif func_commkind:
                 if RE.match(r'\s+(\w+)\s*$', line):

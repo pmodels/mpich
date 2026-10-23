@@ -931,7 +931,7 @@ Used in functions: `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`,
 
 ### MPIR_CVAR_COLLECTIVE_FALLBACK
 
-Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path.
+Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path. Calls on internal sub-communicators, such as the node communicators that a compositional algorithm like `smp` uses, always fall back silently, so forcing such an algorithm does not fail on its inner calls.
 
 * error - throw an error.
 * silent - default, silently fallback to the internally selected algorithm.

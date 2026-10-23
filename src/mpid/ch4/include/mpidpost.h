@@ -77,8 +77,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
     return MPIR_Stop_progress_thread_impl(NULL);
 }
 
+#ifdef MPIDI_CH4_SHM_POSIX
+void MPIDI_POSIX_release_gather_prepare(MPIR_Csel_coll_sig_s * coll_sig);
+#endif
+
 MPL_STATIC_INLINE_PREFIX void MPID_Init_coll_sig(MPIR_Csel_coll_sig_s * coll_sig)
 {
+#ifdef MPIDI_CH4_SHM_POSIX
+    MPIDI_POSIX_release_gather_prepare(coll_sig);
+#endif
 }
 
 #endif /* MPIDPOST_H_INCLUDED */

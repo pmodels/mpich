@@ -48,12 +48,15 @@ Three inputs drive selection:
 ## The catalog: `coll_algorithms.txt`
 
 The file is indentation based (4 spaces; the `:` after a key is significant).
-It has three kinds of top-level section:
+It has four kinds of top-level section:
 
 ```
+restrictions:
+    0  - inplace:           MPIR_Csel_sendbuf_inplace
+    1  - not_inplace:       MPIR_Csel_sendbuf_not_inplace
+    2  - pof2:              MPIR_Csel_comm_size_is_pof2
+
 conditions:
-    inplace:                MPIR_Csel_sendbuf_inplace
-    pof2:                   MPIR_Csel_comm_size_is_pof2
     comm_size(thresh):      MPIR_Csel_comm_size
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
@@ -75,18 +78,33 @@ bcast-intra:
         restrictions: MPIDI_CH4_release_gather
 ```
 
-- **Conditions.** `name: func` is a predicate, `bool func(coll_sig)`.
-  `name(thresh): func` is a query, `int func(coll_sig)`, and the condition is
-  true when the value is at most the threshold. A trailing `#if ...` makes a
-  *conditional condition*: the generated wrapper calls `func` only under that
-  macro guard and returns false otherwise.
+- **Restrictions and conditions** form one condition table, restrictions
+  first. `index - name: func` under `restrictions:` is a predicate,
+  `bool func(coll_sig)`, usable both as an algorithm restriction and in JSON.
+  The index is its position in the table (gen_coll checks it) and its bit in
+  the masks tuning tools use, e.g. in tuning-file subtree names, so existing
+  indices must not change and new restrictions go at the end.
+  `name(thresh): func` under `conditions:` is a query, `int func(coll_sig)`,
+  and the condition is true when the value is at most the threshold; it is
+  for JSON only. A trailing `#if ...` makes a *conditional condition*: the
+  generated wrapper calls `func` only under that macro guard and returns
+  false otherwise.
 - **General algorithms** work on any `coll_type`. `MPIR_Coll_nb` runs the
   nonblocking form of a blocking collective and waits for it.
 - **`<coll>-<intra|inter>` sections** list algorithms. A name such as
   `binomial` expands to the function `MPIR_Bcast_intra_binomial` unless
   `func_name` gives one. Attribute keys:
     - `restrictions`: conditions that must hold for the algorithm to run.
-      Prefix with `!` to negate. Threshold conditions are not allowed here.
+      Threshold conditions and negation are not allowed here; a restriction
+      that needs a condition to be false names its own condition (e.g.
+      `not_inplace`). Every restriction is then a condition that holds, so
+      the algorithms allowed under a set of true conditions are also
+      allowed under any larger set. JSON trees can still negate (`!inplace`).
+    - `inner`: for a compositional algorithm, the collectives it calls
+      through the selection, as `<section>@<communicator>` (e.g.
+      `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
+      Tuning tools use it to tune the algorithm after those collectives;
+      gen_coll only checks the names.
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
       forced by CVAR. The CVAR's type is also the parameter's type in the
@@ -114,6 +132,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
+| `"dispatch=bcast-intra(0x820)"` | A string value in place of an object: evaluate the restrictions whose bits are in the mask (here `hierarchical` and `MPIDI_CH4_release_gather`) in one call, `MPIR_Csel_restriction_mask`, and continue in the subtree `bcast-intra-<mask that holds, in hex>`, e.g. `bcast-intra-800`. A combination without a subtree uses that of its largest subset (fewer bits; between equal counts, the lower mask), down to `bcast-intra-0`, which must exist. See "Restriction sets and `dispatch=`" below. |
 | `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
@@ -151,6 +170,54 @@ The file is a dictionary of named subtrees:
 - A file with no `name=` keys is loaded as a single tree named `main`.
 - `call=` targets are resolved by name at search time, so a subtree replaced
   by the user file is the one used.
+- `dispatch=` builds its table of subtrees, one per combination of its bits,
+  when the file is loaded, from the subtree names known then; a later file
+  that replaces one of those subtrees is used, but a subtree name added only
+  by a later file is not.
+
+**Restriction sets and `dispatch=`.** A `dispatch=<prefix>(<bits>)` node
+selects among subtrees named by convention `<prefix>-<m>`, where `m` is a
+mask of restriction indices (bit k is the restriction with index k in the
+`restrictions:` section of `coll_algorithms.txt`) written in lowercase hex
+without `0x` or leading zeros: `bcast-intra-0`, `bcast-intra-800`, not
+`bcast-intra-0x800` or `bcast-intra-0800`. A subtree spelled otherwise is not
+found, and the dispatch falls back as below. `<prefix>` is free-form, e.g.
+`bcast-intra`.
+
+At a call, MPICH evaluates the restrictions in `bits`, takes the mask `m` of
+those that hold, and continues in `<prefix>-<m>`. If that subtree does not
+exist, it continues in the subtree of the largest subset of `m` that does
+(fewer bits; between equal counts, the lower mask), down to `<prefix>-0`,
+which must exist. Restrictions are positive conditions, so the algorithms a
+subset's subtree may select also run under `m`.
+
+The names are only a convention: the loader treats them as ordinary subtrees.
+Each subtree must itself select only algorithms whose restrictions hold under
+its mask. `<prefix>-800` may select `release_gather` (restriction 11,
+`MPIDI_CH4_release_gather`), `<prefix>-0` may not; an algorithm selected where
+its restriction does not hold can fail or hang (e.g. `release_gather` before
+its shared memory exists).
+
+```json
+{
+    "name=bcast-intra-auto": "dispatch=bcast-intra(0x820)",
+    "name=bcast-intra-0":    { "avg_msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
+                               "any": { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} } },
+    "name=bcast-intra-800":  { "avg_msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
+                               "any": "call=bcast-intra-0" },
+    "name=bcast-intra-20":   { "avg_msg_size(65536)": "call=bcast-intra-0",
+                               "any": { "algorithm=MPIR_Bcast_intra_smp": {} } }
+}
+```
+
+Here `0x820` is `hierarchical` (bit 5, `0x20`) and `MPIDI_CH4_release_gather`
+(bit 11, `0x800`). A comm on one node where release_gather can run gets mask
+`800`; a comm on several nodes with several ranks per node gets `20`; any
+other comm, e.g. one rank per node or release_gather unavailable under
+`MPI_THREAD_MULTIPLE`, gets `0`. Both bits holding at once has no subtree, and
+would use the lower of `20` and `800`. csel_tuner
+(https://github.com/hzhou-muse/csel_tuner) writes files of this shape, with
+one subtree per restriction set it measured.
 
 An algorithm leaf lists every non-constant parameter in its `extra_params`
 as `"name": value`, and nothing else. The value's type follows the type of the
@@ -316,7 +383,8 @@ barrier) is the example.
    any extra parameters.
 2. List it under its `<coll>-<intra|inter>` section in `coll_algorithms.txt`
    with its `restrictions`, `extra_params`, and `cvar_params`. Add any new
-   condition under `conditions:` and define its checker function.
+   predicate at the end of `restrictions:` with the next index (a threshold
+   condition under `conditions:`) and define its checker function.
 3. Add its value to the collective's algorithm CVAR in
    `src/mpi/coll/cvars.txt`.
 4. Reference it in `coll_selection.json` on branches where its restrictions

@@ -62,6 +62,104 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                              const MPIDI_POSIX_release_gather_opcode_t operation);
 int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr);
 
+/* Whether a blocking release_gather collective fits this call, apart from its shared memory */
+MPL_STATIC_INLINE_PREFIX bool
+MPIDI_POSIX_release_gather_eligible(MPIR_Csel_coll_sig_s * coll_sig,
+                                    MPIDI_POSIX_release_gather_opcode_t * opcode_out)
+{
+    if (MPIR_IS_THREADED) {
+        return false;
+    }
+
+    /* Check whether comm is an intranode comm */
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    if (!(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY)) {
+        /* Missing hierarchical check. */
+        /* Add an assertion since this is likely due to a negligence. All comm should be
+         * initialized with hierarchical info before exposed to users */
+        MPIR_Assert(0 && "Missing hierarchical info");
+        return false;
+    } else if (comm_ptr->num_external > 1) {
+        return false;
+    }
+
+    /* check coll_type */
+    MPIDI_POSIX_release_gather_opcode_t opcode;
+    MPI_Datatype datatype_for_reduce = MPI_DATATYPE_NULL;
+    MPI_Op op_for_reduce;
+    switch (coll_sig->coll_type) {
+        case MPIR_CSEL_COLL_TYPE__INTRA_BCAST:
+            opcode = MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST;
+            break;
+        case MPIR_CSEL_COLL_TYPE__INTRA_REDUCE:
+            opcode = MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE;
+            datatype_for_reduce = coll_sig->u.reduce.datatype;
+            op_for_reduce = coll_sig->u.reduce.op;
+            break;
+        case MPIR_CSEL_COLL_TYPE__INTRA_ALLREDUCE:
+            opcode = MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE;
+            datatype_for_reduce = coll_sig->u.allreduce.datatype;
+            op_for_reduce = coll_sig->u.allreduce.op;
+            break;
+        case MPIR_CSEL_COLL_TYPE__INTRA_BARRIER:
+            opcode = MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER;
+            break;
+        default:
+            return false;
+    }
+
+    if (datatype_for_reduce != MPI_DATATYPE_NULL) {
+        MPI_Aint type_size, dummy_lb, extent, true_extent;
+        MPIR_Datatype_get_size_macro(datatype_for_reduce, type_size);
+        MPIR_Type_get_extent_impl(datatype_for_reduce, &dummy_lb, &extent);
+        MPIR_Type_get_true_extent_impl(datatype_for_reduce, &dummy_lb, &true_extent);
+        extent = MPL_MAX(extent, true_extent);
+        if (MPL_MAX(type_size, extent) >=
+            MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+            return false;
+        }
+
+        if (!MPIR_Op_is_commutative(op_for_reduce)) {
+            return false;
+        }
+    }
+
+    *opcode_out = opcode;
+    return true;
+}
+
+/* Whether the shared memory that the opcode uses has been created on this comm */
+MPL_STATIC_INLINE_PREFIX bool
+MPIDI_POSIX_release_gather_is_ready(MPIR_Comm * comm_ptr,
+                                    MPIDI_POSIX_release_gather_opcode_t opcode)
+{
+    if (!RELEASE_GATHER_FIELD(comm_ptr, is_initialized)) {
+        return false;
+    }
+
+    switch (opcode) {
+        case MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST:
+            return RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL;
+        case MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE:
+        case MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE:
+            return RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr) != NULL;
+        default:
+            return true;
+    }
+}
+
+/* The condition MPIDI_CH4_release_gather. It has no side effects: the call counting and the
+ * lazy initialization happen in MPIDI_POSIX_release_gather_prepare, before the selection. */
+MPL_STATIC_INLINE_PREFIX bool MPIDI_POSIX_check_release_gather(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    MPIDI_POSIX_release_gather_opcode_t opcode;
+    if (!MPIDI_POSIX_release_gather_eligible(coll_sig, &opcode)) {
+        return false;
+    }
+
+    return MPIDI_POSIX_release_gather_is_ready(coll_sig->comm_ptr, opcode);
+}
+
 MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_release_gather_tree_type_t
 MPIDI_POSIX_mpi_release_gather_get_tree_type(const char *tree_type_name)
 {
