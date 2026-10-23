@@ -16,7 +16,9 @@ def main():
     G.coll_names = ["barrier", "bcast", "gather", "gatherv", "scatter", "scatterv", "allgather", "allgatherv", "alltoall", "alltoallv", "alltoallw", "reduce", "allreduce", "reduce_scatter", "reduce_scatter_block", "scan", "exscan", "neighbor_allgather", "neighbor_allgatherv", "neighbor_alltoall", "neighbor_alltoallv", "neighbor_alltoallw"]
 
     # Loading coll_algorithms.txt. It sets -
-    #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
+    #   - G.conditions: the condition table, restrictions first, then threshold conditions;
+    #                   all are used in JSON tuning files, restrictions also by algorithms
+    #   - G.restrictions: the names of the restrictions, in index order
     #   - G.algos:      a two level array: [func-commkind][algo]
     load_coll_algos("src/mpi/coll/coll_algorithms.txt")
     check_inner()
@@ -493,6 +495,10 @@ def dump_MPIR_Coll_check_algo_restriction():
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
+        if r + "(thresh)" in G.conditions:
+            raise Exception("Threshold condition %s cannot be used as a restriction" % r)
+        if r in G.conditions and r not in G.restrictions:
+            raise Exception("Restriction %s is not listed under restrictions:" % r)
         if r in G.conditions:
             # We assume we can directly call conditional condition since we are inside the algorithm macro_guard
             cond = "%s(coll_sig)" % get_condition_function(r)
@@ -644,16 +650,31 @@ def check_inner():
 def load_coll_algos(algo_txt):
     G.algos = {}
     G.conditions = {}
+    G.restrictions = []
     with open(algo_txt) as In:
         (func_commkind, algo_list, algo) = (None, None, None)
         for line in In:
-            if RE.match(r'(\w+-(intra|inter)|general|conditions):', line):
+            if RE.match(r'(\w+-(intra|inter)|general|restrictions|conditions):', line):
                 func_commkind = RE.m.group(1)
-                if func_commkind != "conditions":
+                if func_commkind == "restrictions" and G.conditions:
+                    raise Exception("restrictions: must come before conditions:")
+                if func_commkind not in ("restrictions", "conditions"):
                     algo_list = []
                     G.algos[func_commkind] = algo_list
+            elif func_commkind == "restrictions":
+                if RE.match(r'\s+(\d+)\s+-\s+(\w+):\s*(\w+.*)', line):
+                    (idx, name, func) = (int(RE.m.group(1)), RE.m.group(2), RE.m.group(3))
+                    # the index is the condition's position in the table: the restriction's bit
+                    if idx != len(G.conditions):
+                        raise Exception("restriction %s: index %d, but it is condition %d" % (name, idx, len(G.conditions)))
+                    G.conditions[name] = func
+                    G.restrictions.append(name)
+                elif line.strip() and not line.strip().startswith('#'):
+                    raise Exception("restriction entry is not \"index - name: func\": %s" % line.strip())
             elif func_commkind == "conditions":
                 if RE.match(r'\s+([\w()-]+):\s*(\w+.*)', line):
+                    if not RE.m.group(1).endswith("(thresh)"):
+                        raise Exception("condition %s: list non-threshold conditions under restrictions:" % RE.m.group(1))
                     G.conditions[RE.m.group(1)] = RE.m.group(2)
             elif func_commkind:
                 if RE.match(r'\s+(\w+)\s*$', line):

@@ -48,12 +48,15 @@ Three inputs drive selection:
 ## The catalog: `coll_algorithms.txt`
 
 The file is indentation based (4 spaces; the `:` after a key is significant).
-It has three kinds of top-level section:
+It has four kinds of top-level section:
 
 ```
+restrictions:
+    0  - inplace:           MPIR_Csel_sendbuf_inplace
+    1  - not_inplace:       MPIR_Csel_sendbuf_not_inplace
+    2  - pof2:              MPIR_Csel_comm_size_is_pof2
+
 conditions:
-    inplace:                MPIR_Csel_sendbuf_inplace
-    pof2:                   MPIR_Csel_comm_size_is_pof2
     comm_size(thresh):      MPIR_Csel_comm_size
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
@@ -75,11 +78,17 @@ bcast-intra:
         restrictions: MPIDI_CH4_release_gather
 ```
 
-- **Conditions.** `name: func` is a predicate, `bool func(coll_sig)`.
-  `name(thresh): func` is a query, `int func(coll_sig)`, and the condition is
-  true when the value is at most the threshold. A trailing `#if ...` makes a
-  *conditional condition*: the generated wrapper calls `func` only under that
-  macro guard and returns false otherwise.
+- **Restrictions and conditions** form one condition table, restrictions
+  first. `index - name: func` under `restrictions:` is a predicate,
+  `bool func(coll_sig)`, usable both as an algorithm restriction and in JSON.
+  The index is its position in the table (gen_coll checks it) and its bit in
+  the masks tuning tools use, e.g. in tuning-file subtree names, so existing
+  indices must not change and new restrictions go at the end.
+  `name(thresh): func` under `conditions:` is a query, `int func(coll_sig)`,
+  and the condition is true when the value is at most the threshold; it is
+  for JSON only. A trailing `#if ...` makes a *conditional condition*: the
+  generated wrapper calls `func` only under that macro guard and returns
+  false otherwise.
 - **General algorithms** work on any `coll_type`. `MPIR_Coll_nb` runs the
   nonblocking form of a blocking collective and waits for it.
 - **`<coll>-<intra|inter>` sections** list algorithms. A name such as
@@ -325,7 +334,8 @@ barrier) is the example.
    any extra parameters.
 2. List it under its `<coll>-<intra|inter>` section in `coll_algorithms.txt`
    with its `restrictions`, `extra_params`, and `cvar_params`. Add any new
-   condition under `conditions:` and define its checker function.
+   predicate at the end of `restrictions:` with the next index (a threshold
+   condition under `conditions:`) and define its checker function.
 3. Add its value to the collective's algorithm CVAR in
    `src/mpi/coll/cvars.txt`.
 4. Reference it in `coll_selection.json` on branches where its restrictions
