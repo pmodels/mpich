@@ -91,6 +91,11 @@ bcast-intra:
       `not_inplace`). Every restriction is then a condition that holds, so
       the algorithms allowed under a set of true conditions are also
       allowed under any larger set. JSON trees can still negate (`!inplace`).
+    - `inner`: for a compositional algorithm, the collectives it calls
+      through the selection, as `<section>@<communicator>` (e.g.
+      `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
+      Tuning tools use it to tune the algorithm after those collectives;
+      gen_coll only checks the names.
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
       forced by CVAR. The CVAR's type is also the parameter's type in the

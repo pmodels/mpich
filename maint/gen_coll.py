@@ -19,6 +19,7 @@ def main():
     #   - G.conditions: a list of conditions that can be used as restrictions and in JSON tuning files
     #   - G.algos:      a two level array: [func-commkind][algo]
     load_coll_algos("src/mpi/coll/coll_algorithms.txt")
+    check_inner()
     # Loading the collective CVARs, for the types of the algorithm parameters -
     #   - G.cvars:      {name: {'type': type, 'enum': [names]}}
     load_cvars("src/mpi/coll")
@@ -624,6 +625,21 @@ def load_cvar_file(path):
                     cvar['enum'].append(RE.m.group(1))
             elif RE.match(r'\s*type\s*:\s*(\w+)', line):
                 cvar['type'] = RE.m.group(1)
+
+def check_inner():
+    """The "inner" key: <section>@<communicator>, an existing section and a known communicator."""
+    for func_commkind, algo_list in G.algos.items():
+        for algo in algo_list:
+            if "inner" not in algo:
+                continue
+            for item in algo["inner"].replace(' ', '').split(','):
+                if not RE.match(r'([\w-]+)@(\w+)$', item):
+                    raise Exception("%s %s: inner %s is not <section>@<communicator>" % (func_commkind, algo['name'], item))
+                section, comm = RE.m.group(1), RE.m.group(2)
+                if section not in G.algos:
+                    raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, section))
+                if comm not in ("node_comm", "node_roots_comm"):
+                    raise Exception("%s %s: inner %s: unknown communicator %s" % (func_commkind, algo['name'], item, comm))
 
 def load_coll_algos(algo_txt):
     G.algos = {}

@@ -26,7 +26,9 @@ cvars:
       description : |-
         Variable to control what the MPI library should do if the
         user-specified collective algorithm does not work for the
-        arguments passed in by the user.
+        arguments passed in by the user. Calls on internal
+        sub-communicators (e.g. the node communicators of a
+        compositional algorithm) always fall back silently.
         error   - throw an error
         silent  - silently fallback to the internally selected algorithm
 
@@ -423,8 +425,11 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
-            /* Error or Fall-thru */
-            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
+            /* Error or Fall-thru. An inner call of a compositional algorithm (on an internal
+             * sub-communicator) falls through, so that forcing e.g. smp does not fail on the
+             * inner calls that the same CVAR also reaches. */
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error &&
+                !(coll_sig->comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM)) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nosupport");
             }
         }
