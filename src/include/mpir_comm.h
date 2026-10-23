@@ -253,7 +253,10 @@ struct MPIR_Comm {
 #define MPIR_COMM_HIERARCHY__SINGLE_NODE 0x2
 #define MPIR_COMM_HIERARCHY__NODE_CONSECUTIVE 0x4       /* ranks are ordered by nodes */
 #define MPIR_COMM_HIERARCHY__NODE_BALANCED    0x8       /* same number of ranks on every node */
-#define MPIR_COMM_HIERARCHY__PARENT      0x10   /* has node_comm and node_roots_comm */
+#define MPIR_COMM_HIERARCHY__PARENT      0x10   /* spans several nodes, with node_comm and
+                                                 * node_roots_comm: hierarchical algorithms
+                                                 * apply. Code that needs a subcomm checks
+                                                 * node_comm / node_roots_comm directly. */
 
 #define MPIR_is_self_comm(comm) \
     ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \
