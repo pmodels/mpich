@@ -8,12 +8,23 @@
 
 #include "csel_json.h"
 
+/* "dispatch=<prefix>(<bits>)": continue in the subtree "<prefix>-<m>", m the restrictions (in hex)
+ * among bits that hold. idx[] has one subtree per combination of the bits, resolved when the file
+ * is loaded: the subtree of the combination, or of its largest subset that has one. */
+typedef struct MPIR_Csel_dispatch {
+    unsigned bits;
+    int nbits;
+    int pos[32];                /* bit positions of bits, low to high */
+    int idx[];                  /* 1 << nbits subtree indices, by compressed mask */
+} MPIR_Csel_dispatch_s;
+
 typedef struct MPIR_Csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
             int idx;
         } call;
+        MPIR_Csel_dispatch_s *dispatch;
         struct {
             MPIR_Csel_coll_type_e coll_type;
         } collective;

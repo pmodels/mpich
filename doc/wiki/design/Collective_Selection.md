@@ -132,6 +132,7 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 | `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
 | `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
+| `"dispatch=bcast-intra(0x820)"` | A string value in place of an object: evaluate the restrictions whose bits are in the mask (here `hierarchical` and `MPIDI_CH4_release_gather`) in one call, `MPIR_Csel_restriction_mask`, and continue in the subtree `bcast-intra-<mask that holds, in hex>`, e.g. `bcast-intra-800`. A combination without a subtree uses that of its largest subset (fewer bits; between equal counts, the lower mask), down to `bcast-intra-0`, which must exist. |
 | `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
@@ -169,6 +170,10 @@ The file is a dictionary of named subtrees:
 - A file with no `name=` keys is loaded as a single tree named `main`.
 - `call=` targets are resolved by name at search time, so a subtree replaced
   by the user file is the one used.
+- `dispatch=` builds its table of subtrees, one per combination of its bits,
+  when the file is loaded, from the subtree names known then; a later file
+  that replaces one of those subtrees is used, but a subtree name added only
+  by a later file is not.
 
 An algorithm leaf lists every non-constant parameter in its `extra_params`
 as `"name": value`, and nothing else. The value's type follows the type of the

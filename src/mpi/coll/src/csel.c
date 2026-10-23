@@ -131,6 +131,76 @@ static int parse_condition(const MPII_Csel_json_s * obj, MPIR_Csel_node_s * node
     return MPII_Csel_json_error(obj, "unknown condition");
 }
 
+/* "dispatch=<prefix>(<bits>)", e.g. "dispatch=bcast-intra(0x820)": a table of the subtree for
+ * every combination of the restriction bits, "<prefix>-<mask in hex>" or that of its largest
+ * subset that exists (fewer bits; between equal counts, the lower mask) */
+static int parse_dispatch(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
+{
+    const char *str = obj->u.str + strlen("dispatch=");
+    const char *lp = strchr(str, '(');
+    int len = lp ? (int) (lp - str) : 0;
+    char *end = NULL;
+    unsigned long bits = lp ? strtoul(lp + 1, &end, 0) : 0;
+    if (len == 0 || len >= CSEL_MAX_NAME - 10 || !end || strcmp(end, ")") != 0 || bits > 0xffffffff) {
+        return MPII_Csel_json_error(obj, "expect \"dispatch=<prefix>(<restriction bits>)\"");
+    }
+
+    int pos[32], nbits = 0;
+    for (int k = 0; k < 32; k++) {
+        if (bits & (1ul << k)) {
+            pos[nbits++] = k;
+        }
+    }
+    if (nbits > 16) {
+        return MPII_Csel_json_error(obj, "dispatch on more than 16 restrictions");
+    }
+
+    MPIR_Csel_dispatch_s *d = MPL_malloc(sizeof(*d) + (sizeof(int) << nbits), MPL_MEM_COLL);
+    d->bits = (unsigned) bits;
+    d->nbits = nbits;
+    memcpy(d->pos, pos, sizeof(pos));
+    for (int c = 0; c < (1 << nbits); c++) {
+        unsigned m = 0;
+        for (int j = 0; j < nbits; j++) {
+            if (c & (1 << j)) {
+                m |= 1u << pos[j];
+            }
+        }
+        /* every subset s of m, from m down to 0 */
+        int best = -1, best_count = -1;
+        unsigned s = m;
+        while (true) {
+            char name[CSEL_MAX_NAME];
+            snprintf(name, sizeof(name), "%.*s-%x", len, str, s);
+            int idx = csel_name_to_idx(name);
+            int count = 0;
+            for (unsigned b = s; b; b &= b - 1) {
+                count++;
+            }
+            if (idx >= 0 && count >= best_count) {
+                best = idx;
+                best_count = count;
+            }
+            if (s == 0) {
+                break;
+            }
+            s = (s - 1) & m;
+        }
+        if (best < 0) {
+            MPL_free(d);
+            return MPII_Csel_json_error(obj,
+                                        "no subtree <prefix>-0 for a dispatch to fall back to");
+        }
+        d->idx[c] = best;
+    }
+
+    MPIR_Csel_node_s *tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
+    tmp->type = CSEL_NODE_TYPE__OPERATOR__DISPATCH;
+    tmp->u.dispatch = d;
+    *node_out = tmp;
+    return MPI_SUCCESS;
+}
+
 static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -144,9 +214,15 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
         return MPI_SUCCESS;
     }
 
+    if (obj->type == MPII_CSEL_JSON_STRING && strncmp(obj->u.str, "dispatch=", 9) == 0) {
+        return parse_dispatch(obj, node_out);
+    }
+
     if (obj->type != MPII_CSEL_JSON_OBJECT) {
         if (obj->type != MPII_CSEL_JSON_STRING || strncmp(obj->u.str, "call=", 5) != 0) {
-            return MPII_Csel_json_error(obj, "expect an object, a \"call=\" string, or \"error\"");
+            return MPII_Csel_json_error(obj,
+                                        "expect an object, a \"call=\" or \"dispatch=\" string, "
+                                        "or \"error\"");
         }
 
         int idx = csel_name_to_idx(obj->u.str + 5);
@@ -414,6 +490,10 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level)
         printf("ANY\n");
     } else if (node->type == CSEL_NODE_TYPE__ERROR) {
         printf("ERROR\n");
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__CALL) {
+        printf("call: subtree %d\n", node->u.call.idx);
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__DISPATCH) {
+        printf("dispatch: restrictions 0x%x\n", node->u.dispatch->bits);
     } else {
         if (!node->u.condition.negate) {
             if (!node->u.condition.thresh) {
@@ -457,6 +537,20 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
                 }
                 node = csel_get_tree_by_idx(node->u.call.idx);
                 break;
+
+            case CSEL_NODE_TYPE__OPERATOR__DISPATCH:{
+                    if (++ncalls > utarray_len(csel_subtrees)) {
+                        return NULL;
+                    }
+                    MPIR_Csel_dispatch_s *d = node->u.dispatch;
+                    unsigned m = MPIR_Csel_restriction_mask(coll_sig, d->bits);
+                    int c = 0;
+                    for (int j = 0; j < d->nbits; j++) {
+                        c |= ((m >> d->pos[j]) & 1u) << j;
+                    }
+                    node = csel_get_tree_by_idx(d->idx[c]);
+                    break;
+                }
 
             case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
                 if (node->u.collective.coll_type == coll_sig->coll_type)
@@ -502,6 +596,9 @@ static void free_tree(MPIR_Csel_node_s * node)
 {
     if (node->type == CSEL_NODE_TYPE__CONTAINER) {
         MPL_free(node->u.container);
+        MPL_free(node);
+    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__DISPATCH) {
+        MPL_free(node->u.dispatch);
         MPL_free(node);
     } else {
         if (node->success)
