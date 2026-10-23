@@ -487,20 +487,15 @@ def dump_MPIR_Coll_check_algo_restriction():
     G.out.append("")
     def dump_check_restriction(restriction):
         r = restriction
-        negate = False
-        if restriction.startswith('!'):
-            r = restriction[1:]
-            negate = True
+        if r.startswith('!'):
+            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition (e.g. not_inplace)" % r)
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
         if r in G.conditions:
             # We assume we can directly call conditional condition since we are inside the algorithm macro_guard
             cond = "%s(coll_sig)" % get_condition_function(r)
-            if negate:
-                G.out.append("    if (%s) return false;" % cond)
-            else:
-                G.out.append("    if (!%s) return false;" % cond)
+            G.out.append("    if (!%s) return false;" % cond)
         else:
             raise Exception("Restriction %s not listed" % restriction)
 

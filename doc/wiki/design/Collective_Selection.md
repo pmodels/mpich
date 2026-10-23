@@ -86,7 +86,11 @@ bcast-intra:
   `binomial` expands to the function `MPIR_Bcast_intra_binomial` unless
   `func_name` gives one. Attribute keys:
     - `restrictions`: conditions that must hold for the algorithm to run.
-      Prefix with `!` to negate. Threshold conditions are not allowed here.
+      Threshold conditions and negation are not allowed here; a restriction
+      that needs a condition to be false names its own condition (e.g.
+      `not_inplace`). Every restriction is then a condition that holds, so
+      the algorithms allowed under a set of true conditions are also
+      allowed under any larger set. JSON trees can still negate (`!inplace`).
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
       forced by CVAR. The CVAR's type is also the parameter's type in the
