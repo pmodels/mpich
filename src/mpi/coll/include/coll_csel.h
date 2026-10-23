@@ -54,6 +54,25 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Csel_comm_size(MPIR_Csel_coll_sig_s * coll_sig
     return coll_sig->comm_ptr->local_size;
 }
 
+/* the number of nodes the comm spans */
+MPL_STATIC_INLINE_PREFIX int MPIR_Csel_num_nodes(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    MPIR_Comm *comm = coll_sig->comm_ptr;
+    MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
+    return comm->num_external;
+}
+
+/* ranks per node, averaged over the nodes (rounded down): the same on every rank, also when
+ * nodes have different numbers of ranks */
+MPL_STATIC_INLINE_PREFIX int MPIR_Csel_ppn(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    MPIR_Comm *comm = coll_sig->comm_ptr;
+    MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
+    return comm->local_size / comm->num_external;
+}
+
 #define COLL_TYPE_ALL_CASE(NAME) \
     case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
     case MPIR_CSEL_COLL_TYPE__INTER_  ## NAME: \

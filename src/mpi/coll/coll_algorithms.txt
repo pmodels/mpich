@@ -86,6 +86,8 @@ conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
     avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
     total_msg_size(thresh): MPIR_Csel_total_msg_size
+    num_nodes(thresh):      MPIR_Csel_num_nodes
+    ppn(thresh):            MPIR_Csel_ppn
 
 # ----
 general:
