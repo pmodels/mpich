@@ -62,6 +62,9 @@ struct swap_buf {
     void *raw;
 };
 
+static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
+                        MPII_Csel_container_s * cnt);
 static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs);
 static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
                           struct swap_buf *swaps);
@@ -106,14 +109,49 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
 
 /* General algorithm: swap the device buffers for host buffers, and continue in the auto
  * tree. The swap clears the gpu flags, so the auto tree cannot select
- * buffer_swap again.
+ * buffer_swap again. */
+int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* a tree that selects buffer_swap where gpu does not hold would loop */
+    MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU), mpi_errno, MPI_ERR_OTHER,
+                        "**nosupport");
+
+    mpi_errno = swap_and_run(coll_sig, run_auto, me);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* For the algorithms with gpu_swap in coll_algorithms.txt, which can't work on device buffers:
+ * their generated wrapper calls this when the gpu flag is set, with itself as fn. The swap
+ * clears the flag, so fn then runs the algorithm on the host buffers. */
+int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
+                       MPIR_Coll_algo_fn fn)
+{
+    MPIR_Assert(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU);
+    return swap_and_run(coll_sig, fn, cnt);
+}
+
+static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
+{
+    return MPIR_Coll_run_auto(coll_sig);
+}
+
+/* Swaps the device buffers for host buffers, clears the gpu flags, and calls
+ * fn, which either selects (run_auto) or is an algorithm.
  *
  * A blocking collective copies in, runs, and copies out inline. For nonblocking and persistent
- * collectives, auto only builds the schedule, so the copies are added to the schedule before
+ * collectives, fn only builds the schedule, so the copies are added to the schedule before
  * it starts: the copy-in at the front and the copy-out at the back. A persistent schedule
  * replays them on every start. The schedule owns the host buffers and frees them with
  * itself. */
-int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
+                        MPII_Csel_container_s * cnt)
 {
     int mpi_errno = MPI_SUCCESS;
     struct coll_bufs bufs;
@@ -122,9 +160,6 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
     bufs.n = 0;
     memset(swaps, 0, sizeof(swaps));
 
-    /* a tree that selects buffer_swap where gpu does not hold would loop */
-    MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU), mpi_errno, MPI_ERR_OTHER,
-                        "**nosupport");
     coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU | MPIR_COLL_SIG_FLAG__GPU_COLL);
 
     /* blocking coll_type is even */
@@ -151,7 +186,7 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
         }
     }
 
-    mpi_errno = MPIR_Coll_run_auto(coll_sig);
+    mpi_errno = fn(coll_sig, cnt);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (is_blocking) {

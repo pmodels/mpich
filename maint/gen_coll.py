@@ -139,6 +139,8 @@ def dump_algo_cnt_fns():
 
     G.out.append("")
     for algo in G.algo_list:
+        if algo["func-commkind"] == 'general' and 'gpu_swap' in algo:
+            raise Exception("%s: gpu_swap only applies to the algorithms of a collective" % algo['name'])
         if algo["func-commkind"] != 'general':
             func_name, commkind = algo['func-commkind'].split("-")
             if func_name.startswith('i'):
@@ -156,6 +158,11 @@ def dump_algo_cnt_fns():
                 G.out.append("#if %s" % algo['macro_guard'])
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
+            if algo.get('gpu_swap') == '1':
+                # the swap clears the gpu flag, so the second call runs the algorithm
+                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
+                G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
+                dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
             dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))

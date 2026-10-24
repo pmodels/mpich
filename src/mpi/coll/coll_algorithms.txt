@@ -58,6 +58,11 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
+#   * gpu_swap:
+#         1 for an algorithm that can't work on device buffers. When the gpu restriction
+#         holds, its generated wrapper swaps the buffers for host buffers first,
+#         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
+#         without it must work on device buffers.
 #   * inner:
 #         The collectives a compositional algorithm calls through the selection, as a
 #         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The

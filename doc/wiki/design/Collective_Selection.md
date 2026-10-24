@@ -102,6 +102,9 @@ bcast-intra:
       `not_inplace`). Every restriction is then a condition that holds, so
       the algorithms allowed under a set of true conditions are also
       allowed under any larger set. JSON trees can still negate (`!inplace`).
+    - `gpu_swap: 1`: for an algorithm that can't work on device buffers.
+      When the `gpu` restriction holds, its generated wrapper swaps the
+      buffers for host buffers first (see "GPU buffers" below).
     - `inner`: for a compositional algorithm, the collectives it calls
       through the selection, as `<section>@<communicator>` (e.g.
       `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
@@ -426,6 +429,16 @@ collective:
     "any": "call=auto"
 }
 ```
+
+An algorithm with `gpu_swap: 1` gets the same swap for itself: its
+generated `_cnt` wrapper calls `MPIR_Coll_gpu_swap` when the `gpu` flag is
+set, which swaps the buffers, clears the flags and calls the wrapper again,
+now running the algorithm. Host calls only test the flag. Every other
+algorithm must work on device buffers; most do through yaksa, and the
+shared CPU step, `MPIR_Reduce_local` with a builtin op that yaksa can't run,
+swaps its two operands to host memory itself. Calls that skip the algorithm
+table (`MPIR_*_fallback`, one algorithm calling another directly) don't get
+the wrapper.
 
 For nonblocking and persistent collectives, `auto` only builds the
 schedule, which the generated `_impl` starts afterwards. `buffer_swap` adds
