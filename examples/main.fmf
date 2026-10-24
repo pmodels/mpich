@@ -1,0 +1,16 @@
+/simple:
+  summary: Simple example tests
+  description: |
+    These are just simple smoke test for the examples to check if they compile
+    and execute
+  test: |
+    pwd
+    mpicc -o ${example} ${example}.c
+    mpiexec -n 2 ./${example}
+
+  /cpi:
+    environment:
+      example: cpi
+  /hellow:
+    environment:
+      example: hellow
