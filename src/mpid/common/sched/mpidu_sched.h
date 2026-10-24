@@ -138,6 +138,7 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 int MPIDU_Sched_free(MPIR_Sched_t s);
 int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
+void MPIDU_Sched_add_buffer(MPIR_Sched_t s, void *buf);
 int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
@@ -152,5 +153,6 @@ int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
 int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,
                      MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 int MPIDU_Sched_barrier(MPIR_Sched_t s);
+int MPIDU_Sched_move_to_front(MPIR_Sched_t s, int n);
 
 #endif /* MPIDU_SCHED_H_INCLUDED */

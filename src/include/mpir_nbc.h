@@ -60,6 +60,8 @@ int MPIR_Sched_free(MPIR_Sched_t s);
 int MPIR_Sched_reset(MPIR_Sched_t s);
 /* allocate the state buffer associated with the sched. It will be freed by MPIR_Sched_free */
 void *MPIR_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
+/* hand a buffer allocated with MPL_malloc to the sched. It will be freed by MPIR_Sched_free */
+void MPIR_Sched_add_buffer(MPIR_Sched_t s, void *buf);
 /* starts the sched and gives you back a request pointer in (*req).
  *
  * comm should be the primary (user) communicator with which this collective is
@@ -86,6 +88,8 @@ int MPIR_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
 int MPIR_Sched_barrier(MPIR_Sched_t s);
+/* before the sched starts: move the last n entries to the front, followed by a barrier */
+int MPIR_Sched_move_to_front(MPIR_Sched_t s, int n);
 
 /* A convenience macro for the extremely common case that "mpi_errno" is the
  * variable used for tracking error state and MPIR_ERR_POP is needed.  This

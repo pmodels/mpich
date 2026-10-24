@@ -16,6 +16,7 @@
 #define MPIR_Sched_free MPIDU_Sched_free
 #define MPIR_Sched_reset MPIDU_Sched_reset
 #define MPIR_Sched_alloc_state MPIDU_Sched_alloc_state
+#define MPIR_Sched_add_buffer MPIDU_Sched_add_buffer
 #define MPIR_Sched_start MPIDU_Sched_start
 #define MPIR_Sched_send MPIDU_Sched_send
 #define MPIR_Sched_pt2pt_send MPIDU_Sched_pt2pt_send
@@ -26,5 +27,6 @@
 #define MPIR_Sched_reduce MPIDU_Sched_reduce
 #define MPIR_Sched_copy MPIDU_Sched_copy
 #define MPIR_Sched_barrier MPIDU_Sched_barrier
+#define MPIR_Sched_move_to_front MPIDU_Sched_move_to_front
 
 #endif /* MPID_SCHED_H_INCLUDED */
