@@ -184,8 +184,8 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(base, &attr);
-        if (MPL_gpu_attr_is_dev(&attr)) {
-            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_strict_dev(&attr)) {
+        if (!MPL_gpu_attr_is_host(&attr)) {
+            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_dev(&attr)) {
                 mpi_errno =
                     MPIDI_OFI_register_memory(base, len, &attr, ctx_idx, MPIDI_OFI_WIN(win).mr_key,
                                               &MPIDI_OFI_WIN(win).mr);
@@ -944,7 +944,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     int rc = 0, allrc = 0;
     struct fid_mr *mr = NULL;
     /* device buffers are not currently supported */
-    if (MPIR_GPU_query_pointer_is_dev(base))
+    if (!MPIR_GPU_query_pointer_is_host(base))
         rc = -1;
     else {
         MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,   /* In:  Domain Object */

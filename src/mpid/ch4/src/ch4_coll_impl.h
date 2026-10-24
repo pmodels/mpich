@@ -271,7 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if (MPL_gpu_attr_is_strict_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
+    if (MPL_gpu_attr_is_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
         if (host_buffer != NULL) {
             host_buffer = (char *) host_buffer - shift;
@@ -334,7 +334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if (MPL_gpu_attr_is_strict_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
+    if (MPL_gpu_attr_is_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
         if (host_buffer != NULL) {
             host_buffer = (char *) host_buffer - shift;
@@ -410,7 +410,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if (MPL_gpu_attr_is_strict_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
+    if (MPL_gpu_attr_is_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
         if (host_buffer != NULL) {
             host_buffer = (char *) host_buffer - shift;
@@ -507,7 +507,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
     /* only node leaders need to allocate a host buffer */
-    if (MPL_gpu_attr_is_strict_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
+    if (MPL_gpu_attr_is_dev(&attr) && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
         && comm->node_roots_comm != NULL) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
         if (host_buffer != NULL) {
@@ -579,7 +579,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if ((MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) &&
+    if ((MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) &&
         (size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ)) {
         MPIDI_Coll_host_buffer_genq_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
                                           &host_recvbuf, send_attr, recv_attr, shift);
@@ -680,7 +680,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if ((MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) &&
+    if ((MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) &&
         (size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ)) {
         MPIDI_Coll_host_buffer_genq_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
                                           &host_recvbuf, send_attr, recv_attr, shift);
@@ -735,7 +735,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
 
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
-    if ((MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) &&
+    if ((MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) &&
         (size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ)) {
         MPIDI_Coll_host_buffer_genq_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf,
                                           &host_recvbuf, send_attr, recv_attr, shift);

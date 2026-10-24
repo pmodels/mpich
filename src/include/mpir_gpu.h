@@ -108,15 +108,15 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
     return false;
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_strict_dev(const void *ptr)
+MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_host(const void *ptr)
 {
     if (ENABLE_GPU && ptr != NULL) {
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(ptr, &attr);
-        return MPL_gpu_attr_is_strict_dev(&attr);
+        return MPL_gpu_attr_is_host(&attr);
     }
 
-    return false;
+    return true;
 }
 
 /* gpu registration or pinning has huge latency (~500us), thus the following
