@@ -768,7 +768,7 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
     *host_ptr_out = dev_ptr;    /* default: unchanged */
 
 #ifdef MPL_HAVE_ZE
-    if (attr->type != MPL_GPU_POINTER_DEV) {
+    if (!MPL_gpu_attr_is_dev(attr)) {
         goto fn_exit;
     }
     if (data_sz > MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
