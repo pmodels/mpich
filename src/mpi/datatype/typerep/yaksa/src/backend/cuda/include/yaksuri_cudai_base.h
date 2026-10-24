@@ -24,7 +24,7 @@ typedef struct cudai_stream_s {
 } cudai_stream;
 
 typedef struct {
-    int ndevices;
+    unsigned ndevices;
     cudai_stream *streams;      /* array of lazily created streams, one for each device */
     int **p2p;                  /* p2p[sdev][ddev] */
 } yaksuri_cudai_global_s;
