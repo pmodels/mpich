@@ -316,13 +316,13 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         }
 
         MPL_gpu_copy_direction_t dir;
-        if (send_attr->type == MPL_GPU_POINTER_DEV) {
-            if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_dev(send_attr)) {
+            if (MPL_gpu_attr_is_dev(recv_attr)) {
                 dir = MPL_GPU_COPY_D2D_OUTGOING;
             } else {
                 dir = MPL_GPU_COPY_D2H;
             }
-        } else if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+        } else if (MPL_gpu_attr_is_dev(recv_attr)) {
             dir = MPL_GPU_COPY_H2D;
         } else {
             dir = MPL_GPU_COPY_DIRECTION_NONE;

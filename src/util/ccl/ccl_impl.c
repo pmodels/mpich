@@ -16,7 +16,7 @@ int MPIR_CCL_check_both_gpu_bufs(const void *sendbuf, void *recvbuf)
     if (mpi_errno != MPL_SUCCESS) {
         return 0;
     }
-    if (recv_attr.type != MPL_GPU_POINTER_DEV) {
+    if (!MPL_gpu_attr_is_dev(&recv_attr)) {
         return 0;
     }
 
@@ -26,7 +26,7 @@ int MPIR_CCL_check_both_gpu_bufs(const void *sendbuf, void *recvbuf)
         if (mpi_errno != MPL_SUCCESS) {
             return 0;
         }
-        if (send_attr.type != MPL_GPU_POINTER_DEV) {
+        if (!MPL_gpu_attr_is_dev(&send_attr)) {
             return 0;
         }
     }
