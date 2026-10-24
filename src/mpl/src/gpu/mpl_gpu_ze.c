@@ -1563,14 +1563,6 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 
 int MPL_gpu_attr_is_dev(MPL_pointer_attr_t * attr)
 {
-    /* Treat all ZE allocations as device objects. This is because even host-registered memory
-     * are implemented as device objects in the driver. As such, these allocations don't work
-     * properly with XPMEM. */
-    return attr->type != MPL_GPU_POINTER_UNREGISTERED_HOST;
-}
-
-int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
-{
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
