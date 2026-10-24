@@ -142,6 +142,18 @@ EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_conve
 endif !BUILD_PROFILING_LIB
 endif BUILD_MPICH_LIB
 
+if BUILD_CUDA_MODULE
+# -------- libmpich_cuda: CUDA support loaded with dlopen at runtime --------
+#
+# With --enable-dlopen, the libraries above do not link with CUDA. The code
+# that does is collected from convenience libraries into this module.
+lib_LTLIBRARIES += lib/libmpich_cuda.la
+lib_libmpich_cuda_la_SOURCES =
+lib_libmpich_cuda_la_LDFLAGS = $(external_ldflags) -module -avoid-version -shared
+lib_libmpich_cuda_la_LIBADD = @mpl_cuda_lib@ @yaksa_cuda_lib@
+EXTRA_lib_libmpich_cuda_la_DEPENDENCIES = @mpl_cuda_lib@ @yaksa_cuda_lib@
+endif BUILD_CUDA_MODULE
+
 if BUILD_ABI_LIB
 abi_cppflags = -DMPICH_BUILD_MPI_ABI
 if BUILD_PROFILING_LIB

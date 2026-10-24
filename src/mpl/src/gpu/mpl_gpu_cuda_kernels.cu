@@ -3,8 +3,19 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mplconfig.h"
 #include "mpl_gpu_cuda.h"
 #include <stdio.h>
+
+#ifdef MPL_CUDA_DLOPEN
+/* built into a dlopen module, only accessed via MPL_gpu_cuda_ops */
+extern "C" {
+    void MPL_gpu_enqueue_trigger(volatile int *var, cudaStream_t stream)
+        __attribute__ ((visibility("hidden")));
+    void MPL_gpu_enqueue_wait(volatile int *var, cudaStream_t stream)
+        __attribute__ ((visibility("hidden")));
+}
+#endif
 
 __global__ void MPL_gpu_kernel_trigger(MPL_gpu_event_t *var)
 {
