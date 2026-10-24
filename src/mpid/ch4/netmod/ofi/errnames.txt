@@ -21,3 +21,7 @@
 **ofid_issue_trigger %s %s:OFI triggered ops issue failed (default nic=%s: %s)
 **ofid_poll:OFI poll failed
 **ofid_poll %s %s:OFI poll failed (default nic=%s: %s)
+**ofi_collop_failed:Error in libfabric collective operation: Fallback not possible.
+**ofi_coll_nosupport:MPIR_CVAR_CH4_OFI_ENABLE_COLL is set but no OFI provider supports FI_COLLECTIVE
+**ofi_coll_domain:MPIR_CVAR_CH4_OFI_ENABLE_COLL is set but the OFI provider could not open a domain with FI_COLLECTIVE (for libfabric rxm, FI_PROVIDER must also include off_coll)
+**ofi_coll_eq:MPIR_CVAR_CH4_OFI_ENABLE_COLL is set but the OFI collective event queue could not be opened or bound
