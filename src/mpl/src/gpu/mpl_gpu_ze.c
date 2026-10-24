@@ -1574,6 +1574,13 @@ int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
+int MPL_gpu_attr_is_host(MPL_pointer_attr_t * attr)
+{
+    /* Only unregistered host memory can be treated as host memory. Host-registered memory
+     * is implemented as a device object in the driver and doesn't work properly with XPMEM. */
+    return attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST;
+}
+
 int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
 {
     MPL_ze_device_entry_t *device_state1, *device_state2;

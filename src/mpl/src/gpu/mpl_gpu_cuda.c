@@ -129,6 +129,12 @@ int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
+int MPL_gpu_attr_is_host(MPL_pointer_attr_t * attr)
+{
+    return attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+        attr->type == MPL_GPU_POINTER_REGISTERED_HOST || attr->type == MPL_GPU_POINTER_MANAGED;
+}
+
 int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 {
     return dev1 == dev2;
