@@ -55,7 +55,17 @@ struct coll_bufs {
     case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
     case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME
 
+/* a swapped buffer: the user buffer, the host buffer, and the host buffer as allocated */
+struct swap_buf {
+    void *user;
+    void *host;
+    void *raw;
+};
+
 static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs);
+static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
+                          struct swap_buf *swaps);
+static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
                           MPI_Datatype recvtype, bool has_recv);
@@ -96,27 +106,32 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
 
 /* General algorithm: swap the device buffers for host buffers, and continue in the auto
  * tree. The swap clears the gpu flags, so the auto tree cannot select
- * buffer_swap again. */
+ * buffer_swap again.
+ *
+ * A blocking collective copies in, runs, and copies out inline. For nonblocking and persistent
+ * collectives, auto only builds the schedule, so the copies are added to the schedule before
+ * it starts: the copy-in at the front and the copy-out at the back. A persistent schedule
+ * replays them on every start. The schedule owns the host buffers and frees them with
+ * itself. */
 int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {
     int mpi_errno = MPI_SUCCESS;
     struct coll_bufs bufs;
-    void *user_bufs[MAX_COLL_BUFS] = { NULL };
+    struct swap_buf swaps[MAX_COLL_BUFS];
 
     bufs.n = 0;
+    memset(swaps, 0, sizeof(swaps));
 
     /* a tree that selects buffer_swap where gpu does not hold would loop */
     MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU), mpi_errno, MPI_ERR_OTHER,
                         "**nosupport");
     coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU | MPIR_COLL_SIG_FLAG__GPU_COLL);
 
-    /* FIXME: nonblocking and persistent collectives need the copies in the schedule. For
-     * now they run on the user buffers. Blocking coll_type is even. */
-    if (coll_sig->coll_type % 2 == 1) {
-        mpi_errno = MPIR_Coll_run_auto(coll_sig);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    }
+    /* blocking coll_type is even */
+    bool is_blocking = (coll_sig->coll_type % 2 == 0);
+    /* Nothing selects into an existing schedule yet: the nonblocking compositions are
+     * disabled. Swapping inside one would need the copies around the sub-call's steps only. */
+    MPIR_Assert(coll_sig->sched == NULL);
 
     /* the gpu flag is only set for the collectives get_coll_bufs describes */
     MPIR_Assertp(get_coll_bufs(coll_sig, &bufs));
@@ -126,11 +141,12 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
         if (!MPIR_GPU_query_pointer_is_dev(*b->field)) {
             continue;
         }
-        user_bufs[i] = *b->field;
-        *b->field = MPIR_alloc_buffer(b->count, b->datatype);
-        if (b->dir & COLL_BUF_READ) {
-            mpi_errno = MPIR_Localcopy(user_bufs[i], b->count, b->datatype,
-                                       *b->field, b->count, b->datatype);
+        swaps[i].user = *b->field;
+        swaps[i].host = alloc_host_buf(b->count, b->datatype, &swaps[i].raw);
+        *b->field = swaps[i].host;
+        if (is_blocking && (b->dir & COLL_BUF_READ)) {
+            mpi_errno = MPIR_Localcopy(swaps[i].user, b->count, b->datatype,
+                                       swaps[i].host, b->count, b->datatype);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -138,26 +154,129 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
     mpi_errno = MPIR_Coll_run_auto(coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
-    for (int i = 0; i < bufs.n; i++) {
-        struct coll_buf *b = &bufs.bufs[i];
-        if (user_bufs[i] && (b->dir & COLL_BUF_WRITE)) {
-            mpi_errno = MPIR_Localcopy(*b->field, b->count, b->datatype,
-                                       user_bufs[i], b->count, b->datatype);
-            MPIR_ERR_CHECK(mpi_errno);
+    if (is_blocking) {
+        for (int i = 0; i < bufs.n; i++) {
+            struct coll_buf *b = &bufs.bufs[i];
+            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
+                mpi_errno = MPIR_Localcopy(swaps[i].host, b->count, b->datatype,
+                                           swaps[i].user, b->count, b->datatype);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
+    } else {
+        mpi_errno = add_swap_steps(coll_sig, &bufs, swaps);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
-    for (int i = 0; i < MAX_COLL_BUFS; i++) {
-        if (user_bufs[i]) {
-            struct coll_buf *b = &bufs.bufs[i];
-            MPIR_gpu_host_free(*b->field, b->count, b->datatype);
-            *b->field = user_bufs[i];
+    for (int i = 0; i < bufs.n; i++) {
+        if (swaps[i].user) {
+            *bufs.bufs[i].field = swaps[i].user;
+            /* NULL once the schedule owns it */
+            MPL_free(swaps[i].raw);
         }
     }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* Adds the copy-in steps at the front of the schedule auto built, and the copy-out steps at
+ * the back after a barrier (normal) or fence (gentran), and hands the host buffers to the
+ * schedule. */
+static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
+                          struct swap_buf *swaps)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {
+        MPIR_Sched_t s = coll_sig->sched;
+        for (int i = 0; i < bufs->n; i++) {
+            if (swaps[i].user) {
+                MPIR_Sched_add_buffer(s, swaps[i].raw);
+                swaps[i].raw = NULL;
+            }
+        }
+
+        int n = 0;
+        for (int i = 0; i < bufs->n; i++) {
+            struct coll_buf *b = &bufs->bufs[i];
+            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
+                mpi_errno = MPIR_Sched_copy(swaps[i].user, b->count, b->datatype,
+                                            swaps[i].host, b->count, b->datatype, s);
+                MPIR_ERR_CHECK(mpi_errno);
+                n++;
+            }
+        }
+        mpi_errno = MPIR_Sched_move_to_front(s, n);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Sched_barrier(s);
+        MPIR_ERR_CHECK(mpi_errno);
+        for (int i = 0; i < bufs->n; i++) {
+            struct coll_buf *b = &bufs->bufs[i];
+            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
+                mpi_errno = MPIR_Sched_copy(swaps[i].host, b->count, b->datatype,
+                                            swaps[i].user, b->count, b->datatype, s);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    } else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {
+        MPIR_TSP_sched_t s = coll_sig->sched;
+        for (int i = 0; i < bufs->n; i++) {
+            if (swaps[i].user) {
+                MPIR_TSP_sched_add_buffer(s, swaps[i].raw);
+                swaps[i].raw = NULL;
+            }
+        }
+
+        for (int i = 0; i < bufs->n; i++) {
+            struct coll_buf *b = &bufs->bufs[i];
+            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
+                mpi_errno = MPIR_TSP_sched_localcopy_front(swaps[i].user, b->count, b->datatype,
+                                                           swaps[i].host, b->count, b->datatype, s);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+
+        mpi_errno = MPIR_TSP_sched_fence(s);
+        MPIR_ERR_CHECK(mpi_errno);
+        for (int i = 0; i < bufs->n; i++) {
+            struct coll_buf *b = &bufs->bufs[i];
+            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
+                int vtx_id;
+                mpi_errno = MPIR_TSP_sched_localcopy(swaps[i].host, b->count, b->datatype,
+                                                     swaps[i].user, b->count, b->datatype,
+                                                     s, 0, NULL, &vtx_id);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    } else {
+        /* MPIR_SCHED_REQUEST has no steps to add; nothing produces it for now */
+        MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* MPIR_alloc_buffer, plus the pointer as allocated, which it shifts by the datatype's lb */
+static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw)
+{
+    MPI_Aint extent, true_lb, true_extent;
+    MPIR_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+
+    MPI_Aint shift = true_lb;
+    if (count > 1 && extent < 0) {
+        shift -= (-extent) * (count - 1);
+    }
+
+    void *host_buf = MPIR_alloc_buffer(count, datatype);
+    *raw = (char *) host_buf + shift;
+    return host_buf;
 }
 
 /* Fills bufs with the buffers this rank uses. Returns false for the collectives it doesn't
