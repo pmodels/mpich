@@ -752,6 +752,7 @@ def dump_coll_impl(name, blocking_type):
             G.out.append("coll_sig.u.%s.%s = %s;" % (name, p['name'], p['name']))
 
     G.out.append("MPID_Init_coll_sig(&coll_sig);")
+    G.out.append("MPIR_Coll_sig_prepare_gpu(&coll_sig);")
 
     # Call csel
     G.out.append("")

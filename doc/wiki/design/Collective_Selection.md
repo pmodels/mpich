@@ -262,7 +262,8 @@ only the JSON subset the tree needs:
 
 ```
 MPI_Bcast
-  -> MPIR_Bcast_impl                 (generated) fill coll_sig, MPID_Init_coll_sig
+  -> MPIR_Bcast_impl                 (generated) fill coll_sig, MPID_Init_coll_sig,
+                                     MPIR_Coll_sig_prepare_gpu
      -> MPIR_Coll_json
         algorithm CVAR set?
           yes: restrictions pass? -> fill container from CVARs ------+
@@ -281,7 +282,9 @@ MPI_Bcast
 2. **Signature.** `_impl` fills a stack `coll_sig`: `coll_type`, `comm_ptr`,
    `flags` (`MPIR_COLL_SIG_FLAG__PERSISTENT` for `_init` calls), `tag`,
    `sched = NULL`, and the arguments. It then calls
-   `MPID_Init_coll_sig(&coll_sig)` so the device can add its own fields.
+   `MPID_Init_coll_sig(&coll_sig)` so the device can add its own fields, and
+   `MPIR_Coll_sig_prepare_gpu(&coll_sig)`, which queries the buffers this rank
+   uses and sets the GPU flags (see "GPU buffers" below).
 3. **CVAR.** `MPIR_Coll_json` reads the algorithm CVAR through
    `MPIR_Coll_cvar_table[coll_type]`, a table of pointers to the CVARs, so a
    value written with `MPI_T_cvar_write` applies from the next call; 0 means
@@ -381,6 +384,29 @@ barrier) is the example.
 - **Signature hook.** Every `_impl` calls `MPID_Init_coll_sig(coll_sig)` after
   the generic fields are set. CH3 and CH4 define it as an empty inline today.
   New boolean attributes go in the `flags` bit mask.
+
+## GPU buffers
+
+`MPIR_Coll_sig_prepare_gpu` runs before the selection, when GPU support is
+on. It queries the buffers this rank uses in the call (e.g. a rooted
+collective's recvbuf only at the root, no sendbuf with `MPI_IN_PLACE`) and
+sets two flags, which two restrictions read:
+
+| Restriction | Flag | Holds when |
+|---|---|---|
+| 12 `gpu` | `MPIR_COLL_SIG_FLAG__GPU` | a buffer is device memory (`MPL_gpu_attr_is_dev`) |
+| 13 `gpu_coll` | `MPIR_COLL_SIG_FLAG__GPU_COLL` | every buffer is device memory (`MPL_gpu_attr_is_dev`) and `MPIR_CVAR_ENABLE_GPU_COLL` is on |
+
+Buffers that are neither host nor device memory, such as registered host or
+managed memory, count as host memory here: the CPU can access them, so the
+collective algorithms can use them directly.
+`gpu` is a local fact. `gpu_coll` is for algorithms that need device buffers
+on every rank; no collective check is affordable in the selection, so the
+CVAR is the user's promise that each call passes either host buffers on all
+ranks or device buffers on all ranks. Intercomm, alltoallw and neighborhood
+collectives are not described yet and never set the flags. Neither flag
+changes what any algorithm does: an algorithm without the `gpu` restriction
+must still work on device buffers.
 
 ## Adding an algorithm
 

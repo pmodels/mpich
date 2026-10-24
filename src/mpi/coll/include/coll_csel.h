@@ -354,6 +354,18 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_node_canonical(MPIR_Csel_coll_sig_s *
     return MPII_Comm_is_node_canonical(coll_sig->comm_ptr);
 }
 
+/* a buffer this rank uses is device memory */
+MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_gpu(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    return coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU;
+}
+
+/* every buffer this rank uses is device memory, and the user asserts all ranks do the same */
+MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_gpu_coll(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    return coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_COLL;
+}
+
 #include "coll_autogen.h"
 
 #endif /* COLL_CSEL_H_INCLUDED */

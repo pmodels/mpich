@@ -86,6 +86,9 @@ restrictions:
     10 - block_regular:            MPIR_Csel_block_regular
     # conditional conditions - only call the condition function under macro_guard
     11 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+    # set by MPIR_Coll_sig_prepare_gpu before the selection
+    12 - gpu:                      MPIR_Csel_is_gpu
+    13 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size

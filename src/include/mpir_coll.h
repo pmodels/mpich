@@ -38,6 +38,10 @@ typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_con
 /* Define bits for coll_sig->flags */
 #define MPIR_COLL_SIG_FLAG__PERSISTENT  0x1
 #define MPIR_COLL_SIG_FLAG__CVAR        0x2
+#define MPIR_COLL_SIG_FLAG__GPU         0x4     /* a local buffer is device memory */
+#define MPIR_COLL_SIG_FLAG__GPU_COLL    0x8     /* local buffers are device memory, and
+                                                 * MPIR_CVAR_ENABLE_GPU_COLL asserts the same
+                                                 * for all ranks */
 
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;
