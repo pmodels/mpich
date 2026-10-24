@@ -40,7 +40,23 @@ include_HEADERS += \
 
 noinst_HEADERS += \
 	mpif_h/fortran_profile.h \
-	mpif_h/mpi_fortimpl.h
+	mpif_h/mpi_fortimpl.h \
+	mpif_h/mpifnoext.h
+
+# setbotf.f includes mpifnoext.h
+BUILT_SOURCES += mpif_h/mpifnoext.h
 
 endif BUILD_F77_BINDING
+
+# A version of mpif.h with no external commands, including declarations
+# such as `REAL*8 MPI_WTIME, PMPI_WTIME`. Filtering on `PMPI_` covers those
+# lines. It is valid in both fixed and free source form. It is used in
+# BLOCK DATA (setbotf.f) and in the mpi module (use_mpi).
+# NOTE: do not use extended regex to allow posix sed.
+mpif_h/mpifnoext.h: mpif_h/mpif.h
+	rm -f $@
+	sed -e 's/^C/\!/g' -e '/EXTERNAL/d' \
+	-e '/PMPI_/d' mpif_h/mpif.h > $@
+
+CLEANFILES += mpif_h/mpifnoext.h
 
