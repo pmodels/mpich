@@ -198,7 +198,7 @@ int MPIDI_OFI_register_memory_and_bind(char *buf, size_t data_sz,
     void *bounds_base;
     uintptr_t bounds_len;
     MPL_gpu_buffer_id_t buffer_id;
-    if (MPL_gpu_attr_is_dev(attr)) {
+    if (!MPL_gpu_attr_is_host(attr)) {
         int mpl_err = MPL_gpu_get_buffer_bounds(buf, &bounds_base, &bounds_len);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_get_buffer_info");

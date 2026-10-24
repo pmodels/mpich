@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_rma_enabled(const void *ptr)
     if (ENABLE_GPU) {
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(ptr, &attr);
-        if (MPL_gpu_attr_is_dev(&attr)) {
+        if (!MPL_gpu_attr_is_host(&attr)) {
             if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_strict_dev(&attr)) {
                 return 1;
             } else
@@ -249,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     /* skip fi_inject path for GPU messages because this path can be
      * very slow */
     if (!sigreq && origin_contig && target_contig &&
-        (origin_bytes <= MPIDI_OFI_global.max_buffered_write && !MPL_gpu_attr_is_dev(&attr))) {
+        (origin_bytes <= MPIDI_OFI_global.max_buffered_write && MPL_gpu_attr_is_host(&attr))) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         MPIDI_OFI_win_cntr_incr(win);
         fi_addr_t dest = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);

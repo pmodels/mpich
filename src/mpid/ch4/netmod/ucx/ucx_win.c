@@ -50,7 +50,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
 
     /* As of ucx-1.10, mapping with a CUDA device buffer may be successful but
      * later RMA segfaults inside UCX. Thus, MPICH manually disables native RMA for device win buffer for now.*/
-    if (MPIR_GPU_query_pointer_is_dev(*base_ptr)) {
+    if (!MPIR_GPU_query_pointer_is_host(*base_ptr)) {
         status = UCS_ERR_UNSUPPORTED;
     } else {
         status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
