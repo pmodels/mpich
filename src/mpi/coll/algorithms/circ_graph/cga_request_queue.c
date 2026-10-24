@@ -95,7 +95,7 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     MPIR_Datatype_is_contig(datatype, &dt_contig);
 
     MPIR_GPU_query_pointer_attr(buf, &queue->attr);
-    queue->need_pack = (!dt_contig || MPL_gpu_attr_is_dev(&queue->attr));
+    queue->need_pack = (!dt_contig || !MPL_gpu_attr_is_host(&queue->attr));
 
     queue->comm = comm;
     queue->coll_attr = coll_attr;

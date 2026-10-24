@@ -71,7 +71,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     p->comm_ptr = comm_ptr;
     MPIR_Comm_add_ref(comm_ptr);
 
-    if (MPIR_GPU_query_pointer_is_dev(buf)) {
+    if (!MPIR_GPU_query_pointer_is_host(buf)) {
         MPI_Aint dt_size;
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
@@ -169,7 +169,7 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->status = status;
     MPIR_Comm_add_ref(comm_ptr);
 
-    if (MPIR_GPU_query_pointer_is_dev(buf)) {
+    if (!MPIR_GPU_query_pointer_is_host(buf)) {
         MPI_Aint dt_size;
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
@@ -245,7 +245,7 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
     p->comm_ptr = comm_ptr;
     MPIR_Comm_add_ref(comm_ptr);
 
-    if (MPIR_GPU_query_pointer_is_dev(buf)) {
+    if (!MPIR_GPU_query_pointer_is_host(buf)) {
         MPI_Aint dt_size;
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
@@ -319,7 +319,7 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->datatype = datatype;
     MPIR_Comm_add_ref(comm_ptr);
 
-    if (MPIR_GPU_query_pointer_is_dev(buf)) {
+    if (!MPIR_GPU_query_pointer_is_host(buf)) {
         MPI_Aint dt_size;
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
@@ -685,18 +685,18 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
 
     /* Buffer swap. We need additional temp buffer size for noncontig datatype */
     if (sendbuf == MPI_IN_PLACE) {
-        if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
+        if (!MPIR_GPU_query_pointer_is_host(recvbuf)) {
             p->host_recvbuf = MPIR_alloc_buffer(count, datatype);
             HOST_SWAP_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
                              is_contig, p->tmp_buf, p->data_sz);
         }
     } else {
         void *use_recvbuf = recvbuf;
-        if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
+        if (!MPIR_GPU_query_pointer_is_host(recvbuf)) {
             p->host_recvbuf = MPIR_alloc_buffer(count, datatype);
             use_recvbuf = p->host_recvbuf;
         }
-        if (MPIR_GPU_query_pointer_is_dev(sendbuf)) {
+        if (!MPIR_GPU_query_pointer_is_host(sendbuf)) {
             /* copy the sendbuf to recvbuf and do IN_PLACE allreduce in callback */
             p->sendbuf_is_dev = true;
             HOST_SWAP_STREAM(use_recvbuf, sendbuf, count, datatype, &gpu_stream,

@@ -22,7 +22,7 @@
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
-    p->is_device_buffer = MPIR_GPU_query_pointer_is_dev(MPIDIG_REQUEST(rreq, buffer));
+    p->is_device_buffer = !MPIR_GPU_query_pointer_is_host(MPIDIG_REQUEST(rreq, buffer));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
