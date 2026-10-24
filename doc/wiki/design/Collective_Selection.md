@@ -91,6 +91,8 @@ bcast-intra:
   false otherwise.
 - **General algorithms** work on any `coll_type`. `MPIR_Coll_nb` runs the
   nonblocking form of a blocking collective and waits for it.
+  `MPIR_Coll_buffer_swap` swaps GPU buffers for host buffers (see "GPU
+  buffers" below).
 - **`<coll>-<intra|inter>` sections** list algorithms. A name such as
   `binomial` expands to the function `MPIR_Bcast_intra_binomial` unless
   `func_name` gives one. Attribute keys:
@@ -407,6 +409,26 @@ ranks or device buffers on all ranks. Intercomm, alltoallw and neighborhood
 collectives are not described yet and never set the flags. Neither flag
 changes what any algorithm does: an algorithm without the `gpu` restriction
 must still work on device buffers.
+
+`MPIR_Coll_buffer_swap`, a general algorithm with restriction `gpu`, copies
+each device buffer into a host buffer (only the ones the
+collective reads; a v-collective's recvbuf is copied in too, to keep the gaps
+between blocks), points `coll_sig` at the host buffers, clears both flags and
+continues in the `auto` tree. Afterwards it copies the written buffers back
+and frees the host buffers. With the flags clear, `auto` cannot select it
+again; a tree that selects it where `gpu` does not hold gets an error. The
+default tree does not use it; a tuning file opts in, e.g. for every
+collective:
+
+```
+"name=main": {
+    "gpu": { "algorithm=MPIR_Coll_buffer_swap": {} },
+    "any": "call=auto"
+}
+```
+
+Nonblocking and persistent collectives are not swapped yet: for them it
+only clears the flags and continues in `auto` on the user buffers.
 
 ## Adding an algorithm
 

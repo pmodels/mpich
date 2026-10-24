@@ -101,8 +101,8 @@ cvars:
 
 int MPIR_Nbc_progress_hook_id = 0;
 
-MPIR_Csel_node_s *csel_tree_main;
-MPIR_Csel_node_s *csel_tree_auto;
+static MPIR_Csel_node_s *csel_tree_main;
+static MPIR_Csel_node_s *csel_tree_auto;
 
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
@@ -444,6 +444,12 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
     goto fn_exit;
 }
 
+/* run the auto tree, for general algorithms that continue the selection */
+int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    return MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
+}
+
 /* blocking collectives by calling its nonblocking forms */
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {
@@ -453,7 +459,7 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     MPIR_Assert(coll_sig->coll_type % 2 == 0);
     coll_sig->coll_type += 1;
 
-    mpi_errno = MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
+    mpi_errno = MPIR_Coll_run_auto(coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Request *req;

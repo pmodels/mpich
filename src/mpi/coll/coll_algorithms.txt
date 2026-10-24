@@ -100,6 +100,8 @@ conditions:
 # ----
 general:
     MPIR_Coll_nb
+    MPIR_Coll_buffer_swap
+        restrictions: gpu
 
 # ----
 barrier-intra:

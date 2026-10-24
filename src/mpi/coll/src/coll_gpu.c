@@ -94,6 +94,72 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
     }
 }
 
+/* General algorithm: swap the device buffers for host buffers, and continue in the auto
+ * tree. The swap clears the gpu flags, so the auto tree cannot select
+ * buffer_swap again. */
+int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct coll_bufs bufs;
+    void *user_bufs[MAX_COLL_BUFS] = { NULL };
+
+    bufs.n = 0;
+
+    /* a tree that selects buffer_swap where gpu does not hold would loop */
+    MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU), mpi_errno, MPI_ERR_OTHER,
+                        "**nosupport");
+    coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU | MPIR_COLL_SIG_FLAG__GPU_COLL);
+
+    /* FIXME: nonblocking and persistent collectives need the copies in the schedule. For
+     * now they run on the user buffers. Blocking coll_type is even. */
+    if (coll_sig->coll_type % 2 == 1) {
+        mpi_errno = MPIR_Coll_run_auto(coll_sig);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    /* the gpu flag is only set for the collectives get_coll_bufs describes */
+    MPIR_Assertp(get_coll_bufs(coll_sig, &bufs));
+
+    for (int i = 0; i < bufs.n; i++) {
+        struct coll_buf *b = &bufs.bufs[i];
+        if (!MPIR_GPU_query_pointer_is_dev(*b->field)) {
+            continue;
+        }
+        user_bufs[i] = *b->field;
+        *b->field = MPIR_alloc_buffer(b->count, b->datatype);
+        if (b->dir & COLL_BUF_READ) {
+            mpi_errno = MPIR_Localcopy(user_bufs[i], b->count, b->datatype,
+                                       *b->field, b->count, b->datatype);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+    mpi_errno = MPIR_Coll_run_auto(coll_sig);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int i = 0; i < bufs.n; i++) {
+        struct coll_buf *b = &bufs.bufs[i];
+        if (user_bufs[i] && (b->dir & COLL_BUF_WRITE)) {
+            mpi_errno = MPIR_Localcopy(*b->field, b->count, b->datatype,
+                                       user_bufs[i], b->count, b->datatype);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    for (int i = 0; i < MAX_COLL_BUFS; i++) {
+        if (user_bufs[i]) {
+            struct coll_buf *b = &bufs.bufs[i];
+            MPIR_gpu_host_free(*b->field, b->count, b->datatype);
+            *b->field = user_bufs[i];
+        }
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Fills bufs with the buffers this rank uses. Returns false for the collectives it doesn't
  * describe yet: intercomm, alltoallw, neighborhood, and v-collectives with negative
  * displacements. Those never set the gpu flags. */
