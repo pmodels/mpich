@@ -3756,16 +3756,16 @@ Enables verbose CH3 process-group output. It is used when a process group is cre
 
 Used in functions: `MPIDI_PG_Create`, `MPIDI_PG_Finalize`
 
-### MPIR_CVAR_CH3_PORT_RANGE
+### MPIR_CVAR_PORT_RANGE
 
-Sets the TCP port range used by the CH3 nemesis TCP listener and recognized by the Hydra process manager. It is used when Hydra checks environment settings for a requested port range and when the CH3 nemesis TCP netmod binds its listener socket while initializing TCP connectivity. The TCP listener validates that the lower bound is nonnegative and not greater than the upper bound before binding. When active, this CVAR sets the port-selection range for process-manager and MPICH TCP sockets.
+Sets the TCP port range used by the CH3 nemesis TCP listener, the CH3 sock channel, and the CH4 sock netmod, and recognized by the Hydra process manager. It is used when Hydra checks environment settings for a requested port range and when an MPI process binds its listener socket while initializing TCP connectivity. The listener validates that the lower bound is nonnegative and not greater than the upper bound before binding. When active, this CVAR sets the port-selection range for process-manager and MPICH TCP sockets.
 
 * 0:0 - default, bind the TCP listener to any available port.
 * low:high - bind the TCP listener to an available port in the requested inclusive range.
 
-Alternate name: MPIR_CVAR_PORTRANGE, MPIR_CVAR_PORT_RANGE
+Alternate name: MPIR_CVAR_PORTRANGE, MPIR_CVAR_CH3_PORT_RANGE, MPIR_CVAR_CH4_PORT_RANGE
 
-Used in functions: `check_environment`, `MPID_nem_tcp_listen`
+Used in functions: `check_environment`, `MPID_nem_tcp_listen`, `MPIDI_CH3I_Sock_listen`, `init_listener`
 
 ### MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD
 
