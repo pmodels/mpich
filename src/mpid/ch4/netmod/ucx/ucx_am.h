@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(data, &attr);
-    if (MPL_gpu_attr_is_dev(&attr)) {
+    if (!MPL_gpu_attr_is_host(&attr)) {
         /* Force packing of GPU buffer in host memory */
         dt_contig = 0;
     }

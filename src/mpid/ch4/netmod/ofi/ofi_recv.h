@@ -183,12 +183,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD &&
         MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
-        if (MPL_gpu_attr_is_strict_dev(&attr)) {
+        if (MPL_gpu_attr_is_dev(&attr)) {
             register_mem = true;
         }
     }
 
-    if (data_sz && MPL_gpu_attr_is_dev(&attr)) {
+    if (data_sz && !MPL_gpu_attr_is_host(&attr)) {
         MPIDI_OFI_register_am_bufs();
         if (!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) {
             /* FIXME: at this point, GPU data takes host-buffer staging

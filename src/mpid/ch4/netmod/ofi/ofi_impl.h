@@ -557,7 +557,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv_pack(uint64_t match_bits)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_rndv_need_pack(int dt_contig, MPL_pointer_attr_t * attr)
 {
     /* assume noncontig data or device data can benefit from pipelined packing/unpacking */
-    return (!dt_contig || MPL_gpu_attr_is_dev(attr));
+    return (!dt_contig || !MPL_gpu_attr_is_host(attr));
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(int contextid, int source, int tag)
@@ -790,7 +790,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
     mr_attr.requested_key = rkey;
     mr_attr.offset = 0;
     mr_attr.context = NULL;
-    if (MPL_gpu_attr_is_strict_dev(attr)) {
+    if (MPL_gpu_attr_is_dev(attr)) {
 #ifdef MPL_HAVE_CUDA
         mr_attr.iface = FI_HMEM_CUDA;
         mr_attr.device.cuda = MPL_gpu_get_dev_id_from_attr(attr);
@@ -855,7 +855,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, siz
         MPIR_GPU_query_pointer_attr(buffer, &attr_tmp);
         attr = &attr_tmp;
     }
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM && MPL_gpu_attr_is_strict_dev(attr)) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM && MPL_gpu_attr_is_dev(attr)) {
         mpi_errno = MPIDI_OFI_register_memory_and_bind((char *) buffer, size, attr, ctx_idx, &mr);
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
         if (mr != NULL) {

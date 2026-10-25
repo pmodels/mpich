@@ -301,10 +301,10 @@ int run(const char *arg)
         flush_type = FLUSH_TYPE__FLUSH_ALL;
     }
     if (MTestArgListGetInt_with_default(head, "flushlocal", 0)) {
-        flush_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL;
+        flush_local_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL;
     }
     if (MTestArgListGetInt_with_default(head, "flushlocalall", 0)) {
-        flush_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL;
+        flush_local_type = FLUSH_LOCAL_TYPE__FLUSH_LOCAL_ALL;
     }
     MTestArgListDestroy(head);
 

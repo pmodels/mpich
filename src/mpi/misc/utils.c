@@ -167,9 +167,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
         MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
 
-        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        if (MPL_gpu_attr_is_dev(&send_attr) && MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_malloc((void **) &buf, COPY_BUFFER_SZ, recv_attr.device);
-        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        } else if (MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_malloc_host((void **) &buf, COPY_BUFFER_SZ);
         } else {
             MPIR_CHKLMEM_MALLOC(buf, COPY_BUFFER_SZ);
@@ -212,9 +212,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             }
         }
 
-        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        if (MPL_gpu_attr_is_dev(&send_attr) && MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_free(buf);
-        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        } else if (MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_free_host(buf);
         }
     }
@@ -225,9 +225,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     return mpi_errno;
   fn_fail:
     if (buf) {
-        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        if (MPL_gpu_attr_is_dev(&send_attr) && MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_free(buf);
-        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
+        } else if (MPL_gpu_attr_is_dev(&send_attr) || MPL_gpu_attr_is_dev(&recv_attr)) {
             MPL_gpu_free_host(buf);
         }
     }
@@ -316,13 +316,13 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         }
 
         MPL_gpu_copy_direction_t dir;
-        if (send_attr->type == MPL_GPU_POINTER_DEV) {
-            if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_dev(send_attr)) {
+            if (MPL_gpu_attr_is_dev(recv_attr)) {
                 dir = MPL_GPU_COPY_D2D_OUTGOING;
             } else {
                 dir = MPL_GPU_COPY_D2H;
             }
-        } else if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+        } else if (MPL_gpu_attr_is_dev(recv_attr)) {
             dir = MPL_GPU_COPY_H2D;
         } else {
             dir = MPL_GPU_COPY_DIRECTION_NONE;
@@ -348,12 +348,12 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                 gpu_req->type = MPIR_NULL_REQUEST;
             }
         } else {
-            if (MPL_gpu_attr_is_strict_dev(send_attr)) {
+            if (MPL_gpu_attr_is_dev(send_attr)) {
                 dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
             }
 
             if (dev_id == -1) {
-                if (MPL_gpu_attr_is_strict_dev(recv_attr)) {
+                if (MPL_gpu_attr_is_dev(recv_attr)) {
                     dev_id = MPL_gpu_get_dev_id_from_attr(recv_attr);
                 } else {
                     /* fallback to do_localcopy */
