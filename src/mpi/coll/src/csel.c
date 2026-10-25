@@ -274,6 +274,8 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
             }
             if (cnt->id == MPIR_CSEL_NUM_ALGORITHMS) {
                 mpi_errno = MPII_Csel_json_error(val, "unknown algorithm");
+            } else if (MPIR_Coll_algo_table[cnt->id] == NULL) {
+                mpi_errno = MPII_Csel_json_error(val, "disabled algorithm");
             } else if (val->type != MPII_CSEL_JSON_OBJECT) {
                 mpi_errno = MPII_Csel_json_error(val, "expect an object of parameters");
             } else {

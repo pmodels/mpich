@@ -112,6 +112,11 @@ bcast-intra:
       `cvar_params` placeholder.
     - `func_name`, `inline`, `macro_guard`: for device algorithms that are
       inline in device headers and exist only in some builds.
+    - `disabled: 1`: keeps the algorithm out of the selection. Forcing it by
+      CVAR fails its restriction check, and a JSON file that names it fails
+      to load ("disabled algorithm"). Its algorithm table entry is NULL. The
+      nonblocking compositions (`sched_smp`) are disabled until nested
+      selection into an existing schedule is designed.
 
 Each entry is exactly one algorithm function. There are no aliases; an alias
 is a small separate function.

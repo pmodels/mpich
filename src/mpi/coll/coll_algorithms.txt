@@ -65,6 +65,11 @@
 #         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
 #         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
 #         after the collectives it depends on; gen_coll.py only checks it.
+#   * disabled:
+#         1 to keep an algorithm out of the selection. Forcing it by CVAR fails its
+#         restriction check (error or fallback, per MPIR_CVAR_COLLECTIVE_FALLBACK), and a JSON
+#         tuning file that names it fails to load. The nonblocking compositions (sched_smp)
+#         are disabled until nested selection into an existing schedule is designed.
 
 # ----
 restrictions:
@@ -145,6 +150,7 @@ ibcast-intra:
     sched_binomial
     sched_smp
         restrictions: hierarchical
+        disabled: 1
     sched_scatter_recursive_doubling_allgather
         restrictions: pof2
     sched_scatter_ring_allgather
@@ -392,6 +398,7 @@ reduce-inter:
 ireduce-intra:
     sched_smp
         restrictions: commutative, hierarchical
+        disabled: 1
     sched_binomial
     sched_reduce_scatter_gather
         restrictions: count_ge_pof2, builtin_op
@@ -442,6 +449,7 @@ iallreduce-intra:
     sched_naive
     sched_smp
         restrictions: commutative, hierarchical
+        disabled: 1
     sched_recursive_doubling
     sched_reduce_scatter_allgather
         restrictions: count_ge_pof2, builtin_op
@@ -523,6 +531,7 @@ scan-intra:
 iscan-intra:
     sched_smp
         restrictions: commutative, node_consecutive
+        disabled: 1
     sched_recursive_doubling
     tsp_recursive_doubling
 

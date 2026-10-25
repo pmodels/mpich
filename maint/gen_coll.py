@@ -298,6 +298,9 @@ def dump_MPII_Coll_algo_init():
         idx = algo_id(algo_funcname)
         if a['func-commkind'] != 'general':
             algo_funcname += "_cnt"
+        if a.get('disabled') == '1':
+            # NULL tells the JSON loader to reject it
+            algo_funcname = "NULL"
         G.out.append("MPIR_Coll_algo_table[%s] = %s;" % (idx, algo_funcname))
     for a in G.algo_list:
         algo_funcname = get_algo_funcname(a)
@@ -524,7 +527,10 @@ def dump_MPIR_Coll_check_algo_restriction():
     G.out.append("unsigned need;")
     dump_open("switch (algo_id) {")
     for algo in G.algo_list:
-        if "restrictions" in algo:
+        if algo.get('disabled') == '1':
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            G.out.append("    return false;    /* disabled */")
+        elif "restrictions" in algo:
             restrictions = algo['restrictions'].replace(' ', '').split(',')
             need = 0
             for r in restrictions:
