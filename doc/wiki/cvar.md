@@ -2835,33 +2835,6 @@ Sets how often CH4 progress polls all VCIs for global progress. It is used only 
 
 Used in functions: `MPIDI_do_global_progress`, `MPIDI_progress_test`, `MPIDI_progress_test_vci`
 
-### MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS
-
-Sets the maximum number of registered host buffers in the CH4 GPU collective private buffer pool. In `src/mpid/ch4/src/ch4_init.c`, this CVAR is used during `MPID_Init` when `MPIDU_genq_private_pool_create` creates `MPIDI_global.gpu_coll_pool`; that pool also uses `MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ` as the size of each buffer and `MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK` as the number of buffers allocated per chunk. The pool is created unconditionally during `MPID_Init` in the reviewed file, with no dependency on `MPIR_CVAR_ENABLE_GPU` or another mode being active. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_init.c`. When active, this CVAR sets the total buffer limit for the registered host buffer pool used by GPU collective data transfer.
-
-* 256 - default, allow up to 256 GPU collective transfer buffers in the pool.
-* integer - allow up to the specified number of GPU collective transfer buffers in the pool.
-
-Used in functions: `MPID_Init`
-
-### MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK
-
-Sets the number of registered host buffers allocated in each chunk of the CH4 GPU collective private buffer pool. In `src/mpid/ch4/src/ch4_init.c`, this CVAR is used during `MPID_Init` when `MPIDU_genq_private_pool_create` creates `MPIDI_global.gpu_coll_pool`; that pool also uses `MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ` as the size of each buffer and `MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS` as the total buffer limit. The pool is created unconditionally during `MPID_Init` in the reviewed file, with no dependency on `MPIR_CVAR_ENABLE_GPU` or another mode being active. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_init.c`. When active, this CVAR sets the chunk size, in buffers, for the registered host buffer pool used by GPU collective data transfer.
-
-* 1 - default, create one GPU collective transfer buffer per pool chunk.
-* integer - create the specified number of GPU collective transfer buffers per pool chunk.
-
-Used in functions: `MPID_Init`
-
-### MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
-
-Sets the registered host swap-buffer size used by CH4 GPU collectives. In `src/mpid/ch4/src/ch4_init.c`, this CVAR sets the cell size for the GPU collective private buffer pool; the pool also uses `MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK` and `MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS` to determine its chunking and maximum number of buffers. In `src/mpid/ch4/src/ch4_coll_impl.h`, selected CH4 broadcast and allreduce compositions use this CVAR as the maximum message size for swapping strict-device GPU buffers through host memory; the swap path is used only when the computed datatype span is no larger than this buffer size, and the delta broadcast path also requires a node-roots communicator for host-buffer allocation. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_init.c` or `src/mpid/ch4/src/ch4_coll_impl.h`. When active, this CVAR sets both the size of each registered host buffer available for GPU collective data transfer and the size threshold for using those buffers in the reviewed GPU collective swap paths.
-
-* 1048576 - default, use one MiB registered host swap buffers.
-* non-negative integer - use the specified number of bytes for each registered host swap buffer and as the maximum datatype span eligible for the reviewed GPU collective swap paths.
-
-Used in functions: `MPID_Init`, `MPIDI_Bcast_intra_composition_alpha`, `MPIDI_Bcast_intra_composition_beta`, `MPIDI_Bcast_intra_composition_gamma`, `MPIDI_Bcast_intra_composition_delta`, `MPIDI_Allreduce_intra_composition_alpha`, `MPIDI_Allreduce_intra_composition_beta`, `MPIDI_Allreduce_intra_composition_gamma`
-
 ### MPIR_CVAR_CH4_IOV_DENSITY_MIN
 
 Sets the minimum datatype or receive IOV density for choosing direct IOV-based transfer paths instead of packing, unpacking, or active-message fallback paths. It is used for noncontiguous OFI RMA put and get operations after native OFI RMA is available, the target memory region can be prepared, and GPU RMA is permitted; for UCX noncontiguous receives when UCX datatype receives are disabled and UCX IOV receives are compiled in; and for OFI long active-message RDMA-read receives when deciding whether sparse multi-IOV receives should unpack through a temporary buffer. When active, this CVAR sets the density threshold used to select high-density datatype IOV paths for CH4 OFI and UCX communication.
