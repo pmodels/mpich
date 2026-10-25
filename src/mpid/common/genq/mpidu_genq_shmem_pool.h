@@ -35,7 +35,7 @@ static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool,
     MPIR_FUNC_ENTER;
 
     /* lazy registration of the shmem pool with the gpu */
-    if (!pool_obj->gpu_registered && !MPIR_GPU_query_pointer_is_host(src_buf)) {
+    if (!pool_obj->gpu_registered && MPIR_GPU_query_pointer_is_dev(src_buf)) {
         rc = MPIDU_genqi_shmem_pool_register(pool_obj);
         MPIR_ERR_CHECK(rc);
     }
