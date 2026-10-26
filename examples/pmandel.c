@@ -26,10 +26,10 @@
 #define USE_PPM /* define to output a color image, otherwise output is a grayscale pgm image */
 
 #ifndef MIN
-#define MIN(x, y)	(((x) < (y))?(x):(y))
+#define MIN(x, y)       (((x) < (y))?(x):(y))
 #endif
 #ifndef MAX
-#define MAX(x, y)	(((x) > (y))?(x):(y))
+#define MAX(x, y)       (((x) > (y))?(x):(y))
 #endif
 
 #define DEFAULT_PORT 7470       /* default port to listen on */

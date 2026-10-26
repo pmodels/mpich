@@ -23,8 +23,8 @@ typedef int BOOL;
 #define FALSE 0
 #endif
 
-#define MIN(x, y)	(((x) < (y))?(x):(y))
-#define MAX(x, y)	(((x) > (y))?(x):(y))
+#define MIN(x, y)       (((x) < (y))?(x):(y))
+#define MAX(x, y)       (((x) > (y))?(x):(y))
 
 #ifdef HAVE_WINDOWS_H
 #define POINTER_TO_INT(a)   ((int)(0xffffffff & (__int64) (a)))
@@ -40,7 +40,7 @@ typedef int BOOL;
 #define PERT            3
 #define LONGTIME        1e99
 #define CHARSIZE        8
-#define RUNTM		0.1
+#define RUNTM           0.1
 #define MAXINT          2147483647
 #define MAX_LAT_TIME    2
 #define LEFT_PROCESS    0

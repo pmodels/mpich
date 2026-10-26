@@ -23,22 +23,22 @@ typedef int BOOL;
 #define FALSE 0
 #endif
 
-#define  TRIALS 	3
-#define  REPEAT 	1000
+#define  TRIALS         3
+#define  REPEAT         1000
 int g_NSAMP = 250;
-#define  PERT		3
-/*#define  LATENCYREPS	1000*/
+#define  PERT           3
+/*#define  LATENCYREPS  1000*/
 int g_LATENCYREPS = 1000;
-#define  LONGTIME	1e99
-#define  CHARSIZE	8
-#define  PATIENCE	50
-#define  RUNTM		0.25
+#define  LONGTIME       1e99
+#define  CHARSIZE       8
+#define  PATIENCE       50
+#define  RUNTM          0.25
 double g_STOPTM = 0.1;
-#define  MAXINT 	2147483647
+#define  MAXINT         2147483647
 
-#define ABS(x)		(((x) < 0)?(-(x)):(x))
-#define MIN(x, y)	(((x) < (y))?(x):(y))
-#define MAX(x, y)	(((x) > (y))?(x):(y))
+#define ABS(x)          (((x) < 0)?(-(x)):(x))
+#define MIN(x, y)       (((x) < (y))?(x):(y))
+#define MAX(x, y)       (((x) > (y))?(x):(y))
 
 int g_nIproc = 0, g_nNproc = 0;
 
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 }
 
 
-/* Return the current time in seconds, using a double precision number. 	 */
+/* Return the current time in seconds, using a double precision number.          */
 double When(void)
 {
     return MPI_Wtime();

@@ -500,7 +500,7 @@ cvars:
 #define MPIR_ERRTEST_WIN_SIZE(size_, err_)                      \
     do {                                                        \
         if (size_ < 0) {                                        \
-	    err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
+            err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
                                         MPIR_ERR_RECOVERABLE,   \
                                         __func__, __LINE__,     \
                                         MPI_ERR_SIZE,           \
@@ -513,7 +513,7 @@ cvars:
 #define MPIR_ERRTEST_WIN_DISPUNIT(dispunit_, err_)              \
     do {                                                        \
         if (dispunit_ <= 0) {                                   \
-	    err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
+            err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
                                         MPIR_ERR_RECOVERABLE,   \
                                         __func__, __LINE__,     \
                                         MPI_ERR_DISP,           \

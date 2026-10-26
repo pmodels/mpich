@@ -47,7 +47,7 @@ int MTest_Join_threads(void)
         ret = qthread_readFE(&threads[i], NULL);
         MTEST_QTHR_ERROR(ret, "qthread_readFE");
     }
-    
+
     nthreads = 0;
     return 0;
 }
@@ -65,7 +65,7 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
 int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 {
     int ret;
-    ret  =  qthread_lock(lock);
+    ret = qthread_lock(lock);
     MTEST_QTHR_ERROR(ret, "qthread_lock");
     return 0;
 }
@@ -73,7 +73,7 @@ int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE * lock)
 {
     int ret;
-    ret  =  qthread_unlock(lock);
+    ret = qthread_unlock(lock);
     MTEST_QTHR_ERROR(ret, "qthread_unlock");
     return 0;
 }
@@ -87,7 +87,7 @@ int MTest_thread_yield(void)
 /* -------------------------------------------- */
 #define HAVE_MTEST_THREAD_BARRIER 1
 
-qt_barrier_t * qt_barrier;
+qt_barrier_t *qt_barrier;
 
 int MTest_thread_barrier_init(void)
 {

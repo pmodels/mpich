@@ -56,13 +56,13 @@ static int basic_only = 0;
    type will be sent.
 */
 #define SETUPBASICTYPE(_mpitype,_ctype,_count) { \
-  int i; _ctype *a;	\
-  if (cnt > *n) {*n = cnt; return; }			\
+  int i; _ctype *a;     \
+  if (cnt > *n) {*n = cnt; return; }                    \
   types[cnt] = _mpitype; \
   inbufs[cnt] = (void *)calloc(_count,sizeof(_ctype)); \
-  outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count));	\
-  a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i;	\
-  a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0;	\
+  outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count));     \
+  a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i;       \
+  a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0;      \
   counts[cnt]  = _count; bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
 
 /*
@@ -76,12 +76,12 @@ static int basic_only = 0;
   MPI_Type_contiguous(_count, _mpitype, types + cnt);\
   MPI_Type_commit(types + cnt);\
   inbufs[cnt] = (void *)calloc(_count, sizeof(_ctype)); \
-  outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count));	\
-  a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i;	\
-  a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0;	\
+  outbufs[cnt] = (void *)malloc(sizeof(_ctype) * (_count));     \
+  a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i] = i;       \
+  a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0;      \
   myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, MYNAME_SIZE, "Contig type %s", _basename);	\
+  snprintf(myname, MYNAME_SIZE, "Contig type %s", _basename);   \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1;  bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
@@ -91,10 +91,10 @@ static int basic_only = 0;
   of _mpitype.  Each block has a single element.
  */
 #define SETUPVECTORTYPE(_mpitype,_ctype,_count,_stride,_name) { \
-  int i; _ctype *a; char *myname;				\
+  int i; _ctype *a; char *myname;                               \
   char _basename[MPI_MAX_OBJECT_NAME]; int _basenamelen;\
   if (cnt > *n) {*n = cnt; return; }\
-  MPI_Type_vector(_count, 1, _stride, _mpitype, types + cnt);	\
+  MPI_Type_vector(_count, 1, _stride, _mpitype, types + cnt);   \
   MPI_Type_commit(types + cnt);\
   inbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1); \
   outbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1); \
@@ -102,7 +102,7 @@ static int basic_only = 0;
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = 0; \
   myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, MYNAME_SIZE, "Vector type %s", _basename);		\
+  snprintf(myname, MYNAME_SIZE, "Vector type %s", _basename);           \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1; bytesize[cnt] = sizeof(_ctype) * (_count) * (_stride) ;\
@@ -112,7 +112,7 @@ static int basic_only = 0;
    Note that systems may try to convert this to contiguous, so we'll
    eventually need a test that has holes in it */
 #define SETUPINDEXTYPE(_mpitype,_ctype,_count,_name) { \
-  int i; int *lens, *disp; _ctype *a; char *myname;	\
+  int i; int *lens, *disp; _ctype *a; char *myname;     \
   char _basename[MPI_MAX_OBJECT_NAME]; int _basenamelen;\
   if (cnt > *n) {*n = cnt; return; }\
   lens = (int *)malloc((_count) * sizeof(int)); \
@@ -127,7 +127,7 @@ static int basic_only = 0;
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i] = 0; \
   myname = (char *)malloc(MYNAME_SIZE);\
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, MYNAME_SIZE, "Index type %s", _basename);		\
+  snprintf(myname, MYNAME_SIZE, "Index type %s", _basename);            \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = 1;  bytesize[cnt] = sizeof(_ctype) * (_count); cnt++; }
@@ -135,46 +135,46 @@ static int basic_only = 0;
 /* This defines a structure of two basic members; by choosing things like
    (char, double), various packing and alignment tests can be made */
 #define SETUPSTRUCT2TYPE(_mpitype1,_ctype1,_mpitype2,_ctype2,_count,_tname) { \
-  int i; char *myname;						\
+  int i; char *myname;                                          \
   MPI_Datatype b[2], tmp_raw_type; int cnts[2]; \
-  struct name { _ctype1 a1; _ctype2 a2; } *a, samp;	\
-  MPI_Aint disp[2];				\
-  if (cnt > *n) {*n = cnt; return; }					\
-  b[0] = _mpitype1; b[1] = _mpitype2;	\
-  cnts[0] = 1; cnts[1] = 1;	\
-  MPI_Get_address(&(samp.a2), &disp[1]);		\
-  MPI_Get_address(&(samp.a1), &disp[0]);		\
+  struct name { _ctype1 a1; _ctype2 a2; } *a, samp;     \
+  MPI_Aint disp[2];                             \
+  if (cnt > *n) {*n = cnt; return; }                                    \
+  b[0] = _mpitype1; b[1] = _mpitype2;   \
+  cnts[0] = 1; cnts[1] = 1;     \
+  MPI_Get_address(&(samp.a2), &disp[1]);                \
+  MPI_Get_address(&(samp.a1), &disp[0]);                \
   disp[1] = disp[1] - disp[0]; disp[0] = 0; \
-  MPI_Type_create_struct(2, cnts, disp, b, &tmp_raw_type);		\
+  MPI_Type_create_struct(2, cnts, disp, b, &tmp_raw_type);              \
   MPI_Type_create_resized(tmp_raw_type, 0, sizeof(samp), types + cnt); \
   MPI_Type_free(&tmp_raw_type); \
-  MPI_Type_commit(types + cnt);					\
-  inbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);	\
-  outbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);	\
+  MPI_Type_commit(types + cnt);                                 \
+  inbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);       \
+  outbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);      \
   a = (struct name *)inbufs[cnt]; for (i=0; i<(_count); i++) { a[i].a1 = i; \
-      a[i].a2 = i; }							\
+      a[i].a2 = i; }                                                    \
   a = (struct name *)outbufs[cnt]; for (i=0; i<(_count); i++) { a[i].a1 = 0; \
-      a[i].a2 = 0; }							\
-  myname = (char *)malloc(MYNAME_SIZE);					\
-  snprintf(myname, MYNAME_SIZE, "Struct type %s", _tname);		\
+      a[i].a2 = 0; }                                                    \
+  myname = (char *)malloc(MYNAME_SIZE);                                 \
+  snprintf(myname, MYNAME_SIZE, "Struct type %s", _tname);              \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = (_count);  bytesize[cnt] = sizeof(struct name) * (_count);cnt++; }
 
 /* This accomplished the same effect as VECTOR, but allow a count of > 1 */
-#define SETUPSTRUCTTYPEUB(_mpitype,_ctype,_count,_stride) {	\
-  int i; _ctype *a; char *myname;					\
+#define SETUPSTRUCTTYPEUB(_mpitype,_ctype,_count,_stride) {     \
+  int i; _ctype *a; char *myname;                                       \
   char _basename[MPI_MAX_OBJECT_NAME]; int _basenamelen;\
-  if (cnt > *n) {*n = cnt; return; }					\
+  if (cnt > *n) {*n = cnt; return; }                                    \
   MPI_Type_create_resized(_mpitype, 0, (_stride) * sizeof(_ctype), types + cnt); \
-  MPI_Type_commit(types + cnt);					\
+  MPI_Type_commit(types + cnt);                                 \
   inbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1);\
   outbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1);\
   a = (_ctype *)inbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = i;  \
   a = (_ctype *)outbufs[cnt]; for (i=0; i<(_count); i++) a[i*(_stride)] = 0; \
-  myname = (char *)malloc(MYNAME_SIZE);					\
+  myname = (char *)malloc(MYNAME_SIZE);                                 \
   MPI_Type_get_name(_mpitype, _basename, &_basenamelen); \
-  snprintf(myname, MYNAME_SIZE, "Struct (MPI_UB) type %s", _basename);	\
+  snprintf(myname, MYNAME_SIZE, "Struct (MPI_UB) type %s", _basename);  \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
   counts[cnt]  = (_count);  \

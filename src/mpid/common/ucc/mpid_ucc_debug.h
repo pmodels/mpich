@@ -34,7 +34,7 @@
                              _file, _func, _line,               \
                              ## __VA_ARGS__)
 
-#define MPIDI_COMMON_UCC_DEBUG_FNCALL(_fn_name)	\
+#define MPIDI_COMMON_UCC_DEBUG_FNCALL(_fn_name) \
     MPIDI_COMMON_UCC_DEBUG_WRAPPER(MPIDI_COMMON_UCC_VERBOSE_LEVEL_FNCALL, "calling %s() ...", _fn_name);
 
 #define MPIDI_COMMON_UCC_DEBUG_FNDONE(_fn_name) \
