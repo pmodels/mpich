@@ -107,6 +107,34 @@ typedef struct {
         }                                                               \
     } while (0)
 
+#elif defined(MPL_HAVE_LDOUBLE_BINARY128_CONV)
+/* software conversion when there is no native binary128 type */
+#define PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len) \
+    do {                                                                \
+        char *dbuf = outbuf;                                            \
+        uintptr_t idx = 0;                                              \
+        for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
+            const char *sbuf = iov[i].iov_base;                         \
+            for (size_t j = 0; j < iov[i].iov_len / sizeof(long double); j++) { \
+                MPL_ldouble_to_binary128_be(sbuf + j * sizeof(long double), dbuf + idx * 16); \
+                idx++;                                                  \
+            }                                                           \
+        }                                                               \
+    } while (0)
+
+#define UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len) \
+    do {                                                                \
+        const char *sbuf = inbuf;                                       \
+        uintptr_t idx = 0;                                              \
+        for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
+            char *dbuf = iov[i].iov_base;                               \
+            for (size_t j = 0; j < iov[i].iov_len / sizeof(long double); j++) { \
+                MPL_binary128_be_to_ldouble(sbuf + idx * 16, dbuf + j * sizeof(long double)); \
+                idx++;                                                  \
+            }                                                           \
+        }                                                               \
+    } while (0)
+
 #endif
 
 int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
@@ -162,7 +190,7 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
     MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
     if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
-#ifdef MPIR_FLOAT128_CTYPE
+#if defined(MPIR_FLOAT128_CTYPE) || defined(MPL_HAVE_LDOUBLE_BINARY128_CONV)
         PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
 #else
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**ext32longdouble");
@@ -265,7 +293,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
     MPI_Datatype orig_basic_type = MPIR_DATATYPE_GET_ORIG_BUILTIN(basic_type);
     if (orig_basic_type == MPI_LONG_DOUBLE || orig_basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
         /* most c compiler's long double is different from 128-bit floating point */
-#ifdef MPIR_FLOAT128_CTYPE
+#if defined(MPIR_FLOAT128_CTYPE) || defined(MPL_HAVE_LDOUBLE_BINARY128_CONV)
         UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
 #else
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**ext32longdouble");
