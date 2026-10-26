@@ -122,6 +122,8 @@ typedef struct MPII_Genutil_sched_t {
     MPIR_Request *req;
     /* array of buffers allocated for schedule execution */
     UT_array buffers;
+    /* object handles whose references are released with the schedule */
+    UT_array handles;
 
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;

@@ -62,6 +62,11 @@ int MPIR_Sched_reset(MPIR_Sched_t s);
 void *MPIR_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 /* hand a buffer allocated with MPL_malloc to the sched. It will be freed by MPIR_Sched_free */
 void MPIR_Sched_add_buffer(MPIR_Sched_t s, void *buf);
+/* hand a reference on an object (communicator, datatype, op) to the sched. The sched releases
+ * it in MPIR_Sched_free, so the object stays valid while the sched exists, including every start
+ * of a persistent sched. The caller passes its own reference, e.g. instead of freeing a datatype
+ * it created for the sched. Predefined handles are ignored. */
+void MPIR_Sched_add_handle(MPIR_Sched_t s, int handle);
 /* starts the sched and gives you back a request pointer in (*req).
  *
  * comm should be the primary (user) communicator with which this collective is

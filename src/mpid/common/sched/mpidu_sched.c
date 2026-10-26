@@ -488,17 +488,7 @@ int MPIDU_Sched_free(struct MPIDU_Sched *s)
     }
     if (s->handles) {
         for (int *p = (int *)utarray_front(s->handles); p; p = (int *) utarray_next(s->handles, p)) {
-            if (HANDLE_GET_MPI_KIND(*p) == MPIR_COMM) {
-                MPIR_Comm *comm;
-                MPIR_Comm_get_ptr(*p, comm);
-                MPIR_Comm_release(comm);
-            } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_DATATYPE) {
-                MPIR_Datatype_release_if_not_builtin(*p);
-            } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_OP) {
-                MPIR_Op_release_if_not_builtin(*p);
-            } else {
-                MPIR_Assert(0);
-            }
+            MPIR_Handle_release(*p);
         }
         utarray_free(s->handles);
     }
@@ -547,6 +537,16 @@ static void sched_add_ref(struct MPIDU_Sched *s, int handle)
         utarray_new(s->handles, &ut_int_icd, MPL_MEM_OTHER);
     }
     utarray_push_back(s->handles, &handle, MPL_MEM_OTHER);
+}
+
+void MPIDU_Sched_add_handle(struct MPIDU_Sched *s, int handle)
+{
+    if (HANDLE_IS_BUILTIN(handle)) {
+        return;
+    }
+    /* freeing a window is collective, which the schedule free can't do */
+    MPIR_Assert(HANDLE_GET_MPI_KIND(handle) != MPIR_WIN);
+    sched_add_ref(s, handle);
 }
 
 int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** req)

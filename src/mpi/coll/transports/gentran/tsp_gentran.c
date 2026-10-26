@@ -36,6 +36,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     utarray_init(&sched->vtcs, &vtx_t_icd);
 
     utarray_init(&sched->buffers, &ut_ptr_icd);
+    utarray_init(&sched->handles, &ut_int_icd);
     utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
@@ -114,8 +115,14 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     while ((p = (void **) utarray_next(&sched->buffers, p)))
         MPL_free(*p);
 
+    /* release the handed references */
+    int *h = NULL;
+    while ((h = (int *) utarray_next(&sched->handles, h)))
+        MPIR_Handle_release(*h);
+
     utarray_done(&sched->vtcs);
     utarray_done(&sched->buffers);
+    utarray_done(&sched->handles);
     utarray_done(&sched->generic_types);
     MPL_free(sched);
 
@@ -556,6 +563,17 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t s, void *buf)
 {
     MPII_Genutil_sched_t *sched = s;
     utarray_push_back(&sched->buffers, &buf, MPL_MEM_COLL);
+}
+
+void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t s, int handle)
+{
+    MPII_Genutil_sched_t *sched = s;
+    if (HANDLE_IS_BUILTIN(handle)) {
+        return;
+    }
+    /* freeing a window is collective, which the schedule free can't do */
+    MPIR_Assert(HANDLE_GET_MPI_KIND(handle) != MPIR_WIN);
+    utarray_push_back(&sched->handles, &handle, MPL_MEM_COLL);
 }
 
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t s, MPIR_TSP_sched_t subs,

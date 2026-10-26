@@ -139,6 +139,7 @@ int MPIDU_Sched_free(MPIR_Sched_t s);
 int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 void MPIDU_Sched_add_buffer(MPIR_Sched_t s, void *buf);
+void MPIDU_Sched_add_handle(MPIR_Sched_t s, int handle);
 int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);

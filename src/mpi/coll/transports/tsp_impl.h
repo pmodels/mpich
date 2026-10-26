@@ -106,6 +106,11 @@ void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t sched);
  * it with the schedule */
 void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
 
+/* Transport function to hand a reference on an object (communicator, datatype, op) to the
+ * schedule, which releases it with the schedule. The caller passes its own reference.
+ * Predefined handles are ignored. */
+void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
+
 /* Transport function to schedule, before the schedule starts, a local copy that all the
  * vertices already in the schedule wait for */
 int MPIR_TSP_sched_localcopy_front(const void *sendbuf, MPI_Aint sendcount,

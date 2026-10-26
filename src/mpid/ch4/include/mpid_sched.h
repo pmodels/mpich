@@ -17,6 +17,7 @@
 #define MPIR_Sched_reset MPIDU_Sched_reset
 #define MPIR_Sched_alloc_state MPIDU_Sched_alloc_state
 #define MPIR_Sched_add_buffer MPIDU_Sched_add_buffer
+#define MPIR_Sched_add_handle MPIDU_Sched_add_handle
 #define MPIR_Sched_start MPIDU_Sched_start
 #define MPIR_Sched_send MPIDU_Sched_send
 #define MPIR_Sched_pt2pt_send MPIDU_Sched_pt2pt_send
