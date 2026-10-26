@@ -38,4 +38,13 @@ typedef struct {
 int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_nodemap);
 int MPL_rankmap_array_to_str(int *nodemap, int sz, char **out_mapping_str);
 
+/* src/mpl/src/misc/mpl_float.c. Configure defines MPL_LDBL_MANT_DIG; a unit
+ * defines it before including mpl.h to pick the long double format to test,
+ * whatever the native one is. */
+#ifdef MPL_LDBL_MANT_DIG
+#define MPL_HAVE_LDOUBLE_BINARY128_CONV 1
+void MPL_ldouble_to_binary128_be(const void *src, void *dest);
+void MPL_binary128_be_to_ldouble(const void *src, void *dest);
+#endif
+
 #endif /* MPL_H_INCLUDED */

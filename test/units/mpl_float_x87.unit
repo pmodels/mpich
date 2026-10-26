@@ -1,0 +1,136 @@
+include:
+    src/mpl/src/misc
+
+shim:
+    mpl
+
+template:
+    /* Test the long double <-> binary128 conversion in mpl_float.c for a long
+     * double that is x87 80-bit extended precision (macOS x86_64), whatever the
+     * native long double is. Configure would define MPL_LDBL_MANT_DIG; here it
+     * is fixed so that the checks always run. mpl_float.c is included, rather
+     * than listed in sources:, so that it sees the definition. */
+    #define MPL_LDBL_MANT_DIG 64
+    #include "mpl.h"
+    #include "mpl_float.c"
+
+    /* the driver, see mpl_float_binary64.unit */
+    [test/units/mpl_float_binary64.unit:driver]
+
+TESTS:
+
+    # widening is exact
+
+    # zero
+    cmd: ./t to128 00000000000000000000
+    expect: 00000000000000000000000000000000
+    # negative zero
+    cmd: ./t to128 80000000000000000000
+    expect: 80000000000000000000000000000000
+    # 1
+    cmd: ./t to128 3fff8000000000000000
+    expect: 3fff0000000000000000000000000000
+    # -2
+    cmd: ./t to128 c0008000000000000000
+    expect: c0000000000000000000000000000000
+    # largest below 2
+    cmd: ./t to128 3fffffffffffffffffff
+    expect: 3ffffffffffffffffffe000000000000
+    # 0.1
+    cmd: ./t to128 3ffbcccccccccccccccd
+    expect: 3ffb999999999999999a000000000000
+    # largest
+    cmd: ./t to128 7ffeffffffffffffffff
+    expect: 7ffefffffffffffffffe000000000000
+    # smallest normal
+    cmd: ./t to128 00018000000000000000
+    expect: 00010000000000000000000000000000
+    # largest subnormal
+    cmd: ./t to128 00007fffffffffffffff
+    expect: 0000fffffffffffffffe000000000000
+    # smallest subnormal
+    cmd: ./t to128 00000000000000000001
+    expect: 00000000000000000002000000000000
+    # infinity
+    cmd: ./t to128 7fff8000000000000000
+    expect: 7fff0000000000000000000000000000
+    # negative infinity
+    cmd: ./t to128 ffff8000000000000000
+    expect: ffff0000000000000000000000000000
+    # quiet NaN
+    cmd: ./t to128 7fffc000000000000000
+    expect: 7fff8000000000000000000000000000
+    # signaling NaN becomes quiet, keeping its payload
+    cmd: ./t to128 ffffa000000000000001
+    expect: ffffc000000000000002000000000000
+
+    # narrowing
+
+    # 1
+    cmd: ./t from128 3fff0000000000000000000000000000
+    expect: 3fff8000000000000000
+    # exact 0.1
+    cmd: ./t from128 3ffb999999999999999a000000000000
+    expect: 3ffbcccccccccccccccd
+    # 0.1 rounds up
+    cmd: ./t from128 3ffb9999999999999999999999999999
+    expect: 3ffbcccccccccccccccd
+    # tie rounds down to even
+    cmd: ./t from128 3fff0000000000000001000000000000
+    expect: 3fff8000000000000000
+    # tie rounds up to even
+    cmd: ./t from128 3fff0000000000000003000000000000
+    expect: 3fff8000000000000002
+    # above a tie rounds up
+    cmd: ./t from128 3fff0000000000000001000000000001
+    expect: 3fff8000000000000001
+    # below a tie rounds down
+    cmd: ./t from128 3fff0000000000000000ffffffffffff
+    expect: 3fff8000000000000000
+    # tie rounds up into the exponent
+    cmd: ./t from128 3fffffffffffffffffff000000000000
+    expect: 40008000000000000000
+    # rounds up to infinity
+    cmd: ./t from128 7ffeffffffffffffffff000000000000
+    expect: 7fff8000000000000000
+    # rounds down to the largest
+    cmd: ./t from128 7ffefffffffffffffffeffffffffffff
+    expect: 7ffeffffffffffffffff
+    # smallest normal
+    cmd: ./t from128 00010000000000000000000000000000
+    expect: 00018000000000000000
+    # rounds up to the smallest normal
+    cmd: ./t from128 0000ffffffffffffffff000000000000
+    expect: 00018000000000000000
+    # binary128 normal is an x87 normal
+    cmd: ./t from128 3fc10000000000000000000000000000
+    expect: 3fc18000000000000000
+    # smallest subnormal
+    cmd: ./t from128 00000000000000000002000000000000
+    expect: 00000000000000000001
+    # half the smallest subnormal ties to zero
+    cmd: ./t from128 00000000000000000001000000000000
+    expect: 00000000000000000000
+    # above half rounds up to the smallest subnormal
+    cmd: ./t from128 00000000000000000001000000000001
+    expect: 00000000000000000001
+    # 1.5 subnormal ties to 2
+    cmd: ./t from128 00000000000000000003000000000000
+    expect: 00000000000000000002
+    # underflows to negative zero
+    cmd: ./t from128 80000000000000000000ffffffffffff
+    expect: 80000000000000000000
+    # infinity
+    cmd: ./t from128 7fff0000000000000000000000000000
+    expect: 7fff8000000000000000
+    # quiet NaN
+    cmd: ./t from128 7fff8000000000000000000000000000
+    expect: 7fffc000000000000000
+    # signaling NaN becomes quiet, keeping its payload
+    cmd: ./t from128 7fff4000000000000000000000000001
+    expect: 7fffe000000000000000
+
+    # roundtrips of random values
+
+    cmd: ./t check 1000000
+    expect: ok

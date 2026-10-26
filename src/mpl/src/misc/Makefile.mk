@@ -4,5 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-lib@MPLLIBNAME@_la_SOURCES += src/misc/mpl_misc.c \
+lib@MPLLIBNAME@_la_SOURCES += src/misc/mpl_float.c \
+                              src/misc/mpl_misc.c \
                               src/misc/mpl_mkstemp.c
