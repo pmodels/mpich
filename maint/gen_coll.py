@@ -172,6 +172,12 @@ def dump_algo_cnt_fns():
                 dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
                 G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
                 dump_close("}")
+            if func_name.startswith('i') and not algo['name'].startswith(('tsp_', 'sched_')):
+                # a request-based algorithm has no schedule to replay; save the selection,
+                # MPIR_Persist_coll_start runs it on every start
+                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__PERSISTENT) {")
+                G.out.append("return MPIR_Coll_persist_request_save(coll_sig, cnt, %s_cnt);" % algo_funcname)
+                dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
             dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))

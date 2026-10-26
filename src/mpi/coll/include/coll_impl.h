@@ -49,6 +49,10 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
                        MPIR_Coll_algo_fn fn);
+int MPIR_Coll_persist_request_save(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
+                                   MPIR_Coll_algo_fn fn);
+int MPIR_Coll_persist_request_start(void *sched, MPIR_Request ** req_out);
+void MPIR_Coll_persist_request_free(void *sched);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 void MPII_Coll_type_init(void);

@@ -28,6 +28,10 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
         mpi_errno = MPIR_TSP_sched_start(preq->u.persist_coll.sched,
                                          preq->comm, &preq->u.persist_coll.real_request);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (preq->u.persist_coll.sched_type == MPIR_SCHED_REQUEST) {
+        mpi_errno = MPIR_Coll_persist_request_start(preq->u.persist_coll.sched,
+                                                    &preq->u.persist_coll.real_request);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* TODO: proper error return */
         MPIR_Assert(0);
@@ -58,6 +62,8 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
             MPIR_Sched_free(request->u.persist_coll.sched);
         } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
             MPIR_TSP_sched_free(request->u.persist_coll.sched);
+        } else if (request->u.persist_coll.sched_type == MPIR_SCHED_REQUEST) {
+            MPIR_Coll_persist_request_free(request->u.persist_coll.sched);
         } else {
             /* TODO: proper error return */
             MPIR_Assert(0);
