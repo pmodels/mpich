@@ -70,6 +70,8 @@ def main():
     dump_MPIR_Coll_cvar_to_algo_id()
     dump_MPIR_Coll_init_algo_container()
     dump_MPIR_Coll_check_algo_restriction()
+    # references on the handles of a saved coll_sig
+    dump_MPIR_Coll_sig_refs()
 
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
@@ -255,6 +257,104 @@ def add_sched_auto_prototypes(name):
         add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (name, params))
 
 #---- dumping to G.out (mpir_coll.c) ----
+
+def dump_MPIR_Coll_sig_refs():
+    """Generate MPIR_Coll_sig_add_ref and MPIR_Coll_sig_release.
+
+    They take and drop a reference on the datatype and op handles in coll_sig->u, for state
+    that keeps a coll_sig beyond the call (e.g. a persistent collective). A handle the
+    collective ignores at this process may be garbage, so it is skipped: send types with
+    MPI_IN_PLACE sendbuf, recv types with MPI_IN_PLACE recvbuf, root_only handles at non-roots,
+    and, on an intercommunicator, the handles of the side this process is not on.
+    """
+    def get_handles(name):
+        func = G.FUNCS["mpi_" + name]
+        pnames = [p['name'] for p in func['parameters']]
+        is_rooted = 'root' in pnames
+        handles = []
+        for p in func['parameters']:
+            if p['kind'] not in ('DATATYPE', 'OPERATION'):
+                continue
+            U = "coll_sig->u.%s." % name
+            conds = {'intra': [], 'inter': []}
+            # an MPI_IN_PLACE buffer leaves its datatype unused
+            m = RE.match(r'(send|recv)', p['name'])
+            if m and (m.group(1) + 'buf') in pnames:
+                for k in conds:
+                    conds[k].append("%s%sbuf != MPI_IN_PLACE" % (U, m.group(1)))
+            if is_rooted:
+                if 'root_only=True' in p['t']:
+                    conds['intra'].append("coll_sig->comm_ptr->rank == %sroot" % U)
+                    conds['inter'].append("%sroot == MPI_ROOT" % U)
+                elif m:
+                    # the non-root side of gather/scatter
+                    conds['inter'].append("%sroot != MPI_ROOT && %sroot != MPI_PROC_NULL" % (U, U))
+                else:
+                    # both sides, e.g. bcast datatype, reduce datatype and op
+                    conds['inter'].append("%sroot != MPI_PROC_NULL" % U)
+            length = None
+            if p['length']:
+                if name.startswith('neighbor_'):
+                    length = 'outdegree' if p['name'].startswith('send') else 'indegree'
+                else:
+                    length = 'comm_size'
+            handles.append((U + p['name'], p['kind'], conds, length))
+        return handles
+
+    def dump_handle(fn, kind, h, length):
+        macro = "MPIR_Datatype_%s_if_not_builtin" if kind == 'DATATYPE' else "MPIR_Op_%s_if_not_builtin"
+        macro = macro % fn
+        if length:
+            dump_open("for (int i = 0; i < %s; i++) {" % length)
+            G.out.append("%s(%s[i]);" % (macro, h))
+            dump_close("}")
+        else:
+            G.out.append("%s(%s);" % (macro, h))
+
+    def dump_commkind(fn, handles, commkind):
+        for h, kind, conds, length in handles:
+            cond = conds[commkind]
+            if cond:
+                dump_open("if (%s) {" % ' && '.join(cond))
+            dump_handle(fn, kind, h, length)
+            if cond:
+                dump_close("}")
+
+    for fn in ("add_ref", "release"):
+        G.out.append("")
+        decl = "void MPIR_Coll_sig_%s(MPIR_Csel_coll_sig_s * coll_sig)" % fn
+        add_prototype(decl)
+        G.out.append(decl)
+        dump_open('{')
+        dump_open("switch (coll_sig->coll_type) {")
+        for name in G.coll_names:
+            handles = get_handles(name)
+            if not handles:
+                continue
+            has_inter = not re.match(r'(scan|exscan|neighbor_)', name)
+            need_size = any(l == 'comm_size' for _, _, _, l in handles)
+            need_degree = any(l in ('indegree', 'outdegree') for _, _, _, l in handles)
+            for commkind in ("intra", "inter"):
+                if commkind == "inter" and not has_inter:
+                    continue
+                G.out.append("case %s:" % coll_type(name, True, commkind))
+                G.out.append("case %s:" % coll_type(name, False, commkind))
+                dump_open("{")
+                if need_size:
+                    if commkind == "intra":
+                        G.out.append("int comm_size = coll_sig->comm_ptr->local_size;")
+                    else:
+                        G.out.append("int comm_size = coll_sig->comm_ptr->remote_size;")
+                if need_degree:
+                    G.out.append("int indegree, outdegree, weighted;")
+                    G.out.append("MPIR_Topo_canon_nhb_count(coll_sig->comm_ptr, &indegree, &outdegree, &weighted);")
+                dump_commkind(fn, handles, commkind)
+                G.out.append("break;")
+                dump_close("}")
+        G.out.append("default:")
+        G.out.append("    break;")
+        dump_close('}')
+        dump_close('}')
 
 def dump_MPIR_Coll_cvar_table():
     # Pointers rather than values, so that a CVAR written through MPI_T takes effect
