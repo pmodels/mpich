@@ -158,8 +158,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         mpi_errno = MPIR_Sched_barrier(s);
                         MPIR_ERR_CHECK(mpi_errno);
 
-                        /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
-                        MPIR_Type_free_impl(&tmp_type);
+                        /* the schedule owns tmp_type and frees it with itself */
+                        MPIR_Sched_add_handle(s, tmp_type);
                     }
                 } else {        /* Intermediate nodes store in temporary buffer */
                     MPI_Aint offset;
@@ -207,7 +207,11 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 /* check for overflow.  work around int limits if needed */
                 if (curr_cnt - nbytes != (int) (curr_cnt - nbytes)) {
                     blocks[1] = 1;
-                    MPIR_Type_contiguous_x_impl(curr_cnt - nbytes, MPIR_BYTE_INTERNAL, &(types[1]));
+                    mpi_errno = MPIR_Type_contiguous_x_impl(curr_cnt - nbytes, MPIR_BYTE_INTERNAL,
+                                                            &(types[1]));
+                    MPIR_ERR_CHECK(mpi_errno);
+                    /* tmp_type keeps its own reference on types[1] */
+                    MPIR_Sched_add_handle(s, types[1]);
                 } else {
                     MPIR_Assign_trunc(blocks[1], curr_cnt - nbytes, int);
                     types[1] = MPIR_BYTE_INTERNAL;
@@ -224,8 +228,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
-                /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
-                MPIR_Type_free_impl(&tmp_type);
+                /* the schedule owns tmp_type and frees it with itself */
+                MPIR_Sched_add_handle(s, tmp_type);
             }
 
             break;

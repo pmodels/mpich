@@ -240,8 +240,9 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
             }
         }
 
-        MPIR_Type_free_impl(&sendtype);
-        MPIR_Type_free_impl(&recvtype);
+        /* the schedule owns sendtype and recvtype and frees them with itself */
+        MPIR_Sched_add_handle(s, sendtype);
+        MPIR_Sched_add_handle(s, recvtype);
 
         mask <<= 1;
         i++;

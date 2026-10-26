@@ -112,7 +112,8 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
-        MPIR_Type_free_impl(&newtype);
+        /* the schedule owns newtype and frees it with itself */
+        MPIR_Sched_add_handle(s, newtype);
 
         pof2 *= 2;
     }
