@@ -262,6 +262,7 @@ A memory object id was expected but a non-memory object id was passed instead
 **dtypecommit:Datatype has not been committed 
 **dtypeperm:Cannot free permanent data type 
 **dtypemismatch:Receiving data with a datatype whose signature does not match that of the sending datatype.
+**ext32longdouble:Converting long double to or from external32 requires native IEEE 754 128-bit floating point support
 **contentspredef:Named predefined datatypes are not permitted in MPI_Type_get_contents
 **comm:Invalid communicator
 **commnull:Null communicator

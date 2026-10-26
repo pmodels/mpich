@@ -165,8 +165,7 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
 #ifdef MPIR_FLOAT128_CTYPE
         PACK_EXTERNAL_long_double(iov, outbuf, max_iov_len);
 #else
-        MPIR_Assert(0);
-        mpi_errno = MPI_ERR_INTERN;
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**ext32longdouble");
 #endif
     } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
@@ -269,8 +268,7 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
 #ifdef MPIR_FLOAT128_CTYPE
         UNPACK_EXTERNAL_long_double(inbuf, iov, max_iov_len);
 #else
-        MPIR_Assert(0);
-        mpi_errno = MPI_ERR_INTERN;
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**ext32longdouble");
 #endif
     } else if (basic_type_size == ext_type_size) {
         if (basic_type_size == 1) {
