@@ -145,6 +145,7 @@ int MPIR_Ibcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype data
     state->iter_cur = x;
     state->iter_end = n - 1 + q + x;
     state->iter_offset = -x;
+    state->iter_sent = false;
 
     state->rank = rank;
     state->root = root;
