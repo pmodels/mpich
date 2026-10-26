@@ -22,4 +22,48 @@ static inline int MPIR_Process_status(MPI_Status * status)
     return status->MPI_ERROR;
 }
 
+/* Take or drop a reference on an object by its handle, for a holder that keeps handles of
+ * different kinds (communicator, datatype, op). Predefined handles are skipped. */
+static inline void MPIR_Handle_add_ref(int handle)
+{
+    switch (HANDLE_GET_MPI_KIND(handle)) {
+        case MPIR_COMM:
+            {
+                MPIR_Comm *comm_ptr;
+                MPIR_Comm_get_ptr(handle, comm_ptr);
+                MPIR_Comm_add_ref(comm_ptr);
+                break;
+            }
+        case MPIR_DATATYPE:
+            MPIR_Datatype_add_ref_if_not_builtin(handle);
+            break;
+        case MPIR_OP:
+            MPIR_Op_add_ref_if_not_builtin(handle);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+}
+
+static inline void MPIR_Handle_release(int handle)
+{
+    switch (HANDLE_GET_MPI_KIND(handle)) {
+        case MPIR_COMM:
+            {
+                MPIR_Comm *comm_ptr;
+                MPIR_Comm_get_ptr(handle, comm_ptr);
+                MPIR_Comm_release(comm_ptr);
+                break;
+            }
+        case MPIR_DATATYPE:
+            MPIR_Datatype_release_if_not_builtin(handle);
+            break;
+        case MPIR_OP:
+            MPIR_Op_release_if_not_builtin(handle);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+}
+
 #endif /* MPIR_MISC_POST_H_INCLUDED */

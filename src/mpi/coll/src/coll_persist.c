@@ -16,8 +16,18 @@
  * algorithm's _cnt wrapper) as the "schedule" of type MPIR_SCHED_REQUEST, and every start
  * runs the algorithm again.
  *
- * The saved coll_sig holds a reference on its datatype and op handles, since the user may
- * free them after the init. */
+ * The saved coll_sig holds a reference on its communicator, datatypes and op, since the user
+ * may free them after the init. */
+
+static void add_ref_fn(int handle, void *arg)
+{
+    MPIR_Handle_add_ref(handle);
+}
+
+static void release_fn(int handle, void *arg)
+{
+    MPIR_Handle_release(handle);
+}
 
 struct persist_request {
     MPIR_Csel_coll_sig_s coll_sig;
@@ -42,7 +52,7 @@ int MPIR_Coll_persist_request_save(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_co
     p->coll_sig.flags &= ~MPIR_COLL_SIG_FLAG__PERSISTENT;
     p->cnt = *cnt;
     p->fn = fn;
-    MPIR_Coll_sig_add_ref(&p->coll_sig);
+    MPIR_Coll_sig_foreach_handle(&p->coll_sig, add_ref_fn, NULL);
 
     coll_sig->sched_type = MPIR_SCHED_REQUEST;
     coll_sig->sched = p;
@@ -85,6 +95,6 @@ void MPIR_Coll_persist_request_free(void *sched)
 {
     struct persist_request *p = sched;
 
-    MPIR_Coll_sig_release(&p->coll_sig);
+    MPIR_Coll_sig_foreach_handle(&p->coll_sig, release_fn, NULL);
     MPL_free(p);
 }
