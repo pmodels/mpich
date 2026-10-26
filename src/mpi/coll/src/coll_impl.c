@@ -370,6 +370,102 @@ int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig)
     return MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
 }
 
+/* Hold the objects a nonblocking or persistent collective uses (from its coll_sig) until its
+ * schedule or request is freed, since the user may free them as soon as the call returns.
+ *
+ * A schedule takes the references with MPIR_Sched_add_handle and releases them when it is
+ * freed. A request-based algorithm returns a generalized request; its free_fn releases them.
+ * The saved state of a persistent request-based collective holds its own references (see
+ * coll_persist.c), so there is nothing to do for it. */
+
+static void sched_hold_fn(int handle, void *arg)
+{
+    if (!HANDLE_IS_BUILTIN(handle)) {
+        MPIR_Handle_add_ref(handle);
+        MPIR_Sched_add_handle(arg, handle);
+    }
+}
+
+static void tsp_hold_fn(int handle, void *arg)
+{
+    if (!HANDLE_IS_BUILTIN(handle)) {
+        MPIR_Handle_add_ref(handle);
+        MPIR_TSP_sched_add_handle(arg, handle);
+    }
+}
+
+struct held_handles {
+    int n;
+    int max;
+    int *handles;
+};
+
+static void count_fn(int handle, void *arg)
+{
+    struct held_handles *h = arg;
+    h->max++;
+}
+
+static void request_hold_fn(int handle, void *arg)
+{
+    struct held_handles *h = arg;
+    if (!HANDLE_IS_BUILTIN(handle)) {
+        MPIR_Assert(h->n < h->max);
+        MPIR_Handle_add_ref(handle);
+        h->handles[h->n++] = handle;
+    }
+}
+
+static int release_held_handles(void *extra_state)
+{
+    struct held_handles *h = extra_state;
+    for (int i = 0; i < h->n; i++) {
+        MPIR_Handle_release(h->handles[i]);
+    }
+    MPL_free(h);
+    return MPI_SUCCESS;
+}
+
+int MPIR_Coll_sig_hold_handles(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {
+        MPIR_Coll_sig_foreach_handle(coll_sig, sched_hold_fn, coll_sig->sched);
+    } else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {
+        MPIR_Coll_sig_foreach_handle(coll_sig, tsp_hold_fn, coll_sig->sched);
+    } else if (coll_sig->sched_type == MPIR_SCHED_REQUEST) {
+        MPIR_Request *req = coll_sig->sched;
+        if ((coll_sig->flags & MPIR_COLL_SIG_FLAG__PERSISTENT) || req == NULL) {
+            /* persistent: the saved state holds them; no request: nothing to hold for */
+            goto fn_exit;
+        }
+        MPIR_Assert(req->kind == MPIR_REQUEST_KIND__GREQUEST);
+        MPIR_Assert(req->u.ureq.greq_fns->U.C.free_fn == NULL);
+
+        struct held_handles count = { 0, 0, NULL };
+        MPIR_Coll_sig_foreach_handle(coll_sig, count_fn, &count);
+
+        struct held_handles *h = MPL_malloc(sizeof(struct held_handles) +
+                                            count.max * sizeof(int), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!h, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        h->n = 0;
+        h->max = count.max;
+        h->handles = (int *) (h + 1);
+        MPIR_Coll_sig_foreach_handle(coll_sig, request_hold_fn, h);
+
+        req->u.ureq.greq_fns->U.C.free_fn = release_held_handles;
+        req->u.ureq.greq_fns->grequest_extra_state = h;
+    } else {
+        MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* blocking collectives by calling its nonblocking forms */
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
 {

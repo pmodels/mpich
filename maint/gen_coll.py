@@ -881,6 +881,11 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("mpi_errno = MPIR_Coll_json(&coll_sig);")
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
+    if blocking_type != "blocking":
+        # the user may free the communicator, datatypes and op as soon as the call returns
+        G.out.append("mpi_errno = MPIR_Coll_sig_hold_handles(&coll_sig);")
+        G.out.append("MPIR_ERR_CHECK(mpi_errno);")
+        G.out.append("")
 
     # Set request if nonblocking or persistent
     if blocking_type == "blocking":

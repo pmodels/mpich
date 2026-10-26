@@ -45,6 +45,7 @@ int MPII_Coll_finalize(void);
 
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+int MPIR_Coll_sig_hold_handles(MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
