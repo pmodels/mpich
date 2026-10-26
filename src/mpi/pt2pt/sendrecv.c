@@ -202,6 +202,11 @@ int MPIR_Isendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_pt2pt_recv(recvbuf, recvcount, recvtype, recvtag, source, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
+    /* the user may free the datatypes before the steps are posted */
+    MPIR_Datatype_add_ref_if_not_builtin(sendtype);
+    MPIR_Sched_add_handle(s, sendtype);
+    MPIR_Datatype_add_ref_if_not_builtin(recvtype);
+    MPIR_Sched_add_handle(s, recvtype);
 
     /* note: we are not using collective tag */
     mpi_errno = MPIR_Sched_start(s, comm_ptr, p_req);
@@ -269,6 +274,9 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_pt2pt_recv(buf, count, datatype, recvtag, source, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
+    /* the user may free the datatype before the steps are posted */
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIR_Sched_add_handle(s, datatype);
 
     mpi_errno = MPIR_Sched_barrier(s);
     MPIR_ERR_CHECK(mpi_errno);
