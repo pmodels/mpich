@@ -63,31 +63,9 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {
         MPIR_ERR_CHKANDJUMP(vtx == NULL, mpi_errno, MPI_ERR_OTHER, "**nullvertex");
         switch (vtx->vtx_kind) {
-            case MPII_GENUTIL_VTX_KIND__ISEND:
-                MPIR_Comm_release(vtx->u.isend.comm);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.isend.dt);
-                break;
-            case MPII_GENUTIL_VTX_KIND__IRECV:
-                MPIR_Comm_release(vtx->u.irecv.comm);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.irecv.dt);
-                break;
-            case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
-                MPIR_Comm_release(vtx->u.irecv_status.comm);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.irecv_status.dt);
-                break;
             case MPII_GENUTIL_VTX_KIND__IMCAST:
-                MPIR_Comm_release(vtx->u.imcast.comm);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.imcast.dt);
                 MPL_free(vtx->u.imcast.req);
                 utarray_done(&vtx->u.imcast.dests);
-                break;
-            case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:
-                MPIR_Op_release_if_not_builtin(vtx->u.reduce_local.op);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.reduce_local.datatype);
-                break;
-            case MPII_GENUTIL_VTX_KIND__LOCALCOPY:
-                MPIR_Datatype_release_if_not_builtin(vtx->u.localcopy.sendtype);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.localcopy.recvtype);
                 break;
             case MPII_GENUTIL_VTX_KIND__SCHED:
                 /* In normal case, sub schedule is free'ed when it is done
@@ -213,11 +191,6 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
 
-    /* the user may free the comm & type after initiating but before the
-     * underlying send is actually posted, so we must add a reference here and
-     * release it at entry completion time */
-    MPIR_Comm_add_ref(comm_ptr);
-    MPIR_Datatype_add_ref_if_not_builtin(dt);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", *vtx_id));
@@ -251,8 +224,6 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
 
-    MPIR_Comm_add_ref(comm_ptr);
-    MPIR_Datatype_add_ref_if_not_builtin(dt);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", *vtx_id));
@@ -286,8 +257,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
 
-    MPIR_Comm_add_ref(comm_ptr);
-    MPIR_Datatype_add_ref_if_not_builtin(dt);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv_status", *vtx_id));
@@ -329,8 +298,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
                                             MPL_MEM_COLL);
     vtxp->u.imcast.last_complete = -1;
 
-    MPIR_Comm_add_ref(comm_ptr);
-    MPIR_Datatype_add_ref_if_not_builtin(dt);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
@@ -357,8 +324,6 @@ int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint coun
     vtxp->u.reduce_local.datatype = datatype;
     vtxp->u.reduce_local.op = op;
 
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIR_Op_add_ref_if_not_builtin(op);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local", *vtx_id));
@@ -388,8 +353,6 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
     vtxp->u.localcopy.recvcount = recvcount;
     vtxp->u.localcopy.recvtype = recvtype;
 
-    MPIR_Datatype_add_ref_if_not_builtin(sendtype);
-    MPIR_Datatype_add_ref_if_not_builtin(recvtype);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy", *vtx_id));
@@ -423,8 +386,6 @@ int MPIR_TSP_sched_localcopy_front(const void *sendbuf, MPI_Aint sendcount,
     vtxp->u.localcopy.recvcount = recvcount;
     vtxp->u.localcopy.recvtype = recvtype;
 
-    MPIR_Datatype_add_ref_if_not_builtin(sendtype);
-    MPIR_Datatype_add_ref_if_not_builtin(recvtype);
 
     for (int i = 0; i < vtx_id; i++) {
         vtx_t *v = (vtx_t *) utarray_eltptr(&sched->vtcs, i);

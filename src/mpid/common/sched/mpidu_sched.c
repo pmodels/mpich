@@ -570,7 +570,8 @@ int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** r
     r = MPID_Request_create_from_comm(MPIR_REQUEST_KIND__COLL, comm);
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    /* FIXME is this right when comm/datatype GC is used? */
+    /* the request holds the communicator. Other objects the steps use are held through
+     * MPIR_Sched_add_handle by whoever builds the schedule. */
     MPIR_Comm_add_ref(comm);
     r->comm = comm;
     /* req refcount is currently 1, for the user's request.  Increment for the
@@ -669,13 +670,6 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
 
-    /* the user may free the comm & type after initiating but before the
-     * underlying send is actually posted, so we must add a reference here and
-     * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -705,13 +699,6 @@ int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     e->u.send.comm = comm;
     e->u.send.tag = tag;
 
-    /* the user may free the comm & type after initiating but before the
-     * underlying send is actually posted, so we must add a reference here and
-     * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -740,13 +727,6 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
     e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
 
-    /* the user may free the comm & type after initiating but before the
-     * underlying send is actually posted, so we must add a reference here and
-     * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -775,10 +755,6 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
     e->u.recv.comm = comm;
     e->u.recv.status = status;
     status->MPI_ERROR = MPI_SUCCESS;
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -807,10 +783,6 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
     e->u.recv.comm = comm;
     e->u.recv.status = MPI_STATUS_IGNORE;
 
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -840,10 +812,6 @@ int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
     e->u.recv.status = MPI_STATUS_IGNORE;
     e->u.recv.tag = tag;
 
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -872,10 +840,6 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
     reduce->datatype = datatype;
     reduce->op = op;
 
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIR_Op_add_ref_if_not_builtin(op);
-    sched_add_ref(s, datatype);
-    sched_add_ref(s, op);
 
   fn_exit:
     return mpi_errno;
@@ -912,10 +876,6 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
     copy->outcount = outcount;
     copy->outtype = outtype;
 
-    MPIR_Datatype_add_ref_if_not_builtin(intype);
-    MPIR_Datatype_add_ref_if_not_builtin(outtype);
-    sched_add_ref(s, intype);
-    sched_add_ref(s, outtype);
 
     /* some sanity checking up front */
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
