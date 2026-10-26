@@ -122,7 +122,11 @@ def dump_algo_cnt_fns():
             args += ", " + get_algo_extra_args(algo, "csel")
 
         if func_name.startswith('i'):
-            args += ", coll_sig->sched"
+            if algo['name'].startswith(('tsp_', 'sched_')):
+                args += ", coll_sig->sched"
+            else:
+                # the algorithm creates and returns its own request
+                args += ", (MPIR_Request **) &coll_sig->sched"
         elif func_name.startswith('neighbor_'):
             pass
         else:
@@ -134,8 +138,11 @@ def dump_algo_cnt_fns():
         if func_name.startswith('i'):
             if algo['name'].startswith('tsp_'):
                 G.out.append("MPII_CSEL_CREATE_TSP_SCHED(coll_sig);")
-            else:
+            elif algo['name'].startswith('sched_'):
                 G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
+            else:
+                G.out.append("MPIR_Assert(coll_sig->sched == NULL);")
+                G.out.append("coll_sig->sched_type = MPIR_SCHED_REQUEST;")
 
     G.out.append("")
     for algo in G.algo_list:
