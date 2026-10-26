@@ -326,13 +326,12 @@ IBCAST, will use the same blocking algorithm. Notice that if
 + ---------- + ---------------------------- + ---------------------------------- + ------------------- +
 ```
 
-`MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ` determines the size of the swap
-buffer used for GPU collective operations. Currently, it only supports
-MPI_Bcast and MPI_Allreduce. If the message size is smaller or equal to
-this swap buffer size, MPICH will transfer the data to the host and
-perform the collective operation there. If the message size exceeds this
-buffer size, MPICH will perform the collective operation directly on the
-GPU.
+Collectives on GPU device buffers run on the device buffers by default.
+Reductions whose operation cannot run on the GPU copy their operands to
+the host. A tuning file (`MPIR_CVAR_COLL_SELECTION_JSON_FILE`) can send
+collectives with device buffers to `MPIR_Coll_buffer_swap`, which copies
+the device buffers to host buffers and runs the collective there; see
+`doc/wiki/design/Collective_Selection.md`.
 
 The following CVARs are related to the topology-aware collective algorithms:
 * `MPIR_CVAR_<collname>_TOPO_REORDER_ENABLE`, where \<collname\> is BCAST

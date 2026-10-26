@@ -91,6 +91,8 @@ bcast-intra:
   false otherwise.
 - **General algorithms** work on any `coll_type`. `MPIR_Coll_nb` runs the
   nonblocking form of a blocking collective and waits for it.
+  `MPIR_Coll_buffer_swap` swaps GPU buffers for host buffers (see "GPU
+  buffers" below).
 - **`<coll>-<intra|inter>` sections** list algorithms. A name such as
   `binomial` expands to the function `MPIR_Bcast_intra_binomial` unless
   `func_name` gives one. Attribute keys:
@@ -100,6 +102,9 @@ bcast-intra:
       `not_inplace`). Every restriction is then a condition that holds, so
       the algorithms allowed under a set of true conditions are also
       allowed under any larger set. JSON trees can still negate (`!inplace`).
+    - `gpu_swap: 1`: for an algorithm that can't work on device buffers.
+      When the `gpu` restriction holds, its generated wrapper swaps the
+      buffers for host buffers first (see "GPU buffers" below).
     - `inner`: for a compositional algorithm, the collectives it calls
       through the selection, as `<section>@<communicator>` (e.g.
       `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
@@ -112,6 +117,11 @@ bcast-intra:
       `cvar_params` placeholder.
     - `func_name`, `inline`, `macro_guard`: for device algorithms that are
       inline in device headers and exist only in some builds.
+    - `disabled: 1`: keeps the algorithm out of the selection. Forcing it by
+      CVAR fails its restriction check, and a JSON file that names it fails
+      to load ("disabled algorithm"). Its algorithm table entry is NULL. The
+      nonblocking compositions (`sched_smp`) are disabled until nested
+      selection into an existing schedule is designed.
 
 Each entry is exactly one algorithm function. There are no aliases; an alias
 is a small separate function.
@@ -257,7 +267,8 @@ only the JSON subset the tree needs:
 
 ```
 MPI_Bcast
-  -> MPIR_Bcast_impl                 (generated) fill coll_sig, MPID_Init_coll_sig
+  -> MPIR_Bcast_impl                 (generated) fill coll_sig, MPID_Init_coll_sig,
+                                     MPIR_Coll_sig_prepare_gpu
      -> MPIR_Coll_json
         algorithm CVAR set?
           yes: restrictions pass? -> fill container from CVARs ------+
@@ -276,7 +287,9 @@ MPI_Bcast
 2. **Signature.** `_impl` fills a stack `coll_sig`: `coll_type`, `comm_ptr`,
    `flags` (`MPIR_COLL_SIG_FLAG__PERSISTENT` for `_init` calls), `tag`,
    `sched = NULL`, and the arguments. It then calls
-   `MPID_Init_coll_sig(&coll_sig)` so the device can add its own fields.
+   `MPID_Init_coll_sig(&coll_sig)` so the device can add its own fields, and
+   `MPIR_Coll_sig_prepare_gpu(&coll_sig)`, which queries the buffers this rank
+   uses and sets the GPU flags (see "GPU buffers" below).
 3. **CVAR.** `MPIR_Coll_json` reads the algorithm CVAR through
    `MPIR_Coll_cvar_table[coll_type]`, a table of pointers to the CVARs, so a
    value written with `MPI_T_cvar_write` applies from the next call; 0 means
@@ -376,6 +389,66 @@ barrier) is the example.
 - **Signature hook.** Every `_impl` calls `MPID_Init_coll_sig(coll_sig)` after
   the generic fields are set. CH3 and CH4 define it as an empty inline today.
   New boolean attributes go in the `flags` bit mask.
+
+## GPU buffers
+
+`MPIR_Coll_sig_prepare_gpu` runs before the selection, when GPU support is
+on. It queries the buffers this rank uses in the call (e.g. a rooted
+collective's recvbuf only at the root, no sendbuf with `MPI_IN_PLACE`) and
+sets two flags, which two restrictions read:
+
+| Restriction | Flag | Holds when |
+|---|---|---|
+| 12 `gpu` | `MPIR_COLL_SIG_FLAG__GPU` | a buffer is device memory (`MPL_gpu_attr_is_dev`) |
+| 13 `gpu_coll` | `MPIR_COLL_SIG_FLAG__GPU_COLL` | every buffer is device memory (`MPL_gpu_attr_is_dev`) and `MPIR_CVAR_ENABLE_GPU_COLL` is on |
+
+Buffers that are neither host nor device memory, such as registered host or
+managed memory, count as host memory here: the CPU can access them, so the
+collective algorithms can use them directly.
+`gpu` is a local fact. `gpu_coll` is for algorithms that need device buffers
+on every rank; no collective check is affordable in the selection, so the
+CVAR is the user's promise that each call passes either host buffers on all
+ranks or device buffers on all ranks. Intercomm, alltoallw and neighborhood
+collectives are not described yet and never set the flags. Neither flag
+changes what any algorithm does: an algorithm without the `gpu` restriction
+must still work on device buffers.
+
+`MPIR_Coll_buffer_swap`, a general algorithm with restriction `gpu`, copies
+each device buffer into a host buffer (only the ones the
+collective reads; a v-collective's recvbuf is copied in too, to keep the gaps
+between blocks), points `coll_sig` at the host buffers, clears both flags and
+continues in the `auto` tree. Afterwards it copies the written buffers back
+and frees the host buffers. With the flags clear, `auto` cannot select it
+again; a tree that selects it where `gpu` does not hold gets an error. The
+default tree does not use it; a tuning file opts in, e.g. for every
+collective:
+
+```
+"name=main": {
+    "gpu": { "algorithm=MPIR_Coll_buffer_swap": {} },
+    "any": "call=auto"
+}
+```
+
+An algorithm with `gpu_swap: 1` gets the same swap for itself: its
+generated `_cnt` wrapper calls `MPIR_Coll_gpu_swap` when the `gpu` flag is
+set, which swaps the buffers, clears the flags and calls the wrapper again,
+now running the algorithm. Host calls only test the flag. Every other
+algorithm must work on device buffers; most do through yaksa, and the
+shared CPU step, `MPIR_Reduce_local` with a builtin op that yaksa can't run,
+swaps its two operands to host memory itself. Calls that skip the algorithm
+table (`MPIR_*_fallback`, one algorithm calling another directly) don't get
+the wrapper.
+
+For nonblocking and persistent collectives, `auto` only builds the
+schedule, which the generated `_impl` starts afterwards. `buffer_swap` adds
+the copies to that schedule before it starts: the copy-ins at the front
+(`MPIR_Sched_move_to_front`, or `MPIR_TSP_sched_localcopy_front` for gentran),
+then a barrier or fence and the copy-outs at the back. The schedule owns the
+host buffers (`MPIR_Sched_add_buffer`, `MPIR_TSP_sched_add_buffer`) and frees
+them with itself; a persistent schedule replays the copies on every start. A
+call that adds to a schedule an outer collective is already building runs on
+the user buffers, since the copies would wrap the outer steps too.
 
 ## Adding an algorithm
 

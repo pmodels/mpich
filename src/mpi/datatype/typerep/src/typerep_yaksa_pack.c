@@ -65,9 +65,9 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#define IS_HOST(attr) \
-    ((attr).type == MPL_GPU_POINTER_UNREGISTERED_HOST || \
-    (attr).type == MPL_GPU_POINTER_REGISTERED_HOST)
+/* Memory that is not device memory, e.g. registered host or managed memory, is accessible
+ * by the CPU and is copied as host memory. */
+#define IS_HOST(attr) (!MPL_gpu_attr_is_dev(&(attr)))
 
 /* When a returned typerep_req is expected, using the nonblocking yaksa routine and
  * return the request; otherwise use the blocking yaksa routine. */

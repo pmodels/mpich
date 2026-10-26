@@ -102,6 +102,16 @@ int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t sched, int n_in_vtcs, int *in
 /* Transport function to allocate memory required for schedule execution */
 void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t sched);
 
+/* Transport function to hand a buffer allocated with MPL_malloc to the schedule, which frees
+ * it with the schedule */
+void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
+
+/* Transport function to schedule, before the schedule starts, a local copy that all the
+ * vertices already in the schedule wait for */
+int MPIR_TSP_sched_localcopy_front(const void *sendbuf, MPI_Aint sendcount,
+                                   MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                   MPI_Datatype recvtype, MPIR_TSP_sched_t sched);
+
 /* Transport function to schedule a sub-schedule */
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t sched, MPIR_TSP_sched_t subsched,
                              int n_in_vtcs, int *in_vtcs, int *vtx_id);

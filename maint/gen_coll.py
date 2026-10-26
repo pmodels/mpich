@@ -139,6 +139,8 @@ def dump_algo_cnt_fns():
 
     G.out.append("")
     for algo in G.algo_list:
+        if algo["func-commkind"] == 'general' and 'gpu_swap' in algo:
+            raise Exception("%s: gpu_swap only applies to the algorithms of a collective" % algo['name'])
         if algo["func-commkind"] != 'general':
             func_name, commkind = algo['func-commkind'].split("-")
             if func_name.startswith('i'):
@@ -156,6 +158,11 @@ def dump_algo_cnt_fns():
                 G.out.append("#if %s" % algo['macro_guard'])
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
+            if algo.get('gpu_swap') == '1':
+                # the swap clears the gpu flag, so the second call runs the algorithm
+                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
+                G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
+                dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
             dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
@@ -298,6 +305,9 @@ def dump_MPII_Coll_algo_init():
         idx = algo_id(algo_funcname)
         if a['func-commkind'] != 'general':
             algo_funcname += "_cnt"
+        if a.get('disabled') == '1':
+            # NULL tells the JSON loader to reject it
+            algo_funcname = "NULL"
         G.out.append("MPIR_Coll_algo_table[%s] = %s;" % (idx, algo_funcname))
     for a in G.algo_list:
         algo_funcname = get_algo_funcname(a)
@@ -524,7 +534,10 @@ def dump_MPIR_Coll_check_algo_restriction():
     G.out.append("unsigned need;")
     dump_open("switch (algo_id) {")
     for algo in G.algo_list:
-        if "restrictions" in algo:
+        if algo.get('disabled') == '1':
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            G.out.append("    return false;    /* disabled */")
+        elif "restrictions" in algo:
             restrictions = algo['restrictions'].replace(' ', '').split(',')
             need = 0
             for r in restrictions:
@@ -746,6 +759,7 @@ def dump_coll_impl(name, blocking_type):
             G.out.append("coll_sig.u.%s.%s = %s;" % (name, p['name'], p['name']))
 
     G.out.append("MPID_Init_coll_sig(&coll_sig);")
+    G.out.append("MPIR_Coll_sig_prepare_gpu(&coll_sig);")
 
     # Call csel
     G.out.append("")

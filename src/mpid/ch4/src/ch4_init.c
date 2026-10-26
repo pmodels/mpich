@@ -137,37 +137,6 @@ cvars:
       description : >-
         Specifies the max number of buffers for packing/unpacking buffers in the
         pool. Use 0 for unlimited.
-
-    - name        : MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
-      category    : CH4_OFI
-      type        : int
-      default     : 1048576
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the buffer size (in bytes) for GPU collectives data transfer.
-
-    - name        : MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK
-      category    : CH4_OFI
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the number of buffers for GPU collectives data transfer in
-        each block/chunk of the pool.
-
-    - name        : MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS
-      category    : CH4_OFI
-      type        : int
-      default     : 256
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the total number of buffers for GPU collectives data transfer.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -464,15 +433,6 @@ int MPID_Init(int requested, int *provided)
     mpi_errno = MPIDU_stream_workq_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Create genq for GPU collectives */
-    mpi_errno =
-        MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ,
-                                       MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK,
-                                       MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS,
-                                       host_alloc_registered,
-                                       host_free_registered, &MPIDI_global.gpu_coll_pool);
-    MPIR_ERR_CHECK(mpi_errno);
-
     if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
 #ifdef MPIDI_CH4_USE_MT_RUNTIME
         print_runtime_configurations();
@@ -566,8 +526,6 @@ int MPID_Finalize(void)
 #endif
 
     MPIDIG_am_finalize();
-
-    MPIDU_genq_private_pool_destroy(MPIDI_global.gpu_coll_pool);
 
     MPIDIU_avt_finalize();
 

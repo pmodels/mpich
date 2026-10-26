@@ -45,6 +45,10 @@ int MPII_Coll_finalize(void);
 
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
+                       MPIR_Coll_algo_fn fn);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 void MPII_Coll_type_init(void);
@@ -129,15 +133,5 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             MPIR_Assert(0); \
         } \
     } while (0)
-
-/* functions for supporting GPU buffers in reduce collectives */
-void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
-                                 MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
-void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
-void MPIR_Coll_host_buffer_swap_back(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
-                                     MPI_Aint count, MPI_Datatype datatype, MPIR_Request * request);
-void MPIR_Coll_host_buffer_persist_set(void *host_sendbuf, void *host_recvbuf, void *in_recvbuf,
-                                       MPI_Aint count, MPI_Datatype datatype,
-                                       MPIR_Request * request);
 
 #endif /* COLL_IMPL_H_INCLUDED */

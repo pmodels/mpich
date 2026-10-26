@@ -391,6 +391,49 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
 }
 
 
+/* Adds a localcopy vertex that every vertex without dependencies, i.e. every vertex that would
+ * start right away, now depends on. Vertices that depend on others wait for it through them.
+ * A second call makes the first copy wait for the second. Only valid before the schedule
+ * starts, when no vertex is complete and pending_dependencies equals num_dependencies. */
+int MPIR_TSP_sched_localcopy_front(const void *sendbuf, MPI_Aint sendcount,
+                                   MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                   MPI_Datatype recvtype, MPIR_TSP_sched_t s)
+{
+    MPII_Genutil_sched_t *sched = s;
+    vtx_t *vtxp;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(sched->completed_vtcs == 0 && sched->issued_head == NULL);
+
+    /* no dependencies: unlike MPIR_TSP_sched_localcopy, not even on the last fence */
+    int vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__LOCALCOPY;
+
+    vtxp->u.localcopy.sendbuf = sendbuf;
+    vtxp->u.localcopy.sendcount = sendcount;
+    vtxp->u.localcopy.sendtype = sendtype;
+    vtxp->u.localcopy.recvbuf = recvbuf;
+    vtxp->u.localcopy.recvcount = recvcount;
+    vtxp->u.localcopy.recvtype = recvtype;
+
+    MPIR_Datatype_add_ref_if_not_builtin(sendtype);
+    MPIR_Datatype_add_ref_if_not_builtin(recvtype);
+
+    for (int i = 0; i < vtx_id; i++) {
+        vtx_t *v = (vtx_t *) utarray_eltptr(&sched->vtcs, i);
+        if (v->num_dependencies == 0) {
+            utarray_push_back(&vtxp->out_vtcs, &i, MPL_MEM_COLL);
+            v->num_dependencies++;
+            v->pending_dependencies++;
+        }
+    }
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy at the front", vtx_id));
+
+    return mpi_errno;
+}
+
 /* Transport function that adds a callback type vertex in the graph */
 int MPIR_TSP_sched_cb(MPIR_TSP_cb_t cb_p, void *cb_data, MPIR_TSP_sched_t sched,
                       int n_in_vtcs, int *in_vtcs, int *vtx_id)
@@ -504,10 +547,15 @@ int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtc
 
 void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
 {
-    MPII_Genutil_sched_t *sched = s;
     void *addr = MPL_malloc(size, MPL_MEM_COLL);
-    utarray_push_back(&sched->buffers, &addr, MPL_MEM_COLL);
+    MPIR_TSP_sched_add_buffer(s, addr);
     return addr;
+}
+
+void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t s, void *buf)
+{
+    MPII_Genutil_sched_t *sched = s;
+    utarray_push_back(&sched->buffers, &buf, MPL_MEM_COLL);
 }
 
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t s, MPIR_TSP_sched_t subs,

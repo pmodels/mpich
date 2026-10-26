@@ -50,6 +50,48 @@ static void call_user_op_x(const void *inbuf, void *inoutbuf, MPI_Count count,
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
+/* The builtin op functions run on the CPU. Swap the device operands, which get here when
+ * yaksa can't do the op on the GPU, for host buffers. */
+static int reduce_local_on_host(const void *inbuf, void *inoutbuf, MPI_Aint count,
+                                MPI_Datatype datatype, MPIR_op_function * uop)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *host_in = NULL, *host_inout = NULL;
+    const void *in = inbuf;
+    void *inout = inoutbuf;
+
+    if (MPIR_GPU_query_pointer_is_dev(inbuf)) {
+        host_in = MPIR_alloc_buffer(count, datatype);
+        mpi_errno = MPIR_Localcopy(inbuf, count, datatype, host_in, count, datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+        in = host_in;
+    }
+    if (MPIR_GPU_query_pointer_is_dev(inoutbuf)) {
+        host_inout = MPIR_alloc_buffer(count, datatype);
+        mpi_errno = MPIR_Localcopy(inoutbuf, count, datatype, host_inout, count, datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+        inout = host_inout;
+    }
+
+    (*uop) ((void *) in, inout, &count, &datatype);
+
+    if (host_inout) {
+        mpi_errno = MPIR_Localcopy(host_inout, count, datatype, inoutbuf, count, datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    if (host_in) {
+        MPIR_gpu_host_free(host_in, count, datatype);
+    }
+    if (host_inout) {
+        MPIR_gpu_host_free(host_inout, count, datatype);
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op)
 {
@@ -72,7 +114,14 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         } else {
             /* get the function by indexing into the op table */
             uop = MPIR_OP_HDL_TO_FN(op);
-            (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+            if (ENABLE_GPU && (MPIR_GPU_query_pointer_is_dev(inbuf) ||
+                               MPIR_GPU_query_pointer_is_dev(inoutbuf))) {
+                mpi_errno = reduce_local_on_host(inbuf, inoutbuf, count, datatype, uop);
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_exit;
+            } else {
+                (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
+            }
         }
     } else {
         MPIR_Op_get_ptr(op, op_ptr);

@@ -47,9 +47,6 @@ void MPII_init_request(void)
     }
     MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtin[MPIR_REQUEST_KIND__SEND]);
     MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll_attr = 0;
-    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_sendbuf = NULL;
-    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.host_recvbuf = NULL;
-    MPIR_Request_builtin[MPIR_REQUEST_KIND__COLL].u.nbc.coll.datatype = MPI_DATATYPE_NULL;
 
     /* for recv from MPI_PROC_NULL */
     req = MPIR_Request_builtin + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
@@ -71,19 +68,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
             }
         case MPIR_REQUEST_KIND__COLL:
             {
-                MPII_Coll_req_t *coll = &request_ptr->u.nbc.coll;
-
-                if (coll->host_sendbuf || coll->host_recvbuf) {
-                    if (coll->host_sendbuf) {
-                        MPIR_gpu_host_free(coll->host_sendbuf, coll->count, coll->datatype);
-                    }
-                    if (coll->host_recvbuf) {
-                        MPIR_gpu_swap_back(coll->host_recvbuf, coll->user_recvbuf,
-                                           coll->count, coll->datatype);
-                    }
-                    MPIR_Datatype_release_if_not_builtin(coll->datatype);
-                }
-
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 break;
@@ -156,12 +140,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
                 if (request_ptr->u.persist_coll.real_request != NULL) {
-                    MPII_Coll_req_t *coll = &request_ptr->u.persist_coll.coll;
-                    if (coll->host_recvbuf) {
-                        MPIR_Localcopy(coll->host_recvbuf, coll->count, coll->datatype,
-                                       coll->user_recvbuf, coll->count, coll->datatype);
-                    }
-
                     MPIR_Request *prequest_ptr = request_ptr->u.persist_coll.real_request;
 
                     /* reset persistent request to inactive state */

@@ -58,6 +58,11 @@
 #         the same order. In addition, some of the extra parameter can be constant by specify
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
+#   * gpu_swap:
+#         1 for an algorithm that can't work on device buffers. When the gpu restriction
+#         holds, its generated wrapper swaps the buffers for host buffers first,
+#         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
+#         without it must work on device buffers.
 #   * inner:
 #         The collectives a compositional algorithm calls through the selection, as a
 #         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The
@@ -65,6 +70,11 @@
 #         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
 #         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
 #         after the collectives it depends on; gen_coll.py only checks it.
+#   * disabled:
+#         1 to keep an algorithm out of the selection. Forcing it by CVAR fails its
+#         restriction check (error or fallback, per MPIR_CVAR_COLLECTIVE_FALLBACK), and a JSON
+#         tuning file that names it fails to load. The nonblocking compositions (sched_smp)
+#         are disabled until nested selection into an existing schedule is designed.
 
 # ----
 restrictions:
@@ -81,6 +91,9 @@ restrictions:
     10 - block_regular:            MPIR_Csel_block_regular
     # conditional conditions - only call the condition function under macro_guard
     11 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+    # set by MPIR_Coll_sig_prepare_gpu before the selection
+    12 - gpu:                      MPIR_Csel_is_gpu
+    13 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
@@ -92,6 +105,8 @@ conditions:
 # ----
 general:
     MPIR_Coll_nb
+    MPIR_Coll_buffer_swap
+        restrictions: gpu
 
 # ----
 barrier-intra:
@@ -145,6 +160,7 @@ ibcast-intra:
     sched_binomial
     sched_smp
         restrictions: hierarchical
+        disabled: 1
     sched_scatter_recursive_doubling_allgather
         restrictions: pof2
     sched_scatter_ring_allgather
@@ -392,6 +408,7 @@ reduce-inter:
 ireduce-intra:
     sched_smp
         restrictions: commutative, hierarchical
+        disabled: 1
     sched_binomial
     sched_reduce_scatter_gather
         restrictions: count_ge_pof2, builtin_op
@@ -442,6 +459,7 @@ iallreduce-intra:
     sched_naive
     sched_smp
         restrictions: commutative, hierarchical
+        disabled: 1
     sched_recursive_doubling
     sched_reduce_scatter_allgather
         restrictions: count_ge_pof2, builtin_op
@@ -523,6 +541,7 @@ scan-intra:
 iscan-intra:
     sched_smp
         restrictions: commutative, node_consecutive
+        disabled: 1
     sched_recursive_doubling
     tsp_recursive_doubling
 

@@ -294,21 +294,22 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_GPU_query_pointer_attr(recvbuf, &recvattr);
             recv_attr = &recvattr;
         }
-        if (send_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST &&
-            recv_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST) {
-            memcpy(recv_ptr, send_ptr, copy_sz);
-            if (gpu_req) {
-                gpu_req->type = MPIR_NULL_REQUEST;
-            }
-            goto fn_exit;
-        }
-
         /* DEV_MMAP pointers are device memory mmap'd to host -- always use fast_memcpy */
         if (send_attr->type == MPL_GPU_POINTER_DEV_MMAP ||
             recv_attr->type == MPL_GPU_POINTER_DEV_MMAP) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
+            if (gpu_req) {
+                gpu_req->type = MPIR_NULL_REQUEST;
+            }
+            goto fn_exit;
+        }
+
+        /* memory that is not device memory, e.g. registered host or managed memory, is
+         * accessible by the CPU */
+        if (!MPL_gpu_attr_is_dev(send_attr) && !MPL_gpu_attr_is_dev(recv_attr)) {
+            memcpy(recv_ptr, send_ptr, copy_sz);
             if (gpu_req) {
                 gpu_req->type = MPIR_NULL_REQUEST;
             }
