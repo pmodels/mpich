@@ -105,7 +105,7 @@ static int basic_only = 0;
   snprintf(myname, MYNAME_SIZE, "Vector type %s", _basename);           \
   MPI_Type_set_name(types[cnt], myname); \
   free(myname); \
-  counts[cnt]  = 1; bytesize[cnt] = sizeof(_ctype) * (_count) * (_stride) ;\
+  counts[cnt]  = 1; bytesize[cnt] = sizeof(_ctype) * (_count) * (_stride); \
   cnt++; }
 
 /* This indexed type is setup like a contiguous type .

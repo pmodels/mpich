@@ -70,7 +70,7 @@
     {                                                                   \
         if ((_class & MPL_dbg_active_classes) && MPL_DBG_##_level <= MPL_dbg_max_level) { \
             char _s[MPL_DBG_MAXLINE];                                   \
-            snprintf _fmatargs ;                                        \
+            snprintf _fmatargs;                                         \
             MPL_dbg_outevent(__FILE__, __LINE__, _class, 0, "%s", _s);  \
         }                                                               \
     }
@@ -88,7 +88,7 @@
 #define MPL_DBG_OUT_FMT(_class,_fmatargs)                               \
     {                                                                   \
         char _s[MPL_DBG_MAXLINE];                                       \
-        snprintf _fmatargs ;                                            \
+        snprintf _fmatargs;                                             \
         MPL_dbg_outevent(__FILE__, __LINE__, _class, 0, "%s", _s);      \
     }
 

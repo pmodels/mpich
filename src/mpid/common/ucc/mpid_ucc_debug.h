@@ -41,14 +41,14 @@
     MPIDI_COMMON_UCC_DEBUG_WRAPPER(MPIDI_COMMON_UCC_VERBOSE_LEVEL_FNCALL, "call of %s() DONE", _fn_name);
 
 #define MPIDI_COMMON_UCC_DEBUG_WRAPPER_CALL(_fn_name, ...) MPIDI_COMMON_UCC_DEBUG_WRAPPER_ \
-    ## _fn_name (__FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+    ## _fn_name(__FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 #define MPIDI_COMMON_UCC_DEBUG_WRAPPER_IMPL(_ret_type, _fn_name, _arglist, ...) \
     static _ret_type MPIDI_COMMON_UCC_DEBUG_WRAPPER_ ## _fn_name                \
         (const char * _file, const char * _func, int _line, __VA_ARGS__)        \
     {                                                                           \
         _ret_type ret_val;                                                      \
         MPIDI_COMMON_UCC_DEBUG_FNCALL(# _fn_name);                              \
-        ret_val = _fn_name _arglist ;                                           \
+        ret_val = _fn_name _arglist;                                            \
         MPIDI_COMMON_UCC_DEBUG_FNDONE(# _fn_name);                              \
         return ret_val;                                                         \
     }
@@ -95,7 +95,7 @@ MPIDI_COMMON_UCC_DEBUG_WRAPPER_IMPL(ucc_status_t, ucc_finalize, (lib_p), ucc_lib
 #define MPIDI_COMMON_UCC_OUTPUT_COND_CONCAT_STR(_str, _cond) do {      \
        if (_cond) {                                                    \
            if (strlen(_str)) strcat(_str, " + ");                      \
-           strcat(_str , MPIDI_COMMON_UCC_OUTPUT_STRINGIFY(_cond));    \
+           strcat(_str, MPIDI_COMMON_UCC_OUTPUT_STRINGIFY(_cond));     \
        }                                                               \
    } while (0);
 #define MPIDI_COMMON_UCC_OUTPUT_COND_CREATE_STR(_str) do {             \
