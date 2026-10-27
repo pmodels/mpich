@@ -38,6 +38,9 @@ MPI_Allreduce:
     .docnotes: collops
     .extra: threadcomm
 { -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0 && op != MPIX_EQUAL) {
+        goto fn_exit;
+    }
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
@@ -164,6 +167,11 @@ MPI_Iallgatherv:
 MPI_Iallreduce:
     .desc: Combines values from all processes and distributes the result back to all processes in a nonblocking way
 { -- early_return --
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
