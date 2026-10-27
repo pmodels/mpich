@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  [goodell@ 2010-12-20]
 
  - Added _N (for LL_ macros) and _NP (for DL_ and CDL_ macros)
-   variants to each macro.  Thease take additional parameters to specify the
+   variants to each macro.  These take additional parameters to specify the
    next or next and prev fields, respectively.  The field name should be used in
    those parameters.  E.g., say the struct looks like this:
 
