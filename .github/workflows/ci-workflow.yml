@@ -275,6 +275,10 @@ jobs:
     - name: Configure hostname
       run:  echo 127.0.0.1 `hostname` | sudo tee -a /etc/hosts > /dev/null
 
+    - if: ${{ runner.os == 'macOS' && contains(inputs.pm, 'gforker') }}
+      name: Disable spawn tests
+      run:  echo MPI4PY_TEST_SPAWN=0 >> "$GITHUB_ENV"
+
     - name: Test mpi4py (singleton)
       run:  python test/main.py -v
     - name: Test mpi4py (np=1)
