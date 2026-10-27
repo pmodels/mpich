@@ -7,6 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 #include "ofi_init.h"
+#include "coll/ofi_coll_types.h"
 
 #define HAS_PREF_NIC(comm) comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1
 
@@ -130,6 +131,10 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
+    /* comm objects are not zeroed on allocation; make the free hook safe for comms
+     * whose commit_post_hook never ran */
+    memset(&MPIDI_OFI_COMM(comm).coll, 0, sizeof(MPIDI_OFI_COMM(comm).coll));
+
     /* Initialize the multi-nic optimization values */
     MPIDI_OFI_COMM(comm).enable_striping = 0;
     MPIDI_OFI_COMM(comm).enable_hashing = 0;
@@ -164,6 +169,9 @@ int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
     mpi_errno = update_nic_preferences(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_OFI_coll_comm_create_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -176,10 +184,15 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    mpi_errno = MPIDI_OFI_coll_comm_destroy_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_comm_set_hints(MPIR_Comm * comm, MPIR_Info * info)

@@ -242,6 +242,12 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
     }
 #endif
 
+    if (MPIDI_OFI_ENABLE_COLL) {
+        hints->caps |= FI_COLLECTIVE;
+        hints->tx_attr->caps |= FI_COLLECTIVE;
+        hints->rx_attr->caps |= FI_COLLECTIVE;
+    }
+
   fn_fail:
     return mpi_errno;
 }
@@ -338,6 +344,8 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     UPDATE_SETTING_BY_CAP(num_optimized_memory_regions,
                           MPIR_CVAR_CH4_OFI_NUM_OPTIMIZED_MEMORY_REGIONS);
     UPDATE_SETTING_BY_CAP(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
+    /* Offload to fi_collective is opt-in only; no provider set enables it by default. */
+    p_settings->enable_coll = MPIR_CVAR_CH4_OFI_ENABLE_COLL;
     UPDATE_SETTING_BY_CAP(enable_mr_hmem, MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM);
 }
 
@@ -373,6 +381,7 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 #ifdef FI_HMEM
     CHECK_CAP(enable_hmem, !(prov->caps & FI_HMEM));
 #endif
+    CHECK_CAP(enable_coll, !(prov->caps & FI_COLLECTIVE));
     uint64_t msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     CHECK_CAP(enable_atomics,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);

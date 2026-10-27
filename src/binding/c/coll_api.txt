@@ -38,6 +38,9 @@ MPI_Allreduce:
     .docnotes: collops
     .extra: threadcomm
 { -- early_return --
+    if (count == 0) {
+        goto fn_exit;
+    }
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
