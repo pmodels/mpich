@@ -24,6 +24,7 @@
 #   C3 label indentation            C4 top-level indentation
 #   C5 preprocessor directive placement
 #   C6 continuation line indentation
+#   C7 line break that indent would join
 #   D1 comment indentation          D3 comment continuation lines
 #   D4 trailing comment column      D5 space before '*/'
 #   D6 comment column after a directive
@@ -75,7 +76,7 @@ IGNORE_LIST = [
 ]
 
 ALL_RULES = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
-             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "C6", "D1", "D3", "D4", "D5",
+             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "D1", "D3", "D4", "D5",
              "D6", "E1", "E4"]
 
 KEYWORDS = {
@@ -98,6 +99,17 @@ AGGREGATES = {"struct", "union", "enum"}
 
 TYPE_KEYWORDS = {"char", "short", "int", "long", "float", "double", "void", "signed", "unsigned",
                  "_Bool", "const", "volatile", "struct", "union", "enum"}
+
+DECL_KEYWORDS = TYPE_KEYWORDS | {"static", "extern", "inline", "register", "auto", "typedef",
+                                 "__inline__", "__inline", "_Thread_local", "__thread"}
+
+# keywords that keep a line break after them when a declaration follows (C7, probe):
+# 'static' / 'bool f(void)', 'unsigned long' / 'foo x;'
+KEEP_BREAK_KEYWORDS = {"char", "short", "int", "long", "float", "double", "void", "signed",
+                       "unsigned", "const", "volatile", "struct", "union", "enum", "static",
+                       "extern", "register", "typedef"}
+
+ASSIGN_OPS = {"=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="}
 
 # keywords after which a '(' may open a cast
 UNARY_KEYWORDS = {"return", "case", "else", "do"}
@@ -247,7 +259,7 @@ def lex(text, lines):
 
 class Frame:
     __slots__ = ("kind", "indent", "inner", "close", "kw", "state", "paren", "hdr_line",
-                 "brace", "saved", "depth", "init", "else_tok", "macro", "open")
+                 "brace", "saved", "depth", "init", "else_tok", "macro", "open", "lines")
 
     def __init__(self, kind, indent=0, inner=0, close=0):
         self.kind = kind      # top extern func block switch struct opaque ctl
@@ -265,6 +277,7 @@ class Frame:
         self.else_tok = None
         self.macro = False
         self.open = ()        # ctl: unclosed '(' and '[' of the header
+        self.lines = ()       # ctl: lines of the header (C7), None if not checked
 
     def copy(self):
         f = Frame(self.kind)
@@ -770,6 +783,20 @@ class Checker:
         self.cond = []
         self.last_close = None   # last '}' that closed a ctl body
         self.shift = {}          # line -> columns indent would move it by (C6)
+        self.first_code = {}     # line -> its first code token (C7)
+        self.last_code = {}      # line -> its last code token (C7)
+        self.cmt_lines = set()   # lines where a comment starts (C7)
+        self.mid_cmt = set()     # lines with code after a comment (C7)
+        for t in toks:
+            if t.pp is not None:
+                continue
+            if t.kind in ("cmt", "lcmt"):
+                self.cmt_lines.add(t.line)
+            else:
+                if t.line in self.cmt_lines:
+                    self.mid_cmt.add(t.line)
+                self.first_code.setdefault(t.line, t)
+                self.last_code[t.line] = t
         code = self.code
         self.i = 0
         n = len(code)
@@ -892,6 +919,8 @@ class Checker:
                     return
                 if top.open and t.first:
                     self.check_cont(t, top.indent, top.open)
+                    if top.lines is not None:
+                        top.lines += ((t.line, top.open),)
                 if s in ("(", "["):
                     top.paren += 1
                     top.open += (t,)
@@ -899,10 +928,13 @@ class Checker:
                     top.paren -= 1
                     top.open = top.open[:-1]
                     if top.paren == 0:
+                        if top.lines:
+                            self.check_joins(top.lines)
                         top.hdr_line = t.line
                         top.state = "need-semi" if top.kw == "do" else "body-pending"
                         top.else_tok = t
                 elif s == "{":
+                    top.lines = None
                     self.push_opaque(t)
                 elif s == "}":
                     self.lose()
@@ -927,6 +959,7 @@ class Checker:
                 else:
                     self.check_col(t, top.indent, "C1", "'while' of do-while")
                 top.state = "header"
+                top.lines = ((t.line, ()),)
                 return
             if st == "need-semi":
                 if s != ";":
@@ -977,6 +1010,8 @@ class Checker:
         return False
 
     def push_opaque(self, t, init=False):
+        if self.stmt is not None:
+            self.stmt["nojoin"] = True    # brace groups inside a statement: not checked
         f = Frame("opaque")
         f.depth = 1
         f.init = init
@@ -1043,6 +1078,7 @@ class Checker:
             f = Frame("ctl", ctl.indent)
             f.kw = "if"
             f.state = "header"
+            f.lines = ((nxt.line, ()),)
             self.stack.append(f)
             pp = self.skip_to(j)
             if nxt.line == t.line:
@@ -1134,6 +1170,7 @@ class Checker:
             f = Frame("ctl", base)
             f.kw = s
             f.state = "header"
+            f.lines = ((t.line, ()),)
             self.stack.append(f)
             return
         if s == "do":
@@ -1150,7 +1187,7 @@ class Checker:
         self.stmt = {"kind": "expr", "start": t, "base": base, "paren": 1 if s in "([" else 0, "prev": t,
                      "open": (t,) if s in "([" else (),
                      "eq": False, "agg": s if s in AGGREGATES else False, "call": False,
-                     "init": False, "extern": s == "extern"}
+                     "init": False, "extern": s == "extern", "lines": ((t.line, ()),), "decl": False}
         if not glued:
             # checked when the statement ends with ';', as one without is likely a macro
             self.stmt["chk"] = chk
@@ -1196,6 +1233,152 @@ class Checker:
             self.shift[t.line] = 0
         else:
             self.check_col(t, want, "C6", "continuation line")
+
+    def stmt_joins(self, st):
+        if "chk" in st and not st.get("nojoin") and not st.get("semi") and st["kind"] == "expr":
+            self.check_joins(st["lines"], st["decl"])
+        st["nojoin"] = True
+
+    def check_joins(self, lines, decl=False):
+        """C7: lines (the first line and the continuation lines of a statement or
+        control header) as indent would join them.  indent fills a line with the input
+        lines; when the next one does not fit in 100 columns it breaks at the earliest
+        input line break still in the line that moves the text after it at least 2
+        columns left, and refills from there.  Columns are taken from the lines as
+        they will be once fixed (C1, C6)."""
+        if self.lost:
+            return
+        units = []
+        for ln, opens in sorted(dict(lines).items()):
+            first, last = self.first_code.get(ln), self.last_code.get(ln)
+            if first is None or "\n" in last.text:
+                # a string continued with '\' at the end of the line: not checked
+                return
+            units.append({"lines": [ln], "start": first.col + self.shift.get(ln, 0),
+                          "width": last.ecol - first.col, "first": first, "last": last,
+                          "opens": opens})
+        for prev, unit in zip(units, units[1:]):
+            a, b = prev["last"], unit["first"]
+            if b.text == "(" and a.kind == "id" and a.text not in KEYWORDS:
+                # 'f' / '(x)': indent's own break in a line too long for it; the
+                # statement's other breaks are not predictable from the input either
+                return
+        prev = units[0]["lines"][0] - 1
+        if self.last_code.get(prev) and self.last_code[prev].text == ":" and \
+                len(self.lines[prev - 1]) >= 100:
+            # QUIRK(Q35): after a label or 'case' line of 100 columns or more indent
+            # keeps the breaks
+            return
+        # option (a): a break after '=' is flagged only when the whole statement fits
+        long = self.joined_end(units, len(units)) > self.limit(units)
+        groups = [[units[0]]]
+        for prev, unit in zip(units, units[1:]):
+            ln = prev["lines"][0]
+            a, b = prev["last"], unit["first"]
+            if a.text in (")", "]") or ln in self.cmt_lines or \
+                    any(self.lines[k - 1].strip() for k in range(ln + 1, unit["lines"][0])):
+                # indent keeps a break after ')' or ']', after a line with a comment,
+                # and one that a comment or directive is in the way of
+                groups.append([unit])
+            elif a.kind == "id" and (b.text in DECL_KEYWORDS or self.pointer_declarator(b)):
+                # and one between declaration specifiers or before a pointer declarator:
+                # 'static' / 'int x;', 'struct s' / '*p;' (but '(int' / '*) x' is joined)
+                groups.append([unit])
+            elif not unit["opens"] and a.text in KEEP_BREAK_KEYWORDS and b.kind == "id" and \
+                    (self.toks[b.idx + 1].kind == "id" or self.toks[b.idx + 1].text == "*"):
+                # QUIRK(Q34): and one after some keywords when a declarator follows:
+                # 'static' / 'bool f(' (but 'f(int a, const' / 'foo_t b)' is joined)
+                groups.append([unit])
+            elif decl and any(self.is_call(o) for o in unit["opens"]):
+                # QUIRK(Q33): and one in the arguments of a call in a declaration's
+                # initializer
+                groups.append([unit])
+            elif long and a.text in ASSIGN_OPS and not decl:
+                # (in a declaration the break after '=' is an ordinary one)
+                groups.append([unit])
+            elif unit["first"].text == "->":
+                # indent never keeps a break before '->'
+                u = groups[-1][-1]
+                u["width"] += self.join_space(u, unit) + unit["width"]
+                u["lines"] += unit["lines"]
+                u["last"] = unit["last"]
+            else:
+                groups[-1].append(unit)
+        for group in groups:
+            cur = []
+            for unit in group:
+                cur.append(unit)
+                while self.joined_end(cur, len(cur)) > self.limit(cur):
+                    for k in range(1, len(cur)):
+                        a, b = cur[k - 1]["last"], cur[k]["first"]
+                        if self.joined_end(cur, k) + self.join_space(cur[k - 1], cur[k]) \
+                                - cur[k]["start"] >= 2:
+                            break
+                        if b.text == "(" and (a.text in ("!", "~") or self.unary(a)):
+                            # a break between a unary operator and '(' is an ordinary one
+                            break
+                    else:
+                        break
+                    self.join_report(cur[:k])
+                    cur = cur[k:]
+            self.join_report(cur)
+
+    def pointer_declarator(self, t):
+        """t starts '*name' or '**name'"""
+        j = t.idx
+        while self.toks[j].text == "*" and self.toks[j + 1].col == self.toks[j].ecol:
+            j += 1
+        return j > t.idx and self.toks[j].kind == "id"
+
+    def is_call(self, t):
+        """t is a '(' that opens the arguments of a call"""
+        j = t.idx - 1
+        while j >= 0 and self.toks[j].kind in ("cmt", "lcmt"):
+            j -= 1
+        p = self.toks[j]
+        return t.text == "(" and ((p.kind == "id" and p.text not in KEYWORDS) or p.text == ")")
+
+    def joined_end(self, units, n):
+        """end column of the first n units joined on one line"""
+        end = units[0]["start"] + units[0]["width"]
+        for a, b in zip(units[:n - 1], units[1:n]):
+            end += self.join_space(a, b) + b["width"]
+        return end
+
+    def limit(self, units):
+        """the column a joined line may reach: 99 with code after a comment in it (probe)"""
+        return 99 if any(ln in self.mid_cmt for u in units for ln in u["lines"]) else 100
+
+    def join_report(self, units):
+        """units become one line in indent's output"""
+        if self.joined_end(units, len(units)) > self.limit(units):
+            # indent breaks the line at its own places; option (a): not checked
+            return
+        for i, unit in enumerate(units):
+            for ln in unit["lines"][0 if i else 1:]:
+                t = self.first_code[ln]
+                self.report("C7", ln, t.col, "line break that indent would join (fits in 100 columns)")
+
+    def join_space(self, a, b):
+        """columns between units a and b once joined"""
+        x, y = a["last"], b["first"]
+        if y.text in (")", "]", ",", ";", "->", ".", "[") or x.text in ("(", "[", "->", ".", "!", "~") \
+                or self.unary(x):
+            return 0
+        if y.text == "(" and x.kind == "id" and (x.text not in KEYWORDS or x.text == "sizeof"):
+            return 0
+        return 1
+
+    def unary(self, t):
+        """t is a '-', '+', '*' or '&' in unary position"""
+        if t.text not in ("-", "+", "*", "&"):
+            return False
+        j = t.idx - 1
+        while j >= 0 and self.toks[j].kind in ("cmt", "lcmt"):
+            j -= 1
+        p = self.toks[j]
+        return not (p.kind in ("num", "str", "chr") or (p.kind == "id" and p.text not in KEYWORDS)
+                    or p.text in (")", "]", "++", "--"))
 
     def ends_line(self, t):
         """nothing but comments follows token t on its line"""
@@ -1281,6 +1464,7 @@ class Checker:
         if t.first and s not in ("{", "}") and not st.get("semi"):
             start = st["start"]
             self.check_cont(t, start.col + self.shift.get(start.line, 0), st["open"])
+            st["lines"] += ((t.line, st["open"]),)
         if s in ("(", "["):
             st["paren"] = p + 1
             st["open"] += (t,)
@@ -1297,6 +1481,11 @@ class Checker:
                 self.complete(t)
                 return
             if s == "=":
+                if not st["eq"] and self.i >= 2:
+                    # 'TYPE x =', 'TYPE *x =': a declaration with an initializer ('*x =' is not)
+                    a, b = self.code[self.i - 1], self.code[self.i - 2]
+                    st["decl"] = a is not st["start"] and a.kind == "id" and a.text not in KEYWORDS \
+                        and (b.kind == "id" or (b.text == "*" and b is not st["start"]))
                 st["eq"] = True
             elif s == "{":
                 self.open_in_statement(t)
@@ -1340,6 +1529,7 @@ class Checker:
             return
         if "chk" in st and not (st["agg"] and prev.kind == "id"):
             self.check_col(*st["chk"])
+        self.stmt_joins(st)
         if st["extern"] and prev.kind == "str" and toplevel:
             f = Frame("extern", 0, None, 0)
             self.stmt = None
@@ -1452,6 +1642,7 @@ class Checker:
         if st is not None and "chk" in st:
             if not implicit:
                 self.check_col(*st["chk"])
+                self.stmt_joins(st)
             else:
                 self.glued = True    # QUIRK(Q22)
         if st is not None and st.get("init") and not implicit and top.kind in ("top", "extern") \

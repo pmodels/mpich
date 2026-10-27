@@ -1,4 +1,4 @@
-/* expect: C2 */
+/* expect: C2,C7 */
 int g(void)
 {
     switch (x) {
