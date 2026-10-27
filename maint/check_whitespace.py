@@ -24,8 +24,10 @@
 #   C3 label indentation            C4 top-level indentation
 #   C5 preprocessor directive placement
 #   D1 comment indentation          D3 comment continuation lines
-#   D4 trailing comment column      D6 comment column after a directive
+#   D4 trailing comment column      D5 space before '*/'
+#   D6 comment column after a directive
 #   E1 blank line after a function body
+#   E4 exactly one newline at the end of the file
 
 import re
 import subprocess
@@ -72,8 +74,8 @@ IGNORE_LIST = [
 ]
 
 ALL_RULES = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
-             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "D1", "D3", "D4", "D6",
-             "E1"]
+             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "D1", "D3", "D4", "D5",
+             "D6", "E1", "E4"]
 
 KEYWORDS = {
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else",
@@ -296,12 +298,14 @@ class Checker:
     def run(self):
         self.find_indent_off()
         self.check_lines()
+        self.check_file_end()
         self.toks, self.directives, literal_tabs = lex(self.text, self.lines)
         self.check_tabs(literal_tabs)
         self.check_directives()
         self.check_spacing()
         self.check_operators()
         self.check_comments()
+        self.check_comment_ends()
         self.check_trailing_comments()
         self.parse()
         return sorted(self.reports.values())
@@ -325,6 +329,19 @@ class Checker:
             if s.endswith((" ", "\t")):
                 k = len(s.rstrip(" \t"))
                 self.report("A1", i + 1, vcol(s, k), "trailing whitespace")
+
+    def check_file_end(self):
+        # indent removes blank lines at the end of a file and adds a missing final newline
+        if not self.text:
+            return
+        if not self.text.endswith("\n"):
+            self.report("E4", self.nlines, len(self.lines[-1]), "no newline at end of file")
+            return
+        n = self.nlines
+        while n > 0 and not self.lines[n - 1].strip(" \t"):
+            n -= 1
+        if n < self.nlines:
+            self.report("E4", n + 1, 0, "blank line at end of file")
 
     def check_tabs(self, literal_tabs):
         for i, s in enumerate(self.lines):
@@ -670,6 +687,27 @@ class Checker:
                         self.report("D3", ln, vcol(s, k), "comment line should start with '*' under the '*' of '/*'")
                 elif vcol(s, k) not in want:
                     self.report("D3", ln, vcol(s, k), "'*' should be under the '*' of '/*'")
+
+    def check_comment_ends(self):
+        # indent puts a space before the '*/' of a one-line comment, except in column 0,
+        # boxed comments, and inside a directive unless the comment ends it
+        toks = self.toks
+        for t in toks:
+            if t.kind != "cmt" or t.eline != t.line or t.col == 0 or self.is_boxed(t):
+                continue
+            nxt = toks[t.idx + 1] if t.idx + 1 < len(toks) else None
+            if t.pp is not None and nxt is not None and nxt.pp == t.pp:
+                continue
+            # QUIRK(Q26): in an initializer indent leaves a line with two adjacent comments
+            # alone ('f, /* a */ /*b*/'); elsewhere it adds the space
+            prv = toks[t.idx - 1] if t.idx > 0 else None
+            if (prv is not None and prv.kind == "cmt" and prv.eline == t.line) or \
+                    (nxt is not None and nxt.kind == "cmt" and nxt.line == t.line):
+                continue
+            # a tab is reported by A2; QUIRK(Q25): indent turns '/* a**/' into '/* a* */';
+            # QUIRK(Q27): it leaves '/* a(*/' alone
+            if t.text[-3] not in " \t*(":
+                self.report("D5", t.line, t.ecol - 2, "need a space before '*/'")
 
     def check_trailing_comments(self):
         """D4: a comment that ends a code line starts at the next tab stop past the code,
