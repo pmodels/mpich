@@ -23,6 +23,7 @@
 #   C1 statement indentation        C2 case indentation
 #   C3 label indentation            C4 top-level indentation
 #   C5 preprocessor directive placement
+#   C6 continuation line indentation
 #   D1 comment indentation          D3 comment continuation lines
 #   D4 trailing comment column      D5 space before '*/'
 #   D6 comment column after a directive
@@ -74,7 +75,7 @@ IGNORE_LIST = [
 ]
 
 ALL_RULES = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
-             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "D1", "D3", "D4", "D5",
+             "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "C6", "D1", "D3", "D4", "D5",
              "D6", "E1", "E4"]
 
 KEYWORDS = {
@@ -246,7 +247,7 @@ def lex(text, lines):
 
 class Frame:
     __slots__ = ("kind", "indent", "inner", "close", "kw", "state", "paren", "hdr_line",
-                 "brace", "saved", "depth", "init", "else_tok", "macro")
+                 "brace", "saved", "depth", "init", "else_tok", "macro", "open")
 
     def __init__(self, kind, indent=0, inner=0, close=0):
         self.kind = kind      # top extern func block switch struct opaque ctl
@@ -263,6 +264,7 @@ class Frame:
         self.init = False     # opaque: initializer at statement level
         self.else_tok = None
         self.macro = False
+        self.open = ()        # ctl: unclosed '(' and '[' of the header
 
     def copy(self):
         f = Frame(self.kind)
@@ -767,6 +769,7 @@ class Checker:
         self.glued = False
         self.cond = []
         self.last_close = None   # last '}' that closed a ctl body
+        self.shift = {}          # line -> columns indent would move it by (C6)
         code = self.code
         self.i = 0
         n = len(code)
@@ -837,6 +840,8 @@ class Checker:
                 self.lost_at = self.code[self.i].line
 
     def check_col(self, t, want, code="C1", what="statement", alt=None):
+        if t.first:
+            self.shift[t.line] = 0 if t.col in (want, alt) else want - t.col
         if t.first and t.col != want and t.col != alt and not self.lost:
             self.report(code, t.line, t.col, "%s at column %d, expected %d" % (what, t.col + 1, want + 1))
 
@@ -885,10 +890,14 @@ class Checker:
                 if top.paren == 0 and s != "(":
                     self.lose()
                     return
+                if top.open and t.first:
+                    self.check_cont(t, top.indent, top.open)
                 if s in ("(", "["):
                     top.paren += 1
+                    top.open += (t,)
                 elif s in (")", "]"):
                     top.paren -= 1
+                    top.open = top.open[:-1]
                     if top.paren == 0:
                         top.hdr_line = t.line
                         top.state = "need-semi" if top.kw == "do" else "body-pending"
@@ -1139,11 +1148,61 @@ class Checker:
             self.lose()
             return
         self.stmt = {"kind": "expr", "start": t, "base": base, "paren": 1 if s in "([" else 0, "prev": t,
+                     "open": (t,) if s in "([" else (),
                      "eq": False, "agg": s if s in AGGREGATES else False, "call": False,
                      "init": False, "extern": s == "extern"}
         if not glued:
             # checked when the statement ends with ';', as one without is likely a macro
             self.stmt["chk"] = chk
+            if t.first:
+                self.shift[t.line] = 0 if t.col in chk[1:2] + chk[4:] else base - t.col
+
+    def check_cont(self, t, base, opens):
+        """C6: t starts a continuation line of the statement whose first line starts at
+        column base (once fixed); opens holds its unclosed '(' and '['.  Columns are
+        measured on the lines as they will be once the lines above are fixed."""
+        i = self.i
+        j = i - 1
+        while self.code[j].pp is not None:
+            j -= 1
+        prev = self.code[j]
+        alt = []
+        if opens:
+            o = opens[-1]
+            want = o.ecol + self.shift.get(o.line, 0)
+            if self.ends_line(o):
+                # QUIRK(Q28): after a bracket that ends its line (a comment or directive
+                # follows, so it is not joined), indent goes 3 columns further
+                want += 3
+                alt.append(base + 4)
+        elif self.stack[-1].kind in ("top", "extern"):
+            # QUIRK(Q30): at top level indent uses 0 or 4, depending on what precedes;
+            # inside 'extern "C" {' also 1 after a type
+            want = base
+            alt += [base + 4, base + 1] if self.stack[-1].kind == "extern" else [base + 4]
+        else:
+            want = base + 4
+            if self.toks[t.idx - 1].kind in ("cmt", "lcmt"):
+                # QUIRK(Q29): 'int a,  /* c */' then 'b;' one column in, '*b;' not
+                alt.append(base if t.text == "*" else base + 1)
+            if t.text in ("+", "-") and i + 1 < len(self.code) and self.code[i + 1].text == "(" \
+                    and self.cast_kind(self.code, i + 1) != "group":
+                # QUIRK(Q31): '+ (MPI_Aint) x' starting a line goes to the statement column
+                alt.append(base)
+        if t.kind == "id" and (prev.text == ")" or prev.kind == "id") and not opens:
+            # QUIRK(Q22): after a macro call without ';' the next line may start a statement
+            alt.append(base)
+        if t.col in alt:
+            self.shift[t.line] = 0
+        else:
+            self.check_col(t, want, "C6", "continuation line")
+
+    def ends_line(self, t):
+        """nothing but comments follows token t on its line"""
+        for u in self.toks[t.idx + 1:]:
+            if u.kind not in ("cmt", "lcmt"):
+                return u.line != t.line or u.pp is not None
+        return True
 
     def fp_decl(self, i):
         """code[i] starts 'name (*' (a function pointer with an unknown type, or a call)"""
@@ -1208,6 +1267,7 @@ class Checker:
             # QUIRK(Q22): a macro alone on its line, a directive, then more code: indent puts
             # both lines one column right ('MPID_DEV_COMM_DECL', '#endif', 'MPIR_Session *p;')
             del st["chk"]
+            self.shift[st["start"].line] = 0
         if p == 0 and t.kind == "id" and s in STMT_KEYWORDS:
             if s in ("case", "default") and t.line == st["prev"].line:
                 # 'x case 1:' is not C; indent's layout of it is anyone's guess
@@ -1218,12 +1278,17 @@ class Checker:
             if not self.lost:
                 self.step(t)
             return
+        if t.first and s not in ("{", "}") and not st.get("semi"):
+            start = st["start"]
+            self.check_cont(t, start.col + self.shift.get(start.line, 0), st["open"])
         if s in ("(", "["):
             st["paren"] = p + 1
+            st["open"] += (t,)
             if p == 0 and s == "(":
                 st["call"] = True
         elif s in (")", "]"):
             st["paren"] = p - 1
+            st["open"] = st["open"][:-1]
             if p - 1 < 0:
                 self.lose()
                 return
@@ -1246,6 +1311,10 @@ class Checker:
         elif s == "{":
             self.push_opaque(t)
             return
+        elif s == ";":
+            # QUIRK(Q32): statements inside a macro argument; indent's layout of the
+            # rest of the statement is not checked
+            st["semi"] = True
         st["prev"] = t
 
     def open_in_statement(self, t):
