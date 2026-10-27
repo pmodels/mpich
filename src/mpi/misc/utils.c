@@ -88,8 +88,13 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     send_attr.type = recv_attr.type = MPL_GPU_POINTER_UNREGISTERED_HOST;
 
     /* if there is no data to copy, bail out */
-    if (!sdata_sz || !rdata_sz)
+    if (!sdata_sz || !rdata_sz) {
+        if (localcopy_kind == LOCALCOPY_NONBLOCKING && extra_param) {
+            MPIR_Typerep_req *typerep_req = extra_param;
+            typerep_req->req = MPIR_TYPEREP_REQ_NULL;
+        }
         goto fn_exit;
+    }
 
     copy_sz = sdata_sz;
     if (copy_sz > rdata_sz)
@@ -271,8 +276,12 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             rdata_sz = recvsize * recvcount;
 
             /* if there is no data to copy, bail out */
-            if (!sdata_sz || !rdata_sz)
+            if (!sdata_sz || !rdata_sz) {
+                if (gpu_req) {
+                    gpu_req->type = MPIR_NULL_REQUEST;
+                }
                 goto fn_exit;
+            }
 
             copy_sz = sdata_sz;
             if (copy_sz > rdata_sz)
