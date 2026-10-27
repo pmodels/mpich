@@ -1032,6 +1032,14 @@ AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
 
 AC_CHECK_SIZEOF([void *])
 
+# The number of significand bits of long double selects the software
+# conversion between long double and IEEE 754 binary128 (mpl_float.c)
+AC_CACHE_CHECK([for LDBL_MANT_DIG], [pac_cv_ldbl_mant_dig],
+    [AC_COMPUTE_INT([pac_cv_ldbl_mant_dig], [LDBL_MANT_DIG], [#include <float.h>],
+                    [pac_cv_ldbl_mant_dig=0])])
+AC_DEFINE_UNQUOTED([LDBL_MANT_DIG], [$pac_cv_ldbl_mant_dig],
+                   [Define to the number of significand bits of long double, or 0 if unknown])
+
 PAC_PUSH_FLAG([CFLAGS])
 CFLAGS="$CFLAGS -I${srcdir}/include"
 # Add -Werror to favor the option that does not result in warnings.
