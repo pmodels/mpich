@@ -62,6 +62,7 @@ IGNORE_LIST = [
     r"src/mpi/romio/include/mpio.h.in",
     r"src/mpi/romio/adio/include/adioi_errmsg.h",
     r"src/binding/abi/mpi_abi.h",
+    r"maint/check_whitespace_tests",
     # maint/hooks/pre-commit
     r"mpi\.h\.in$",
     r"mpio\.h\.in$",

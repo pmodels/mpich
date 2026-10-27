@@ -135,6 +135,7 @@ ignore_list="$ignore_list|src/pmi/include/pmix_fns.h"
 ignore_list="$ignore_list|src/pmi/include/pmix_macros.h"
 ignore_list="$ignore_list|src/pmi/include/pmix_types.h"
 ignore_list="$ignore_list|src/binding/abi/mpi_abi.h"
+ignore_list="$ignore_list|maint/check_whitespace_tests"
 
 filelist=""
 
