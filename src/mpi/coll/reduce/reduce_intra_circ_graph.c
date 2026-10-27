@@ -38,6 +38,12 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
     int rank, comm_size;
     MPIR_COMM_RANK_SIZE(comm, rank, comm_size);
 
+    MPI_Aint type_size;
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    if (count == 0 || type_size == 0) {
+        goto fn_exit;   /* nothing to do */
+    }
+
     MPIR_Assert(MPIR_Op_is_commutative(op));
 
     /* non-root need allocate a recvbuf */
