@@ -381,6 +381,13 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     ADIO_Offset off, req_off, send_off, iter_st_off, *off_list;
     ADIO_Offset max_size, step_size = 0;
     int real_size;
+    /* First I/O error seen inside the write loop below.  That loop performs
+     * point-to-point exchanges which every rank must take part in, and the
+     * caller ends with a collective MPI_Allreduce on error_code.  Leaving the
+     * loop early on a single rank therefore deadlocks every other rank, so
+     * record the error, agree on it collectively, and exit together. */
+    int deferred_error = MPI_SUCCESS;
+    int any_failed, local_failed;
     MPI_Count *recv_count, *send_curr_offlen_ptr, *recv_curr_offlen_ptr;
     MPI_Count *recv_size, *send_size;
     MPI_Count *sent_to_proc, *recv_start_pos;
@@ -591,8 +598,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                      buftype_extent, this_buf_idx,
                                      &srt_off, &srt_len, &srt_num, error_code);
 
-        if (*error_code != MPI_SUCCESS)
-            goto over;
+        if (*error_code != MPI_SUCCESS) {
+            if (deferred_error == MPI_SUCCESS)
+                deferred_error = *error_code;
+            *error_code = MPI_SUCCESS;
+        }
 
         flag = 0;
         for (i = 0; i < nprocs; i++)
@@ -630,8 +640,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                     ADIO_WriteContig(fd, write_buf + block_offset - off, block_len,
                                                      MPI_BYTE, ADIO_EXPLICIT_OFFSET, block_offset,
                                                      &status, error_code);
-                                    if (*error_code != MPI_SUCCESS)
-                                        goto over;
+                                    if (*error_code != MPI_SUCCESS) {
+                                        if (deferred_error == MPI_SUCCESS)
+                                            deferred_error = *error_code;
+                                        *error_code = MPI_SUCCESS;
+                                    }
                                     block_offset = srt_off[i];
                                     block_len = srt_len[i];
                                 }
@@ -645,17 +658,38 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                          block_len,
                                          MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                          block_offset, &status, error_code);
-                        if (*error_code != MPI_SUCCESS)
-                            goto over;
+                        if (*error_code != MPI_SUCCESS) {
+                            if (deferred_error == MPI_SUCCESS)
+                                deferred_error = *error_code;
+                            *error_code = MPI_SUCCESS;
+                        }
                     }
                 }
             }
-            if (*error_code != MPI_SUCCESS)
-                goto over;
+            if (*error_code != MPI_SUCCESS) {
+                if (deferred_error == MPI_SUCCESS)
+                    deferred_error = *error_code;
+                *error_code = MPI_SUCCESS;
+            }
         }
+        /* Agree collectively whether any rank has failed, so every rank leaves
+         * the loop at the same iteration: no deadlock, and no further
+         * iterations spent on writes that cannot succeed. */
+        local_failed = (deferred_error != MPI_SUCCESS) ? 1 : 0;
+        MPI_Allreduce(&local_failed, &any_failed, 1, MPI_INT, MPI_MAX, fd->comm);
+        if (any_failed) {
+            iter_st_off += max_size;
+            break;
+        }
+
         iter_st_off += max_size;
     }
   over:
+    /* All ranks have left the loop together; surface the deferred error so
+     * the caller's collective MPI_Allreduce reports it on every rank. */
+    if (deferred_error != MPI_SUCCESS)
+        *error_code = deferred_error;
+
     if (srt_off)
         ADIOI_Free(srt_off);
     if (srt_len)
