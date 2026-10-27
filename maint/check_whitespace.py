@@ -29,6 +29,7 @@
 #   D4 trailing comment column      D5 space before '*/'
 #   D6 comment column after a directive
 #   E1 blank line after a function body
+#   E3 line longer than 100 columns that indent would break
 #   E4 exactly one newline at the end of the file
 
 import re
@@ -77,7 +78,7 @@ IGNORE_LIST = [
 
 ALL_RULES = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
              "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "D1", "D3", "D4", "D5",
-             "D6", "E1", "E4"]
+             "D6", "E1", "E3", "E4"]
 
 KEYWORDS = {
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else",
@@ -110,6 +111,10 @@ KEEP_BREAK_KEYWORDS = {"char", "short", "int", "long", "float", "double", "void"
                        "extern", "register", "typedef"}
 
 ASSIGN_OPS = {"=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="}
+
+# operators indent breaks a long line after (E3); '+' and '-' only when binary
+BREAK_OPS = ASSIGN_OPS | {",", "==", "!=", "<", ">", "<=", ">=", "&&", "||", "/", "%", "<<",
+                          ">>", "|", "^", "?", "+", "-"}
 
 # keywords after which a '(' may open a cast
 UNARY_KEYWORDS = {"return", "case", "else", "do"}
@@ -1269,6 +1274,7 @@ class Checker:
             # QUIRK(Q35): after a label or 'case' line of 100 columns or more indent
             # keeps the breaks
             return
+        self.check_long(units)
         # option (a): a break after '=' is flagged only when the whole statement fits
         long = self.joined_end(units, len(units)) > self.limit(units)
         groups = [[units[0]]]
@@ -1322,6 +1328,54 @@ class Checker:
                     self.join_report(cur[:k])
                     cur = cur[k:]
             self.join_report(cur)
+
+    def check_long(self, units):
+        """E3: a line whose code passes column 100 and that has a place within 100
+        where indent would break it: after a ',', an assignment or a binary operator,
+        if the text after it moves at least 2 columns left at the continuation
+        column.  Columns are taken from the lines as they will be once fixed."""
+        lines = [ln for u in units for ln in u["lines"]]
+        if any(ln in self.cmt_lines for ln in lines) or any(
+                t.kind in ("cmt", "lcmt") for t in self.toks[units[0]["first"].idx:units[-1]["last"].idx]):
+            # QUIRK(Q36): indent leaves the long lines of a statement with a comment
+            return
+        for prev, unit in zip(units, units[1:]):
+            a, b = prev["last"], unit["first"]
+            if a.kind == "id" and (b.text in DECL_KEYWORDS or self.pointer_declarator(b)):
+                # QUIRK(Q38): after a kept break before a declarator ('struct s' / '*p')
+                # indent's line lengths are erratic (it even joins past column 100)
+                return
+        base = units[0]["start"]
+        for unit in units:
+            ln = unit["lines"][0]
+            shift = self.shift.get(ln, 0)
+            first, last = unit["first"], unit["last"]
+            code = self.toks[first.idx:last.idx + 1]
+            if last.text == "{" and len(code) > 1:
+                # QUIRK(Q37): the ' {' of a control header may end past column 100
+                code = code[:-1]
+            if code[-1].ecol + shift <= 100:
+                continue
+            opens = list(unit["opens"])
+            for t, nxt in zip(code, code[1:]):
+                if t.text in ("(", "["):
+                    opens.append(t)
+                elif t.text in (")", "]"):
+                    if opens:
+                        opens.pop()
+                if t.ecol + shift > 100:
+                    break
+                if t.text not in BREAK_OPS or (t.text in ("+", "-") and self.unary(t)):
+                    continue
+                if opens:
+                    o = opens[-1]
+                    cont = o.ecol + self.shift.get(o.line, 0)
+                else:
+                    cont = base + 4
+                if nxt.col + shift - cont >= 2:
+                    self.report("E3", ln, t.ecol, "line of %d columns that indent would break"
+                                % (code[-1].ecol + shift))
+                    break
 
     def pointer_declarator(self, t):
         """t starts '*name' or '**name'"""
