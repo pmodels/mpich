@@ -64,6 +64,13 @@
 #         holds, its generated wrapper swaps the buffers for host buffers first,
 #         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
 #         without it must work on device buffers.
+#   * inplace_copy:
+#         1 for an algorithm of the alltoall, alltoallv and alltoallw families that runs with
+#         the sendbuf of a not-in-place call only. When sendbuf is MPI_IN_PLACE, its generated
+#         wrapper copies the receive buffer to a temporary buffer (MPIR_Coll_inplace_copy) and
+#         calls the wrapper again with that copy as the sendbuf. The algorithm then needs no
+#         in-place code of its own, and the in-place case costs one copy and p blocks of extra
+#         memory. Algorithms without it handle MPI_IN_PLACE themselves or are restricted to it.
 #   * inner:
 #         The collectives a compositional algorithm calls through the selection, as a
 #         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The
