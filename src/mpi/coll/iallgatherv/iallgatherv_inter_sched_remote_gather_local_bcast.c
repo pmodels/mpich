@@ -75,11 +75,11 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
 
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Sched_add_handle(s, newtype);
+    MPIR_Datatype_release_if_not_builtin(newtype);
 
     mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, 1, newtype, 0, newcomm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Type_free_impl(&newtype);
 
   fn_exit:
     return mpi_errno;

@@ -115,6 +115,8 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Sched_add_handle(s, sendtype);
+        MPIR_Datatype_release_if_not_builtin(sendtype);
 
         /* calculate recvtype */
         blklens[0] = blklens[1] = 0;
@@ -133,6 +135,8 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Sched_add_handle(s, recvtype);
+        MPIR_Datatype_release_if_not_builtin(recvtype);
 
         received = 0;
         if (dst < comm_size) {
@@ -240,9 +244,6 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
                 MPIR_SCHED_BARRIER(s);
             }
         }
-
-        MPIR_Type_free_impl(&sendtype);
-        MPIR_Type_free_impl(&recvtype);
 
         mask <<= 1;
         i++;

@@ -152,14 +152,14 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                         MPIR_ERR_CHECK(mpi_errno);
+                        MPIR_Sched_add_handle(s, tmp_type);
+                        MPIR_Datatype_release_if_not_builtin(tmp_type);
 
                         mpi_errno = MPIR_Sched_recv(recvbuf, 1, tmp_type, src, comm_ptr, s);
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
                         MPIR_ERR_CHECK(mpi_errno);
 
-                        /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
-                        MPIR_Type_free_impl(&tmp_type);
                     }
                 } else {        /* Intermediate nodes store in temporary buffer */
                     MPI_Aint offset;
@@ -219,13 +219,13 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                 MPIR_ERR_CHECK(mpi_errno);
+                MPIR_Sched_add_handle(s, tmp_type);
+                MPIR_Datatype_release_if_not_builtin(tmp_type);
 
                 mpi_errno = MPIR_Sched_send(MPI_BOTTOM, 1, tmp_type, dst, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
-                /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
-                MPIR_Type_free_impl(&tmp_type);
             }
 
             break;

@@ -97,6 +97,8 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Sched_add_handle(s, newtype);
+        MPIR_Datatype_release_if_not_builtin(newtype);
         MPIR_Datatype_get_size_macro(newtype, newtype_size);
 
         /* we will usually copy much less than nbytes */
@@ -111,8 +113,6 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         mpi_errno = MPIR_Sched_recv(recvbuf, 1, newtype, src, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-
-        MPIR_Type_free_impl(&newtype);
 
         pof2 *= 2;
     }
