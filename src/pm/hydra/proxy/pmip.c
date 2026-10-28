@@ -138,7 +138,7 @@ int main(int argc, char **argv)
             struct pmip_downstream *p = PMIP_find_downstream_by_pid(pid);
             if (p) {
                 p->exit_status = ret_status;
-                if (WIFSIGNALED(ret_status)) {
+                if (WIFSIGNALED(ret_status) && HYD_pmcd_pmip.user_global.auto_cleanup) {
                     /* kill all processes */
                     PMIP_bcast_signal(SIGKILL);
                 }
