@@ -28,6 +28,17 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
         mpi_errno = MPIR_TSP_sched_start(preq->u.persist_coll.sched,
                                          preq->comm, &preq->u.persist_coll.real_request);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (preq->u.persist_coll.sched_type == MPIR_SCHED_GREQ) {
+        MPIR_Coll_greq_t *greq = preq->u.persist_coll.sched;
+        mpi_errno = greq->start_fn(greq->state, &preq->u.persist_coll.real_request);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (preq->u.persist_coll.real_request == NULL) {
+            /* nothing to do */
+            preq->u.persist_coll.real_request =
+                MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+            MPIR_ERR_CHKANDJUMP(!preq->u.persist_coll.real_request, mpi_errno, MPIX_ERR_NOREQ,
+                                "**nomemreq");
+        }
     } else {
         /* TODO: proper error return */
         MPIR_Assert(0);
@@ -58,6 +69,8 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
             MPIR_Sched_free(request->u.persist_coll.sched);
         } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
             MPIR_TSP_sched_free(request->u.persist_coll.sched);
+        } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GREQ) {
+            MPIR_Coll_greq_free(request->u.persist_coll.sched);
         } else {
             /* TODO: proper error return */
             MPIR_Assert(0);

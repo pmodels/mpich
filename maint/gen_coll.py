@@ -108,6 +108,10 @@ def collect_algo_list():
         algo_list.append(algo)
     return algo_list
 
+def is_greq_algo(func_name, algo):
+    # a nonblocking algorithm that is neither tsp_ nor sched_ is a greq algorithm
+    return func_name.startswith('i') and not algo['name'].startswith(('tsp_', 'sched_'))
+
 def dump_algo_cnt_fns():
     def get_coll_args(func, func_name):
         args = []
@@ -127,8 +131,8 @@ def dump_algo_cnt_fns():
             if algo['name'].startswith(('tsp_', 'sched_')):
                 args += ", coll_sig->sched"
             else:
-                # the algorithm creates and returns its own request
-                args += ", (MPIR_Request **) &coll_sig->sched"
+                # a greq algorithm: its _init fills in the MPIR_Coll_greq_t
+                args += ", (MPIR_Coll_greq_t *) coll_sig->sched"
         elif func_name.startswith('neighbor_'):
             pass
         else:
@@ -143,8 +147,7 @@ def dump_algo_cnt_fns():
             elif algo['name'].startswith('sched_'):
                 G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
             else:
-                G.out.append("MPIR_Assert(coll_sig->sched == NULL);")
-                G.out.append("coll_sig->sched_type = MPIR_SCHED_GREQ;")
+                G.out.append("MPII_CSEL_CREATE_GREQ(coll_sig);")
 
     G.out.append("")
     for algo in G.algo_list:
@@ -162,6 +165,12 @@ def dump_algo_cnt_fns():
                 func = G.FUNCS["mpi_" + func_name]
             algo_funcname = get_algo_funcname(algo)
             algo_args = get_algo_args(func, func_name, algo)
+            # a greq algorithm (an i* algorithm that is neither tsp_ nor sched_) is called as _init
+            call_funcname = algo_funcname
+            if is_greq_algo(func_name, algo):
+                if algo.get('gpu_swap') == '1':
+                    raise Exception("%s: a greq algorithm has no schedule to add the swap steps to" % algo['name'])
+                call_funcname = algo_funcname + "_init"
             decl = "int %s_cnt(%s)" % (algo_funcname, "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
             add_prototype(decl)
             dump_split(0, decl)
@@ -184,7 +193,7 @@ def dump_algo_cnt_fns():
                 dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
-            dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
+            dump_split(1, "mpi_errno = %s(%s);" % (call_funcname, algo_args))
             G.out.append("MPIR_ERR_CHECK(mpi_errno);")
             dump_fn_exit()
             if 'macro_guard' in algo:
@@ -219,7 +228,7 @@ def add_algo_prototypes():
             elif algo['name'].startswith('sched_'):
                 params += ", MPIR_Sched_t s"
             else:
-                params += ", MPIR_Request **request"
+                params += ", MPIR_Coll_greq_t * greq"
         elif func_name.startswith('neighbor_'):
             pass
         else:
@@ -241,6 +250,8 @@ def add_algo_prototypes():
             func = G.FUNCS["mpi_" + func_name]
 
         algo_funcname = get_algo_funcname(algo)
+        if is_greq_algo(func_name, algo):
+            algo_funcname += "_init"
         algo_params = get_algo_params(func, func_name, algo)
         decl = "int %s(%s)" % (algo_funcname, algo_params)
         add_prototype(decl)
@@ -349,8 +360,7 @@ def dump_MPIR_Coll_hold_handles():
     G.out.append("owned = MPIR_TSP_sched_get_owned(coll_sig->sched);")
     dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_GREQ) {")
     G.out.append("INDENT")
-    G.out.append("/* the request-based algorithm has already started */")
-    G.out.append("return;")
+    G.out.append("owned = &((MPIR_Coll_greq_t *) coll_sig->sched)->owned;")
     dump_else()
     G.out.append("MPIR_Assert(0);")
     dump_close("}")

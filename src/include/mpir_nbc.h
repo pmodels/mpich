@@ -72,6 +72,12 @@ int MPIR_Sched_reset(MPIR_Sched_t s);
 void *MPIR_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 /* hand a buffer allocated with MPL_malloc to the sched. It will be freed by MPIR_Sched_free */
 void MPIR_Sched_add_buffer(MPIR_Sched_t s, void *buf);
+/* greq algorithms: MPIR_Coll_greq_t is defined in coll_types.h. */
+int MPIR_Coll_greq_create(MPIR_Coll_greq_t ** greq_out);
+/* starts it once and returns the request, which frees greq when it is freed */
+int MPIR_Coll_greq_start(MPIR_Coll_greq_t * greq, MPIR_Request ** request);
+void MPIR_Coll_greq_free(MPIR_Coll_greq_t * greq);
+
 /* hold a reference on a comm/datatype/op handle until the sched is freed */
 void MPIR_Sched_add_handle(MPIR_Sched_t s, int handle);
 /* what the sched owns */

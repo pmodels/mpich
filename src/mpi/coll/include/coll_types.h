@@ -37,6 +37,19 @@ typedef struct {
     UT_array handles;           /* comm, datatype and op references, released */
 } MPIR_Coll_owned_t;
 
+/* A greq algorithm (grequest collective) has its own state machine instead of a schedule. Its
+ * _init sets up everything that does not change between runs, and fills in state, start_fn and
+ * free_fn. start_fn runs the operation once and returns a generalized request that the algorithm
+ * completes (NULL if there is nothing to do). free_fn releases state. */
+typedef struct MPIR_Coll_greq {
+    /* set by the algorithm's _init */
+    void *state;
+    int (*start_fn) (void *state, struct MPIR_Request ** req);
+    void (*free_fn) (void *state);
+    /* set up before _init */
+    MPIR_Coll_owned_t owned;
+} MPIR_Coll_greq_t;
+
 /* Collectives request data structure */
 typedef struct MPII_Coll_req_t {
     void *sched;                /* pointer to the schedule */
