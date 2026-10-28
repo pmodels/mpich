@@ -25,8 +25,9 @@
 #     bool (*func)(coll_sig). These are the conditions that can be used as algorithm
 #     restrictions. The index is the condition's position in the table, starting at 0, and
 #     gen_coll.py checks it. It is also the restriction's bit in the masks that tuning tools
-#     use, e.g. in subtree names of a tuning file, so the indices of existing restrictions
-#     must not change: add new ones at the end.
+#     use, e.g. in subtree names of a tuning file. Removing a restriction renumbers the ones
+#     after it, so tuning files and masks that use bit numbers must be regenerated; add new
+#     ones at the end.
 #   - conditions: "name(thresh): func", a threshold condition whose checker returns a value:
 #     int (*func)(coll_sig). The thresh marks the upper limit (inclusive) of the condition.
 #   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
@@ -86,14 +87,13 @@ restrictions:
     5  - hierarchical:             MPIR_Csel_is_hierarchical
     6  - node_consecutive:         MPIR_Csel_is_node_consecutive
     7  - node_regular:             MPIR_Csel_is_node_canonical
-    8  - count_ge_pof2:            MPIR_Csel_count_ge_pof2
-    9  - displs_ordered:           MPIR_Csel_displs_ordered
-    10 - block_regular:            MPIR_Csel_block_regular
+    8  - displs_ordered:           MPIR_Csel_displs_ordered
+    9  - block_regular:            MPIR_Csel_block_regular
     # conditional conditions - only call the condition function under macro_guard
-    11 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+    10 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
     # set by MPIR_Coll_sig_prepare_gpu before the selection
-    12 - gpu:                      MPIR_Csel_is_gpu
-    13 - gpu_coll:                 MPIR_Csel_is_gpu_coll
+    11 - gpu:                      MPIR_Csel_is_gpu
+    12 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
@@ -397,7 +397,7 @@ reduce-intra:
         restrictions: commutative, hierarchical
         inner: reduce-intra@node_comm, reduce-intra@node_roots_comm
     reduce_scatter_gather
-        restrictions: count_ge_pof2, builtin_op
+        restrictions: builtin_op
     release_gather
         func_name: MPIDI_POSIX_mpi_reduce_release_gather
         inline: 1
@@ -411,7 +411,7 @@ ireduce-intra:
         disabled: 1
     sched_binomial
     sched_reduce_scatter_gather
-        restrictions: count_ge_pof2, builtin_op
+        restrictions: builtin_op
     tsp_tree
         restrictions: commutative
         extra_params: tree_type, k, chunk_size, buffer_per_child
@@ -432,7 +432,7 @@ allreduce-intra:
         cvar_params: RECURSIVE_MULTIPLYING_KVAL
         restrictions: commutative
     reduce_scatter_allgather
-        restrictions: count_ge_pof2, builtin_op
+        restrictions: builtin_op
     tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
@@ -462,7 +462,7 @@ iallreduce-intra:
         disabled: 1
     sched_recursive_doubling
     sched_reduce_scatter_allgather
-        restrictions: count_ge_pof2, builtin_op
+        restrictions: builtin_op
     tsp_recexch_single_buffer
         extra_params: k
         cvar_params: RECEXCH_KVAL

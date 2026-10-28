@@ -77,7 +77,6 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
-    MPIR_Assert(count >= pof2);
 #endif /* HAVE_ERROR_CHECKING */
 
     rem = comm_size - pof2;

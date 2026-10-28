@@ -107,7 +107,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     } else      /* rank >= 2*rem */
         newrank = rank - rem;
 
-    /* If op is user-defined or count is less than pof2, use
+    /* If op is user-defined, use
      * recursive doubling algorithm. Otherwise do a reduce-scatter
      * followed by allgather. (If op is user-defined,
      * derived datatypes are allowed and the user could pass basic
@@ -118,7 +118,6 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
-    MPIR_Assert(count >= pof2);
 #endif /* HAVE_ERROR_CHECKING */
 
     if (newrank != -1) {

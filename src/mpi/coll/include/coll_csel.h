@@ -226,21 +226,6 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_comm_size_is_pof2(MPIR_Csel_coll_sig_s *
     return MPL_is_pof2(coll_sig->comm_ptr->local_size);
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_count_ge_pof2(MPIR_Csel_coll_sig_s * coll_sig)
-{
-    switch (coll_sig->coll_type) {
-          COLL_TYPE_ALL_CASE(REDUCE):
-            return (coll_sig->u.reduce.count >= MPL_pof2(coll_sig->comm_ptr->local_size));
-          COLL_TYPE_ALL_CASE(ALLREDUCE):
-            return (coll_sig->u.allreduce.count >= MPL_pof2(coll_sig->comm_ptr->local_size));
-        default:
-            printf("MPIR_Csel_count_ge_pof2: unsupported coll_type: %s\n",
-                   MPIR_Coll_type_names[coll_sig->coll_type]);
-            MPIR_Assert(0);
-            return false;
-    }
-}
-
 MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_block_regular(MPIR_Csel_coll_sig_s * coll_sig)
 {
     const MPI_Aint *counts = NULL;

@@ -247,8 +247,7 @@ A missing, unknown, or mistyped parameter is an error.
 
 The tree does not check algorithm restrictions. A tree must pick only
 algorithms whose restrictions hold on that branch, for example by guarding
-`MPIR_Allreduce_intra_reduce_scatter_allgather` with `builtin_op` and
-`count_ge_pof2`.
+`MPIR_Allreduce_intra_reduce_scatter_allgather` with `builtin_op`.
 
 The files are read by a small built-in parser (`csel_json.c`) that accepts
 only the JSON subset the tree needs:
