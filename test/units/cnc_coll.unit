@@ -1,0 +1,256 @@
+sources:
+    src/mpi/coll/cnc/cnc_coll.c
+
+include:
+    src/mpi/coll/cnc
+
+shim:
+    core
+    cnc
+
+template:
+    #include "mpiimpl.h"
+    #include <cnc/collective.h>
+    #include <cnc/cnc_oob_mpi.h>
+    #include "cnc_internal.h"
+
+    MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
+
+    struct cnc_transport {
+        MPI_Comm comm;
+    };
+
+    static int next_handle = 100;
+    static int live_comms = 0;
+    static int live_oob = 0;
+    static int live_transports = 0;
+    static int is_dev_ptr = 0;
+    static MPI_Aint true_lb_val = 0;
+    static int fail_comm_copy = 0;
+    static int fail_oob_create = 0;
+    static int fail_cnc_init = 0;
+    static MPIR_Comm *init_dup_comm = NULL;
+
+    int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr)
+    {
+        if (fail_comm_copy) {
+            return MPI_ERR_OTHER;
+        }
+        MPIR_Comm *c = calloc(1, sizeof(*c));
+        c->handle = ++next_handle;
+        c->rank = comm_ptr->rank;
+        c->local_size = size;
+        live_comms++;
+        init_dup_comm = c;
+        *outcomm_ptr = c;
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Comm_release(MPIR_Comm * comm_ptr)
+    {
+        live_comms--;
+        free(comm_ptr);
+        return MPI_SUCCESS;
+    }
+
+    void MPIR_Datatype_is_contig(MPI_Datatype datatype, int *flag)
+    {
+        *flag = (datatype != 99);
+    }
+
+    int MPIR_GPU_query_pointer_is_dev(const void *ptr)
+    {
+        return is_dev_ptr;
+    }
+
+    MPI_Aint unit_datatype_size(MPI_Datatype datatype)
+    {
+        return (datatype == MPI_DOUBLE) ? 8 : 4;
+    }
+
+    void MPIR_Datatype_get_true_lb(MPI_Datatype datatype, MPI_Aint * true_lb)
+    {
+        *true_lb = true_lb_val;
+    }
+
+    int MPIR_Bcast_intra_binomial(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                                  MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_bcast count=%ld root=%d\n", (long) count, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_allreduce count=%ld dt=%d op=%d\n", (long) count, datatype, op);
+        return MPI_SUCCESS;
+    }
+
+    cnc_status_t cnc_oob_mpi_create(cnc_oob_t * oob, MPI_Comm comm)
+    {
+        if (fail_oob_create) {
+            return CNC_ERR;
+        }
+        memset(oob, 0, sizeof(*oob));
+        oob->context = malloc(sizeof(MPI_Comm));
+        *(MPI_Comm *) oob->context = comm;
+        live_oob++;
+        printf("oob_create\n");
+        return CNC_OK;
+    }
+
+    void cnc_oob_mpi_destroy(cnc_oob_t * oob)
+    {
+        free(oob->context);
+        oob->context = NULL;
+        live_oob--;
+        printf("oob_destroy\n");
+    }
+
+    cnc_status_t cnc_init(cnc_transport_t ** out, const cnc_oob_t * oob)
+    {
+        if (fail_cnc_init) {
+            return CNC_ERR;
+        }
+        /* Simulate mpi_backend.c calling MPI_Allreduce on dup_comm during cnc_init:
+         * CNC_PRIV_SKIP must route this to the fallback, not recurse into cnc_init. */
+        if (init_dup_comm) {
+            int dummy = 0;
+            MPIR_Allreduce_intra_cnc(&dummy, &dummy, 1, MPI_INT, MPI_MIN, init_dup_comm, 0);
+        }
+        cnc_transport_t *t = calloc(1, sizeof(*t));
+        t->comm = *(MPI_Comm *) oob->context;
+        live_transports++;
+        *out = t;
+        printf("cnc_init\n");
+        return CNC_OK;
+    }
+
+    void cnc_fini(cnc_transport_t * t)
+    {
+        free(t);
+        live_transports--;
+        printf("cnc_fini\n");
+    }
+
+    cnc_status_t cnc_bcast(const void *sendbuf, void *recvbuf, size_t nbytes,
+                           int n, int rank, int root, cnc_transport_t * t,
+                           const cnc_bcast_opts_t * opts)
+    {
+        printf("cnc_bcast inplace=%d nbytes=%zu n=%d rank=%d root=%d\n",
+               sendbuf == CNC_IN_PLACE, nbytes, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_allreduce(const void *sendbuf, void *recvbuf, size_t count,
+                               cnc_datatype_t datatype, int n, int rank,
+                               cnc_transport_t * t,
+                               const cnc_allreduce_opts_t * opts)
+    {
+        printf("cnc_allreduce inplace=%d count=%zu dt=%d op=%d n=%d rank=%d\n",
+               sendbuf == CNC_IN_PLACE, count, datatype, opts ? opts->op : -1, n, rank);
+        return CNC_OK;
+    }
+
+    int main(int argc, char **argv)
+    {
+        MPIR_Comm comm = { .handle = 1, .rank = 1, .local_size = 4 };
+        char sbuf[64] = { 0 }, rbuf[64] = { 0 };
+        const char *mode = argc > 1 ? argv[1] : "";
+
+        if (strcmp(mode, "bcast") == 0) {
+            true_lb_val = 8;
+            MPIR_Bcast_intra_cnc(rbuf, 5, MPI_INT, 0, &comm, 0);
+            MPIR_Bcast_intra_cnc(rbuf, 3, MPI_FLOAT, 2, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "allreduce") == 0) {
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_FLOAT, MPI_SUM, &comm, 0);
+            MPIR_Allreduce_intra_cnc(MPI_IN_PLACE, rbuf, 6, MPI_INT, MPI_MAX, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 2, MPI_INT32_T, MPI_PROD, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 2, MPI_FLOAT, MPI_MIN, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "fallback") == 0) {
+            /* unsupported datatype and op */
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_DOUBLE, MPI_SUM, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_BAND, &comm, 0);
+            /* non-contiguous datatype (99) */
+            MPIR_Bcast_intra_cnc(rbuf, 4, 99, 0, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, 99, MPI_SUM, &comm, 0);
+            /* GPU buffer */
+            is_dev_ptr = 1;
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            is_dev_ptr = 0;
+            /* multi-threaded */
+            MPIR_ThreadInfo.isThreaded = 1;
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            MPIR_ThreadInfo.isThreaded = 0;
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "errors") == 0) {
+            fail_comm_copy = 1;
+            printf("rc_copy=%d\n", MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0) != MPI_SUCCESS);
+            fail_comm_copy = 0;
+
+            fail_oob_create = 1;
+            printf("rc_oob=%d\n", MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0) != MPI_SUCCESS);
+            fail_oob_create = 0;
+
+            fail_cnc_init = 1;
+            printf("rc_init=%d\n", MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0) != MPI_SUCCESS);
+            fail_cnc_init = 0;
+
+            MPII_Cnc_comm_cleanup(&comm);
+        }
+
+        printf("leaks=%d\n", live_comms + live_oob + live_transports);
+        return 0;
+    }
+
+TESTS:
+    cmd: ./t bcast
+    expect:
+        oob_create
+        fallback_allreduce count=1 dt=2 op=3
+        cnc_init
+        cnc_bcast inplace=1 nbytes=20 n=4 rank=1 root=0
+        cnc_bcast inplace=1 nbytes=12 n=4 rank=1 root=2
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t allreduce
+    expect:
+        oob_create
+        fallback_allreduce count=1 dt=2 op=3
+        cnc_init
+        cnc_allreduce inplace=0 count=4 dt=0 op=0 n=4 rank=1
+        cnc_allreduce inplace=1 count=6 dt=1 op=3 n=4 rank=1
+        cnc_allreduce inplace=0 count=2 dt=1 op=1 n=4 rank=1
+        cnc_allreduce inplace=0 count=2 dt=0 op=2 n=4 rank=1
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t fallback
+    expect:
+        fallback_allreduce count=4 dt=4 op=1
+        fallback_allreduce count=4 dt=2 op=5
+        fallback_bcast count=4 root=0
+        fallback_allreduce count=4 dt=99 op=1
+        fallback_bcast count=4 root=0
+        fallback_allreduce count=4 dt=2 op=1
+        fallback_bcast count=4 root=0
+        fallback_allreduce count=4 dt=2 op=1
+        leaks=0
+
+    cmd: ./t errors
+    expect:
+        rc_copy=1
+        rc_oob=1
+        oob_create
+        oob_destroy
+        rc_init=1
+        leaks=0
