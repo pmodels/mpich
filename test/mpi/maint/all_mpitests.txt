@@ -58,6 +58,7 @@ coll/allredmany
 coll/allred_derived
 coll/allred_float
 coll/alltoall1
+coll/alltoall_inplace
 coll/alltoallv
 coll/alltoallv0
 coll/alltoallw1

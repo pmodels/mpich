@@ -28,6 +28,8 @@ alltoallw_zeros 1
 alltoallw_zeros 2
 alltoallw_zeros 5
 alltoallw_zeros 8
+alltoall_inplace 4
+alltoall_inplace 5
 allgather2 10
 allgather3 10
 allgatherv2 10

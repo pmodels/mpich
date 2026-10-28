@@ -26,6 +26,7 @@ noinst_PROGRAMS =      \
     allred_float       \
     allredmany         \
     alltoall1          \
+    alltoall_inplace   \
     alltoall_gpu       \
     alltoallv          \
     alltoallv0         \
