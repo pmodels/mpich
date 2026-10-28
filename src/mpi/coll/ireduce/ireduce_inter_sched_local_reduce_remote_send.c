@@ -18,7 +18,6 @@ int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void 
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
@@ -41,13 +40,12 @@ int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void 
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-
-            MPIR_Datatype_get_extent_macro(datatype, extent);
-            tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+            MPI_Aint buf_shift, buf_size;
+            MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+            tmp_buf = MPIR_Sched_alloc_state(s, buf_size);
             MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
             /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+            tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
         }
 
         if (!comm_ptr->local_comm) {

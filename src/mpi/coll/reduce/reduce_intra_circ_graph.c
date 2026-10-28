@@ -48,14 +48,11 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
 
     /* non-root need allocate a recvbuf */
     if (rank != root) {
-        MPI_Aint true_lb, true_extent, extent;
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPIR_Datatype_get_extent_macro(datatype, extent);
-
-        MPI_Aint buf_size = (count - 1) * extent + true_extent;
+        MPI_Aint buf_shift, buf_size;
+        MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
 
         MPIR_CHKLMEM_MALLOC(recvbuf, buf_size);
-        recvbuf = (void *) ((char *) recvbuf - true_lb);
+        recvbuf = (void *) ((char *) recvbuf - buf_shift);
     }
 
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {

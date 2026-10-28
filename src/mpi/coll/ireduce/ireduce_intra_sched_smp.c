@@ -11,7 +11,6 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
-    MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *nc;
     MPIR_Comm *nrc;
@@ -33,13 +32,12 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
 
     /* Create a temporary buffer on local roots of all nodes */
     if (nrc != NULL) {
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPIR_Datatype_get_extent_macro(datatype, extent);
-
-        tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        MPI_Aint buf_shift, buf_size;
+        MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+        tmp_buf = MPIR_Sched_alloc_state(s, buf_size);
         MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
         /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+        tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
     }
 
     /* do the intranode reduce on all nodes other than the root's node */

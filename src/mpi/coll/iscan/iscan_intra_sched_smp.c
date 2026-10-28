@@ -14,7 +14,6 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
     int rank = comm_ptr->rank;
     MPIR_Comm *node_comm;
     MPIR_Comm *roots_comm;
-    MPI_Aint true_extent, true_lb, extent;
     void *tempbuf = NULL;
     void *prefulldata = NULL;
     void *localfulldata = NULL;
@@ -34,23 +33,22 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
     node_comm = comm_ptr->node_comm;
     roots_comm = comm_ptr->node_roots_comm;
 
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-
-    tempbuf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    tempbuf = MPIR_Sched_alloc_state(s, buf_size);
     MPIR_ERR_CHKANDJUMP(!tempbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    tempbuf = (void *) ((char *) tempbuf - true_lb);
+    tempbuf = (void *) ((char *) tempbuf - buf_shift);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        prefulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        prefulldata = MPIR_Sched_alloc_state(s, buf_size);
         MPIR_ERR_CHKANDJUMP(!prefulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        prefulldata = (void *) ((char *) prefulldata - true_lb);
+        prefulldata = (void *) ((char *) prefulldata - buf_shift);
 
         if (node_comm != NULL) {
-            localfulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+            localfulldata = MPIR_Sched_alloc_state(s, buf_size);
             MPIR_ERR_CHKANDJUMP(!localfulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            localfulldata = (void *) ((char *) localfulldata - true_lb);
+            localfulldata = (void *) ((char *) localfulldata - buf_shift);
         }
     }
 

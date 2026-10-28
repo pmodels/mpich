@@ -23,7 +23,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     /* newrank is a rank in group_ptr */
     int mask, dst, is_commutative, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
-    MPI_Aint true_extent, true_lb, extent;
+    MPI_Aint extent;
     void *tmp_buf;
     int group_rank, group_size;
     int cdst, csrc;
@@ -36,13 +36,14 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {
