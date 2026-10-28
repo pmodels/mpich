@@ -9,23 +9,9 @@
 /* A helper function for allocating temporary buffer */
 MPL_STATIC_INLINE_PREFIX void *MPIR_alloc_buffer(MPI_Aint count, MPI_Datatype datatype)
 {
-    MPI_Aint extent, true_lb, true_extent;
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPI_Aint shift, size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &shift, &size);
 
-    MPI_Aint shift = true_lb;
-    MPI_Aint size = true_extent;
-    if (count > 1) {
-        if (extent >= 0) {
-            size += extent * (count - 1);
-        } else {
-            MPI_Aint size_before = (-extent) * (count - 1);
-            /* extra counts are being packed *before*, so need *increase* the size */
-            size += size_before;
-            /* the allocated pointer will be *already* shifted by this amount */
-            shift -= size_before;
-        }
-    }
     void *host_buf = MPL_malloc(size, MPL_MEM_OTHER);
     MPIR_Assert(host_buf);
 
@@ -36,15 +22,9 @@ MPL_STATIC_INLINE_PREFIX void *MPIR_alloc_buffer(MPI_Aint count, MPI_Datatype da
 /* Free a buffer allocated by MPIR_alloc_buffer */
 MPL_STATIC_INLINE_PREFIX void MPIR_free_buffer(void *buf, MPI_Aint count, MPI_Datatype datatype)
 {
-    MPI_Aint extent, true_lb, true_extent;
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPI_Aint shift, size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &shift, &size);
 
-    MPI_Aint shift = true_lb;
-    if (count > 1 && extent < 0) {
-        MPI_Aint size_before = (-extent) * (count - 1);
-        shift -= size_before;
-    }
     /* The pointers was previously shifted */
     buf = (char *) buf + shift;
     MPL_free(buf);
