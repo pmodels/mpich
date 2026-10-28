@@ -26,7 +26,9 @@ isendself 1
 issendselfcancel 1 xfail=ticket2276
 isendirecv 10
 isendrecv 4
+isendrecv 4 arg=-stride=2
 isendrecv_replace 4
+isendrecv_replace 4 arg=-stride=2
 bsendfrag 2
 icsend 4
 icsend 4 arg=-randomize=1
