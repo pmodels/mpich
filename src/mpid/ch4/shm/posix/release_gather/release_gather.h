@@ -492,7 +492,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
   fn_exit:
     if (temp_recvbuf) {
-        MPL_free(temp_recvbuf);
+        MPIR_free_buffer(temp_recvbuf, count, datatype);
     }
     MPIR_FUNC_EXIT;
     return mpi_errno;
