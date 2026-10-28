@@ -122,8 +122,7 @@ struct MPIDU_Sched {
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
     enum MPIR_Sched_kind kind;  /* regular, persistent, generalized */
-    MPIR_Coll_owned_t owned;    /* buffers to be freed when sched is freed */
-    UT_array *handles;          /* ref_count to be released when sched is freed */
+    MPIR_Coll_owned_t owned;    /* buffers and handles released when sched is freed */
     struct MPIDU_Sched *next;   /* linked-list next pointer */
     struct MPIDU_Sched *prev;   /* linked-list next pointer */
 };
@@ -139,6 +138,8 @@ int MPIDU_Sched_free(MPIR_Sched_t s);
 int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 void MPIDU_Sched_add_buffer(MPIR_Sched_t s, void *buf);
+void MPIDU_Sched_add_handle(MPIR_Sched_t s, int handle);
+MPIR_Coll_owned_t *MPIDU_Sched_get_owned(MPIR_Sched_t s);
 int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);

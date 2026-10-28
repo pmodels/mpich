@@ -447,7 +447,6 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     s->entries = NULL;
     s->kind = kind;
     MPIR_Coll_owned_init(&s->owned);
-    s->handles = NULL;
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
 
@@ -480,22 +479,6 @@ int MPIDU_Sched_free(struct MPIDU_Sched *s)
 {
     MPL_free(s->entries);
     MPIR_Coll_owned_free(&s->owned);
-    if (s->handles) {
-        for (int *p = (int *)utarray_front(s->handles); p; p = (int *) utarray_next(s->handles, p)) {
-            if (HANDLE_GET_MPI_KIND(*p) == MPIR_COMM) {
-                MPIR_Comm *comm;
-                MPIR_Comm_get_ptr(*p, comm);
-                MPIR_Comm_release(comm);
-            } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_DATATYPE) {
-                MPIR_Datatype_release_if_not_builtin(*p);
-            } else if (HANDLE_GET_MPI_KIND(*p) == MPIR_OP) {
-                MPIR_Op_release_if_not_builtin(*p);
-            } else {
-                MPIR_Assert(0);
-            }
-        }
-        utarray_free(s->handles);
-    }
     MPL_free(s);
     return MPI_SUCCESS;
 }
@@ -532,12 +515,14 @@ void MPIDU_Sched_add_buffer(struct MPIDU_Sched *s, void *buf)
     MPIR_Coll_owned_add_buffer(&s->owned, buf);
 }
 
-static void sched_add_ref(struct MPIDU_Sched *s, int handle)
+void MPIDU_Sched_add_handle(struct MPIDU_Sched *s, int handle)
 {
-    if (s->handles == NULL) {
-        utarray_new(s->handles, &ut_int_icd, MPL_MEM_OTHER);
-    }
-    utarray_push_back(s->handles, &handle, MPL_MEM_OTHER);
+    MPIR_Coll_owned_add_handle(&s->owned, handle);
+}
+
+MPIR_Coll_owned_t *MPIDU_Sched_get_owned(struct MPIDU_Sched *s)
+{
+    return &s->owned;
 }
 
 int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** req)
@@ -663,10 +648,8 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -699,10 +682,8 @@ int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -734,10 +715,8 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -766,10 +745,8 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
     e->u.recv.comm = comm;
     e->u.recv.status = status;
     status->MPI_ERROR = MPI_SUCCESS;
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -798,10 +775,8 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
     e->u.recv.comm = comm;
     e->u.recv.status = MPI_STATUS_IGNORE;
 
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -831,10 +806,8 @@ int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
     e->u.recv.status = MPI_STATUS_IGNORE;
     e->u.recv.tag = tag;
 
-    MPIR_Comm_add_ref(comm);
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    sched_add_ref(s, comm->handle);
-    sched_add_ref(s, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, comm->handle);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
 
   fn_exit:
     return mpi_errno;
@@ -863,10 +836,8 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
     reduce->datatype = datatype;
     reduce->op = op;
 
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIR_Op_add_ref_if_not_builtin(op);
-    sched_add_ref(s, datatype);
-    sched_add_ref(s, op);
+    MPIR_Coll_owned_add_handle(&s->owned, datatype);
+    MPIR_Coll_owned_add_handle(&s->owned, op);
 
   fn_exit:
     return mpi_errno;
@@ -903,10 +874,8 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
     copy->outcount = outcount;
     copy->outtype = outtype;
 
-    MPIR_Datatype_add_ref_if_not_builtin(intype);
-    MPIR_Datatype_add_ref_if_not_builtin(outtype);
-    sched_add_ref(s, intype);
-    sched_add_ref(s, outtype);
+    MPIR_Coll_owned_add_handle(&s->owned, intype);
+    MPIR_Coll_owned_add_handle(&s->owned, outtype);
 
     /* some sanity checking up front */
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)

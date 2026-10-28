@@ -34,6 +34,7 @@ enum {
  * It is freed once, when the operation object is freed. */
 typedef struct {
     UT_array buffers;           /* MPL_malloc'd memory, MPL_free'd */
+    UT_array handles;           /* comm, datatype and op references, released */
 } MPIR_Coll_owned_t;
 
 /* Collectives request data structure */

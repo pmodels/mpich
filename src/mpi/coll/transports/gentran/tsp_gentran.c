@@ -554,6 +554,18 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t s, void *buf)
     MPIR_Coll_owned_add_buffer(&sched->owned, buf);
 }
 
+void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t s, int handle)
+{
+    MPII_Genutil_sched_t *sched = s;
+    MPIR_Coll_owned_add_handle(&sched->owned, handle);
+}
+
+MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t s)
+{
+    MPII_Genutil_sched_t *sched = s;
+    return &sched->owned;
+}
+
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t s, MPIR_TSP_sched_t subs,
                              int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
