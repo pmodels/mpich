@@ -196,6 +196,206 @@ static void test_alltoallw(bool persistent)
     free(types);
 }
 
+/* gather and scatter: the types that are significant only at the root are valid at every
+ * process and are freed too, and an algorithm must not use them at the other processes */
+static void test_rooted(bool persistent, bool gather)
+{
+    int root = size - 1;
+    int *rootbuf = malloc(size * N * sizeof(int));
+    int buf[N];
+    MPI_Comm comm;
+    MPI_Datatype blk, mytype;
+    MPI_Request req;
+
+    MPI_Comm_dup(MPI_COMM_WORLD, &comm);
+    MPI_Type_contiguous(N, MPI_INT, &blk);
+    MPI_Type_commit(&blk);
+    MPI_Type_contiguous(N, MPI_INT, &mytype);
+    MPI_Type_commit(&mytype);
+
+    for (int it = 0; it < (persistent ? STARTS : 1); it++) {
+        if (gather) {
+            for (int i = 0; i < N; i++) {
+                buf[i] = (rank * 100 + it) * 1000 + i;
+            }
+            for (int i = 0; i < size * N; i++) {
+                rootbuf[i] = -1;
+            }
+        } else {
+            for (int i = 0; i < size * N; i++) {
+                rootbuf[i] = (rank == root) ? (i / N * 100 + it) * 1000 + i % N : -1;
+            }
+            for (int i = 0; i < N; i++) {
+                buf[i] = -1;
+            }
+        }
+        if (it == 0) {
+            if (gather) {
+                if (persistent) {
+                    MPI_Gather_init(buf, N, MPI_INT, rootbuf, 1, blk, root, comm, MPI_INFO_NULL,
+                                    &req);
+                } else {
+                    MPI_Igather(buf, N, MPI_INT, rootbuf, 1, blk, root, comm, &req);
+                }
+            } else {
+                if (persistent) {
+                    MPI_Scatter_init(rootbuf, 1, blk, buf, N, MPI_INT, root, comm, MPI_INFO_NULL,
+                                     &req);
+                } else {
+                    MPI_Iscatter(rootbuf, 1, blk, buf, N, MPI_INT, root, comm, &req);
+                }
+            }
+            MPI_Type_free(&blk);
+            MPI_Type_free(&mytype);
+            MPI_Comm_free(&comm);
+        }
+        if (persistent) {
+            MPI_Start(&req);
+        }
+        MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+        if (gather && rank == root) {
+            for (int i = 0; i < size * N; i++) {
+                check(rootbuf[i] == (i / N * 100 + it) * 1000 + i % N, "gather", it);
+            }
+        } else if (!gather) {
+            for (int i = 0; i < N; i++) {
+                check(buf[i] == (rank * 100 + it) * 1000 + i, "scatter", it);
+            }
+        }
+    }
+    if (persistent) {
+        MPI_Request_free(&req);
+    }
+    free(rootbuf);
+}
+
+/* MPI_IN_PLACE: the send type is not significant, but it is valid, and it is freed */
+static void test_inplace(bool persistent, bool alltoall)
+{
+    int *buf = malloc(size * N * sizeof(int));
+    MPI_Comm comm;
+    MPI_Datatype blk, sendtype;
+    MPI_Request req;
+
+    MPI_Comm_dup(MPI_COMM_WORLD, &comm);
+    MPI_Type_contiguous(N, MPI_INT, &sendtype);
+    MPI_Type_commit(&sendtype);
+    MPI_Type_contiguous(N, MPI_INT, &blk);
+    MPI_Type_commit(&blk);
+
+    for (int it = 0; it < (persistent ? STARTS : 1); it++) {
+        for (int i = 0; i < size * N; i++) {
+            if (alltoall) {
+                /* block j goes to rank j */
+                buf[i] = ((rank * 100 + i / N) * 10 + it) * 1000 + i % N;
+            } else {
+                /* our block is in place */
+                buf[i] = (i / N == rank) ? ((rank * 100 + it) * 1000 + i % N) : -1;
+            }
+        }
+        if (it == 0) {
+            if (alltoall) {
+                if (persistent) {
+                    MPI_Alltoall_init(MPI_IN_PLACE, 0, sendtype, buf, 1, blk, comm, MPI_INFO_NULL,
+                                      &req);
+                } else {
+                    MPI_Ialltoall(MPI_IN_PLACE, 0, sendtype, buf, 1, blk, comm, &req);
+                }
+            } else {
+                if (persistent) {
+                    MPI_Allgather_init(MPI_IN_PLACE, 0, sendtype, buf, 1, blk, comm,
+                                       MPI_INFO_NULL, &req);
+                } else {
+                    MPI_Iallgather(MPI_IN_PLACE, 0, sendtype, buf, 1, blk, comm, &req);
+                }
+            }
+            MPI_Type_free(&sendtype);
+            MPI_Type_free(&blk);
+            MPI_Comm_free(&comm);
+        }
+        if (persistent) {
+            MPI_Start(&req);
+        }
+        MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+        for (int i = 0; i < size * N; i++) {
+            int expect;
+            if (alltoall) {
+                /* block j came from rank j, who put it at block of our rank */
+                expect = ((i / N * 100 + rank) * 10 + it) * 1000 + i % N;
+            } else {
+                expect = (i / N * 100 + it) * 1000 + i % N;
+            }
+            check(buf[i] == expect, alltoall ? "in-place alltoall" : "in-place allgather", it);
+        }
+    }
+    if (persistent) {
+        MPI_Request_free(&req);
+    }
+    free(buf);
+}
+
+/* in-place alltoallw: the entries of the peers that exchange nothing are empty, and their types
+ * are valid and freed */
+static void test_inplace_alltoallw(bool persistent)
+{
+    int *buf = malloc(size * N * sizeof(int));
+    int *counts = malloc(size * sizeof(int));
+    int *displs = malloc(size * sizeof(int));
+    MPI_Datatype *types = malloc(size * sizeof(MPI_Datatype));
+    MPI_Comm comm;
+    MPI_Request req;
+
+    MPI_Comm_dup(MPI_COMM_WORLD, &comm);
+    for (int i = 0; i < size; i++) {
+        /* symmetric: the pair (i, j) agrees */
+        counts[i] = ((rank + i) % 2 == 0 && i != rank) ? 0 : 1;
+        displs[i] = i * N * sizeof(int);
+        MPI_Type_contiguous(N, MPI_INT, &types[i]);
+        MPI_Type_commit(&types[i]);
+    }
+
+    for (int it = 0; it < (persistent ? STARTS : 1); it++) {
+        for (int i = 0; i < size * N; i++) {
+            buf[i] = ((rank * 100 + i / N) * 10 + it) * 1000 + i % N;
+        }
+        if (it == 0) {
+            if (persistent) {
+                MPI_Alltoallw_init(MPI_IN_PLACE, NULL, NULL, NULL, buf, counts, displs, types,
+                                   comm, MPI_INFO_NULL, &req);
+            } else {
+                MPI_Ialltoallw(MPI_IN_PLACE, NULL, NULL, NULL, buf, counts, displs, types, comm,
+                               &req);
+            }
+            for (int i = 0; i < size; i++) {
+                MPI_Type_free(&types[i]);
+            }
+            MPI_Comm_free(&comm);
+        }
+        if (persistent) {
+            MPI_Start(&req);
+        }
+        MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+        for (int i = 0; i < size * N; i++) {
+            int peer = i / N;
+            int expect = ((rank * 100 + peer) * 10 + it) * 1000 + i % N;
+            if (counts[peer] > 0 && peer != rank) {
+                expect = ((peer * 100 + rank) * 10 + it) * 1000 + i % N;
+            }
+            check(buf[i] == expect, "in-place alltoallw", it);
+        }
+    }
+    if (persistent) {
+        MPI_Request_free(&req);
+    }
+    free(buf);
+    free(counts);
+    free(displs);
+    free(types);
+}
+
 int run(const char *arg)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -206,6 +406,11 @@ int run(const char *arg)
         test_reduce(persistent, false);
         test_reduce(persistent, true);
         test_alltoallw(persistent);
+        test_rooted(persistent, true);
+        test_rooted(persistent, false);
+        test_inplace(persistent, true);
+        test_inplace(persistent, false);
+        test_inplace_alltoallw(persistent);
     }
 
     return errs;
