@@ -35,7 +35,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     /* initialize array for storing vertices */
     utarray_init(&sched->vtcs, &vtx_t_icd);
 
-    utarray_init(&sched->buffers, &ut_ptr_icd);
+    MPIR_Coll_owned_init(&sched->owned);
     utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
@@ -53,7 +53,6 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i;
     vtx_t *vtx;
-    void **p;
 
     /* free up the sched resources */
     vtx = ut_type_array(&sched->vtcs, vtx_t *);
@@ -110,12 +109,9 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     }
 
     /* free up the allocated buffers */
-    p = NULL;
-    while ((p = (void **) utarray_next(&sched->buffers, p)))
-        MPL_free(*p);
+    MPIR_Coll_owned_free(&sched->owned);
 
     utarray_done(&sched->vtcs);
-    utarray_done(&sched->buffers);
     utarray_done(&sched->generic_types);
     MPL_free(sched);
 
@@ -555,7 +551,7 @@ void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
 void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t s, void *buf)
 {
     MPII_Genutil_sched_t *sched = s;
-    utarray_push_back(&sched->buffers, &buf, MPL_MEM_COLL);
+    MPIR_Coll_owned_add_buffer(&sched->owned, buf);
 }
 
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t s, MPIR_TSP_sched_t subs,

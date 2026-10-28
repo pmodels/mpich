@@ -50,6 +50,13 @@ void MPIR_Sched_set_tag(MPIR_Sched_t s, int tag);
 
 /* the device must provide a typedef for MPIR_Sched_t in mpidpre.h */
 
+/* MPIR_Coll_owned_t (coll_types.h) holds what a schedule owns. */
+void MPIR_Coll_owned_init(MPIR_Coll_owned_t * o);
+/* takes ownership of a buffer allocated with MPL_malloc */
+void MPIR_Coll_owned_add_buffer(MPIR_Coll_owned_t * o, void *buf);
+/* frees the buffers */
+void MPIR_Coll_owned_free(MPIR_Coll_owned_t * o);
+
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
 int MPIR_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 /* clones orig and returns a handle to the new schedule in (*cloned) */

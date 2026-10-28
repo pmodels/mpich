@@ -9,6 +9,7 @@
 /* Type definitions from all algorithms */
 #include "stubalgo_types.h"
 #include "treealgo_types.h"
+#include "utarray.h"
 
 #define MPIR_COLL_FLAG_REDUCE_L 1
 #define MPIR_COLL_FLAG_REDUCE_R 0
@@ -28,6 +29,12 @@ enum {
     MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER = 0,
     MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
 };
+
+/* What an operation object of a nonblocking or persistent collective owns.
+ * It is freed once, when the operation object is freed. */
+typedef struct {
+    UT_array buffers;           /* MPL_malloc'd memory, MPL_free'd */
+} MPIR_Coll_owned_t;
 
 /* Collectives request data structure */
 typedef struct MPII_Coll_req_t {

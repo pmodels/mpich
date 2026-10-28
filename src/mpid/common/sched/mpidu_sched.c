@@ -446,7 +446,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     s->req = NULL;
     s->entries = NULL;
     s->kind = kind;
-    s->buffers = NULL;
+    MPIR_Coll_owned_init(&s->owned);
     s->handles = NULL;
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
@@ -479,13 +479,7 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
 int MPIDU_Sched_free(struct MPIDU_Sched *s)
 {
     MPL_free(s->entries);
-    if (s->buffers) {
-        for (void **p = (void **)utarray_front(s->buffers); p;
-             p = (void **) utarray_next(s->buffers, p)) {
-            MPL_free(*p);
-        }
-        utarray_free(s->buffers);
-    }
+    MPIR_Coll_owned_free(&s->owned);
     if (s->handles) {
         for (int *p = (int *)utarray_front(s->handles); p; p = (int *) utarray_next(s->handles, p)) {
             if (HANDLE_GET_MPI_KIND(*p) == MPIR_COMM) {
@@ -523,7 +517,7 @@ int MPIDU_Sched_reset(struct MPIDU_Sched *s)
 
 void *MPIDU_Sched_alloc_state(struct MPIDU_Sched *s, MPI_Aint size)
 {
-    void *p = MPL_malloc(size, MPL_MEM_OTHER);
+    void *p = MPL_malloc(size, MPL_MEM_COLL);
     if (p == NULL) {
         /* Caller should process error */
         return p;
@@ -535,10 +529,7 @@ void *MPIDU_Sched_alloc_state(struct MPIDU_Sched *s, MPI_Aint size)
 
 void MPIDU_Sched_add_buffer(struct MPIDU_Sched *s, void *buf)
 {
-    if (s->buffers == NULL) {
-        utarray_new(s->buffers, &ut_ptr_icd, MPL_MEM_OTHER);
-    }
-    utarray_push_back(s->buffers, &buf, MPL_MEM_OTHER);
+    MPIR_Coll_owned_add_buffer(&s->owned, buf);
 }
 
 static void sched_add_ref(struct MPIDU_Sched *s, int handle)
