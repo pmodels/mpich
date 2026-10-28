@@ -125,6 +125,7 @@ static void get_recv_span(MPIR_Csel_coll_sig_s * coll_sig, struct recv_span *sp)
     int size = comm->local_size;
 
     sp->any = false;
+    sp->buf = NULL;
 #define U(name) (&coll_sig->u.name)
     switch (coll_sig->coll_type) {
           COLL_TYPE_INTRA_CASE(ALLTOALL):

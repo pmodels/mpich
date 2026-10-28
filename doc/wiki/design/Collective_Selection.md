@@ -53,8 +53,7 @@ It has four kinds of top-level section:
 ```
 restrictions:
     0  - inplace:           MPIR_Csel_sendbuf_inplace
-    1  - not_inplace:       MPIR_Csel_sendbuf_not_inplace
-    2  - pof2:              MPIR_Csel_comm_size_is_pof2
+    1  - pof2:              MPIR_Csel_comm_size_is_pof2
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
@@ -98,13 +97,22 @@ bcast-intra:
   `func_name` gives one. Attribute keys:
     - `restrictions`: conditions that must hold for the algorithm to run.
       Threshold conditions and negation are not allowed here; a restriction
-      that needs a condition to be false names its own condition (e.g.
-      `not_inplace`). Every restriction is then a condition that holds, so
-      the algorithms allowed under a set of true conditions are also
-      allowed under any larger set. JSON trees can still negate (`!inplace`).
+      that needs a condition to be false names its own condition. Every
+      restriction is then a condition that holds, so the algorithms allowed
+      under a set of true conditions are also allowed under any larger set. JSON trees can still negate (`!inplace`).
     - `gpu_swap: 1`: for an algorithm that can't work on device buffers.
       When the `gpu` restriction holds, its generated wrapper swaps the
       buffers for host buffers first (see "GPU buffers" below).
+    - `inplace_copy: 1`: for an alltoall, alltoallv or alltoallw algorithm
+      that only handles a not-in-place call. When `sendbuf` is
+      `MPI_IN_PLACE`, its generated wrapper calls `MPIR_Coll_inplace_copy`,
+      which copies the receive buffer span to a temporary buffer and calls
+      the wrapper again with that copy as the send side. The algorithm then
+      needs no in-place code, and the in-place case costs one copy and
+      `p` blocks of extra memory. Such algorithms have no in-place
+      restriction, so in-place becomes an ordinary yes/no input of the
+      selection. Device buffers are swapped to host first, as with `gpu_swap`.
+      Rejected on `general` algorithms and outside the alltoall family.
     - `inner`: for a compositional algorithm, the collectives it calls
       through the selection, as `<section>@<communicator>` (e.g.
       `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).

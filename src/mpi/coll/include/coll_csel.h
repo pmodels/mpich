@@ -285,11 +285,6 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_sendbuf_inplace(MPIR_Csel_coll_sig_s * c
     }
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_sendbuf_not_inplace(MPIR_Csel_coll_sig_s * coll_sig)
-{
-    return !MPIR_Csel_sendbuf_inplace(coll_sig);
-}
-
 MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_op_is_builtin(MPIR_Csel_coll_sig_s * coll_sig)
 {
     switch (coll_sig->coll_type) {

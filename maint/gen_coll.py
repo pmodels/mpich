@@ -518,7 +518,7 @@ def dump_MPIR_Coll_check_algo_restriction():
     def restriction_bit(restriction):
         r = restriction
         if r.startswith('!'):
-            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition (e.g. not_inplace)" % r)
+            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition" % r)
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
