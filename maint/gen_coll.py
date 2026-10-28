@@ -144,7 +144,7 @@ def dump_algo_cnt_fns():
                 G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
             else:
                 G.out.append("MPIR_Assert(coll_sig->sched == NULL);")
-                G.out.append("coll_sig->sched_type = MPIR_SCHED_REQUEST;")
+                G.out.append("coll_sig->sched_type = MPIR_SCHED_GREQ;")
 
     G.out.append("")
     for algo in G.algo_list:
@@ -347,7 +347,7 @@ def dump_MPIR_Coll_hold_handles():
     dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {")
     G.out.append("INDENT")
     G.out.append("owned = MPIR_TSP_sched_get_owned(coll_sig->sched);")
-    dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_REQUEST) {")
+    dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_GREQ) {")
     G.out.append("INDENT")
     G.out.append("/* the request-based algorithm has already started */")
     G.out.append("return;")

@@ -105,7 +105,7 @@ int MPIR_Coll_inplace_copy(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_
             mpi_errno = MPIR_TSP_sched_fence(s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            /* MPIR_SCHED_REQUEST has no steps to add; nothing produces it for now */
+            /* MPIR_SCHED_GREQ has no steps to add; nothing produces it for now */
             MPIR_Assert(0);
         }
     }

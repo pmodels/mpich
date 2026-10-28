@@ -129,7 +129,7 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
         } else if (sched_type == MPIR_SCHED_GENTRAN) { \
             mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \
             MPIR_ERR_CHECK(mpi_errno); \
-        } else if (sched_type == MPIR_SCHED_REQUEST) { \
+        } else if (sched_type == MPIR_SCHED_GREQ) { \
             *request = sched; \
         } else { \
             MPIR_Assert(0); \

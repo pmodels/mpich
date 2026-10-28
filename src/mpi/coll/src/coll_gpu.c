@@ -287,7 +287,7 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             }
         }
     } else {
-        /* MPIR_SCHED_REQUEST has no steps to add; nothing produces it for now */
+        /* MPIR_SCHED_GREQ has no steps to add; nothing produces it for now */
         MPIR_Assert(0);
     }
 
