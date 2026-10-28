@@ -68,7 +68,7 @@ static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint da
     }
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         for (int i = 0; i < num_nics; i++) {
-            rkeys[i] = fi_mr_key(mrs[i]);
+            rkeys[i] = mrs[i] ? fi_mr_key(mrs[i]) : 0;
         }
     }
 
