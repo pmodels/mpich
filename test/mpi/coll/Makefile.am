@@ -111,6 +111,7 @@ noinst_PROGRAMS =      \
     p_inactive         \
     red3               \
     red4               \
+    red_negextent      \
     red_scat_block     \
     red_scat_block2    \
     redscat            \

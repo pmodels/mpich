@@ -148,6 +148,7 @@ coll/p_order
 coll/p_inactive
 coll/red3
 coll/red4
+coll/red_negextent
 coll/red_scat_block
 coll/red_scat_block2
 coll/redscat
