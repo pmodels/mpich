@@ -22,10 +22,12 @@ noinst_PROGRAMS =
 nodist_noinst_SCRIPTS =
 dist_noinst_SCRIPTS = autogen.sh
 
+noinst_LTLIBRARIES =
+lib_LTLIBRARIES =
 if EMBEDDED_BUILD
-noinst_LTLIBRARIES = libyaksa.la
+noinst_LTLIBRARIES += libyaksa.la
 else
-lib_LTLIBRARIES = libyaksa.la
+lib_LTLIBRARIES += libyaksa.la
 endif !EMBEDDED_BUILD
 
 libyaksa_la_SOURCES =

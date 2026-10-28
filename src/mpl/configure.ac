@@ -25,6 +25,15 @@ AM_PROG_AR
 
 LT_PREREQ([2.2.6])
 
+AC_ARG_ENABLE([dlopen],
+              [AS_HELP_STRING([--enable-dlopen],
+                              [Do not link libraries such as CUDA directly. Build the
+                               code that needs them as a separate piece that the
+                               parent project links into a module to dlopen at runtime.])],
+              [], [enable_dlopen=no])
+# LT_INIT uses and resets the shell variable enable_dlopen, save ours
+mpl_enable_dlopen=$enable_dlopen
+
 # Bug in libtool adds -O2 and -g by default
 PAC_PUSH_FLAG([CFLAGS])
 LT_INIT()
@@ -1156,7 +1165,17 @@ have_gpu="no"
 
 # Check CUDA availability
 AC_ARG_VAR([NVCC], [nvcc compiler to use])
-PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+# With --enable-dlopen, CUDA libraries are linked into a separate convenience
+# library rather than libmpl. Collect the libraries in MPL_CUDA_LIBS rather
+# than LIBS.
+MPL_CUDA_LIBS=
+AC_SUBST(MPL_CUDA_LIBS)
+if test "$mpl_enable_dlopen" = "yes" ; then
+    PAC_PROBE_HEADER_LIB([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+    PAC_PUSH_FLAG([LIBS])
+else
+    PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+fi
 if test "$pac_have_cuda" = "yes" ; then
     # also require -lcuda (in addition to -lcudart)
     PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange], pac_have_cuda=yes, pac_have_cuda=no)
@@ -1211,13 +1230,32 @@ if test "$pac_have_cuda" = "yes" ; then
         AC_MSG_RESULT([no])
     fi
 fi
-if test "X${pac_have_cuda}" = "Xyes" ; then
+mpl_cuda_dlopen=no
+if test "$mpl_enable_dlopen" = "yes" ; then
+    # discard the libraries added to LIBS by the CUDA checks
+    PAC_POP_FLAG([LIBS])
+    if test "X${pac_have_cuda}" = "Xyes" ; then
+        if test "$enable_shared" = "no" ; then
+            AC_MSG_ERROR([--enable-dlopen requires building shared libraries])
+        fi
+        AC_CHECK_LIB(dl, dlopen)
+        mpl_cuda_dlopen=yes
+        MPL_CUDA_LIBS="-lcudart -lcuda -lstdc++"
+        AC_DEFINE([CUDA_DLOPEN],[1],[Define if CUDA support is built as a piece of a dlopen module])
+        AC_DEFINE([CUDA_MODULE_NAME],["libmpich_cuda.so"],[File name of the dlopen module that contains the CUDA support])
+    fi
+elif test "X${pac_have_cuda}" = "Xyes" ; then
     PAC_LIBS_ADD(-lcuda)
+fi
+if test "X${pac_have_cuda}" = "Xyes" ; then
     AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
     have_gpu="yes"
     GPU_SUPPORT="CUDA"
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
+AM_CONDITIONAL([MPL_CUDA_DLOPEN],[test "$mpl_cuda_dlopen" = "yes"])
+MPL_CUDA_DLOPEN=$mpl_cuda_dlopen
+AC_SUBST(MPL_CUDA_DLOPEN)
 
 # Check Level-Zero availability
 if test "$have_gpu" = "no" ; then

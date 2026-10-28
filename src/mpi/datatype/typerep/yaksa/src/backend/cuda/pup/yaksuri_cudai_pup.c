@@ -108,7 +108,8 @@ int yaksuri_cudai_ipack_with_stream(const void *inbuf, void *outbuf, uintptr_t c
 
         while (offset < type->num_contig * count) {
             uintptr_t actual_iov_len;
-            rc = yaksi_iov(inbuf, count, type, offset, iov, MAX_IOV_LENGTH, &actual_iov_len);
+            rc = YAKSURI_CUDAI_IOV(inbuf, count, type, offset, iov, MAX_IOV_LENGTH,
+                                   &actual_iov_len);
             YAKSU_ERR_CHECK(rc, fn_fail);
 
             for (uintptr_t i = 0; i < actual_iov_len; i++) {
@@ -173,7 +174,8 @@ int yaksuri_cudai_iunpack_with_stream(const void *inbuf, void *outbuf, uintptr_t
 
         while (offset < type->num_contig * count) {
             uintptr_t actual_iov_len;
-            rc = yaksi_iov(outbuf, count, type, offset, iov, MAX_IOV_LENGTH, &actual_iov_len);
+            rc = YAKSURI_CUDAI_IOV(outbuf, count, type, offset, iov, MAX_IOV_LENGTH,
+                                   &actual_iov_len);
             YAKSU_ERR_CHECK(rc, fn_fail);
 
             for (uintptr_t i = 0; i < actual_iov_len; i++) {
