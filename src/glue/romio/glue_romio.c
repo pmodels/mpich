@@ -140,12 +140,12 @@ void MPIR_Ext_cs_yield(void)
 
 void *MPIR_Ext_gpu_host_alloc(const void *buf, MPI_Aint count, MPI_Datatype datatype)
 {
-    return MPIR_gpu_host_alloc(buf, count, datatype);
+    return MPIR_alloc_buffer_if_dev(buf, count, datatype);
 }
 
 void MPIR_Ext_gpu_host_free(void *host_buf, MPI_Aint count, MPI_Datatype datatype)
 {
-    MPIR_gpu_host_free(host_buf, count, datatype);
+    MPIR_free_buffer(host_buf, count, datatype);
 }
 
 void *MPIR_Ext_gpu_host_swap(const void *buf, MPI_Aint count, MPI_Datatype datatype)

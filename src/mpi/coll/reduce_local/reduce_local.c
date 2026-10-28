@@ -82,10 +82,10 @@ static int reduce_local_on_host(const void *inbuf, void *inoutbuf, MPI_Aint coun
 
   fn_exit:
     if (host_in) {
-        MPIR_gpu_host_free(host_in, count, datatype);
+        MPIR_free_buffer(host_in, count, datatype);
     }
     if (host_inout) {
-        MPIR_gpu_host_free(host_inout, count, datatype);
+        MPIR_free_buffer(host_inout, count, datatype);
     }
     return mpi_errno;
   fn_fail:
