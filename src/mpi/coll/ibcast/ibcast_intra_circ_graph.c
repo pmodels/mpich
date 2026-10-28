@@ -98,6 +98,7 @@ static int cga_bcast_poll(MPIX_Async_thing thing)
     mpi_errno = MPII_cga_testall(&state->queue, &done);
     MPIR_ERR_CHECK(mpi_errno);
     if (done) {
+        MPII_cga_queue_free(&state->queue);
         MPII_circ_graph_free(&state->cga);
         MPIR_Grequest_complete_impl(state->req_ptr);
         MPL_free(state);
