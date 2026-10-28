@@ -243,8 +243,8 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
     }
 
     void *tmpbuf = NULL;
+    MPI_Aint tmpbuf_size = 0;
     if (count > 0 && dest != MPI_PROC_NULL) {
-        MPI_Aint tmpbuf_size = 0;
         MPI_Aint actual_pack_bytes;
         MPIR_Pack_size(count, datatype, &tmpbuf_size);
 
@@ -265,7 +265,8 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Sched_pt2pt_send(tmpbuf, count, datatype, sendtag, dest, comm_ptr, s);
+    mpi_errno = MPIR_Sched_pt2pt_send(tmpbuf, tmpbuf_size, MPIR_BYTE_INTERNAL, sendtag, dest,
+                                      comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_pt2pt_recv(buf, count, datatype, recvtag, source, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
