@@ -94,7 +94,6 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
         MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
         MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
-        MPIR_Assert(count >= pof2);     /* the cnts calculations assume this */
         for (i = 0; i < (pof2 - 1); i++)
             cnts[i] = count / pof2;
         cnts[pof2 - 1] = count - (count / pof2) * (pof2 - 1);

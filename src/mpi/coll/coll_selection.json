@@ -136,14 +136,7 @@
                 },
                 "any":
                 {
-                    "!count_ge_pof2":
-                    {
-                        "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather":{}
-                    }
+                    "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather":{}
                 }
             }
     },
@@ -223,14 +216,7 @@
             {
                 "builtin_op":
                 {
-                    "!count_ge_pof2":
-                    {
-                        "algorithm=MPIR_Reduce_intra_binomial":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
-                    }
+                    "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
                 },
                 "any":
                 {
@@ -490,14 +476,7 @@
                 },
                 "any":
                 {
-                    "!count_ge_pof2":
-                    {
-                        "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallreduce_intra_sched_reduce_scatter_allgather":{}
-                    }
+                    "algorithm=MPIR_Iallreduce_intra_sched_reduce_scatter_allgather":{}
                 }
             }
     },
@@ -613,14 +592,7 @@
             {
                 "builtin_op":
                 {
-                    "!count_ge_pof2":
-                    {
-                        "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
-                    }
+                    "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
                 },
                 "any":
                 {
