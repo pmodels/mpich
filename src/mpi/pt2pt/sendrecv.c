@@ -198,6 +198,10 @@ int MPIR_Isendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* the user may free the datatypes after the call returns; the request holds the comm */
+    MPIR_Sched_add_handle(s, sendtype);
+    MPIR_Sched_add_handle(s, recvtype);
+
     mpi_errno = MPIR_Sched_pt2pt_send(sendbuf, sendcount, sendtype, sendtag, dest, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_pt2pt_recv(recvbuf, recvcount, recvtype, recvtag, source, comm_ptr, s);
@@ -264,6 +268,9 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
 
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* the user may free the datatype after the call returns; the request holds the comm */
+    MPIR_Sched_add_handle(s, datatype);
 
     mpi_errno = MPIR_Sched_pt2pt_send(tmpbuf, tmpbuf_size, MPIR_BYTE_INTERNAL, sendtag, dest,
                                       comm_ptr, s);
