@@ -109,10 +109,14 @@ MPIDI_POSIX_release_gather_eligible(MPIR_Csel_coll_sig_s * coll_sig,
     }
 
     if (datatype_for_reduce != MPI_DATATYPE_NULL) {
-        MPI_Aint type_size, dummy_lb, extent, true_extent;
+        MPI_Aint type_size, dummy_lb, extent, true_lb, true_extent;
         MPIR_Datatype_get_size_macro(datatype_for_reduce, type_size);
         MPIR_Type_get_extent_impl(datatype_for_reduce, &dummy_lb, &extent);
-        MPIR_Type_get_true_extent_impl(datatype_for_reduce, &dummy_lb, &true_extent);
+        MPIR_Type_get_true_extent_impl(datatype_for_reduce, &true_lb, &true_extent);
+        /* the shm reduce cells hold the data from their start address, in increasing order */
+        if (extent < 0 || true_lb != 0) {
+            return false;
+        }
         extent = MPL_MAX(extent, true_extent);
         if (MPL_MAX(type_size, extent) >=
             MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
