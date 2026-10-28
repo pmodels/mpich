@@ -133,6 +133,7 @@ uoplong 4
 uoplong 11 env=MPIR_CVAR_SOCKET_BUFFER_SIZE=262144
 uoplong 16 mem=1.4 env=MPIR_CVAR_SOCKET_BUFFER_SIZE=262144
 nonblocking 4
+nb_early_free 5
 nonblocking 5
 nonblocking 10
 nonblocking2 1

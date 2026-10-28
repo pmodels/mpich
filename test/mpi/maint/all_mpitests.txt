@@ -100,6 +100,7 @@ coll/longuser
 coll/nonblocking
 coll/nonblocking2
 coll/nonblocking3
+coll/nb_early_free
 coll/neighb_allgather
 coll/neighb_allgatherv
 coll/neighb_alltoall
