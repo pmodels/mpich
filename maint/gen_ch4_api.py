@@ -28,10 +28,10 @@ def main():
     dump_netmod_impl_h("src/mpid/ch4/netmod/include/netmod_impl.h")
     dump_netmod_impl_c("src/mpid/ch4/netmod/src/netmod_impl.c")
 
-    for m in "ofi", "ucx", "stubnm":
+    for m in "ofi", "ucx", "sock", "stubnm":
         dump_func_table_c("src/mpid/ch4/netmod/%s/func_table.c" % (m), m)
 
-    for m in "ofi", "ucx", "stubnm":
+    for m in "ofi", "ucx", "sock", "stubnm":
         dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m, is_nm=True)
     dump_noinline_h("src/mpid/ch4/shm/src/shm_noinline.h", 'shm', is_nm=False)
     dump_noinline_h("src/mpid/ch4/shm/posix/posix_noinline.h", 'posix', is_nm=False)
@@ -102,6 +102,9 @@ def dump_netmod_h(h_file):
         print("#endif", file=Out)
         print("#ifdef HAVE_CH4_NETMOD_UCX", file=Out)
         print("    MPIDI_UCX_Global_t ucx;", file=Out)
+        print("#endif", file=Out)
+        print("#ifdef HAVE_CH4_NETMOD_SOCK", file=Out)
+        print("    MPIDI_SOCK_Global_t sock;", file=Out)
         print("#endif", file=Out)
         print("} MPIDI_NM_Global_t;", file=Out)
         print("", file=Out)
@@ -225,6 +228,7 @@ def dump_netmod_impl_h(h_file):
         print("#define __netmod_inline_stubnm__   0", file=Out)
         print("#define __netmod_inline_ofi__   1", file=Out)
         print("#define __netmod_inline_ucx__   2", file=Out)
+        print("#define __netmod_inline_sock__   3", file=Out)
         print("", file=Out)
         print("#if NETMOD_INLINE==__netmod_inline_stubnm__", file=Out)
         print("#include \"../stubnm/netmod_inline.h\"", file=Out)
@@ -232,6 +236,8 @@ def dump_netmod_impl_h(h_file):
         print("#include \"../ofi/netmod_inline.h\"", file=Out)
         print("#elif NETMOD_INLINE==__netmod_inline_ucx__", file=Out)
         print("#include \"../ucx/netmod_inline.h\"", file=Out)
+        print("#elif NETMOD_INLINE==__netmod_inline_sock__", file=Out)
+        print("#include \"../sock/netmod_inline.h\"", file=Out)
         print("#else", file=Out)
         print("#error \"No direct netmod included\"", file=Out)
         print("#endif", file=Out)

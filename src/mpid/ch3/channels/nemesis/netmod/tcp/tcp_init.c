@@ -39,16 +39,16 @@ cvars:
         MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
         both.
 
-    - name        : MPIR_CVAR_CH3_PORT_RANGE
+    - name        : MPIR_CVAR_PORT_RANGE
       category    : CH3
-      alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_PORT_RANGE
+      alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_CH3_PORT_RANGE, MPIR_CVAR_CH4_PORT_RANGE
       type        : range
       default     : "0:0"
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
+        The MPIR_CVAR_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
         manager and the MPICH library. The format of this variable is
         <low>:<high>.  To specify any available port, use 0:0.
@@ -144,8 +144,8 @@ static int set_up_listener(void)
     MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd =
         socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     MPIR_ERR_CHKANDJUMP2(MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create",
-                         "**sock_create %s %d", MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE),
-                         errno);
+                         "**sock_create %s %d", MPIR_Strerror(errno, strerrbuf,
+                                                              MPIR_STRERROR_BUF_SIZE), errno);
 
     mpi_errno = MPID_nem_tcp_set_sockopts(MPID_nem_tcp_g_lstn_sc.fd);
     MPIR_ERR_CHECK(mpi_errno);
@@ -214,7 +214,8 @@ int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
             /* The app has set its own signal handler.  Replace the previous handler. */
             ret = signal(SIGPIPE, ret);
             MPIR_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal",
-                                 "**signal %s", MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+                                 "**signal %s", MPIR_Strerror(errno, strerrbuf,
+                                                              MPIR_STRERROR_BUF_SIZE));
         }
     }
 #endif
@@ -420,7 +421,8 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     str_errno =
         MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname);
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER,
+                            "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -433,7 +435,8 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
         MPL_str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY,
                             MPL_sockaddr_port(&sock_id));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER,
+                            "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -604,18 +607,18 @@ int MPID_nem_tcp_listen(int sockfd)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
-                        MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
+    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_PORT_RANGE.low < 0 ||
+                        MPIR_CVAR_PORT_RANGE.low > MPIR_CVAR_PORT_RANGE.high, mpi_errno,
                         MPI_ERR_OTHER, "**badportrange");
 
     /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
+    if (MPIR_CVAR_PORT_RANGE.low == 0) {
         ret = MPL_listen_anyport(sockfd, &port);
     } else {
         ret =
-            MPL_listen_portrange(sockfd, &port, MPIR_CVAR_CH3_PORT_RANGE.low,
-                                 MPIR_CVAR_CH3_PORT_RANGE.high);
+            MPL_listen_portrange(sockfd, &port, MPIR_CVAR_PORT_RANGE.low,
+                                 MPIR_CVAR_PORT_RANGE.high);
     }
     if (ret == -2) {
         /* check if an available port was found */

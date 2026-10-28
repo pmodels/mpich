@@ -546,6 +546,8 @@ Makefile.am-stamp
 /src/mpid/ch4/netmod/include/netmod_impl.h
 /src/mpid/ch4/netmod/ofi/func_table.c
 /src/mpid/ch4/netmod/ofi/ofi_noinline.h
+/src/mpid/ch4/netmod/sock/func_table.c
+/src/mpid/ch4/netmod/sock/sock_noinline.h
 /src/mpid/ch4/netmod/src/netmod_impl.c
 /src/mpid/ch4/netmod/stubnm/func_table.c
 /src/mpid/ch4/netmod/stubnm/netmod_inline.h

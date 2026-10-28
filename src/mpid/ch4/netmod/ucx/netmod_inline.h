@@ -22,7 +22,6 @@
 #include "ucx_progress.h"
 #include "ucx_request.h"
 #include "ucx_am.h"
-#include "ucx_proc.h"
 
 /* Not-inlined UCX netmod functions */
 #include "ucx_noinline.h"
