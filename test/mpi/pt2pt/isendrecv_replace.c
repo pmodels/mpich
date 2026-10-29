@@ -18,31 +18,42 @@ static int rank, nproc, dest;
 static float *buf;
 static MPI_Comm comm;
 static MPI_Request *reqs;
+/* stride > 1 sends each block as a non-contiguous vector type */
+static int stride = 1;
+static int count;
+static MPI_Datatype dtype;
+
+#define IDX(i, j) (((i) * elems + (j)) * stride)
 
 static void test_sendrecv(int offset)
 {
+    /* the gaps between the elements must stay untouched */
+    for (int i = 0; i < nproc * elems * stride; i++) {
+        buf[i] = -1.0;
+    }
     for (int i = 0; i < nproc; i++) {
         for (int j = 0; j < elems; j++) {
-            buf[i * elems + j] = rank * 100.0 + j;
+            buf[IDX(i, j)] = rank * 100.0 + j;
         }
     }
 
     for (int i = 0; i < nproc; i++) {
         int j = (i + offset) % nproc;
-        MPI_Isendrecv_replace(&buf[elems * j], elems, MPI_FLOAT, i, 0, j, 0, comm, &reqs[i]);
+        MPI_Isendrecv_replace(&buf[IDX(j, 0)], count, dtype, i, 0, j, 0, comm, &reqs[i]);
     }
 
     MPI_Waitall(nproc, reqs, MPI_STATUSES_IGNORE);
 
-    for (int i = 0; i < nproc; i++) {
-        for (int j = 0; j < elems; j++) {
-            if (buf[i * elems + j] != i * 100.0 + j) {
-                if (errs < 10) {
-                    fprintf(stderr, "buf(%d, %d) mismatch, got %f, expect %f\n", i, j,
-                            buf[i * elems + j], (float) i);
-                }
-                errs++;
+    for (int i = 0; i < nproc * elems * stride; i++) {
+        float expect = -1.0;
+        if (i % stride == 0) {
+            expect = (i / stride / elems) * 100.0 + (i / stride) % elems;
+        }
+        if (buf[i] != expect) {
+            if (errs < 10) {
+                fprintf(stderr, "buf[%d] mismatch, got %f, expect %f\n", i, buf[i], expect);
             }
+            errs++;
         }
     }
 }
@@ -52,17 +63,33 @@ static void test_sendrecv(int offset)
 
 int run(const char *arg)
 {
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    stride = MTestArgListGetInt_with_default(head, "stride", 1);
+    MTestArgListDestroy(head);
+
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nproc);
 
     reqs = malloc(nproc * sizeof(MPI_Request));
-    buf = malloc(elems * nproc * sizeof(float));
+    buf = malloc(elems * nproc * stride * sizeof(float));
+
+    if (stride > 1) {
+        count = 1;
+        MPI_Type_vector(elems, 1, stride, MPI_FLOAT, &dtype);
+        MPI_Type_commit(&dtype);
+    } else {
+        count = elems;
+        dtype = MPI_FLOAT;
+    }
 
     for (int offset = 0; offset < nproc - 1; offset++) {
         test_sendrecv(offset);
     }
 
+    if (stride > 1) {
+        MPI_Type_free(&dtype);
+    }
     free(reqs);
     free(buf);
 
