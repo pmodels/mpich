@@ -34,8 +34,8 @@
 #         A wrapper checker function will be generated that wraps the "func" within macro-guard.
 # Both kinds are used as CSEL conditions in JSON files, e.g. inplace, !inplace,
 # avg_msg_size(1024). Algorithm restrictions take only restrictions, without negation: a
-# restriction that needs a condition to be false uses its own condition (e.g. not_inplace), so
-# that every restriction is a condition that must hold.
+# restriction that needs a condition to be false uses its own condition, so that every
+# restriction is a condition that must hold.
 # Most of the checker functions should be inlined to minimize function call overhead.
 #
 # Notes:
@@ -64,6 +64,13 @@
 #         holds, its generated wrapper swaps the buffers for host buffers first,
 #         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
 #         without it must work on device buffers.
+#   * inplace_copy:
+#         1 for an algorithm of the alltoall, alltoallv and alltoallw families that runs with
+#         the sendbuf of a not-in-place call only. When sendbuf is MPI_IN_PLACE, its generated
+#         wrapper copies the receive buffer to a temporary buffer (MPIR_Coll_inplace_copy) and
+#         calls the wrapper again with that copy as the sendbuf. The algorithm then needs no
+#         in-place code of its own, and the in-place case costs one copy and p blocks of extra
+#         memory. Algorithms without it handle MPI_IN_PLACE themselves or are restricted to it.
 #   * inner:
 #         The collectives a compositional algorithm calls through the selection, as a
 #         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The
@@ -80,20 +87,19 @@
 # ----
 restrictions:
     0  - inplace:                  MPIR_Csel_sendbuf_inplace
-    1  - not_inplace:              MPIR_Csel_sendbuf_not_inplace
-    2  - pof2:                     MPIR_Csel_comm_size_is_pof2
-    3  - commutative:              MPIR_Csel_op_is_commutative
-    4  - builtin_op:               MPIR_Csel_op_is_builtin
-    5  - hierarchical:             MPIR_Csel_is_hierarchical
-    6  - node_consecutive:         MPIR_Csel_is_node_consecutive
-    7  - node_regular:             MPIR_Csel_is_node_canonical
-    8  - displs_ordered:           MPIR_Csel_displs_ordered
-    9  - block_regular:            MPIR_Csel_block_regular
+    1  - pof2:                     MPIR_Csel_comm_size_is_pof2
+    2  - commutative:              MPIR_Csel_op_is_commutative
+    3  - builtin_op:               MPIR_Csel_op_is_builtin
+    4  - hierarchical:             MPIR_Csel_is_hierarchical
+    5  - node_consecutive:         MPIR_Csel_is_node_consecutive
+    6  - node_regular:             MPIR_Csel_is_node_canonical
+    7  - displs_ordered:           MPIR_Csel_displs_ordered
+    8  - block_regular:            MPIR_Csel_block_regular
     # conditional conditions - only call the condition function under macro_guard
-    10 - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
+    9  - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
     # set by MPIR_Coll_sig_prepare_gpu before the selection
-    11 - gpu:                      MPIR_Csel_is_gpu
-    12 - gpu_coll:                 MPIR_Csel_is_gpu_coll
+    10 - gpu:                      MPIR_Csel_is_gpu
+    11 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
@@ -311,28 +317,27 @@ iallgatherv-inter:
 
 alltoall-intra:
     brucks
-        restrictions: not_inplace
+        inplace_copy: 1
     k_brucks
-        restrictions: not_inplace
         extra_params: k
         cvar_params: BRUCKS_KVAL
     pairwise
-        restrictions: not_inplace
+        inplace_copy: 1
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: not_inplace
+        inplace_copy: 1
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
     sched_brucks
-        restrictions: not_inplace
+        inplace_copy: 1
     sched_inplace
         restrictions: inplace
     sched_pairwise
-        restrictions: not_inplace
+        inplace_copy: 1
     sched_permuted_sendrecv
-        restrictions: not_inplace
+        inplace_copy: 1
     tsp_ring
     tsp_brucks
         extra_params: k, buffer_per_phase
@@ -347,20 +352,20 @@ alltoallv-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: not_inplace
+        inplace_copy: 1
 alltoallv-inter:
     pairwise_exchange
 ialltoallv-intra:
     sched_blocked
-        restrictions: not_inplace
+        inplace_copy: 1
     sched_inplace
         restrictions: inplace
     tsp_scattered
-        restrictions: not_inplace
+        inplace_copy: 1
         extra_params: batch_size, bblock
         cvar_params: SCATTERED_BATCH_SIZE, SCATTERED_OUTSTANDING_TASKS
     tsp_blocked
-        restrictions: not_inplace
+        inplace_copy: 1
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace
@@ -372,16 +377,16 @@ alltoallw-intra:
     pairwise_sendrecv_replace
         restrictions: inplace
     scattered
-        restrictions: not_inplace
+        inplace_copy: 1
 alltoallw-inter:
     pairwise_exchange
 ialltoallw-intra:
     sched_blocked
-        restrictions: not_inplace
+        inplace_copy: 1
     sched_inplace
         restrictions: inplace
     tsp_blocked
-        restrictions: not_inplace
+        inplace_copy: 1
         extra_params: bblock
         cvar_params: THROTTLE
     tsp_inplace

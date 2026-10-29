@@ -146,8 +146,11 @@ def dump_algo_cnt_fns():
 
     G.out.append("")
     for algo in G.algo_list:
+        # check invalid algorithm keys
         if algo["func-commkind"] == 'general' and 'gpu_swap' in algo:
             raise Exception("%s: gpu_swap only applies to the algorithms of a collective" % algo['name'])
+        if algo["func-commkind"].split("-")[0].lstrip('i') not in ('alltoall', 'alltoallv', 'alltoallw') and 'inplace_copy' in algo:
+            raise Exception("%s: inplace_copy only applies to the alltoall family" % algo['name'])
         if algo["func-commkind"] != 'general':
             func_name, commkind = algo['func-commkind'].split("-")
             if func_name.startswith('i'):
@@ -165,10 +168,17 @@ def dump_algo_cnt_fns():
                 G.out.append("#if %s" % algo['macro_guard'])
             G.out.append("int mpi_errno = MPI_SUCCESS;")
             G.out.append("")
+            # keys e.g. gpu_swap calls a wrapper which will call this algorithm again, avoid applying the wrapper again
             if algo.get('gpu_swap') == '1':
                 # the swap clears the gpu flag, so the second call runs the algorithm
                 dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
                 G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
+                dump_close("}")
+            if algo.get('inplace_copy') == '1':
+                # the adapter calls the wrapper again with a copy as the sendbuf
+                base_name = func_name[1:] if func_name.startswith('i') else func_name
+                dump_open("if (coll_sig->u.%s.sendbuf == MPI_IN_PLACE) {" % base_name)
+                G.out.append("return MPIR_Coll_inplace_copy(coll_sig, cnt, %s_cnt);" % algo_funcname)
                 dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
@@ -508,7 +518,7 @@ def dump_MPIR_Coll_check_algo_restriction():
     def restriction_bit(restriction):
         r = restriction
         if r.startswith('!'):
-            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition (e.g. not_inplace)" % r)
+            raise Exception("Restriction %s: restrictions cannot be negated; list a separate condition" % r)
         if RE.match(r'.*\(.*\)', r):
             raise Exception("Threshold condition %s cannot be used as a restriction" % r)
 
