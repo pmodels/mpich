@@ -2,32 +2,14 @@
 
 ## Table of Contents
 
-- [Collective Algorithms](#collective-algorithms) (302)
-- [CH4 Device Layer](#ch4-device-layer) (95)
+- [Collective Algorithms](#collective-algorithms) (224)
+- [CH4 Device Layer](#ch4-device-layer) (92)
 - [CH3 Device Layer](#ch3-device-layer) (25)
 - [Process Management](#process-management) (7)
 - [Debugging and Development](#debugging-and-development) (15)
 - [Other](#other) (26)
 
 ## Collective Algorithms
-
-### MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allgatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allgatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Allgatherv` collective algorithms.
-* false - disables the device override for `MPI_Allgatherv`.
-
-Used in functions: `MPI_Allgatherv`
-
-### MPIR_CVAR_ALLGATHERV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allgatherv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allgatherv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Allgatherv_init` collective algorithms.
-* false - disables the device override for `MPI_Allgatherv_init`.
-
-Used in functions: `MPI_Allgatherv_init`
 
 ### MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM
 
@@ -85,24 +67,6 @@ Selects the CH4 allgather composition in `MPID_Allgather`. When set to automatic
 * 2 - use the network-module-only intracommunicator composition when the communicator constraints are met.
 
 Used in functions: `MPID_Allgather`
-
-### MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allgather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allgather.
-
-* true - default, allows the device to override MPIR-level `MPI_Allgather` collective algorithms.
-* false - disables the device override for `MPI_Allgather`.
-
-Used in functions: `MPI_Allgather`
-
-### MPIR_CVAR_ALLGATHER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allgather_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allgather_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Allgather_init` collective algorithms.
-* false - disables the device override for `MPI_Allgather_init`.
-
-Used in functions: `MPI_Allgather_init`
 
 ### MPIR_CVAR_ALLGATHER_INTER_ALGORITHM
 
@@ -210,24 +174,6 @@ Selects the CH4 allreduce composition in `MPID_Allreduce`. When set to automatic
 * 4 - use the multi-leader inter-node plus intra-node intracommunicator composition when the communicator, message-size, and operation constraints are met.
 
 Used in functions: `MPID_Allreduce`
-
-### MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allreduce` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allreduce.
-
-* true - default, allows the device to override MPIR-level `MPI_Allreduce` collective algorithms.
-* false - disables the device override for `MPI_Allreduce`.
-
-Used in functions: `MPI_Allreduce`
-
-### MPIR_CVAR_ALLREDUCE_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Allreduce_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Allreduce_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Allreduce_init` collective algorithms.
-* false - disables the device override for `MPI_Allreduce_init`.
-
-Used in functions: `MPI_Allreduce_init`
 
 ### MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
 
@@ -390,24 +336,6 @@ Sets the tree type for tree-based Allreduce. It is used when the tree Allreduce 
 
 Used in functions: `MPIR_Coll_init_algo_container`
 
-### MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoallv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoallv.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoallv` collective algorithms.
-* false - disables the device override for `MPI_Alltoallv`.
-
-Used in functions: `MPI_Alltoallv`
-
-### MPIR_CVAR_ALLTOALLV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoallv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoallv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoallv_init` collective algorithms.
-* false - disables the device override for `MPI_Alltoallv_init`.
-
-Used in functions: `MPI_Alltoallv_init`
-
 ### MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM
 
 Selects the inter-communicator Alltoallv algorithm. It is used for `MPI_Alltoallv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which inter-communicator Alltoallv implementation is forced or whether internal collective selection chooses the implementation.
@@ -439,24 +367,6 @@ Selects the bit-wise pair ordering for the in-place pairwise sendrecv-replace Al
 Alternate names: MPIR_CVAR_ALLTOALL_PAIRWISE_NEW, MPIR_CVAR_ALLTOALLW_PAIRWISE_NEW
 
 Used in functions: `MPIR_Alltoall_intra_pairwise_sendrecv_replace`, `MPIR_Alltoallv_intra_pairwise_sendrecv_replace`, `MPIR_Alltoallw_intra_pairwise_sendrecv_replace`
-
-### MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoallw` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoallw.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoallw` collective algorithms.
-* false - disables the device override for `MPI_Alltoallw`.
-
-Used in functions: `MPI_Alltoallw`
-
-### MPIR_CVAR_ALLTOALLW_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoallw_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoallw_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoallw_init` collective algorithms.
-* false - disables the device override for `MPI_Alltoallw_init`.
-
-Used in functions: `MPI_Alltoallw_init`
 
 ### MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM
 
@@ -496,24 +406,6 @@ Selects the CH4 alltoall composition in `MPID_Alltoall`. When set to automatic s
 * 2 - use the network-module-only intracommunicator composition when the communicator constraints are met.
 
 Used in functions: `MPID_Alltoall`
-
-### MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoall` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoall.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoall` collective algorithms.
-* false - disables the device override for `MPI_Alltoall`.
-
-Used in functions: `MPI_Alltoall`
-
-### MPIR_CVAR_ALLTOALL_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Alltoall_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Alltoall_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Alltoall_init` collective algorithms.
-* false - disables the device override for `MPI_Alltoall_init`.
-
-Used in functions: `MPI_Alltoall_init`
 
 ### MPIR_CVAR_ALLTOALL_INTER_ALGORITHM
 
@@ -591,15 +483,6 @@ Selects the CH4 barrier composition in `MPID_Barrier`. When set to automatic sel
 
 Used in functions: `MPID_Barrier`
 
-### MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Barrier` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Barrier.
-
-* true - default, allows the device to override MPIR-level `MPI_Barrier` collective algorithms.
-* false - disables the device override for `MPI_Barrier`.
-
-Used in functions: `MPI_Barrier`
-
 ### MPIR_CVAR_BARRIER_DISSEM_KVAL
 
 Sets the k value for the high-radix dissemination intra-communicator Barrier algorithm. It is used only when that Barrier implementation is selected, such as by forcing `MPIR_CVAR_BARRIER_INTRA_ALGORITHM` to `k_dissemination` or by internal collective/tuning selection.
@@ -607,15 +490,6 @@ Sets the k value for the high-radix dissemination intra-communicator Barrier alg
 * integer - default is 2, represents the k value used by the high-radix dissemination Barrier algorithm.
 
 Used in functions: `MPI_Barrier`
-
-### MPIR_CVAR_BARRIER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Barrier_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Barrier_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Barrier_init` collective algorithms.
-* false - disables the device override for `MPI_Barrier_init`.
-
-Used in functions: `MPI_Barrier_init`
 
 ### MPIR_CVAR_BARRIER_INTER_ALGORITHM
 
@@ -667,24 +541,6 @@ Selects the CH4 broadcast composition in `MPID_Bcast`. When set to automatic sel
 * 4 - use the combined network-module and shared-memory intracommunicator composition selected by the delta path when the communicator constraints are met.
 
 Used in functions: `MPID_Bcast`
-
-### MPIR_CVAR_BCAST_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Bcast` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Bcast.
-
-* true - default, allows the device to override MPIR-level `MPI_Bcast` collective algorithms.
-* false - disables the device override for `MPI_Bcast`.
-
-Used in functions: `MPI_Bcast`
-
-### MPIR_CVAR_BCAST_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Bcast_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Bcast_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Bcast_init` collective algorithms.
-* false - disables the device override for `MPI_Bcast_init`.
-
-Used in functions: `MPI_Bcast_init`
 
 ### MPIR_CVAR_BCAST_INTER_ALGORITHM
 
@@ -1009,16 +865,6 @@ Sets the input file used to load network coordinates during PMI initialization. 
 
 Used in functions: `MPIR_pmi_init`, `parse_coord_file`
 
-### MPIR_CVAR_DEVICE_COLLECTIVES
-
-Controls whether the device can override MPIR-level collective algorithms. When set to use per-collective control, the corresponding per-collective device CVARs decide whether device override is allowed for each collective. When active, this CVAR sets the global policy for preferring device collective implementations over MPIR-level implementations.
-
-* all - Always prefer device collectives.
-* none - Never select device collectives.
-* percoll - default, use the per-collective CVARs to decide whether device collectives are selected.
-
-Used in functions: `MPID_Init`, `devcollstr`
-
 ### MPIR_CVAR_ENABLE_GPU_COLL
 
 Lets the user assert that within each collective call, either every rank passes host buffers or every rank passes device buffers. `MPIR_Coll_sig_prepare_gpu` sets the `gpu_coll` restriction (bit 13) for a call only when this CVAR is on and every buffer the rank uses is device memory; algorithms that need device buffers on all ranks, such as GPU IPC algorithms, are gated by it. MPICH does not check the assertion across ranks. The `gpu` restriction (bit 12), which only looks at the local buffers, does not depend on this CVAR.
@@ -1055,24 +901,6 @@ Controls whether yaksa-based reductions are considered for local typerep reducti
 
 Used in functions: `MPIR_Typerep_reduce_is_supported`
 
-### MPIR_CVAR_EXSCAN_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Exscan` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Exscan.
-
-* true - default, allows the device to override MPIR-level `MPI_Exscan` collective algorithms.
-* false - disables the device override for `MPI_Exscan`.
-
-Used in functions: `MPI_Exscan`
-
-### MPIR_CVAR_EXSCAN_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Exscan_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Exscan_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Exscan_init` collective algorithms.
-* false - disables the device override for `MPI_Exscan_init`.
-
-Used in functions: `MPI_Exscan_init`
-
 ### MPIR_CVAR_EXSCAN_INTRA_ALGORITHM
 
 Selects the intra-communicator Exscan algorithm. It is used for `MPI_Exscan` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Exscan implementation is forced or whether internal collective selection chooses the implementation.
@@ -1091,24 +919,6 @@ Controls whether MPI finalization waits for pending references on built-in commu
 * true - poll progress until pending references on the built-in communicator clear.
 
 Used in functions: `finalize_builtin_comm`
-
-### MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Gatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Gatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Gatherv` collective algorithms.
-* false - disables the device override for `MPI_Gatherv`.
-
-Used in functions: `MPI_Gatherv`
-
-### MPIR_CVAR_GATHERV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Gatherv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Gatherv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Gatherv_init` collective algorithms.
-* false - disables the device override for `MPI_Gatherv_init`.
-
-Used in functions: `MPI_Gatherv_init`
 
 ### MPIR_CVAR_GATHERV_INTER_ALGORITHM
 
@@ -1129,24 +939,6 @@ Selects the intra-communicator Gatherv algorithm. It is used for `MPI_Gatherv` o
 * nb - Forces the nonblocking Gatherv algorithm.
 
 Used in functions: `MPI_Gatherv`
-
-### MPIR_CVAR_GATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Gather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Gather.
-
-* true - default, allows the device to override MPIR-level `MPI_Gather` collective algorithms.
-* false - disables the device override for `MPI_Gather`.
-
-Used in functions: `MPI_Gather`
-
-### MPIR_CVAR_GATHER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Gather_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Gather_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Gather_init` collective algorithms.
-* false - disables the device override for `MPI_Gather_init`.
-
-Used in functions: `MPI_Gather_init`
 
 ### MPIR_CVAR_GATHER_INTER_ALGORITHM
 
@@ -1221,15 +1013,6 @@ Sets the radix value for the generic transport Brucks-based Iallgatherv algorith
 
 Used in functions: `MPIR_TSP_Iallgatherv_sched_intra_brucks`
 
-### MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iallgatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iallgatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Iallgatherv` collective algorithms.
-* false - disables the device override for `MPI_Iallgatherv`.
-
-Used in functions: `MPI_Iallgatherv`
-
 ### MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
 
 Selects the inter-communicator nonblocking Allgatherv algorithm. It is used for Iallgatherv on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based selection or forces a sched-based inter-communicator implementation.
@@ -1272,15 +1055,6 @@ Sets the radix value for the generic transport Brucks-based Iallgather algorithm
 
 Used in functions: `MPI_Iallgather`
 
-### MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iallgather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iallgather.
-
-* true - default, allows the device to override MPIR-level `MPI_Iallgather` collective algorithms.
-* false - disables the device override for `MPI_Iallgather`.
-
-Used in functions: `MPI_Iallgather`
-
 ### MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
 
 Selects the inter-communicator Iallgather algorithm. It is used for `MPI_Iallgather` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; the available inter-communicator paths are sched-based and do not rely on the Iallgather k-value CVARs.
@@ -1314,15 +1088,6 @@ Sets the k value for recursive-exchange Iallgather algorithms. It is used when a
 * integer - default is 2, represents the k value used by recursive-exchange Iallgather algorithms.
 
 Used in functions: `MPI_Iallgather`
-
-### MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iallreduce` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iallreduce.
-
-* true - default, allows the device to override MPIR-level `MPI_Iallreduce` collective algorithms.
-* false - disables the device override for `MPI_Iallreduce`.
-
-Used in functions: `MPI_Iallreduce`
 
 ### MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
 
@@ -1396,15 +1161,6 @@ Sets the tree type for the generic transport tree-based intra-communicator Iallr
 
 Used in functions: `MPIR_Coll_init_algo_container`
 
-### MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ialltoallv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ialltoallv.
-
-* true - default, allows the device to override MPIR-level `MPI_Ialltoallv` collective algorithms.
-* false - disables the device override for `MPI_Ialltoallv`.
-
-Used in functions: `MPI_Ialltoallv`
-
 ### MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM
 
 Selects the inter-communicator nonblocking Alltoallv algorithm. It is used for `MPI_Ialltoallv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific pairwise-exchange Ialltoallv implementation.
@@ -1445,15 +1201,6 @@ Sets the maximum number of outstanding send and receive tasks posted at a time b
 
 Used in functions: `MPI_Ialltoallv`
 
-### MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ialltoallw` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ialltoallw.
-
-* true - default, allows the device to override MPIR-level `MPI_Ialltoallw` collective algorithms.
-* false - disables the device override for `MPI_Ialltoallw`.
-
-Used in functions: `MPI_Ialltoallw`
-
 ### MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
 
 Selects the inter-communicator nonblocking Alltoallw algorithm. It is used for `MPI_Ialltoallw` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific pairwise-exchange Ialltoallw implementation.
@@ -1493,15 +1240,6 @@ Sets the radix for the generic transport Brucks-based intra-communicator Ialltoa
 * integer 2 or greater - default is 2, represents the radix used by the generic transport Brucks Ialltoall algorithm.
 
 Used in functions: `MPIR_TSP_Ialltoall_sched_intra_brucks`
-
-### MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ialltoall` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ialltoall.
-
-* true - default, allows the device to override MPIR-level `MPI_Ialltoall` collective algorithms.
-* false - disables the device override for `MPI_Ialltoall`.
-
-Used in functions: `MPI_Ialltoall`
 
 ### MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
 
@@ -1544,15 +1282,6 @@ Sets the maximum number of outstanding send and receive tasks posted at a time b
 * integer - default is 64, represents the maximum number of outstanding sends and receives posted at a time.
 
 Used in functions: `MPIR_TSP_Ialltoall_sched_intra_scattered`
-
-### MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ibarrier` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ibarrier.
-
-* true - default, allows the device to override MPIR-level `MPI_Ibarrier` collective algorithms.
-* false - disables the device override for `MPI_Ibarrier`.
-
-Used in functions: `MPI_Ibarrier`
 
 ### MPIR_CVAR_IBARRIER_DISSEM_KVAL
 
@@ -1599,15 +1328,6 @@ Sets the k value for the recursive-exchange Allgatherv phase of the generic tran
 * integer - default is 2, represents the k value used by the recursive-exchange Allgatherv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
 
 Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
-
-### MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ibcast` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ibcast.
-
-* true - default, allows the device to override MPIR-level `MPI_Ibcast` collective algorithms.
-* false - disables the device override for `MPI_Ibcast`.
-
-Used in functions: `MPI_Ibcast`
 
 ### MPIR_CVAR_IBCAST_INTER_ALGORITHM
 
@@ -1681,33 +1401,15 @@ Sets the tree type used by the generic transport tree-based intra-communicator I
 
 Used in functions: `MPIR_Coll_init_algo_container`
 
-### MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iexscan` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iexscan.
-
-* true - default, allows the device to override MPIR-level `MPI_Iexscan` collective algorithms.
-* false - disables the device override for `MPI_Iexscan`.
-
-Used in functions: `MPI_Iexscan`
-
 ### MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM
 
-Selects the intra-communicator Iexscan algorithm. It is used for `MPI_Iexscan` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Iexscan implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Iexscan algorithm. It is used for `MPI_Iexscan` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Iexscan implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
 
 Used in functions: `MPI_Iexscan`
-
-### MPIR_CVAR_IGATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Igatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Igatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Igatherv` collective algorithms.
-* false - disables the device override for `MPI_Igatherv`.
-
-Used in functions: `MPI_Igatherv`
 
 ### MPIR_CVAR_IGATHERV_INTER_ALGORITHM
 
@@ -1730,15 +1432,6 @@ Selects the intra-communicator nonblocking Gatherv algorithm. It is used for `MP
 * tsp_linear - Forces the generic transport linear algorithm.
 
 Used in functions: `MPI_Igatherv`
-
-### MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Igather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Igather.
-
-* true - default, allows the device to override MPIR-level `MPI_Igather` collective algorithms.
-* false - disables the device override for `MPI_Igather`.
-
-Used in functions: `MPI_Igather`
 
 ### MPIR_CVAR_IGATHER_INTER_ALGORITHM
 
@@ -1770,18 +1463,9 @@ Sets the k value for the generic transport tree-based intra-communicator Igather
 
 Used in functions: `MPIR_TSP_Igather_sched_intra_tree`
 
-### MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ineighbor_allgatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ineighbor_allgatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Ineighbor_allgatherv` collective algorithms.
-* false - disables the device override for `MPI_Ineighbor_allgatherv`.
-
-Used in functions: `MPI_Ineighbor_allgatherv`
-
 ### MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM
 
-Selects the inter-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
+Selects the inter-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1792,7 +1476,7 @@ Used in functions: `MPI_Ineighbor_allgatherv`
 
 ### MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM
 
-Selects the intra-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1801,18 +1485,9 @@ Selects the intra-communicator Ineighbor_allgatherv algorithm. It is used for `M
 
 Used in functions: `MPI_Ineighbor_allgatherv`
 
-### MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ineighbor_allgather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ineighbor_allgather.
-
-* true - default, allows the device to override MPIR-level `MPI_Ineighbor_allgather` collective algorithms.
-* false - disables the device override for `MPI_Ineighbor_allgather`.
-
-Used in functions: `MPI_Ineighbor_allgather`
-
 ### MPIR_CVAR_INEIGHBOR_ALLGATHER_INTER_ALGORITHM
 
-Selects the inter-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
+Selects the inter-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1823,7 +1498,7 @@ Used in functions: `MPI_Ineighbor_allgather`
 
 ### MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM
 
-Selects the intra-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1831,15 +1506,6 @@ Selects the intra-communicator Ineighbor_allgather algorithm. It is used for `MP
 * tsp_linear - forces the generic transport based linear algorithm.
 
 Used in functions: `MPI_Ineighbor_allgather`
-
-### MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ineighbor_alltoallv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ineighbor_alltoallv.
-
-* true - default, allows the device to override MPIR-level `MPI_Ineighbor_alltoallv` collective algorithms.
-* false - disables the device override for `MPI_Ineighbor_alltoallv`.
-
-Used in functions: `MPI_Ineighbor_alltoallv`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
 
@@ -1854,7 +1520,7 @@ Used in functions: `MPI_Ineighbor_alltoallv`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
 
-Selects the intra-communicator Ineighbor_alltoallv algorithm. It is used for `MPI_Ineighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ineighbor_alltoallv algorithm. It is used for `MPI_Ineighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1864,15 +1530,6 @@ Selects the intra-communicator Ineighbor_alltoallv algorithm. It is used for `MP
 Alternate names: MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
 
 Used in functions: `MPI_Ineighbor_alltoallv`
-
-### MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ineighbor_alltoallw` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ineighbor_alltoallw.
-
-* true - default, allows the device to override MPIR-level `MPI_Ineighbor_alltoallw` collective algorithms.
-* false - disables the device override for `MPI_Ineighbor_alltoallw`.
-
-Used in functions: `MPI_Ineighbor_alltoallw`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
 
@@ -1887,7 +1544,7 @@ Used in functions: `MPI_Ineighbor_alltoallw`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
 
-Selects the intra-communicator Ineighbor_alltoallw algorithm. It is used for `MPI_Ineighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ineighbor_alltoallw algorithm. It is used for `MPI_Ineighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1897,15 +1554,6 @@ Selects the intra-communicator Ineighbor_alltoallw algorithm. It is used for `MP
 Alternate names: MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
 
 Used in functions: `MPI_Ineighbor_alltoallw`
-
-### MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ineighbor_alltoall` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ineighbor_alltoall.
-
-* true - default, allows the device to override MPIR-level `MPI_Ineighbor_alltoall` collective algorithms.
-* false - disables the device override for `MPI_Ineighbor_alltoall`.
-
-Used in functions: `MPI_Ineighbor_alltoall`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
 
@@ -1920,7 +1568,7 @@ Used in functions: `MPI_Ineighbor_alltoall`
 
 ### MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM
 
-Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI_Ineighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Ineighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI_Ineighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * sched_auto - uses internal algorithm selection for sched-based algorithms.
@@ -1930,15 +1578,6 @@ Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI
 Alternate names: MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
 
 Used in functions: `MPI_Ineighbor_alltoall`
-
-### MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ireduce` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually.
-
-* true - default, allows the device to override MPIR-level `MPI_Ireduce` collective algorithms.
-* false - disables the device override for `MPI_Ireduce`.
-
-Used in functions: `MPI_Ireduce`
 
 ### MPIR_CVAR_IREDUCE_INTER_ALGORITHM
 
@@ -1972,15 +1611,6 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport ring-b
 * positive integer - represents the maximum pipeline chunk size in bytes.
 
 Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
-
-### MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ireduce_scatter_block` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ireduce_scatter_block.
-
-* true - default, allows the device to override MPIR-level `MPI_Ireduce_scatter_block` collective algorithms.
-* false - disables the device override for `MPI_Ireduce_scatter_block`.
-
-Used in functions: `MPI_Ireduce_scatter_block`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM
 
@@ -2021,15 +1651,6 @@ Sets the long-message threshold, in bytes, for commutative-operation sched-auto 
 * integer - default is 524288, represents the commutative Ireduce_scatter and Ireduce_scatter_block long-message threshold in bytes.
 
 Used in functions: `MPIR_Ireduce_scatter_intra_sched_auto`, `MPIR_Ireduce_scatter_block_intra_sched_auto`
-
-### MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Ireduce_scatter` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Ireduce_scatter.
-
-* true - default, allows the device to override MPIR-level `MPI_Ireduce_scatter` collective algorithms.
-* false - disables the device override for `MPI_Ireduce_scatter`.
-
-Used in functions: `MPI_Ireduce_scatter`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
 
@@ -2144,15 +1765,6 @@ Sets the tree type for tree-based Ireduce. It is used for generic transport tree
 
 Used in functions: `MPIR_Coll_init_algo_container`
 
-### MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iscan` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iscan.
-
-* true - default, allows the device to override MPIR-level `MPI_Iscan` collective algorithms.
-* false - disables the device override for `MPI_Iscan`.
-
-Used in functions: `MPI_Iscan`
-
 ### MPIR_CVAR_ISCAN_INTRA_ALGORITHM
 
 Selects the intra-communicator Iscan algorithm. It is used for `MPI_Iscan` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Iscan implementation is forced or whether internal collective selection chooses the implementation.
@@ -2164,15 +1776,6 @@ Selects the intra-communicator Iscan algorithm. It is used for `MPI_Iscan` on in
 * tsp_recursive_doubling - forces the generic transport recursive-doubling algorithm.
 
 Used in functions: `MPI_Iscan`
-
-### MPIR_CVAR_ISCATTERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iscatterv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iscatterv.
-
-* true - default, allows the device to override MPIR-level `MPI_Iscatterv` collective algorithms.
-* false - disables the device override for `MPI_Iscatterv`.
-
-Used in functions: `MPI_Iscatterv`
 
 ### MPIR_CVAR_ISCATTERV_INTER_ALGORITHM
 
@@ -2195,15 +1798,6 @@ Selects the intra-communicator nonblocking Scatterv algorithm. It is used for `M
 * tsp_linear - Forces the generic transport linear algorithm.
 
 Used in functions: `MPI_Iscatterv`
-
-### MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Iscatter` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Iscatter.
-
-* true - default, allows the device to override MPIR-level `MPI_Iscatter` collective algorithms.
-* false - disables the device override for `MPI_Iscatter`.
-
-Used in functions: `MPI_Iscatter`
 
 ### MPIR_CVAR_ISCATTER_INTER_ALGORITHM
 
@@ -2235,24 +1829,6 @@ Sets the tree k value for the generic transport based tree intra-communicator Is
 
 Used in functions: `MPI_Iscatter`
 
-### MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_allgatherv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_allgatherv.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_allgatherv` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_allgatherv`.
-
-Used in functions: `MPI_Neighbor_allgatherv`
-
-### MPIR_CVAR_NEIGHBOR_ALLGATHERV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_allgatherv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_allgatherv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_allgatherv_init` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_allgatherv_init`.
-
-Used in functions: `MPI_Neighbor_allgatherv_init`
-
 ### MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTER_ALGORITHM
 
 Selects the inter-communicator Neighbor_allgatherv algorithm. It is used for `MPI_Neighbor_allgatherv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Neighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
@@ -2270,24 +1846,6 @@ Selects the intra-communicator Neighbor_allgatherv algorithm. It is used for `MP
 * nb - forces the nonblocking algorithm.
 
 Used in functions: `MPI_Neighbor_allgatherv`
-
-### MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_allgather` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_allgather.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_allgather` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_allgather`.
-
-Used in functions: `MPI_Neighbor_allgather`
-
-### MPIR_CVAR_NEIGHBOR_ALLGATHER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_allgather_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_allgather_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_allgather_init` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_allgather_init`.
-
-Used in functions: `MPI_Neighbor_allgather_init`
 
 ### MPIR_CVAR_NEIGHBOR_ALLGATHER_INTER_ALGORITHM
 
@@ -2307,24 +1865,6 @@ Selects the intra-communicator Neighbor_allgather algorithm. It is used for `MPI
 
 Used in functions: `MPI_Neighbor_allgather`
 
-### MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoallv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoallv.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoallv` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoallv`.
-
-Used in functions: `MPI_Neighbor_alltoallv`
-
-### MPIR_CVAR_NEIGHBOR_ALLTOALLV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoallv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoallv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoallv_init` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoallv_init`.
-
-Used in functions: `MPI_Neighbor_alltoallv_init`
-
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTER_ALGORITHM
 
 Selects the inter-communicator neighbor_alltoallv algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
@@ -2336,7 +1876,7 @@ Used in functions: `MPI_Neighbor_alltoallv`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
 
-Selects the intra-communicator Neighbor_alltoallv algorithm. It is used for `MPI_Neighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Neighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Neighbor_alltoallv algorithm. It is used for `MPI_Neighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Neighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * nb - forces the nonblocking algorithm.
@@ -2344,24 +1884,6 @@ Selects the intra-communicator Neighbor_alltoallv algorithm. It is used for `MPI
 Alternate names: MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTER_ALGORITHM
 
 Used in functions: `MPI_Neighbor_alltoallv`
-
-### MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoallw` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoallw.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoallw` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoallw`.
-
-Used in functions: `MPI_Neighbor_alltoallw`
-
-### MPIR_CVAR_NEIGHBOR_ALLTOALLW_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoallw_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoallw_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoallw_init` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoallw_init`.
-
-Used in functions: `MPI_Neighbor_alltoallw_init`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
 
@@ -2374,7 +1896,7 @@ Used in functions: `MPI_Neighbor_alltoallw`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
 
-Selects the intra-communicator Neighbor_alltoallw algorithm. It is used for `MPI_Neighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Neighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Neighbor_alltoallw algorithm. It is used for `MPI_Neighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Neighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * nb - forces the nonblocking algorithm.
@@ -2382,24 +1904,6 @@ Selects the intra-communicator Neighbor_alltoallw algorithm. It is used for `MPI
 Alternate names: MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
 
 Used in functions: `MPI_Neighbor_alltoallw`
-
-### MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoall` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoall.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoall` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoall`.
-
-Used in functions: `MPI_Neighbor_alltoall`
-
-### MPIR_CVAR_NEIGHBOR_ALLTOALL_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Neighbor_alltoall_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Neighbor_alltoall_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Neighbor_alltoall_init` collective algorithms.
-* false - disables the device override for `MPI_Neighbor_alltoall_init`.
-
-Used in functions: `MPI_Neighbor_alltoall_init`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM
 
@@ -2412,7 +1916,7 @@ Used in functions: `MPI_Neighbor_alltoall`
 
 ### MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM
 
-Selects the intra-communicator Neighbor_alltoall algorithm. It is used for `MPI_Neighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`, `MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE` may allow a device override instead of the MPIR-level algorithm. When active, this CVAR sets which Neighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Neighbor_alltoall algorithm. It is used for `MPI_Neighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Neighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * nb - forces the nonblocking algorithm.
@@ -2476,26 +1980,6 @@ Selects the CH4 reduce composition in `MPID_Reduce`. When set to automatic selec
 * 3 - use the network-module-only intracommunicator composition when the communicator constraints are met.
 
 Used in functions: `MPID_Reduce`
-
-### MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce` collective algorithms.
-* false - disables the device override for `MPI_Reduce`.
-
-Alternate names: MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
-
-Used in functions: `MPI_Reduce`
-
-### MPIR_CVAR_REDUCE_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce_init` collective algorithms.
-* false - disables the device override for `MPI_Reduce_init`.
-
-Used in functions: `MPI_Reduce_init`
 
 ### MPIR_CVAR_REDUCE_INTER_ALGORITHM
 
@@ -2580,24 +2064,6 @@ Selects the intra-communicator Reduce algorithm. It is used for `MPI_Reduce` on 
 
 Used in functions: `MPI_Reduce`
 
-### MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce_scatter_block` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce_scatter_block.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce_scatter_block` collective algorithms.
-* false - disables the device override for `MPI_Reduce_scatter_block`.
-
-Used in functions: `MPI_Reduce_scatter_block`
-
-### MPIR_CVAR_REDUCE_SCATTER_BLOCK_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce_scatter_block_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce_scatter_block_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce_scatter_block_init` collective algorithms.
-* false - disables the device override for `MPI_Reduce_scatter_block_init`.
-
-Used in functions: `MPI_Reduce_scatter_block_init`
-
 ### MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM
 
 Selects the inter-communicator Reduce_scatter_block algorithm. It is used for `MPI_Reduce_scatter_block` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which inter-communicator Reduce_scatter_block implementation is forced or whether internal collective selection chooses the implementation.
@@ -2620,24 +2086,6 @@ Selects the intra-communicator Reduce_scatter_block algorithm. It is used for `M
 * nb - Forces the nonblocking algorithm.
 
 Used in functions: `MPI_Reduce_scatter_block`
-
-### MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce_scatter` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce_scatter.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce_scatter` collective algorithms.
-* false - disables the device override for `MPI_Reduce_scatter`.
-
-Used in functions: `MPI_Reduce_scatter`
-
-### MPIR_CVAR_REDUCE_SCATTER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Reduce_scatter_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Reduce_scatter_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Reduce_scatter_init` collective algorithms.
-* false - disables the device override for `MPI_Reduce_scatter_init`.
-
-Used in functions: `MPI_Reduce_scatter_init`
 
 ### MPIR_CVAR_REDUCE_SCATTER_INTER_ALGORITHM
 
@@ -2670,24 +2118,6 @@ Sets the Reduce short-message threshold, in bytes, used by sched-auto intra-comm
 
 Used in functions: `MPIR_Ireduce_intra_sched_auto`
 
-### MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scan` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scan.
-
-* true - default, allows the device to override MPIR-level `MPI_Scan` collective algorithms.
-* false - disables the device override for `MPI_Scan`.
-
-Used in functions: `MPI_Scan`
-
-### MPIR_CVAR_SCAN_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scan_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scan_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Scan_init` collective algorithms.
-* false - disables the device override for `MPI_Scan_init`.
-
-Used in functions: `MPI_Scan_init`
-
 ### MPIR_CVAR_SCAN_INTRA_ALGORITHM
 
 Selects the intra-communicator Scan algorithm. It is used for `MPI_Scan` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Scan implementation is forced or whether internal collective selection chooses the implementation.
@@ -2698,24 +2128,6 @@ Selects the intra-communicator Scan algorithm. It is used for `MPI_Scan` on intr
 * recursive_doubling - Forces the recursive-doubling algorithm.
 
 Used in functions: `MPI_Scan`
-
-### MPIR_CVAR_SCATTERV_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scatterv` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scatterv.
-
-* true - default, allows the device to override MPIR-level `MPI_Scatterv` collective algorithms.
-* false - disables the device override for `MPI_Scatterv`.
-
-Used in functions: `MPI_Scatterv`
-
-### MPIR_CVAR_SCATTERV_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scatterv_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scatterv_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Scatterv_init` collective algorithms.
-* false - disables the device override for `MPI_Scatterv_init`.
-
-Used in functions: `MPI_Scatterv_init`
 
 ### MPIR_CVAR_SCATTERV_INTER_ALGORITHM
 
@@ -2736,24 +2148,6 @@ Selects the intra-communicator Scatterv algorithm. It is used for `MPI_Scatterv`
 * nb - Forces the nonblocking Scatterv algorithm.
 
 Used in functions: `MPI_Scatterv`
-
-### MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scatter` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scatter.
-
-* true - default, allows the device to override MPIR-level `MPI_Scatter` collective algorithms.
-* false - disables the device override for `MPI_Scatter`.
-
-Used in functions: `MPI_Scatter`
-
-### MPIR_CVAR_SCATTER_INIT_DEVICE_COLLECTIVE
-
-Controls whether `MPI_Scatter_init` allows the device to override MPIR-level collective algorithms. This CVAR is used only when `MPIR_CVAR_DEVICE_COLLECTIVES` is set to `percoll`; even when device override is allowed, the device may still call MPIR-level algorithms manually. When active, it enables or disables the device-override path for Scatter_init.
-
-* true - default, allows the device to override MPIR-level `MPI_Scatter_init` collective algorithms.
-* false - disables the device override for `MPI_Scatter_init`.
-
-Used in functions: `MPI_Scatter_init`
 
 ### MPIR_CVAR_SCATTER_INTER_ALGORITHM
 
