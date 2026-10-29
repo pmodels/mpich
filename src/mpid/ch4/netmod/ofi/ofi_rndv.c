@@ -95,6 +95,19 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
             break;
     }
 
+    /*
+     * We may have registered memory in MPIDI_OFI_do_irecv in anticipation of a
+     * possible eager send. We won't be using it for rendezvous path, so
+     * deregister here. TODO: avoid registration in the firstplace (difficult
+     * because receiver doesn't know a priori whether sender will take
+     * rendezvous or eager)
+     */
+    if (MPIDI_OFI_REQUEST(rreq, mr)) {
+        mpi_errno = MPIDI_OFI_mr_complete(MPIDI_OFI_REQUEST(rreq, mr), true);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_OFI_REQUEST(rreq, mr) = NULL;
+    }
+
     int dt_contig;
     MPIR_Datatype_is_contig(datatype, &dt_contig);
 
