@@ -204,14 +204,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 blocks[0] = sendcount;
                 struct_displs[0] = (MPI_Aint) sendbuf;
                 types[0] = sendtype;
-                /* check for overflow.  work around int limits if needed */
-                if (curr_cnt - nbytes != (int) (curr_cnt - nbytes)) {
-                    blocks[1] = 1;
-                    MPIR_Type_contiguous_x_impl(curr_cnt - nbytes, MPIR_BYTE_INTERNAL, &(types[1]));
-                } else {
-                    MPIR_Assign_trunc(blocks[1], curr_cnt - nbytes, int);
-                    types[1] = MPIR_BYTE_INTERNAL;
-                }
+                blocks[1] = curr_cnt - nbytes;
+                types[1] = MPIR_BYTE_INTERNAL;
                 struct_displs[1] = (MPI_Aint) tmp_buf;
 
                 mpi_errno = MPIR_Type_create_struct_large_impl(2, blocks, struct_displs, types,
