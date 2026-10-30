@@ -14,7 +14,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
                                           MPIR_TSP_sched_t sched)
 {
     MPI_Aint extent;
-    MPI_Aint lb, true_extent;
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
@@ -35,8 +34,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         data_buf = (char *) sendbuf;
 
     MPIR_Datatype_get_extent_macro(recvtype, extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     MPI_Aint max_count;
     max_count = recvcounts[0];
@@ -46,8 +43,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     }
 
     /* allocate space for temporary buffers to accommodate the largest recvcount */
-    buf1 = MPIR_TSP_sched_malloc(max_count * extent, sched);
-    buf2 = MPIR_TSP_sched_malloc(max_count * extent, sched);
+    buf1 = MPIR_TSP_sched_alloc_buffer(max_count, recvtype, sched);
+    buf2 = MPIR_TSP_sched_alloc_buffer(max_count, recvtype, sched);
 
     /* Phase 1: copy data to buf1 from sendbuf or recvbuf(in case of inplace) */
     int dtcopy_id[3];

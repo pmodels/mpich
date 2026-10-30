@@ -36,7 +36,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint extent, type_size;
+    MPI_Aint type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;
     int i, j, x, is_contig;
@@ -68,10 +68,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                      size, root));
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_is_contig(datatype, &is_contig);
-    extent = MPL_MAX(extent, true_extent);
 
     nbytes = type_size * count;
     MPIR_CHKLMEM_MALLOC(cnts, sizeof(MPI_Aint) * size);
