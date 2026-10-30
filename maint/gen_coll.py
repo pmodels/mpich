@@ -70,6 +70,8 @@ def main():
     dump_MPIR_Coll_cvar_to_algo_id()
     dump_MPIR_Coll_init_algo_container()
     dump_MPIR_Coll_check_algo_restriction()
+    # make the operation object hold the object handles of a coll_sig
+    dump_MPIR_Coll_hold_handles()
 
     # enum for coll_type, define MPIR_CSEL_NUM_COLL_TYPES
     dump_MPIR_Csel_coll_type_e()
@@ -106,6 +108,10 @@ def collect_algo_list():
         algo_list.append(algo)
     return algo_list
 
+def is_greq_algo(func_name, algo):
+    # a nonblocking algorithm that is neither tsp_ nor sched_ is a greq algorithm
+    return func_name.startswith('i') and not algo['name'].startswith(('tsp_', 'sched_'))
+
 def dump_algo_cnt_fns():
     def get_coll_args(func, func_name):
         args = []
@@ -125,8 +131,8 @@ def dump_algo_cnt_fns():
             if algo['name'].startswith(('tsp_', 'sched_')):
                 args += ", coll_sig->sched"
             else:
-                # the algorithm creates and returns its own request
-                args += ", (MPIR_Request **) &coll_sig->sched"
+                # a greq algorithm: its _init fills in the MPIR_Coll_greq_t
+                args += ", (MPIR_Coll_greq_t *) coll_sig->sched"
         elif func_name.startswith('neighbor_'):
             pass
         else:
@@ -141,8 +147,7 @@ def dump_algo_cnt_fns():
             elif algo['name'].startswith('sched_'):
                 G.out.append("MPII_CSEL_CREATE_SCHED(coll_sig);")
             else:
-                G.out.append("MPIR_Assert(coll_sig->sched == NULL);")
-                G.out.append("coll_sig->sched_type = MPIR_SCHED_REQUEST;")
+                G.out.append("MPII_CSEL_CREATE_GREQ(coll_sig);")
 
     G.out.append("")
     for algo in G.algo_list:
@@ -160,6 +165,12 @@ def dump_algo_cnt_fns():
                 func = G.FUNCS["mpi_" + func_name]
             algo_funcname = get_algo_funcname(algo)
             algo_args = get_algo_args(func, func_name, algo)
+            # a greq algorithm (an i* algorithm that is neither tsp_ nor sched_) is called as _init
+            call_funcname = algo_funcname
+            if is_greq_algo(func_name, algo):
+                if algo.get('gpu_swap') == '1':
+                    raise Exception("%s: a greq algorithm has no schedule to add the swap steps to" % algo['name'])
+                call_funcname = algo_funcname + "_init"
             decl = "int %s_cnt(%s)" % (algo_funcname, "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt")
             add_prototype(decl)
             dump_split(0, decl)
@@ -182,7 +193,7 @@ def dump_algo_cnt_fns():
                 dump_close("}")
             dump_algo_prep(func_name, algo)
             G.out.append("MPIR_Coll_algo_counters[%s]++;" % algo_id(algo_funcname))
-            dump_split(1, "mpi_errno = %s(%s);" % (algo_funcname, algo_args))
+            dump_split(1, "mpi_errno = %s(%s);" % (call_funcname, algo_args))
             G.out.append("MPIR_ERR_CHECK(mpi_errno);")
             dump_fn_exit()
             if 'macro_guard' in algo:
@@ -217,7 +228,7 @@ def add_algo_prototypes():
             elif algo['name'].startswith('sched_'):
                 params += ", MPIR_Sched_t s"
             else:
-                params += ", MPIR_Request **request"
+                params += ", MPIR_Coll_greq_t * greq"
         elif func_name.startswith('neighbor_'):
             pass
         else:
@@ -239,6 +250,8 @@ def add_algo_prototypes():
             func = G.FUNCS["mpi_" + func_name]
 
         algo_funcname = get_algo_funcname(algo)
+        if is_greq_algo(func_name, algo):
+            algo_funcname += "_init"
         algo_params = get_algo_params(func, func_name, algo)
         decl = "int %s(%s)" % (algo_funcname, algo_params)
         add_prototype(decl)
@@ -265,6 +278,121 @@ def add_sched_auto_prototypes(name):
         add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (name, params))
 
 #---- dumping to G.out (mpir_coll.c) ----
+
+def dump_MPIR_Coll_hold_handles():
+    """Generate MPIR_Coll_hold_handles, which makes the operation object of a nonblocking or
+    persistent collective hold every object handle the collective in coll_sig uses at this
+    process: the communicator, then its datatypes and op. The user may free them as soon as the
+    call returns. Call it after selection, when the operation is built and not yet started. Only
+    the nonblocking coll_types have cases (persistent collectives use them too); a blocking
+    collective never holds its handles.
+
+    A handle the collective ignores at this process may be garbage, so it is skipped: send types
+    with MPI_IN_PLACE sendbuf, recv types with MPI_IN_PLACE recvbuf, root_only handles at
+    non-roots, on an intercommunicator the handles of the side this process is not on, and the
+    entries of a type array (alltoallw) whose count is 0.
+    """
+    def get_handles(name):
+        func = G.FUNCS["mpi_" + name]
+        pnames = [p['name'] for p in func['parameters']]
+        is_rooted = 'root' in pnames
+        handles = []
+        for p in func['parameters']:
+            if p['kind'] not in ('DATATYPE', 'OPERATION'):
+                continue
+            U = "coll_sig->u.%s." % name
+            conds = {'intra': [], 'inter': []}
+            # an MPI_IN_PLACE buffer leaves its datatype unused
+            m = RE.match(r'(send|recv)', p['name'])
+            if m and (m.group(1) + 'buf') in pnames:
+                for k in conds:
+                    conds[k].append("%s%sbuf != MPI_IN_PLACE" % (U, m.group(1)))
+            if is_rooted:
+                if 'root_only=True' in p['t']:
+                    conds['intra'].append("coll_sig->comm_ptr->rank == %sroot" % U)
+                    conds['inter'].append("%sroot == MPI_ROOT" % U)
+                elif m:
+                    # the non-root side of gather/scatter
+                    conds['inter'].append("%sroot != MPI_ROOT && %sroot != MPI_PROC_NULL" % (U, U))
+                else:
+                    # both sides, e.g. bcast datatype, reduce datatype and op
+                    conds['inter'].append("%sroot != MPI_PROC_NULL" % U)
+            array = None
+            if p['length']:
+                if name.startswith('neighbor_'):
+                    length = 'outdegree' if p['name'].startswith('send') else 'indegree'
+                else:
+                    length = 'comm_size'
+                # an entry with a zero count is not validated and may be garbage
+                counts = U + m.group(1) + 'counts'
+                array = (length, counts)
+            handles.append((U + p['name'], conds, array))
+        return handles
+
+    def dump_commkind(handles, commkind):
+        for h, conds, array in handles:
+            cond = conds[commkind]
+            if cond:
+                dump_open("if (%s) {" % ' && '.join(cond))
+            if array:
+                length, counts = array
+                dump_open("for (int i = 0; i < %s; i++) {" % length)
+                dump_open("if (%s[i] > 0) {" % counts)
+                G.out.append("MPIR_Coll_owned_add_handle(owned, %s[i]);" % h)
+                dump_close("}")
+                dump_close("}")
+            else:
+                G.out.append("MPIR_Coll_owned_add_handle(owned, %s);" % h)
+            if cond:
+                dump_close("}")
+
+    G.out.append("")
+    decl = "void MPIR_Coll_hold_handles(MPIR_Csel_coll_sig_s * coll_sig)"
+    add_prototype(decl)
+    dump_split(0, decl)
+    dump_open('{')
+    G.out.append("MPIR_Coll_owned_t *owned = NULL;")
+    G.out.append("")
+    dump_open("if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {")
+    G.out.append("owned = MPIR_Sched_get_owned(coll_sig->sched);")
+    dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {")
+    G.out.append("INDENT")
+    G.out.append("owned = MPIR_TSP_sched_get_owned(coll_sig->sched);")
+    dump_close("} else if (coll_sig->sched_type == MPIR_SCHED_GREQ) {")
+    G.out.append("INDENT")
+    G.out.append("owned = &((MPIR_Coll_greq_t *) coll_sig->sched)->owned;")
+    dump_else()
+    G.out.append("MPIR_Assert(0);")
+    dump_close("}")
+    G.out.append("")
+    G.out.append("MPIR_Coll_owned_add_handle(owned, coll_sig->comm_ptr->handle);")
+    dump_open("switch (coll_sig->coll_type) {")
+    for name in G.coll_names:
+        handles = get_handles(name)
+        has_inter = not re.match(r'(scan|exscan|neighbor_)', name)
+        need_size = any(a and a[0] == 'comm_size' for _, _, a in handles)
+        need_degree = any(a and a[0] in ('indegree', 'outdegree') for _, _, a in handles)
+        for commkind in ("intra", "inter"):
+            if commkind == "inter" and not has_inter:
+                continue
+            G.out.append("case %s:" % coll_type(name, False, commkind))
+            dump_open("{")
+            if need_size:
+                if commkind == "intra":
+                    G.out.append("int comm_size = coll_sig->comm_ptr->local_size;")
+                else:
+                    G.out.append("int comm_size = coll_sig->comm_ptr->remote_size;")
+            if need_degree:
+                G.out.append("int indegree, outdegree, weighted;")
+                G.out.append("MPIR_Topo_canon_nhb_count(coll_sig->comm_ptr, &indegree, &outdegree, &weighted);")
+            dump_commkind(handles, commkind)
+            G.out.append("break;")
+            dump_close("}")
+    G.out.append("default:")
+    G.out.append("    MPIR_Assert(0);")
+    G.out.append("    break;")
+    dump_close('}')
+    dump_close('}')
 
 def dump_MPIR_Coll_cvar_table():
     # Pointers rather than values, so that a CVAR written through MPI_T takes effect
@@ -797,6 +925,10 @@ def dump_coll_impl(name, blocking_type):
     G.out.append("mpi_errno = MPIR_Coll_json(&coll_sig);")
     G.out.append("MPIR_ERR_CHECK(mpi_errno);")
     G.out.append("")
+    if blocking_type != "blocking":
+        # the user may free the communicator, datatypes and op as soon as the call returns
+        G.out.append("MPIR_Coll_hold_handles(&coll_sig);")
+        G.out.append("")
 
     # Set request if nonblocking or persistent
     if blocking_type == "blocking":

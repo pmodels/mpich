@@ -153,6 +153,9 @@ int MPII_cga_reduce_irecv(MPII_cga_request_queue * queue, int block, int peer_ra
 int MPII_cga_reduce_send(MPII_cga_request_queue * queue, int block, int peer_rank);
 int MPII_cga_reduce_recv(MPII_cga_request_queue * queue, int block, int peer_rank);
 
+void MPII_cga_queue_reset(MPII_cga_request_queue * queue);
+void MPII_cga_queue_free(MPII_cga_request_queue * queue);
+
 int MPII_cga_waitall(MPII_cga_request_queue * queue);
 int MPII_cga_testall(MPII_cga_request_queue * queue, bool * is_done);
 

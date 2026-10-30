@@ -97,6 +97,7 @@ int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI
     mpi_errno = MPII_cga_waitall(&queue);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPII_cga_queue_free(&queue);
     MPII_circ_graph_free(&cga);
     MPIR_CHKLMEM_FREEALL();
 

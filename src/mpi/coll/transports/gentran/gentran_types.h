@@ -120,8 +120,8 @@ typedef struct MPII_Genutil_sched_t {
     int last_fence;
 
     MPIR_Request *req;
-    /* array of buffers allocated for schedule execution */
-    UT_array buffers;
+    /* buffers allocated for schedule execution */
+    MPIR_Coll_owned_t owned;
 
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;

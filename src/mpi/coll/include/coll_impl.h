@@ -94,7 +94,7 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             bool is_persistent = (coll_sig)->flags & MPIR_COLL_SIG_FLAG__PERSISTENT; \
             MPIR_TSP_sched_create(&coll_sig->sched, is_persistent); \
         } else { \
-            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_GENTRAN); \
+            MPIR_Assert(coll_sig->sched_type == MPIR_SCHED_GENTRAN); \
         } \
     } while (0)
 
@@ -117,7 +117,18 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             coll_sig->sched_type = MPIR_SCHED_NORMAL; \
             coll_sig->sched = s; \
         } else { \
-            MPIR_Assert(coll_sig->sched_type = MPIR_SCHED_NORMAL); \
+            MPIR_Assert(coll_sig->sched_type == MPIR_SCHED_NORMAL); \
+        } \
+    } while (0)
+
+#define MPII_CSEL_CREATE_GREQ(coll_sig) \
+    do { \
+        if (coll_sig->sched == NULL) { \
+            mpi_errno = MPIR_Coll_greq_create((MPIR_Coll_greq_t **) &coll_sig->sched); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            coll_sig->sched_type = MPIR_SCHED_GREQ; \
+        } else { \
+            MPIR_Assert(coll_sig->sched_type == MPIR_SCHED_GREQ); \
         } \
     } while (0)
 
@@ -129,8 +140,9 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
         } else if (sched_type == MPIR_SCHED_GENTRAN) { \
             mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, request); \
             MPIR_ERR_CHECK(mpi_errno); \
-        } else if (sched_type == MPIR_SCHED_REQUEST) { \
-            *request = sched; \
+        } else if (sched_type == MPIR_SCHED_GREQ) { \
+            mpi_errno = MPIR_Coll_greq_start(sched, request); \
+            MPIR_ERR_CHECK(mpi_errno); \
         } else { \
             MPIR_Assert(0); \
         } \

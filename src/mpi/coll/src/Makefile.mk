@@ -11,7 +11,9 @@ mpi_core_sources += \
     src/mpi/coll/src/coll_impl.c \
     src/mpi/coll/src/coll_fallback.c \
     src/mpi/coll/src/coll_gpu.c \
+    src/mpi/coll/src/coll_greq.c \
     src/mpi/coll/src/coll_inplace.c \
+    src/mpi/coll/src/coll_owned.c \
     src/mpi/coll/src/csel.c \
     src/mpi/coll/src/csel_json.c \
     src/mpi/coll/src/csel_json_autogen.c

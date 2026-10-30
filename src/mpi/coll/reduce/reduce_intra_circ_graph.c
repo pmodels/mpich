@@ -125,6 +125,7 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
     mpi_errno = MPII_cga_waitall(&queue);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPII_cga_queue_free(&queue);
     MPII_circ_graph_free(&cga);
     MPIR_CHKLMEM_FREEALL();
 

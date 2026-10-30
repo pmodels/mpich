@@ -24,13 +24,19 @@
  *     R[q] - in round k, this process receives the block R[k] (from r-Skip[k])
  */
 
+/* A greq algorithm: _init sets up what does not change between runs (the schedule of the
+ * circulant graph and the request queue), start_fn resets the per-run part of the state and runs
+ * the operation once, and free_fn releases the state. */
 struct cga_bcast {
+    /* set by _init, constant over the runs */
     MPII_circ_graph cga;
     MPII_cga_request_queue queue;
     int root;
     int rank;
-    int iter_cur;
+    int iter_begin;
     int iter_end;
+    /* per run */
+    int iter_cur;
     int iter_offset;
     /* each iter round has one send and one recv, thus we need a bool to mark where we are at */
     bool iter_sent;
@@ -98,9 +104,8 @@ static int cga_bcast_poll(MPIX_Async_thing thing)
     mpi_errno = MPII_cga_testall(&state->queue, &done);
     MPIR_ERR_CHECK(mpi_errno);
     if (done) {
-        MPII_circ_graph_free(&state->cga);
+        /* the last time the run touches state: the operation may be freed right after */
         MPIR_Grequest_complete_impl(state->req_ptr);
-        MPL_free(state);
         return MPIX_ASYNC_DONE;
     }
 
@@ -112,12 +117,54 @@ static int cga_bcast_poll(MPIX_Async_thing thing)
     return MPIX_ASYNC_NOPROGRESS;
 }
 
-int MPIR_Ibcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                 int root, MPIR_Comm * comm, MPIR_Request ** req)
+static int cga_bcast_start(void *state_p, MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct cga_bcast *state = state_p;
+
+    if (!state) {
+        /* a single process has nothing to do */
+        *req = NULL;
+        goto fn_exit;
+    }
+
+    MPII_cga_queue_reset(&state->queue);
+    state->iter_cur = state->iter_begin;
+    state->iter_offset = -state->iter_begin;
+    state->iter_sent = false;
+
+    mpi_errno = MPIR_Grequest_start_impl(NULL, NULL, NULL, NULL, req);
+    MPIR_ERR_CHECK(mpi_errno);
+    state->req_ptr = *req;
+
+    mpi_errno = MPIR_Async_things_add(cga_bcast_poll, state, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void cga_bcast_free(void *state_p)
+{
+    struct cga_bcast *state = state_p;
+
+    MPII_cga_queue_free(&state->queue);
+    MPII_circ_graph_free(&state->cga);
+    MPL_free(state);
+}
+
+int MPIR_Ibcast_intra_circ_graph_init(void *buffer, MPI_Aint count, MPI_Datatype datatype,
+                                      int root, MPIR_Comm * comm, MPIR_Coll_greq_t * greq)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
     MPIR_COMM_RANK_SIZE(comm, rank, comm_size);
+
+    greq->state = NULL;
+    greq->start_fn = cga_bcast_start;
+    greq->free_fn = NULL;
 
     if (comm_size < 2) {
         goto fn_exit;
@@ -142,20 +189,14 @@ int MPIR_Ibcast_intra_circ_graph(void *buffer, MPI_Aint count, MPI_Datatype data
 
     int n = state->queue.num_chunks;
     int x = (q - ((n - 1) % q)) % q;
-    state->iter_cur = x;
+    state->iter_begin = x;
     state->iter_end = n - 1 + q + x;
-    state->iter_offset = -x;
-    state->iter_sent = false;
 
     state->rank = rank;
     state->root = root;
 
-    mpi_errno = MPIR_Grequest_start_impl(NULL, NULL, NULL, NULL, req);
-    MPIR_ERR_CHECK(mpi_errno);
-    state->req_ptr = *req;
-
-    mpi_errno = MPIR_Async_things_add(cga_bcast_poll, state, NULL);
-    MPIR_ERR_CHECK(mpi_errno);
+    greq->state = state;
+    greq->free_fn = cga_bcast_free;
 
   fn_exit:
     return mpi_errno;

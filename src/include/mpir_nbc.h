@@ -50,6 +50,16 @@ void MPIR_Sched_set_tag(MPIR_Sched_t s, int tag);
 
 /* the device must provide a typedef for MPIR_Sched_t in mpidpre.h */
 
+/* MPIR_Coll_owned_t (coll_types.h) holds what a schedule owns. */
+void MPIR_Coll_owned_init(MPIR_Coll_owned_t * o);
+/* takes ownership of a buffer allocated with MPL_malloc */
+void MPIR_Coll_owned_add_buffer(MPIR_Coll_owned_t * o, void *buf);
+/* takes a reference of its own on a communicator, datatype or op handle, which
+ * the caller may release afterwards */
+void MPIR_Coll_owned_add_handle(MPIR_Coll_owned_t * o, int handle);
+/* frees the buffers and releases the handles */
+void MPIR_Coll_owned_free(MPIR_Coll_owned_t * o);
+
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
 int MPIR_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 /* clones orig and returns a handle to the new schedule in (*cloned) */
@@ -62,6 +72,16 @@ int MPIR_Sched_reset(MPIR_Sched_t s);
 void *MPIR_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 /* hand a buffer allocated with MPL_malloc to the sched. It will be freed by MPIR_Sched_free */
 void MPIR_Sched_add_buffer(MPIR_Sched_t s, void *buf);
+/* greq algorithms: MPIR_Coll_greq_t is defined in coll_types.h. */
+int MPIR_Coll_greq_create(MPIR_Coll_greq_t ** greq_out);
+/* starts it once and returns the request, which frees greq when it is freed */
+int MPIR_Coll_greq_start(MPIR_Coll_greq_t * greq, MPIR_Request ** request);
+void MPIR_Coll_greq_free(MPIR_Coll_greq_t * greq);
+
+/* hold a reference on a comm/datatype/op handle until the sched is freed */
+void MPIR_Sched_add_handle(MPIR_Sched_t s, int handle);
+/* what the sched owns */
+MPIR_Coll_owned_t *MPIR_Sched_get_owned(MPIR_Sched_t s);
 /* starts the sched and gives you back a request pointer in (*req).
  *
  * comm should be the primary (user) communicator with which this collective is

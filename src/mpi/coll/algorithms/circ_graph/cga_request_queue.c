@@ -120,16 +120,8 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     }
     queue->num_pending = num_pending;
 
-    if (!queue->inverse_order) {
-        queue->pending_head_block = 0;
-    } else {
-        queue->pending_head_block = queue->num_chunks - 1;
-    }
-    queue->pending_head = queue->pending_head_block % queue->num_pending;
-
     /* circular array of pending requests */
     queue->q_len = q_len;
-    queue->q_head = 0;
 
     queue->pending_blocks = MPL_malloc(all_size * num_pending * sizeof(*queue->pending_blocks),
                                        MPL_MEM_OTHER);
@@ -143,22 +135,45 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    for (int i = 0; i < all_size * num_pending; i++) {
-        /* -1 marks the block not pending (available to send) */
-        queue->pending_blocks[i].req_id = -1;
-        queue->pending_blocks[i].persist_packbuf = NULL;
-    }
-
-    for (int i = 0; i < q_len; i++) {
-        queue->requests[i].op_stage = MPII_CGA_STAGE_NULL;
-        queue->requests[i].packbuf = NULL;
-        queue->requests[i].tmpbuf = NULL;
-    }
+    MPII_cga_queue_reset(queue);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* Put the queue back in its initial state, so that the same setup can run again. */
+void MPII_cga_queue_reset(MPII_cga_request_queue * queue)
+{
+    if (!queue->inverse_order) {
+        queue->pending_head_block = 0;
+    } else {
+        queue->pending_head_block = queue->num_chunks - 1;
+    }
+    queue->pending_head = queue->pending_head_block % queue->num_pending;
+    queue->q_head = 0;
+
+    for (int i = 0; i < queue->all_size * queue->num_pending; i++) {
+        /* -1 marks the block not pending (available to send) */
+        queue->pending_blocks[i].req_id = -1;
+        queue->pending_blocks[i].persist_packbuf = NULL;
+    }
+
+    for (int i = 0; i < queue->q_len; i++) {
+        queue->requests[i].op_stage = MPII_CGA_STAGE_NULL;
+        queue->requests[i].packbuf = NULL;
+        queue->requests[i].tmpbuf = NULL;
+    }
+}
+
+/* Free the arrays of the queue. The queue is done after MPII_cga_testall reports it complete. */
+void MPII_cga_queue_free(MPII_cga_request_queue * queue)
+{
+    MPL_free(queue->pending_blocks);
+    MPL_free(queue->requests);
+    queue->pending_blocks = NULL;
+    queue->requests = NULL;
 }
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
@@ -571,10 +586,6 @@ int MPII_cga_testall(MPII_cga_request_queue * queue, bool * is_done)
     for (int i = 0; i < queue->num_pending; i++) {
         clear_pending(queue, i);
     }
-
-    /* free the memory */
-    MPL_free(queue->pending_blocks);
-    MPL_free(queue->requests);
 
     *is_done = true;
 
