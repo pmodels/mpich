@@ -2804,7 +2804,7 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
     /* --END ERROR HANDLING-- */
 
     /* Use hostname supplied in the cvar, if it exists */
-    env_hostname = MPIR_CVAR_CH3_INTERFACE_HOSTNAME;
+    env_hostname = MPIR_CVAR_INTERFACE_HOSTNAME;
 
     if (!env_hostname) {
         /* See if there is a per-process name for the interfaces (e.g.,

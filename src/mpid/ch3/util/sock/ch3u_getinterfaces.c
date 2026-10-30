@@ -52,7 +52,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     }
 
     /* Check for the name supplied through the cvar */
-    ifname_string = MPIR_CVAR_CH3_INTERFACE_HOSTNAME;
+    ifname_string = MPIR_CVAR_INTERFACE_HOSTNAME;
 
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,

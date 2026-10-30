@@ -24,9 +24,9 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH3_INTERFACE_HOSTNAME
+    - name        : MPIR_CVAR_INTERFACE_HOSTNAME
       category    : CH3
-      alt-env     : MPIR_CVAR_INTERFACE_HOSTNAME
+      alt-env     : MPIR_CVAR_CH3_INTERFACE_HOSTNAME
       type        : string
       default     : NULL
       class       : none
@@ -83,7 +83,7 @@ cvars:
         interface the tcp netmod should use (e.g., "eth1", "ib0").
         Note, this is a Linux-specific cvar.
         This cvar is mutually exclusive with the
-        MPIR_CVAR_CH3_INTERFACE_HOSTNAME cvar and it is an error to set
+        MPIR_CVAR_INTERFACE_HOSTNAME cvar and it is an error to set
         them both.
 
     - name        : MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES
@@ -317,7 +317,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
     MPIR_Assert(maxIfname);
     ifname[0] = '\0';
 
-    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_INTERFACE_HOSTNAME &&
+    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_INTERFACE_HOSTNAME &&
                         MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER,
                         "**ifname_and_hostname");
 
@@ -339,7 +339,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
     }
 
     /* Check for a host name supplied through an environment variable */
-    ifname_string = MPIR_CVAR_CH3_INTERFACE_HOSTNAME;
+    ifname_string = MPIR_CVAR_INTERFACE_HOSTNAME;
     if (!ifname_string) {
         ifname_string = MPIR_pmi_hostname();
     }
