@@ -194,6 +194,7 @@ cvars:
         pipelined_tree                          - Force tree-based pipelined algorithm
         tree                                    - Force tree-based algorithm
         release_gather                          - Force CH4 POSIX release_gather algorithm
+        cnc                                     - Force CN collectives (libcncoll) algorithm
 	
     - name        : MPIR_CVAR_BCAST_TREE_KVAL
       category    : COLLECTIVE
@@ -1366,6 +1367,7 @@ cvars:
         k_reduce_scatter_allgather - Force reduce scatter allgather algorithm
         ccl                      - Force CCL algorithm
         release_gather           - Force CH4 POSIX release_gather algorithm
+        cnc                      - Force CN collectives (libcncoll) algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE

@@ -162,6 +162,8 @@ bcast-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 ibcast-intra:
     sched_binomial
     sched_smp
@@ -458,6 +460,8 @@ allreduce-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:

@@ -22,6 +22,7 @@
 #include "../../../../src/mpl/include/mpl_err.h"
 
 /* memory allocation, ignoring the memory class */
+#define MPL_MEM_COLL 0
 #define MPL_malloc(size, class) malloc(size)
 #define MPL_calloc(n, size, class) calloc(n, size)
 #define MPL_realloc(p, size, class) realloc(p, size)

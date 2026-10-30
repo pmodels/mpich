@@ -13,6 +13,9 @@
 #include "../algorithms/stubalgo/stubalgo.h"
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
+#ifdef ENABLE_CNC
+#include "../cnc/cnc_internal.h"
+#endif
 
 #define MPII_COLLECTIVE_FALLBACK_CHECK(check, mpi_errno)                \
     do {                                                                \

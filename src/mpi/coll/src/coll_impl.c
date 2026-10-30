@@ -273,6 +273,9 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     mpi_errno = MPII_Recexchalgo_comm_init(comm);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+#ifdef ENABLE_CNC
+    comm->coll.cnc_priv = NULL;
+#endif
 
   fn_exit:
     return mpi_errno;
@@ -299,6 +302,10 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     mpi_errno = MPII_Recexchalgo_comm_cleanup(comm);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+#ifdef ENABLE_CNC
+    mpi_errno = MPII_Cnc_comm_cleanup(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
     return mpi_errno;
