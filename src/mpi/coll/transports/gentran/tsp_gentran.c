@@ -517,6 +517,18 @@ void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
     return addr;
 }
 
+void *MPIR_TSP_sched_alloc_buffer(MPI_Aint count, MPI_Datatype datatype, MPIR_TSP_sched_t s)
+{
+    MPI_Aint shift, size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &shift, &size);
+
+    void *addr = MPIR_TSP_sched_malloc(size, s);
+    if (!addr) {
+        return NULL;
+    }
+    return (char *) addr - shift;
+}
+
 void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t s, void *buf)
 {
     MPII_Genutil_sched_t *sched = s;
