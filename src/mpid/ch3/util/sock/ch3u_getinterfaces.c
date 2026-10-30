@@ -41,7 +41,7 @@ static int dbg_ifname = -1;
 int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 				    MPL_sockaddr_t * p_addr)
 {
-    char *ifname_string;
+    const char *ifname_string;
     int mpi_errno = MPI_SUCCESS;
     int ifaddrFound = 0;
 
@@ -51,13 +51,14 @@ int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	if (rc != 1) dbg_ifname = 0;
     }
 
-    /* Check for the name supplied through an environment variable */
-    ifname_string = getenv("MPICH_INTERFACE_HOSTNAME");
+    /* Check for the name supplied through the cvar */
+    ifname_string = MPIR_CVAR_INTERFACE_HOSTNAME;
 
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,
-	   the process manager only delievers the same values for the 
-	   environment to each process */
+	   the process manager only delievers the same values for the
+	   environment to each process.  There's no way to do this with
+	   the cvar interface, so we need to use getenv() here. */
 	char namebuf[1024];
 	snprintf( namebuf, sizeof(namebuf),
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );

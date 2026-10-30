@@ -2786,7 +2786,7 @@ int MPIDI_CH3I_Sock_wakeup(struct MPIDI_CH3I_Sock_set *sock_set)
    interface if a particular environment variable is set) .  */
 int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int len)
 {
-    char *env_hostname;
+    const char *env_hostname;
     int rc;
     int mpi_errno = MPI_SUCCESS;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
@@ -2803,11 +2803,8 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
     }
     /* --END ERROR HANDLING-- */
 
-    /* FIXME: Is this documented?  How does it work if the process manager
-     * cannot give each process a different value for an environment
-     * name?  What if a different interface is needed? */
-    /* Use hostname supplied in environment variable, if it exists */
-    env_hostname = getenv("MPICH_INTERFACE_HOSTNAME");
+    /* Use hostname supplied in the cvar, if it exists */
+    env_hostname = MPIR_CVAR_INTERFACE_HOSTNAME;
 
     if (!env_hostname) {
         /* See if there is a per-process name for the interfaces (e.g.,

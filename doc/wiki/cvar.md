@@ -3112,17 +3112,6 @@ Alternate name: MPIR_CVAR_ENABLE_HCOLL
 
 Used in functions: `MPIDI_CH3I_Comm_init`
 
-### MPIR_CVAR_CH3_INTERFACE_HOSTNAME
-
-Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod builds its business card, so other processes use that address when connecting to it. It is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, MPICH falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process.
-
-* NULL - default, do not set an advertised hostname or IP address through this CVAR.
-* string - hostname or IP address to advertise for connections to this process.
-
-Alternate name: MPIR_CVAR_INTERFACE_HOSTNAME
-
-Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`
-
 ### MPIR_CVAR_CH3_PG_VERBOSE
 
 Enables verbose CH3 process-group output. It is used when a process group is created and when process groups are finalized, and it does not rely on another CVAR or mode being active. When active, this CVAR prints process-group creation messages and process-group state information to stdout.
@@ -3254,6 +3243,17 @@ Sets the number of RMA target entries allocated in each CH3 window-private targe
 
 Used in functions: `win_init`
 
+### MPIR_CVAR_INTERFACE_HOSTNAME
+
+Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod or the CH3 sock channel builds its business card, so other processes use that address when connecting to it. In nemesis TCP it is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, nemesis TCP falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup; the sock channel skips the PMI hostname step. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process.
+
+* NULL - default, do not set an advertised hostname or IP address through this CVAR.
+* string - hostname or IP address to advertise for connections to this process.
+
+Alternate name: MPIR_CVAR_CH3_INTERFACE_HOSTNAME
+
+Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`, `MPIDU_CH3U_GetSockInterfaceAddr`, `MPIDI_CH3I_Sock_get_host_description`
+
 ### MPIR_CVAR_NEMESIS_ENABLE_CKPOINT
 
 Controls whether CH3 nemesis checkpointing support is initialized and progressed. It is used only when MPICH is built with checkpointing support. During nemesis checkpoint initialization, it controls whether the BLCR checkpointing library is initialized, the checkpoint callback is registered, and checkpoint synchronization semaphores are created. During nemesis progress, it controls whether pending checkpoint-start and checkpoint-finish requests raised by the checkpoint callback or checkpoint marker packets are processed. When active, this CVAR enables nemesis checkpoint coordination and integration with the checkpointing library.
@@ -3302,7 +3302,7 @@ Used in functions: `GetSockInterfaceAddr`
 
 ### MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE
 
-Specifies the pseudo-ethernet interface that the CH3 nemesis TCP netmod uses when selecting the socket address to publish in its business card. It is used while building the TCP business card and only when this CVAR is set; setting it together with `MPIR_CVAR_CH3_INTERFACE_HOSTNAME` is an error. Hydra can also set this CVAR from its selected interface option, unless forced hostname propagation is requested. When active, this CVAR sets the network interface whose address is advertised for TCP connections to this process.
+Specifies the pseudo-ethernet interface that the CH3 nemesis TCP netmod uses when selecting the socket address to publish in its business card. It is used while building the TCP business card and only when this CVAR is set; setting it together with `MPIR_CVAR_INTERFACE_HOSTNAME` is an error. Hydra can also set this CVAR from its selected interface option, unless forced hostname propagation is requested. When active, this CVAR sets the network interface whose address is advertised for TCP connections to this process.
 
 * NULL - default, do not select a network interface through this CVAR.
 * string - network interface name to use for TCP connections.
