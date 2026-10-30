@@ -678,19 +678,33 @@ def load_cvar_file(path):
                 cvar['type'] = RE.m.group(1)
 
 def check_inner():
-    """The "inner" key: <section>@<communicator>, an existing section and a known communicator."""
+    """The "inner" key: <section>@<communicator>[k=v], an existing section, a known communicator
+    and a restriction set to 0 or 1. In a general algorithm, $coll stands for the calling
+    collective, and the section must exist for every blocking collective with an intra section."""
     for func_commkind, algo_list in G.algos.items():
         for algo in algo_list:
             if "inner" not in algo:
                 continue
             for item in algo["inner"].replace(' ', '').split(','):
-                if not RE.match(r'([\w-]+)@(\w+)$', item):
-                    raise Exception("%s %s: inner %s is not <section>@<communicator>" % (func_commkind, algo['name'], item))
-                section, comm = RE.m.group(1), RE.m.group(2)
-                if section not in G.algos:
-                    raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, section))
-                if comm not in ("node_comm", "node_roots_comm"):
+                if not RE.match(r'([\w$-]+)@(\w+)(?:\[(\w+)=(\w+)\])?$', item):
+                    raise Exception("%s %s: inner %s is not <section>@<communicator>[k=v]" % (func_commkind, algo['name'], item))
+                section, comm, k, v = RE.m.group(1, 2, 3, 4)
+                if '$coll' in section:
+                    if func_commkind != "general":
+                        raise Exception("%s %s: inner %s: $coll only in general algorithms" % (func_commkind, algo['name'], item))
+                    sections = [section.replace('$coll', a) for a in G.coll_names if a + "-intra" in G.algos]
+                else:
+                    sections = [section]
+                for s in sections:
+                    if s not in G.algos:
+                        raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, s))
+                if comm not in ("node_comm", "node_roots_comm", "comm"):
                     raise Exception("%s %s: inner %s: unknown communicator %s" % (func_commkind, algo['name'], item, comm))
+                if k is not None:
+                    if k not in G.restrictions:
+                        raise Exception("%s %s: inner %s: %s is not a restriction" % (func_commkind, algo['name'], item, k))
+                    if v not in ("0", "1"):
+                        raise Exception("%s %s: inner %s: %s must be 0 or 1" % (func_commkind, algo['name'], item, k))
 
 def load_coll_algos(algo_txt):
     G.algos = {}

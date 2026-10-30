@@ -78,6 +78,23 @@
 #         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
 #         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
 #         after the collectives it depends on; gen_coll.py only checks it.
+#         A general algorithm runs for any collective, so its inner calls are written
+#         relative to the caller: $coll is the calling collective's name (e.g. bcast), the
+#         communicator comm is the caller's own, and a suffix [k=v] sets restriction k to v
+#         (0 or 1) on the inner call, e.g. $coll-intra@comm[gpu=0] for the same collective
+#         on host buffers. These forms describe the intra case.
+#
+# Conditions that a device or another component supplies as black boxes (e.g.
+# MPIDI_CH4_release_gather) must compose with tuning and with the subsets of a tree:
+#   1. free of side effects (setup such as call counting or shared memory belongs in
+#      MPID_Init_coll_sig, before the selection);
+#   2. a function of the call's input conditions, the comm's layout and the environment only:
+#      never of message size or count, and the same on every rank of the call;
+#   3. stable after a warm-up of a fixed number of calls on a communicator (release_gather:
+#      MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD);
+#   4. optional: where it is false, the selection without it must be valid;
+#   5. able to fail at run time only by turning false (e.g. shared memory exhausted), never by
+#      returning an error.
 #   * disabled:
 #         1 to keep an algorithm out of the selection. Forcing it by CVAR fails its
 #         restriction check (error or fallback, per MPIR_CVAR_COLLECTIVE_FALLBACK), and a JSON
@@ -111,8 +128,10 @@ conditions:
 # ----
 general:
     MPIR_Coll_nb
+        inner: i$coll-intra@comm
     MPIR_Coll_buffer_swap
         restrictions: gpu
+        inner: $coll-intra@comm[gpu=0]
 
 # ----
 barrier-intra:

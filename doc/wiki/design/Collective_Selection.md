@@ -117,7 +117,13 @@ bcast-intra:
       through the selection, as `<section>@<communicator>` (e.g.
       `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
       Tuning tools use it to tune the algorithm after those collectives;
-      gen_coll only checks the names.
+      gen_coll only checks the names. A `general` algorithm writes its
+      inner calls relative to the caller: `$coll` is the calling
+      collective's name, `comm` the caller's communicator, and a suffix
+      `[k=v]` sets restriction `k` to 0 or 1 on the inner call. So
+      `MPIR_Coll_nb` has `inner: i$coll-intra@comm` and
+      `MPIR_Coll_buffer_swap` has `inner: $coll-intra@comm[gpu=0]` (the
+      same collective on host buffers). These forms describe the intra case.
     - `extra_params` and `cvar_params`: extra arguments of the algorithm
       function, and the CVAR suffixes that supply them when the algorithm is
       forced by CVAR. The CVAR's type is also the parameter's type in the
@@ -229,7 +235,9 @@ its shared memory exists).
 ```
 
 Here `0x820` is `hierarchical` (bit 5, `0x20`) and `MPIDI_CH4_release_gather`
-(bit 11, `0x800`). A comm on one node where release_gather can run gets mask
+(bit 11, `0x800`). The bit numbers in these examples may be out of date: a
+restriction's bit is its index in `coll_algorithms.txt`, which changes when
+restrictions are removed, so read the current index there. A comm on one node where release_gather can run gets mask
 `800`; a comm on several nodes with several ranks per node gets `20`; any
 other comm, e.g. one rank per node or release_gather unavailable under
 `MPI_THREAD_MULTIPLE`, gets `0`. Both bits holding at once has no subtree, and
@@ -387,14 +395,30 @@ barrier) is the example.
   same tree works for CH3 and every CH4 configuration.
   `MPIDI_POSIX_check_release_gather` rejects threaded runs, communicators that
   span nodes (`num_external > 1`), and unsupported reduce types or
-  non-commutative ops. It passes only after
-  `MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD` calls on the communicator, except when
-  `MPIR_COLL_SIG_FLAG__CVAR` is set. It lazily initializes the shared-memory
-  state and passes only if that succeeds. Every communicator, including
+  non-commutative ops, and it passes only once the shared-memory state is
+  ready. It has no side effects: `MPIDI_POSIX_release_gather_prepare`, called
+  from `MPID_Init_coll_sig` before the selection, counts the calls on the
+  communicator and sets up the shared memory after
+  `MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD` calls, or at once when a CVAR forces
+  release_gather. Every communicator, including
   `node_comm` and `node_roots_comm`, carries `MPIR_COMM_ATTR__HIERARCHY`, so
   such checks can rely on the hierarchy fields.
+- **Composability.** A condition supplied as a black box, like
+  `MPIDI_CH4_release_gather`, must work with tuning tools and with the
+  subsets of a tree. It must:
+  1. have no side effects: setup such as call counting or shared memory goes
+     in `MPID_Init_coll_sig`, before the selection;
+  2. depend only on the call's input conditions, the communicator's layout and
+     the environment: never on message size or count, and be the same on
+     every rank of the call;
+  3. be stable after a warm-up of a fixed number of calls on a communicator
+     (`MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD` for release_gather);
+  4. be optional: where it is false, the selection without it must be valid;
+  5. fail at run time only by turning false (e.g. shared memory exhausted),
+     never by returning an error.
 - **Signature hook.** Every `_impl` calls `MPID_Init_coll_sig(coll_sig)` after
-  the generic fields are set. CH3 and CH4 define it as an empty inline today.
+  the generic fields are set. CH3 defines it as an empty inline; CH4 uses it
+  for the release_gather setup.
   New boolean attributes go in the `flags` bit mask.
 
 ## GPU buffers
