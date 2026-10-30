@@ -298,6 +298,8 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     MPI_Aint extent, true_lb, true_extent;
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPI_Aint tmpbuf_shift, tmpbuf_size;
+    MPIR_Datatype_get_buffer_span(datatype, chunk_count, &tmpbuf_shift, &tmpbuf_size);
 
     bool inverse_order = true;
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
@@ -309,17 +311,17 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     queue->u.reduce.op = op;
     queue->u.reduce.type_size = type_size;
     queue->u.reduce.type_extent = extent;
-    queue->u.reduce.true_lb = true_lb;
+    queue->u.reduce.tmpbuf_shift = tmpbuf_shift;
     queue->u.reduce.chunk_extent = chunk_count * extent;
     if (!queue->need_pack) {
         /* datatype must be contig, no pack_buf, need tmpbuf to receive chunk data */
         queue->u.reduce.tmpbuf_size = chunk_count * type_size;
-    } else if (type_size == true_extent) {
+    } else if (type_size == true_extent && type_size == extent) {
         /* datatype is contig, skip tmpbuf, we can do reduce from pack_buf */
         queue->u.reduce.tmpbuf_size = 0;
     } else {
         /* non-contig case, we need both pack_buf and tmpbuf */
-        queue->u.reduce.tmpbuf_size = (chunk_count - 1) * extent + true_extent;
+        queue->u.reduce.tmpbuf_size = tmpbuf_size;
     }
 
   fn_fail:
@@ -538,7 +540,7 @@ static int reduce_local(MPII_cga_request_queue * queue, int block, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    void *buf_in = (char *) buf - queue->u.reduce.true_lb;
+    void *buf_in = (char *) buf - queue->u.reduce.tmpbuf_shift;
     void *buf_inout = (char *) queue->buf + block * queue->u.reduce.chunk_extent;
     MPI_Aint count = GET_BLOCK_SIZE(block) / queue->u.reduce.type_size;
 
@@ -676,7 +678,7 @@ static int issue_unpack(MPII_cga_request_queue * queue, int block, int root,
     MPI_Aint offset;
     if (tmpbuf) {
         /* reduce need unpack into a tmpbuf before reduce_local */
-        dst_buf = (char *) tmpbuf - queue->u.reduce.true_lb;
+        dst_buf = (char *) tmpbuf - queue->u.reduce.tmpbuf_shift;
         offset = 0;
     } else {
         if (root == 0) {
