@@ -3114,14 +3114,14 @@ Used in functions: `MPIDI_CH3I_Comm_init`
 
 ### MPIR_CVAR_CH3_INTERFACE_HOSTNAME
 
-Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod builds its business card, so other processes use that address when connecting to it. It is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, MPICH falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process.
+Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod or the CH3 sock channel builds its business card, so other processes use that address when connecting to it. In nemesis TCP it is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, nemesis TCP falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup; the sock channel skips the PMI hostname step. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process.
 
 * NULL - default, do not set an advertised hostname or IP address through this CVAR.
 * string - hostname or IP address to advertise for connections to this process.
 
 Alternate name: MPIR_CVAR_INTERFACE_HOSTNAME
 
-Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`
+Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`, `MPIDU_CH3U_GetSockInterfaceAddr`, `MPIDI_CH3I_Sock_get_host_description`
 
 ### MPIR_CVAR_CH3_PG_VERBOSE
 
