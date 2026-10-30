@@ -38,7 +38,6 @@
 
 - Collectives
     - [Collective Algorithm Selection (CSEL)](Collective_Selection.md)
-    - [Collectives Framework](Collectives_framework.md)
     - [Schedules of Nonblocking and Persistent Collectives](Collective_Schedules.md)
     - [Overriding Collective Functions](Overriding_Collective_Functions.md)
 
