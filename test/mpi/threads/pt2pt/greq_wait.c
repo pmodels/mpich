@@ -20,7 +20,7 @@ static char MTEST_Descrip[] = "threaded generalized request tests";
 #define IF_VERBOSE(a) \
 do { \
     if (verbose) { \
-        printf a ; \
+        printf a; \
         fflush(stdout); \
     } \
 } while (0)

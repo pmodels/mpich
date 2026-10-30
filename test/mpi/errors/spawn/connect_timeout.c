@@ -9,7 +9,7 @@
 #include <string.h>
 #include "mpitest.h"
 
-#define IF_VERBOSE(cond, a) if (verbose && (cond)) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(cond, a) if (verbose && (cond)) { printf a; fflush(stdout); }
 #define SERVER_GID 0
 #define CLIENT_GID 1
 /* Connect timeouts in seconds: the default (set through the CVAR) and the one

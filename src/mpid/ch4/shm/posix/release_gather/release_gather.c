@@ -79,7 +79,7 @@ cvars:
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
-        	    knomial_2 is only supported with non topology aware trees.
+                    knomial_2 is only supported with non topology aware trees.
 
     - name        : MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD
       category    : COLLECTIVE
@@ -126,7 +126,7 @@ cvars:
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
-        	    knomial_2 is only supported with non topology aware trees.
+                    knomial_2 is only supported with non topology aware trees.
 
     - name        : MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE
       category    : COLLECTIVE
@@ -140,7 +140,7 @@ cvars:
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
-        	    knomial_2 is only supported with non topology aware trees.
+                    knomial_2 is only supported with non topology aware trees.
 
     - name        : MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES
       category    : COLLECTIVE

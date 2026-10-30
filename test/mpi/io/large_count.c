@@ -12,7 +12,7 @@ static int Errors;
         int errorStringLen; \
         char errorString[MPI_MAX_ERROR_STRING]; \
         MPI_Error_string(err, errorString, &errorStringLen); \
-	Errors++; \
+        Errors++; \
         printf("Error at line %d when calling %s: %s\n",__LINE__,fname,errorString); \
     }
 

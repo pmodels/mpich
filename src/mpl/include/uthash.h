@@ -124,7 +124,7 @@ do {                                                                            
     unsigned _hf_bkt;                                                            \
     HASH_TO_BKT(hashval, (head)->hh.tbl->num_buckets, _hf_bkt);                  \
     if (HASH_BLOOM_TEST((head)->hh.tbl, hashval) != 0) {                         \
-      HASH_FIND_IN_BKT((head)->hh.tbl, hh, (head)->hh.tbl->buckets[ _hf_bkt ], keyptr, keylen, hashval, out); \
+      HASH_FIND_IN_BKT((head)->hh.tbl, hh, (head)->hh.tbl->buckets[_hf_bkt], keyptr, keylen, hashval, out); \
     }                                                                            \
   }                                                                              \
 } while (0)
@@ -409,7 +409,7 @@ do {                                                                            
         unsigned _count;                                                         \
         char *_prev;                                                             \
         _count = 0;                                                              \
-        for(_bkt_i = 0; _bkt_i < (head)->hh.tbl->num_buckets; _bkt_i++) {       \
+        for (_bkt_i = 0; _bkt_i < (head)->hh.tbl->num_buckets; _bkt_i++) {      \
             unsigned _bkt_count = 0;                                             \
             _thh = (head)->hh.tbl->buckets[_bkt_i].hh_head;                      \
             _prev = NULL;                                                        \
@@ -496,7 +496,7 @@ do {                                                                            
   unsigned _sx_i;                                                                \
   const unsigned char *_hs_key=(const unsigned char*)(key);                      \
   hashv = 0;                                                                     \
-  for(_sx_i=0; _sx_i < keylen; _sx_i++) {                                        \
+  for (_sx_i=0; _sx_i < keylen; _sx_i++) {                                       \
       hashv ^= (hashv << 5) + (hashv >> 2) + _hs_key[_sx_i];                     \
   }                                                                              \
 } while (0)
@@ -506,7 +506,7 @@ do {                                                                            
   unsigned _fn_i;                                                                \
   const unsigned char *_hf_key=(const unsigned char*)(key);                      \
   hashv = 2166136261U;                                                           \
-  for(_fn_i=0; _fn_i < keylen; _fn_i++) {                                        \
+  for (_fn_i=0; _fn_i < keylen; _fn_i++) {                                       \
       hashv = hashv ^ _hf_key[_fn_i];                                            \
       hashv = hashv * 16777619U;                                                 \
   }                                                                              \
@@ -517,7 +517,7 @@ do {                                                                            
   unsigned _ho_i;                                                                \
   const unsigned char *_ho_key=(const unsigned char*)(key);                      \
   hashv = 0;                                                                     \
-  for(_ho_i=0; _ho_i < keylen; _ho_i++) {                                        \
+  for (_ho_i=0; _ho_i < keylen; _ho_i++) {                                       \
       hashv += _ho_key[_ho_i];                                                   \
       hashv += (hashv << 10);                                                    \
       hashv ^= (hashv >> 6);                                                     \
@@ -602,21 +602,21 @@ do {                                                                            
                                                                                  \
   /* Main loop */                                                                \
   for (;_sfh_len > 0U; _sfh_len--) {                                             \
-    hashv    += get16bits (_sfh_key);                                            \
-    _sfh_tmp  = ((uint32_t)(get16bits (_sfh_key+2)) << 11) ^ hashv;              \
+    hashv    += get16bits(_sfh_key);                                             \
+    _sfh_tmp  = ((uint32_t)(get16bits(_sfh_key+2)) << 11) ^ hashv;               \
     hashv     = (hashv << 16) ^ _sfh_tmp;                                        \
-    _sfh_key += 2U*sizeof (uint16_t);                                            \
+    _sfh_key += 2U*sizeof(uint16_t);                                             \
     hashv    += hashv >> 11;                                                     \
   }                                                                              \
                                                                                  \
   /* Handle end cases */                                                         \
   switch (_sfh_rem) {                                                            \
-    case 3: hashv += get16bits (_sfh_key);                                       \
+    case 3: hashv += get16bits(_sfh_key);                                        \
             hashv ^= hashv << 16;                                                \
-            hashv ^= (uint32_t)(_sfh_key[sizeof (uint16_t)]) << 18;              \
+            hashv ^= (uint32_t)(_sfh_key[sizeof(uint16_t)]) << 18;               \
             hashv += hashv >> 11;                                                \
             break;                                                               \
-    case 2: hashv += get16bits (_sfh_key);                                       \
+    case 2: hashv += get16bits(_sfh_key);                                        \
             hashv ^= hashv << 11;                                                \
             hashv += hashv >> 17;                                                \
             break;                                                               \
@@ -687,7 +687,7 @@ do {                                                                   \
   const uint8_t *_mur_tail;                                            \
   const uint32_t *_mur_blocks = (const uint32_t*)(_mur_data+(_mur_nblocks*4)); \
   int _mur_i;                                                          \
-  for(_mur_i = -_mur_nblocks; _mur_i!=0; _mur_i++) {                   \
+  for (_mur_i = -_mur_nblocks; _mur_i!=0; _mur_i++) {                  \
     _mur_k1 = MUR_GETBLOCK(_mur_blocks,_mur_i);                        \
     _mur_k1 *= _mur_c1;                                                \
     _mur_k1 = MUR_ROTL32(_mur_k1,15);                                  \
@@ -699,7 +699,7 @@ do {                                                                   \
   }                                                                    \
   _mur_tail = (const uint8_t*)(_mur_data + (_mur_nblocks*4));          \
   _mur_k1=0;                                                           \
-  switch((keylen) & 3U) {                                              \
+  switch ((keylen) & 3U) {                                             \
     case 3: _mur_k1 ^= (uint32_t)_mur_tail[2] << 16; /* FALLTHROUGH */ \
     case 2: _mur_k1 ^= (uint32_t)_mur_tail[1] << 8;  /* FALLTHROUGH */ \
     case 1: _mur_k1 ^= (uint32_t)_mur_tail[0];                         \
@@ -807,13 +807,13 @@ do {                                                                            
        (tbl->num_items >> (tbl->log2_num_buckets+1U)) +                          \
        (((tbl->num_items & ((tbl->num_buckets*2U)-1U)) != 0U) ? 1U : 0U);        \
     tbl->nonideal_items = 0;                                                     \
-    for(_he_bkt_i = 0; _he_bkt_i < tbl->num_buckets; _he_bkt_i++)                \
+    for (_he_bkt_i = 0; _he_bkt_i < tbl->num_buckets; _he_bkt_i++)               \
     {                                                                            \
-        _he_thh = tbl->buckets[ _he_bkt_i ].hh_head;                             \
+        _he_thh = tbl->buckets[_he_bkt_i].hh_head;                               \
         while (_he_thh != NULL) {                                                \
            _he_hh_nxt = _he_thh->hh_next;                                        \
            HASH_TO_BKT(_he_thh->hashv, tbl->num_buckets*2U, _he_bkt);           \
-           _he_newbkt = &(_he_new_buckets[ _he_bkt ]);                           \
+           _he_newbkt = &(_he_new_buckets[_he_bkt]);                             \
            if (++(_he_newbkt->count) > tbl->ideal_chain_maxlen) {                \
              tbl->nonideal_items++;                                              \
              _he_newbkt->expand_mult = _he_newbkt->count /                       \
@@ -944,8 +944,8 @@ do {                                                                            
   UT_hash_handle *_src_hh, *_dst_hh, *_last_elt_hh=NULL;                         \
   ptrdiff_t _dst_hho = ((char*)(&(dst)->hh_dst) - (char*)(dst));                 \
   if (src != NULL) {                                                             \
-    for(_src_bkt=0; _src_bkt < (src)->hh_src.tbl->num_buckets; _src_bkt++) {     \
-      for(_src_hh = (src)->hh_src.tbl->buckets[_src_bkt].hh_head;                \
+    for (_src_bkt=0; _src_bkt < (src)->hh_src.tbl->num_buckets; _src_bkt++) {    \
+      for (_src_hh = (src)->hh_src.tbl->buckets[_src_bkt].hh_head;               \
           _src_hh != NULL;                                                       \
           _src_hh = _src_hh->hh_next) {                                          \
           _elt = ELMT_FROM_HH((src)->hh_src.tbl, _src_hh);                       \
@@ -995,11 +995,11 @@ do {                                                                            
 
 #ifdef NO_DECLTYPE
 #define HASH_ITER(hh,head,el,tmp)                                                \
-for(((el)=(head)), ((*(char**)(&(tmp)))=(char*)((head!=NULL)?(head)->hh.next:NULL)); \
+for (((el)=(head)), ((*(char**)(&(tmp)))=(char*)((head!=NULL)?(head)->hh.next:NULL)); \
   (el) != NULL; ((el)=(tmp)), ((*(char**)(&(tmp)))=(char*)((tmp!=NULL)?(tmp)->hh.next:NULL)))
 #else
 #define HASH_ITER(hh,head,el,tmp)                                                \
-for(((el)=(head)), ((tmp)=DECLTYPE(el)((head!=NULL)?(head)->hh.next:NULL));      \
+for (((el)=(head)), ((tmp)=DECLTYPE(el)((head!=NULL)?(head)->hh.next:NULL));     \
   (el) != NULL; ((el)=(tmp)), ((tmp)=DECLTYPE(el)((tmp!=NULL)?(tmp)->hh.next:NULL)))
 #endif
 

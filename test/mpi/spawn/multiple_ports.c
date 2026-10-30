@@ -9,7 +9,7 @@
 #include <string.h>
 #include "mpitest.h"
 
-#define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(a) if (verbose) { printf a; fflush(stdout); }
 
 /* This test checks to make sure that two MPI_Comm_connects to two different MPI
  * ports match their corresponding MPI_Comm_accepts.  The root process opens two

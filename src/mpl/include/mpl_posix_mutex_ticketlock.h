@@ -32,7 +32,7 @@ typedef struct {
     do { \
         int ticket = MPL_atomic_fetch_add_int(&(lock_)->num, 1); \
         while (MPL_atomic_load_int(&(lock_)->next) != ticket) { \
-	    MPLI_TICKETLOCK_YIELD(); \
+            MPLI_TICKETLOCK_YIELD(); \
         } \
     } while (0)
 
