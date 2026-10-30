@@ -27,6 +27,7 @@
     - [Overall Design](CH4_Overall_Design.md)
     - [Process Address Translation](CH4_Process_Address_Translation.md)
     - [OFI Active Messages](CH4_OFI_Active_Messages.md)
+    - [Progress Design](CH4_Progress_Design.md)
 
 - CH3
     - [Channels](CH3_And_Channels.md)
