@@ -47,8 +47,10 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
     for (i = 0; i < comm_size; ++i) {
         /* only look at recvtypes/recvcounts because the send vectors are
          * ignored when sendbuf==MPI_IN_PLACE */
-        MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
-        max_size = MPL_MAX(max_size, recvcounts[i] * recvtype_sz);
+        if (recvcounts[i] > 0) {
+            MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
+            max_size = MPL_MAX(max_size, recvcounts[i] * recvtype_sz);
+        }
     }
     tmp_buf = MPIR_Sched_alloc_state(s, max_size);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -64,9 +66,12 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                 else
                     dst = i;
 
-                MPIR_Datatype_get_size_macro(recvtypes[dst], recvtype_sz);
+                /* the type of an empty entry is not held by the schedule and may not be valid
+                 * anymore */
+                MPI_Datatype dt = (recvcounts[dst] > 0) ? recvtypes[dst] : MPIR_BYTE_INTERNAL;
+                MPIR_Datatype_get_size_macro(dt, recvtype_sz);
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
-                                            recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                                            recvcounts[dst], dt, dst, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno =
                     MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPIR_BYTE_INTERNAL, dst,
@@ -76,8 +81,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
 
                 mpi_errno =
                     MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPIR_BYTE_INTERNAL,
-                                    ((char *) recvbuf + rdispls[dst]), recvcounts[dst],
-                                    recvtypes[dst], s);
+                                    ((char *) recvbuf + rdispls[dst]), recvcounts[dst], dt, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }

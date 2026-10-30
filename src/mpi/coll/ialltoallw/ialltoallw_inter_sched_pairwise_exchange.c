@@ -59,6 +59,14 @@ int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
             sendtype = sendtypes[dst];
         }
 
+        /* the type of an empty entry is not held by the schedule and may not be valid anymore */
+        if (sendcount == 0) {
+            sendtype = MPIR_BYTE_INTERNAL;
+        }
+        if (recvcount == 0) {
+            recvtype = MPIR_BYTE_INTERNAL;
+        }
+
         mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier here */
