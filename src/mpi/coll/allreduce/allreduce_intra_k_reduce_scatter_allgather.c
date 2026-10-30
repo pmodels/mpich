@@ -20,7 +20,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int rank, nranks, nbr;
     int rem = 0, idx = 0, dst = 0, rank_for_offset;
-    MPI_Aint true_extent, true_lb, extent;
+    MPI_Aint extent, buf_shift, buf_size;
     int current_cnt = 0, send_count = 0, recv_count = 0, send_cnt = 0, recv_cnt = 0, iter = 0;
     int offset = 0;
     int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom = NULL;
@@ -40,8 +40,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPIR_Assert(MPIR_Op_is_commutative(op));
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE && count > 0) {
@@ -97,8 +97,9 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
         send_reqs = sreqs;
     }
     /* allocate temp buffer for receiving in reduce scatter phase */
-    tmp_recvbuf = MPL_malloc(count * extent, MPL_MEM_BUFFER);
+    tmp_recvbuf = MPL_malloc(buf_size, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    tmp_recvbuf = (char *) tmp_recvbuf - buf_shift;
 
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
     if (!in_step2) {    /* even */
@@ -291,7 +292,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
             MPL_free(send_reqs);
         }
     }
-    MPL_free(tmp_recvbuf);
+    MPL_free((char *) tmp_recvbuf + buf_shift);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
