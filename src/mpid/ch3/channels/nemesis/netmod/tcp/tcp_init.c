@@ -36,8 +36,8 @@ cvars:
         If non-NULL, this cvar specifies the IP address that
         other processes should use when connecting to this process.
         This cvar is mutually exclusive with the
-        MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
-        both.
+        MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE cvar and it is an error to set
+        them both.
 
     - name        : MPIR_CVAR_CH3_PORT_RANGE
       category    : CH3
