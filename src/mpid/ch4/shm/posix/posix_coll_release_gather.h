@@ -175,16 +175,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
     }
 
-    /* Calculate chunking information, taking max(extent, type_size) handles contiguous and non-contiguous datatypes both */
+    /* Calculate chunking information, taking max(extent, true_extent, type_size) handles contiguous
+     * and non-contiguous datatypes both. A chunk starts at offset * extent. */
     MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE,
-                                            MPL_MAX(extent, type_size), count, &num_chunks,
-                                            &chunk_size_floor, &chunk_size_ceil);
+                                            MPL_MAX(MPL_MAX(extent, true_extent), type_size),
+                                            count, &num_chunks, &chunk_size_floor,
+                                            &chunk_size_ceil);
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
@@ -244,16 +245,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
     }
 
-    /* Calculate chunking information, taking max(extent, type_size) handles contiguous and non-contiguous datatypes both */
+    /* Calculate chunking information, taking max(extent, true_extent, type_size) handles contiguous
+     * and non-contiguous datatypes both. A chunk starts at offset * extent. */
     MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE,
-                                            MPL_MAX(extent, type_size), count, &num_chunks,
-                                            &chunk_size_floor, &chunk_size_ceil);
+                                            MPL_MAX(MPL_MAX(extent, true_extent), type_size),
+                                            count, &num_chunks, &chunk_size_floor,
+                                            &chunk_size_ceil);
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
