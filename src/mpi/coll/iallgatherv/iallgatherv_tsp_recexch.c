@@ -243,7 +243,6 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Ain
     int is_inplace, i;
     int nranks, rank;
     MPI_Aint recv_extent;
-    MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
     int is_instep2, log_pofk;
@@ -259,8 +258,6 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Ain
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
-    recv_extent = MPL_MAX(recv_extent, true_extent);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */

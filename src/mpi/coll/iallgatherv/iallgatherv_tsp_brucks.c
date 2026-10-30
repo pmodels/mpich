@@ -40,9 +40,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int delta = 1;
 
     int is_inplace, rank, size, max;
-    MPI_Aint sendtype_extent, sendtype_lb;
-    MPI_Aint recvtype_extent, recvtype_lb;
-    MPI_Aint sendtype_true_extent, recvtype_true_extent;
+    MPI_Aint recvtype_extent;
 
     int tag;
     int *recv_id = NULL;
@@ -74,14 +72,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         sendtype = recvtype;
     }
 
-    /* Get datatype info of sendtype and recvtype */
-    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
-    sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
-
+    /* Get datatype info of recvtype */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
-    recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     while (max) {
         nphases++;
@@ -105,7 +97,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     if (rank == 0)
         tmp_recvbuf = recvbuf;
     else
-        tmp_recvbuf = MPIR_TSP_sched_malloc(total_recvcount * recvtype_extent, sched);
+        tmp_recvbuf = MPIR_TSP_sched_alloc_buffer(total_recvcount, recvtype, sched);
     MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
 
