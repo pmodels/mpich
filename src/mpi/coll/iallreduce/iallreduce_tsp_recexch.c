@@ -17,8 +17,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int dtcopy_id = -1;
-    MPI_Aint extent;
-    MPI_Aint lb, true_extent;
     int is_commutative;
     int nranks, rank;
     int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom;
@@ -39,12 +37,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf,
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
-    tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
+    tmp_buf = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -70,7 +65,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf,
     /* Step 1 */
     MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
                                                   datatype, op, is_commutative,
-                                                  tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
+                                                  tag, dtcopy_id, recv_id, reduce_id, vtcs,
                                                   is_inplace, step1_sendto, in_step2, step1_nrecvs,
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
                                                   comm, sched);
@@ -84,11 +79,11 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf,
     MPIR_Assert(nbr_buffer != NULL);
     buf = 0;
     if (step2_nphases > 0)
-        nbr_buffer[0] = MPIR_TSP_sched_malloc(count * extent, sched);
+        nbr_buffer[0] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
     for (i = 0; i < step2_nphases; i++) {
         for (j = 0; j < (k - 1); j++, buf++) {
             if (per_nbr_buffer)
-                nbr_buffer[buf] = MPIR_TSP_sched_malloc(count * extent, sched);
+                nbr_buffer[buf] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
             else
                 nbr_buffer[buf] = nbr_buffer[0];
         }
