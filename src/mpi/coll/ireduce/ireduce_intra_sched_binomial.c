@@ -12,7 +12,6 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, is_commutative;
     int mask, relrank, source, lroot;
-    MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
@@ -21,22 +20,21 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
 
     /* Create a temporary buffer */
 
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-
     is_commutative = MPIR_Op_is_commutative(op);
 
-    tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    tmp_buf = MPIR_Sched_alloc_state(s, buf_size);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore
      * I have to allocate a temporary one */
     if (rank != root) {
-        recvbuf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        recvbuf = MPIR_Sched_alloc_state(s, buf_size);
         MPIR_ERR_CHKANDJUMP(!recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        recvbuf = (void *) ((char *) recvbuf - true_lb);
+        recvbuf = (void *) ((char *) recvbuf - buf_shift);
     }
 
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {

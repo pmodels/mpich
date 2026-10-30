@@ -297,21 +297,15 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
     goto fn_exit;
 }
 
-/* MPIR_alloc_buffer, plus the pointer as allocated, which it shifts by the datatype's lb */
+/* Like MPIR_alloc_buffer, but also returns the pointer as allocated in *raw */
 static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw)
 {
-    MPI_Aint extent, true_lb, true_extent;
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPI_Aint shift, size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &shift, &size);
 
-    MPI_Aint shift = true_lb;
-    if (count > 1 && extent < 0) {
-        shift -= (-extent) * (count - 1);
-    }
-
-    void *host_buf = MPIR_alloc_buffer(count, datatype);
-    *raw = (char *) host_buf + shift;
-    return host_buf;
+    *raw = MPL_malloc(size, MPL_MEM_OTHER);
+    MPIR_Assert(*raw);
+    return (char *) *raw - shift;
 }
 
 /* Fills bufs with the buffers this rank uses. Returns false for the collectives it doesn't

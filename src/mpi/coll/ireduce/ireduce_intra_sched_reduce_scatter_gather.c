@@ -41,7 +41,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     int rem, dst, newrank, newdst, mask, send_idx, recv_idx, last_idx;
     int newroot, newdst_tree_root, newroot_tree_root;
     void *tmp_buf = NULL;
-    MPI_Aint true_lb, true_extent, extent;
+    MPI_Aint extent;
     MPIR_CHKLMEM_DECL();
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -54,13 +54,14 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
 #endif /* HAVE_ERROR_CHECKING */
 
     /* Create a temporary buffer */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    tmp_buf = MPIR_Sched_alloc_state(s, buf_size);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* get nearest power-of-two less than or equal to comm_size */
     pof2 = MPL_pof2(comm_size);
@@ -74,9 +75,9 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     /* If I'm not the root, then my recvbuf may not be valid, therefore
      * I have to allocate a temporary one */
     if (rank != root) {
-        recvbuf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+        recvbuf = MPIR_Sched_alloc_state(s, buf_size);
         MPIR_ERR_CHKANDJUMP(!recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        recvbuf = (void *) ((char *) recvbuf - true_lb);
+        recvbuf = (void *) ((char *) recvbuf - buf_shift);
     }
 
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {

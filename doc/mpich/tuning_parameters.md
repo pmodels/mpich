@@ -241,13 +241,6 @@ the algorithm). If the corresponding CVAR to set the value of a given
 parameter is not used, a default value will be used, as documented in
 Table II.
 
-To use the same algorithm for both, blocking and non-blocking versions
-of the collective, set `MPIR_CVAR_<collname>_DEVICE_COLLECTIVE=0`. In
-this case, both blocking and non-blocking collectives, e.g. BCAST and
-IBCAST, will use the same blocking algorithm. Notice that if
-`MPIR_CVAR_<collname>_DEVICE_COLLECTIVE` is set to 0, compositions
-(Section 2.2) are disabled.
-
 #### Table II: Algorithms available for each blocking collective operation
 
 ```
@@ -381,9 +374,6 @@ A blocking collective, such as BCAST can use non-blocking algorithms
 if the CVAR `MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb`. This CVAR transforms
 a BCAST call into IBCAST followed by wait. In this case, the user can
 select any of the non-blocking algorithms for BCAST.
-
-To disable composition while using these algorithms, set
-`MPIR_CVAR_*collname*_DEVICE_COLLECTIVE=0>`.
 
 Please refer to Section 2.3 for the CVARs related to topology-aware
 Ireduce.

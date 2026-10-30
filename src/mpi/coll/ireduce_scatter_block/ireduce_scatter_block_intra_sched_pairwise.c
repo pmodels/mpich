@@ -13,7 +13,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    MPI_Aint extent;
     MPI_Aint *disps;
     void *tmp_recvbuf;
     int src, dst;
@@ -22,7 +22,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -48,10 +47,12 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
     }
 
     /* allocate temporary buffer to store incoming data */
-    tmp_recvbuf = MPIR_Sched_alloc_state(s, recvcount * (MPL_MAX(extent, true_extent)) + 1);
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, recvcount, &buf_shift, &buf_size);
+    tmp_recvbuf = MPIR_Sched_alloc_state(s, buf_size + 1);
     MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* adjust for potential negative lower bound in datatype */
-    tmp_recvbuf = (void *) ((char *) tmp_recvbuf - true_lb);
+    tmp_recvbuf = (void *) ((char *) tmp_recvbuf - buf_shift);
 
     for (i = 1; i < comm_size; i++) {
         src = (rank - i + comm_size) % comm_size;

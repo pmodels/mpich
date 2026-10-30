@@ -11,7 +11,6 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
-    MPI_Aint true_lb, true_extent, extent;
     MPIR_CHKLMEM_DECL();
 
 #ifdef HAVE_ERROR_CHECKING
@@ -25,12 +24,11 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     /* Create a temporary buffer on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
 
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPIR_Datatype_get_extent_macro(datatype, extent);
-
-        MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
+        MPI_Aint buf_shift, buf_size;
+        MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
         /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+        tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
     }
 
     /* do the intranode reduce on all nodes other than the root's node */

@@ -636,7 +636,7 @@ static void allred_stream_cleanup_cb(void *data)
 {
     struct allreduce_data *p = data;
 
-    MPIR_gpu_host_free(p->host_recvbuf, p->count, p->datatype);
+    MPIR_free_buffer(p->host_recvbuf, p->count, p->datatype);
 
     MPIR_Comm_release(p->comm_ptr);
     MPL_free(p->tmp_buf);

@@ -568,6 +568,40 @@ void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, i
         }                                                                      \
     } while (0)
 
+/* The bytes that count elements of datatype span. Element i lies at
+ * buf + i * extent + [true_lb, true_lb + true_extent), and extent may be negative.
+ * A temporary buffer is allocated with *size bytes, and used as (char *) ptr - *shift. */
+MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_get_buffer_span(MPI_Datatype datatype,
+                                                            MPI_Aint count,
+                                                            MPI_Aint * shift, MPI_Aint * size)
+{
+    MPI_Aint extent, true_lb, true_extent;
+    if (HANDLE_IS_BUILTIN(datatype)) {
+        extent = MPIR_Datatype_get_basic_size(datatype);
+        true_lb = 0;
+        true_extent = extent;
+    } else {
+        MPIR_Datatype *dtp = NULL;
+        MPIR_Datatype_get_ptr(datatype, dtp);
+        MPIR_Assert(dtp);
+        extent = dtp->extent;
+        true_lb = dtp->true_lb;
+        true_extent = dtp->true_ub - dtp->true_lb;
+    }
+
+    *shift = true_lb;
+    *size = true_extent;
+    if (count > 1) {
+        if (extent >= 0) {
+            *size += extent * (count - 1);
+        } else {
+            /* elements 1 to count-1 lie below element 0 */
+            *size += (-extent) * (count - 1);
+            *shift += extent * (count - 1);
+        }
+    }
+}
+
 #define MPIR_Datatype_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
 
 /* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type

@@ -50,7 +50,6 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
     int mask, dst, is_commutative;
-    MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPIR_CHKLMEM_DECL();
 
@@ -59,19 +58,19 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* need to allocate temporary buffer to store partial scan */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_CHKLMEM_MALLOC(partial_scan, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    MPIR_CHKLMEM_MALLOC(partial_scan, buf_size);
 
     /* adjust for potential negative lower bound in datatype */
-    partial_scan = (void *) ((char *) partial_scan - true_lb);
+    partial_scan = (void *) ((char *) partial_scan - buf_shift);
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
+    MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* Since this is an inclusive scan, copy local contribution into
      * recvbuf. */

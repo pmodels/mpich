@@ -18,7 +18,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                        MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    MPI_Aint extent;
     MPI_Aint *disps;
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;
@@ -28,7 +28,6 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
 
 #ifdef HAVE_ERROR_CHECKING
@@ -63,9 +62,11 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
     }
 
     /* allocate temporary buffer to store incoming data */
-    MPIR_CHKLMEM_MALLOC(tmp_recvbuf, recvcounts[rank] * (MPL_MAX(true_extent, extent)) + 1);
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, recvcounts[rank], &buf_shift, &buf_size);
+    MPIR_CHKLMEM_MALLOC(tmp_recvbuf, buf_size + 1);
     /* adjust for potential negative lower bound in datatype */
-    tmp_recvbuf = (void *) ((char *) tmp_recvbuf - true_lb);
+    tmp_recvbuf = (void *) ((char *) tmp_recvbuf - buf_shift);
 
     for (i = 1; i < comm_size; i++) {
         src = (rank - i + comm_size) % comm_size;

@@ -48,19 +48,20 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mask, dst, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
-    MPI_Aint true_extent, true_lb, extent;
+    MPI_Aint extent;
     void *tmp_buf;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {

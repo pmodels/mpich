@@ -12,7 +12,6 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
     int mpi_errno = MPI_SUCCESS;
     int pof2, rem, comm_size, is_commutative, rank;
     int newrank, mask, newdst, dst;
-    MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -20,14 +19,14 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    tmp_buf = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    tmp_buf = MPIR_Sched_alloc_state(s, buf_size);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {

@@ -48,22 +48,17 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
     MPIR_CHKLMEM_MALLOC(reqs, (2 * (k - 1) * sizeof(MPIR_Request *)));
 
     /* need to allocate temporary buffer to store incoming data */
-    MPI_Aint true_extent, true_lb, extent;
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPI_Aint single_size = extent * count;
-    if (extent > true_extent) {
-        single_size -= (extent - true_extent);
-        /* prevent alignment problem */
-        if (single_size % MAX_ALIGNMENT) {
-            single_size += MAX_ALIGNMENT - single_size % MAX_ALIGNMENT;
-        }
+    MPI_Aint buf_shift, single_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &single_size);
+    /* prevent alignment problem */
+    if (single_size % MAX_ALIGNMENT) {
+        single_size += MAX_ALIGNMENT - single_size % MAX_ALIGNMENT;
     }
 
     MPIR_CHKLMEM_MALLOC(tmp_buf, (k - 1) * single_size);
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
 
 
     /* copy local data into recvbuf */

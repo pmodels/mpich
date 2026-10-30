@@ -52,6 +52,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
     extent = MPL_MAX(extent, true_extent);
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE && count > 0) {
@@ -134,17 +136,17 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             nbr_buffer = (void **) MPL_malloc(sizeof(void *) * (k - 1), MPL_MEM_COLL);
             MPIR_ERR_CHKANDJUMP(!nbr_buffer, mpi_errno, MPI_ERR_OTHER, "**nomem");
             for (j = 0; j < (k - 1); j++) {
-                nbr_buffer[j] = MPL_malloc(count * extent, MPL_MEM_COLL);
+                nbr_buffer[j] = MPL_malloc(buf_size, MPL_MEM_COLL);
                 MPIR_ERR_CHKANDJUMP(!nbr_buffer[j], mpi_errno, MPI_ERR_OTHER, "**nomem");
-                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] - true_lb);
+                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] - buf_shift);
             }
         } else {        /* create buffers for 2 phases */
             nbr_buffer = (void **) MPL_malloc(sizeof(void *) * 2 * (k - 1), MPL_MEM_COLL);
             MPIR_ERR_CHKANDJUMP(!nbr_buffer, mpi_errno, MPI_ERR_OTHER, "**nomem");
             for (j = 0; j < 2 * (k - 1); j++) {
-                nbr_buffer[j] = MPL_malloc(count * extent, MPL_MEM_COLL);
+                nbr_buffer[j] = MPL_malloc(buf_size, MPL_MEM_COLL);
                 MPIR_ERR_CHKANDJUMP(!nbr_buffer[j], mpi_errno, MPI_ERR_OTHER, "**nomem");
-                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] - true_lb);
+                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] - buf_shift);
             }
         }
     }
@@ -267,12 +269,12 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     if (in_step2 && (k > MAX_RADIX || count * extent > 8192)) {
         if (single_phase_recv == true) {
             for (j = 0; j < (k - 1); j++) {
-                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] + true_lb);
+                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] + buf_shift);
                 MPL_free(nbr_buffer[j]);
             }
         } else {
             for (j = 0; j < 2 * (k - 1); j++) {
-                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] + true_lb);
+                nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] + buf_shift);
                 MPL_free(nbr_buffer[j]);
             }
         }

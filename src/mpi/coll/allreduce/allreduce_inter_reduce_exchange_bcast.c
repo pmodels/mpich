@@ -18,17 +18,16 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
                                                MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL();
 
     if (comm_ptr->rank == 0) {
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPIR_Datatype_get_extent_macro(datatype, extent);
-        MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
+        MPI_Aint buf_shift, buf_size;
+        MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, buf_size);
         /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+        tmp_buf = (void *) ((char *) tmp_buf - buf_shift);
     }
 
     /* Get the local intracommunicator */

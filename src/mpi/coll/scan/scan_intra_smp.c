@@ -16,25 +16,22 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
     MPI_Status status;
     void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
-    MPI_Aint true_lb, true_extent, extent;
     int noneed = 1;             /* noneed=1 means no need to bcast tempbuf and
                                  * reduce tempbuf & recvbuf */
 
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-
-    MPIR_CHKLMEM_MALLOC(tempbuf, count * (MPL_MAX(extent, true_extent)));
-    tempbuf = (void *) ((char *) tempbuf - true_lb);
+    MPI_Aint buf_shift, buf_size;
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    MPIR_CHKLMEM_MALLOC(tempbuf, buf_size);
+    tempbuf = (void *) ((char *) tempbuf - buf_shift);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_CHKLMEM_MALLOC(prefulldata, count * (MPL_MAX(extent, true_extent)));
-        prefulldata = (void *) ((char *) prefulldata - true_lb);
+        MPIR_CHKLMEM_MALLOC(prefulldata, buf_size);
+        prefulldata = (void *) ((char *) prefulldata - buf_shift);
 
         if (comm_ptr->node_comm != NULL) {
-            MPIR_CHKLMEM_MALLOC(localfulldata, count * (MPL_MAX(extent, true_extent)));
-            localfulldata = (void *) ((char *) localfulldata - true_lb);
+            MPIR_CHKLMEM_MALLOC(localfulldata, buf_size);
+            localfulldata = (void *) ((char *) localfulldata - buf_shift);
         }
     }
 
