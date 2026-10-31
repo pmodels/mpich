@@ -65,28 +65,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint c
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     MPIDI_IPCI_NO_IPC_EXIT;
 
+    int oversized = false;
     int dt_contig;
     MPIR_Datatype_is_contig(datatype, &dt_contig);
     if (!dt_contig) {
         int flattened_sz;
         void *flattened_dt;
         MPIR_Datatype_get_flattened(datatype, &flattened_dt, &flattened_sz);
-        if (msg_hdr_sz + sizeof(MPIDI_IPC_hdr) + flattened_sz > MPIDI_POSIX_am_hdr_max_sz()) {
-            goto fn_exit;
-        }
+        oversized = msg_hdr_sz + sizeof(MPIDI_IPC_hdr) + flattened_sz > MPIDI_POSIX_am_hdr_max_sz();
     }
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, ipc_attr);
     MPIR_ERR_CHECK(mpi_errno);
-    if (ipc_attr->ipc_type == MPIDI_IPCI_TYPE__SKIP) {
-        /* GPU IPC is not supported but it is still a device memory,
-         * we can't do shared memory IPC either, so skip to fn_exit. */
-        goto fn_exit;
-    }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__NONE) {
+        if (oversized) {
+            ipc_attr->ipc_type = MPIDI_IPCI_TYPE__SKIP;
+        }
         goto fn_exit;
     }
 #endif
+    if (oversized) {
+        goto fn_exit;
+    }
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     mpi_errno = MPIDI_XPMEM_get_ipc_attr(buf, count, datatype, ipc_attr);
     MPIR_ERR_CHECK(mpi_errno);
