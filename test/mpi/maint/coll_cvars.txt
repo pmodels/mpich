@@ -85,6 +85,7 @@ tests:
         intra-blocking:
             bcasttest 10
             bcastzerotype 5
+            bcast_noncontig 4
         persistent:
             p_bcast 4
             p_bcast2 8

@@ -35,6 +35,7 @@ noinst_PROGRAMS =      \
     alltoallw_zeros    \
     bcasttest          \
     bcastzerotype      \
+    bcast_noncontig    \
     coll2              \
     gatherv            \
     coll4              \

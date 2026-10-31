@@ -57,6 +57,9 @@ cvars:
 #include "circ_graph.h"
 
 MPIDU_genq_private_pool_t MPIR_cga_chunk_pool;
+/* Cell size of MPIR_cga_chunk_pool, 0 if there is no pool. The queues chunk with this size
+ * rather than the CVAR, which can change after init, so that every chunk fits in a cell. */
+int MPIR_cga_chunk_pool_cell_size;
 
 static void *host_alloc_registered(uintptr_t size);
 static void host_free_registered(void *ptr);
@@ -73,6 +76,7 @@ int MPIR_cga_init(void)
                                                    host_alloc_registered, host_free_registered,
                                                    &MPIR_cga_chunk_pool);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_cga_chunk_pool_cell_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
     }
 
   fn_exit:
@@ -85,8 +89,9 @@ int MPIR_cga_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE > 0) {
+    if (MPIR_cga_chunk_pool_cell_size > 0) {
         MPIDU_genq_private_pool_destroy(MPIR_cga_chunk_pool);
+        MPIR_cga_chunk_pool_cell_size = 0;
     }
 
     return mpi_errno;
