@@ -57,7 +57,7 @@ restrictions:
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
-    avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
+    msg_size(thresh):       MPIR_Csel_msg_size
     MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
 
 general:
@@ -85,7 +85,16 @@ bcast-intra:
   indices must not change and new restrictions go at the end.
   `name(thresh): func` under `conditions:` is a query, `int func(coll_sig)`,
   and the condition is true when the value is at most the threshold; it is
-  for JSON only. A trailing `#if ...` makes a *conditional condition*: the
+  for JSON only. `msg_size` is the message size in bytes, the same on every
+  rank of the call: the buffer of bcast, reduce, allreduce, scan and exscan,
+  one rank's block of allgather, alltoall, gather, scatter and
+  reduce_scatter_block, and the mean block of allgatherv and reduce_scatter,
+  each read from counts that are valid on the rank (also with
+  `MPI_IN_PLACE`). The v/w collectives whose ranks know only their own
+  counts, barrier, the neighborhood collectives, and the intercommunicator
+  allgatherv and reduce_scatter (whose two groups hold different
+  `recvcounts`) have none, and `MPIR_Csel_msg_size` asserts for them. A
+  trailing `#if ...` makes a *conditional condition*: the
   generated wrapper calls `func` only under that macro guard and returns
   false otherwise.
 - **General algorithms** work on any `coll_type`. `MPIR_Coll_nb` runs the
@@ -174,8 +183,8 @@ The file is a dictionary of named subtrees:
         "MPIDI_CH4_release_gather": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
         "comm_size<8":              { "algorithm=MPIR_Bcast_intra_binomial": {} },
         "pof2": {
-            "avg_msg_size<=12288":  { "algorithm=MPIR_Bcast_intra_binomial": {} },
-            "avg_msg_size<=524288": { "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather": {} },
+            "msg_size<=12288":  { "algorithm=MPIR_Bcast_intra_binomial": {} },
+            "msg_size<=524288": { "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather": {} },
             "any":                  { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} }
         },
         "any": { ... }
@@ -225,11 +234,11 @@ its shared memory exists).
 ```json
 {
     "name=bcast-intra-auto": "dispatch=bcast-intra(0x820)",
-    "name=bcast-intra-0":    { "avg_msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
+    "name=bcast-intra-0":    { "msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
                                "any": { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} } },
-    "name=bcast-intra-800":  { "avg_msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
+    "name=bcast-intra-800":  { "msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
                                "any": "call=bcast-intra-0" },
-    "name=bcast-intra-20":   { "avg_msg_size(65536)": "call=bcast-intra-0",
+    "name=bcast-intra-20":   { "msg_size(65536)": "call=bcast-intra-0",
                                "any": { "algorithm=MPIR_Bcast_intra_smp": {} } }
 }
 ```

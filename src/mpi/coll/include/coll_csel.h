@@ -91,133 +91,103 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Csel_ppn(MPIR_Csel_coll_sig_s * coll_sig)
     case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME: \
     case MPIR_CSEL_COLL_TYPE__INTER_I ## NAME
 
-MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_avg_msg_size(MPIR_Csel_coll_sig_s * coll_sig)
+#define COLL_TYPE_INTRA_CASE(NAME) \
+    case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
+    case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME
+
+/* the mean of a recvcounts array, at least 1 when any count is nonzero */
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_mean_count(const MPI_Aint * counts, int n)
 {
-    MPI_Aint msgsize = 0;
-    switch (coll_sig->coll_type) {
-          COLL_TYPE_ALL_CASE(ALLREDUCE):
-            MPIR_Datatype_get_size_macro(coll_sig->u.allreduce.datatype, msgsize);
-            msgsize *= coll_sig->u.allreduce.count;
-            break;
-          COLL_TYPE_ALL_CASE(BCAST):
-            MPIR_Datatype_get_size_macro(coll_sig->u.bcast.datatype, msgsize);
-            msgsize *= coll_sig->u.bcast.count;
-            break;
-          COLL_TYPE_ALL_CASE(REDUCE):
-            MPIR_Datatype_get_size_macro(coll_sig->u.reduce.datatype, msgsize);
-            msgsize *= coll_sig->u.reduce.count;
-            break;
-          COLL_TYPE_ALL_CASE(ALLTOALL):
-            MPIR_Datatype_get_size_macro(coll_sig->u.alltoall.sendtype, msgsize);
-            msgsize *= coll_sig->u.alltoall.sendcount;
-            break;
-        default:
-            fprintf(stderr, "avg_msg_size not defined for coll_type %d\n", coll_sig->coll_type);
-            MPIR_Assert(0);
-            break;
+    MPI_Aint sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += counts[i];
     }
-    return msgsize;
+    return (sum + n - 1) / n;
 }
 
-MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_total_msg_size(MPIR_Csel_coll_sig_s * coll_sig)
+/* The message size in bytes. Only applicable to coll_types that every rank can have the same
+ * size. Asserts for barrier, gatherv, scatterv, alltoallv, alltoallw, the neighborhood
+ * collectives, and the intercommunicator allgatherv and reduce_scatter (the two groups hold
+ * different recvcounts). */
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Csel_msg_size(MPIR_Csel_coll_sig_s * coll_sig)
 {
-    MPI_Aint total_bytes = 0;
+    MPI_Datatype datatype = MPI_DATATYPE_NULL;
+    MPI_Aint count = 0, type_size;
     int comm_size = coll_sig->comm_ptr->local_size;
 
     switch (coll_sig->coll_type) {
           COLL_TYPE_ALL_CASE(ALLREDUCE):
-            MPIR_Datatype_get_size_macro(coll_sig->u.allreduce.datatype, total_bytes);
-            total_bytes *= coll_sig->u.allreduce.count * comm_size;
+            datatype = coll_sig->u.allreduce.datatype;
+            count = coll_sig->u.allreduce.count;
             break;
           COLL_TYPE_ALL_CASE(BCAST):
-            MPIR_Datatype_get_size_macro(coll_sig->u.bcast.datatype, total_bytes);
-            total_bytes *= coll_sig->u.bcast.count * comm_size;
+            datatype = coll_sig->u.bcast.datatype;
+            count = coll_sig->u.bcast.count;
             break;
           COLL_TYPE_ALL_CASE(REDUCE):
-            MPIR_Datatype_get_size_macro(coll_sig->u.reduce.datatype, total_bytes);
-            total_bytes *= coll_sig->u.reduce.count * comm_size;
+            datatype = coll_sig->u.reduce.datatype;
+            count = coll_sig->u.reduce.count;
             break;
           COLL_TYPE_ALL_CASE(ALLTOALL):
-            MPIR_Datatype_get_size_macro(coll_sig->u.alltoall.sendtype, total_bytes);
-            total_bytes *= coll_sig->u.alltoall.sendcount * comm_size;
-            break;
-          COLL_TYPE_ALL_CASE(ALLTOALLV):
-            MPIR_Datatype_get_size_macro(coll_sig->u.alltoallv.sendtype, total_bytes);
-            {
-                MPI_Aint count = 0;
-                for (int i = 0; i < comm_size; i++) {
-                    count += coll_sig->u.alltoallv.sendcounts[i];
-                }
-                total_bytes *= count;
-            }
-            break;
-          COLL_TYPE_ALL_CASE(ALLTOALLW):
-            for (int i = 0; i < comm_size; i++) {
-                MPI_Aint typesize;
-                MPIR_Datatype_get_size_macro(coll_sig->u.alltoallw.sendtypes[i], typesize);
-                total_bytes += (coll_sig->u.alltoallw.sendcounts[i] * typesize);
-            }
+            datatype = coll_sig->u.alltoall.recvtype;
+            count = coll_sig->u.alltoall.recvcount;
             break;
           COLL_TYPE_ALL_CASE(ALLGATHER):
-            MPIR_Datatype_get_size_macro(coll_sig->u.allgather.recvtype, total_bytes);
-            total_bytes *= coll_sig->u.allgather.recvcount * comm_size;
+            /* the receive side is valid also with MPI_IN_PLACE */
+            datatype = coll_sig->u.allgather.recvtype;
+            count = coll_sig->u.allgather.recvcount;
             break;
-          COLL_TYPE_ALL_CASE(ALLGATHERV):
-            MPIR_Datatype_get_size_macro(coll_sig->u.allgatherv.recvtype, total_bytes);
-            {
-                MPI_Aint count = 0;
-                for (int i = 0; i < comm_size; i++) {
-                    count += coll_sig->u.allgatherv.recvcounts[i];
-                }
-                total_bytes *= count;
-            }
+          COLL_TYPE_INTRA_CASE(ALLGATHERV):
+            datatype = coll_sig->u.allgatherv.recvtype;
+            count = MPIR_Csel_mean_count(coll_sig->u.allgatherv.recvcounts, comm_size);
             break;
           COLL_TYPE_ALL_CASE(GATHER):
-            if (coll_sig->u.gather.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_sig->u.gather.recvtype, total_bytes);
-                /* use remote size for intercomm root */
-                if (coll_sig->comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes = coll_sig->u.gather.recvcount * (coll_sig->comm_ptr->remote_size);
-                else
-                    total_bytes = coll_sig->u.gather.recvcount * comm_size;
+            /* the receive side is valid only at the root, the send side elsewhere and at an
+             * intercommunicator's root (MPI_ROOT), except at a root using MPI_IN_PLACE */
+            if (coll_sig->u.gather.root == MPI_ROOT ||
+                (coll_sig->comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                 coll_sig->u.gather.root == coll_sig->comm_ptr->rank)) {
+                datatype = coll_sig->u.gather.recvtype;
+                count = coll_sig->u.gather.recvcount;
             } else {
-                MPIR_Datatype_get_size_macro(coll_sig->u.gather.sendtype, total_bytes);
-                total_bytes = coll_sig->u.gather.sendcount * comm_size;
+                datatype = coll_sig->u.gather.sendtype;
+                count = coll_sig->u.gather.sendcount;
             }
             break;
           COLL_TYPE_ALL_CASE(SCATTER):
-            if (coll_sig->u.scatter.root == MPI_ROOT) {
-                MPIR_Datatype_get_size_macro(coll_sig->u.scatter.sendtype, total_bytes);
-                /* use remote size for intercomm root */
-                if (coll_sig->comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-                    total_bytes = coll_sig->u.scatter.sendcount * (coll_sig->comm_ptr->remote_size);
-                else
-                    total_bytes = coll_sig->u.scatter.sendcount * comm_size;
+            if (coll_sig->u.scatter.root == MPI_ROOT ||
+                (coll_sig->comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                 coll_sig->u.scatter.root == coll_sig->comm_ptr->rank)) {
+                datatype = coll_sig->u.scatter.sendtype;
+                count = coll_sig->u.scatter.sendcount;
             } else {
-                MPIR_Datatype_get_size_macro(coll_sig->u.scatter.recvtype, total_bytes);
-                total_bytes = coll_sig->u.scatter.recvcount * comm_size;
+                datatype = coll_sig->u.scatter.recvtype;
+                count = coll_sig->u.scatter.recvcount;
             }
             break;
-          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
-            MPIR_Datatype_get_size_macro(coll_sig->u.reduce_scatter.datatype, total_bytes);
-            {
-                MPI_Aint count = 0;
-                for (int i = 0; i < comm_size; i++) {
-                    count += coll_sig->u.reduce_scatter.recvcounts[i];
-                }
-                total_bytes *= count;
-            }
+          COLL_TYPE_INTRA_CASE(REDUCE_SCATTER):
+            datatype = coll_sig->u.reduce_scatter.datatype;
+            count = MPIR_Csel_mean_count(coll_sig->u.reduce_scatter.recvcounts, comm_size);
             break;
           COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
-            MPIR_Datatype_get_size_macro(coll_sig->u.reduce_scatter_block.datatype, total_bytes);
-            total_bytes *= coll_sig->u.reduce_scatter_block.recvcount * comm_size;
+            datatype = coll_sig->u.reduce_scatter_block.datatype;
+            count = coll_sig->u.reduce_scatter_block.recvcount;
+            break;
+          COLL_TYPE_ALL_CASE(SCAN):
+            datatype = coll_sig->u.scan.datatype;
+            count = coll_sig->u.scan.count;
+            break;
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            datatype = coll_sig->u.exscan.datatype;
+            count = coll_sig->u.exscan.count;
             break;
         default:
             MPIR_Assert(0);
-            break;
+            return 0;
     }
 
-    return total_bytes;
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    return type_size * count;
 }
 
 /* boolean csel checker_functions */

@@ -51,10 +51,6 @@ struct coll_bufs {
     struct coll_buf bufs[MAX_COLL_BUFS];
 };
 
-#define COLL_TYPE_INTRA_CASE(NAME) \
-    case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
-    case MPIR_CSEL_COLL_TYPE__INTRA_I ## NAME
-
 /* a swapped buffer: the user buffer, the host buffer, and the host buffer as allocated */
 struct swap_buf {
     void *user;
