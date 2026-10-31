@@ -182,7 +182,7 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
 {
     int mpi_errno;
 
-    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    int chunk_size = MPIR_cga_chunk_pool_cell_size;
     int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 to avoid circular dependency issues within a round */
@@ -214,7 +214,7 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
 {
     int mpi_errno;
 
-    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    int chunk_size = MPIR_cga_chunk_pool_cell_size;
     int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 to avoid circular dependency issues within a round */
@@ -249,7 +249,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int chunk_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
+    int chunk_size = MPIR_cga_chunk_pool_cell_size;
     int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 */
@@ -260,18 +260,17 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
+    /* Reduction chunks have to contain whole datatypes. Round down so that a chunk fits in a
+     * pool cell. If not even one datatype fits, don't chunk (chunk_size = 0). */
     MPI_Aint num_chunks, chunk_count, last_chunk_count, last_chunk_size;
-    if (chunk_size == 0) {
+    chunk_count = (chunk_size > 0 && type_size > 0) ? chunk_size / type_size : 0;
+    if (chunk_count == 0) {
         num_chunks = 1;
         chunk_count = count;
         last_chunk_count = count;
+        chunk_size = 0;
     } else {
-        /* reduction chunks have to contain whole datatypes */
-        chunk_count = chunk_size / type_size;
-        if (chunk_size > 0 && chunk_size % type_size > 0) {
-            chunk_count++;
-        }
-
+        chunk_size = chunk_count * type_size;
         num_chunks = count / chunk_count;
         last_chunk_count = count % chunk_count;
         if (last_chunk_count == 0) {
@@ -280,7 +279,6 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
             num_chunks++;
         }
     }
-    chunk_size = chunk_count * type_size;
     last_chunk_size = last_chunk_count * type_size;
 
     MPI_Aint extent, true_lb, true_extent;
@@ -301,7 +299,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     queue->u.reduce.chunk_extent = chunk_count * extent;
     if (!queue->need_pack) {
         /* datatype must be contig, no pack_buf, need tmpbuf to receive chunk data */
-        queue->u.reduce.tmpbuf_size = chunk_size;
+        queue->u.reduce.tmpbuf_size = chunk_count * type_size;
     } else if (type_size == true_extent) {
         /* datatype is contig, skip tmpbuf, we can do reduce from pack_buf */
         queue->u.reduce.tmpbuf_size = 0;
