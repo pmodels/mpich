@@ -94,7 +94,13 @@ MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
     .extra: threadcomm
 { -- early_return --
-    if (count == 0 || MPIR_is_self_comm(comm_ptr)) {
+    /* An empty signature (count == 0 or a zero-size type) must give the same
+     * answer on every rank, since the signatures may differ between ranks. */
+    MPI_Aint type_size = 0;
+    if (count != 0) {
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+    }
+    if (count == 0 || type_size == 0 || MPIR_is_self_comm(comm_ptr)) {
         goto fn_exit;
     }
 }
@@ -211,7 +217,13 @@ MPI_Ibarrier:
 MPI_Ibcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
 { -- early_return --
-    if (count == 0 || MPIR_is_self_comm(comm_ptr)) {
+    /* An empty signature (count == 0 or a zero-size type) must give the same
+     * answer on every rank, since the signatures may differ between ranks. */
+    MPI_Aint type_size = 0;
+    if (count != 0) {
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+    }
+    if (count == 0 || type_size == 0 || MPIR_is_self_comm(comm_ptr)) {
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
         goto fn_exit;
