@@ -38,7 +38,9 @@ int MPII_circ_graph_free(MPII_circ_graph * cga);
 /* runtime request queue */
 
 /* We assume there are n chunks in a contiguous buf with equal chunk_size except the last chunk.
- * This may get relaxed (extended) later */
+ * This may get relaxed (extended) later.
+ * chunk_size is 0 when there is no chunking: a single chunk of last_chunk_size bytes, the whole
+ * message. Otherwise no chunk is larger than a cell of MPIR_cga_chunk_pool. */
 
 enum MPII_cga_type {
     MPII_CGA_BCAST,
@@ -124,6 +126,7 @@ typedef struct {
 } MPII_cga_request_queue;       /* note: cga refers to "circulant graph algorithm" */
 
 extern MPIDU_genq_private_pool_t MPIR_cga_chunk_pool;
+extern int MPIR_cga_chunk_pool_cell_size;
 
 int MPIR_cga_init(void);
 int MPIR_cga_finalize(void);
