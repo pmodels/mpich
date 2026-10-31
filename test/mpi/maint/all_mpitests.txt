@@ -66,6 +66,7 @@ coll/alltoallw2
 coll/alltoallw_zeros
 coll/bcasttest
 coll/bcastzerotype
+coll/bcast_noncontig
 coll/coll2
 coll/coll4
 coll/coll5
