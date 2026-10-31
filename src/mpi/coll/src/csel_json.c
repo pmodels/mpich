@@ -85,12 +85,17 @@ int MPII_Csel_json_get_int(const MPII_Csel_json_s * node, int *val_out)
     return MPI_SUCCESS;
 }
 
+/* also 0 and 1: MPI_T reports a boolean CVAR as an MPI_INT, so a tool that
+ * writes a CVAR's value read through MPI_T can't tell it from an integer */
 int MPII_Csel_json_get_bool(const MPII_Csel_json_s * node, bool * val_out)
 {
-    if (node->type != MPII_CSEL_JSON_BOOL) {
-        return MPII_Csel_json_error(node, "expect true or false");
+    if (node->type == MPII_CSEL_JSON_BOOL) {
+        *val_out = node->u.bval;
+    } else if (node->type == MPII_CSEL_JSON_INT && (node->u.ival == 0 || node->u.ival == 1)) {
+        *val_out = node->u.ival;
+    } else {
+        return MPII_Csel_json_error(node, "expect true, false, 0 or 1");
     }
-    *val_out = node->u.bval;
     return MPI_SUCCESS;
 }
 
