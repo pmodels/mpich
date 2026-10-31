@@ -40,7 +40,9 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
         char *sb;
 
         sb = ((char *) sendbuf) + sdispls[k];
-        mpi_errno = MPIR_Sched_send(sb, sendcounts[k], sendtypes[k], dsts[k], comm_ptr, s);
+        /* the type of an empty entry is not held by the schedule and may not be valid anymore */
+        MPI_Datatype dt = (sendcounts[k] > 0) ? sendtypes[k] : MPIR_BYTE_INTERNAL;
+        mpi_errno = MPIR_Sched_send(sb, sendcounts[k], dt, dsts[k], comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -55,7 +57,8 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
             l = i;
         }
         char *rb = ((char *) recvbuf) + rdispls[l];
-        mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtypes[l], srcs[l], comm_ptr, s);
+        MPI_Datatype dt = (recvcounts[l] > 0) ? recvtypes[l] : MPIR_BYTE_INTERNAL;
+        mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], dt, srcs[l], comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
