@@ -290,8 +290,11 @@ TESTS:
     cmd: printf '{"k": 2,\n  "n": "2"}' | ./t get int
     expect_err: **colljson 2 3 expect an integer
 
-    cmd: printf '{"a": 1}' | ./t get bool
-    expect_err: **colljson 1 2 expect true or false
+    cmd: printf '{"a": 1, "b": 0}' | ./t get bool
+    expect: a=1 b=0
+
+    cmd: printf '{"a": 2}' | ./t get bool
+    expect_err: **colljson 1 2 expect true, false, 0 or 1
 
     cmd: printf '{"t": 1}' | ./t get enum
     expect_err: **colljson 1 2 expect a string
