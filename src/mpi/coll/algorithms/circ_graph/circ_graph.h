@@ -73,6 +73,7 @@ typedef struct {
     MPI_Aint buf_extent;        /* count * extent, needed by allgather */
 
     bool need_pack;
+    bool packbuf_from_pool;     /* pack buffers come from MPIR_cga_chunk_pool, else MPL_malloc */
     MPL_pointer_attr_t attr;
 
     enum MPII_cga_type coll_type;

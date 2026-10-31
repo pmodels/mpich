@@ -35,7 +35,8 @@ static void remove_pending_req_id(MPII_cga_request_queue * queue, int block, int
  */
 static void *get_persist_packbuf(MPII_cga_request_queue * queue, int block, int root);
 static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int root, void *packbuf);
-static int alloc_packbuf(void **packbuf_out);
+static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out);
+static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf);
 /* free buffers depend on where they are stored */
 static void clear_request(MPII_cga_request_queue * queue, int req_id);
 static void clear_pending(MPII_cga_request_queue * queue, int pending_id);
@@ -96,6 +97,11 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
 
     MPIR_GPU_query_pointer_attr(buf, &queue->attr);
     queue->need_pack = (!dt_contig || MPL_gpu_attr_is_dev(&queue->attr));
+
+    /* With chunking (chunk_size > 0) every chunk fits in a cell of the chunk pool. Without it
+     * (chunk_size == 0) there may be no pool, and the single chunk is the whole message,
+     * last_chunk_size bytes, so its pack buffer is allocated with MPL_malloc. */
+    queue->packbuf_from_pool = (chunk_size > 0);
 
     queue->comm = comm;
     queue->coll_attr = coll_attr;
@@ -886,11 +892,28 @@ static void add_persist_packbuf(MPII_cga_request_queue * queue, int block, int r
     queue->pending_blocks[pending_id].persist_packbuf = packbuf;
 }
 
-static int alloc_packbuf(void **packbuf_out)
+static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out)
 {
-    int mpi_errno;
-    mpi_errno = MPIDU_genq_private_pool_force_alloc_cell(MPIR_cga_chunk_pool, packbuf_out);
+    int mpi_errno = MPI_SUCCESS;
+    if (queue->packbuf_from_pool) {
+        mpi_errno = MPIDU_genq_private_pool_force_alloc_cell(MPIR_cga_chunk_pool, packbuf_out);
+    } else {
+        /* no chunking, the whole message; at least 1 byte, a NULL packbuf means none allocated */
+        *packbuf_out = MPL_malloc(MPL_MAX(queue->last_chunk_size, 1), MPL_MEM_BUFFER);
+        if (!*packbuf_out) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
+    }
     return mpi_errno;
+}
+
+static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf)
+{
+    if (queue->packbuf_from_pool) {
+        MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, packbuf);
+    } else {
+        MPL_free(packbuf);
+    }
 }
 
 static void clear_request(MPII_cga_request_queue * queue, int req_id)
@@ -898,7 +921,7 @@ static void clear_request(MPII_cga_request_queue * queue, int req_id)
 #define REQi queue->requests[req_id]
     if (queue->coll_type == MPII_CGA_REDUCE) {
         if (REQi.packbuf) {
-            MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, REQi.packbuf);
+            free_packbuf(queue, REQi.packbuf);
             REQi.packbuf = NULL;
         }
         if (REQi.tmpbuf) {
@@ -913,7 +936,7 @@ static void clear_pending(MPII_cga_request_queue * queue, int pending_id)
 {
 #define PENDING queue->pending_blocks[pending_id]
     if (PENDING.persist_packbuf) {
-        MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, PENDING.persist_packbuf);
+        free_packbuf(queue, PENDING.persist_packbuf);
         PENDING.persist_packbuf = NULL;
     }
 #undef PENDING
@@ -1042,7 +1065,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                 if (queue->need_pack) {
                     void *pack_buf = get_persist_packbuf(queue, block, root);
                     if (!pack_buf) {
-                        mpi_errno = alloc_packbuf(&pack_buf);
+                        mpi_errno = alloc_packbuf(queue, &pack_buf);
                         MPIR_ERR_CHECK(mpi_errno);
 
                         REQi.packbuf = pack_buf;
@@ -1076,7 +1099,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                     /* make sure all recvs are in order */
                     TEST_PENDING(check_pending_ops(queue, i, &flag));
                     void *pack_buf;
-                    mpi_errno = alloc_packbuf(&pack_buf);
+                    mpi_errno = alloc_packbuf(queue, &pack_buf);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     REQi.packbuf = pack_buf;
