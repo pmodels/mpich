@@ -322,11 +322,13 @@ int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig)
     goto fn_exit;
 }
 
-int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
+/* Run the algorithm that the user set with the algorithm CVAR of coll_sig->coll_type, else
+ * select from tree. Callers must not reach here twice with the same coll_type, or the CVAR
+ * would pick the same algorithm again. */
+static int run_cvar_or_tree(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s * tree)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* First check whether user has set an algorithm CVAR */
     int coll_type = coll_sig->coll_type;
     int cvar_val = *MPIR_Coll_cvar_table[coll_type];
     if (cvar_val) {
@@ -355,13 +357,18 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
         }
     }
 
-    mpi_errno = MPIR_Coll_run_tree(csel_tree_main, coll_sig);
+    mpi_errno = MPIR_Coll_run_tree(tree, coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    return run_cvar_or_tree(coll_sig, csel_tree_main);
 }
 
 /* run the auto tree, for general algorithms that continue the selection */
@@ -379,7 +386,10 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     MPIR_Assert(coll_sig->coll_type % 2 == 0);
     coll_sig->coll_type += 1;
 
-    mpi_errno = MPIR_Coll_run_auto(coll_sig);
+    /* The nonblocking form stands for the whole user call (same communicator and arguments),
+     * so its algorithm CVAR applies. It cannot recurse: nb is an algorithm of the blocking
+     * types only. */
+    mpi_errno = run_cvar_or_tree(coll_sig, csel_tree_auto);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Request *req;
