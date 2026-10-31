@@ -252,7 +252,7 @@ parameter's CVAR in `cvar_params`:
 | CVAR type | JSON value | Example |
 |---|---|---|
 | `int` | an integer | `"k": 4`, `"chunk_size": 8192` |
-| `boolean` | `true` or `false` | `"is_non_blocking": true` |
+| `boolean` | `true` or `false`, or `1` or `0` (MPI_T reports a boolean CVAR as an `int`) | `"is_non_blocking": true` |
 | `enum` | one of the CVAR's value names, as a string | `"tree_type": "knomial_1"`, `"ccl": "nccl"` |
 
 ```json
