@@ -36,6 +36,7 @@ static MPIR_Csel_node_s *csel_get_tree_by_idx(int idx);
 static void add_named_tree(const char *name, const MPII_Csel_json_s * obj);
 static void replace_named_tree(int idx, const MPII_Csel_json_s * obj);
 static int parse_named_trees(void);
+static int validate_csel_main_tree(void);
 static void free_tree(MPIR_Csel_node_s * node);
 
 static bool key_is_any(const char *ckey)
@@ -410,6 +411,9 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
     mpi_errno = parse_named_trees();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = validate_csel_main_tree();
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_fail:
     return mpi_errno;
 }
@@ -681,4 +685,117 @@ static int parse_named_trees(void)
         p->json_obj = NULL;
     }
     goto fn_exit;
+}
+
+static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_type, bool * seen);
+static bool has_msg_size(MPIR_Csel_coll_type_e coll_type);
+
+/* Check a loaded tuning file from the main tree. For now the only check is that msg_size is
+ * reached only by collectives that have one. */
+static int validate_csel_main_tree(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int n = utarray_len(csel_subtrees);
+    bool *seen = MPL_calloc((size_t) n * (MPIR_CSEL_NUM_COLL_TYPES + 1), sizeof(bool),
+                            MPL_MEM_COLL);
+    MPIR_ERR_CHKANDJUMP(!seen, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    seen[csel_main_idx * (MPIR_CSEL_NUM_COLL_TYPES + 1)] = true;
+    mpi_errno = validate_msg_size_node(csel_get_tree_by_idx(csel_main_idx), csel_main_idx, -1,
+                                       seen);
+
+  fn_fail:
+    MPL_free(seen);
+    return mpi_errno;
+}
+
+/* msg_size is defined only for some collectives (has_msg_size). Reject trees in which a
+ * collective without it reaches a msg_size condition: from the main tree, through "collective="
+ * nodes, "call=" and every subtree of a "dispatch=". seen marks (subtree, collective) pairs. */
+static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_type, bool * seen)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ntypes = MPIR_CSEL_NUM_COLL_TYPES + 1;  /* coll_type -1: no collective= node yet */
+
+    for (; node; node = node->failure) {
+        int next[2] = { -1, -1 };
+        switch (node->type) {
+            case CSEL_NODE_TYPE__CONTAINER:
+            case CSEL_NODE_TYPE__ERROR:
+                return MPI_SUCCESS;
+            case CSEL_NODE_TYPE__OPERATOR__CALL:
+                next[0] = node->u.call.idx;
+                break;
+            case CSEL_NODE_TYPE__OPERATOR__DISPATCH:
+                for (int c = 0; c < (1 << node->u.dispatch->nbits); c++) {
+                    int idx = node->u.dispatch->idx[c];
+                    if (!seen[idx * ntypes + coll_type + 1]) {
+                        seen[idx * ntypes + coll_type + 1] = true;
+                        mpi_errno = validate_msg_size_node(csel_get_tree_by_idx(idx), idx,
+                                                           coll_type, seen);
+                        MPIR_ERR_CHECK(mpi_errno);
+                    }
+                }
+                return MPI_SUCCESS;
+            case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
+                mpi_errno = validate_msg_size_node(node->success, tree,
+                                                   node->u.collective.coll_type, seen);
+                MPIR_ERR_CHECK(mpi_errno);
+                continue;
+            case CSEL_NODE_TYPE__OPERATOR__ANY:
+                break;
+            default:
+                if (node->type == CSEL_NODE_TYPE__OPERATOR__msg_size && coll_type >= 0 &&
+                    !has_msg_size(coll_type)) {
+                    /* unused when MPIR_ERR_SETANDJUMP2 drops its message arguments */
+                    MPL_UNUSED const char *name = "?";
+                    struct csel_subtree_hash_item *h, *tmp;
+                    HASH_ITER(hh, csel_subtree_hash, h, tmp) {
+                        if (h->idx == tree) {
+                            name = h->name;
+                        }
+                    }
+                    MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**colljsonmsgsize",
+                                         "**colljsonmsgsize %s %s", name,
+                                         MPIR_Coll_type_names[coll_type]);
+                }
+                break;
+        }
+        if (next[0] >= 0) {
+            if (!seen[next[0] * ntypes + coll_type + 1]) {
+                seen[next[0] * ntypes + coll_type + 1] = true;
+                mpi_errno = validate_msg_size_node(csel_get_tree_by_idx(next[0]), next[0],
+                                                   coll_type, seen);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+            return MPI_SUCCESS;
+        }
+        mpi_errno = validate_msg_size_node(node->success, tree, coll_type, seen);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+/* Whether coll_type has a msg_size. Must match the cases of MPIR_Csel_msg_size in coll_csel.h. */
+static bool has_msg_size(MPIR_Csel_coll_type_e coll_type)
+{
+    switch (coll_type) {
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+          COLL_TYPE_ALL_CASE(BCAST):
+          COLL_TYPE_ALL_CASE(REDUCE):
+          COLL_TYPE_ALL_CASE(ALLTOALL):
+          COLL_TYPE_ALL_CASE(ALLGATHER):
+          COLL_TYPE_INTRA_CASE(ALLGATHERV):
+          COLL_TYPE_ALL_CASE(GATHER):
+          COLL_TYPE_ALL_CASE(SCATTER):
+          COLL_TYPE_INTRA_CASE(REDUCE_SCATTER):
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+          COLL_TYPE_ALL_CASE(SCAN):
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return true;
+        default:
+            return false;
+    }
 }

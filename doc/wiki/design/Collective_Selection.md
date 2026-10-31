@@ -93,7 +93,8 @@ bcast-intra:
   `MPI_IN_PLACE`). The v/w collectives whose ranks know only their own
   counts, barrier, the neighborhood collectives, and the intercommunicator
   allgatherv and reduce_scatter (whose two groups hold different
-  `recvcounts`) have none, and `MPIR_Csel_msg_size` asserts for them. A
+  `recvcounts`) have none: loading a file
+  in which such a collective can reach a `msg_size` condition fails. A
   trailing `#if ...` makes a *conditional condition*: the
   generated wrapper calls `func` only under that macro guard and returns
   false otherwise.
