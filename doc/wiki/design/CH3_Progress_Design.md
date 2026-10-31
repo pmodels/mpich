@@ -1,4 +1,7 @@
-# The Progress Engine
+# CH3 Progress Design
+
+This page describes the progress engine of the ch3 device. For ch4, see
+[CH4 Progress Design](CH4_Progress_Design.md).
 
 The progress engine (TPE) is a series of lists for MPI internal tasks
 such as: send, receive, collectives, and so on. It is designed for
