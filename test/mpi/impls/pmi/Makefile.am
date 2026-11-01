@@ -11,4 +11,6 @@ testing:
 
 noinst_PROGRAMS = \
     test_pmi1 \
-    test_pmi2
+    test_pmi2 \
+    test_pmi2_nodeattr \
+    test_pmi2_nodeattr_fault

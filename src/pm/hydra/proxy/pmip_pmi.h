@@ -18,6 +18,9 @@ struct HYD_pmcd_pmip_pmi_handle {
 /* handlers for initialization via pmi port */
 HYD_status fn_fullinit(struct pmip_downstream *p, struct PMIU_cmd *pmi);
 
+/* Discard deferred PMI2 replies for a disconnected downstream. */
+void PMIP_pmi_cancel_pending_reqs(struct pmip_downstream *p);
+
 /* handlers for client pmi commands */
 HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi);
 HYD_status fn_get_maxes(struct pmip_downstream *p, struct PMIU_cmd *pmi);
