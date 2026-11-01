@@ -23,9 +23,8 @@ static bool is_static = false;
 struct HYD_pmcd_pmi_v2_reqs {
     struct pmip_downstream *downstream_ptr;
     struct PMIU_cmd *pmi;
-    const char *key;
+    char *key;
 
-    struct HYD_pmcd_pmi_v2_reqs *prev;
     struct HYD_pmcd_pmi_v2_reqs *next;
 };
 
@@ -40,7 +39,6 @@ static HYD_status HYD_pmcd_pmi_v2_queue_req(struct pmip_downstream *p, struct PM
     HYDU_MALLOC_OR_JUMP(req, struct HYD_pmcd_pmi_v2_reqs *, sizeof(struct HYD_pmcd_pmi_v2_reqs),
                         status);
     req->downstream_ptr = p;
-    req->prev = NULL;
     req->next = NULL;
 
     req->pmi = PMIU_cmd_dup(pmi);
@@ -51,14 +49,35 @@ static HYD_status HYD_pmcd_pmi_v2_queue_req(struct pmip_downstream *p, struct PM
     else {
         for (tmp = pending_reqs; tmp->next; tmp = tmp->next);
         tmp->next = req;
-        req->prev = tmp;
     }
+
 
   fn_exit:
     return status;
 
   fn_fail:
     goto fn_exit;
+}
+
+
+/* A PMI socket may close while a getnodeattr(wait=true) request is pending.
+ * Drop only requests owned by that downstream before its fd is closed.
+ */
+void PMIP_pmi_cancel_pending_reqs(struct pmip_downstream *p)
+{
+    struct HYD_pmcd_pmi_v2_reqs **next = &pending_reqs;
+
+    while (*next) {
+        struct HYD_pmcd_pmi_v2_reqs *req = *next;
+        if (req->downstream_ptr == p) {
+            *next = req->next;
+            PMIU_cmd_free(req->pmi);
+            MPL_free(req->key);
+            MPL_free(req);
+        } else {
+            next = &req->next;
+        }
+    }
 }
 
 /* check pending kvs get when we get fn_info_putnodeattr */
@@ -95,7 +114,6 @@ static HYD_status poke_progress(const char *key)
                 list_tail = req;
             } else {
                 list_tail->next = req;
-                req->prev = list_tail;
                 list_tail = req;
             }
         } else {
@@ -104,6 +122,7 @@ static HYD_status poke_progress(const char *key)
 
             /* Free the dequeued request */
             PMIU_cmd_free(req->pmi);
+            MPL_free(req->key);
             MPL_free(req);
         }
     }
