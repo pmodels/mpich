@@ -33,7 +33,7 @@
 #   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
 #         A wrapper checker function will be generated that wraps the "func" within macro-guard.
 # Both kinds are used as CSEL conditions in JSON files, e.g. inplace, !inplace,
-# avg_msg_size(1024). Algorithm restrictions take only restrictions, without negation: a
+# msg_size(1024). Algorithm restrictions take only restrictions, without negation: a
 # restriction that needs a condition to be false uses its own condition, so that every
 # restriction is a condition that must hold.
 # Most of the checker functions should be inlined to minimize function call overhead.
@@ -120,8 +120,7 @@ restrictions:
 
 conditions:
     comm_size(thresh):      MPIR_Csel_comm_size
-    avg_msg_size(thresh):   MPIR_Csel_avg_msg_size
-    total_msg_size(thresh): MPIR_Csel_total_msg_size
+    msg_size(thresh):       MPIR_Csel_msg_size
     num_nodes(thresh):      MPIR_Csel_num_nodes
     ppn(thresh):            MPIR_Csel_ppn
 
