@@ -1,2 +1,4 @@
 test_pmi1 2
 test_pmi2 2
+test_pmi2_nodeattr 4
+test_pmi2_nodeattr_fault 3 mpiexecarg=-disable-auto-cleanup mpiexecarg=-ppn mpiexecarg=3 resultTest=TestStatusNoErrors strict=false timeLimit=20
