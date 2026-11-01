@@ -20,13 +20,13 @@
     - [Reference Counting](Reference_Counting.md)
     - [Reporting and Returning Error Codes](Reporting_And_Returning_Error_Codes.md)
     - [Sharing Blocking Resources](Sharing_Blocking_Resources.md)
-    - [The Progress Engine](The_Progress_Engine.md)
     - [Topology and Communicator Split Types](Topology.md)
 
 - CH4
     - [Overall Design](CH4_Overall_Design.md)
     - [Process Address Translation](CH4_Process_Address_Translation.md)
     - [OFI Active Messages](CH4_OFI_Active_Messages.md)
+    - [Progress Design](CH4_Progress_Design.md)
 
 - CH3
     - [Channels](CH3_And_Channels.md)
@@ -34,10 +34,11 @@
     - [Object Model](CH3_Object_Model.md)
     - [Netmod Packet Types](CH3_Netmod_Packet_Types.md)
     - [Changes and ADI3](Changes_to_CH3_and_ADI3.md)
+    - [Progress Design](CH3_Progress_Design.md)
 
 - Collectives
     - [Collective Algorithm Selection (CSEL)](Collective_Selection.md)
-    - [Collectives Framework](Collectives_framework.md)
+    - [Schedules of Nonblocking and Persistent Collectives](Collective_Schedules.md)
     - [Overriding Collective Functions](Overriding_Collective_Functions.md)
 
 - Language Bindings

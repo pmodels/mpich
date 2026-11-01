@@ -250,8 +250,8 @@ A memory object id was expected but a non-memory object id was passed instead
 **readcolltuningfile %s: Unable to read collective tuning file %s, or the file is empty.\nCheck the file or unset MPIR_CVAR_COLL_SELECTION_JSON_FILE to use the default settings.
 **colljson: Invalid collective tuning JSON
 **colljson %d %d %s: Invalid collective tuning JSON at line %d, column %d: %s
-**colljsonmsgsize: Invalid collective tuning JSON: msg_size used by a collective without a message size
-**colljsonmsgsize %s %s: Invalid collective tuning JSON: subtree %s splits on msg_size, which %s does not have (no message size is the same on every rank)
+**colljsoncond: Invalid collective tuning JSON: a condition used by a collective that does not define it
+**colljsoncond %s %s %s: Invalid collective tuning JSON: subtree %s splits on %s, which %s does not have (the value would not be the same on every rank, or does not exist)
 
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.

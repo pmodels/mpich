@@ -238,15 +238,33 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_displs_ordered(MPIR_Csel_coll_sig_s * co
     return true;
 }
 
+/* The collectives where every rank passes MPI_IN_PLACE when one does, so the value is the same
+ * on every rank of the call. Not defined for the rooted ones (gather, gatherv, scatter, scatterv,
+ * reduce): there MPI_IN_PLACE is given at the root only, so the value would differ between ranks
+ * and a selection on it could pick different algorithms on different ranks. */
 MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_sendbuf_inplace(MPIR_Csel_coll_sig_s * coll_sig)
 {
     switch (coll_sig->coll_type) {
+          COLL_TYPE_ALL_CASE(ALLGATHER):
+            return (coll_sig->u.allgather.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(ALLGATHERV):
+            return (coll_sig->u.allgatherv.sendbuf == MPI_IN_PLACE);
           COLL_TYPE_ALL_CASE(ALLTOALL):
             return (coll_sig->u.alltoall.sendbuf == MPI_IN_PLACE);
           COLL_TYPE_ALL_CASE(ALLTOALLV):
             return (coll_sig->u.alltoallv.sendbuf == MPI_IN_PLACE);
           COLL_TYPE_ALL_CASE(ALLTOALLW):
             return (coll_sig->u.alltoallw.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+            return (coll_sig->u.allreduce.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+            return (coll_sig->u.reduce_scatter.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+            return (coll_sig->u.reduce_scatter_block.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(SCAN):
+            return (coll_sig->u.scan.sendbuf == MPI_IN_PLACE);
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return (coll_sig->u.exscan.sendbuf == MPI_IN_PLACE);
         default:
             fprintf(stderr, "is_sendbuf_inplace not defined for coll_type %d\n",
                     coll_sig->coll_type);
@@ -262,7 +280,14 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_op_is_builtin(MPIR_Csel_coll_sig_s * col
             return HANDLE_IS_BUILTIN(coll_sig->u.allreduce.op);
           COLL_TYPE_ALL_CASE(REDUCE):
             return HANDLE_IS_BUILTIN(coll_sig->u.reduce.op);
-            break;
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+            return HANDLE_IS_BUILTIN(coll_sig->u.reduce_scatter.op);
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+            return HANDLE_IS_BUILTIN(coll_sig->u.reduce_scatter_block.op);
+          COLL_TYPE_ALL_CASE(SCAN):
+            return HANDLE_IS_BUILTIN(coll_sig->u.scan.op);
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return HANDLE_IS_BUILTIN(coll_sig->u.exscan.op);
         default:
             fprintf(stderr, "is_op_builtin not defined for coll_type %d\n", coll_sig->coll_type);
             MPIR_Assert(0);
@@ -283,6 +308,8 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_op_is_commutative(MPIR_Csel_coll_sig_s *
             return MPIR_Op_is_commutative(coll_sig->u.reduce_scatter_block.op);
           COLL_TYPE_ALL_CASE(SCAN):
             return MPIR_Op_is_commutative(coll_sig->u.scan.op);
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return MPIR_Op_is_commutative(coll_sig->u.exscan.op);
         default:
             fprintf(stderr, "is_commutative not defined for coll_type %d\n", coll_sig->coll_type);
             MPIR_Assert(0);
