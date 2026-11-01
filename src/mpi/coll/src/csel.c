@@ -688,10 +688,14 @@ static int parse_named_trees(void)
 }
 
 static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_type, bool * seen);
+static bool condition_is_defined(int node_type, MPIR_Csel_coll_type_e coll_type, const char **name);
 static bool has_msg_size(MPIR_Csel_coll_type_e coll_type);
+static bool has_sendbuf_inplace(MPIR_Csel_coll_type_e coll_type);
+static bool has_op(MPIR_Csel_coll_type_e coll_type);
 
-/* Check a loaded tuning file from the main tree. For now the only check is that msg_size is
- * reached only by collectives that have one. */
+/* Check a loaded tuning file from the main tree. For now the only check is that a condition
+ * that is not defined for every collective (msg_size, inplace, builtin_op, commutative) is
+ * reached only by collectives that define it. */
 static int validate_csel_main_tree(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -709,8 +713,8 @@ static int validate_csel_main_tree(void)
     return mpi_errno;
 }
 
-/* msg_size is defined only for some collectives (has_msg_size). Reject trees in which a
- * collective without it reaches a msg_size condition: from the main tree, through "collective="
+/* Some conditions are defined only for some collectives (condition_is_defined). Reject trees in
+ * which a collective without one reaches it: from the main tree, through "collective="
  * nodes, "call=" and every subtree of a "dispatch=". seen marks (subtree, collective) pairs. */
 static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_type, bool * seen)
 {
@@ -745,9 +749,9 @@ static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_ty
             case CSEL_NODE_TYPE__OPERATOR__ANY:
                 break;
             default:
-                if (node->type == CSEL_NODE_TYPE__OPERATOR__msg_size && coll_type >= 0 &&
-                    !has_msg_size(coll_type)) {
-                    /* unused when MPIR_ERR_SETANDJUMP2 drops its message arguments */
+                const char *cond_name;
+                if (coll_type >= 0 && !condition_is_defined(node->type, coll_type, &cond_name)) {
+                    /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
                     MPL_UNUSED const char *name = "?";
                     struct csel_subtree_hash_item *h, *tmp;
                     HASH_ITER(hh, csel_subtree_hash, h, tmp) {
@@ -755,8 +759,8 @@ static int validate_msg_size_node(MPIR_Csel_node_s * node, int tree, int coll_ty
                             name = h->name;
                         }
                     }
-                    MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**colljsonmsgsize",
-                                         "**colljsonmsgsize %s %s", name,
+                    MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
+                                         "**colljsoncond %s %s %s", name, cond_name,
                                          MPIR_Coll_type_names[coll_type]);
                 }
                 break;
@@ -797,5 +801,68 @@ static bool has_msg_size(MPIR_Csel_coll_type_e coll_type)
             return true;
         default:
             return false;
+    }
+}
+
+/* Whether coll_type has an MPI_IN_PLACE sendbuf that is the same on every rank. Must match the
+ * cases of MPIR_Csel_sendbuf_inplace in coll_csel.h. The rooted collectives (gather, scatter,
+ * reduce) take MPI_IN_PLACE at the root only, so they have none. */
+static bool has_sendbuf_inplace(MPIR_Csel_coll_type_e coll_type)
+{
+    switch (coll_type) {
+          COLL_TYPE_ALL_CASE(ALLGATHER):
+          COLL_TYPE_ALL_CASE(ALLGATHERV):
+          COLL_TYPE_ALL_CASE(ALLTOALL):
+          COLL_TYPE_ALL_CASE(ALLTOALLV):
+          COLL_TYPE_ALL_CASE(ALLTOALLW):
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+          COLL_TYPE_ALL_CASE(SCAN):
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return true;
+        default:
+            return false;
+    }
+}
+
+/* Whether coll_type has a reduction op. Must match the cases of MPIR_Csel_op_is_builtin and
+ * MPIR_Csel_op_is_commutative in coll_csel.h. */
+static bool has_op(MPIR_Csel_coll_type_e coll_type)
+{
+    switch (coll_type) {
+          COLL_TYPE_ALL_CASE(ALLREDUCE):
+          COLL_TYPE_ALL_CASE(REDUCE):
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER):
+          COLL_TYPE_ALL_CASE(REDUCE_SCATTER_BLOCK):
+          COLL_TYPE_ALL_CASE(SCAN):
+          COLL_TYPE_ALL_CASE(EXSCAN):
+            return true;
+        default:
+            return false;
+    }
+}
+
+/* Whether the condition of a node type is defined for coll_type, i.e. its checker has a case for
+ * it. Only the conditions that some collective lacks are listed; all others are defined for
+ * every collective. name is set to the condition's name. */
+static bool condition_is_defined(int node_type, MPIR_Csel_coll_type_e coll_type, const char **name)
+{
+    switch (node_type) {
+        case CSEL_NODE_TYPE__OPERATOR__msg_size:
+            *name = "msg_size";
+            return has_msg_size(coll_type);
+        case CSEL_NODE_TYPE__OPERATOR__inplace:
+            *name = "inplace";
+            return has_sendbuf_inplace(coll_type);
+        case CSEL_NODE_TYPE__OPERATOR__builtin_op:
+            *name = "builtin_op";
+            return has_op(coll_type);
+        case CSEL_NODE_TYPE__OPERATOR__commutative:
+            *name = "commutative";
+            return has_op(coll_type);
+        default:
+            *name = "?";
+            return true;
     }
 }
