@@ -517,12 +517,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
      * MPI_Win_fence(MODE_NOPRECEDE)   MPI_Win_fence(MODE_NOPRECEDE)
      * MPI_Get(from rank 1)
      */
-    /* MPIR_Barrier's state is protected by ALLFUNC_MUTEX.
+    /* MPIR_Barrier_impl's state is protected by ALLFUNC_MUTEX.
      * In VCI granularity, individual send/recv/wait operations will take
      * the VCI lock internally. */
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     need_unlock = 0;
-    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_COLL_ATTR_SYNC);
+    mpi_errno = MPIR_Barrier_impl(win->comm_ptr);
 
   fn_exit:
     if (need_unlock) {

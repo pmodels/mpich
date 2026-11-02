@@ -6,9 +6,7 @@
 # This file lists all collective algorithms with annotations. It is used by
 # maint/gen_coll.py to generate src/mpi/coll/mpir_coll.c, which implements
 # top-level collective functions, such as (using bcast for example) --
-#     MPIR_Bcast, MPIR_Bcast_impl, MPIR_Bcast_allcomm_auto,
-#     MPIR_Ibcast, MPIR_Ibcast_impl, MPIR_Ibcast_sched_impl, MPIR_Ibcast_allcomm_sched_auto,
-#     MPIR_Bcast_init, MPIR_Bcast_init_impl
+#     MPIR_Bcast_impl, MPIR_Bcast_fill_sig, MPIR_Ibcast_impl, MPIR_Ibcast_tag, MPIR_Bcast_init_impl
 #
 # The format is (reference actual examples) --
 #
