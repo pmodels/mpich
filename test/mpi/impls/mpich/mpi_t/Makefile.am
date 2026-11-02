@@ -10,4 +10,4 @@ include $(top_srcdir)/Makefile_single.mtest
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
 noinst_PROGRAMS = \
-	collparmt recvq_events
+	recvq_events
