@@ -30,7 +30,7 @@ it reaches a container, then calls that container's function.
 | Collective signature | `MPIR_Csel_coll_sig_s` (`src/include/mpir_coll.h`) | `coll_type`, `comm_ptr`, `tag`, `sched`, `sched_type`, `flags`, and a union of the call's arguments (`u.bcast.buffer`, ...). Passed by pointer, so it carries state through nested selections. |
 | Algorithm ID | `MPII_Csel_container_type_e` | One ID per algorithm in the catalog, with a name table `MPIR_Coll_algo_names`. Generated. |
 | Container | `MPII_Csel_container_s` | The selected algorithm: its `id` and a union of per-algorithm extra parameters (tree kval, chunk size, ...). |
-| Algorithm function | `MPIR_Coll_algo_fn`: `int (*)(coll_sig, cnt)` | Uniform entry point. A generated `<algo>_cnt` wrapper per algorithm unpacks the `coll_sig` and calls the real function. All wrappers are in `MPIR_Coll_algo_table[id]`. |
+| Algorithm function | `MPIR_Coll_algo_fn`: `int (*)(coll_sig, cnt)` | Uniform entry point. A generated `<algo>_cnt` wrapper per algorithm unpacks the `coll_sig` and calls the real function (an algorithm with the `inner` key receives the `coll_sig`). All wrappers are in `MPIR_Coll_algo_table[id]`. |
 | Condition | `bool f(coll_sig)`, or `int f(coll_sig)` with a threshold | Named predicates such as `pof2`, `inplace`, `comm_size(thresh)`. Used both as JSON branch keys and as algorithm restrictions. |
 | Tree node | `MPIR_Csel_node_s` (`src/mpi/coll/include/coll_csel.h`) | A `type` (collective, any, a condition, call, or container), `negate` and `thresh` for conditions, and `success`/`failure` pointers. |
 | General algorithm | `MPIR_Coll_nb` | An algorithm that works for any `coll_type`; selectable like any other. |
@@ -125,9 +125,11 @@ bcast-intra:
       Rejected on `general` algorithms and outside the alltoall family.
     - `inner`: for a compositional algorithm, the collectives it calls
       through the selection, as `<section>@<communicator>` (e.g.
-      `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`).
-      Tuning tools use it to tune the algorithm after those collectives;
-      gen_coll only checks the names. A `general` algorithm writes its
+      `bcast-intra@node_comm`; communicators `node_comm`, `node_roots_comm`,
+      `local_comm`, or `comm` for the caller's own). Tuning tools use it to
+      tune the algorithm after those collectives. gen_coll checks the names,
+      and calls the algorithm with `(coll_sig, cnt)`, rather than the
+      collective's arguments. A `general` algorithm writes its
       inner calls relative to the caller: `$coll` is the calling
       collective's name, `comm` the caller's communicator, and a suffix
       `[k=v]` sets restriction `k` to 0 or 1 on the inner call. So
@@ -352,10 +354,14 @@ Rules that follow:
   selection on the `auto` tree, then starts and waits on the resulting
   schedule. It is chosen by the algorithm CVAR value `nb` or by
   `algorithm=MPIR_Coll_nb` in the JSON.
-- **Nested selection.** Because `coll_sig` is passed by pointer and carries
-  `sched`, `tag` and `flags`, an algorithm can re-enter selection for a
-  sub-step with `MPIR_Coll_run_tree(csel_tree_auto, coll_sig)`. The outer
-  entry (`main`) and the inner sub-steps (`auto`) can be tuned separately.
+- **Nested selection.** A compositional algorithm (one with the `inner` key)
+  takes `(coll_sig, cnt)` and describes each inner call in its own `coll_sig`
+  with the generated `MPIR_<Coll>_fill_sig`, which does not select, and runs it
+  with `MPIR_Coll_run_inner` (the macro `MPIR_COLL_INNER` does both), which selects
+  from `auto`: `main` has already had its chance to swap the user's buffers.
+  The algorithm CVARs apply to the user's call only, unless
+  `MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS` is set, which is for experiments that
+  control an inner algorithm.
 - **One global tree.** There is no per-communicator pruning or caching; every
   call searches from the root.
 - **Usage counters.** `MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS=<world rank>` makes
@@ -382,7 +388,7 @@ Rules that follow:
 | JSON parsing | `MPII_Csel_parse_container_params` |
 | Search | `MPII_Csel_run_condition` |
 | CVAR path | `MPIR_Coll_cvar_to_algo_id`, `MPIR_Coll_init_algo_container`, `MPIR_Coll_check_algo_restriction` |
-| Dispatch | the `<algo>_cnt` wrappers and every `MPIR_Xxx_impl` |
+| Dispatch | the `<algo>_cnt` wrappers, every `MPIR_Xxx_impl`, and `MPIR_Xxx_fill_sig` for the blocking collectives |
 
 `coll_algos.h` is included from `mpir_coll.h`, between `mpidpre.h` and
 `mpidpost.h`. Code that calls device functions (conditional-condition
@@ -484,8 +490,16 @@ or used in a `dispatch=`. For example:
 ```
 
 Internal buffers can break `gpu_coll`, whose promise covers only the user's
-buffers: the ranks of an inner call that mix them with host temporaries can
-disagree on it.
+buffers: the ranks of an inner call that mix them with host temporaries could
+disagree on it. So an inner call does not compute the gpu bits.
+`MPIR_<Coll>_fill_sig` inherits `gpu_local` and `gpu_coll` from the parent
+`coll_sig`, and the algorithm sets them there before each call: it clears
+`gpu_coll` on a call that passes a host temporary, and `gpu_local` on a call
+whose buffers are all host (the bits are the same for all the ranks of the
+call, except `gpu_local`, which may differ). It restores the flags before it
+returns, since the `coll_sig` belongs to its caller (reduce and scan smp). A
+debug build asserts before the selection that `gpu_coll` holds for the buffers
+of the call. An intercomm parent has no flags, so its inner calls have none.
 
 `gpu_coll` is not defined for gatherv, scatterv and alltoallv, and a tuning file
 that uses it there fails to load: a rank with a zero count has no buffer to
@@ -533,7 +547,8 @@ the user buffers, since the copies would wrap the outer steps too.
 ## Adding an algorithm
 
 1. Write the algorithm function with the standard collective arguments, plus
-   any extra parameters.
+   any extra parameters. An algorithm that calls through the selection takes
+   `(coll_sig, cnt)` instead, and has the `inner` key.
 2. List it under its `<coll>-<intra|inter>` section in `coll_algorithms.txt`
    with its `restrictions`, `extra_params`, and `cvar_params`. Add any new
    predicate at the end of `restrictions:` with the next index (a threshold
