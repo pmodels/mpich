@@ -516,6 +516,7 @@ iallreduce-inter:
 
 reduce_scatter-intra:
     noncommutative
+        restrictions: pof2, block_regular
     pairwise
         restrictions: commutative
     recursive_doubling
@@ -525,7 +526,7 @@ reduce_scatter-inter:
     remote_reduce_local_scatter
 ireduce_scatter-intra:
     sched_noncommutative
-        restrictions: pof2
+        restrictions: pof2, block_regular
     sched_recursive_doubling
     sched_pairwise
         restrictions: commutative
