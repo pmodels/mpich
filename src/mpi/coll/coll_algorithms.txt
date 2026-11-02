@@ -112,8 +112,8 @@
 #   * disabled:
 #         1 to keep an algorithm out of the selection. Forcing it by CVAR fails its
 #         restriction check (error or fallback, per MPIR_CVAR_COLLECTIVE_FALLBACK), and a JSON
-#         tuning file that names it fails to load. The nonblocking compositions (sched_smp)
-#         are disabled until nested selection into an existing schedule is designed.
+#         tuning file that names it fails to load. The nonblocking compositions that still call
+#         the legacy selectors are disabled until they move to the coll_sig form.
 
 # ----
 # Some checkers are defined for only some collectives; loading a tuning file that uses one under
@@ -461,7 +461,7 @@ reduce-inter:
 ireduce-intra:
     sched_smp
         restrictions: commutative, hierarchical
-        disabled: 1
+        inner: ireduce-intra@node_comm, ireduce-intra@node_roots_comm
     sched_binomial
     sched_reduce_scatter_gather
         restrictions: builtin_op
