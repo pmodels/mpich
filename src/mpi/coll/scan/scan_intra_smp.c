@@ -6,10 +6,17 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Scan_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.scan.sendbuf;
+    void *recvbuf = coll_sig->u.scan.recvbuf;
+    MPI_Aint count = coll_sig->u.scan.count;
+    MPI_Datatype datatype = coll_sig->u.scan.datatype;
+    MPI_Op op = coll_sig->u.scan.op;
+    int coll_attr = 0;
     int mpi_errno = MPI_SUCCESS;
+    unsigned saved_flags = coll_sig->flags;
     MPIR_CHKLMEM_DECL();
     int rank;
     int size ATTRIBUTE((unused));
@@ -38,9 +45,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     /* perform intranode scan to get temporary result in recvbuf. if there is only
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno =
-            MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Scan, coll_sig, sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm);
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         MPIR_ERR_CHECK(mpi_errno);
@@ -70,9 +75,11 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * 1,2,3,4,5,6. it will be sent to rank 7 which is the
      * main process of node 3. */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
-                              op, comm_ptr->node_roots_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        /* localfulldata is either recvbuf or host memory, depending on the size of the node, and
+         * prefulldata is host memory. The inner calls below no longer have gpu_coll. */
+        coll_sig->flags &= ~MPIR_COLL_SIG_FLAG__GPU_COLL;
+        MPIR_COLL_INNER(Scan, coll_sig, localfulldata, prefulldata, count, datatype, op,
+                        comm_ptr->node_roots_comm);
 
         if (MPIR_Get_internode_rank(comm_ptr, rank) != comm_ptr->node_roots_comm->local_size - 1) {
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
@@ -95,21 +102,22 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * then we should broadcast this result in the local node, and
      * reduce it with recvbuf to get final result if necessary. */
 
+    /* the bcasts pass host buffers only */
+    coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU_LOCAL | MPIR_COLL_SIG_FLAG__GPU_COLL);
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(&noneed, 1, MPIR_INT_INTERNAL, 0, comm_ptr->node_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Bcast, coll_sig, &noneed, 1, MPIR_INT_INTERNAL, 0, comm_ptr->node_comm);
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, tempbuf, count, datatype, 0, comm_ptr->node_comm);
         }
 
         mpi_errno = MPIR_Reduce_local(tempbuf, recvbuf, count, datatype, op);
     }
 
   fn_exit:
+    coll_sig->flags = saved_flags;
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:

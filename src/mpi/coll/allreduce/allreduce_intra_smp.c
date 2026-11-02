@@ -5,9 +5,14 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Allreduce_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allreduce.sendbuf;
+    void *recvbuf = coll_sig->u.allreduce.recvbuf;
+    MPI_Aint count = coll_sig->u.allreduce.count;
+    MPI_Datatype datatype = coll_sig->u.allreduce.datatype;
+    MPI_Op op = coll_sig->u.allreduce.op;
     int mpi_errno = MPI_SUCCESS;
 
     /* on each node, do a reduce to the local root */
@@ -20,14 +25,11 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
             /* IN_PLACE and not root of reduce. Data supplied to this
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
-            mpi_errno =
-                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Reduce, coll_sig, recvbuf, NULL, count, datatype, op, 0,
+                            comm_ptr->node_comm);
         } else {
-            mpi_errno =
-                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm,
-                            coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, recvbuf, count, datatype, op, 0,
+                            comm_ptr->node_comm);
         }
     } else {
         /* only one process on the node. copy sendbuf to recvbuf */
@@ -39,16 +41,13 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno =
-            MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                           coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Allreduce, coll_sig, MPI_IN_PLACE, recvbuf, count, datatype, op,
+                        comm_ptr->node_roots_comm);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Bcast, coll_sig, recvbuf, count, datatype, 0, comm_ptr->node_comm);
     }
     goto fn_exit;
 

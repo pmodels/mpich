@@ -110,6 +110,11 @@ def collect_algo_list():
         algo_list.append(algo)
     return algo_list
 
+def uses_coll_sig(algo):
+    # a compositional algorithm keeps the decisions on its inner calls in coll_sig, so it takes the
+    # coll_sig rather than the unpacked arguments
+    return 'inner' in algo
+
 def is_greq_algo(func_name, algo):
     # a nonblocking algorithm that is neither tsp_ nor sched_ is a greq algorithm
     return func_name.startswith('i') and not algo['name'].startswith(('tsp_', 'sched_'))
@@ -125,6 +130,9 @@ def dump_algo_cnt_fns():
         return ', '.join(args)
 
     def get_algo_args(func, func_name, algo):
+        if uses_coll_sig(algo):
+            return "coll_sig, cnt"
+
         args = get_coll_args(func, func_name)
         if 'extra_params' in algo:
             args += ", " + get_algo_extra_args(algo, "csel")
@@ -220,6 +228,9 @@ def add_algo_prototypes():
         return ', '.join(params)
 
     def get_algo_params(func, func_name, algo):
+        if uses_coll_sig(algo):
+            return "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt"
+
         params = get_coll_params(func)
         if 'extra_params' in algo:
             params += ", " + get_algo_extra_params(algo)

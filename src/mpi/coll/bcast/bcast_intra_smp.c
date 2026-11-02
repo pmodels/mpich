@@ -25,9 +25,14 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                         MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Bcast_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    void *buffer = coll_sig->u.bcast.buffer;
+    MPI_Aint count = coll_sig->u.bcast.count;
+    MPI_Datatype datatype = coll_sig->u.bcast.datatype;
+    int root = coll_sig->u.bcast.root;
+    int coll_attr = 0;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size, nbytes = 0;
     MPI_Status *status_p;
@@ -83,9 +88,8 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             }
             /* TODO: set need_post_local_bcast = false if node_comm->local_size is 2 */
         } else if (nonroot_algo == MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM_bcast) {
-            mpi_errno = MPIR_Bcast(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                                   comm_ptr->node_comm, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
+                            MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm);
 
             need_post_local_bcast = false;
         }
@@ -93,16 +97,13 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 
     /* perform the internode broadcast */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Bcast(buffer, count, datatype,
-                               MPIR_Get_internode_rank(comm_ptr, root),
-                               comm_ptr->node_roots_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
+                        MPIR_Get_internode_rank(comm_ptr, root), comm_ptr->node_roots_comm);
     }
 
     /* perform the intranode broadcast unless it's done in pre-step */
     if (need_post_local_bcast) {
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
     }
 
   fn_exit:

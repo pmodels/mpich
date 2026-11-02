@@ -88,7 +88,12 @@
 #         section is one of this file's; the communicator is the field of the comm the call
 #         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
 #         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
-#         after the collectives it depends on; gen_coll.py only checks it.
+#         after the collectives it depends on.
+#         An algorithm with this key takes (coll_sig, cnt), rather than the collective's
+#         arguments, and describes each inner call with MPIR_<Coll>_fill_sig, so that its decisions
+#         about the inner call are in the inner coll_sig. The inner call inherits the gpu bits
+#         of the coll_sig it is called from. An algorithm that gives an inner call a temporary
+#         buffer clears them there first, and restores them before it returns.
 #         A general algorithm runs for any collective, so its inner calls are written
 #         relative to the caller: $coll is the calling collective's name (e.g. bcast), the
 #         communicator comm is the caller's own, and a suffix [k=v] sets restriction k to v
