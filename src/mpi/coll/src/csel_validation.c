@@ -77,6 +77,18 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
                 next = node->u.call.idx;
                 break;
             case CSEL_NODE_TYPE__OPERATOR__DISPATCH:
+                /* a restriction's bit is its node type */
+                for (int k = 0; k < node->u.dispatch->nbits; k++) {
+                    const char *cond_name;
+                    if (coll_type >= 0 &&
+                        !condition_is_defined(node->u.dispatch->pos[k], coll_type, &cond_name)) {
+                        /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
+                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree);
+                        MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
+                                             "**colljsoncond %s %s %s", name, cond_name,
+                                             MPIR_Coll_type_names[coll_type]);
+                    }
+                }
                 for (int c = 0; c < (1 << node->u.dispatch->nbits); c++) {
                     int idx = node->u.dispatch->idx[c];
                     if (!seen[idx * ntypes + coll_type + 1]) {
@@ -216,6 +228,7 @@ static bool validate_local_branch(MPIR_Csel_node_s * node, unsigned bit, int aut
 static bool has_msg_size(MPIR_Csel_coll_type_e coll_type);
 static bool has_sendbuf_inplace(MPIR_Csel_coll_type_e coll_type);
 static bool has_op(MPIR_Csel_coll_type_e coll_type);
+static bool has_gpu_coll(MPIR_Csel_coll_type_e coll_type);
 
 /* Whether the condition of a node type is defined for coll_type, i.e. its checker has a case for
  * it. Only the conditions that some collective lacks are listed; all others are defined for
@@ -235,6 +248,9 @@ static bool condition_is_defined(int node_type, MPIR_Csel_coll_type_e coll_type,
         case CSEL_NODE_TYPE__OPERATOR__commutative:
             *name = "commutative";
             return has_op(coll_type);
+        case CSEL_NODE_TYPE__OPERATOR__gpu_coll:
+            *name = "gpu_coll";
+            return has_gpu_coll(coll_type);
         default:
             *name = "?";
             return true;
@@ -299,6 +315,21 @@ static bool has_op(MPIR_Csel_coll_type_e coll_type)
             return true;
         default:
             return false;
+    }
+}
+
+/* Whether gpu_coll is the same on every rank of coll_type under MPIR_CVAR_ENABLE_GPU_COLL. A rank
+ * of these three can have no buffer to query (a zero count) or skip the query (negative
+ * displacements), so it cannot tell. */
+static bool has_gpu_coll(MPIR_Csel_coll_type_e coll_type)
+{
+    switch (coll_type) {
+          COLL_TYPE_ALL_CASE(GATHERV):
+          COLL_TYPE_ALL_CASE(SCATTERV):
+          COLL_TYPE_ALL_CASE(ALLTOALLV):
+            return false;
+        default:
+            return true;
     }
 }
 

@@ -120,6 +120,8 @@
 #     the value differs between ranks (restriction rule 2 above).
 #   * commutative, builtin_op: reduce, allreduce, reduce_scatter(_block), scan, exscan.
 #   * msg_size: see MPIR_Csel_msg_size.
+#   * gpu_coll: not gatherv, scatterv, alltoallv. MPIR_CVAR_ENABLE_GPU_COLL promises device buffers
+#     on all ranks, but a rank with a zero count or negative displacements cannot see any.
 restrictions:
     0  - inplace:                  MPIR_Csel_sendbuf_inplace
     1  - pof2:                     MPIR_Csel_comm_size_is_pof2
