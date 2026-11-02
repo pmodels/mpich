@@ -60,7 +60,7 @@
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
 #   * gpu_swap:
-#         1 for an algorithm that can't work on device buffers. When the gpu restriction
+#         1 for an algorithm that can't work on device buffers. When the gpu_local restriction
 #         holds, its generated wrapper swaps the buffers for host buffers first,
 #         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
 #         without it must work on device buffers.
@@ -81,7 +81,7 @@
 #         A general algorithm runs for any collective, so its inner calls are written
 #         relative to the caller: $coll is the calling collective's name (e.g. bcast), the
 #         communicator comm is the caller's own, and a suffix [k=v] sets restriction k to v
-#         (0 or 1) on the inner call, e.g. $coll-intra@comm[gpu=0] for the same collective
+#         (0 or 1) on the inner call, e.g. $coll-intra@comm[gpu_local=0] for the same collective
 #         on host buffers. These forms describe the intra case.
 #
 # Conditions that a device or another component supplies as black boxes (e.g.
@@ -122,7 +122,7 @@ restrictions:
     # conditional conditions - only call the condition function under macro_guard
     9  - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
     # set by MPIR_Coll_sig_prepare_gpu before the selection
-    10 - gpu:                      MPIR_Csel_is_gpu
+    10 - gpu_local:                MPIR_Csel_is_gpu_local
     11 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
@@ -136,8 +136,8 @@ general:
     MPIR_Coll_nb
         inner: i$coll-intra@comm
     MPIR_Coll_buffer_swap
-        restrictions: gpu
-        inner: $coll-intra@comm[gpu=0]
+        restrictions: gpu_local
+        inner: $coll-intra@comm[gpu_local=0]
 
 # ----
 barrier-intra:

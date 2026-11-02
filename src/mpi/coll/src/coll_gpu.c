@@ -27,7 +27,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* The buffers of a collective call that this rank uses, for the gpu restrictions and for
+/* The buffers of a collective call that this rank uses, for the gpu_local and gpu_coll restrictions and for
  * buffer swapping. Each entry is a user buffer as a (count, datatype) span, and whether the
  * collective reads it, writes it, or both. A buffer whose span has gaps between the blocks
  * (e.g. the recvbuf of allgatherv) is marked as read too, so that copying the span back does
@@ -96,7 +96,7 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
     }
 
     if (any_dev) {
-        coll_sig->flags |= MPIR_COLL_SIG_FLAG__GPU;
+        coll_sig->flags |= MPIR_COLL_SIG_FLAG__GPU_LOCAL;
     }
     if (all_dev && MPIR_CVAR_ENABLE_GPU_COLL) {
         coll_sig->flags |= MPIR_COLL_SIG_FLAG__GPU_COLL;
@@ -111,8 +111,8 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
     int mpi_errno = MPI_SUCCESS;
 
     /* a tree that selects buffer_swap where gpu does not hold would loop */
-    MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU), mpi_errno, MPI_ERR_OTHER,
-                        "**nosupport");
+    MPIR_ERR_CHKANDJUMP(!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL), mpi_errno,
+                        MPI_ERR_OTHER, "**nosupport");
 
     mpi_errno = swap_and_run(coll_sig, run_auto, me);
     MPIR_ERR_CHECK(mpi_errno);
@@ -124,12 +124,12 @@ int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s
 }
 
 /* For the algorithms with gpu_swap in coll_algorithms.txt, which can't work on device buffers:
- * their generated wrapper calls this when the gpu flag is set, with itself as fn. The swap
+ * their generated wrapper calls this when the gpu_local flag is set, with itself as fn. The swap
  * clears the flag, so fn then runs the algorithm on the host buffers. */
 int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
                        MPIR_Coll_algo_fn fn)
 {
-    MPIR_Assert(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU);
+    MPIR_Assert(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL);
     return swap_and_run(coll_sig, fn, cnt);
 }
 
@@ -156,7 +156,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
     bufs.n = 0;
     memset(swaps, 0, sizeof(swaps));
 
-    coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU | MPIR_COLL_SIG_FLAG__GPU_COLL);
+    coll_sig->flags &= ~(MPIR_COLL_SIG_FLAG__GPU_LOCAL | MPIR_COLL_SIG_FLAG__GPU_COLL);
 
     /* blocking coll_type is even */
     bool is_blocking = (coll_sig->coll_type % 2 == 0);
@@ -164,7 +164,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
      * disabled. Swapping inside one would need the copies around the sub-call's steps only. */
     MPIR_Assert(coll_sig->sched == NULL);
 
-    /* the gpu flag is only set for the collectives get_coll_bufs describes */
+    /* the gpu_local flag is only set for the collectives get_coll_bufs describes */
     MPIR_Assertp(get_coll_bufs(coll_sig, &bufs));
 
     for (int i = 0; i < bufs.n; i++) {

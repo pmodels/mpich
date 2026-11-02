@@ -181,8 +181,8 @@ def dump_algo_cnt_fns():
             G.out.append("")
             # keys e.g. gpu_swap calls a wrapper which will call this algorithm again, avoid applying the wrapper again
             if algo.get('gpu_swap') == '1':
-                # the swap clears the gpu flag, so the second call runs the algorithm
-                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
+                # the swap clears the gpu_local flag, so the second call runs the algorithm
+                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL) {")
                 G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
                 dump_close("}")
             if algo.get('inplace_copy') == '1':
