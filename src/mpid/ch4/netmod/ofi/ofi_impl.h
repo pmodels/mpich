@@ -840,6 +840,35 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
     }
 }
 
+/* A datatype at MPI_BOTTOM holds absolute addresses that can be in both device and host memory,
+ * and the query at true_lb only sees the first block. Since the iov path passes every address to
+ * the provider, check each block. Packing handles such a datatype block by block. */
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_bottom_has_gpu(const void *buf, MPI_Aint count,
+                                                       MPI_Datatype datatype, MPI_Aint num_contig)
+{
+    if (!ENABLE_GPU || buf != MPI_BOTTOM) {
+        return false;
+    }
+
+    struct iovec *iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
+    MPIR_Assertp(iovs);
+
+    MPI_Aint actual_iov_len;
+    MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
+
+    bool has_gpu = false;
+    for (MPI_Aint i = 0; i < actual_iov_len; i++) {
+        if (!MPIR_GPU_query_pointer_is_host(iovs[i].iov_base)) {
+            has_gpu = true;
+            MPIDI_OFI_register_am_bufs();
+            break;
+        }
+    }
+
+    MPL_free(iovs);
+    return has_gpu;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, size_t size,
                                                          MPL_pointer_attr_t * attr, MPIR_Win * win,
                                                          int nic, void **desc)
