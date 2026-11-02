@@ -393,6 +393,8 @@ int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig)
 /* run an inner call of a compositional algorithm, described by MPIR_<Coll>_fill_sig */
 int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig)
 {
+    MPIR_Assert(MPIR_Coll_sig_check_gpu_coll(coll_sig));
+
     if (MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS) {
         return run_cvar_or_tree(coll_sig, csel_tree_auto);
     }

@@ -103,6 +103,29 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
     }
 }
 
+/* An inner call inherits gpu_coll, and an algorithm that gives it a host temporary must clear it.
+ * For an assert before the selection: an algorithm restricted on gpu_coll needs device buffers. */
+bool MPIR_Coll_sig_check_gpu_coll(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    if (!(coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_COLL)) {
+        return true;
+    }
+
+    struct coll_bufs bufs;
+    if (!get_coll_bufs(coll_sig, &bufs)) {
+        return true;
+    }
+
+    for (int i = 0; i < bufs.n; i++) {
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(*bufs.bufs[i].field, &attr);
+        if (!MPL_gpu_attr_is_dev(&attr)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /* General algorithm: swap the device buffers for host buffers, and continue in the auto
  * tree. The swap clears the gpu flags, so the auto tree cannot select
  * buffer_swap again. */
