@@ -42,9 +42,9 @@ int MPIR_Coll_inplace_copy(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_
     void *tmp = NULL;
     MPI_Aint size;
 
-    /* device receive buffers: swap them for host buffers. The swap clears the gpu flag and
+    /* device receive buffers: swap them for host buffers. The swap clears the gpu_local flag and
      * calls fn again, which comes back here for the host path below. */
-    if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {
+    if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL) {
         return MPIR_Coll_gpu_swap(coll_sig, cnt, fn);
     }
 
@@ -65,7 +65,7 @@ int MPIR_Coll_inplace_copy(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_
         MPIR_ERR_CHKANDJUMP(!tmp, mpi_errno, MPI_ERR_OTHER, "**nomem");
         if (is_blocking) {
             /* MPIR_Localcopy takes the source from device memory too: alltoallw has no
-             * gpu flag, so its receive buffer can be on the device here */
+             * gpu_local flag, so its receive buffer can be on the device here */
             mpi_errno = MPIR_Localcopy((char *) sp.buf + sp.lo, size, MPIR_BYTE_INTERNAL,
                                        tmp, size, MPIR_BYTE_INTERNAL);
             MPIR_ERR_CHECK(mpi_errno);

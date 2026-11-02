@@ -867,7 +867,7 @@ Used in functions: `MPIR_pmi_init`, `parse_coord_file`
 
 ### MPIR_CVAR_ENABLE_GPU_COLL
 
-Lets the user assert that within each collective call, either every rank passes host buffers or every rank passes device buffers. `MPIR_Coll_sig_prepare_gpu` sets the `gpu_coll` restriction (bit 13) for a call only when this CVAR is on and every buffer the rank uses is device memory; algorithms that need device buffers on all ranks, such as GPU IPC algorithms, are gated by it. MPICH does not check the assertion across ranks. The `gpu` restriction (bit 12), which only looks at the local buffers, does not depend on this CVAR.
+Lets the user assert that within each collective call, either every rank passes host buffers or every rank passes device buffers. `MPIR_Coll_sig_prepare_gpu` sets the `gpu_coll` restriction (bit 11) for a call only when this CVAR is on and every buffer the rank uses is device memory; algorithms that need device buffers on all ranks, such as GPU IPC algorithms, are gated by it. MPICH does not check the assertion across ranks. The `gpu` restriction (bit 12), which only looks at the local buffers, does not depend on this CVAR.
 
 * false - default, the `gpu_coll` restriction never holds.
 * true - the `gpu_coll` restriction holds when every buffer this rank uses is device memory.

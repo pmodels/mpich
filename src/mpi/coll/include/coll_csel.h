@@ -55,6 +55,13 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
 int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig);
 
+/* the named subtrees of csel.c, for csel_validation.c */
+int MPII_Csel_num_trees(void);
+int MPII_Csel_name_to_idx(const char *name);
+const char *MPII_Csel_tree_name(int idx);
+MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int idx);
+int MPII_Csel_validate(void);
+
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 int MPII_Csel_parse_container_params(const MPII_Csel_json_s * obj, MPII_Csel_container_s * cnt);
 MPIR_Csel_node_s *MPII_Csel_run_condition(MPIR_Csel_node_s * node, MPIR_Csel_coll_sig_s * coll_sig);
@@ -333,9 +340,9 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_node_canonical(MPIR_Csel_coll_sig_s *
 }
 
 /* a buffer this rank uses is device memory */
-MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_gpu(MPIR_Csel_coll_sig_s * coll_sig)
+MPL_STATIC_INLINE_PREFIX bool MPIR_Csel_is_gpu_local(MPIR_Csel_coll_sig_s * coll_sig)
 {
-    return coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU;
+    return coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL;
 }
 
 /* every buffer this rank uses is device memory, and the user asserts all ranks do the same */

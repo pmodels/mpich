@@ -22,6 +22,7 @@ def main():
     #   - G.algos:      a two level array: [func-commkind][algo]
     load_coll_algos("src/mpi/coll/coll_algorithms.txt")
     check_inner()
+    check_local_algos()
     # Loading the collective CVARs, for the types of the algorithm parameters -
     #   - G.cvars:      {name: {'type': type, 'enum': [names]}}
     load_cvars("src/mpi/coll")
@@ -181,8 +182,8 @@ def dump_algo_cnt_fns():
             G.out.append("")
             # keys e.g. gpu_swap calls a wrapper which will call this algorithm again, avoid applying the wrapper again
             if algo.get('gpu_swap') == '1':
-                # the swap clears the gpu flag, so the second call runs the algorithm
-                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU) {")
+                # the swap clears the gpu_local flag, so the second call runs the algorithm
+                dump_open("if (coll_sig->flags & MPIR_COLL_SIG_FLAG__GPU_LOCAL) {")
                 G.out.append("return MPIR_Coll_gpu_swap(coll_sig, cnt, %s_cnt);" % algo_funcname)
                 dump_close("}")
             if algo.get('inplace_copy') == '1':
@@ -673,26 +674,38 @@ def dump_MPIR_Coll_check_algo_restriction():
     dump_close("}")
     G.out.append("")
 
-    decl = "bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_type_e algo_id)"
+    # the restrictions of an algorithm, as a mask
+    decl = "unsigned MPIR_Coll_get_algo_restriction_bits(int algo_id)"
+    add_prototype(decl)
     G.out.append(decl)
     dump_open("{")
-    G.out.append("unsigned need;")
     dump_open("switch (algo_id) {")
     for algo in G.algo_list:
-        if algo.get('disabled') == '1':
-            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
-            G.out.append("    return false;    /* disabled */")
-        elif "restrictions" in algo:
+        if "restrictions" in algo:
             restrictions = algo['restrictions'].replace(' ', '').split(',')
             need = 0
             for r in restrictions:
                 need |= 1 << restriction_bit(r)
             G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
-            G.out.append("    need = 0x%x;    /* %s */" % (need, ', '.join(restrictions)))
-            G.out.append("    break;")
+            G.out.append("    return 0x%x;    /* %s */" % (need, ', '.join(restrictions)))
     G.out.append("default:")
-    G.out.append("    return true;")
+    G.out.append("    return 0;")
     dump_close("}")
+    dump_close("}")
+    G.out.append("")
+
+    decl = "bool MPIR_Coll_check_algo_restriction(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_type_e algo_id)"
+    G.out.append(decl)
+    dump_open("{")
+    dump_open("switch (algo_id) {")
+    for algo in G.algo_list:
+        if algo.get('disabled') == '1':
+            G.out.append("case %s:" % algo_id(get_algo_funcname(algo)))
+            G.out.append("    return false;    /* disabled */")
+    G.out.append("default:")
+    G.out.append("    break;")
+    dump_close("}")
+    G.out.append("unsigned need = MPIR_Coll_get_algo_restriction_bits(algo_id);")
     G.out.append("return MPIR_Csel_restriction_mask(coll_sig, need) == need;")
     dump_close("}")
 
@@ -723,6 +736,12 @@ def dump_MPIR_Csel_container_type_e():
     G.out2.append("};")
     G.out2.append("")
     G.out2.append("#define MPIR_CSEL_NUM_ALGORITHMS %s" % algo_id_END())
+    local_bits = 0
+    for r in local_restrictions():
+        local_bits |= 1 << G.restrictions.index(r)
+    G.out2.append("")
+    G.out2.append("/* the restrictions that can differ between the ranks of a call */")
+    G.out2.append("#define MPIR_CSEL_LOCAL_RESTRICTIONS 0x%x" % local_bits)
 
 def dump_MPIR_Csel_node_type_e():
     """generate condition IDs as CSEL_NODE_TYPE__OPERATOR__XXX."""
@@ -804,6 +823,21 @@ def load_cvar_file(path):
                     cvar['enum'].append(RE.m.group(1))
             elif RE.match(r'\s*type\s*:\s*(\w+)', line):
                 cvar['type'] = RE.m.group(1)
+
+def local_restrictions():
+    """The restrictions that can differ between the ranks of a call, by their _local suffix."""
+    return [r for r in G.restrictions if r.endswith("_local")]
+
+def check_local_algos():
+    """An algorithm restricted on a local condition only clears it and continues in auto, so that
+    the ranks that run it rejoin the ranks that do not."""
+    for func_commkind, algo_list in G.algos.items():
+        for algo in algo_list:
+            restrictions = algo.get("restrictions", "").replace(' ', '').split(',')
+            for r in set(restrictions) & set(local_restrictions()):
+                want = "$coll-intra@comm[%s=0]" % r
+                if func_commkind != "general" or algo.get("inner", "").replace(' ', '') != want:
+                    raise Exception("%s %s: restricted on %s, so it must be a general algorithm with inner: %s" % (func_commkind, algo['name'], r, want))
 
 def check_inner():
     """The "inner" key: <section>@<communicator>[k=v], an existing section, a known communicator

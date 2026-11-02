@@ -28,6 +28,17 @@
 #     use, e.g. in subtree names of a tuning file. Removing a restriction renumbers the ones
 #     after it, so tuning files and masks that use bit numbers must be regenerated; add new
 #     ones at the end.
+#     A restriction's name tells how a JSON tree can use it, because all ranks of a call must reach
+#     the same algorithm:
+#       - <name>_local can differ between the ranks of a call. It is only tested in the tree that
+#         main reaches, never from auto. Its true branch can split on other conditions, and each
+#         leaf is either "call=auto" or an algorithm restricted on it; its next case is
+#         "any": "call=auto". It cannot be negated or used in a dispatch. An algorithm restricted
+#         on it only clears the condition and continues in auto, so it must be a general algorithm
+#         with inner: $coll-intra@comm[<name>_local=0]. All ranks then select in auto without it.
+#       - <name>_coll is the same on all ranks, by a promise of the user or by a check. It can
+#         select completely separate subtrees, like every condition without a suffix, which
+#         is the same on all ranks because the arguments it depends on are.
 #   - conditions: "name(thresh): func", a threshold condition whose checker returns a value:
 #     int (*func)(coll_sig). The thresh marks the upper limit (inclusive) of the condition.
 #   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).
@@ -60,7 +71,7 @@
 #         a initialization, e.g. param1=val. Rather than repeating the same constant in the
 #         cvar_params, we can use `-` as placeholder for the corresponding constant param.
 #   * gpu_swap:
-#         1 for an algorithm that can't work on device buffers. When the gpu restriction
+#         1 for an algorithm that can't work on device buffers. When the gpu_local restriction
 #         holds, its generated wrapper swaps the buffers for host buffers first,
 #         the same way MPIR_Coll_buffer_swap does, and the host path pays nothing. Algorithms
 #         without it must work on device buffers.
@@ -81,7 +92,7 @@
 #         A general algorithm runs for any collective, so its inner calls are written
 #         relative to the caller: $coll is the calling collective's name (e.g. bcast), the
 #         communicator comm is the caller's own, and a suffix [k=v] sets restriction k to v
-#         (0 or 1) on the inner call, e.g. $coll-intra@comm[gpu=0] for the same collective
+#         (0 or 1) on the inner call, e.g. $coll-intra@comm[gpu_local=0] for the same collective
 #         on host buffers. These forms describe the intra case.
 #
 # Conditions that a device or another component supplies as black boxes (e.g.
@@ -103,12 +114,14 @@
 
 # ----
 # Some checkers are defined for only some collectives; loading a tuning file that uses one under
-# a collective without it fails (csel.c condition_is_defined, which must match coll_csel.h):
+# a collective without it fails (csel_validation.c condition_is_defined, which must match coll_csel.h):
 #   * inplace: allgather(v), alltoall(v,w), allreduce, reduce_scatter(_block), scan, exscan.
 #     Not the rooted gather(v), scatter(v), reduce: MPI_IN_PLACE is given at the root only, so
 #     the value differs between ranks (restriction rule 2 above).
 #   * commutative, builtin_op: reduce, allreduce, reduce_scatter(_block), scan, exscan.
 #   * msg_size: see MPIR_Csel_msg_size.
+#   * gpu_coll: not gatherv, scatterv, alltoallv. MPIR_CVAR_ENABLE_GPU_COLL promises device buffers
+#     on all ranks, but a rank with a zero count or negative displacements cannot see any.
 restrictions:
     0  - inplace:                  MPIR_Csel_sendbuf_inplace
     1  - pof2:                     MPIR_Csel_comm_size_is_pof2
@@ -122,7 +135,7 @@ restrictions:
     # conditional conditions - only call the condition function under macro_guard
     9  - MPIDI_CH4_release_gather: MPIDI_POSIX_check_release_gather #if defined(MPIDI_CH4_SHM_POSIX)
     # set by MPIR_Coll_sig_prepare_gpu before the selection
-    10 - gpu:                      MPIR_Csel_is_gpu
+    10 - gpu_local:                MPIR_Csel_is_gpu_local
     11 - gpu_coll:                 MPIR_Csel_is_gpu_coll
 
 conditions:
@@ -136,8 +149,8 @@ general:
     MPIR_Coll_nb
         inner: i$coll-intra@comm
     MPIR_Coll_buffer_swap
-        restrictions: gpu
-        inner: $coll-intra@comm[gpu=0]
+        restrictions: gpu_local
+        inner: $coll-intra@comm[gpu_local=0]
 
 # ----
 barrier-intra:
