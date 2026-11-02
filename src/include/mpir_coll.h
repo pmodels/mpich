@@ -42,8 +42,10 @@ typedef int (*MPIR_Coll_algo_fn) (MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_con
 #define MPIR_COLL_SIG_FLAG__GPU_COLL    0x8     /* local buffers are device memory, and
                                                  * MPIR_CVAR_ENABLE_GPU_COLL asserts the same
                                                  * for all ranks */
-/* the bits an inner call inherits from its parent */
-#define MPIR_COLL_SIG_INHERIT_MASK (MPIR_COLL_SIG_FLAG__GPU_LOCAL | MPIR_COLL_SIG_FLAG__GPU_COLL)
+/* the bits an inner call inherits from its parent: an inner call of a persistent collective is
+ * persistent too */
+#define MPIR_COLL_SIG_INHERIT_MASK (MPIR_COLL_SIG_FLAG__GPU_LOCAL | MPIR_COLL_SIG_FLAG__GPU_COLL | \
+                                    MPIR_COLL_SIG_FLAG__PERSISTENT)
 
 struct MPIR_Csel_coll_sig {
     MPIR_Csel_coll_type_e coll_type;

@@ -42,6 +42,8 @@ static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
             return "NOP";
         case MPIDU_SCHED_ENTRY_CB:
             return "CB";
+        case MPIDU_SCHED_ENTRY_COND:
+            return "COND";
         default:
             return "(out of range)";
     }
@@ -137,6 +139,9 @@ struct MPIDU_Sched_state {
 /* holds on to all incomplete schedules on which progress should be made */
 static struct MPIDU_Sched_state all_schedules = { NULL };
 
+/* set while this thread holds SCHED_LIST_MUTEX in MPIDU_Sched_progress */
+static MPL_TLS int in_sched_progress = 0;
+
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
 int MPIDU_Sched_are_pending(void)
@@ -203,6 +208,19 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 void MPIDU_Sched_set_tag(struct MPIDU_Sched *s, int tag)
 {
     s->tag = tag;
+}
+
+/* a callback failed: fail the entry, and let the request report it when the schedule completes */
+static void entry_set_failed(MPIR_Request * r, struct MPIDU_Sched_entry *e, int errcode)
+{
+    if (0 == r->u.nbc.coll_attr) {
+        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(errcode)) {
+            r->u.nbc.coll_attr = MPIR_ERR_PROC_FAILED;
+        } else {
+            r->u.nbc.coll_attr = MPIR_ERR_OTHER;
+        }
+    }
+    e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
 }
 
 /* initiates the schedule entry "e" in the NBC described by "s", where
@@ -370,6 +388,18 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             }
 
             break;
+        case MPIDU_SCHED_ENTRY_COND:
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting COND entry %d\n", (int) idx);
+            ret_errno = e->u.cond.start_p(e->u.cond.state);
+            if (unlikely(ret_errno)) {
+                entry_set_failed(r, e, ret_errno);
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    return ret_errno;
+                }
+            } else {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+            }
+            break;
         default:
             MPL_DBG_MSG_D(MPIR_DBG_COMM, TYPICAL, "unknown entry type, e->type=%d", e->type);
             break;
@@ -477,6 +507,12 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
 
 int MPIDU_Sched_free(struct MPIDU_Sched *s)
 {
+    for (int i = 0; i < s->num_entries; ++i) {
+        struct MPIDU_Sched_entry *e = &s->entries[i];
+        if (e->type == MPIDU_SCHED_ENTRY_COND && e->u.cond.free_p) {
+            e->u.cond.free_p(e->u.cond.state);
+        }
+    }
     MPL_free(s->entries);
     MPIR_Coll_owned_free(&s->owned);
     MPL_free(s);
@@ -566,9 +602,14 @@ int MPIDU_Sched_start(struct MPIDU_Sched *s, MPIR_Comm * comm, MPIR_Request ** r
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    /* progress holds the mutex when a COND entry starts this schedule */
+    if (!in_sched_progress) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    }
     DL_APPEND(all_schedules.head, s);
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    if (!in_sched_progress) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    }
 
     MPIR_Progress_hook_activate(MPIR_Nbc_progress_hook_id);
 
@@ -974,6 +1015,29 @@ int MPIDU_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MP
     goto fn_exit;
 }
 
+int MPIDU_Sched_cond(MPIR_Sched_cond_start_t * start_p, MPIR_Sched_cond_test_t * test_p,
+                     MPIR_Sched_cond_free_t * free_p, void *state, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIDU_Sched_entry *e = NULL;
+
+    mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    e->type = MPIDU_SCHED_ENTRY_COND;
+    e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    e->is_barrier = FALSE;
+    e->u.cond.start_p = start_p;
+    e->u.cond.test_p = test_p;
+    e->u.cond.free_p = free_p;
+    e->u.cond.state = state;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* returns TRUE in (*made_progress) if any of the outstanding schedules in state completed */
 static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made_progress)
 {
@@ -1056,6 +1120,21 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         e->u.recv.rreq = NULL;
                     }
                     break;
+                case MPIDU_SCHED_ENTRY_COND:
+                    if (e->status == MPIDU_SCHED_ENTRY_STATUS_STARTED) {
+                        bool done = false;
+                        int ret_errno = e->u.cond.test_p(e->u.cond.state, &done);
+                        if (unlikely(ret_errno)) {
+                            entry_set_failed(s->req, e, ret_errno);
+                            if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                                mpi_errno = ret_errno;
+                                goto fn_fail;
+                            }
+                        } else if (done) {
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                        }
+                    }
+                    break;
                 default:
                     /* all other entry types don't have any sub-requests that
                      * need to be checked */
@@ -1125,8 +1204,6 @@ int MPIDU_Sched_progress(int vci, int *made_progress)
      * For example, with MPI_Comm_idup, sched_cb_gcn_allocate_cid will call MPIR_Allreduce.
      * This inner progress should skip Sched progress to avoid recursive situation.
      */
-    static MPL_TLS int in_sched_progress = 0;
-
     if (in_sched_progress) {
         return MPI_SUCCESS;
     } else {

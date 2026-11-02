@@ -5,36 +5,94 @@
 
 #include "mpiimpl.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+/* the root, not a node root, sends to the root of its node */
+static int send_to_node_root(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                             MPI_Aint nbytes, MPIR_Comm * comm_ptr);
 
-cvars:
-    - name        : MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM
-      category    : COLLECTIVE
-      type        : enum
-      default     : auto
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : |-
-        Variable to select SMP algorithms when root is not a local root.
-        auto - Internal auto selection
-        send - root first send data to local root
-        bcast - root first bcast within the local node
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
+/* A root that is not a node root first sends to the root of its node. Then a bcast among the node
+ * roots, and one on every node. */
 int MPIR_Bcast_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
     void *buffer = coll_sig->u.bcast.buffer;
     MPI_Aint count = coll_sig->u.bcast.count;
     MPI_Datatype datatype = coll_sig->u.bcast.datatype;
     int root = coll_sig->u.bcast.root;
-    int coll_attr = 0;
+    MPI_Aint type_size;
+
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    MPI_Aint nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit;   /* nothing to do */
+
+    if (MPIR_Get_intranode_rank(comm_ptr, root) > 0) {
+        mpi_errno = send_to_node_root(buffer, count, datatype, root, nbytes, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (comm_ptr->node_roots_comm != NULL) {
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
+                        MPIR_Get_internode_rank(comm_ptr, root), comm_ptr->node_roots_comm);
+    }
+
+    if (comm_ptr->node_comm != NULL) {
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* The root's node does its bcast first, from the root. Then a bcast among the node roots, and one
+ * on every other node. This avoids a potential double data movement when the node root is not the
+ * local lead. */
+int MPIR_Bcast_intra_smp_node_first(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
+{
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size, nbytes = 0;
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    void *buffer = coll_sig->u.bcast.buffer;
+    MPI_Aint count = coll_sig->u.bcast.count;
+    MPI_Datatype datatype = coll_sig->u.bcast.datatype;
+    int root = coll_sig->u.bcast.root;
+    MPI_Aint type_size;
+
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    if (type_size * count == 0)
+        goto fn_exit;   /* nothing to do */
+
+    int node_root = MPIR_Get_intranode_rank(comm_ptr, root);
+
+    if (node_root > 0) {
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, node_root, comm_ptr->node_comm);
+    }
+
+    if (comm_ptr->node_roots_comm != NULL) {
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
+                        MPIR_Get_internode_rank(comm_ptr, root), comm_ptr->node_roots_comm);
+    }
+
+    if (node_root <= 0 && comm_ptr->node_comm != NULL) {
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int send_to_node_root(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                             MPI_Aint nbytes, MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int coll_attr = 0;
     MPI_Status *status_p;
 #ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
@@ -44,66 +102,21 @@ int MPIR_Bcast_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s 
     status_p = MPI_STATUS_IGNORE;
 #endif
 
+    if (root == comm_ptr->rank) {
+        mpi_errno = MPIC_Send(buffer, count, datatype, 0,
+                              MPIR_BCAST_TAG, comm_ptr->node_comm, coll_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (0 == comm_ptr->node_comm->rank) {
+        mpi_errno = MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
+                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
+        MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+        /* check that we received as much as we expected */
+        MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
+        MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                             "**collective_size_mismatch",
+                             "**collective_size_mismatch %d %d", (int) recvd_size, (int) nbytes);
 #endif
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    nbytes = type_size * count;
-    if (nbytes == 0)
-        goto fn_exit;   /* nothing to do */
-
-    /* if root is on my local node but not the local root */
-    bool need_pre_local_step = (MPIR_Get_intranode_rank(comm_ptr, root) > 0);
-    /* the pre_local_step may done the local bcast already */
-    bool need_post_local_bcast = true;
-
-    if (need_pre_local_step) {
-        int nonroot_algo = MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM;
-        if (nonroot_algo == MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM_auto) {
-            /* overwrite "auto" */
-            nonroot_algo = MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM_send;
-        }
-
-        if (nonroot_algo == MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM_send) {
-            /* send to intranode-rank 0 on the root's node */
-            if (root == comm_ptr->rank) {
-                mpi_errno = MPIC_Send(buffer, count, datatype, 0,
-                                      MPIR_BCAST_TAG, comm_ptr->node_comm, coll_attr);
-                MPIR_ERR_CHECK(mpi_errno);
-            } else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno = MPIC_Recv(buffer, count, datatype,
-                                      MPIR_Get_intranode_rank(comm_ptr, root),
-                                      MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
-                MPIR_ERR_CHECK(mpi_errno);
-#ifdef HAVE_ERROR_CHECKING
-                /* check that we received as much as we expected */
-                MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
-                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                                     "**collective_size_mismatch",
-                                     "**collective_size_mismatch %d %d",
-                                     (int) recvd_size, (int) nbytes);
-#endif
-            }
-            /* TODO: set need_post_local_bcast = false if node_comm->local_size is 2 */
-        } else if (nonroot_algo == MPIR_CVAR_BCAST_SMP_NONROOT_ALGORITHM_bcast) {
-            MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
-                            MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm);
-
-            need_post_local_bcast = false;
-        }
-    }
-
-    /* perform the internode broadcast */
-    if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype,
-                        MPIR_Get_internode_rank(comm_ptr, root), comm_ptr->node_roots_comm);
-    }
-
-    /* perform the intranode broadcast unless it's done in pre-step */
-    if (need_post_local_bcast) {
-        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
     }
 
   fn_exit:

@@ -8,6 +8,7 @@
 #include "mpidu_sched.h"
 
 #define MPIR_Sched_cb MPIDU_Sched_cb
+#define MPIR_Sched_cond MPIDU_Sched_cond
 #define MPIR_Sched_cb2 MPIDU_Sched_cb2
 #define MPIR_Sched_next_tag  MPIDU_Sched_next_tag
 #define MPIR_Sched_set_tag  MPIDU_Sched_set_tag

@@ -45,6 +45,7 @@ int MPII_Coll_finalize(void);
 
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 /* Run an inner call of Coll (e.g. Bcast) with the arguments of the blocking collective. The inner
@@ -55,6 +56,16 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
         MPIR_Csel_coll_sig_s inner_sig_; \
         MPIR_##Coll##_fill_sig(&inner_sig_, parent, __VA_ARGS__); \
         mpi_errno = MPIR_Coll_run_inner(&inner_sig_); \
+        MPIR_ERR_CHECK(mpi_errno); \
+    } while (0)
+
+/* The same for a nonblocking algorithm, with the arguments of Coll (e.g. Ireduce): adds an entry to
+ * the parent's schedule. As for any entry, the algorithm orders it with MPIR_SCHED_BARRIER. */
+#define MPIR_COLL_SCHED_INNER(Coll, parent, ...) \
+    do { \
+        MPIR_Csel_coll_sig_s inner_sig_; \
+        MPIR_##Coll##_fill_sig(&inner_sig_, parent, __VA_ARGS__); \
+        mpi_errno = MPIR_Coll_sched_call_inner((parent)->sched, &inner_sig_); \
         MPIR_ERR_CHECK(mpi_errno); \
     } while (0)
 

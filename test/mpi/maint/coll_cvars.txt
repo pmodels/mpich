@@ -356,6 +356,7 @@ algorithms:
             composition:3
             binomial
             smp
+            smp_node_first
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
             circ_graph

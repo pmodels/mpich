@@ -41,7 +41,8 @@ def main():
         dump_coll_impl(a, "nonblocking")
         dump_coll_impl(a, "persistent")
         dump_coll_impl(a, "nonblocking_tag")
-        dump_coll_sig(a)
+        dump_coll_sig(a, "blocking")
+        dump_coll_sig(a, "nonblocking")
 
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
@@ -994,22 +995,22 @@ def dump_coll_sig_fill(name, blocking_type, sig):
 
     G.out.append("MPID_Init_coll_sig(%s);" % ("&coll_sig" if sig == "coll_sig." else "coll_sig"))
 
-def dump_coll_sig(name):
-    """MPIR_<Coll>_fill_sig describes a blocking collective in coll_sig, for an algorithm to run it as an
+def dump_coll_sig(name, blocking_type):
+    """MPIR_<Coll>_fill_sig describes a collective in coll_sig, for an algorithm to run it as an
     inner call. It does not select. The inner call inherits the gpu bits of the parent, which the
     algorithm sets on its own coll_sig before the call: clear gpu_coll when the call passes a host
     temporary, and gpu_local when all of its buffers are. A NULL parent is a call made outside of
     any parent, such as a fallback, and inherits nothing."""
     func = G.FUNCS["mpi_" + name]
     func_params = get_impl_params(func, "blocking")
-    Name = name.capitalize()
+    Name = get_func_name(name, blocking_type).capitalize()
     decl = "void MPIR_%s_fill_sig(MPIR_Csel_coll_sig_s * coll_sig, const MPIR_Csel_coll_sig_s * parent, %s)" % (Name, func_params)
 
     G.out.append("")
     add_prototype(decl)
     dump_split(0, decl)
     dump_open('{')
-    dump_coll_sig_fill(name, "blocking", "coll_sig->")
+    dump_coll_sig_fill(name, blocking_type, "coll_sig->")
     dump_open("if (parent) {")
     G.out.append("coll_sig->flags |= parent->flags & MPIR_COLL_SIG_INHERIT_MASK;")
     dump_close('}')

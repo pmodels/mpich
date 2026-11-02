@@ -595,6 +595,7 @@ Selects the intra-communicator Bcast algorithm. It is used for `MPI_Bcast` on in
 * nb - Forces the nonblocking Bcast algorithm.
 * circ_graph - Forces the queued circulant graph algorithm.
 * smp - Forces the SMP algorithm.
+* smp_node_first - Forces the SMP algorithm, with the bcast on the root's node first.
 * scatter_recursive_doubling_allgather - Forces the Scatter Recursive-Doubling Allgather algorithm.
 * scatter_ring_allgather - Forces the Scatter Ring algorithm.
 * pipelined_tree - Forces the tree-based pipelined algorithm.

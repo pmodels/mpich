@@ -146,8 +146,8 @@ bcast-intra:
     - `disabled: 1`: keeps the algorithm out of the selection. Forcing it by
       CVAR fails its restriction check, and a JSON file that names it fails
       to load ("disabled algorithm"). Its algorithm table entry is NULL. The
-      nonblocking compositions (`sched_smp`) are disabled until nested
-      selection into an existing schedule is designed.
+      nonblocking compositions that still call the legacy selectors are
+      disabled until they move to the `coll_sig` form.
 
 Each entry is exactly one algorithm function. There are no aliases; an alias
 is a small separate function.
@@ -362,6 +362,11 @@ Rules that follow:
   The algorithm CVARs apply to the user's call only, unless
   `MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS` is set, which is for experiments that
   control an inner algorithm.
+  A nonblocking algorithm uses `MPIR_I<Coll>_fill_sig` and
+  `MPIR_Coll_sched_call_inner` (the macro `MPIR_COLL_SCHED_INNER` does both):
+  the inner call builds a schedule of its own, of any type, and a waiting entry
+  (`MPIR_Sched_cond`) in the parent's normal schedule starts it and waits for
+  it. It takes its tag from its own comm.
 - **One global tree.** There is no per-communicator pruning or caching; every
   call searches from the root.
 - **Usage counters.** `MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS=<world rank>` makes

@@ -31,6 +31,7 @@ enum MPIDU_Sched_entry_type {
     MPIDU_SCHED_ENTRY_COPY,
     MPIDU_SCHED_ENTRY_NOP,
     MPIDU_SCHED_ENTRY_CB,
+    MPIDU_SCHED_ENTRY_COND,
     MPIDU_SCHED_ENTRY_INVALID_UB
 };
 
@@ -97,6 +98,12 @@ enum MPIDU_Sched_entry_status {
     MPIDU_SCHED_ENTRY_STATUS_FAILED,    /* indicates a failure occurred while executing the entry */
     MPIDU_SCHED_ENTRY_STATUS_INVALID    /* indicates an invalid entry, or invalid status value */
 };
+struct MPIDU_Sched_cond {
+    MPIR_Sched_cond_start_t *start_p;
+    MPIR_Sched_cond_test_t *test_p;
+    MPIR_Sched_cond_free_t *free_p;
+    void *state;
+};
 
 /* Use a tagged union for schedule entries.  Not always space optimal, but saves
  * lots of error-prone pointer arithmetic and makes scanning the schedule easy. */
@@ -111,6 +118,7 @@ struct MPIDU_Sched_entry {
         struct MPIDU_Sched_copy copy;
         /* nop entries have no args */
         struct MPIDU_Sched_cb cb;
+        struct MPIDU_Sched_cond cond;
     } u;
 };
 
@@ -154,6 +162,8 @@ int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
 int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,
                      MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 int MPIDU_Sched_barrier(MPIR_Sched_t s);
+int MPIDU_Sched_cond(MPIR_Sched_cond_start_t * start_p, MPIR_Sched_cond_test_t * test_p,
+                     MPIR_Sched_cond_free_t * free_p, void *state, MPIR_Sched_t s);
 int MPIDU_Sched_move_to_front(MPIR_Sched_t s, int n);
 
 #endif /* MPIDU_SCHED_H_INCLUDED */

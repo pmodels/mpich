@@ -526,15 +526,6 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (MPIR_Comm_is_parent_comm(comm_ptr) && MPIR_Op_is_commutative(op)) {
-        mpi_errno = MPIR_Ireduce_intra_sched_smp(sendbuf, recvbuf, count,
-                                                 datatype, op, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        goto fn_exit;
-    }
-
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
