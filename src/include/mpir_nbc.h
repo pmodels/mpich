@@ -139,6 +139,13 @@ int MPIR_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int
 int MPIR_Sched_cb(MPIR_Sched_cb_t * cb_p, void *cb_state, MPIR_Sched_t s);
 int MPIR_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MPIR_Sched_t s);
 
+/* An entry that waits on an operation outside this schedule. The start callback starts it when the
+ * entry starts, on every start of a persistent schedule. The test callback sets *done, and is called
+ * from progress until then. An error from either fails the entry. The free callback, which may be
+ * NULL, runs when the schedule is freed. */
+int MPIR_Sched_cond(MPIR_Sched_cond_start_t * start_p, MPIR_Sched_cond_test_t * test_p,
+                    MPIR_Sched_cond_free_t * free_p, void *state, MPIR_Sched_t s);
+
 /* TODO: develop a caching infrastructure for use by the upper level as well,
  * hopefully s.t. uthash can be used somehow */
 
