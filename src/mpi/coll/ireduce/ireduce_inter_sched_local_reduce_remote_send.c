@@ -11,11 +11,17 @@
  * 0 then sends data to root.
  */
 
-int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void *recvbuf,
-                                                      MPI_Aint count, MPI_Datatype datatype,
-                                                      MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                                                      MPIR_Sched_t s)
+int MPIR_Ireduce_inter_sched_local_reduce_remote_send(MPIR_Csel_coll_sig_s * coll_sig,
+                                                      MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.reduce.sendbuf;
+    void *recvbuf = coll_sig->u.reduce.recvbuf;
+    MPI_Aint count = coll_sig->u.reduce.count;
+    MPI_Datatype datatype = coll_sig->u.reduce.datatype;
+    MPI_Op op = coll_sig->u.reduce.op;
+    int root = coll_sig->u.reduce.root;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int rank;
     void *tmp_buf = NULL;
@@ -53,10 +59,8 @@ int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void 
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno =
-            MPIR_Ireduce_intra_sched_auto(sendbuf, tmp_buf, count, datatype, op, 0,
-                                          comm_ptr->local_comm, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, tmp_buf, count, datatype, op, 0,
+                              comm_ptr->local_comm);
         mpi_errno = MPIR_Sched_barrier(s);
         MPIR_ERR_CHECK(mpi_errno);
 

@@ -12,14 +12,17 @@
  * by local intracommunicator scattervs in each group.
  */
 
-int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const void *sendbuf,
-                                                                        void *recvbuf,
-                                                                        MPI_Aint recvcount,
-                                                                        MPI_Datatype datatype,
-                                                                        MPI_Op op,
-                                                                        MPIR_Comm * comm_ptr,
-                                                                        MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(MPIR_Csel_coll_sig_s *
+                                                                        coll_sig,
+                                                                        MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.reduce_scatter_block.sendbuf;
+    void *recvbuf = coll_sig->u.reduce_scatter_block.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.reduce_scatter_block.recvcount;
+    MPI_Datatype datatype = coll_sig->u.reduce_scatter_block.datatype;
+    MPI_Op op = coll_sig->u.reduce_scatter_block.op;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size;
     void *tmp_buf = NULL;
@@ -49,33 +52,29 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
     if (comm_ptr->is_low_group) {
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                              comm_ptr);
 
         /* sched barrier intentionally omitted here to allow both reductions to
          * proceed in parallel */
 
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                              comm_ptr);
     } else {
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                              comm_ptr);
 
         /* sched barrier intentionally omitted here to allow both reductions to
          * proceed in parallel */
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                              comm_ptr);
     }
     MPIR_SCHED_BARRIER(s);
 
@@ -87,9 +86,8 @@ int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const vo
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount, datatype,
-                                               recvbuf, recvcount, datatype, 0, newcomm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_SCHED_INNER(Iscatter, coll_sig, tmp_buf, recvcount, datatype, recvbuf, recvcount,
+                          datatype, 0, newcomm_ptr);
 
   fn_exit:
     return mpi_errno;

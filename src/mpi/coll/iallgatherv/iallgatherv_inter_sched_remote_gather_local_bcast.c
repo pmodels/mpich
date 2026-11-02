@@ -16,13 +16,18 @@
  * intracommunicator broadcast.
  */
 
-int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, MPI_Aint sendcount,
-                                                           MPI_Datatype sendtype, void *recvbuf,
-                                                           const MPI_Aint recvcounts[],
-                                                           const MPI_Aint displs[],
-                                                           MPI_Datatype recvtype,
-                                                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(MPIR_Csel_coll_sig_s * coll_sig,
+                                                           MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allgatherv.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.allgatherv.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.allgatherv.sendtype;
+    void *recvbuf = coll_sig->u.allgatherv.recvbuf;
+    const MPI_Aint *recvcounts = coll_sig->u.allgatherv.recvcounts;
+    const MPI_Aint *displs = coll_sig->u.allgatherv.displs;
+    MPI_Datatype recvtype = coll_sig->u.allgatherv.recvtype;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int remote_size, root, rank;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -36,25 +41,21 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Igatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                              displs, recvtype, root, comm_ptr);
         /* gatherv to right group */
         root = 0;
-        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Igatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                              displs, recvtype, root, comm_ptr);
     } else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Igatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                              displs, recvtype, root, comm_ptr);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Igatherv_inter_sched_auto(sendbuf, sendcount, sendtype, recvbuf,
-                                                   recvcounts, displs, recvtype, root, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Igatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                              displs, recvtype, root, comm_ptr);
     }
 
     MPIR_SCHED_BARRIER(s);
@@ -78,8 +79,7 @@ int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, 
     MPIR_Sched_add_handle(s, newtype);
     MPIR_Datatype_release_if_not_builtin(newtype);
 
-    mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, 1, newtype, 0, newcomm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_SCHED_INNER(Ibcast, coll_sig, recvbuf, 1, newtype, 0, newcomm_ptr);
 
   fn_exit:
     return mpi_errno;

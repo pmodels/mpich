@@ -183,6 +183,7 @@ ibarrier-intra:
         cvar_params: DISSEM_KVAL
 ibarrier-inter:
     sched_bcast
+        inner: ibarrier-intra@local_comm, ibcast-inter@comm
 
 bcast-intra:
     binomial
@@ -235,6 +236,7 @@ bcast-inter:
         inner: bcast-intra@local_comm
 ibcast-inter:
     sched_flat
+        inner: ibcast-intra@local_comm
 
 gather-intra:
     binomial
@@ -250,6 +252,7 @@ igather-intra:
 igather-inter:
     sched_long
     sched_short
+        inner: igather-intra@local_comm
 
 gatherv-intra:
     linear
@@ -282,6 +285,7 @@ iscatter-intra:
 iscatter-inter:
     sched_linear
     sched_remote_send_local_scatter
+        inner: iscatter-intra@local_comm
 
 scatterv-intra:
     linear
@@ -335,6 +339,7 @@ iallgather-intra:
         cvar_params: RECEXCH_KVAL
 iallgather-inter:
     sched_local_gather_remote_bcast
+        inner: igather-intra@local_comm, ibcast-inter@comm
 
 allgatherv-intra:
     brucks
@@ -363,6 +368,7 @@ iallgatherv-intra:
         cvar_params: BRUCKS_KVAL
 iallgatherv-inter:
     sched_remote_gather_local_bcast
+        inner: igatherv-inter@comm, ibcast-intra@local_comm
 
 alltoall-intra:
     brucks
@@ -476,6 +482,7 @@ ireduce-intra:
         cvar_params: RING_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
 ireduce-inter:
     sched_local_reduce_remote_send
+        inner: ireduce-intra@local_comm
 
 allreduce-intra:
     smp
@@ -540,6 +547,7 @@ iallreduce-intra:
         cvar_params: RECEXCH_KVAL
 iallreduce-inter:
     sched_remote_reduce_local_bcast
+        inner: ireduce-inter@comm, ibcast-intra@local_comm
 
 reduce_scatter-intra:
     noncommutative
@@ -566,6 +574,7 @@ ireduce_scatter-intra:
         cvar_params: -, RECEXCH_KVAL
 ireduce_scatter-inter:
     sched_remote_reduce_local_scatterv
+        inner: ireduce-inter@comm, iscatterv-intra@local_comm
 
 reduce_scatter_block-intra:
     noncommutative
@@ -592,6 +601,7 @@ ireduce_scatter_block-intra:
         cvar_params: RECEXCH_KVAL
 ireduce_scatter_block-inter:
     sched_remote_reduce_local_scatterv
+        inner: ireduce-inter@comm, iscatter-intra@local_comm
 
 scan-intra:
     smp

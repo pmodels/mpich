@@ -14,12 +14,18 @@
  * where n is the total size of the data to be scattered from the root.
  */
 
-int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
-                                                        MPI_Datatype sendtype, void *recvbuf,
-                                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                        int root, MPIR_Comm * comm_ptr,
-                                                        MPIR_Sched_t s)
+int MPIR_Iscatter_inter_sched_remote_send_local_scatter(MPIR_Csel_coll_sig_s * coll_sig,
+                                                        MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.scatter.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.scatter.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.scatter.sendtype;
+    void *recvbuf = coll_sig->u.scatter.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.scatter.recvcount;
+    MPI_Datatype recvtype = coll_sig->u.scatter.recvtype;
+    int root = coll_sig->u.scatter.root;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -57,7 +63,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {
-            /* silence -Wmaybe-uninitialized due to MPIR_Iscatter_intra_sched_auto by non-zero ranks */
+            /* silence -Wmaybe-uninitialized by non-zero ranks */
             recvtype_sz = 0;
         }
 
@@ -68,10 +74,8 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the usual scatter on this intracommunicator */
-        mpi_errno =
-            MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
-                                           recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Iscatter, coll_sig, tmp_buf, recvcount * recvtype_sz,
+                              MPIR_BYTE_INTERNAL, recvbuf, recvcount, recvtype, 0, newcomm_ptr);
         MPIR_SCHED_BARRIER(s);
     }
 

@@ -13,10 +13,17 @@
  *
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
-int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_inter_sched_short(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.gather.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.gather.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.gather.sendtype;
+    void *recvbuf = coll_sig->u.gather.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.gather.recvcount;
+    MPI_Datatype recvtype = coll_sig->u.gather.recvtype;
+    int root = coll_sig->u.gather.root;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int rank;
     MPI_Aint local_size, remote_size;
@@ -44,7 +51,7 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
             tmp_buf = MPIR_Sched_alloc_state(s, sendcount * local_size * sendtype_sz);
             MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
         } else {
-            /* silence -Wmaybe-uninitialized due to MPIR_Igather_intra_sched_auto by non-zero ranks */
+            /* silence -Wmaybe-uninitialized by non-zero ranks */
             sendtype_sz = 0;
         }
 
@@ -57,10 +64,11 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the a local gather on this intracommunicator */
-        mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype,
-                                                  tmp_buf, sendcount * sendtype_sz,
-                                                  MPIR_BYTE_INTERNAL, 0, newcomm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Igather, coll_sig, sendbuf, sendcount, sendtype, tmp_buf,
+                              sendcount * sendtype_sz, MPIR_BYTE_INTERNAL, 0, newcomm_ptr);
+
+        /* the send below needs the result of the gather */
+        MPIR_SCHED_BARRIER(s);
 
         if (rank == 0) {
             mpi_errno =
