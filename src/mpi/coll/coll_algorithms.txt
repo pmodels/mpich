@@ -112,8 +112,7 @@
 #   * disabled:
 #         1 to keep an algorithm out of the selection. Forcing it by CVAR fails its
 #         restriction check (error or fallback, per MPIR_CVAR_COLLECTIVE_FALLBACK), and a JSON
-#         tuning file that names it fails to load. The nonblocking compositions that still call
-#         the legacy selectors are disabled until they move to the coll_sig form.
+#         tuning file that names it fails to load.
 
 # ----
 # Some checkers are defined for only some collectives; loading a tuning file that uses one under
@@ -211,7 +210,7 @@ ibcast-intra:
     sched_binomial
     sched_smp
         restrictions: hierarchical
-        disabled: 1
+        inner: ibcast-intra@node_comm, ibcast-intra@node_roots_comm
     sched_scatter_recursive_doubling_allgather
         restrictions: pof2
     sched_scatter_ring_allgather
@@ -514,9 +513,10 @@ allreduce-inter:
         inner: reduce-intra@local_comm, bcast-intra@local_comm
 iallreduce-intra:
     sched_naive
+        inner: ireduce-intra@comm, ibcast-intra@comm
     sched_smp
         restrictions: commutative, hierarchical
-        disabled: 1
+        inner: ireduce-intra@node_comm, iallreduce-intra@node_roots_comm, ibcast-intra@node_comm
     sched_recursive_doubling
     sched_reduce_scatter_allgather
         restrictions: builtin_op
@@ -601,7 +601,7 @@ scan-intra:
 iscan-intra:
     sched_smp
         restrictions: commutative, node_consecutive
-        disabled: 1
+        inner: iscan-intra@node_comm, iscan-intra@node_roots_comm, ibcast-intra@node_comm
     sched_recursive_doubling
     tsp_recursive_doubling
 

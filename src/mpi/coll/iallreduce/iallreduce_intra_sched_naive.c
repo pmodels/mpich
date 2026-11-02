@@ -6,10 +6,15 @@
 #include "mpiimpl.h"
 
 /* implements the naive intracomm allreduce, that is, reduce followed by bcast */
-int MPIR_Iallreduce_intra_sched_naive(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                      MPIR_Sched_t s)
+int MPIR_Iallreduce_intra_sched_naive(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allreduce.sendbuf;
+    void *recvbuf = coll_sig->u.allreduce.recvbuf;
+    MPI_Aint count = coll_sig->u.allreduce.count;
+    MPI_Datatype datatype = coll_sig->u.allreduce.datatype;
+    MPI_Op op = coll_sig->u.allreduce.op;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     int rank;
     int size ATTRIBUTE((unused));
@@ -17,19 +22,15 @@ int MPIR_Iallreduce_intra_sched_naive(const void *sendbuf, void *recvbuf, MPI_Ai
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
 
     if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
-        mpi_errno =
-            MPIR_Ireduce_intra_sched_auto(recvbuf, NULL, count, datatype, op, 0, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, recvbuf, NULL, count, datatype, op, 0, comm_ptr);
     } else {
-        mpi_errno =
-            MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ireduce, coll_sig, sendbuf, recvbuf, count, datatype, op, 0,
+                              comm_ptr);
     }
 
     MPIR_SCHED_BARRIER(s);
 
-    mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, count, datatype, 0, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_SCHED_INNER(Ibcast, coll_sig, recvbuf, count, datatype, 0, comm_ptr);
 
   fn_exit:
     return mpi_errno;

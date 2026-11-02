@@ -145,9 +145,7 @@ bcast-intra:
       inline in device headers and exist only in some builds.
     - `disabled: 1`: keeps the algorithm out of the selection. Forcing it by
       CVAR fails its restriction check, and a JSON file that names it fails
-      to load ("disabled algorithm"). Its algorithm table entry is NULL. The
-      nonblocking compositions that still call the legacy selectors are
-      disabled until they move to the `coll_sig` form.
+      to load ("disabled algorithm"). Its algorithm table entry is NULL.
 
 Each entry is exactly one algorithm function. There are no aliases; an alias
 is a small separate function.
@@ -366,7 +364,9 @@ Rules that follow:
   `MPIR_Coll_sched_call_inner` (the macro `MPIR_COLL_SCHED_INNER` does both):
   the inner call builds a schedule of its own, of any type, and a waiting entry
   (`MPIR_Sched_cond`) in the parent's normal schedule starts it and waits for
-  it. It takes its tag from its own comm.
+  it. The whole call chain uses one tag, drawn once from the user's comm and
+  inherited by `fill_sig`, whatever comm an inner call runs on (transport
+  algorithms still draw their own).
 - **One global tree.** There is no per-communicator pruning or caching; every
   call searches from the root.
 - **Usage counters.** `MPIR_CVAR_DUMP_COLL_ALGO_COUNTERS=<world rank>` makes

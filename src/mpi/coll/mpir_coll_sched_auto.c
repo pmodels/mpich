@@ -41,14 +41,6 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (MPIR_Comm_is_parent_comm(comm_ptr)) {
-        mpi_errno = MPIR_Ibcast_intra_sched_smp(buffer, count, datatype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        goto fn_exit;
-    }
-
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
@@ -573,15 +565,6 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (MPIR_Comm_is_parent_comm(comm_ptr) && MPIR_Op_is_commutative(op)) {
-        mpi_errno =
-            MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        goto fn_exit;
-    }
-
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -783,13 +766,8 @@ int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint cou
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_Comm_is_parent_comm(comm_ptr)) {
-        mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    } else {
-        mpi_errno =
-            MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                      comm_ptr, s);
-    }
+    mpi_errno = MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                          comm_ptr, s);
 
     return mpi_errno;
 }
