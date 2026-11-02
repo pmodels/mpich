@@ -1005,7 +1005,8 @@ def dump_coll_sig(name):
     """MPIR_<Coll>_fill_sig describes a blocking collective in coll_sig, for an algorithm to run it as an
     inner call. It does not select. The inner call inherits the gpu bits of the parent, which the
     algorithm sets on its own coll_sig before the call: clear gpu_coll when the call passes a host
-    temporary, and gpu_local when all of its buffers are."""
+    temporary, and gpu_local when all of its buffers are. A NULL parent is a call made outside of
+    any parent, such as a fallback, and inherits nothing."""
     func = G.FUNCS["mpi_" + name]
     func_params = get_impl_params(func, "blocking")
     Name = name.capitalize()
@@ -1016,7 +1017,9 @@ def dump_coll_sig(name):
     dump_split(0, decl)
     dump_open('{')
     dump_coll_sig_fill(name, "blocking", "coll_sig->")
+    dump_open("if (parent) {")
     G.out.append("coll_sig->flags |= parent->flags & MPIR_COLL_SIG_INHERIT_MASK;")
+    dump_close('}')
     dump_close('}')
 
 def dump_coll_mpir(name, blocking_type):
