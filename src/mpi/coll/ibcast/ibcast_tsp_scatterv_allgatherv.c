@@ -7,6 +7,27 @@
 #include "algo_common.h"
 #include "ibcast.h"
 
+/* The chunks are in rank order in the buffer, and a subtree of the scatter tree is a range of
+ * logical ranks, which wraps around the end of the rank order when the root is not 0. Split the
+ * logical range [lbeg, lend) into the one or two contiguous pieces it occupies in the buffer, in
+ * logical order. displs has size + 1 entries, with displs[size] being the total size. */
+static int get_pieces(int lbeg, int lend, int root, int size, const MPI_Aint * displs,
+                      MPI_Aint offs[2], MPI_Aint lens[2])
+{
+    int first = (lbeg + root) % size;
+    int last = first + (lend - lbeg);
+
+    offs[0] = displs[first];
+    if (last <= size) {
+        lens[0] = displs[last] - displs[first];
+        return 1;
+    }
+    lens[0] = displs[size] - displs[first];
+    offs[1] = 0;
+    lens[1] = displs[last - size];
+    return 2;
+}
+
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
@@ -25,8 +46,10 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int tree_type, vtx_id, recv_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int current_child, next_child, lrank, total_count, sink_id;
-    int num_children, *child_subtree_size = NULL;
+    int num_children, *child_subtree_size = NULL, *child_subtree_nranks = NULL;
     int num_send_dependencies;
+    int lend, npieces, recv_ids[2], nrecv = 0;
+    MPI_Aint offs[2], lens[2];
     MPIR_CHKLMEM_DECL();
 
     /* For correctness, transport based collectives need to get the
@@ -52,7 +75,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     nbytes = type_size * count;
     MPIR_CHKLMEM_MALLOC(cnts, sizeof(MPI_Aint) * size);
-    MPIR_CHKLMEM_MALLOC(displs, sizeof(MPI_Aint) * size);
+    MPIR_CHKLMEM_MALLOC(displs, sizeof(MPI_Aint) * (size + 1));
 
     total_count = 0;
     for (i = 0; i < size; i++)
@@ -69,6 +92,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     for (i = 1; i < size; i++) {
         displs[i] = displs[i - 1] + cnts[i - 1];
     }
+    displs[size] = nbytes;
 
 
     if (is_contig) {
@@ -94,6 +118,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     num_children = my_tree.num_children;
 
     MPIR_CHKLMEM_MALLOC(child_subtree_size, sizeof(int) * num_children);
+    MPIR_CHKLMEM_MALLOC(child_subtree_nranks, sizeof(int) * num_children);
     /* calculate size of subtree of each child */
 
     /* get tree information of the parent */
@@ -108,6 +133,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     MPI_Aint recv_size;
     recv_size = cnts[rank];
+    lend = lrank + 1;   /* the end of my subtree in logical ranks */
     /* total size of the data to be received from the parent. */
     for (i = 0; i < num_children; i++) {
         current_child = ((*(int *) utarray_eltptr(my_tree.children, i)) - root + size) % size;  /* Dereference and calculate the current child */
@@ -126,8 +152,9 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
             }
         }
         child_subtree_size[i] = 0;
+        child_subtree_nranks[i] = next_child - current_child;
         for (x = current_child; x < next_child; x++) {
-            child_subtree_size[i] += cnts[x];
+            child_subtree_size[i] += cnts[(x + root) % size];
         }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
@@ -135,46 +162,57 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                          i, rank, current_child, next_child, child_subtree_size[i],
                          (long) recv_size));
         recv_size += child_subtree_size[i];
+        lend = next_child;
     }
     if (my_tree.parent != -1)
         MPIR_Treealgo_tree_free(&parents_tree);
 
     /* receive data from the parent */
     if (my_tree.parent != -1) {
+        npieces = get_pieces(lrank, lend, root, size, displs, offs, lens);
+        for (i = 0; i < npieces; i++) {
 #ifdef HAVE_ERROR_CHECKING
-        struct MPII_Ibcast_state *ibcast_state =
-            MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
-        MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        ibcast_state->n_bytes = recv_size;
-        mpi_errno =
-            MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size,
-                                        MPIR_BYTE_INTERNAL, my_tree.parent, tag, comm,
-                                        &ibcast_state->status, sched, 0, NULL, &recv_id);
-        MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
-                          &vtx_id);
+            struct MPII_Ibcast_state *ibcast_state =
+                MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
+            MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            ibcast_state->n_bytes = lens[i];
+            mpi_errno =
+                MPIR_TSP_sched_irecv_status((char *) tmp_buf + offs[i], lens[i],
+                                            MPIR_BYTE_INTERNAL, my_tree.parent, tag, comm,
+                                            &ibcast_state->status, sched, 0, NULL, &recv_id);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
+                              &vtx_id);
 #else
-        mpi_errno =
-            MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPIR_BYTE_INTERNAL,
-                                 my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+            mpi_errno =
+                MPIR_TSP_sched_irecv((char *) tmp_buf + offs[i], lens[i], MPIR_BYTE_INTERNAL,
+                                     my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+            MPIR_ERR_CHECK(mpi_errno);
 #endif
-        MPIR_ERR_CHECK(mpi_errno);
+            recv_ids[nrecv++] = recv_id;
+        }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
-
     }
 
     /* send data to children */
     for (i = 0; i < num_children; i++) {
         int child = *(int *) utarray_eltptr(my_tree.children, i);
+        int lchild = (child - root + size) % size;
+        int lchild_end = lchild + child_subtree_nranks[i];
         if (num_children > 0 && lrank != 0)
-            num_send_dependencies = 1;
+            num_send_dependencies = nrecv;
         else
             num_send_dependencies = 0;
 
-        mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
-                                         child_subtree_size[i], MPIR_BYTE_INTERNAL,
-                                         child, tag, comm, sched, num_send_dependencies, &recv_id,
-                                         &vtx_id);
-        MPIR_ERR_CHECK(mpi_errno);
+        /* a subtree that wraps around the rank order goes in two messages, which the
+         * child receives in the same order */
+        npieces = get_pieces(lchild, lchild_end, root, size, displs, offs, lens);
+        for (j = 0; j < npieces; j++) {
+            mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + offs[j], lens[j],
+                                             MPIR_BYTE_INTERNAL, child, tag, comm, sched,
+                                             num_send_dependencies, recv_ids, &vtx_id);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
 
