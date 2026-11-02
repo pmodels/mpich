@@ -103,7 +103,7 @@
 
 # ----
 # Some checkers are defined for only some collectives; loading a tuning file that uses one under
-# a collective without it fails (csel.c condition_is_defined, which must match coll_csel.h):
+# a collective without it fails (csel_validation.c condition_is_defined, which must match coll_csel.h):
 #   * inplace: allgather(v), alltoall(v,w), allreduce, reduce_scatter(_block), scan, exscan.
 #     Not the rooted gather(v), scatter(v), reduce: MPI_IN_PLACE is given at the root only, so
 #     the value differs between ranks (restriction rule 2 above).

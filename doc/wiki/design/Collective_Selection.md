@@ -515,5 +515,6 @@ the user buffers, since the copies would wrap the outer steps too.
 | `src/include/mpir_coll.h` | `MPIR_Csel_coll_sig_s`, flags, algorithm function type |
 | `src/mpi/coll/include/coll_csel.h` | `MPIR_Csel_node_s`, condition functions, csel API |
 | `src/mpi/coll/src/csel.c` | JSON loading, named subtrees, `MPIR_Csel_search` |
+| `src/mpi/coll/src/csel_validation.c` | checks of a loaded tuning file; they improve the error checking, and a correct file selects the same way without them |
 | `src/mpi/coll/src/coll_impl.c` | Init and finalize, `MPIR_Coll_json`, `MPIR_Coll_run_tree`, `MPIR_Coll_nb`, counters |
 | `src/mpid/ch4/shm/posix/posix_coll.h`, `posix_coll_release_gather.h` | CH4 POSIX release_gather algorithms and condition |
