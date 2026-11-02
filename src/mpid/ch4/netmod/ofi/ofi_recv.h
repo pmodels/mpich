@@ -42,7 +42,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_D
     /* if we cannot fit the entire data into a single IOV array,
      * fallback to pack */
     MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
-    if (num_contig > MPIDI_OFI_global.rx_iov_limit)
+    if (num_contig > MPIDI_OFI_global.rx_iov_limit ||
+        MPIDI_OFI_bottom_has_gpu(buf, count, datatype, num_contig))
         goto unpack;
 
     /* Calculate the correct NICs. */
