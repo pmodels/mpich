@@ -440,19 +440,58 @@ sets two flags, which two restrictions read:
 
 | Restriction | Flag | Holds when |
 |---|---|---|
-| 12 `gpu_local` | `MPIR_COLL_SIG_FLAG__GPU_LOCAL` | a buffer is device memory (`MPL_gpu_attr_is_dev`) |
-| 13 `gpu_coll` | `MPIR_COLL_SIG_FLAG__GPU_COLL` | every buffer is device memory (`MPL_gpu_attr_is_dev`) and `MPIR_CVAR_ENABLE_GPU_COLL` is on |
+| 10 `gpu_local` | `MPIR_COLL_SIG_FLAG__GPU_LOCAL` | a buffer is device memory (`MPL_gpu_attr_is_dev`) |
+| 11 `gpu_coll` | `MPIR_COLL_SIG_FLAG__GPU_COLL` | every buffer is device memory (`MPL_gpu_attr_is_dev`) and `MPIR_CVAR_ENABLE_GPU_COLL` is on |
 
 Buffers that are neither host nor device memory, such as registered host or
 managed memory, count as host memory here: the CPU can access them, so the
 collective algorithms can use them directly.
-`gpu_local` is a local fact. `gpu_coll` is for algorithms that need device buffers
-on every rank; no collective check is affordable in the selection, so the
-CVAR is the user's promise that each call passes either host buffers on all
-ranks or device buffers on all ranks. Intercomm, alltoallw and neighborhood
-collectives are not described yet and never set the flags. Neither flag
-changes what any algorithm does: an algorithm without the `gpu_local` restriction
-must still work on device buffers.
+`gpu_coll` is for algorithms that need device buffers on every rank; no
+collective check is affordable in the selection, so the CVAR is the user's
+promise that each call passes either host buffers on all ranks or device buffers
+on all ranks. Intercomm, alltoallw and neighborhood collectives are not described
+yet and never set the flags. Neither flag changes what any algorithm does: an
+algorithm without the `gpu_local` restriction must still work on device buffers.
+
+A restriction's suffix says how a tree can use it, because all ranks of a call
+must reach the same algorithm:
+
+- **`_coll`**, and every condition without a suffix, is the same on all ranks, so
+  it can select completely separate subtrees.
+- **`_local`** can differ between ranks, so it only chooses between `call=auto`
+  and an algorithm restricted on it. That algorithm only clears the condition
+  and continues in `auto`, so a rank that takes it rejoins the ranks that do not.
+  gen_coll requires it to be a general algorithm with
+  `inner: $coll-intra@comm[<name>_local=0]`.
+
+Loading a tuning file refuses any other use of a `_local` condition. It cannot be
+reached from `auto`, because a rank that goes on to `auto` still has it set. Its
+branch can split on other conditions, and each leaf is `call=auto` or the
+restricted algorithm. Its next case is `"any": "call=auto"`. It cannot be negated
+or used in a `dispatch=`. For example:
+
+```
+"name=main": {
+    "gpu_local": {
+        "collective=reduce-intra": {
+            "msg_size(4096)": { "algorithm=MPIR_Coll_buffer_swap": {} },
+            "any": "call=auto"
+        },
+        "any": "call=auto"
+    },
+    "any": "call=auto"
+}
+```
+
+Internal buffers can break `gpu_coll`, whose promise covers only the user's
+buffers: the ranks of an inner call that mix them with host temporaries can
+disagree on it.
+
+`gpu_coll` is not defined for gatherv, scatterv and alltoallv, and a tuning file
+that uses it there fails to load: a rank with a zero count has no buffer to
+query, and negative displacements skip the query, so that rank cannot tell.
+A future wrapper in the style of `MPIR_Coll_buffer_swap` could check the kind
+across ranks and enable the condition for them.
 
 `MPIR_Coll_buffer_swap`, a general algorithm with restriction `gpu_local`, copies
 each device buffer into a host buffer (only the ones the
