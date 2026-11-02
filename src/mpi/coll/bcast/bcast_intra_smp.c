@@ -102,7 +102,7 @@ int MPIR_Bcast_intra_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s 
     }
 
     /* perform the intranode broadcast unless it's done in pre-step */
-    if (need_post_local_bcast) {
+    if (need_post_local_bcast && comm_ptr->node_comm != NULL) {
         MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
     }
 
