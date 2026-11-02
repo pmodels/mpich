@@ -47,8 +47,6 @@ def main():
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
     add_algo_prototypes()
-    for a in G.coll_names:
-        add_sched_auto_prototypes(a)
 
     # MPIR_Coll_cvar_table, pointers to the algorithm CVARs
     dump_MPIR_Coll_cvar_table()
@@ -262,27 +260,6 @@ def add_algo_prototypes():
         algo_params = get_algo_params(func, func_name, algo)
         decl = "int %s(%s)" % (algo_funcname, algo_params)
         add_prototype(decl)
-
-def add_sched_auto_prototypes(name):
-    def get_coll_params(func):
-        mapping = G.MAPS['SMALL_C_KIND_MAP']
-        params = []
-        for p in func['parameters']:
-            if p['name'] == 'comm':
-                params.append("MPIR_Comm * comm_ptr")
-            else:
-                s = get_C_param(p, func, mapping)
-                if p['kind'].startswith('POLY'):
-                    s = re.sub(r'\bint ', 'MPI_Aint ', s)
-                params.append(s)
-        return ', '.join(params)
-
-    func = G.FUNCS["mpi_" + name]
-    params = get_coll_params(func)
-    params += ", MPIR_Sched_t s"
-    add_prototype("int MPIR_I%s_intra_sched_auto(%s)" % (name, params))
-    if not re.match(r'(scan|exscan|neighbor_)', name):
-        add_prototype("int MPIR_I%s_inter_sched_auto(%s)" % (name, params))
 
 #---- dumping to G.out (mpir_coll.c) ----
 

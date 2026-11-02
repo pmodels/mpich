@@ -97,7 +97,6 @@ cvars:
       description : |-
         Variable to select ibarrier algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_recursive_doubling - Force recursive doubling algorithm
         tsp_recexch - Force generic transport based recursive exchange algorithm
         tsp_k_dissemination - Force generic transport based high-radix dissemination algorithm
@@ -112,7 +111,6 @@ cvars:
       description : |-
         Variable to select ibarrier algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_bcast - Force bcast algorithm
 
     - name        : MPIR_CVAR_BCAST_MIN_PROCS
@@ -371,7 +369,6 @@ cvars:
       description : |-
         Variable to select ibcast algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial                             - Force Binomial algorithm
         sched_smp                                  - Force smp algorithm
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
@@ -413,7 +410,6 @@ cvars:
       description : |-
         Variable to select ibcast algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_flat - Force flat algorithm
 
     - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
@@ -465,7 +461,6 @@ cvars:
       description : |-
         Variable to select igather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
         tsp_tree       - Force genetric transport based tree algorithm
 
@@ -489,7 +484,6 @@ cvars:
       description : |-
         Variable to select igather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_long  - Force long inter algorithm
         sched_short - Force short inter algorithm
 
@@ -529,7 +523,6 @@ cvars:
       description : |-
         Variable to select igatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear         - Force linear algorithm
         tsp_linear       - Force generic transport based linear algorithm
 
@@ -543,7 +536,6 @@ cvars:
       description : |-
         Variable to select igatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
 
@@ -595,7 +587,6 @@ cvars:
       description : |-
         Variable to select iscatter algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial     - Force binomial algorithm
         tsp_tree       - Force genetric transport based tree algorithm
 
@@ -619,7 +610,6 @@ cvars:
       description : |-
         Variable to select iscatter algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear                    - Force linear algorithm
         sched_remote_send_local_scatter - Force remote-send-local-scatter algorithm
 
@@ -659,7 +649,6 @@ cvars:
       description : |-
         Variable to select iscatterv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
 
@@ -673,7 +662,6 @@ cvars:
       description : |-
         Variable to select iscatterv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
 
@@ -794,7 +782,6 @@ cvars:
       description : |-
         Variable to select iallgather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_ring               - Force ring algorithm
         sched_brucks             - Force brucks algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
@@ -813,7 +800,6 @@ cvars:
       description : |-
         Variable to select iallgather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
 
     - name        : MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE
@@ -885,7 +871,6 @@ cvars:
       description : |-
         Variable to select iallgatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_brucks             - Force brucks algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_ring               - Force ring algorithm
@@ -904,7 +889,6 @@ cvars:
       description : |-
         Variable to select iallgatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
 
     - name      : MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
@@ -994,7 +978,6 @@ cvars:
       description : |-
         Variable to select ialltoall algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_brucks            - Force brucks algorithm
         sched_inplace           - Force inplace algorithm
         sched_pairwise          - Force pairwise algorithm
@@ -1013,7 +996,6 @@ cvars:
       description : |-
         Variable to select ialltoall algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM
@@ -1053,7 +1035,6 @@ cvars:
       description : |-
         Variable to select ialltoallv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
         tsp_scattered       - Force generic transport based scattered algorithm
@@ -1070,7 +1051,6 @@ cvars:
       description : |-
         Variable to select ialltoallv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS
@@ -1131,7 +1111,6 @@ cvars:
       description : |-
         Variable to select ialltoallw algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_blocked           - Force blocked algorithm
         sched_inplace           - Force inplace algorithm
         tsp_blocked   - Force generic transport based blocked algorithm
@@ -1147,7 +1126,6 @@ cvars:
       description : |-
         Variable to select ialltoallw algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_REDUCE_SHORT_MSG_SIZE
@@ -1315,7 +1293,6 @@ cvars:
       description : |-
         Variable to select ireduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_smp                   - Force smp algorithm
         sched_binomial              - Force binomial algorithm
         sched_reduce_scatter_gather - Force reduce scatter gather algorithm
@@ -1332,7 +1309,6 @@ cvars:
       description : |-
         Variable to select ireduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE
@@ -1598,7 +1574,6 @@ cvars:
       description : |-
         Variable to select iallreduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_naive                      - Force naive algorithm
         sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
@@ -1620,7 +1595,6 @@ cvars:
       description : |-
         Variable to select iallreduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
@@ -1683,7 +1657,6 @@ cvars:
       description : |-
         Variable to select ireduce_scatter algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_noncommutative     - Force noncommutative algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_pairwise           - Force pairwise algorithm
@@ -1700,7 +1673,6 @@ cvars:
       description : |-
         Variable to select ireduce_scatter algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM
@@ -1752,7 +1724,6 @@ cvars:
       description : |-
         Variable to select ireduce_scatter_block algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_noncommutative     - Force noncommutative algorithm
         sched_recursive_doubling - Force recursive doubling algorithm
         sched_pairwise           - Force pairwise algorithm
@@ -1769,7 +1740,6 @@ cvars:
       description : |-
         Variable to select ireduce_scatter_block algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
     - name        : MPIR_CVAR_SCAN_INTRA_ALGORITHM
@@ -1796,7 +1766,6 @@ cvars:
       description : |-
         Variable to select allgather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_smp                  - Force smp algorithm
         sched_recursive_doubling   - Force recursive doubling algorithm
         tsp_recursive_doubling - Force generic transport recursive doubling algorithm
@@ -1824,7 +1793,6 @@ cvars:
       description : |-
         Variable to select iexscan algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_INTRA_ALGORITHM
@@ -1861,7 +1829,6 @@ cvars:
       description : |-
         Variable to select ineighbor_allgather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
 
@@ -1875,7 +1842,6 @@ cvars:
       description : |-
         Variable to select ineighbor_allgather algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear    - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
 
@@ -1913,7 +1879,6 @@ cvars:
       description : |-
         Variable to select ineighbor_allgatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
@@ -1927,7 +1892,6 @@ cvars:
       description : |-
         Variable to select ineighbor_allgatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
@@ -1965,7 +1929,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoall algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
@@ -1980,7 +1943,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoall algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
@@ -2018,7 +1980,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoallv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
 
@@ -2032,7 +1993,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoallv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear  - Force generic transport based linear algorithm
 
@@ -2070,7 +2030,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoallw algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
@@ -2084,7 +2043,6 @@ cvars:
       description : |-
         Variable to select ineighbor_alltoallw algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
-        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         tsp_linear        - Force generic transport based linear algorithm
 
