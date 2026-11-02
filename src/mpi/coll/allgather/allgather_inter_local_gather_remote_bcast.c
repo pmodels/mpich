@@ -12,11 +12,16 @@
  * broadcast.
  */
 
-int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint sendcount,
-                                                   MPI_Datatype sendtype, void *recvbuf,
-                                                   MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Allgather_inter_local_gather_remote_bcast(MPIR_Csel_coll_sig_s * coll_sig,
+                                                   MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allgather.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.allgather.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.allgather.sendtype;
+    void *recvbuf = coll_sig->u.allgather.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.allgather.recvcount;
+    MPI_Datatype recvtype = coll_sig->u.allgather.recvtype;
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;
     MPI_Aint sendtype_sz;
     void *tmp_buf = NULL;
@@ -45,9 +50,8 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
     newcomm_ptr = comm_ptr->local_comm;
 
     if (sendcount != 0) {
-        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount * sendtype_sz,
-                                MPIR_BYTE_INTERNAL, 0, newcomm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gather, coll_sig, sendbuf, sendcount, sendtype, tmp_buf,
+                        sendcount * sendtype_sz, MPIR_BYTE_INTERNAL, 0, newcomm_ptr);
     }
 
     /* first broadcast from left to right group, then from right to
@@ -56,33 +60,29 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
         /* bcast to right */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Bcast(tmp_buf, sendcount * sendtype_sz * local_size,
-                                   MPIR_BYTE_INTERNAL, root, comm_ptr, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, tmp_buf, sendcount * sendtype_sz * local_size,
+                            MPIR_BYTE_INTERNAL, root, comm_ptr);
         }
 
         /* receive bcast from right */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Bcast(recvbuf, recvcount * remote_size,
-                                   recvtype, root, comm_ptr, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, recvbuf, recvcount * remote_size, recvtype, root,
+                            comm_ptr);
         }
     } else {
         /* receive bcast from left */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Bcast(recvbuf, recvcount * remote_size,
-                                   recvtype, root, comm_ptr, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, recvbuf, recvcount * remote_size, recvtype, root,
+                            comm_ptr);
         }
 
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Bcast(tmp_buf, sendcount * sendtype_sz * local_size,
-                                   MPIR_BYTE_INTERNAL, root, comm_ptr, coll_attr);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_COLL_INNER(Bcast, coll_sig, tmp_buf, sendcount * sendtype_sz * local_size,
+                            MPIR_BYTE_INTERNAL, root, comm_ptr);
         }
     }
 

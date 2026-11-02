@@ -11,11 +11,15 @@
  * intracommunicator broadcast.
  */
 
-int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
-                                             MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int root, MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Bcast_inter_remote_send_local_bcast(MPIR_Csel_coll_sig_s * coll_sig,
+                                             MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    void *buffer = coll_sig->u.bcast.buffer;
+    MPI_Aint count = coll_sig->u.bcast.count;
+    MPI_Datatype datatype = coll_sig->u.bcast.datatype;
+    int root = coll_sig->u.bcast.root;
+    int coll_attr = 0;
     int rank, mpi_errno;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -50,8 +54,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
 
         /* now do the usual broadcast on this intracommunicator
          * with rank 0 as root. */
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, newcomm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Bcast, coll_sig, buffer, count, datatype, 0, newcomm_ptr);
     }
 
   fn_exit:

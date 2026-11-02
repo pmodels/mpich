@@ -13,11 +13,18 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 
-int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sendcount,
-                                               MPI_Datatype sendtype, void *recvbuf,
-                                               MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                               MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Gather_inter_local_gather_remote_send(MPIR_Csel_coll_sig_s * coll_sig,
+                                               MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.gather.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.gather.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.gather.sendtype;
+    void *recvbuf = coll_sig->u.gather.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.gather.recvcount;
+    MPI_Datatype recvtype = coll_sig->u.gather.recvtype;
+    int root = coll_sig->u.gather.root;
+    int coll_attr = 0;
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -63,10 +70,8 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the a local gather on this intracommunicator */
-        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
-                                tmp_buf, sendcount * sendtype_sz, MPIR_BYTE_INTERNAL, 0,
-                                newcomm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gather, coll_sig, sendbuf, sendcount, sendtype, tmp_buf,
+                        sendcount * sendtype_sz, MPIR_BYTE_INTERNAL, 0, newcomm_ptr);
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, sendcount * local_size * sendtype_sz, MPIR_BYTE_INTERNAL,

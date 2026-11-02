@@ -872,7 +872,7 @@ def check_inner():
                 for s in sections:
                     if s not in G.algos:
                         raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, s))
-                if comm not in ("node_comm", "node_roots_comm", "comm"):
+                if comm not in ("node_comm", "node_roots_comm", "local_comm", "comm"):
                     raise Exception("%s %s: inner %s: unknown communicator %s" % (func_commkind, algo['name'], item, comm))
                 if k is not None:
                     if k not in G.restrictions:

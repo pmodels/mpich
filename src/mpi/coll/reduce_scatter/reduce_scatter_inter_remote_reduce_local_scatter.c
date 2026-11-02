@@ -12,11 +12,15 @@
  * by local intracommunicator scattervs in each group.
  */
 
-int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, void *recvbuf,
-                                                          const MPI_Aint recvcounts[],
-                                                          MPI_Datatype datatype, MPI_Op op,
-                                                          MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(MPIR_Csel_coll_sig_s * coll_sig,
+                                                          MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.reduce_scatter.sendbuf;
+    void *recvbuf = coll_sig->u.reduce_scatter.recvbuf;
+    const MPI_Aint *recvcounts = coll_sig->u.reduce_scatter.recvcounts;
+    MPI_Datatype datatype = coll_sig->u.reduce_scatter.datatype;
+    MPI_Op op = coll_sig->u.reduce_scatter.op;
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size, total_count, i;
     void *tmp_buf = NULL;
@@ -56,27 +60,23 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     if (comm_ptr->is_low_group) {
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                        comm_ptr);
 
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                        comm_ptr);
     } else {
         /* reduce to rank 0 of left group */
         root = 0;
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                        comm_ptr);
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, tmp_buf, total_count, datatype, op, root,
+                        comm_ptr);
     }
 
     /* Get the local intracommunicator */
@@ -87,9 +87,8 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Scatterv(tmp_buf, recvcounts, disps, datatype, recvbuf,
-                              recvcounts[rank], datatype, 0, newcomm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_INNER(Scatterv, coll_sig, tmp_buf, recvcounts, disps, datatype, recvbuf,
+                    recvcounts[rank], datatype, 0, newcomm_ptr);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

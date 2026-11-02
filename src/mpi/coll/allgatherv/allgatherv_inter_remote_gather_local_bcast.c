@@ -15,12 +15,18 @@
  * intracommunicator broadcast.
  */
 
-int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Aint sendcount,
-                                                    MPI_Datatype sendtype, void *recvbuf,
-                                                    const MPI_Aint * recvcounts, const MPI_Aint
-                                                    * displs, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Allgatherv_inter_remote_gather_local_bcast(MPIR_Csel_coll_sig_s * coll_sig,
+                                                    MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allgatherv.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.allgatherv.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.allgatherv.sendtype;
+    void *recvbuf = coll_sig->u.allgatherv.recvbuf;
+    const MPI_Aint *recvcounts = coll_sig->u.allgatherv.recvcounts;
+    const MPI_Aint *displs = coll_sig->u.allgatherv.displs;
+    MPI_Datatype recvtype = coll_sig->u.allgatherv.recvtype;
+    int coll_attr = 0;
     int remote_size, mpi_errno, root, rank;
     MPIR_Comm *newcomm_ptr = NULL;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
@@ -33,25 +39,21 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                        displs, recvtype, root, comm_ptr);
         /* gatherv to right group */
         root = 0;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                        displs, recvtype, root, comm_ptr);
     } else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                        displs, recvtype, root, comm_ptr);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Gatherv, coll_sig, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                        displs, recvtype, root, comm_ptr);
     }
 
     /* now do an intracommunicator broadcast within each group. we use
