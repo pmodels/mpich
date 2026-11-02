@@ -113,66 +113,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_bcast - Force bcast algorithm
 
-    - name        : MPIR_CVAR_BCAST_MIN_PROCS
-      category    : COLLECTIVE
-      type        : int
-      default     : 8
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
-        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
-        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
-        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
-        as follows. For short messages or when the number of processes is <
-        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
-        Otherwise, for medium messages and with a power-of-two number of processes, we do
-        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
-        Otherwise, for long messages or with non power-of-two number of processes, we do
-        broadcast based on a scatter followed by a ring allgather algorithm.
-        (See also: MPIR_CVAR_BCAST_SHORT_MSG_SIZE, MPIR_CVAR_BCAST_LONG_MSG_SIZE)
-
-    - name        : MPIR_CVAR_BCAST_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 12288
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
-        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
-        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
-        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
-        as follows. For short messages or when the number of processes is <
-        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
-        Otherwise, for medium messages and with a power-of-two number of processes, we do
-        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
-        Otherwise, for long messages or with non power-of-two number of processes, we do
-        broadcast based on a scatter followed by a ring allgather algorithm.
-        (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_LONG_MSG_SIZE)
-
-    - name        : MPIR_CVAR_BCAST_LONG_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 524288
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
-        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
-        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
-        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
-        as follows. For short messages or when the number of processes is <
-        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
-        Otherwise, for medium messages and with a power-of-two number of processes, we do
-        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
-        Otherwise, for long messages or with non power-of-two number of processes, we do
-        broadcast based on a scatter followed by a ring allgather algorithm.
-        (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_SHORT_MSG_SIZE)
-
     - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -412,18 +352,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_flat - Force flat algorithm
 
-    - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 2048
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        use the short message algorithm for intercommunicator MPI_Gather if the
-        send buffer size is < this value (in bytes)
-        (See also: MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)
-
     - name        : MPIR_CVAR_GATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -539,17 +467,6 @@ cvars:
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
 
-    - name        : MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 2048
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        use the short message algorithm for intercommunicator MPI_Scatter if the
-        send buffer size is < this value (in bytes)
-
     - name        : MPIR_CVAR_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -664,30 +581,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_linear - Force linear algorithm
         tsp_linear - Force generic transport based linear algorithm
-
-    - name        : MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 81920
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
-        be used if the send buffer size is < this value (in bytes).
-        (See also: MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE)
-
-    - name        : MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 524288
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
-        used if the send buffer size is >= this value (in bytes)
-        (See also: MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE)
 
     - name        : MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -890,31 +783,6 @@ cvars:
         Variable to select iallgatherv algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
-
-    - name      : MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
-      category  : COLLECTIVE
-      type      : int
-      default   : 256
-      class     : none
-      verbosity : MPI_T_VERBOSITY_USER_BASIC
-      scope     : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the short message algorithm will be used if the per-destination
-        message size (sendcount*size(sendtype)) is <= this value
-        (See also: MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE)
-
-    - name      : MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE
-      category  : COLLECTIVE
-      type      : int
-      default   : 32768
-      class     : none
-      verbosity : MPI_T_VERBOSITY_USER_BASIC
-      scope     : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the medium message algorithm will be used if the per-destination
-        message size (sendcount*size(sendtype)) is <= this value and
-        larger than MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
-        (See also: MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE)
 
     - name      : MPIR_CVAR_ALLTOALL_THROTTLE
       category  : COLLECTIVE
@@ -1128,17 +996,6 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_pairwise_exchange - Force pairwise exchange algorithm
 
-    - name        : MPIR_CVAR_REDUCE_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 2048
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the short message algorithm will be used if the send buffer size is <=
-        this value (in bytes)
-
     - name        : MPIR_CVAR_REDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -1310,17 +1167,6 @@ cvars:
         Variable to select ireduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_local_reduce_remote_send - Force local-reduce-remote-send algorithm
-
-    - name        : MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 2048
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the short message algorithm will be used if the send buffer size is <=
-        this value (in bytes)
 
     - name        : MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -1596,17 +1442,6 @@ cvars:
         Variable to select iallreduce algorithm
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_JSON_FILE)
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
-
-    - name        : MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 524288
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        the long message algorithm will be used if the operation is commutative
-        and the send buffer size is >= this value (in bytes)
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
