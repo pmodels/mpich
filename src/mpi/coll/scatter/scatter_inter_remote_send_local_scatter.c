@@ -13,11 +13,18 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 
-int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
-                                                 MPI_Datatype sendtype, void *recvbuf,
-                                                 MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                 int root, MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Scatter_inter_remote_send_local_scatter(MPIR_Csel_coll_sig_s * coll_sig,
+                                                 MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.scatter.sendbuf;
+    MPI_Aint sendcount = coll_sig->u.scatter.sendcount;
+    MPI_Datatype sendtype = coll_sig->u.scatter.sendtype;
+    void *recvbuf = coll_sig->u.scatter.recvbuf;
+    MPI_Aint recvcount = coll_sig->u.scatter.recvcount;
+    MPI_Datatype recvtype = coll_sig->u.scatter.recvtype;
+    int root = coll_sig->u.scatter.root;
+    int coll_attr = 0;
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -65,9 +72,8 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the usual scatter on this intracommunicator */
-        mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
-                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, coll_attr);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_INNER(Scatter, coll_sig, tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
+                        recvbuf, recvcount, recvtype, 0, newcomm_ptr);
     }
 
   fn_exit:

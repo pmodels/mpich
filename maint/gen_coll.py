@@ -41,13 +41,7 @@ def main():
         dump_coll_impl(a, "nonblocking")
         dump_coll_impl(a, "persistent")
         dump_coll_impl(a, "nonblocking_tag")
-
-    # TEMP: dump mpir functions.
-    #       Current code base call MPIR_ functions in compositional algorithms. Create a wrapper that call _impl
-    #       for now. We will refactor the compositional algorithms later.
-    for a in G.coll_names:
-        dump_coll_mpir(a, "blocking")
-        dump_coll_mpir(a, "nonblocking")
+        dump_coll_sig(a)
 
     # dump the container version of the algorithms
     dump_algo_cnt_fns()
@@ -109,6 +103,11 @@ def collect_algo_list():
         algo_list.append(algo)
     return algo_list
 
+def uses_coll_sig(algo):
+    # a compositional algorithm keeps the decisions on its inner calls in coll_sig, so it takes the
+    # coll_sig rather than the unpacked arguments
+    return 'inner' in algo
+
 def is_greq_algo(func_name, algo):
     # a nonblocking algorithm that is neither tsp_ nor sched_ is a greq algorithm
     return func_name.startswith('i') and not algo['name'].startswith(('tsp_', 'sched_'))
@@ -124,6 +123,9 @@ def dump_algo_cnt_fns():
         return ', '.join(args)
 
     def get_algo_args(func, func_name, algo):
+        if uses_coll_sig(algo):
+            return "coll_sig, cnt"
+
         args = get_coll_args(func, func_name)
         if 'extra_params' in algo:
             args += ", " + get_algo_extra_args(algo, "csel")
@@ -219,6 +221,9 @@ def add_algo_prototypes():
         return ', '.join(params)
 
     def get_algo_params(func, func_name, algo):
+        if uses_coll_sig(algo):
+            return "MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt"
+
         params = get_coll_params(func)
         if 'extra_params' in algo:
             params += ", " + get_algo_extra_params(algo)
@@ -860,7 +865,7 @@ def check_inner():
                 for s in sections:
                     if s not in G.algos:
                         raise Exception("%s %s: inner %s: no section %s" % (func_commkind, algo['name'], item, s))
-                if comm not in ("node_comm", "node_roots_comm", "comm"):
+                if comm not in ("node_comm", "node_roots_comm", "local_comm", "comm"):
                     raise Exception("%s %s: inner %s: unknown communicator %s" % (func_commkind, algo['name'], item, comm))
                 if k is not None:
                     if k not in G.restrictions:
@@ -924,34 +929,7 @@ def dump_coll_impl(name, blocking_type):
 
     # Initialize coll_sig
     G.out.append("MPIR_Csel_coll_sig_s coll_sig;")
-    NAME = name.upper()
-    if blocking_type != "blocking":
-        # nonblocking and persistent
-        NAME = 'I' + NAME
-    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
-    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s;" % NAME)
-    dump_else()
-    G.out.append("coll_sig.coll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % NAME)
-    dump_close('}')
-    G.out.append("coll_sig.comm_ptr = comm_ptr;")
-    G.out.append("coll_sig.flags = 0;")
-    if blocking_type == "persistent":
-        G.out.append("coll_sig.flags |= MPIR_COLL_SIG_FLAG__PERSISTENT;")
-    if blocking_type == "nonblocking_tag":
-        G.out.append("coll_sig.tag = tag;")
-    else:
-        G.out.append("coll_sig.tag = 0;")
-    G.out.append("coll_sig.sched = NULL;")
-
-    phash = {}
-    for p in func['parameters']:
-        if p['name'] == 'comm':
-            pass
-        else:
-            phash[p['name']] = 1
-            G.out.append("coll_sig.u.%s.%s = %s;" % (name, p['name'], p['name']))
-
-    G.out.append("MPID_Init_coll_sig(&coll_sig);")
+    dump_coll_sig_fill(name, blocking_type, "coll_sig.")
     G.out.append("MPIR_Coll_sig_prepare_gpu(&coll_sig);")
 
     # Call csel
@@ -987,32 +965,54 @@ def dump_coll_impl(name, blocking_type):
     dump_fn_exit()
     dump_close('}')
 
-def dump_coll_mpir(name, blocking_type):
-    def get_func_args(func):
-        args = []
-        for p in func['parameters']:
-            if p['name'] == 'comm':
-                args.append('comm_ptr')
-            else:
-                args.append(p['name'])
-        return ', '.join(args)
-
+def dump_coll_sig_fill(name, blocking_type, sig):
+    """Fill the fields of a coll_sig from the parameters of the collective, where sig is how the
+    code reaches its fields, "coll_sig." or "coll_sig->"."""
     func = G.FUNCS["mpi_" + name]
-    func_params = get_impl_params(func, blocking_type)
-    func_args = get_func_args(func)
-    if blocking_type == "blocking":
-        func_params += ", int coll_attr"
+    NAME = name.upper()
+    if blocking_type != "blocking":
+        # nonblocking and persistent
+        NAME = 'I' + NAME
+    dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
+    G.out.append("%scoll_type = MPIR_CSEL_COLL_TYPE__INTRA_%s;" % (sig, NAME))
+    dump_else()
+    G.out.append("%scoll_type = MPIR_CSEL_COLL_TYPE__INTER_%s;" % (sig, NAME))
+    dump_close('}')
+    G.out.append("%scomm_ptr = comm_ptr;" % sig)
+    G.out.append("%sflags = 0;" % sig)
+    if blocking_type == "persistent":
+        G.out.append("%sflags |= MPIR_COLL_SIG_FLAG__PERSISTENT;" % sig)
+    if blocking_type == "nonblocking_tag":
+        G.out.append("%stag = tag;" % sig)
     else:
-        func_args += ", request"
+        G.out.append("%stag = 0;" % sig)
+    G.out.append("%ssched = NULL;" % sig)
 
-    func_name = get_func_name(name, blocking_type)
-    Name = func_name.capitalize()
+    for p in func['parameters']:
+        if p['name'] != 'comm':
+            G.out.append("%su.%s.%s = %s;" % (sig, name, p['name'], p['name']))
+
+    G.out.append("MPID_Init_coll_sig(%s);" % ("&coll_sig" if sig == "coll_sig." else "coll_sig"))
+
+def dump_coll_sig(name):
+    """MPIR_<Coll>_fill_sig describes a blocking collective in coll_sig, for an algorithm to run it as an
+    inner call. It does not select. The inner call inherits the gpu bits of the parent, which the
+    algorithm sets on its own coll_sig before the call: clear gpu_coll when the call passes a host
+    temporary, and gpu_local when all of its buffers are. A NULL parent is a call made outside of
+    any parent, such as a fallback, and inherits nothing."""
+    func = G.FUNCS["mpi_" + name]
+    func_params = get_impl_params(func, "blocking")
+    Name = name.capitalize()
+    decl = "void MPIR_%s_fill_sig(MPIR_Csel_coll_sig_s * coll_sig, const MPIR_Csel_coll_sig_s * parent, %s)" % (Name, func_params)
 
     G.out.append("")
-    add_prototype("int MPIR_%s(%s)" % (Name, func_params))
-    dump_split(0, "int MPIR_%s(%s)" % (Name, func_params))
+    add_prototype(decl)
+    dump_split(0, decl)
     dump_open('{')
-    G.out.append("return MPIR_%s_impl(%s);" % (Name, func_args))
+    dump_coll_sig_fill(name, "blocking", "coll_sig->")
+    dump_open("if (parent) {")
+    G.out.append("coll_sig->flags |= parent->flags & MPIR_COLL_SIG_INHERIT_MASK;")
+    dump_close('}')
     dump_close('}')
 
 #---------------------------------------- 

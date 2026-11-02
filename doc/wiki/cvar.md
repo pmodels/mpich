@@ -794,6 +794,15 @@ Controls how MPICH handles collective fallback when a selected collective path c
 
 Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_tree`
 
+### MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS
+
+Controls whether the algorithm CVARs, such as `MPIR_CVAR_BCAST_INTRA_ALGORITHM`, also apply to the inner calls of compositional algorithms. By default they apply to the user's call only, and inner calls select from the `auto` tree. It is for experiments that control an inner algorithm, for example `smp` allreduce with a forced bcast. A forced algorithm whose restrictions fail on an internal sub-communicator falls back silently, as described for `MPIR_CVAR_COLLECTIVE_FALLBACK`.
+
+* 0 - default, inner calls select from the `auto` tree.
+* 1 - inner calls use the algorithm CVAR of their collective, then the `auto` tree.
+
+Used in functions: `MPIR_Coll_run_inner`
+
 ### MPIR_CVAR_COLL_ALIAS_CHECK
 
 Enables checking for aliased buffers in collective-operation error checks. It is used when the collective alias-check macro is invoked; it does not rely on other CVAR values in `mpir_err.h`.

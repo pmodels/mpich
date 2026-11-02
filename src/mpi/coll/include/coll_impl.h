@@ -44,8 +44,22 @@ int MPIR_Coll_safe_to_block(void);
 int MPII_Coll_finalize(void);
 
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
+
+/* Run an inner call of Coll (e.g. Bcast) with the arguments of the blocking collective. The inner
+ * call inherits the gpu bits of parent, so an algorithm sets them on its own coll_sig first.
+ * Needs mpi_errno and the usual fn_fail. */
+#define MPIR_COLL_INNER(Coll, parent, ...) \
+    do { \
+        MPIR_Csel_coll_sig_s inner_sig_; \
+        MPIR_##Coll##_fill_sig(&inner_sig_, parent, __VA_ARGS__); \
+        mpi_errno = MPIR_Coll_run_inner(&inner_sig_); \
+        MPIR_ERR_CHECK(mpi_errno); \
+    } while (0)
+
 void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig);
+bool MPIR_Coll_sig_check_gpu_coll(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_buffer_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
                        MPIR_Coll_algo_fn fn);

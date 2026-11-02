@@ -6,9 +6,7 @@
 # This file lists all collective algorithms with annotations. It is used by
 # maint/gen_coll.py to generate src/mpi/coll/mpir_coll.c, which implements
 # top-level collective functions, such as (using bcast for example) --
-#     MPIR_Bcast, MPIR_Bcast_impl, MPIR_Bcast_allcomm_auto,
-#     MPIR_Ibcast, MPIR_Ibcast_impl, MPIR_Ibcast_sched_impl, MPIR_Ibcast_allcomm_sched_auto,
-#     MPIR_Bcast_init, MPIR_Bcast_init_impl
+#     MPIR_Bcast_impl, MPIR_Bcast_fill_sig, MPIR_Ibcast_impl, MPIR_Ibcast_tag, MPIR_Bcast_init_impl
 #
 # The format is (reference actual examples) --
 #
@@ -86,9 +84,14 @@
 #         The collectives a compositional algorithm calls through the selection, as a
 #         comma-separated list of <section>@<communicator>, e.g. bcast-intra@node_comm. The
 #         section is one of this file's; the communicator is the field of the comm the call
-#         goes to: node_comm or node_roots_comm. Calls to fixed algorithms (e.g.
-#         MPIR_Bcast_fallback) are not listed. Tuning tools use it to tune such an algorithm
-#         after the collectives it depends on; gen_coll.py only checks it.
+#         goes to: node_comm, node_roots_comm or local_comm, or comm for the caller's own. Calls
+#         to fixed algorithms (e.g. MPIR_Bcast_fallback) are not listed. Tuning tools use it to
+#         tune such an algorithm after the collectives it depends on.
+#         An algorithm with this key takes (coll_sig, cnt), rather than the collective's
+#         arguments, and describes each inner call with MPIR_<Coll>_fill_sig, so that its decisions
+#         about the inner call are in the inner coll_sig. The inner call inherits the gpu bits
+#         of the coll_sig it is called from. An algorithm that gives an inner call a temporary
+#         buffer clears them there first, and restores them before it returns.
 #         A general algorithm runs for any collective, so its inner calls are written
 #         relative to the caller: $coll is the calling collective's name (e.g. bcast), the
 #         communicator comm is the caller's own, and a suffix [k=v] sets restriction k to v
@@ -170,6 +173,7 @@ barrier-intra:
         restrictions: MPIDI_CH4_release_gather
 barrier-inter:
     bcast
+        inner: barrier-intra@local_comm, bcast-inter@comm
 ibarrier-intra:
     sched_recursive_doubling
     tsp_recexch
@@ -226,6 +230,7 @@ ibcast-intra:
     circ_graph
 bcast-inter:
     remote_send_local_bcast
+        inner: bcast-intra@local_comm
 ibcast-inter:
     sched_flat
 
@@ -234,6 +239,7 @@ gather-intra:
 gather-inter:
     linear
     local_gather_remote_send
+        inner: gather-intra@local_comm
 igather-intra:
     sched_binomial
     tsp_tree
@@ -265,6 +271,7 @@ scatter-intra:
 scatter-inter:
     linear
     remote_send_local_scatter
+        inner: scatter-intra@local_comm
 iscatter-intra:
     sched_binomial
     tsp_tree
@@ -308,6 +315,7 @@ allgather-intra:
     circ_graph
 allgather-inter:
     local_gather_remote_bcast
+        inner: gather-intra@local_comm, bcast-inter@comm
 iallgather-intra:
     sched_ring
     sched_brucks
@@ -333,6 +341,7 @@ allgatherv-intra:
     ring
 allgatherv-inter:
     remote_gather_local_bcast
+        inner: gatherv-inter@comm
 iallgatherv-intra:
     sched_brucks
     sched_recursive_doubling
@@ -448,6 +457,7 @@ reduce-intra:
         restrictions: MPIDI_CH4_release_gather
 reduce-inter:
     local_reduce_remote_send
+        inner: reduce-intra@local_comm
 ireduce-intra:
     sched_smp
         restrictions: commutative, hierarchical
@@ -498,6 +508,7 @@ allreduce-intra:
         restrictions: MPIDI_CH4_release_gather
 allreduce-inter:
     reduce_exchange_bcast
+        inner: reduce-intra@local_comm, bcast-intra@local_comm
 iallreduce-intra:
     sched_naive
     sched_smp
@@ -537,6 +548,7 @@ reduce_scatter-intra:
         restrictions: commutative
 reduce_scatter-inter:
     remote_reduce_local_scatter
+        inner: reduce-inter@comm, scatterv-intra@local_comm
 ireduce_scatter-intra:
     sched_noncommutative
         restrictions: pof2, block_regular
@@ -562,6 +574,7 @@ reduce_scatter_block-intra:
         restrictions: commutative
 reduce_scatter_block-inter:
     remote_reduce_local_scatter
+        inner: reduce-inter@comm, scatter-intra@local_comm
 ireduce_scatter_block-intra:
     sched_noncommutative
         restrictions: pof2

@@ -20,9 +20,10 @@ int MPIR_Allgather_fallback(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         return MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype,
                                            recvbuf, recvcount, recvtype, comm_ptr, coll_attr);
     } else {
-        return MPIR_Allgather_inter_local_gather_remote_bcast(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcount, recvtype,
-                                                              comm_ptr, coll_attr);
+        MPIR_Csel_coll_sig_s coll_sig;
+        MPIR_Allgather_fill_sig(&coll_sig, NULL, sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                recvtype, comm_ptr);
+        return MPIR_Allgather_inter_local_gather_remote_bcast(&coll_sig, NULL);
     }
 }
 

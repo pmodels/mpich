@@ -13,10 +13,16 @@
  * group.
  */
 
-int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                               MPI_Datatype datatype, MPI_Op op,
-                                               MPIR_Comm * comm_ptr, int coll_attr)
+int MPIR_Allreduce_inter_reduce_exchange_bcast(MPIR_Csel_coll_sig_s * coll_sig,
+                                               MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    const void *sendbuf = coll_sig->u.allreduce.sendbuf;
+    void *recvbuf = coll_sig->u.allreduce.recvbuf;
+    MPI_Aint count = coll_sig->u.allreduce.count;
+    MPI_Datatype datatype = coll_sig->u.allreduce.datatype;
+    MPI_Op op = coll_sig->u.allreduce.op;
+    int coll_attr = 0;
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -37,8 +43,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_INNER(Reduce, coll_sig, sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr);
 
     /* Do a exchange between local and remote rank 0 on this intercommunicator */
     if (comm_ptr->rank == 0) {
@@ -49,8 +54,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
     }
 
     /* Do a local broadcast on this intracommunicator */
-    mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, newcomm_ptr, coll_attr);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_COLL_INNER(Bcast, coll_sig, recvbuf, count, datatype, 0, newcomm_ptr);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
