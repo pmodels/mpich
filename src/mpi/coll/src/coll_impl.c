@@ -16,6 +16,19 @@ categories :
      description : A category for collective communication variables.
 
 cvars:
+    - name        : MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, the algorithm CVARs also apply to the inner calls of compositional
+        algorithms. By default they apply to the user's call only, and inner calls
+        select from the auto tree. This is for experiments that control an inner
+        algorithm, e.g. allreduce smp with a forced bcast.
+
     - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
       category    : COLLECTIVE
       type        : enum
@@ -323,8 +336,8 @@ int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig)
 }
 
 /* Run the algorithm that the user set with the algorithm CVAR of coll_sig->coll_type, else
- * select from tree. Callers must not reach here twice with the same coll_type, or the CVAR
- * would pick the same algorithm again. */
+ * select from tree. Callers must not reach here twice with the same coll_type and comm, or the
+ * CVAR would pick the same algorithm again. */
 static int run_cvar_or_tree(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s * tree)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -374,6 +387,15 @@ int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
 /* run the auto tree, for general algorithms that continue the selection */
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig)
 {
+    return MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
+}
+
+/* run an inner call of a compositional algorithm, described by MPIR_<Coll>_fill_sig */
+int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig)
+{
+    if (MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS) {
+        return run_cvar_or_tree(coll_sig, csel_tree_auto);
+    }
     return MPIR_Coll_run_tree(csel_tree_auto, coll_sig);
 }
 
