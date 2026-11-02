@@ -21,7 +21,7 @@ int run(const char *arg)
     int *buf = 0;
     int *sendcounts;
     int *senddispls;
-    int leftGroup, i, count, rank, rsize, size;
+    int leftGroup, i, count, rank, rsize, size, root, nroots;
     MPI_Comm comm;
     MPI_Datatype datatype;
 
@@ -46,66 +46,70 @@ int run(const char *arg)
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-        for (count = 1; count < 65000; count = 2 * count) {
-            buf = 0;
-            sendcounts = (int *) malloc(rsize * sizeof(int));
-            senddispls = (int *) malloc(rsize * sizeof(int));
-            for (i = 0; i < rsize; i++) {
-                sendcounts[i] = count;
-                senddispls[i] = count * i;
-            }
-            if (leftGroup) {
-                buf = (int *) malloc(count * rsize * sizeof(int));
-                if (rank == 0) {
-                    for (i = 0; i < count * rsize; i++)
-                        buf[i] = i;
-                } else {
-                    for (i = 0; i < count * rsize; i++)
-                        buf[i] = -1;
+        /* each rank of the left group is the root in turn */
+        nroots = leftGroup ? size : rsize;
+        for (root = 0; root < nroots; root++) {
+            for (count = 1; count < 65000; count = 2 * count) {
+                buf = 0;
+                sendcounts = (int *) malloc(rsize * sizeof(int));
+                senddispls = (int *) malloc(rsize * sizeof(int));
+                for (i = 0; i < rsize; i++) {
+                    sendcounts[i] = count;
+                    senddispls[i] = count * i;
                 }
-                err = MTest_Scatterv(is_blocking, buf, sendcounts, senddispls, datatype,
-                                     NULL, 0, datatype,
-                                     (rank == 0) ? MPI_ROOT : MPI_PROC_NULL, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
-                /* Test that no other process in this group received the
-                 * scatter */
-                if (rank != 0) {
-                    for (i = 0; i < count * rsize; i++) {
-                        if (buf[i] != -1) {
-                            if (errs < 10) {
-                                fprintf(stderr, "Received data on root group!\n");
+                if (leftGroup) {
+                    buf = (int *) malloc(count * rsize * sizeof(int));
+                    if (rank == root) {
+                        for (i = 0; i < count * rsize; i++)
+                            buf[i] = i;
+                    } else {
+                        for (i = 0; i < count * rsize; i++)
+                            buf[i] = -1;
+                    }
+                    err = MTest_Scatterv(is_blocking, buf, sendcounts, senddispls, datatype,
+                                         NULL, 0, datatype,
+                                         (rank == root) ? MPI_ROOT : MPI_PROC_NULL, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Test that no other process in this group received the
+                     * scatter */
+                    if (rank != root) {
+                        for (i = 0; i < count * rsize; i++) {
+                            if (buf[i] != -1) {
+                                if (errs < 10) {
+                                    fprintf(stderr, "Received data on root group!\n");
+                                }
+                                errs++;
                             }
+                        }
+                    }
+                } else {
+                    buf = (int *) malloc(count * sizeof(int));
+                    /* In the right group */
+                    for (i = 0; i < count; i++)
+                        buf[i] = -1;
+                    err =
+                        MTest_Scatterv(is_blocking, NULL, 0, 0, datatype, buf, count, datatype,
+                                       root, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Check that we have received the correct data */
+                    for (i = 0; i < count; i++) {
+                        if (buf[i] != i + rank * count) {
+                            if (errs < 10)
+                                fprintf(stderr, "buf[%d] = %d on %d\n", i, buf[i], rank);
                             errs++;
                         }
                     }
                 }
-            } else {
-                buf = (int *) malloc(count * sizeof(int));
-                /* In the right group */
-                for (i = 0; i < count; i++)
-                    buf[i] = -1;
-                err =
-                    MTest_Scatterv(is_blocking, NULL, 0, 0, datatype, buf, count, datatype, 0,
-                                   comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
-                /* Check that we have received the correct data */
-                for (i = 0; i < count; i++) {
-                    if (buf[i] != i + rank * count) {
-                        if (errs < 10)
-                            fprintf(stderr, "buf[%d] = %d on %d\n", i, buf[i], rank);
-                        errs++;
-                    }
-                }
+                free(sendcounts);
+                free(senddispls);
+                free(buf);
             }
-            free(sendcounts);
-            free(senddispls);
-            free(buf);
         }
         MTestFreeComm(&comm);
     }

@@ -19,7 +19,7 @@ int run(const char *arg)
 {
     int errs = 0, err;
     int *buf = 0;
-    int leftGroup, i, count, rank;
+    int leftGroup, i, count, rank, rsize, size, root, nroots;
     MPI_Comm comm;
     MPI_Datatype datatype;
 
@@ -38,53 +38,59 @@ int run(const char *arg)
             continue;
 
         MPI_Comm_rank(comm, &rank);
+        MPI_Comm_remote_size(comm, &rsize);
+        MPI_Comm_size(comm, &size);
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-        for (count = 1; count < 65000; count = 2 * count) {
-            buf = (int *) malloc(count * sizeof(int));
-            if (leftGroup) {
-                if (rank == 0) {
-                    for (i = 0; i < count; i++)
-                        buf[i] = i;
+        /* each rank of the left group is the root in turn */
+        nroots = leftGroup ? size : rsize;
+        for (root = 0; root < nroots; root++) {
+            for (count = 1; count < 65000; count = 2 * count) {
+                buf = (int *) malloc(count * sizeof(int));
+                if (leftGroup) {
+                    if (rank == root) {
+                        for (i = 0; i < count; i++)
+                            buf[i] = i;
+                    } else {
+                        for (i = 0; i < count; i++)
+                            buf[i] = -1;
+                    }
+                    err = MTest_Bcast(is_blocking, buf, count, datatype,
+                                      (rank == root) ? MPI_ROOT : MPI_PROC_NULL, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Test that no other process in this group received the
+                     * broadcast */
+                    if (rank != root) {
+                        for (i = 0; i < count; i++) {
+                            if (buf[i] != -1) {
+                                errs++;
+                            }
+                        }
+                    }
                 } else {
+                    /* In the right group */
                     for (i = 0; i < count; i++)
                         buf[i] = -1;
-                }
-                err = MTest_Bcast(is_blocking, buf, count, datatype,
-                                  (rank == 0) ? MPI_ROOT : MPI_PROC_NULL, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
-                /* Test that no other process in this group received the
-                 * broadcast */
-                if (rank != 0) {
+                    err = MTest_Bcast(is_blocking, buf, count, datatype, root, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Check that we have received the correct data */
                     for (i = 0; i < count; i++) {
-                        if (buf[i] != -1) {
+                        if (buf[i] != i) {
                             errs++;
                         }
                     }
                 }
-            } else {
-                /* In the right group */
-                for (i = 0; i < count; i++)
-                    buf[i] = -1;
-                err = MTest_Bcast(is_blocking, buf, count, datatype, 0, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
-                /* Check that we have received the correct data */
-                for (i = 0; i < count; i++) {
-                    if (buf[i] != i) {
-                        errs++;
-                    }
-                }
+                free(buf);
             }
-            free(buf);
         }
         MTestFreeComm(&comm);
     }

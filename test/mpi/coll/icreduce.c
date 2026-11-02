@@ -19,7 +19,7 @@ int run(const char *arg)
 {
     int errs = 0, err;
     int *sendbuf = 0, *recvbuf = 0;
-    int leftGroup, i, count, rank, rsize;
+    int leftGroup, i, count, rank, rsize, size, root, nroots;
     MPI_Comm comm;
     MPI_Datatype datatype;
 
@@ -38,60 +38,66 @@ int run(const char *arg)
             continue;
 
         MPI_Comm_rank(comm, &rank);
+        MPI_Comm_size(comm, &size);
         MPI_Comm_remote_size(comm, &rsize);
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-        for (count = 1; count < 65000; count = 2 * count) {
-            sendbuf = (int *) malloc(count * sizeof(int));
-            recvbuf = (int *) malloc(count * sizeof(int));
-            for (i = 0; i < count; i++) {
-                sendbuf[i] = -1;
-                recvbuf[i] = -1;
-            }
-            if (leftGroup) {
-                err = MTest_Reduce(is_blocking, sendbuf, recvbuf, count, datatype, MPI_SUM,
-                                   (rank == 0) ? MPI_ROOT : MPI_PROC_NULL, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
+        /* each rank of the left group is the root in turn */
+        nroots = leftGroup ? size : rsize;
+        for (root = 0; root < nroots; root++) {
+            for (count = 1; count < 65000; count = 2 * count) {
+                sendbuf = (int *) malloc(count * sizeof(int));
+                recvbuf = (int *) malloc(count * sizeof(int));
+                for (i = 0; i < count; i++) {
+                    sendbuf[i] = -1;
+                    recvbuf[i] = -1;
                 }
-                /* Test that no other process in this group received the
-                 * broadcast, and that we got the right answers */
-                if (rank == 0) {
-                    for (i = 0; i < count; i++) {
-                        if (recvbuf[i] != i * rsize) {
-                            errs++;
+                if (leftGroup) {
+                    err = MTest_Reduce(is_blocking, sendbuf, recvbuf, count, datatype, MPI_SUM,
+                                       (rank == root) ? MPI_ROOT : MPI_PROC_NULL, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Test that no other process in this group received the
+                     * broadcast, and that we got the right answers */
+                    if (rank == root) {
+                        for (i = 0; i < count; i++) {
+                            if (recvbuf[i] != i * rsize) {
+                                errs++;
+                            }
+                        }
+                    } else {
+                        for (i = 0; i < count; i++) {
+                            if (recvbuf[i] != -1) {
+                                errs++;
+                            }
                         }
                     }
                 } else {
+                    /* In the right group */
+                    for (i = 0; i < count; i++)
+                        sendbuf[i] = i;
+                    err =
+                        MTest_Reduce(is_blocking, sendbuf, recvbuf, count, datatype, MPI_SUM, root,
+                                     comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Check that we have received no data */
                     for (i = 0; i < count; i++) {
                         if (recvbuf[i] != -1) {
                             errs++;
                         }
                     }
                 }
-            } else {
-                /* In the right group */
-                for (i = 0; i < count; i++)
-                    sendbuf[i] = i;
-                err =
-                    MTest_Reduce(is_blocking, sendbuf, recvbuf, count, datatype, MPI_SUM, 0, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
-                /* Check that we have received no data */
-                for (i = 0; i < count; i++) {
-                    if (recvbuf[i] != -1) {
-                        errs++;
-                    }
-                }
+                free(sendbuf);
+                free(recvbuf);
             }
-            free(sendbuf);
-            free(recvbuf);
         }
         MTestFreeComm(&comm);
     }

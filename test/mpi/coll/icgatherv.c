@@ -21,7 +21,7 @@ int run(const char *arg)
     int *buf = 0;
     int *recvcounts;
     int *recvdispls;
-    int leftGroup, i, count, rank, rsize, size;
+    int leftGroup, i, count, rank, rsize, size, root, nroots;
     MPI_Comm comm;
     MPI_Datatype datatype;
 
@@ -45,59 +45,64 @@ int run(const char *arg)
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
-        for (count = 1; count < 65000; count = 2 * count) {
-            /* Get an intercommunicator */
-            recvcounts = (int *) malloc(rsize * sizeof(int));
-            recvdispls = (int *) malloc(rsize * sizeof(int));
-            /* This simple test duplicates the Gather test,
-             * using the same lengths for all messages */
-            for (i = 0; i < rsize; i++) {
-                recvcounts[i] = count;
-                recvdispls[i] = count * i;
-            }
-            if (leftGroup) {
-                buf = (int *) malloc(count * rsize * sizeof(int));
-                for (i = 0; i < count * rsize; i++)
-                    buf[i] = -1;
-
-                err = MTest_Gatherv(is_blocking, NULL, 0, datatype,
-                                    buf, recvcounts, recvdispls, datatype,
-                                    (rank == 0) ? MPI_ROOT : MPI_PROC_NULL, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
+        /* each rank of the left group is the root in turn */
+        nroots = leftGroup ? size : rsize;
+        for (root = 0; root < nroots; root++) {
+            for (count = 1; count < 65000; count = 2 * count) {
+                /* Get an intercommunicator */
+                recvcounts = (int *) malloc(rsize * sizeof(int));
+                recvdispls = (int *) malloc(rsize * sizeof(int));
+                /* This simple test duplicates the Gather test,
+                 * using the same lengths for all messages */
+                for (i = 0; i < rsize; i++) {
+                    recvcounts[i] = count;
+                    recvdispls[i] = count * i;
                 }
-                /* Test that no other process in this group received the
-                 * broadcast */
-                if (rank != 0) {
-                    for (i = 0; i < count; i++) {
-                        if (buf[i] != -1) {
-                            errs++;
+                if (leftGroup) {
+                    buf = (int *) malloc(count * rsize * sizeof(int));
+                    for (i = 0; i < count * rsize; i++)
+                        buf[i] = -1;
+
+                    err = MTest_Gatherv(is_blocking, NULL, 0, datatype,
+                                        buf, recvcounts, recvdispls, datatype,
+                                        (rank == root) ? MPI_ROOT : MPI_PROC_NULL, comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
+                    }
+                    /* Test that no other process in this group received the
+                     * broadcast */
+                    if (rank != root) {
+                        for (i = 0; i < count; i++) {
+                            if (buf[i] != -1) {
+                                errs++;
+                            }
+                        }
+                    } else {
+                        /* Check for the correct data */
+                        for (i = 0; i < count * rsize; i++) {
+                            if (buf[i] != i) {
+                                errs++;
+                            }
                         }
                     }
                 } else {
-                    /* Check for the correct data */
-                    for (i = 0; i < count * rsize; i++) {
-                        if (buf[i] != i) {
-                            errs++;
-                        }
+                    /* In the right group */
+                    buf = (int *) malloc(count * sizeof(int));
+                    for (i = 0; i < count; i++)
+                        buf[i] = rank * count + i;
+                    err =
+                        MTest_Gatherv(is_blocking, buf, count, datatype, NULL, 0, 0, datatype, root,
+                                      comm);
+                    if (err) {
+                        errs++;
+                        MTestPrintError(err);
                     }
                 }
-            } else {
-                /* In the right group */
-                buf = (int *) malloc(count * sizeof(int));
-                for (i = 0; i < count; i++)
-                    buf[i] = rank * count + i;
-                err =
-                    MTest_Gatherv(is_blocking, buf, count, datatype, NULL, 0, 0, datatype, 0, comm);
-                if (err) {
-                    errs++;
-                    MTestPrintError(err);
-                }
+                free(buf);
+                free(recvcounts);
+                free(recvdispls);
             }
-            free(buf);
-            free(recvcounts);
-            free(recvdispls);
         }
         MTestFreeComm(&comm);
     }
