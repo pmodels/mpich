@@ -193,6 +193,9 @@ bcast-intra:
     smp
         restrictions: hierarchical
         inner: bcast-intra@node_comm, bcast-intra@node_roots_comm
+    smp_node_first
+        restrictions: hierarchical
+        inner: bcast-intra@node_comm, bcast-intra@node_roots_comm
     tree
         extra_params: tree_type, k, is_non_blocking
         cvar_params: TREE_TYPE, TREE_KVAL, IS_NON_BLOCKING
