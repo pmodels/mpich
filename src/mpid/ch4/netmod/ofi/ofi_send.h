@@ -363,7 +363,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !do_inject) {
             MPI_Aint num_contig;
             MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
-            if (num_contig <= MPIDI_OFI_global.tx_iov_limit) {
+            if (num_contig <= MPIDI_OFI_global.tx_iov_limit &&
+                !MPIDI_OFI_bottom_has_gpu(buf, count, datatype, num_contig)) {
                 do_iov = true;
             }
         }
