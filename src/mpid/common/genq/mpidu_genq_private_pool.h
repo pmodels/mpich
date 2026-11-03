@@ -18,6 +18,11 @@ typedef enum {
 int MPIDU_genq_private_pool_create(intptr_t cell_size, intptr_t num_cells_in_block,
                                    intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
                                    MPIDU_genq_free_fn free_fn, MPIDU_genq_private_pool_t * pool);
+/* Same, for a pool used outside the per-VCI critical sections: the pool protects itself */
+int MPIDU_genq_private_pool_create_locked(intptr_t cell_size, intptr_t num_cells_in_block,
+                                          intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
+                                          MPIDU_genq_free_fn free_fn,
+                                          MPIDU_genq_private_pool_t * pool);
 int MPIDU_genq_private_pool_destroy(MPIDU_genq_private_pool_t pool);
 int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell);
 int MPIDU_genq_private_pool_force_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell);

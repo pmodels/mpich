@@ -49,6 +49,11 @@ typedef struct MPIDU_genq_private_pool {
     cell_block_s *cell_blocks;
     cell_block_s *free_blocks_head;
     cell_block_s *free_blocks_tail;
+
+    /* Only for a pool used outside the per-VCI critical sections. malloc_fn and free_fn run
+     * with it held. */
+    bool use_lock;
+    MPID_Thread_mutex_t lock;
 } private_pool_s;
 
 static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block);
@@ -86,9 +91,28 @@ int MPIDU_genq_private_pool_create(intptr_t cell_size, intptr_t num_cells_in_blo
     pool_obj->free_blocks_head = NULL;
     pool_obj->free_blocks_tail = NULL;
 
+    pool_obj->use_lock = false;
+
     *pool = (MPIDU_genq_private_pool_t) pool_obj;
 
     MPIR_FUNC_EXIT;
+    return rc;
+}
+
+int MPIDU_genq_private_pool_create_locked(intptr_t cell_size, intptr_t num_cells_in_block,
+                                          intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
+                                          MPIDU_genq_free_fn free_fn,
+                                          MPIDU_genq_private_pool_t * pool)
+{
+    int rc = MPIDU_genq_private_pool_create(cell_size, num_cells_in_block, max_num_cells,
+                                            malloc_fn, free_fn, pool);
+    if (rc == MPI_SUCCESS) {
+        private_pool_s *pool_obj = (private_pool_s *) * pool;
+        int err;
+        MPID_Thread_mutex_create(&pool_obj->lock, &err);
+        MPIR_Assert(err == 0);
+        pool_obj->use_lock = true;
+    }
     return rc;
 }
 
@@ -104,6 +128,12 @@ int MPIDU_genq_private_pool_destroy(MPIDU_genq_private_pool_t pool)
         DL_DELETE(pool_obj->cell_blocks, curr);
         pool_obj->free_fn(curr->slab);
         MPL_free(curr);
+    }
+
+    if (pool_obj->use_lock) {
+        int err;
+        MPID_Thread_mutex_destroy(&pool_obj->lock, &err);
+        MPIR_Assert(err == 0);
     }
 
     /* free self */
@@ -194,17 +224,47 @@ static void remove_free_blocks(private_pool_s * pool_obj, cell_block_s * block)
     }
 }
 
+#define POOL_LOCK(pool_obj) \
+    do { \
+        if ((pool_obj)->use_lock) { \
+            MPID_THREAD_CS_ENTER(VCI, (pool_obj)->lock); \
+        } \
+    } while (0)
+
+#define POOL_UNLOCK(pool_obj) \
+    do { \
+        if ((pool_obj)->use_lock) { \
+            MPID_THREAD_CS_EXIT(VCI, (pool_obj)->lock); \
+        } \
+    } while (0)
+
+/* with force, raises max_num_blocks rather than fail at the limit */
+static int alloc_cell(private_pool_s * pool_obj, void **cell, bool force);
+
 int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell)
 {
+    return alloc_cell((private_pool_s *) pool, cell, false);
+}
+
+int MPIDU_genq_private_pool_force_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell)
+{
+    return alloc_cell((private_pool_s *) pool, cell, true);
+}
+
+static int alloc_cell(private_pool_s * pool_obj, void **cell, bool force)
+{
     int rc = MPI_SUCCESS;
-    private_pool_s *pool_obj = (private_pool_s *) pool;
 
     MPIR_FUNC_ENTER;
+    POOL_LOCK(pool_obj);
 
     if (!pool_obj->free_blocks_head) {
         /* try allocate more blocks if no free cell found */
         if (pool_obj->max_num_blocks > 0 && pool_obj->num_blocks >= pool_obj->max_num_blocks) {
-            MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
+            if (!force) {
+                MPIR_ERR_SETANDJUMP(rc, MPI_ERR_OTHER, "**nomem");
+            }
+            pool_obj->max_num_blocks++;
         }
 
         cell_block_s *new_block;
@@ -233,29 +293,12 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     }
 
   fn_exit:
+    POOL_UNLOCK(pool_obj);
     MPIR_FUNC_EXIT;
     return rc;
   fn_fail:
     *cell = NULL;
     goto fn_exit;
-}
-
-int MPIDU_genq_private_pool_force_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell)
-{
-    int rc = MPI_SUCCESS;
-    private_pool_s *pool_obj = (private_pool_s *) pool;
-
-    MPIR_FUNC_ENTER;
-
-    if (!pool_obj->free_blocks_head) {
-        /* try allocate more blocks if no free cell found */
-        if (pool_obj->max_num_blocks > 0 && pool_obj->num_blocks >= pool_obj->max_num_blocks) {
-            pool_obj->max_num_blocks++;
-        }
-    }
-    rc = MPIDU_genq_private_pool_alloc_cell(pool, cell);
-    MPIR_FUNC_EXIT;
-    return rc;
 }
 
 int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell)
@@ -270,6 +313,8 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     if (cell == NULL) {
         goto fn_exit;
     }
+
+    POOL_LOCK(pool_obj);
 
     cell_h = CELL_TO_CELL_HEADER(cell);
     block = cell_h->block;
@@ -291,6 +336,8 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
             pool_obj->num_blocks--;
         }
     }
+
+    POOL_UNLOCK(pool_obj);
 
   fn_exit:
     MPIR_FUNC_EXIT;
