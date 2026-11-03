@@ -71,6 +71,7 @@ typedef struct {
     MPI_Aint count;
     MPI_Datatype datatype;
     MPI_Aint buf_extent;        /* count * extent, needed by allgather */
+    MPI_Aint true_lb;           /* data of a contig datatype starts at buf + true_lb */
 
     bool need_pack;
     bool packbuf_from_pool;     /* pack buffers come from MPIR_cga_chunk_pool, else MPL_malloc */
