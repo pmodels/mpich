@@ -539,13 +539,13 @@ swaps its two operands to host memory itself. Calls that skip the algorithm
 table (`MPIR_*_fallback`, one algorithm calling another directly) don't get
 the wrapper.
 
-For nonblocking and persistent collectives, `auto` only builds the
-schedule, which the generated `_impl` starts afterwards. `buffer_swap` adds
-the copies to that schedule before it starts: the copy-ins at the front
-(`MPIR_Sched_move_to_front`, or `MPIR_TSP_sched_localcopy_front` for gentran),
-then a barrier or fence and the copy-outs at the back. The schedule owns the
-host buffers (`MPIR_Sched_add_buffer`, `MPIR_TSP_sched_add_buffer`) and frees
-them with itself; a persistent schedule replays the copies on every start. A
+For nonblocking and persistent collectives, `auto` only builds a
+schedule, of any type, which the generated `_impl` would start afterwards.
+`buffer_swap` makes it a step of a new normal schedule
+(`MPIR_Coll_sched_add_inner`), between COND steps that run the copy-ins and the
+copy-outs asynchronously (`MPIR_Ilocalcopy_gpu`). The new schedule owns the host
+buffers (`MPIR_Sched_add_buffer`) and frees them with itself; a persistent
+schedule replays the copies on every start. A
 call that adds to a schedule an outer collective is already building runs on
 the user buffers, since the copies would wrap the outer steps too.
 

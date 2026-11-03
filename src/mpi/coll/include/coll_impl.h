@@ -46,6 +46,7 @@ int MPII_Coll_finalize(void);
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub);
+int MPIR_Coll_sched_add_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 /* Run an inner call of Coll (e.g. Bcast) with the arguments of the blocking collective. The inner

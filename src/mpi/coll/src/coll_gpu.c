@@ -51,9 +51,11 @@ struct coll_bufs {
     struct coll_buf bufs[MAX_COLL_BUFS];
 };
 
-/* a swapped buffer: the user buffer, the host buffer, and the host buffer as allocated */
+/* a swapped buffer: the user buffer and its attributes, the host buffer, and the host buffer as
+ * allocated */
 struct swap_buf {
     void *user;
+    MPL_pointer_attr_t attr;
     void *host;
     void *raw;
 };
@@ -64,6 +66,8 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
 static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs);
 static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
                           struct swap_buf *swaps);
+static int add_copy_step(MPIR_Sched_t s, struct coll_buf *b, struct swap_buf *swap,
+                         bool is_copy_in);
 static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
@@ -165,10 +169,9 @@ static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt
  * fn, which either selects (run_auto) or is an algorithm.
  *
  * A blocking collective copies in, runs, and copies out inline. For nonblocking and persistent
- * collectives, fn only builds the schedule, so the copies are added to the schedule before
- * it starts: the copy-in at the front and the copy-out at the back. A persistent schedule
- * replays them on every start. The schedule owns the host buffers and frees them with
- * itself. */
+ * collectives, fn only builds a schedule, so that schedule becomes a step of a new one, between
+ * asynchronous copy-in and copy-out steps. A persistent schedule replays them on every start.
+ * The new schedule owns the host buffers and frees them with itself. */
 static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
                         MPII_Csel_container_s * cnt)
 {
@@ -192,7 +195,8 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
 
     for (int i = 0; i < bufs.n; i++) {
         struct coll_buf *b = &bufs.bufs[i];
-        if (!MPIR_GPU_query_pointer_is_dev(*b->field)) {
+        MPIR_GPU_query_pointer_attr(*b->field, &swaps[i].attr);
+        if (!MPL_gpu_attr_is_dev(&swaps[i].attr)) {
             continue;
         }
         swaps[i].user = *b->field;
@@ -235,85 +239,113 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
     goto fn_exit;
 }
 
-/* Adds the copy-in steps at the front of the schedule auto built, and the copy-out steps at
- * the back after a barrier (normal) or fence (gentran), and hands the host buffers to the
- * schedule. */
+/* Replaces the schedule fn built, of any type, by a schedule that copies in, runs it, and copies
+ * out, and hands the host buffers to the new schedule. */
 static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
                           struct swap_buf *swaps)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {
-        MPIR_Sched_t s = coll_sig->sched;
-        for (int i = 0; i < bufs->n; i++) {
-            if (swaps[i].user) {
-                MPIR_Sched_add_buffer(s, swaps[i].raw);
-                swaps[i].raw = NULL;
-            }
-        }
+    MPIR_Csel_coll_sig_s inner = *coll_sig;
+    coll_sig->sched = NULL;
+    MPII_CSEL_CREATE_SCHED(coll_sig);
+    MPIR_Sched_t s = coll_sig->sched;
 
-        int n = 0;
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
-                mpi_errno = MPIR_Sched_copy(swaps[i].user, b->count, b->datatype,
-                                            swaps[i].host, b->count, b->datatype, s);
-                MPIR_ERR_CHECK(mpi_errno);
-                n++;
-            }
+    for (int i = 0; i < bufs->n; i++) {
+        if (swaps[i].user) {
+            MPIR_Sched_add_buffer(s, swaps[i].raw);
+            swaps[i].raw = NULL;
         }
-        mpi_errno = MPIR_Sched_move_to_front(s, n);
-        MPIR_ERR_CHECK(mpi_errno);
+    }
 
-        mpi_errno = MPIR_Sched_barrier(s);
-        MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                mpi_errno = MPIR_Sched_copy(swaps[i].host, b->count, b->datatype,
-                                            swaps[i].user, b->count, b->datatype, s);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+    for (int i = 0; i < bufs->n; i++) {
+        if (swaps[i].user && (bufs->bufs[i].dir & COLL_BUF_READ)) {
+            mpi_errno = add_copy_step(s, &bufs->bufs[i], &swaps[i], true);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-    } else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {
-        MPIR_TSP_sched_t s = coll_sig->sched;
-        for (int i = 0; i < bufs->n; i++) {
-            if (swaps[i].user) {
-                MPIR_TSP_sched_add_buffer(s, swaps[i].raw);
-                swaps[i].raw = NULL;
-            }
-        }
+    }
+    mpi_errno = MPIR_Sched_barrier(s);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
-                mpi_errno = MPIR_TSP_sched_localcopy_front(swaps[i].user, b->count, b->datatype,
-                                                           swaps[i].host, b->count, b->datatype, s);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
+    mpi_errno = MPIR_Coll_sched_add_inner(s, &inner);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_barrier(s);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_TSP_sched_fence(s);
-        MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                int vtx_id;
-                mpi_errno = MPIR_TSP_sched_localcopy(swaps[i].host, b->count, b->datatype,
-                                                     swaps[i].user, b->count, b->datatype,
-                                                     s, 0, NULL, &vtx_id);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+    for (int i = 0; i < bufs->n; i++) {
+        if (swaps[i].user && (bufs->bufs[i].dir & COLL_BUF_WRITE)) {
+            mpi_errno = add_copy_step(s, &bufs->bufs[i], &swaps[i], false);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-    } else {
-        /* MPIR_SCHED_GREQ has no steps to add; nothing produces it for now */
-        MPIR_Assert(0);
     }
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* A copy between a user buffer and its host buffer, as a COND entry of a schedule */
+struct swap_copy {
+    void *user;
+    void *host;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    MPL_pointer_attr_t attr;    /* of the user buffer */
+    bool is_copy_in;
+    MPIR_gpu_req areq;
+};
+
+static int swap_copy_start(void *state);
+static int swap_copy_test(void *state, bool * done);
+
+static int add_copy_step(MPIR_Sched_t s, struct coll_buf *b, struct swap_buf *swap, bool is_copy_in)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct swap_copy *copy = MPIR_Sched_alloc_state(s, sizeof(struct swap_copy));
+    MPIR_ERR_CHKANDJUMP(!copy, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    copy->user = swap->user;
+    copy->host = swap->host;
+    copy->count = b->count;
+    copy->datatype = b->datatype;
+    copy->attr = swap->attr;
+    copy->is_copy_in = is_copy_in;
+
+    mpi_errno = MPIR_Sched_cond(swap_copy_start, swap_copy_test, NULL, copy, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int swap_copy_start(void *state)
+{
+    struct swap_copy *copy = state;
+    int engine = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+
+    if (copy->is_copy_in) {
+        return MPIR_Ilocalcopy_gpu(copy->user, copy->count, copy->datatype, 0, &copy->attr,
+                                   copy->host, copy->count, copy->datatype, 0, NULL,
+                                   engine, true, &copy->areq);
+    } else {
+        return MPIR_Ilocalcopy_gpu(copy->host, copy->count, copy->datatype, 0, NULL,
+                                   copy->user, copy->count, copy->datatype, 0, &copy->attr,
+                                   engine, true, &copy->areq);
+    }
+}
+
+static int swap_copy_test(void *state, bool * done)
+{
+    struct swap_copy *copy = state;
+    int is_done = 0;
+
+    MPIR_async_test(&copy->areq, &is_done);
+    *done = is_done;
+    return MPI_SUCCESS;
 }
 
 /* Like MPIR_alloc_buffer, but also returns the pointer as allocated in *raw */
