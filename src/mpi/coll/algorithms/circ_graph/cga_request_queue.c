@@ -112,6 +112,8 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->buf = buf;
     queue->count = count;
     queue->datatype = datatype;
+    MPI_Aint dummy;
+    MPIR_Type_get_true_extent_impl(datatype, &queue->true_lb, &dummy);
     queue->inverse_order = inverse_order;
 
     mpi_errno = MPIR_Sched_next_tag(comm, &queue->tag);
@@ -716,9 +718,9 @@ static int issue_isend_contig(MPII_cga_request_queue * queue, int block, int roo
     MPI_Aint offset = block * queue->chunk_size;
     const void *send_buf;
     if (root == 0) {
-        send_buf = (char *) queue->buf + offset;
+        send_buf = (char *) queue->buf + queue->true_lb + offset;
     } else {
-        send_buf = (char *) queue->buf + root * queue->buf_extent + offset;
+        send_buf = (char *) queue->buf + queue->true_lb + root * queue->buf_extent + offset;
     }
     mpi_errno = MPIC_Isend(send_buf, nbytes, MPIR_BYTE_INTERNAL, peer_rank, queue->tag, queue->comm,
                            req, queue->coll_attr);
@@ -749,9 +751,9 @@ static int issue_irecv_contig(MPII_cga_request_queue * queue, int block, int roo
         recv_buf = tmpbuf;
     } else {
         if (root == 0) {
-            recv_buf = (char *) queue->buf + offset;
+            recv_buf = (char *) queue->buf + queue->true_lb + offset;
         } else {
-            recv_buf = (char *) queue->buf + root * queue->buf_extent + offset;
+            recv_buf = (char *) queue->buf + queue->true_lb + root * queue->buf_extent + offset;
         }
     }
 
