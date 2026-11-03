@@ -973,7 +973,7 @@ Selects the intra-communicator nonblocking Allgatherv algorithm. Its enum values
 * tsp_ring - Forces the generic transport ring algorithm.
 * tsp_brucks - Forces the generic transport Brucks-based algorithm.
 
-Used in functions: `MPIR_Iallgatherv_intra_sched_brucks`, `MPIR_Iallgatherv_intra_sched_recursive_doubling`, `MPIR_Iallgatherv_intra_sched_ring`, `MPIR_TSP_Iallgatherv_sched_intra_recexch`, `MPIR_TSP_Iallgatherv_sched_intra_ring`, `MPIR_TSP_Iallgatherv_sched_intra_brucks`, `MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv`, `MPIR_Ibcast_sched_intra_tsp_flat_auto`, `MPIR_TSP_Ibcast_sched_intra_tsp_auto`, `MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv`
+Used in functions: `MPIR_Iallgatherv_intra_sched_brucks`, `MPIR_Iallgatherv_intra_sched_recursive_doubling`, `MPIR_Iallgatherv_intra_sched_ring`, `MPIR_TSP_Iallgatherv_sched_intra_recexch`, `MPIR_TSP_Iallgatherv_sched_intra_ring`, `MPIR_TSP_Iallgatherv_sched_intra_brucks`, `MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv`, `MPIR_Ibcast_sched_intra_tsp_flat_auto`, `MPIR_Coll_cvar_to_algo_id`, `MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv`
 
 ### MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL
 
@@ -1047,7 +1047,7 @@ Selects the intra-communicator Iallreduce algorithm. It is used by the generic t
 * tsp_ring - forces the generic transport ring algorithm.
 * tsp_recexch_reduce_scatter_recexch_allgatherv - forces generic transport recursive exchange with reduce-scatter and allgatherv.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL
 
@@ -1055,7 +1055,7 @@ Sets the k value for generic transport recursive-exchange Iallreduce algorithms.
 
 * integer - default is 2, represents the k value used by generic transport recursive-exchange Iallreduce algorithms.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD
 
@@ -1064,7 +1064,7 @@ Controls whether the generic transport tree-based intra-communicator Iallreduce 
 * 0 - default, uses one receive buffer for data from all children, serializing receives so only one receive is posted at a time.
 * 1 - allocates a dedicated receive buffer for each child, allowing receives to be preposted and reducing unexpected messages at the cost of higher memory use.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_KVAL
 
@@ -1072,7 +1072,7 @@ Sets the k value for the generic transport tree-based intra-communicator Iallred
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Iallreduce algorithm.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1081,7 +1081,7 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport tree-b
 * 0 - default, disables pipelining in tree-based Iallreduce.
 * positive integer - represents the maximum pipeline chunk size in bytes for tree-based Iallreduce.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_TYPE
 
@@ -1215,7 +1215,7 @@ Sets the k value for the generic transport high-radix dissemination intra-commun
 
 * integer - default is 2, represents the k value used by the generic transport high-radix dissemination Ibarrier algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBARRIER_INTER_ALGORITHM
 
@@ -1235,7 +1235,7 @@ Selects the intra-communicator nonblocking Barrier algorithm for sched-based TSP
 * tsp_recexch - Forces the generic transport recursive-exchange algorithm.
 * tsp_k_dissemination - Forces the generic transport high-radix dissemination algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IBARRIER_RECEXCH_KVAL
 
@@ -1243,7 +1243,7 @@ Sets the k value for the generic transport recursive-exchange intra-communicator
 
 * integer - default is 2, represents the k value used by the generic transport recursive-exchange Ibarrier algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL
 
@@ -1251,7 +1251,7 @@ Sets the k value for the recursive-exchange Allgatherv phase of the generic tran
 
 * integer - default is 2, represents the k value used by the recursive-exchange Allgatherv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_INTER_ALGORITHM
 
@@ -1276,7 +1276,7 @@ Selects the intra-communicator nonblocking Bcast algorithm for generic transport
 * tsp_ring - Forces the generic transport Ring algorithm.
 * circ_graph - Forces the queued circulant graph algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IBCAST_RING_CHUNK_SIZE
 
@@ -1285,7 +1285,7 @@ Sets the maximum chunk size, in bytes, for pipelining in the generic transport r
 * 0 - default, disables pipelining in ring Ibcast.
 * positive integer - represents the maximum chunk size in bytes for pipelining in ring Ibcast.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_SCATTERV_KVAL
 
@@ -1293,7 +1293,7 @@ Sets the k value for the scatterv phase of the generic transport intra-communica
 
 * integer - default is 2, represents the k value used by the scatterv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_KVAL
 
@@ -1301,7 +1301,7 @@ Sets the k value for the generic transport tree-based intra-communicator Ibcast 
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Ibcast algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1310,7 +1310,7 @@ Sets the maximum chunk size, in bytes, for pipelining in the generic transport t
 * 0 - default, disables pipelining in tree-based Ibcast.
 * positive integer - represents the maximum chunk size in bytes for pipelining in tree-based Ibcast.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_TYPE
 
@@ -1505,7 +1505,7 @@ Selects the intra-communicator Ireduce algorithm. It is used by the generic tran
 * tsp_tree - forces the generic transport tree algorithm.
 * tsp_ring - forces the generic transport ring algorithm.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE
 
@@ -1514,7 +1514,7 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport ring-b
 * 0 - default, disables pipelining.
 * positive integer - represents the maximum pipeline chunk size in bytes.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM
 
@@ -1624,7 +1624,7 @@ Sets whether the generic transport tree-based intra-communicator Ireduce impleme
 * false - default, uses one receive buffer for all children, so receives from children are serialized.
 * true - allocates a dedicated receive buffer for each child, enabling receives to be preposted at the cost of additional memory.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_KVAL
 
@@ -1632,7 +1632,7 @@ Sets the k value for the generic transport tree-based intra-communicator Ireduce
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Ireduce algorithm.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1642,7 +1642,7 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport tree-b
 * 0 - disables pipelining.
 * positive integer - represents the maximum pipeline chunk size in bytes.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_TYPE
 

@@ -254,14 +254,4 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
                                       void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm_ptr, int coll_attr);
 
-/* TSP auto */
-int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                             MPI_Datatype datatype, MPI_Op op,
-                                             MPIR_Comm * comm, MPIR_TSP_sched_t sched);
-int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                         int root, MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
-int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sched);
-int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                                          MPI_Datatype datatype, MPI_Op op, int root,
-                                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched);
 #endif /* MPIR_COLL_H_INCLUDED */
