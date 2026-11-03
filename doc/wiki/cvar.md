@@ -724,8 +724,7 @@ Used in functions: `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`,
 
 ### MPIR_CVAR_COLLECTIVE_FALLBACK
 
-Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path. Calls on internal sub-communicators, such as the node communicators that a compositional algorithm like `smp` uses, always fall back silently, so forcing such an algorithm does not fail on its inner calls.
-
+Controls how MPICH handles collective fallback when a selected collective path cannot be used. It is used when a user-selected collective algorithm is not usable for the supplied arguments, and when topology-aware intra-node trees request an unsupported `knomial_2` tree. The topology-aware tree case depends on topology-aware intra-node trees being active, which requires `MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES`, user-provided process binding, and initialized hardware topology support. When active, this CVAR sets the policy for whether MPICH reports an error or falls back to an internally selected collective path.
 * error - throw an error.
 * silent - default, silently fallback to the internally selected algorithm.
 
@@ -733,7 +732,7 @@ Used in functions: `MPII_COLLECTIVE_FALLBACK_CHECK`, `MPIDI_SHM_create_template_
 
 ### MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS
 
-Controls whether the algorithm CVARs, such as `MPIR_CVAR_BCAST_INTRA_ALGORITHM`, also apply to the inner calls of compositional algorithms. By default they apply to the user's call only, and inner calls select from the `auto` tree. It is for experiments that control an inner algorithm, for example `smp` allreduce with a forced bcast. A forced algorithm whose restrictions fail on an internal sub-communicator falls back silently, as described for `MPIR_CVAR_COLLECTIVE_FALLBACK`.
+Controls whether the algorithm CVARs, such as `MPIR_CVAR_BCAST_INTRA_ALGORITHM`, also apply to the inner calls of compositional algorithms. By default they apply to the user's call only, and inner calls select from the `auto` tree. It is for experiments that control an inner algorithm, for example `smp` allreduce with a forced bcast. With this CVAR set, a forced algorithm whose restrictions fail on an inner call errors under `MPIR_CVAR_COLLECTIVE_FALLBACK=error`. Set `MPIR_CVAR_COLLECTIVE_FALLBACK=silent` to fall back instead.
 
 * 0 - default, inner calls select from the `auto` tree.
 * 1 - inner calls use the algorithm CVAR of their collective, then the `auto` tree.
