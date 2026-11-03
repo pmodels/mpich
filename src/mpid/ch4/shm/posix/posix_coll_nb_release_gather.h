@@ -51,9 +51,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int
     goto fn_exit;
 
   fallback:
-    /* Fall back to other algo as release_gather based bcast cannot be used */
-    mpi_errno =
-        MPIR_TSP_Ibcast_sched_intra_tsp_auto(buffer, count, datatype, root, comm_ptr, sched);
+    /* TODO: revive through CSEL. The selection should only reach this where it can run. */
+    MPIR_Assert(0);
     goto fn_exit;
 }
 
@@ -107,10 +106,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ireduce_release_gather(const void *send
     goto fn_exit;
 
   fallback:
-    /* Fall back to other algo as release_gather algo cannot be used */
-    mpi_errno =
-        MPIR_TSP_Ireduce_sched_intra_tsp_auto(sendbuf, recvbuf, count, datatype, op, root,
-                                              comm_ptr, sched);
+    /* TODO: revive through CSEL. The selection should only reach this where it can run. */
+    MPIR_Assert(0);
     goto fn_exit;
 }
 

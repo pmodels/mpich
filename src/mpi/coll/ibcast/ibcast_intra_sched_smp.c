@@ -27,9 +27,14 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 /* This routine purely handles the hierarchical version of bcast, and does not
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
-int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_intra_sched_smp(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    void *buffer = coll_sig->u.bcast.buffer;
+    MPI_Aint count = coll_sig->u.bcast.count;
+    MPI_Datatype datatype = coll_sig->u.bcast.datatype;
+    int root = coll_sig->u.bcast.root;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
     struct MPII_Ibcast_state *ibcast_state;
@@ -67,19 +72,15 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
 
     /* perform the internode broadcast */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype,
-                                                 MPIR_Get_internode_rank(comm_ptr, root),
-                                                 comm_ptr->node_roots_comm, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ibcast, coll_sig, buffer, count, datatype,
+                              MPIR_Get_internode_rank(comm_ptr, root), comm_ptr->node_roots_comm);
 
         /* don't allow the local ops for the intranode phase to start until this has completed */
         MPIR_SCHED_BARRIER(s);
     }
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno =
-            MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ibcast, coll_sig, buffer, count, datatype, 0, comm_ptr->node_comm);
     }
 
   fn_exit:

@@ -6,9 +6,14 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-int MPIR_Ibcast_inter_sched_flat(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                 int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_inter_sched_flat(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt)
 {
+    MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
+    void *buffer = coll_sig->u.bcast.buffer;
+    MPI_Aint count = coll_sig->u.bcast.count;
+    MPI_Datatype datatype = coll_sig->u.bcast.datatype;
+    int root = coll_sig->u.bcast.root;
+    MPIR_Sched_t s = coll_sig->sched;
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
@@ -38,9 +43,7 @@ int MPIR_Ibcast_inter_sched_flat(void *buffer, MPI_Aint count, MPI_Datatype data
 
         /* now do the usual broadcast on this intracommunicator
          * with rank 0 as root. */
-        mpi_errno =
-            MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0, comm_ptr->local_comm, s);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_COLL_SCHED_INNER(Ibcast, coll_sig, buffer, count, datatype, 0, comm_ptr->local_comm);
     }
 
   fn_exit:

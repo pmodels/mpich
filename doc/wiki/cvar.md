@@ -102,14 +102,6 @@ Sets the message-size threshold, in bytes, for using POSIX GPU IPC read allgathe
 
 Used in functions: `MPIDI_POSIX_mpi_allgather_gpu_ipc_read`
 
-### MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE
-
-Sets the Allgather and Allgatherv long-message threshold, in bytes, used by sched-auto intra-communicator algorithm selection. When the total received data is below this threshold and the communicator size is a power of two, recursive doubling is selected. Otherwise, selection falls through to the `MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE` threshold, where shorter messages use Brucks and remaining messages use ring.
-
-* integer - default is 524288, represents the Allgather and Allgatherv long-message threshold in bytes.
-
-Used in functions: `MPIR_Iallgather_intra_sched_auto`, `MPIR_Iallgatherv_intra_sched_auto`
-
 ### MPIR_CVAR_ALLGATHER_RECEXCH_KVAL
 
 Sets the k value for recursive-exchange Allgather algorithms. It is used when a recursive-exchange Allgather path is selected, such as by forcing `MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM` to `recexch_doubling` or `recexch_halving`, or by internal collective selection. The selected recursive-exchange path may also use `MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV` to control receive-posting behavior.
@@ -135,14 +127,6 @@ Sets the per-rank shared-memory buffer size used by the CH4 allgather multi-lead
 * positive integer - use the specified number of bytes of shared memory per rank.
 
 Used in functions: `MPIDI_Allgather_allcomm_composition_json`, `MPID_Allgather`, `MPIDI_Allgather_intra_composition_alpha`
-
-### MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE
-
-Sets the Allgather and Allgatherv short-message threshold, in bytes, used by sched-auto intra-communicator algorithm selection. It is used only after the recursive-doubling condition based on `MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE` and a power-of-two communicator size is not selected. When active, total received data below this threshold selects the Brucks algorithm; otherwise the ring algorithm is selected.
-
-* integer - default is 81920, represents the Allgather and Allgatherv short-message threshold in bytes.
-
-Used in functions: `MPIR_Iallgather_intra_sched_auto`, `MPIR_Iallgatherv_intra_sched_auto`
 
 ### MPIR_CVAR_ALLREDUCE_CACHE_PER_LEADER
 
@@ -247,14 +231,6 @@ Sets the per-leader shared-memory buffer size used by the CH4 allreduce multi-le
 * greater than 4194304 - use the maximum per-leader shared-memory size of 4 MB.
 
 Used in functions: `MPIDI_Allreduce_intra_composition_delta`
-
-### MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE
-
-Sets the allreduce short-message threshold, in bytes, used by sched-auto intra-communicator Allreduce and by group Allreduce algorithm selection. When active, messages at or below this threshold use recursive doubling. Messages above this threshold use reduce-scatter followed by allgather only when the operation is built-in and the count is at least the nearest lower power of two of the participating communicator or group size; otherwise recursive doubling is still used. In sched-auto intra-communicator Allreduce, this CVAR is bypassed when the parent-communicator SMP path is selected for a commutative operation.
-
-* integer - default is 2048, represents the allreduce short-message threshold in bytes.
-
-Used in functions: `MPII_Allreduce_group_intra`, `MPIR_Iallreduce_intra_sched_auto`
 
 ### MPIR_CVAR_ALLREDUCE_TOPO_DIFF_GROUPS
 
@@ -439,14 +415,6 @@ Sets the message-size threshold, in bytes, for using POSIX GPU IPC read alltoall
 
 Used in functions: `MPIDI_POSIX_mpi_alltoall_gpu_ipc_read`
 
-### MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE
-
-Sets the per-destination medium-message threshold, in bytes, used by sched-auto intra-communicator Ialltoall algorithm selection. It is used only for non-in-place operations after the short-message path controlled by `MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE` and communicator size has not been selected. When active, messages at or below this threshold select the permuted-sendrecv schedule; larger messages select the pairwise schedule.
-
-* integer - default is 32768, represents the per-destination medium-message threshold in bytes.
-
-Used in functions: `MPIR_Ialltoall_intra_sched_auto`
-
 ### MPIR_CVAR_ALLTOALL_SHM_PER_RANK
 
 Sets the per-rank shared-memory buffer size used by the CH4 alltoall multi-leader composition. This CVAR is used when `MPIR_CVAR_ALLTOALL_COMPOSITION` forces the multi-leader composition or when automatic CH4 collective selection chooses that composition. The multi-leader composition also requires an intracommunicator whose ranks are node-canonical, and the per-rank alltoall message data must fit within this limit. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_coll_impl.h` or `src/mpid/ch4/src/ch4_coll.h`. When active, this CVAR sets both the per-rank shared-memory allocation size for the node-local staging buffer and the per-rank message-size limit for using the CH4 alltoall multi-leader composition.
@@ -455,14 +423,6 @@ Sets the per-rank shared-memory buffer size used by the CH4 alltoall multi-leade
 * positive integer - use the specified number of bytes of shared memory per rank.
 
 Used in functions: `MPIDI_Alltoall_allcomm_composition_json`, `MPID_Alltoall`, `MPIDI_Alltoall_intra_composition_alpha`
-
-### MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
-
-Sets the per-destination short-message threshold, in bytes, used by sched-auto intra-communicator Ialltoall algorithm selection. It is used only for non-in-place operations when the communicator has at least 8 ranks; messages at or below this threshold select the Brucks algorithm, otherwise selection falls through to `MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE` and then to the large-message path. When active, it controls the cutoff for using the short-message Alltoall schedule.
-
-* integer - default is 256, represents the per-destination short-message threshold in bytes.
-
-Used in functions: `MPIR_Ialltoall_intra_sched_auto`
 
 ### MPIR_CVAR_ALLTOALL_THROTTLE
 
@@ -620,22 +580,6 @@ Controls whether `MPI_Bcast` uses non-blocking send operations. It is used by `M
 
 Used in functions: `MPI_Bcast`
 
-### MPIR_CVAR_BCAST_LONG_MSG_SIZE
-
-Sets the long-message threshold, in bytes, used by broadcast sched-auto and SMP auto-selection paths. It is considered only after the message is not short according to `MPIR_CVAR_BCAST_SHORT_MSG_SIZE` and the communicator size is not below `MPIR_CVAR_BCAST_MIN_PROCS`. When active, it divides the remaining broadcasts between the medium-message power-of-two scatter/recursive-doubling-allgather path and the large-message or non-power-of-two scatter/ring-allgather path.
-
-* integer - default is 524288, represents the broadcast long-message threshold in bytes.
-
-Used in functions: `MPIR_Ibcast_intra_sched_auto`, `MPIR_Bcast_intra_smp`
-
-### MPIR_CVAR_BCAST_MIN_PROCS
-
-Sets the communicator-size threshold used by the SMP intra-communicator Bcast path. It is used only when `MPIR_Bcast_intra_smp` is selected, such as by forcing `MPIR_CVAR_BCAST_INTRA_ALGORITHM` to `smp` or by internal collective selection. Broadcasts whose communicator size is below this threshold, or whose message size is below `MPIR_CVAR_BCAST_SHORT_MSG_SIZE`, use the short-message SMP path. Otherwise, the SMP path selects between scatter/allgather variants based on `MPIR_CVAR_BCAST_LONG_MSG_SIZE` and whether the communicator size is a power of two.
-
-* integer - default is 8, represents the minimum communicator size for using the SMP scatter/allgather selection path.
-
-Used in functions: `MPIR_Bcast_intra_smp`
-
 ### MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM
 
 Selects the CH4 OFI netmod intra-communicator Bcast path. It is used by the OFI netmod Bcast entry point, where it can route the operation to MPIR collective fallback, OFI triggered-operation tree implementations, or internal algorithm selection that can be overridden with `MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE`. The triggered-operation paths require OFI triggered operations, OFI data auto-progress, and a datatype that can be converted to an OFI datatype; otherwise they fall back to the MPIR Bcast implementation. When a triggered-operation tree path is active, it also uses the Bcast tree type and k value selected by `MPIR_CVAR_BCAST_TREE_TYPE` and `MPIR_CVAR_BCAST_TREE_KVAL`.
@@ -655,14 +599,6 @@ Controls receive pre-posting for the pipelined-tree Bcast algorithm. It is used 
 * true - pre-posts receives for all pipeline chunks.
 
 Used in functions: `MPIR_Bcast_intra_pipelined_tree`
-
-### MPIR_CVAR_BCAST_SHORT_MSG_SIZE
-
-Sets the short-message threshold, in bytes, used by broadcast auto-selection paths. It is used by sched-auto intra-communicator Ibcast, by the SMP intra-communicator Bcast path, and by the fallback flat auto-selection path for TSP Ibcast. Messages below this threshold, or broadcasts whose communicator size is below `MPIR_CVAR_BCAST_MIN_PROCS`, use a tree-style short-message path. Messages at or above this threshold use scatter/allgather paths, with the exact path also depending on `MPIR_CVAR_BCAST_LONG_MSG_SIZE` and whether the communicator size is a power of two in the sched-auto and SMP paths.
-
-* integer - default is 12288, represents the broadcast short-message threshold in bytes.
-
-Used in functions: `MPIR_Ibcast_intra_sched_auto`, `MPIR_Bcast_intra_smp`, `MPIR_Ibcast_sched_intra_tsp_flat_auto`
 
 ### MPIR_CVAR_BCAST_TOPO_DIFF_GROUPS
 
@@ -961,14 +897,6 @@ Selects the inter-communicator Gather algorithm. It is used for `MPI_Gather` on 
 
 Used in functions: `MPI_Gather`
 
-### MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
-
-Sets the short-message threshold, in bytes, used by sched-auto nonblocking inter-communicator Gather. It is used when the sched-based inter-communicator Igather automatic path is selected, such as by forcing `MPIR_CVAR_IGATHER_INTER_ALGORITHM` to `sched_auto` or by internal collective selection. The total message size is computed from the receive datatype, receive count, and remote group size on the root side, or from the send datatype, send count, and local group size on the remote side; messages below this threshold use the short inter-communicator Gather schedule, and other messages use the long inter-communicator Gather schedule.
-
-* integer - default is 2048, represents the inter-communicator Gather short-message threshold in bytes.
-
-Used in functions: `MPIR_Igather_inter_sched_auto`
-
 ### MPIR_CVAR_GATHER_INTRA_ALGORITHM
 
 Selects the intra-communicator Gather algorithm. It is used for `MPI_Gather` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. The selected Gather implementation may also use `MPIR_CVAR_GATHER_VSMALL_MSG_SIZE` for its very-small-message threshold.
@@ -1028,17 +956,15 @@ Used in functions: `MPIR_TSP_Iallgatherv_sched_intra_brucks`
 Selects the inter-communicator nonblocking Allgatherv algorithm. It is used for Iallgatherv on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based selection or forces a sched-based inter-communicator implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_remote_gather_local_bcast - Forces the sched-based remote-gather-local-bcast algorithm.
 
-Used in functions: `MPIR_Iallgatherv_inter_sched_auto`, `MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast`
+Used in functions: `MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast`
 
 ### MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
 
 Selects the intra-communicator nonblocking Allgatherv algorithm. Its enum values are also reused by the TSP Ibcast scatterv/allgatherv algorithms to select the Allgatherv phase after the scatter phase. When the TSP Ibcast scatterv/allgatherv paths are active, that choice is made through `MPIR_CVAR_IBCAST_INTRA_ALGORITHM` or collective selection rather than by reading this CVAR directly; those paths also use the Ibcast scatterv and Allgatherv recursive-exchange k-value CVARs for their tree and recursive-exchange branching factors. The recursive-exchange TSP Iallgatherv algorithms require ordered displacements, and their radix is controlled by `MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL`; the TSP Brucks algorithm uses `MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL`.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_brucks - Forces the sched-based Brucks algorithm.
 * sched_recursive_doubling - Forces the sched-based recursive-doubling algorithm.
 * sched_ring - Forces the sched-based ring algorithm.
@@ -1047,7 +973,7 @@ Selects the intra-communicator nonblocking Allgatherv algorithm. Its enum values
 * tsp_ring - Forces the generic transport ring algorithm.
 * tsp_brucks - Forces the generic transport Brucks-based algorithm.
 
-Used in functions: `MPIR_Iallgatherv_intra_sched_brucks`, `MPIR_Iallgatherv_intra_sched_recursive_doubling`, `MPIR_Iallgatherv_intra_sched_ring`, `MPIR_TSP_Iallgatherv_sched_intra_recexch`, `MPIR_TSP_Iallgatherv_sched_intra_ring`, `MPIR_TSP_Iallgatherv_sched_intra_brucks`, `MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv`, `MPIR_Ibcast_sched_intra_tsp_flat_auto`, `MPIR_TSP_Ibcast_sched_intra_tsp_auto`, `MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv`
+Used in functions: `MPIR_Iallgatherv_intra_sched_brucks`, `MPIR_Iallgatherv_intra_sched_recursive_doubling`, `MPIR_Iallgatherv_intra_sched_ring`, `MPIR_TSP_Iallgatherv_sched_intra_recexch`, `MPIR_TSP_Iallgatherv_sched_intra_ring`, `MPIR_TSP_Iallgatherv_sched_intra_brucks`, `MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv`, `MPIR_Ibcast_sched_intra_tsp_flat_auto`, `MPIR_Coll_cvar_to_algo_id`, `MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv`
 
 ### MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL
 
@@ -1070,7 +996,6 @@ Used in functions: `MPI_Iallgather`
 Selects the inter-communicator Iallgather algorithm. It is used for `MPI_Iallgather` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; the available inter-communicator paths are sched-based and do not rely on the Iallgather k-value CVARs.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_local_gather_remote_bcast - forces the local-gather-remote-bcast algorithm.
 
 Used in functions: `MPI_Iallgather`
@@ -1080,7 +1005,6 @@ Used in functions: `MPI_Iallgather`
 Selects the intra-communicator Iallgather algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; selected generic transport recursive-exchange and Brucks paths use the Iallgather k-value CVARs. When active, this CVAR sets which Iallgather implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_ring - forces the ring algorithm.
 * sched_brucks - forces the Brucks algorithm.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
@@ -1104,7 +1028,6 @@ Used in functions: `MPI_Iallgather`
 Selects the inter-communicator Iallreduce algorithm. It is used for Iallreduce on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which inter-communicator Iallreduce implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_remote_reduce_local_bcast - forces the remote-reduce-local-bcast algorithm.
 
 Used in functions: `MPI_Iallreduce`
@@ -1114,7 +1037,6 @@ Used in functions: `MPI_Iallreduce`
 Selects the intra-communicator Iallreduce algorithm. It is used by the generic transport scheduler path for intra-communicator Iallreduce when this CVAR directly forces a generic transport algorithm; otherwise, it falls through to internal collective selection, which may be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`, and then to a recursive-exchange fallback if no generic transport container is selected. When active, this CVAR sets which intra-communicator Iallreduce implementation is forced or whether internal collective selection chooses the implementation. The forced recursive-exchange paths use the Iallreduce recursive-exchange k-value CVAR. The forced tree path uses the selected Iallreduce tree type, tree k value, tree pipeline chunk size, and tree buffer-per-child CVARs, and it falls back to a recursive-exchange path if it cannot be applied. The forced ring and reduce-scatter/allgatherv paths also fall back to recursive exchange if their operation or count requirements are not met.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_naive - forces the naive algorithm.
 * sched_smp - forces the SMP algorithm.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
@@ -1125,7 +1047,7 @@ Selects the intra-communicator Iallreduce algorithm. It is used by the generic t
 * tsp_ring - forces the generic transport ring algorithm.
 * tsp_recexch_reduce_scatter_recexch_allgatherv - forces generic transport recursive exchange with reduce-scatter and allgatherv.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL
 
@@ -1133,7 +1055,7 @@ Sets the k value for generic transport recursive-exchange Iallreduce algorithms.
 
 * integer - default is 2, represents the k value used by generic transport recursive-exchange Iallreduce algorithms.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD
 
@@ -1142,7 +1064,7 @@ Controls whether the generic transport tree-based intra-communicator Iallreduce 
 * 0 - default, uses one receive buffer for data from all children, serializing receives so only one receive is posted at a time.
 * 1 - allocates a dedicated receive buffer for each child, allowing receives to be preposted and reducing unexpected messages at the cost of higher memory use.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_KVAL
 
@@ -1150,7 +1072,7 @@ Sets the k value for the generic transport tree-based intra-communicator Iallred
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Iallreduce algorithm.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1159,7 +1081,7 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport tree-b
 * 0 - default, disables pipelining in tree-based Iallreduce.
 * positive integer - represents the maximum pipeline chunk size in bytes for tree-based Iallreduce.
 
-Used in functions: `MPIR_TSP_Iallreduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IALLREDUCE_TREE_TYPE
 
@@ -1176,7 +1098,6 @@ Used in functions: `MPIR_Coll_init_algo_container`
 Selects the inter-communicator nonblocking Alltoallv algorithm. It is used for `MPI_Ialltoallv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific pairwise-exchange Ialltoallv implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_pairwise_exchange - Forces the sched-based pairwise-exchange algorithm.
 
 Used in functions: `MPI_Ialltoallv`
@@ -1186,7 +1107,6 @@ Used in functions: `MPI_Ialltoallv`
 Selects the intra-communicator nonblocking Alltoallv algorithm. It is used for `MPI_Ialltoallv` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; selected scattered paths may also use `MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS` and `MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE`, and selected blocked paths may also use Alltoall-family throttling. When active, this CVAR sets which Ialltoallv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_blocked - Forces the sched-based blocked algorithm.
 * sched_inplace - Forces the sched-based inplace algorithm.
 * tsp_scattered - Forces the generic transport based scattered algorithm.
@@ -1216,7 +1136,6 @@ Used in functions: `MPI_Ialltoallv`
 Selects the inter-communicator nonblocking Alltoallw algorithm. It is used for `MPI_Ialltoallw` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific pairwise-exchange Ialltoallw implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_pairwise_exchange - Forces the sched-based pairwise-exchange algorithm.
 
 Used in functions: `MPI_Ialltoallw`
@@ -1226,7 +1145,6 @@ Used in functions: `MPI_Ialltoallw`
 Selects the intra-communicator nonblocking Alltoallw algorithm. It is used for `MPI_Ialltoallw` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ialltoallw implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_blocked - Forces the sched-based blocked algorithm.
 * sched_inplace - Forces the sched-based inplace algorithm.
 * tsp_blocked - Forces the generic transport based blocked algorithm.
@@ -1256,7 +1174,6 @@ Used in functions: `MPIR_TSP_Ialltoall_sched_intra_brucks`
 Selects the inter-communicator Ialltoall algorithm. It is used for `MPI_Ialltoall` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific pairwise-exchange Ialltoall implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_pairwise_exchange - Forces the sched-based pairwise-exchange algorithm.
 
 Used in functions: `MPI_Ialltoall`
@@ -1266,7 +1183,6 @@ Used in functions: `MPI_Ialltoall`
 Selects the intra-communicator Ialltoall algorithm. It is used for `MPI_Ialltoall` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection may also use the Alltoall short-message and medium-message thresholds.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_brucks - Forces the Brucks algorithm.
 * sched_inplace - Forces the inplace algorithm.
 * sched_pairwise - Forces the pairwise algorithm.
@@ -1299,14 +1215,13 @@ Sets the k value for the generic transport high-radix dissemination intra-commun
 
 * integer - default is 2, represents the k value used by the generic transport high-radix dissemination Ibarrier algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBARRIER_INTER_ALGORITHM
 
 Selects the inter-communicator nonblocking Barrier algorithm. It is used for `MPI_Ibarrier` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection is limited to sched-based algorithms.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_bcast - Forces the sched-based Bcast algorithm.
 
 Used in functions: `MPI_Ibarrier`
@@ -1316,12 +1231,11 @@ Used in functions: `MPI_Ibarrier`
 Selects the intra-communicator nonblocking Barrier algorithm for sched-based TSP Ibarrier execution. It is used by the TSP auto Ibarrier scheduler on intra-communicators. When it forces a TSP algorithm, the selected implementation uses the corresponding Ibarrier k-value CVAR for its radix. Otherwise, internal collective selection chooses the TSP Ibarrier algorithm and supplies any selected algorithm parameters; if no matching TSP selection is available, the scheduler falls back to a recursive-exchange allreduce-based barrier schedule.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_recursive_doubling - Forces the sched-based recursive-doubling algorithm.
 * tsp_recexch - Forces the generic transport recursive-exchange algorithm.
 * tsp_k_dissemination - Forces the generic transport high-radix dissemination algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IBARRIER_RECEXCH_KVAL
 
@@ -1329,7 +1243,7 @@ Sets the k value for the generic transport recursive-exchange intra-communicator
 
 * integer - default is 2, represents the k value used by the generic transport recursive-exchange Ibarrier algorithm.
 
-Used in functions: `MPIR_TSP_Ibarrier_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL
 
@@ -1337,24 +1251,21 @@ Sets the k value for the recursive-exchange Allgatherv phase of the generic tran
 
 * integer - default is 2, represents the k value used by the recursive-exchange Allgatherv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_INTER_ALGORITHM
 
 Selects the inter-communicator nonblocking Bcast algorithm. It is used for Ibcast operations on inter-communicators. Internal algorithm selection can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses internal selection or a specific sched-based inter-communicator Ibcast implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_flat - Forces the sched-based flat algorithm.
 
-Used in functions: `MPIR_Ibcast_inter_sched_auto`
 
 ### MPIR_CVAR_IBCAST_INTRA_ALGORITHM
 
 Selects the intra-communicator nonblocking Bcast algorithm for generic transport TSP Ibcast execution. It is used by the TSP auto Ibcast scheduler on intra-communicators. When it forces a TSP algorithm, the selected implementation may use the Ibcast tree type, tree k-value, tree pipeline chunk size, ring chunk size, scatterv k-value, or Allgatherv recursive-exchange k-value CVARs for its parameters. Otherwise, internal collective selection chooses the TSP Ibcast algorithm and supplies any selected algorithm parameters; if no matching TSP selection is available, the scheduler falls back to a flat auto-selection path that uses the Bcast short-message and minimum-process CVARs.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_binomial - Forces the sched-based Binomial algorithm.
 * sched_smp - Forces the sched-based SMP algorithm.
 * sched_scatter_recursive_doubling_allgather - Forces the sched-based Scatter Recursive Doubling Allgather algorithm.
@@ -1365,7 +1276,7 @@ Selects the intra-communicator nonblocking Bcast algorithm for generic transport
 * tsp_ring - Forces the generic transport Ring algorithm.
 * circ_graph - Forces the queued circulant graph algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IBCAST_RING_CHUNK_SIZE
 
@@ -1374,7 +1285,7 @@ Sets the maximum chunk size, in bytes, for pipelining in the generic transport r
 * 0 - default, disables pipelining in ring Ibcast.
 * positive integer - represents the maximum chunk size in bytes for pipelining in ring Ibcast.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_SCATTERV_KVAL
 
@@ -1382,7 +1293,7 @@ Sets the k value for the scatterv phase of the generic transport intra-communica
 
 * integer - default is 2, represents the k value used by the scatterv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_KVAL
 
@@ -1390,7 +1301,7 @@ Sets the k value for the generic transport tree-based intra-communicator Ibcast 
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Ibcast algorithm.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1399,7 +1310,7 @@ Sets the maximum chunk size, in bytes, for pipelining in the generic transport t
 * 0 - default, disables pipelining in tree-based Ibcast.
 * positive integer - represents the maximum chunk size in bytes for pipelining in tree-based Ibcast.
 
-Used in functions: `MPIR_TSP_Ibcast_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IBCAST_TREE_TYPE
 
@@ -1416,7 +1327,6 @@ Used in functions: `MPIR_Coll_init_algo_container`
 Selects the intra-communicator Iexscan algorithm. It is used for `MPI_Iexscan` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Iexscan implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
 
 Used in functions: `MPI_Iexscan`
@@ -1426,7 +1336,6 @@ Used in functions: `MPI_Iexscan`
 Selects the inter-communicator nonblocking Gatherv algorithm. It is used for `MPI_Igatherv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific linear Igatherv implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_linear - Forces the sched-based linear algorithm.
 * tsp_linear - Forces the generic transport linear algorithm.
 
@@ -1437,7 +1346,6 @@ Used in functions: `MPI_Igatherv`
 Selects the intra-communicator nonblocking Gatherv algorithm. It is used for `MPI_Igatherv` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_linear - Forces the sched-based linear algorithm.
 * tsp_linear - Forces the generic transport linear algorithm.
 
@@ -1445,10 +1353,9 @@ Used in functions: `MPI_Igatherv`
 
 ### MPIR_CVAR_IGATHER_INTER_ALGORITHM
 
-Selects the inter-communicator nonblocking Gather algorithm. It is used for `MPI_Igather` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection uses `MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE` to choose between the short and long inter-communicator Gather schedules.
+Selects the inter-communicator nonblocking Gather algorithm. It is used for `MPI_Igather` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_long - Forces the sched-based long inter-communicator Gather algorithm.
 * sched_short - Forces the sched-based short inter-communicator Gather algorithm.
 
@@ -1459,7 +1366,6 @@ Used in functions: `MPI_Igather`
 Selects the intra-communicator nonblocking Gather algorithm. It is used for `MPI_Igather` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. The selected implementation may also use `MPIR_CVAR_GATHER_VSMALL_MSG_SIZE` for sched-based binomial Gather behavior or `MPIR_CVAR_IGATHER_TREE_KVAL` for the generic transport tree algorithm.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_binomial - Forces the sched-based binomial algorithm.
 * tsp_tree - Forces the generic transport tree algorithm.
 
@@ -1478,7 +1384,6 @@ Used in functions: `MPIR_TSP_Igather_sched_intra_tree`
 Selects the inter-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1489,7 +1394,6 @@ Used in functions: `MPI_Ineighbor_allgatherv`
 Selects the intra-communicator Ineighbor_allgatherv algorithm. It is used for `MPI_Ineighbor_allgatherv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgatherv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1500,7 +1404,6 @@ Used in functions: `MPI_Ineighbor_allgatherv`
 Selects the inter-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on inter-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1511,7 +1414,6 @@ Used in functions: `MPI_Ineighbor_allgather`
 Selects the intra-communicator Ineighbor_allgather algorithm. It is used for `MPI_Ineighbor_allgather` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_allgather implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1522,7 +1424,6 @@ Used in functions: `MPI_Ineighbor_allgather`
 Selects the inter-communicator ineighbor_alltoallv algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
-* sched_auto - internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1533,7 +1434,6 @@ Used in functions: `MPI_Ineighbor_alltoallv`
 Selects the intra-communicator Ineighbor_alltoallv algorithm. It is used for `MPI_Ineighbor_alltoallv` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoallv implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1546,7 +1446,6 @@ Used in functions: `MPI_Ineighbor_alltoallv`
 Selects the inter-communicator ineighbor_alltoallw algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
-* sched_auto - internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1557,7 +1456,6 @@ Used in functions: `MPI_Ineighbor_alltoallw`
 Selects the intra-communicator Ineighbor_alltoallw algorithm. It is used for `MPI_Ineighbor_alltoallw` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoallw implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1570,7 +1468,6 @@ Used in functions: `MPI_Ineighbor_alltoallw`
 Selects the inter-communicator ineighbor_alltoall algorithm. Automatic selection may be overridden by `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden by a collective selection tuning JSON file.
-* sched_auto - internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1581,7 +1478,6 @@ Used in functions: `MPI_Ineighbor_alltoall`
 Selects the intra-communicator Ineighbor_alltoall algorithm. It is used for `MPI_Ineighbor_alltoall` on intra-communicators when the MPIR-level collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ineighbor_alltoall implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_linear - forces the linear algorithm.
 * tsp_linear - forces the generic transport based linear algorithm.
 
@@ -1594,7 +1490,6 @@ Used in functions: `MPI_Ineighbor_alltoall`
 Selects the inter-communicator Ireduce algorithm. It is used for `MPI_Ireduce` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific local-reduce-remote-send Ireduce implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_local_reduce_remote_send - forces the local-reduce-remote-send algorithm.
 
 Used in functions: `MPI_Ireduce`
@@ -1604,14 +1499,13 @@ Used in functions: `MPI_Ireduce`
 Selects the intra-communicator Ireduce algorithm. It is used by the generic transport scheduler path for intra-communicator Ireduce when this CVAR directly forces a generic transport tree or ring algorithm; otherwise, it falls through to internal collective selection, which may be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`, and then to a flat tree fallback if no generic transport container is selected. When active, this CVAR sets which intra-communicator Ireduce implementation is forced or whether internal collective selection chooses the implementation. The forced tree path uses the selected Ireduce tree type, tree k value, tree pipeline chunk size, and tree buffer-per-child CVARs, and it falls back to the ring-shaped tree path if that tree path cannot be applied. The forced ring path uses the Ireduce ring chunk size and tree buffer-per-child CVARs.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_smp - forces the SMP algorithm.
 * sched_binomial - forces the binomial algorithm.
 * sched_reduce_scatter_gather - forces the reduce-scatter-gather algorithm.
 * tsp_tree - forces the generic transport tree algorithm.
 * tsp_ring - forces the generic transport ring algorithm.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_cvar_to_algo_id`
 
 ### MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE
 
@@ -1620,24 +1514,22 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport ring-b
 * 0 - default, disables pipelining.
 * positive integer - represents the maximum pipeline chunk size in bytes.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM
 
 Selects the inter-communicator Ireduce_scatter_block algorithm. It is used for `MPI_Ireduce_scatter_block` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which inter-communicator Ireduce_scatter_block implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_remote_reduce_local_scatterv - forces the remote-reduce-local-scatterv algorithm.
 
 Used in functions: `MPI_Ireduce_scatter_block`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM
 
-Selects the intra-communicator Ireduce_scatter_block algorithm. It is used for `MPI_Ireduce_scatter_block` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection may also use `MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE`, and the generic transport recursive-exchange path uses `MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL`. When active, this CVAR sets which Ireduce_scatter_block implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ireduce_scatter_block algorithm. It is used for `MPI_Ireduce_scatter_block` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; the generic transport recursive-exchange path uses `MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL`. When active, this CVAR sets which Ireduce_scatter_block implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_noncommutative - forces the noncommutative algorithm.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
 * sched_pairwise - forces the pairwise algorithm.
@@ -1654,30 +1546,20 @@ Sets the k value for the generic transport recursive-exchange intra-communicator
 
 Used in functions: `MPI_Ireduce_scatter_block`
 
-### MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
-
-Sets the long-message threshold, in bytes, for commutative-operation sched-auto intra-communicator Ireduce_scatter and Ireduce_scatter_block algorithm selection. It is used only when the operation is commutative and the sched-auto intra-communicator path is active. For Ireduce_scatter, the message size is the sum of all receive counts multiplied by the datatype size; for Ireduce_scatter_block, it is the block receive count multiplied by the communicator size and datatype size. When active, messages below this threshold select recursive halving, while messages at or above this threshold select pairwise; noncommutative operations bypass this CVAR and select among noncommutative and recursive-doubling algorithms based on communicator size and block regularity.
-
-* integer - default is 524288, represents the commutative Ireduce_scatter and Ireduce_scatter_block long-message threshold in bytes.
-
-Used in functions: `MPIR_Ireduce_scatter_intra_sched_auto`, `MPIR_Ireduce_scatter_block_intra_sched_auto`
-
 ### MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
 
 Selects the inter-communicator Ireduce_scatter algorithm. It is used for `MPI_Ireduce_scatter` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Ireduce_scatter implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_remote_reduce_local_scatterv - forces the remote-reduce-local-scatterv algorithm.
 
 Used in functions: `MPI_Ireduce_scatter`
 
 ### MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM
 
-Selects the intra-communicator Ireduce_scatter algorithm. It is used for `MPI_Ireduce_scatter` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection may also use `MPIR_CVAR_IREDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE`, and the generic transport recursive-exchange path uses `MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL`. When active, this CVAR sets which Ireduce_scatter implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Ireduce_scatter algorithm. It is used for `MPI_Ireduce_scatter` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; the generic transport recursive-exchange path uses `MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL`. When active, this CVAR sets which Ireduce_scatter implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_noncommutative - forces the noncommutative algorithm.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
 * sched_pairwise - forces the pairwise algorithm.
@@ -1742,7 +1624,7 @@ Sets whether the generic transport tree-based intra-communicator Ireduce impleme
 * false - default, uses one receive buffer for all children, so receives from children are serialized.
 * true - allocates a dedicated receive buffer for each child, enabling receives to be preposted at the cost of additional memory.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_KVAL
 
@@ -1750,7 +1632,7 @@ Sets the k value for the generic transport tree-based intra-communicator Ireduce
 
 * integer - default is 2, represents the k value used by the generic transport tree-based Ireduce algorithm.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
 
@@ -1760,7 +1642,7 @@ Sets the maximum pipeline chunk size, in bytes, for the generic transport tree-b
 * 0 - disables pipelining.
 * positive integer - represents the maximum pipeline chunk size in bytes.
 
-Used in functions: `MPIR_TSP_Ireduce_sched_intra_tsp_auto`
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_IREDUCE_TREE_TYPE
 
@@ -1780,7 +1662,6 @@ Used in functions: `MPIR_Coll_init_algo_container`
 Selects the intra-communicator Iscan algorithm. It is used for `MPI_Iscan` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Iscan implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - uses internal algorithm selection for sched-based algorithms.
 * sched_smp - forces the SMP algorithm.
 * sched_recursive_doubling - forces the recursive-doubling algorithm.
 * tsp_recursive_doubling - forces the generic transport recursive-doubling algorithm.
@@ -1792,7 +1673,6 @@ Used in functions: `MPI_Iscan`
 Selects the inter-communicator nonblocking Scatterv algorithm. It is used for `MPI_Iscatterv` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific linear Iscatterv implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_linear - Forces the sched-based linear algorithm.
 * tsp_linear - Forces the generic transport linear algorithm.
 
@@ -1803,7 +1683,6 @@ Used in functions: `MPI_Iscatterv`
 Selects the intra-communicator nonblocking Scatterv algorithm. It is used for `MPI_Iscatterv` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; otherwise, this CVAR sets whether MPICH uses sched-based automatic selection or a specific linear Iscatterv implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_linear - Forces the sched-based linear algorithm.
 * tsp_linear - Forces the generic transport linear algorithm.
 
@@ -1811,10 +1690,9 @@ Used in functions: `MPI_Iscatterv`
 
 ### MPIR_CVAR_ISCATTER_INTER_ALGORITHM
 
-Selects the inter-communicator nonblocking Scatter algorithm. It is used for `MPI_Iscatter` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; sched-based automatic selection uses `MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE` to choose between the remote-send-local-scatter and linear inter-communicator Scatter schedules.
+Selects the inter-communicator nonblocking Scatter algorithm. It is used for `MPI_Iscatter` on inter-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_linear - Forces the sched-based linear algorithm.
 * sched_remote_send_local_scatter - Forces the sched-based remote-send-local-scatter algorithm.
 
@@ -1825,7 +1703,6 @@ Used in functions: `MPI_Iscatter`
 Selects the intra-communicator Iscatter algorithm. It is used for `MPI_Iscatter` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When the tree implementation is selected, the tree radix is controlled by `MPIR_CVAR_ISCATTER_TREE_KVAL`.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
-* sched_auto - Uses internal algorithm selection for sched-based algorithms.
 * sched_binomial - Forces the sched-based binomial Iscatter algorithm.
 * tsp_tree - Forces the generic transport based tree Iscatter algorithm.
 
@@ -2063,7 +1940,7 @@ Used in functions: `MPIDI_POSIX_mpi_release_gather_comm_init`
 
 ### MPIR_CVAR_REDUCE_INTRA_ALGORITHM
 
-Selects the intra-communicator Reduce algorithm. It is used for `MPI_Reduce` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`; selected sched-based nonblocking or automatic paths may use `MPIR_CVAR_REDUCE_SHORT_MSG_SIZE` for size-based algorithm selection. When active, this CVAR sets which Reduce implementation is forced or whether internal collective selection chooses the implementation.
+Selects the intra-communicator Reduce algorithm. It is used for `MPI_Reduce` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Reduce implementation is forced or whether internal collective selection chooses the implementation.
 
 * auto - default, uses internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`.
 * binomial - Forces the binomial Reduce algorithm.
@@ -2120,14 +1997,6 @@ Selects the intra-communicator Reduce_scatter algorithm. It is used for `MPI_Red
 
 Used in functions: `MPI_Reduce_scatter`
 
-### MPIR_CVAR_REDUCE_SHORT_MSG_SIZE
-
-Sets the Reduce short-message threshold, in bytes, used by sched-auto intra-communicator Ireduce algorithm selection. When active, messages above this threshold select reduce-scatter followed by gather only when the operation is built-in and the count is at least the nearest lower power of two of the communicator size; otherwise the binomial tree algorithm is selected. This CVAR is bypassed when the parent-communicator SMP path is selected for a commutative operation.
-
-* integer - default is 2048, represents the Reduce short-message threshold in bytes.
-
-Used in functions: `MPIR_Ireduce_intra_sched_auto`
-
 ### MPIR_CVAR_SCAN_INTRA_ALGORITHM
 
 Selects the intra-communicator Scan algorithm. It is used for `MPI_Scan` on intra-communicators when the collective algorithm is chosen directly through this CVAR or through internal collective selection. In automatic mode, MPICH performs internal algorithm selection, which can be overridden with `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE`. When active, this CVAR sets which Scan implementation is forced or whether internal collective selection chooses the implementation.
@@ -2169,14 +2038,6 @@ Selects the inter-communicator Scatter algorithm. It is used for `MPI_Scatter` o
 * remote_send_local_scatter - Forces the remote-send-local-scatter algorithm.
 
 Used in functions: `MPI_Scatter`
-
-### MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE
-
-Sets the short-message threshold, in bytes, used by sched-auto nonblocking inter-communicator Scatter. It is used when the sched-based inter-communicator Iscatter automatic path is selected, such as by forcing `MPIR_CVAR_ISCATTER_INTER_ALGORITHM` to `sched_auto` or by internal collective selection. The total message size is computed from the send datatype, send count, and remote group size on the root side, or from the receive datatype, receive count, and local group size on the remote side; messages below this threshold use the remote-send-local-scatter schedule, and other messages use the linear schedule.
-
-* integer - default is 2048, represents the inter-communicator Scatter short-message threshold in bytes.
-
-Used in functions: `MPIR_Iscatter_inter_sched_auto`
 
 ### MPIR_CVAR_SCATTER_INTRA_ALGORITHM
 
