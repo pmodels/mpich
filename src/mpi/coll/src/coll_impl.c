@@ -360,11 +360,8 @@ static int run_cvar_or_tree(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s * 
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
-            /* Error or Fall-thru. An inner call of a compositional algorithm (on an internal
-             * sub-communicator) falls through, so that forcing e.g. smp does not fail on the
-             * inner calls that the same CVAR also reaches. */
-            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error &&
-                !(coll_sig->comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM)) {
+            /* Error or Fall-thru */
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nosupport");
             }
         }
