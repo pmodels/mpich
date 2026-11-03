@@ -70,11 +70,13 @@ int MPIR_cga_init(void)
 
     /* Create chunk buffer pool */
     if (MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE > 0) {
-        mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE,
-                                                   MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS,
-                                                   MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS,
-                                                   host_alloc_registered, host_free_registered,
-                                                   &MPIR_cga_chunk_pool);
+        /* a collective runs outside the per-VCI critical sections */
+        mpi_errno = MPIDU_genq_private_pool_create_locked(MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE,
+                                                          MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS,
+                                                          MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS,
+                                                          host_alloc_registered,
+                                                          host_free_registered,
+                                                          &MPIR_cga_chunk_pool);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_cga_chunk_pool_cell_size = MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE;
     }
