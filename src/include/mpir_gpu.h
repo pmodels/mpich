@@ -68,7 +68,7 @@ extern MPL_pointer_attr_t MPIR_static_host_attr;
 
 #ifdef MPL_HAVE_GPU
 #ifdef MPL_HAS_TLS
-#define ENABLE_GPU MPIR_CVAR_ENABLE_GPU && !MPIR_disable_gpu
+#define ENABLE_GPU (MPIR_CVAR_ENABLE_GPU && !MPIR_disable_gpu)
 #else
 #define ENABLE_GPU MPIR_CVAR_ENABLE_GPU
 #endif
