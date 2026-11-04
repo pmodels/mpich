@@ -569,9 +569,10 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
 
     SET_TYPE_INFO(MPI_COMPLEX, "mpi_real_size", MPIR_TYPE_COMPLEX, 2);
     SET_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_precision_size", MPIR_TYPE_COMPLEX, 2);
-    SET_TYPE_INFO(MPI_2INTEGER, "mpi_integer_size", MPIR_TYPE_FIXED, 2);
-    SET_TYPE_INFO(MPI_2REAL, "mpi_real_size", MPIR_TYPE_FIXED, 2);
-    SET_TYPE_INFO(MPI_2DOUBLE_PRECISION, "mpi_double_precision_size", MPIR_TYPE_FIXED, 2);
+    SET_TYPE_INFO(MPI_2INTEGER, "mpi_integer_size", MPIR_TYPE_SIGNED | MPIR_TYPE_PAIR_MASK, 2);
+    SET_TYPE_INFO(MPI_2REAL, "mpi_real_size", MPIR_TYPE_FLOAT | MPIR_TYPE_PAIR_MASK, 2);
+    SET_TYPE_INFO(MPI_2DOUBLE_PRECISION, "mpi_double_precision_size",
+                  MPIR_TYPE_FLOAT | MPIR_TYPE_PAIR_MASK, 2);
 
 #define SET_TYPE_SUPPORTED(mpi_type, keyname, mpir_type) \
     do { \
