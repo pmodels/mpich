@@ -5,6 +5,7 @@
 
 #include "ad_lustre.h"
 #include "adio_extern.h"
+#include <pthread.h>
 
 
 #ifdef HAVE_LUSTRE_LOCKAHEAD
@@ -386,8 +387,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     MPI_Count *sent_to_proc, *recv_start_pos;
     MPI_Count *curr_to_proc, *done_to_proc;
     ADIO_Offset *send_buf_idx, *this_buf_idx;
-    char *write_buf = NULL;
+    char *write_buf = NULL, *write_buf2 = NULL;
     MPI_Status status;
+    pthread_t io_thread;
+    void *thread_ret;
+    ADIOI_IO_ThreadFuncData io_thread_args;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint lb, buftype_extent;
     int stripe_size = striping_info[0], avail_cb_nodes = striping_info[2];
@@ -442,6 +446,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 /*     max_ntimes = (int)((max_end_loc - min_st_loc) / step_size + 1); */
     if (ntimes)
         write_buf = (char *) ADIOI_Malloc(stripe_size);
+    if (ntimes && romio_pthreadio == 1)
+        write_buf2 = (char *) ADIOI_Malloc(stripe_size);
 
     /* calculate the start offset for each iteration */
     off_list = (ADIO_Offset *) ADIOI_Malloc((max_ntimes + 2 * nprocs) * sizeof(ADIO_Offset));
@@ -514,6 +520,9 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
      */
     /* check the hint for data sieving */
     data_sieving = fd->hints->fs_hints.lustre.ds_in_coll;
+
+    if (romio_pthreadio == 1)
+        io_thread = pthread_self();
 
     for (m = 0; m < max_ntimes; m++) {
         /* go through all others_req and my_req to check which will be received
@@ -601,8 +610,38 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                 break;
             }
         if (flag) {
-            /* check whether to do data sieving */
-            if (data_sieving == ADIOI_HINT_ENABLE) {
+            if (romio_pthreadio == 1) {
+                /* complete the I/O of the previous round before this round
+                 * writes */
+                if (!pthread_equal(io_thread, pthread_self())) {
+                    pthread_join(io_thread, &thread_ret);
+                    io_thread = pthread_self();
+                    *error_code = *(int *) thread_ret;
+                    if (*error_code != MPI_SUCCESS)
+                        goto over;
+                }
+            }
+            if (romio_pthreadio == 1 && (data_sieving == ADIOI_HINT_ENABLE || !hole)) {
+                ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
+                io_thread_args.fd = fd;
+                /* do a little pointer shuffling: background I/O works from one
+                 * buffer while two-phase machinery fills up another */
+                io_thread_args.buf = write_buf;
+                write_buf = write_buf2;
+                write_buf2 = io_thread_args.buf;
+                io_thread_args.io_kind = ADIOI_WRITE;
+                io_thread_args.size = real_size;
+                io_thread_args.offset = off;
+                io_thread_args.status = &status;
+                io_thread_args.error_code = *error_code;
+                if ((pthread_create(&io_thread, NULL,
+                                    ADIOI_IO_Thread_Func, &(io_thread_args))) != 0) {
+                    io_thread = pthread_self();
+                    ADIO_WriteContig(fd, io_thread_args.buf, real_size, MPI_BYTE,
+                                     ADIO_EXPLICIT_OFFSET, off, &status, error_code);
+                }
+            } else if (data_sieving == ADIOI_HINT_ENABLE) {
+                /* check whether to do data sieving */
                 ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
                 ADIO_WriteContig(fd, write_buf, real_size, MPI_BYTE,
                                  ADIO_EXPLICIT_OFFSET, off, &status, error_code);
@@ -656,12 +695,21 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         iter_st_off += max_size;
     }
   over:
+    if (romio_pthreadio == 1) {
+        if (!pthread_equal(io_thread, pthread_self())) {
+            pthread_join(io_thread, &thread_ret);
+            if (*error_code == MPI_SUCCESS)
+                *error_code = *(int *) thread_ret;
+        }
+    }
     if (srt_off)
         ADIOI_Free(srt_off);
     if (srt_len)
         ADIOI_Free(srt_len);
     if (ntimes)
         ADIOI_Free(write_buf);
+    if (write_buf2)
+        ADIOI_Free(write_buf2);
     ADIOI_Free(recv_curr_offlen_ptr);
     ADIOI_Free(off_list);
 }
