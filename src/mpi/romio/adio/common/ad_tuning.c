@@ -23,6 +23,7 @@ int romio_onesided_no_rmw;
 int romio_onesided_always_rmw;
 int romio_onesided_inform_rmw;
 int romio_tunegather;
+int romio_pthreadio;
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
@@ -74,6 +75,14 @@ int romio_tunegather;
  *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
  *   - Default is 1.
  *
+ * - ROMIO_PTHREADIO - Enables a very simple form of asynchronous io where a
+ *   pthread is spawned to do the posix writes while the main thread does the
+ *   data aggregation - useful for large files where multiple rounds are
+ *   required (more that the cb_buffer_size of data per aggregator).   User
+ *   must ensure there is hw resource available for the thread to run.
+ *   - 0 (disabled) or 1 (enabled)
+ *   - Default is 0
+ *
  */
 
 void ad_get_env_vars(void)
@@ -111,4 +120,9 @@ void ad_get_env_vars(void)
     x = getenv("ROMIO_TUNEGATHER");
     if (x)
         romio_tunegather = atoi(x);
+
+    romio_pthreadio = 0;
+    x = getenv("ROMIO_PTHREADIO");
+    if (x)
+        romio_pthreadio = atoi(x);
 }
