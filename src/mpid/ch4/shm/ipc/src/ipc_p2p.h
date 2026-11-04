@@ -72,6 +72,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint c
         void *flattened_dt;
         MPIR_Datatype_get_flattened(datatype, &flattened_dt, &flattened_sz);
         if (msg_hdr_sz + sizeof(MPIDI_IPC_hdr) + flattened_sz > MPIDI_POSIX_am_hdr_max_sz()) {
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+            /* No IPC is possible, but device memory still must not be accessed by
+             * XPMEM/CMA on the receiver side, so mark it as SKIP to get it packed. */
+            MPIR_GPU_query_pointer_attr(buf, &ipc_attr->u.gpu.gpu_attr);
+            if (!MPL_gpu_attr_is_host(&ipc_attr->u.gpu.gpu_attr)) {
+                ipc_attr->ipc_type = MPIDI_IPCI_TYPE__SKIP;
+            }
+#endif
             goto fn_exit;
         }
     }
