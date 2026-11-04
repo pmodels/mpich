@@ -54,8 +54,6 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
 /* An inner call of a nonblocking compositional algorithm builds a schedule of its own, of whatever
  * type the selection gives. A COND entry in the parent's schedule starts it, waits for it to
  * complete, passes on its error, and frees it with the parent. */
-static int add_inner_entry(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub);
-
 /* Selects the inner call described by sub, and adds to the schedule s an entry that runs it. The
  * caller's collective holds the handles that sub uses. */
 int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
@@ -66,7 +64,7 @@ int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(sub->sched);
 
-    mpi_errno = add_inner_entry(s, sub);
+    mpi_errno = MPIR_Coll_sched_add_inner(s, sub);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -89,8 +87,9 @@ static int sched_inner_start(void *state);
 static int sched_inner_test(void *state, bool * done);
 static void sched_inner_free(void *state);
 
-/* allocate the state of the inner call from the schedule s and add its COND entry */
-static int add_inner_entry(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
+/* Adds to the schedule s an entry that runs the schedule sub already built. The state of the inner
+ * call comes from s. */
+int MPIR_Coll_sched_add_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
 {
     int mpi_errno = MPI_SUCCESS;
 
