@@ -171,7 +171,8 @@ global progress takes every VCI lock in turn.
   yields the thread.
 - The MT model (`MPIDI_CH4_MT_MODEL`: `direct` or `lockless`, see
   `mpidpre.h`) decides whether netmod progress takes the VCI lock.
-- Progress hooks and async things have their own locks (below).
+- Progress hooks have their own locks; async things poll and add without
+  one (below).
 
 ## Progress hooks
 
@@ -220,18 +221,23 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
   stream goes to the stream's VCI, so only progress on that VCI (e.g. the
   stream's progress thread) polls it; without a stream it goes to the
   global list, polled by every progress call that runs hooks.
-- Adding the first thing to a list activates that list's hook; removing the
-  last one deactivates it.
+- Adding a thing activates its list's hook; a pass that leaves the list
+  empty deactivates it.
 - `MPIR_Async_things_progress` calls every thing's `poll_fn` in its list.
   `poll_fn` returns `MPIX_ASYNC_DONE` to be removed or
   `MPIX_ASYNC_NOPROGRESS` to stay, and may add new things with
   `MPIX_Async_spawn` (`MPIR_Async_thing_spawn`), which join the list after
   the call. The order is not defined; every thing is polled eventually.
-- Each list has a mutex. A thread-local flag skips async progress when a
-  `poll_fn` calls into MPI progress again (e.g. a blocking MPI call).
-- `MPIR_Async_things_add_in_vci` adds a thing from inside a VCI lock: it
-  releases the VCI lock around the add, so the async lock is always taken
-  before a VCI lock.
+- One thread polls a list at a time, holding only a flag and no lock, so a
+  `poll_fn` may take any lock or start a schedule. A thread that finds the flag
+  set skips the list instead of waiting, and goes on to shm and the netmod. A
+  `poll_fn` that calls into MPI progress again skips the same way.
+- `MPIR_Async_things_add` takes no lock: it pushes onto an atomic stack, which
+  the polling thread moves to the list. So any context can add while holding any
+  lock, e.g. an event handler under its VCI lock. A thing added during a pass is
+  first polled in the next pass.
+- These atomics are only used at VCI granularity with threads. Otherwise there
+  is one thread or the global lock is held, and the flag is a plain load and store.
 - `MPIR_Async_things_finalize` polls until every list is empty.
 
 ## Nonblocking collective schedules
