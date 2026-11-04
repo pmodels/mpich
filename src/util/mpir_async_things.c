@@ -95,12 +95,6 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
     return MPI_SUCCESS;
 }
 
-int MPIR_Async_things_add_in_vci(int (*poll_fn) (struct MPIR_Async_thing * entry), void *state,
-                                 MPIR_Stream * stream_ptr, int vci)
-{
-    return MPIR_Async_things_add(poll_fn, state, stream_ptr);
-}
-
 /* For ch3, which has no streams: whether it may block in its progress */
 int MPIR_Async_things_pending(void)
 {
