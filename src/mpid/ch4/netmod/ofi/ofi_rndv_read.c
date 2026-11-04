@@ -46,7 +46,7 @@ int MPIDI_OFI_rndvread_send(MPIR_Request * sreq, int tag)
     MPIR_Assertp(hdr);
 
     mpi_errno = prepare_rdma_info((void *) p->buf, p->datatype, p->data_sz, p->vci_local,
-                                  FI_REMOTE_READ, p->u.send.mrs, hdr);
+                                  FI_REMOTE_READ, &p->attr, p->u.send.mrs, hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* send rdma_info */
@@ -74,17 +74,8 @@ int MPIDI_OFI_rndvread_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r
     MPIR_Request *sreq = MPIDI_OFI_RNDV_GET_CONTROL_REQ(r);
     MPIDI_OFI_rndvread_t *p = &MPIDI_OFI_AMREQ_READ(sreq);
 
-    int num_nics = MPIDI_OFI_global.num_nics;
-    for (int i = 0; i < num_nics; i++) {
-        if (!p->u.send.mrs[i])
-            continue;
-        uint64_t key = fi_mr_key(p->u.send.mrs[i]);
-        MPIDI_OFI_CALL(fi_close(&p->u.send.mrs[i]->fid), mr_unreg);
-        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-            MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
-        }
-    }
-    MPL_free(p->u.send.mrs);
+    mpi_errno = release_rdma_mrs(p->u.send.mrs, &p->attr);
+    MPIR_ERR_CHECK(mpi_errno);
     MPL_free(r);
 
     /* complete sreq */
