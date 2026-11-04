@@ -314,7 +314,7 @@ int MPIDI_OFI_rndvwrite_recv(MPIR_Request * rreq, int tag, int vci_src, int vci_
     MPIR_Assertp(hdr);
 
     mpi_errno = prepare_rdma_info(p->buf, p->datatype, p->data_sz, p->vci_local,
-                                  FI_REMOTE_WRITE, p->u.recv.mrs, hdr);
+                                  FI_REMOTE_WRITE, &p->attr, p->u.recv.mrs, hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* send rdma_info */
@@ -346,17 +346,8 @@ int MPIDI_OFI_rndvwrite_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * 
     MPI_Aint *hdr_data_sz = MPIDI_OFI_RNDV_GET_CONTROL_HDR(r);
     MPIDI_OFI_RNDV_update_count(rreq, *hdr_data_sz);
 
-    int num_nics = MPIDI_OFI_global.num_nics;
-    for (int i = 0; i < num_nics; i++) {
-        if (!p->u.recv.mrs[i])
-            continue;
-        uint64_t key = fi_mr_key(p->u.recv.mrs[i]);
-        MPIDI_OFI_CALL(fi_close(&p->u.recv.mrs[i]->fid), mr_unreg);
-        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-            MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
-        }
-    }
-    MPL_free(p->u.recv.mrs);
+    mpi_errno = release_rdma_mrs(p->u.recv.mrs);
+    MPIR_ERR_CHECK(mpi_errno);
     MPL_free(r);
 
     /* complete rreq */

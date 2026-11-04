@@ -12,8 +12,25 @@ struct rdma_info {
 
 static MPI_Aint get_chunks_per_nic(MPI_Aint data_sz, int num_nics);
 
+/*
+ * Return whether we can / want to do MR caching for the given buffer. currently:
+ * - has to be HMEM; caching host buffers isn't always safe, since they can be
+ * realloc'd without us noticing. we could add memory monitorting to improve this
+ * - provider handles keys for us; the existing cache code doesn't manage
+ * alloc/freeing keys
+ * - provider does MR in raw virtual addresses; we could support zero-based, but
+ * it hasn't been tested
+ */
+static bool rdma_use_mr_cache(MPL_pointer_attr_t * attr)
+{
+    return MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM &&
+        MPIDI_OFI_ENABLE_MR_PROV_KEY && MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS &&
+        !MPL_gpu_attr_is_host(attr);
+}
+
 static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint data_sz, int vci,
-                             int access, struct fid_mr **mrs, struct rdma_info *hdr)
+                             int access, MPL_pointer_attr_t * attr,
+                             struct fid_mr **mrs, struct rdma_info *hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     const void *data;
@@ -23,6 +40,7 @@ static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint da
 
     int num_nics = MPIDI_OFI_global.num_nics;
     uint64_t rkeys[MPIDI_OFI_MAX_NICS];
+    bool use_cache = rdma_use_mr_cache(attr);
 
     /* prepare mr and rkey */
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
@@ -49,11 +67,20 @@ static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint da
         MPI_Aint sz = MPL_MAX(0, nic_end - nic_start);
         if (sz > 0) {
             void *nic_data = (char *) data + nic_start;
-            MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, nic_data, sz, access, 0ULL,
-                                     rkeys[i], 0ULL, &mrs[i], NULL), mr_reg);
-            mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mrs[i], ctx->ep,
-                                          NULL);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (use_cache) {
+                /* registers (and binds) on a miss, reuses the MR on a hit */
+                mpi_errno = MPIDI_OFI_register_memory_and_bind(nic_data, sz, attr,
+                                                               MPIDI_OFI_get_ctx_index(vci, i),
+                                                               &mrs[i]);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIR_Assert(mrs[i]);
+            } else {
+                MPIDI_OFI_CALL(fi_mr_reg(ctx->domain, nic_data, sz, access, 0ULL,
+                                         rkeys[i], 0ULL, &mrs[i], NULL), mr_reg);
+                mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mrs[i], ctx->ep,
+                                              NULL);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         } else {
             /* we over-provisioned a key above, are skipping the MR, and will not be
              * binding it. To avoid a leak in the teardown, free the key early
@@ -79,6 +106,31 @@ static int prepare_rdma_info(const void *buf, MPI_Datatype datatype, MPI_Aint da
         hdr->rkeys[i] = rkeys[i];
     }
 
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* release the MRs from prepare_rdma_info() and free the array */
+static int release_rdma_mrs(struct fid_mr **mrs)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int num_nics = MPIDI_OFI_global.num_nics;
+    for (int i = 0; i < num_nics; i++) {
+        if (!mrs[i])
+            continue;
+        if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+            /* returns a cached MR to the cache, or unregisters an uncached one */
+            mpi_errno = MPIDI_OFI_mr_complete(mrs[i], true);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            uint64_t key = fi_mr_key(mrs[i]);
+            MPIDI_OFI_CALL(fi_close(&mrs[i]->fid), mr_unreg);
+            MPIDI_OFI_mr_key_free(MPIDI_OFI_LOCAL_MR_KEY, key);
+        }
+    }
+    MPL_free(mrs);
   fn_exit:
     return mpi_errno;
   fn_fail:
