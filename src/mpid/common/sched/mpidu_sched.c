@@ -1143,6 +1143,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 
             if (i == s->idx && e->status >= MPIDU_SCHED_ENTRY_STATUS_COMPLETE) {
                 ++s->idx;
+                if (made_progress)
+                    *made_progress = TRUE;
                 MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "completed OTHER entry %d\n", (int) i);
                 if (e->is_barrier) {
                     /* post/perform the next round of operations */
