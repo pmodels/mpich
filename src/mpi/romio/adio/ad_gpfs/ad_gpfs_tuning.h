@@ -64,7 +64,6 @@ extern int gpfsmpio_timing;
 extern int gpfsmpio_timing_cw_level;
 extern int gpfsmpio_comm;
 extern int gpfsmpio_tuneblocking;
-extern int gpfsmpio_pthreadio;
 extern int gpfsmpio_p2pcontig;
 extern int gpfsmpio_balancecontig;
 extern int gpfsmpio_devnullio;
