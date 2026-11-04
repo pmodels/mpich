@@ -105,17 +105,17 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         MPIR_op_function *uop;
         MPIR_Assert(MPIR_Internal_op_dt_check(op, datatype));
 
-        /* FIXME: ENABLE_GPU is irrelevant here. We should check whether inbuf or inoutbuf is device buffer */
+        /* FIXME: MPIR_ENABLE_GPU is irrelevant here. We should check whether inbuf or inoutbuf is device buffer */
         /* use count=0 since we don't make MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD decision here */
-        if (ENABLE_GPU && MPIR_Typerep_reduce_is_supported(op, 0, datatype)) {
+        if (MPIR_ENABLE_GPU && MPIR_Typerep_reduce_is_supported(op, 0, datatype)) {
             mpi_errno = MPIR_Typerep_reduce(inbuf, inoutbuf, count, datatype, op);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_exit;
         } else {
             /* get the function by indexing into the op table */
             uop = MPIR_OP_HDL_TO_FN(op);
-            if (ENABLE_GPU && (MPIR_GPU_query_pointer_is_dev(inbuf) ||
-                               MPIR_GPU_query_pointer_is_dev(inoutbuf))) {
+            if (MPIR_ENABLE_GPU && (MPIR_GPU_query_pointer_is_dev(inbuf) ||
+                                    MPIR_GPU_query_pointer_is_dev(inoutbuf))) {
                 mpi_errno = reduce_local_on_host(inbuf, inoutbuf, count, datatype, uop);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_exit;

@@ -58,22 +58,22 @@ cvars:
 
 extern int MPIR_CVAR_ENABLE_GPU;
 extern int MPIR_CVAR_ENABLE_GPU_REGISTER;
-extern MPL_TLS bool MPIR_disable_gpu;   /* per-thread level locally disable gpu */
+extern MPL_TLS bool MPIR_disable_gpu_tls;       /* per-thread level locally disable gpu */
 
 /* define a constant for host buffer attribute */
 extern MPL_pointer_attr_t MPIR_static_host_attr;
 #define MPIR_GPU_ATTR_HOST &MPIR_static_host_attr
 
-#undef ENABLE_GPU
+#undef MPIR_ENABLE_GPU
 
 #ifdef MPL_HAVE_GPU
 #ifdef MPL_HAS_TLS
-#define ENABLE_GPU (MPIR_CVAR_ENABLE_GPU && !MPIR_disable_gpu)
+#define MPIR_ENABLE_GPU (MPIR_CVAR_ENABLE_GPU && !MPIR_disable_gpu_tls)
 #else
-#define ENABLE_GPU MPIR_CVAR_ENABLE_GPU
+#define MPIR_ENABLE_GPU MPIR_CVAR_ENABLE_GPU
 #endif
 #else
-#define ENABLE_GPU FALSE
+#define MPIR_ENABLE_GPU FALSE
 #endif
 
 MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
     /* Skip query if GPU support is disabled by CVAR. Because we assume
      * no GPU buffer is used. If the user disables GPU at configure time
      * (e.g., --without-cuda), then MPL fallback will handle the query. */
-    if (ENABLE_GPU) {
+    if (MPIR_ENABLE_GPU) {
         mpl_err = MPL_gpu_query_pointer_attr(ptr, attr);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_query_ptr");
     } else {
@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
 
 MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
 {
-    if (ENABLE_GPU && ptr != NULL) {
+    if (MPIR_ENABLE_GPU && ptr != NULL) {
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(ptr, &attr);
         return MPL_gpu_attr_is_dev(&attr);
@@ -110,7 +110,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
 
 MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_host(const void *ptr)
 {
-    if (ENABLE_GPU && ptr != NULL) {
+    if (MPIR_ENABLE_GPU && ptr != NULL) {
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(ptr, &attr);
         return MPL_gpu_attr_is_host(&attr);
@@ -125,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_host(const void *ptr)
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size)
 {
-    if (ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
+    if (MPIR_ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
         return MPL_gpu_register_host(ptr, size);
     }
     return MPI_SUCCESS;
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_unregister_host(const void *ptr)
 {
-    if (ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
+    if (MPIR_ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
         return MPL_gpu_unregister_host(ptr);
     }
     return MPI_SUCCESS;
@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_gpu_unregister_host(const void *ptr)
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_malloc_host(void **ptr, size_t size)
 {
-    if (ENABLE_GPU) {
+    if (MPIR_ENABLE_GPU) {
         return MPL_gpu_malloc_host(ptr, size);
     } else {
         *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
@@ -151,7 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_gpu_malloc_host(void **ptr, size_t size)
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_free_host(void *ptr)
 {
-    if (ENABLE_GPU) {
+    if (MPIR_ENABLE_GPU) {
         return MPL_gpu_free_host(ptr);
     } else {
         MPL_free(ptr);

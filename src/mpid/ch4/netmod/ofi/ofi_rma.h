@@ -51,7 +51,7 @@ enum putget_option {
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_rma_enabled(const void *ptr)
 {
-    if (ENABLE_GPU) {
+    if (MPIR_ENABLE_GPU) {
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(ptr, &attr);
         if (!MPL_gpu_attr_is_host(&attr)) {

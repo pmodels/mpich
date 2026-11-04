@@ -74,7 +74,7 @@ static MPI_Aint get_span(const MPI_Aint * counts, const MPI_Aint * displs, int n
 
 void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
 {
-    if (!ENABLE_GPU) {
+    if (!MPIR_ENABLE_GPU) {
         return;
     }
 

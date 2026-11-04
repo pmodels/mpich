@@ -846,7 +846,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_bottom_has_gpu(const void *buf, MPI_Aint count,
                                                        MPI_Datatype datatype, MPI_Aint num_contig)
 {
-    if (!ENABLE_GPU || buf != MPI_BOTTOM) {
+    if (!MPIR_ENABLE_GPU || buf != MPI_BOTTOM) {
         return false;
     }
 

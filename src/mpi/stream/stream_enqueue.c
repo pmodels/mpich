@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 /* Allow per-thread level disabling GPU path */
-MPL_TLS bool MPIR_disable_gpu = false;
+MPL_TLS bool MPIR_disable_gpu_tls = false;
 
 /* send enqueue */
 struct send_data {
@@ -593,7 +593,7 @@ static void allreduce_enqueue_cb(void *data)
     int mpi_errno;
 
     /* avoid GPU functions */
-    MPIR_disable_gpu = true;
+    MPIR_disable_gpu_tls = true;
 
     struct allreduce_data *p = data;
 
@@ -629,7 +629,7 @@ static void allreduce_enqueue_cb(void *data)
         MPL_free(p);
     }
 
-    MPIR_disable_gpu = false;
+    MPIR_disable_gpu_tls = false;
 }
 
 static void allred_stream_cleanup_cb(void *data)
