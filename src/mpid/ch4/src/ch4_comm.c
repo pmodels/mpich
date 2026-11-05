@@ -11,7 +11,6 @@
 #include "mpidig_request.h"
 #include "mpidig_recvq.h"
 
-
 int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -122,8 +121,9 @@ static void comm_revoke_cleanup_vci(MPIR_Comm * comm_ptr, MPIR_Request ** list)
             (comm_ptr->node_roots_comm &&
              (context_id == comm_ptr->node_roots_comm->context_id ||
               context_id == comm_ptr->node_roots_comm->context_id + MPIR_CONTEXT_COLL_OFFSET))) {
+            MPID_Cancel_recv(req);
+            MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
             req->status.MPI_ERROR = MPIX_ERR_REVOKED;
-            MPID_Request_complete(req);
         }
     }
 }
