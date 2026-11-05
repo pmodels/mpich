@@ -233,6 +233,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
                   MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errclass = MPI_SUCCESS, mpi_errclass_errno = MPI_SUCCESS;
     int attr = 0;
     MPI_Status mystatus;
     MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
@@ -276,8 +277,14 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     mpi_errno = MPIC_Wait(send_req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIC_Wait(recv_req_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POPFATAL(mpi_errno);
+    if (mpi_errno) {
+        mpi_errclass_errno = MPI_Error_class(mpi_errno, &mpi_errclass);
+        if (mpi_errclass_errno || mpi_errclass != MPIX_ERR_REVOKED) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        } else {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
 
     *status = recv_req_ptr->status;
 
