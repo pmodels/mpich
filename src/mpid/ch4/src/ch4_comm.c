@@ -7,76 +7,251 @@
 #include "mpidch4r.h"
 #include "ch4_comm.h"
 #include "ch4i_comm.h"
+#include "mpidig.h"
+#include "mpidig_request.h"
+#include "mpidig_recvq.h"
 
 
 int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    mpi_errno = MPIR_Comm_get_failed_impl(comm, failed_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Comm_remote_group_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    *failed_group_ptr = MPIR_Group_empty;
 
     MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
 
 int MPID_Comm_group_failed(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    mpi_errno = MPIR_Comm_get_failed_impl(comm_ptr, failed_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    mpi_errno = MPIR_Comm_get_failed_impl(comm_ptr, &MPIDI_global.failed_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    if (MPIDI_global.failed_group == NULL) {
+        mpi_errno = MPID_Comm_failure_ack(comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
+    if (MPIDI_global.failed_group == NULL) {
+        *failed_group_ptr = MPIR_Group_empty;
+    } else {
+        *failed_group_ptr = MPIDI_global.failed_group;
+        MPIR_Group_add_ref(*failed_group_ptr);
+    }
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void comm_mark_revoked(MPIR_Comm * comm_ptr)
+{
+    comm_ptr->revoked = 1;
+    if (comm_ptr->node_comm) {
+        comm_ptr->node_comm->revoked = 1;
+    }
+    if (comm_ptr->node_roots_comm) {
+        comm_ptr->node_roots_comm->revoked = 1;
+    }
+}
+
+static void comm_revoke_cleanup_vci(MPIR_Comm * comm_ptr, MPIR_Request ** list)
+{
+    MPIR_Request *req, *tmp;
+
+    DL_FOREACH_SAFE(*list, req, tmp) {
+        int context_id = MPIDIG_REQUEST(req, u.recv.context_id);
+        if (context_id == comm_ptr->context_id ||
+            context_id == comm_ptr->context_id + MPIR_CONTEXT_COLL_OFFSET ||
+            (comm_ptr->node_comm &&
+             (context_id == comm_ptr->node_comm->context_id ||
+              context_id == comm_ptr->node_comm->context_id + MPIR_CONTEXT_COLL_OFFSET)) ||
+            (comm_ptr->node_roots_comm &&
+             (context_id == comm_ptr->node_roots_comm->context_id ||
+              context_id == comm_ptr->node_roots_comm->context_id + MPIR_CONTEXT_COLL_OFFSET))) {
+            req->status.MPI_ERROR = MPIX_ERR_REVOKED;
+            MPID_Request_complete(req);
+        }
+    }
+}
+
+static void comm_revoke_cleanup(MPIR_Comm * comm_ptr)
+{
+    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
+        comm_revoke_cleanup_vci(comm_ptr, &MPIDI_global.per_vci[vci].posted_list);
+        comm_revoke_cleanup_vci(comm_ptr, &MPIDI_global.per_vci[vci].unexp_list);
+    }
+}
+
+static int comm_count_known_failed_peers(MPIR_Comm * comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int known_failed = 0;
+    MPIR_Group *failed_group = NULL;
+
+    mpi_errno = MPIR_Comm_get_failed_impl(comm_ptr, &failed_group);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (failed_group != MPIR_Group_empty) {
+        known_failed = failed_group->size;
+        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && failed_group->rank != MPI_UNDEFINED) {
+            known_failed--;
+        }
+        MPIR_Group_release(failed_group);
+    }
+
+  fn_exit:
+    return known_failed;
+  fn_fail:
+    known_failed = 0;
+    goto fn_exit;
+}
+
+static void comm_waiting_revoke_add(MPIR_Comm * comm_ptr)
+{
+    if (MPIDI_COMM(comm_ptr, waiting_revoke_prev) || MPIDI_COMM(comm_ptr, waiting_revoke_next) ||
+        MPIDI_global.waiting_revoke_comm_list == comm_ptr) {
+        return;
+    }
+
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIDI_COMM(comm_ptr, waiting_revoke_prev) = NULL;
+    MPIDI_COMM(comm_ptr, waiting_revoke_next) = MPIDI_global.waiting_revoke_comm_list;
+    if (MPIDI_global.waiting_revoke_comm_list) {
+        MPIDI_COMM(MPIDI_global.waiting_revoke_comm_list, waiting_revoke_prev) = comm_ptr;
+    }
+    MPIDI_global.waiting_revoke_comm_list = comm_ptr;
+}
+
+static void mpidi_waiting_revoke_remove(MPIR_Comm * comm_ptr)
+{
+    if (MPIDI_COMM(comm_ptr, waiting_revoke_prev)) {
+        MPIDI_COMM(MPIDI_COMM(comm_ptr, waiting_revoke_prev), waiting_revoke_next) =
+            MPIDI_COMM(comm_ptr, waiting_revoke_next);
+    } else if (MPIDI_global.waiting_revoke_comm_list == comm_ptr) {
+        MPIDI_global.waiting_revoke_comm_list = MPIDI_COMM(comm_ptr, waiting_revoke_next);
+    } else {
+        return;
+    }
+
+    if (MPIDI_COMM(comm_ptr, waiting_revoke_next)) {
+        MPIDI_COMM(MPIDI_COMM(comm_ptr, waiting_revoke_next), waiting_revoke_prev) =
+            MPIDI_COMM(comm_ptr, waiting_revoke_prev);
+    }
+
+    MPIDI_COMM(comm_ptr, waiting_revoke_prev) = NULL;
+    MPIDI_COMM(comm_ptr, waiting_revoke_next) = NULL;
+    MPIR_Comm_release(comm_ptr);
 }
 
 int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    if (!comm_ptr->revoked) {
+        int known_failed;
 
+        comm_mark_revoked(comm_ptr);
+        comm_revoke_cleanup(comm_ptr);
+
+        known_failed = comm_count_known_failed_peers(comm_ptr);
+        MPIDI_COMM(comm_ptr, waiting_for_revoke) = comm_ptr->local_size - 1 - is_remote - known_failed;
+        if (MPIDI_COMM(comm_ptr, waiting_for_revoke) < 0) {
+            MPIDI_COMM(comm_ptr, waiting_for_revoke) = 0;
+        }
+        if (MPIDI_COMM(comm_ptr, waiting_for_revoke) > 0) {
+            comm_waiting_revoke_add(comm_ptr);
+        }
+
+        mpi_errno = MPIDIG_am_comm_revoke(comm_ptr, is_remote);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (is_remote && MPIDI_COMM(comm_ptr, waiting_for_revoke) > 0) {
+        MPIDI_COMM(comm_ptr, waiting_for_revoke)--;
+        if (MPIDI_COMM(comm_ptr, waiting_for_revoke) == 0) {
+            mpidi_waiting_revoke_remove(comm_ptr);
+        }
+    }
+
+  fn_exit:
+    if (MPIDI_COMM(comm_ptr, waiting_for_revoke) == 0) {
+        mpidi_waiting_revoke_remove(comm_ptr);
+    }
     MPIR_FUNC_EXIT;
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    MPIDI_COMM(comm_ptr, waiting_for_revoke) = 0;
+    goto fn_exit;
 }
 
 int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group, int tag)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    mpi_errno = MPIR_Comm_get_failed_impl(comm_ptr, failed_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* number of bits to represent 0..number inclusive */
@@ -99,6 +274,9 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM || comm->remote_group);
 
     MPIDI_COMM(comm, multi_leads_comm) = NULL;
+    MPIDI_COMM(comm, waiting_revoke_prev) = NULL;
+    MPIDI_COMM(comm, waiting_revoke_next) = NULL;
+    MPIDI_COMM(comm, waiting_for_revoke) = 0;
     MPIDI_COMM(comm, inter_node_leads_comm) = NULL;
     MPIDI_COMM(comm, sub_node_comm) = NULL;
     MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
@@ -134,10 +312,56 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+static void comm_register_context(MPIR_Comm * comm)
+{
+    if (!MPIDI_global.comm_req_map) {
+        return;
+    }
+
+    MPIDIU_map_set(MPIDI_global.comm_req_map, comm->recvcontext_id, comm, MPL_MEM_COMM);
+    if (comm->context_id != comm->recvcontext_id) {
+        MPIDIU_map_set(MPIDI_global.comm_req_map, comm->context_id, comm, MPL_MEM_COMM);
+    }
+    MPIDIU_map_set(MPIDI_global.comm_req_map,
+                   comm->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET, comm, MPL_MEM_COMM);
+    if (comm->context_id != comm->recvcontext_id) {
+        MPIDIU_map_set(MPIDI_global.comm_req_map,
+                       comm->context_id + MPIR_CONTEXT_COLL_OFFSET, comm, MPL_MEM_COMM);
+    }
+}
+
+static void comm_unregister_context(MPIR_Comm * comm)
+{
+    if (!MPIDI_global.comm_req_map) {
+        return;
+    }
+
+    if (MPIDIU_map_lookup(MPIDI_global.comm_req_map, comm->recvcontext_id) != MPIDIU_MAP_NOT_FOUND) {
+        MPIDIU_map_erase(MPIDI_global.comm_req_map, comm->recvcontext_id);
+    }
+    if (comm->context_id != comm->recvcontext_id &&
+        MPIDIU_map_lookup(MPIDI_global.comm_req_map, comm->context_id) != MPIDIU_MAP_NOT_FOUND) {
+        MPIDIU_map_erase(MPIDI_global.comm_req_map, comm->context_id);
+    }
+    if (MPIDIU_map_lookup(MPIDI_global.comm_req_map,
+                          comm->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET) != MPIDIU_MAP_NOT_FOUND) {
+        MPIDIU_map_erase(MPIDI_global.comm_req_map,
+                         comm->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET);
+    }
+    if (comm->context_id != comm->recvcontext_id &&
+        MPIDIU_map_lookup(MPIDI_global.comm_req_map,
+                          comm->context_id + MPIR_CONTEXT_COLL_OFFSET) != MPIDIU_MAP_NOT_FOUND) {
+        MPIDIU_map_erase(MPIDI_global.comm_req_map,
+                         comm->context_id + MPIR_CONTEXT_COLL_OFFSET);
+    }
+}
+
 int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+
+    comm_register_context(comm);
 
     mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -224,6 +448,9 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    mpidi_waiting_revoke_remove(comm);
+    comm_unregister_context(comm);
 
     mpi_errno = MPIDIG_destroy_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);

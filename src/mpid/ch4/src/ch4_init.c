@@ -527,6 +527,11 @@ int MPID_Finalize(void)
 
     MPIDIG_am_finalize();
 
+    if (MPIDI_global.failed_group && MPIDI_global.failed_group != MPIR_Group_empty) {
+        MPIR_Group_release(MPIDI_global.failed_group);
+    }
+    MPIDI_global.failed_group = NULL;
+
     MPIDIU_avt_finalize();
 
     mpi_errno = MPIDU_stream_workq_finalize();

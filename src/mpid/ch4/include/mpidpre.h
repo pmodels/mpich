@@ -589,6 +589,10 @@ typedef struct MPIDI_Devcomm_t {
         struct MPIDI_Multileads_comp_info_t *alltoall_comp_info, *allgather_comp_info,
             *allreduce_comp_info;
         int shm_size_per_lead;
+
+        struct MPIR_Comm *waiting_revoke_prev;
+        struct MPIR_Comm *waiting_revoke_next;
+        int waiting_for_revoke;
     } ch4;
 } MPIDI_Devcomm_t;
 

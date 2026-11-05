@@ -7,6 +7,8 @@
 #include "mpidch4r.h"
 #include "mpidu_genq.h"
 
+void MPIDIG_am_comm_revoke_init(void);
+
 MPIDIG_global_t MPIDIG_global;
 
 static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
@@ -123,6 +125,9 @@ int MPIDIG_am_init(void)
 
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
+    MPIDI_global.failed_group = NULL;
+    MPIDI_global.comm_req_map = NULL;
+    MPIDI_global.waiting_revoke_comm_list = NULL;
 
     MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
     MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
@@ -181,6 +186,9 @@ int MPIDIG_am_init(void)
     MPIDIG_am_tag_recv_reg_cb(MPIDIG_TAG_RECV_COMPLETE, &MPIDIG_tag_recv_complete);
 
     MPIDIG_am_comm_abort_init();
+    MPIDIG_am_comm_revoke_init();
+
+    MPIDIU_map_create((void **) &(MPIDI_global.comm_req_map), MPL_MEM_COMM);
 
     mpi_errno = MPIDIG_RMA_Init_sync_pvars();
     MPIR_ERR_CHECK(mpi_errno);
@@ -201,6 +209,9 @@ void MPIDIG_am_finalize(void)
     MPIR_FUNC_ENTER;
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
+    if (MPIDI_global.comm_req_map) {
+        MPIDIU_map_destroy(MPIDI_global.comm_req_map);
+    }
 
     MPIR_FUNC_EXIT;
 }

@@ -11,22 +11,16 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * req)
 {
-    MPIR_FUNC_ENTER;
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    return req->kind == MPIR_REQUEST_KIND__RECV && req->dev.anysrc_partner;
+#else
+    return 0;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_pending_failure(MPIR_Request * req)
 {
-    MPIR_FUNC_ENTER;
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return MPIR_Request_is_anysrc_mismatched(req);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)

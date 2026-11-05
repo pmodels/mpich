@@ -7,6 +7,7 @@
 #define CH4_RECV_H_INCLUDED
 
 #include "ch4_impl.h"
+#include "ch4_comm.h"
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -225,6 +226,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
+    if (comm->revoked && !MPIDI_comm_is_revoke_exempt_tag(tag)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPIX_ERR_REVOKED, "**revoked");
+    }
     if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, request);
     } else {

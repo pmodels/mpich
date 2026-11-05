@@ -8,6 +8,7 @@
 
 #include "ch4_impl.h"
 #include "ch4_proc.h"
+#include "ch4_comm.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
                                          MPI_Aint count,
@@ -51,6 +52,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIR_FUNC_ENTER;
 
     MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
+    if (comm->revoked && !MPIDI_comm_is_revoke_exempt_tag(tag)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPIX_ERR_REVOKED, "**revoked");
+    }
     if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
     } else {
@@ -106,6 +110,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_ENTER;
+
+    if (comm->revoked && !MPIDI_comm_is_revoke_exempt_tag(tag)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPIX_ERR_REVOKED, "**revoked");
+    }
 
     if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);

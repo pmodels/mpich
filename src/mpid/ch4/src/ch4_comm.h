@@ -8,6 +8,12 @@
 
 #include "ch4_impl.h"
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_comm_is_revoke_exempt_tag(int tag)
+{
+    int masked_tag = MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT);
+    return masked_tag == MPIR_AGREE_TAG || masked_tag == MPIR_SHRINK_TAG;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, int type, int value);
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type,
                                                               int value);
@@ -22,10 +28,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(0);
+    int enabled = !comm->revoked;
 
     MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return enabled;
 }
 
 #endif /* CH4_COMM_H_INCLUDED */

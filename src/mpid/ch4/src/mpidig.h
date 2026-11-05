@@ -58,6 +58,7 @@ enum {
     MPIDIG_WIN_UNLOCKALL_ACK,
 
     MPIDIG_COMM_ABORT,
+    MPIDIG_COMM_REVOKE,
 
     MPIDI_IPC_ACK,
     MPIDI_IPC_WRITE,
@@ -167,6 +168,8 @@ int MPIDIG_destroy_per_vci(int vci);
 
 void MPIDIG_am_comm_abort_init(void);
 int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code);
+void MPIDIG_am_comm_revoke_init(void);
+int MPIDIG_am_comm_revoke(MPIR_Comm * comm, int is_remote);
 
 int MPIDIG_am_check_init(void);
 

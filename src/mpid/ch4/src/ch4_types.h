@@ -276,6 +276,9 @@ typedef struct MPIDI_CH4_Global_t {
 
     MPIR_Request *part_posted_list;
     MPIR_Request *part_unexp_list;
+    MPIR_Group *failed_group;
+    MPIDIU_map_t *comm_req_map;
+    MPIR_Comm *waiting_revoke_comm_list;
 
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
