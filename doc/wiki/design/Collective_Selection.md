@@ -158,29 +158,22 @@ fails, the next sibling is tried. A leaf is an `algorithm=` key.
 
 | Key form | Meaning |
 |---|---|
-| `name=bcast-intra-auto` | Top level only: defines a named subtree. |
+| `name=bcast-intra-0` | Top level only: defines a named subtree. Some names are reserved; see "Names" below. |
 | `collective=bcast-intra` | Matches the `coll_type` (names from `MPIR_Coll_type_names`). |
 | `pof2`, `!pof2` | Boolean condition, optionally negated. |
 | `comm_size(8)` | Canonical threshold form: `comm_size <= 8`. |
 | `comm_size<8`, `<=`, `>`, `>=` | Aliases: `cond<t` is `cond(t-1)`, `cond>t` is `!cond(t)`, `cond>=t` is `!cond(t-1)`. A leading `!` is an error with these; write `!comm_size(8)` or flip the comparison. |
 | `any` | Always true. Every object except an `algorithm=` leaf must have `any` as its last key, so a search never runs past the last case. |
 | `algorithm=MPIR_Barrier_intra_k_dissemination` | Leaf. Its object holds the algorithm's extra parameters, e.g. `{"k": 2}`; see below. |
-| `"call=bcast-intra-auto"` | A string value in place of an object: continue the search in that named subtree. |
-| `"dispatch=bcast-intra(0x820)"` | A string value in place of an object: evaluate the restrictions whose bits are in the mask (here `hierarchical` and `MPIDI_CH4_release_gather`) in one call, `MPIR_Csel_restriction_mask`, and continue in the subtree `bcast-intra-<mask that holds, in hex>`, e.g. `bcast-intra-800`. A combination without a subtree uses that of its largest subset (fewer bits; between equal counts, the lower mask), down to `bcast-intra-0`, which must exist. See "Restriction sets and `dispatch=`" below. |
+| `"call=my-bcast"` | A string value in place of an object: continue the search in that named subtree, which must have a free name (see "Names" below). |
+| `"dispatch(200)"` | A string value in place of an object, in a restriction set or a subtree it calls: select the restriction set of the call again, leaving out the restrictions in the mask (nonzero, lowercase hex). See "Restriction sets and the dispatch" below. |
 | `"error"` | A string value in place of an object: end the search without an algorithm, e.g. `"any": "error"` after a list that should cover every case. The collective returns an error. |
 
 The file is a dictionary of named subtrees:
 
 ```json
 {
-    "name=main": "call=auto",
-    "name=auto": {
-        "collective=bcast-intra": "call=bcast-intra-auto",
-        "collective=allreduce-intra": "call=allreduce-intra-auto",
-        ...
-        "any": "error"
-    },
-    "name=bcast-intra-auto": {
+    "name=bcast-intra-0": {
         "MPIDI_CH4_release_gather": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
         "comm_size<8":              { "algorithm=MPIR_Bcast_intra_binomial": {} },
         "pof2": {
@@ -190,70 +183,119 @@ The file is a dictionary of named subtrees:
         },
         "any": { ... }
     },
+    "name=allreduce-intra-0": { ... },
     ...
 }
 ```
 
-- `main` is where every user-level collective starts. `auto` is what nested
-  selections search (see below). If a file defines no `auto`, `main` is used.
 - The built-in JSON is loaded first. A file named by
   `MPIR_CVAR_COLL_SELECTION_JSON_FILE` is loaded on top of it: each `name=` it
   defines replaces the built-in subtree of that name, and new names are added.
-  To retune one collective, a user file only needs that one subtree, e.g.
-  `name=bcast-intra-auto`.
-- A file with no `name=` keys is loaded as a single tree named `main`.
+  To retune one collective, a user file only needs its sets, e.g.
+  `name=bcast-intra-0`.
+- Every selection starts at the built-in dispatch: a user's call, an inner call of a
+  compositional algorithm, `MPIR_Coll_nb`'s nonblocking call, and the
+  selection after `MPIR_Coll_buffer_swap`. There is no `main` tree: a file
+  defines the restriction sets, and the free subtrees they call. A file
+  without `name=` keys, or with `name=main`, fails to load.
 - `call=` targets are resolved by name at search time, so a subtree replaced
-  by the user file is the one used.
-- `dispatch=` builds its table of subtrees, one per combination of its bits,
-  when the file is loaded, from the subtree names known then; a later file
-  that replaces one of those subtrees is used, but a subtree name added only
-  by a later file is not.
+  by the user file is the one used. The dispatch's set lists are rebuilt
+  after each file, from all the sets known then.
 
-**Restriction sets and `dispatch=`.** A `dispatch=<prefix>(<bits>)` node
-selects among subtrees named by convention `<prefix>-<m>`, where `m` is a
-mask of restriction indices (bit k is the restriction with index k in the
-`restrictions:` section of `coll_algorithms.txt`) written in lowercase hex
-without `0x` or leading zeros: `bcast-intra-0`, `bcast-intra-800`, not
-`bcast-intra-0x800` or `bcast-intra-0800`. A subtree spelled otherwise is not
-found, and the dispatch falls back as below. `<prefix>` is free-form, e.g.
-`bcast-intra`.
+### Names
 
-At a call, MPICH evaluates the restrictions in `bits`, takes the mask `m` of
-those that hold, and continues in `<prefix>-<m>`. If that subtree does not
-exist, it continues in the subtree of the largest subset of `m` that does
-(fewer bits; between equal counts, the lower mask), down to `<prefix>-0`,
-which must exist. Restrictions are positive conditions, so the algorithms a
-subset's subtree may select also run under `m`.
+| Name | Meaning |
+|---|---|
+| `auto` | Not used (the legacy routing): `name=auto` cannot be defined. |
+| `main` | Not used: `name=main` cannot be defined. |
+| `<coll>-<intra\|inter>-<mask>` | Reserved: a restriction set, e.g. `bcast-intra-0` or `bcast-intra-210`. |
+| `<coll>-<intra\|inter>-<mask>-<xxx>` | Reserved: a variant of that set, tuned under the restriction `xxx_coll`, e.g. `bcast-intra-0-gpu` for `gpu_coll`. |
+| anything else | A free name: the user's own subtree, reached only by an explicit `call=`. |
 
-The names are only a convention: the loader treats them as ordinary subtrees.
-Each subtree must itself select only algorithms whose restrictions hold under
-its mask. `<prefix>-800` may select `release_gather` (restriction 11,
-`MPIDI_CH4_release_gather`), `<prefix>-0` may not; an algorithm selected where
-its restriction does not hold can fail or hang (e.g. `release_gather` before
-its shared memory exists).
+A restriction set is reached only through the dispatch: a `call=` that names
+one is an error.
+
+`<coll>-<intra|inter>` is a collective type name as in `collective=`. The
+mask holds restriction indices, bit k being the restriction with index k in
+the `restrictions:` section of `coll_algorithms.txt`, in lowercase hex
+without `0x` or leading zeros. Any name that starts with a collective type
+name, a dash and hex digits, ending there or followed by a dash, has the
+reserved form, and loading fails unless it is a valid set name: the mask is
+canonical (`bcast-intra-800`, not `bcast-intra-0800`), each suffix `-xxx`
+names a restriction `xxx_coll` (in the order of their bits), the restrictions
+in the mask and the variants are ones the collective defines (e.g. not
+`inplace` for bcast, not `gpu_coll` for gatherv), the set does not have both a
+`_coll` and a `_local` restriction, and a variant is not also in the mask
+(not `bcast-intra-800-gpu`). A typo therefore cannot turn a tuned set
+into a free subtree that nothing reaches. Old names such as
+`bcast-intra-auto` or `bcast-intra-main` are free names.
+
+### Restriction sets and the dispatch
+
+A restriction set is the subtree for the calls where the restrictions in its
+mask hold. Restrictions are positive conditions, so the algorithms that a
+set may select also run where more restrictions hold. Each set must select
+only algorithms whose restrictions hold under its mask: `bcast-intra-200` may
+select `release_gather` (restriction 9, `MPIDI_CH4_release_gather`),
+`bcast-intra-0` may not; an algorithm selected where its restriction does not
+hold can fail or hang (e.g. `release_gather` before its shared memory exists).
+The tree can still test any condition, restrictions included.
+
+The dispatch evaluates, in one call to `MPIR_Csel_restriction_mask`, the
+restrictions in the masks of the sets of the call's collective, and continues
+in the set with the most restrictions among those whose masks hold.
+`dispatch(<mask>)` repeats it with the restrictions in the mask left out of what holds, and
+within one search these add up:
+
+1. If a `_coll` restriction holds, the `_local` restrictions are left out:
+   the two exclude each other.
+2. The local sets come first (sets with a `_local` restriction, see "GPU
+   buffers"), then the other sets, leaving the `_local` restrictions out.
+3. A `_coll` restriction that a `dispatch(<mask>)` leaves out selects its
+   variants: from then on the sets with the most of those variants come first
+   (`bcast-intra-10-gpu` before `bcast-intra-10`), and the sets without them
+   are the fallback.
+
+Either of two sets with the same counts that can match the same call would
+work, so the one with the larger variant mask, then the larger mask, is
+taken, which keeps the choice consistent. A call
+that matches no set fails with "Collective selection failed to find an
+algorithm". The built-in file defines the base set `<coll>-<intra|inter>-0`
+for every collective, so a user file only adds sets. Each collective's sets
+are sorted in this order when the file is loaded, so a call costs one mask
+evaluation and a scan of its sets that stops at the first one that matches.
 
 ```json
 {
-    "name=bcast-intra-auto": "dispatch=bcast-intra(0x820)",
-    "name=bcast-intra-0":    { "msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
-                               "any": { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} } },
-    "name=bcast-intra-800":  { "msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
-                               "any": "call=bcast-intra-0" },
-    "name=bcast-intra-20":   { "msg_size(65536)": "call=bcast-intra-0",
-                               "any": { "algorithm=MPIR_Bcast_intra_smp": {} } }
+    "name=bcast-intra-0":   { "msg_size(16384)": { "algorithm=MPIR_Bcast_intra_binomial": {} },
+                              "any": { "algorithm=MPIR_Bcast_intra_scatter_ring_allgather": {} } },
+    "name=bcast-intra-200": { "msg_size(262144)": { "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {} },
+                              "any": "dispatch(200)" },
+    "name=bcast-intra-10":  { "msg_size(65536)": "dispatch(10)",
+                              "any": { "algorithm=MPIR_Bcast_intra_smp": {} } },
+    "name=bcast-intra-210": "dispatch(200)"
 }
 ```
 
-Here `0x820` is `hierarchical` (bit 5, `0x20`) and `MPIDI_CH4_release_gather`
-(bit 11, `0x800`). The bit numbers in these examples may be out of date: a
-restriction's bit is its index in `coll_algorithms.txt`, which changes when
-restrictions are removed, so read the current index there. A comm on one node where release_gather can run gets mask
-`800`; a comm on several nodes with several ranks per node gets `20`; any
-other comm, e.g. one rank per node or release_gather unavailable under
-`MPI_THREAD_MULTIPLE`, gets `0`. Both bits holding at once has no subtree, and
-would use the lower of `20` and `800`. csel_tuner
-(https://github.com/hzhou-muse/csel_tuner) writes files of this shape, with
-one subtree per restriction set it measured.
+Here `0x10` is `hierarchical` (bit 4) and `0x200` is
+`MPIDI_CH4_release_gather` (bit 9). The bit numbers in these examples may be
+out of date: a restriction's bit is its index in `coll_algorithms.txt`, which
+changes when restrictions are removed, so read the current index there. A comm
+on one node where release_gather can run gets `200`; a comm on several nodes
+with several ranks per node gets `10`; any other comm, e.g. one rank per node
+or release_gather unavailable under `MPI_THREAD_MULTIPLE`, gets `0`. Without
+`bcast-intra-210`, a call where both hold would take `200`, the larger mask;
+here it takes what `10` takes. `bcast-intra-200`
+falls back to `bcast-intra-0` for large messages by leaving its restriction
+out. csel_tuner (https://github.com/hzhou-muse/csel_tuner)
+writes files of this shape, with one set per restriction set it measured.
+
+Loading also checks how the trees use `dispatch(<mask>)`: in a set that is not
+local, and in the free subtrees it calls, each one must leave out a
+restriction of the set, so that it cannot come back to the same set, there
+is no `_local` condition, and no algorithm restricted on a `_coll` restriction
+that the set's mask does not have. Each step leaves
+out more, so a chain of them ends.
 
 An algorithm leaf lists every non-constant parameter in its `extra_params`
 as `"name": value`, and nothing else. The value's type follows the type of the
@@ -299,7 +341,7 @@ MPI_Bcast
           yes: restrictions pass? -> fill container from CVARs ------+
                no: error if MPIR_CVAR_COLLECTIVE_FALLBACK=error,      |
                    otherwise fall through                             |
-        MPIR_Coll_search_and_run(main)                                |
+        MPIR_Coll_search_and_run                                      |
           -> MPIR_Csel_search -> container ---------------------------+
                                                                       v
                                           MPIR_Coll_algo_table[id](coll_sig, cnt)
@@ -326,7 +368,8 @@ MPI_Bcast
    (`MPIR_Coll_init_algo_container`) and runs the algorithm. If it fails, it
    returns an error when `MPIR_CVAR_COLLECTIVE_FALLBACK=error` and falls
    through to the tree otherwise.
-4. **Search.** `MPIR_Csel_search` walks the tree from `main`. A `collective`
+4. **Search.** `MPIR_Csel_search` starts at the dispatch, which continues in
+   the restriction set of the call (see above), and walks its tree. A `collective`
    node compares `coll_type`. A condition node calls the generated
    `MPII_Csel_run_condition`, which evaluates the predicate (or `<= thresh`),
    then applies `negate`. `any` always passes. A match moves to `success`, a
@@ -334,8 +377,7 @@ MPI_Bcast
    subtree. The search ends at a container, or at an `error` node, which
    makes the collective return "Collective selection failed to find an
    algorithm". A search that makes more `call=` jumps than there are
-   subtrees is looping, e.g. `auto` → `x` → `auto` for the same collective,
-   and returns the same error.
+   subtrees is looping and returns the same error.
 5. **Run.** `MPIR_Coll_algo_table[cnt->id](coll_sig, cnt)` calls the `_cnt`
    wrapper. It increments `MPIR_Coll_algo_counters[id]`, creates the schedule
    for a nonblocking algorithm (`MPII_CSEL_CREATE_SCHED` or
@@ -349,14 +391,15 @@ Rules that follow:
   restrictions fail is an error. Restrictions are checked once, before a
   CVAR-forced algorithm runs; the tree is responsible for the auto path.
 - **Blocking via nonblocking.** `MPIR_Coll_nb` adds 1 to `coll_type`, runs
-  selection on the `auto` tree, then starts and waits on the resulting
+  selection from the dispatch, then starts and waits on the resulting
   schedule. It is chosen by the algorithm CVAR value `nb` or by
   `algorithm=MPIR_Coll_nb` in the JSON.
 - **Nested selection.** A compositional algorithm (one with the `inner` key)
   takes `(coll_sig, cnt)` and describes each inner call in its own `coll_sig`
   with the generated `MPIR_<Coll>_fill_sig`, which does not select, and runs it
   with `MPIR_Coll_run_inner` (the macro `MPIR_COLL_INNER` does both), which selects
-  from `auto`: `main` has already had its chance to swap the user's buffers.
+  from the dispatch with the gpu flags it inherits, so an inner call on device
+  buffers can take a local set unless its algorithm cleared `gpu_local`.
   The algorithm CVARs apply to the user's call only, unless
   `MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS` is set, which is for experiments that
   control an inner algorithm.
@@ -469,30 +512,49 @@ must reach the same algorithm:
 
 - **`_coll`**, and every condition without a suffix, is the same on all ranks, so
   it can select completely separate subtrees.
-- **`_local`** can differ between ranks, so it only chooses between `call=auto`
-  and an algorithm restricted on it. That algorithm only clears the condition
-  and continues in `auto`, so a rank that takes it rejoins the ranks that do not.
-  gen_coll requires it to be a general algorithm with
-  `inner: $coll-intra@comm[<name>_local=0]`.
+- **`_local`** can differ between ranks, so it only chooses between going on
+  and an algorithm restricted on it. That algorithm clears the condition
+  and selects again from the dispatch, so a rank that takes it rejoins the ranks that
+  do not. gen_coll requires it to be a general algorithm with
+  `inner: $coll-intra@comm[<name>_local=0]`. Only algorithms clear a flag.
 
-Loading a tuning file refuses any other use of a `_local` condition. It cannot be
-reached from `auto`, because a rank that goes on to `auto` still has it set. Its
-branch can split on other conditions, and each leaf is `call=auto` or the
-restricted algorithm. Its next case is `"any": "call=auto"`. It cannot be negated
-or used in a `dispatch=`. For example:
+A local set, a restriction set with a `_local` restriction such as
+`bcast-intra-400` (`gpu_local`), is where the dispatch goes first when the
+restriction holds. It can split on conditions that are the same on every rank
+(`msg_size`, `comm_size`, ...), and each leaf is the restricted algorithm or
+a `dispatch(<mask>)` that leaves out its local restriction, and only local
+ones, e.g. `dispatch(400)`: that is where the ranks without the restriction
+go. So all ranks reach the same algorithm, and it cannot loop.
 
 ```
-"name=main": {
-    "gpu_local": {
-        "collective=reduce-intra": {
-            "msg_size(4096)": { "algorithm=MPIR_Coll_buffer_swap": {} },
-            "any": "call=auto"
-        },
-        "any": "call=auto"
-    },
-    "any": "call=auto"
+"name=reduce-intra-400": {
+    "msg_size(4096)": { "algorithm=MPIR_Coll_buffer_swap": {} },
+    "any": "dispatch(400)"
 }
 ```
+
+A call where `gpu_coll` holds never takes a local set: `_coll` and `_local`
+restrictions exclude each other, so the dispatch leaves the `_local` ones out,
+and no set has both.
+
+Only local sets use a `_local` restriction: loading refuses a `_local`
+condition anywhere else, because a rank that goes on with it set would select
+differently from the ranks without it.
+
+A variant set such as `bcast-intra-0-gpu` has the same mask, and so the same
+algorithms, as the host set (`bcast-intra-0`), but is fitted on timings
+measured under `gpu_coll`, on device buffers; it does not mean that `gpu_coll`
+holds. The dispatch reaches the variants only through a set with `gpu_coll` in
+its mask whose `dispatch(<mask>)` leaves it out, so without such a set the
+`-gpu` sets are never selected:
+
+```
+"name=bcast-intra-800": "dispatch(800)"
+```
+
+A set with `gpu_coll` in its mask is also where an algorithm restricted on
+`gpu_coll` goes. `MPIR_CVAR_ENABLE_GPU_COLL` is off by default, so without it
+device calls take the local sets and the host sets.
 
 Internal buffers can break `gpu_coll`, whose promise covers only the user's
 buffers: the ranks of an inner call that mix them with host temporaries could
@@ -516,17 +578,14 @@ across ranks and enable the condition for them.
 each device buffer into a host buffer (only the ones the
 collective reads; a v-collective's recvbuf is copied in too, to keep the gaps
 between blocks), points `coll_sig` at the host buffers, clears both flags and
-continues in the `auto` tree. Afterwards it copies the written buffers back
-and frees the host buffers. With the flags clear, `auto` cannot select it
+selects again from the dispatch. Afterwards it copies the written buffers back
+and frees the host buffers. With the flags clear, the selection cannot pick it
 again; a tree that selects it where `gpu_local` does not hold gets an error. The
-default tree does not use it; a tuning file opts in, e.g. for every
-collective:
+default tree does not use it; a tuning file opts in with local sets, e.g. for
+bcast:
 
 ```
-"name=main": {
-    "gpu_local": { "algorithm=MPIR_Coll_buffer_swap": {} },
-    "any": "call=auto"
-}
+"name=bcast-intra-400": { "algorithm=MPIR_Coll_buffer_swap": {} }
 ```
 
 An algorithm with `gpu_swap: 1` gets the same swap for itself: its
@@ -539,7 +598,7 @@ swaps its two operands to host memory itself. Calls that skip the algorithm
 table (`MPIR_*_fallback`, one algorithm calling another directly) don't get
 the wrapper.
 
-For nonblocking and persistent collectives, `auto` only builds the
+For nonblocking and persistent collectives, the selection only builds the
 schedule, which the generated `_impl` starts afterwards. `buffer_swap` adds
 the copies to that schedule before it starts: the copy-ins at the front
 (`MPIR_Sched_move_to_front`, or `MPIR_TSP_sched_localcopy_front` for gentran),
