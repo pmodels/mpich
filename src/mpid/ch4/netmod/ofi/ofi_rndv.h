@@ -25,6 +25,17 @@ cvars:
         read - RDMA read.
         write - RDMA write.
         direct - direct send data using libfabric after the RNDV handshake.
+
+    - name        : MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        When true, contiguous device buffers do not force packing, enabling RDMA
+        read/write rendezvous protocols directly.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
