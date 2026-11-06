@@ -299,7 +299,7 @@ MPI_Bcast
           yes: restrictions pass? -> fill container from CVARs ------+
                no: error if MPIR_CVAR_COLLECTIVE_FALLBACK=error,      |
                    otherwise fall through                             |
-        MPIR_Coll_run_tree(main)                                      |
+        MPIR_Coll_search_and_run(main)                                |
           -> MPIR_Csel_search -> container ---------------------------+
                                                                       v
                                           MPIR_Coll_algo_table[id](coll_sig, cnt)
@@ -576,5 +576,5 @@ the user buffers, since the copies would wrap the outer steps too.
 | `src/mpi/coll/src/csel_load.c` | JSON loading, named subtrees, the dispatch table |
 | `src/mpi/coll/src/csel_search.c` | `MPIR_Csel_search`, on every call |
 | `src/mpi/coll/src/csel_validation.c` | checks of a loaded tuning file; they improve the error checking, and a correct file selects the same way without them |
-| `src/mpi/coll/src/coll_impl.c` | Init and finalize, `MPIR_Coll_json`, `MPIR_Coll_run_tree`, `MPIR_Coll_nb`, counters |
+| `src/mpi/coll/src/coll_impl.c` | Init and finalize, `MPIR_Coll_json`, `MPIR_Coll_search_and_run`, `MPIR_Coll_nb`, counters |
 | `src/mpid/ch4/shm/posix/posix_coll.h`, `posix_coll_release_gather.h` | CH4 POSIX release_gather algorithms and condition |

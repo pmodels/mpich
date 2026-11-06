@@ -14,11 +14,12 @@
 
 /* a condition is reached only by the collectives that define it; seen marks (subtree, collective)
  * pairs */
-static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int coll_type,
+static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree_idx, int coll_type,
                                        bool * seen);
 /* local condition nodes are used as coll_algorithms.txt describes, or absent without allow_local;
  * seen marks subtrees */
-static int validate_local_node(MPIR_Csel_node_s * node, int tree, bool allow_local, bool * seen);
+static int validate_local_node(MPIR_Csel_node_s * node, int tree_idx, bool allow_local,
+                               bool * seen);
 /* a local condition's branch splits on other conditions, and ends only in an algorithm restricted
  * on it or a call to auto */
 static bool validate_local_branch(MPIR_Csel_node_s * node, unsigned bit, int auto_idx);
@@ -61,7 +62,7 @@ int MPII_Csel_validate(void)
 
 static bool condition_is_defined(int node_type, MPIR_Csel_coll_type_e coll_type, const char **name);
 
-static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int coll_type,
+static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree_idx, int coll_type,
                                        bool * seen)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -74,7 +75,7 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
             case CSEL_NODE_TYPE__ERROR:
                 return MPI_SUCCESS;
             case CSEL_NODE_TYPE__OPERATOR__CALL:
-                next = node->u.call.idx;
+                next = node->u.call.tree_idx;
                 break;
             case CSEL_NODE_TYPE__OPERATOR__DISPATCH:
                 /* a restriction's bit is its node type */
@@ -83,24 +84,25 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
                     if (coll_type >= 0 &&
                         !condition_is_defined(node->u.dispatch->pos[k], coll_type, &cond_name)) {
                         /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
-                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree);
+                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
                         MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
                                              "**colljsoncond %s %s %s", name, cond_name,
                                              MPIR_Coll_type_names[coll_type]);
                     }
                 }
                 for (int c = 0; c < (1 << node->u.dispatch->nbits); c++) {
-                    int idx = node->u.dispatch->idx[c];
-                    if (!seen[idx * ntypes + coll_type + 1]) {
-                        seen[idx * ntypes + coll_type + 1] = true;
-                        mpi_errno = validate_defined_conditions(MPII_Csel_get_tree_by_idx(idx), idx,
-                                                                coll_type, seen);
+                    int next_tree_idx = node->u.dispatch->tree_idx[c];
+                    if (!seen[next_tree_idx * ntypes + coll_type + 1]) {
+                        seen[next_tree_idx * ntypes + coll_type + 1] = true;
+                        mpi_errno =
+                            validate_defined_conditions(MPII_Csel_get_tree_by_idx(next_tree_idx),
+                                                        next_tree_idx, coll_type, seen);
                         MPIR_ERR_CHECK(mpi_errno);
                     }
                 }
                 return MPI_SUCCESS;
             case CSEL_NODE_TYPE__OPERATOR__COLLECTIVE:
-                mpi_errno = validate_defined_conditions(node->success, tree,
+                mpi_errno = validate_defined_conditions(node->success, tree_idx,
                                                         node->u.collective.coll_type, seen);
                 MPIR_ERR_CHECK(mpi_errno);
                 continue;
@@ -110,7 +112,7 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
                 const char *cond_name;
                 if (coll_type >= 0 && !condition_is_defined(node->type, coll_type, &cond_name)) {
                     /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
-                    MPL_UNUSED const char *name = MPII_Csel_tree_name(tree);
+                    MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
                     MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
                                          "**colljsoncond %s %s %s", name, cond_name,
                                          MPIR_Coll_type_names[coll_type]);
@@ -126,7 +128,7 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
             }
             return MPI_SUCCESS;
         }
-        mpi_errno = validate_defined_conditions(node->success, tree, coll_type, seen);
+        mpi_errno = validate_defined_conditions(node->success, tree_idx, coll_type, seen);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -136,7 +138,7 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree, int co
 
 static bool is_local_node(MPIR_Csel_node_s * node);
 
-static int validate_local_node(MPIR_Csel_node_s * node, int tree, bool allow_local, bool * seen)
+static int validate_local_node(MPIR_Csel_node_s * node, int tree_idx, bool allow_local, bool * seen)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -147,25 +149,26 @@ static int validate_local_node(MPIR_Csel_node_s * node, int tree, bool allow_loc
             case CSEL_NODE_TYPE__ERROR:
                 return MPI_SUCCESS;
             case CSEL_NODE_TYPE__OPERATOR__CALL:
-                next = node->u.call.idx;
+                next = node->u.call.tree_idx;
                 break;
             case CSEL_NODE_TYPE__OPERATOR__DISPATCH:
                 for (int k = 0; k < node->u.dispatch->nbits; k++) {
                     int type = node->u.dispatch->pos[k];
                     if (MPIR_CSEL_LOCAL_RESTRICTIONS & (1u << type)) {
                         /* unused when MPIR_ERR_SETANDJUMP2 drops its message arguments */
-                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree);
+                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
                         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**colljsonlocal",
                                              "**colljsonlocal %s %s", name,
                                              MPIR_Csel_condition_names[type]);
                     }
                 }
                 for (int c = 0; c < (1 << node->u.dispatch->nbits); c++) {
-                    int idx = node->u.dispatch->idx[c];
-                    if (!seen[idx]) {
-                        seen[idx] = true;
-                        mpi_errno = validate_local_node(MPII_Csel_get_tree_by_idx(idx), idx,
-                                                        allow_local, seen);
+                    int next_tree_idx = node->u.dispatch->tree_idx[c];
+                    if (!seen[next_tree_idx]) {
+                        seen[next_tree_idx] = true;
+                        mpi_errno =
+                            validate_local_node(MPII_Csel_get_tree_by_idx(next_tree_idx),
+                                                next_tree_idx, allow_local, seen);
                         MPIR_ERR_CHECK(mpi_errno);
                     }
                 }
@@ -177,10 +180,10 @@ static int validate_local_node(MPIR_Csel_node_s * node, int tree, bool allow_loc
                     if (!allow_local || node->u.condition.negate ||
                         f->type != CSEL_NODE_TYPE__OPERATOR__ANY ||
                         f->success->type != CSEL_NODE_TYPE__OPERATOR__CALL ||
-                        f->success->u.call.idx != auto_idx ||
+                        f->success->u.call.tree_idx != auto_idx ||
                         !validate_local_branch(node->success, 1u << node->type, auto_idx)) {
                         /* unused when MPIR_ERR_SETANDJUMP2 drops its message arguments */
-                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree);
+                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
                         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**colljsonlocal",
                                              "**colljsonlocal %s %s", name,
                                              MPIR_Csel_condition_names[node->type]);
@@ -188,7 +191,7 @@ static int validate_local_node(MPIR_Csel_node_s * node, int tree, bool allow_loc
                     /* the next case is the call to auto */
                     return MPI_SUCCESS;
                 }
-                mpi_errno = validate_local_node(node->success, tree, allow_local, seen);
+                mpi_errno = validate_local_node(node->success, tree_idx, allow_local, seen);
                 MPIR_ERR_CHECK(mpi_errno);
                 continue;
         }
@@ -212,7 +215,7 @@ static bool validate_local_branch(MPIR_Csel_node_s * node, unsigned bit, int aut
             case CSEL_NODE_TYPE__CONTAINER:
                 return (MPIR_Coll_get_algo_restriction_bits(node->u.container->id) & bit) != 0;
             case CSEL_NODE_TYPE__OPERATOR__CALL:
-                return node->u.call.idx == auto_idx;
+                return node->u.call.tree_idx == auto_idx;
             case CSEL_NODE_TYPE__ERROR:
             case CSEL_NODE_TYPE__OPERATOR__DISPATCH:
                 return false;

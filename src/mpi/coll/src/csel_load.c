@@ -15,7 +15,7 @@
 #define CSEL_MAX_NAME 50
 struct csel_subtree_hash_item {
     char name[CSEL_MAX_NAME];   /* key */
-    int idx;
+    int tree_idx;
     UT_hash_handle hh;
 };
 
@@ -32,7 +32,7 @@ UT_array *csel_subtrees = NULL;
 int csel_main_idx = -1;
 
 static void add_named_tree(const char *name, const MPII_Csel_json_s * obj);
-static void replace_named_tree(int idx, const MPII_Csel_json_s * obj);
+static void replace_named_tree(int tree_idx, const MPII_Csel_json_s * obj);
 static int parse_named_trees(void);
 static void free_tree(MPIR_Csel_node_s * node);
 
@@ -170,13 +170,13 @@ static int parse_dispatch(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node
         while (true) {
             char name[CSEL_MAX_NAME];
             snprintf(name, sizeof(name), "%.*s-%x", len, str, s);
-            int idx = MPII_Csel_name_to_idx(name);
+            int tree_idx = MPII_Csel_name_to_idx(name);
             int count = 0;
             for (unsigned b = s; b; b &= b - 1) {
                 count++;
             }
-            if (idx >= 0 && count >= best_count) {
-                best = idx;
+            if (tree_idx >= 0 && count >= best_count) {
+                best = tree_idx;
                 best_count = count;
             }
             if (s == 0) {
@@ -189,7 +189,7 @@ static int parse_dispatch(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node
             return MPII_Csel_json_error(obj,
                                         "no subtree <prefix>-0 for a dispatch to fall back to");
         }
-        d->idx[c] = best;
+        d->tree_idx[c] = best;
     }
 
     MPIR_Csel_node_s *tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
@@ -223,15 +223,15 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
                                         "or \"error\"");
         }
 
-        int idx = MPII_Csel_name_to_idx(obj->u.str + 5);
-        if (idx < 0) {
+        int tree_idx = MPII_Csel_name_to_idx(obj->u.str + 5);
+        if (tree_idx < 0) {
             return MPII_Csel_json_error(obj, "unknown subtree name");
         }
 
         MPIR_Csel_node_s *tmp;
         tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
         tmp->type = CSEL_NODE_TYPE__OPERATOR__CALL;
-        tmp->u.call.idx = idx;
+        tmp->u.call.tree_idx = tree_idx;
         *node_out = tmp;
         return MPI_SUCCESS;
     }
@@ -391,9 +391,9 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         MPII_CSEL_JSON_FOREACH(obj, val) {
             const char *name = val->key + 5;
 
-            int idx = MPII_Csel_name_to_idx(name);
-            if (idx >= 0) {
-                replace_named_tree(idx, val);
+            int tree_idx = MPII_Csel_name_to_idx(name);
+            if (tree_idx >= 0) {
+                replace_named_tree(tree_idx, val);
             } else {
                 add_named_tree(name, val);
             }
@@ -494,7 +494,7 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level)
     } else if (node->type == CSEL_NODE_TYPE__ERROR) {
         printf("ERROR\n");
     } else if (node->type == CSEL_NODE_TYPE__OPERATOR__CALL) {
-        printf("call: subtree %d\n", node->u.call.idx);
+        printf("call: subtree %d\n", node->u.call.tree_idx);
     } else if (node->type == CSEL_NODE_TYPE__OPERATOR__DISPATCH) {
         printf("dispatch: restrictions 0x%x\n", node->u.dispatch->bits);
     } else {
@@ -547,15 +547,15 @@ int MPII_Csel_name_to_idx(const char *name)
     struct csel_subtree_hash_item *h;
     HASH_FIND_STR(csel_subtree_hash, name, h);
     if (h) {
-        return h->idx;
+        return h->tree_idx;
     } else {
         return -1;
     }
 }
 
-MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int idx)
+MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int tree_idx)
 {
-    struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, idx);
+    struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, tree_idx);
     MPIR_Assert(p);
     MPIR_Assert(p->node);
     return p->node;
@@ -566,11 +566,11 @@ int MPII_Csel_num_trees(void)
     return utarray_len(csel_subtrees);
 }
 
-const char *MPII_Csel_tree_name(int idx)
+const char *MPII_Csel_tree_name(int tree_idx)
 {
     struct csel_subtree_hash_item *h, *tmp;
     HASH_ITER(hh, csel_subtree_hash, h, tmp) {
-        if (h->idx == idx) {
+        if (h->tree_idx == tree_idx) {
             return h->name;
         }
     }
@@ -582,22 +582,22 @@ static void add_named_tree(const char *name, const MPII_Csel_json_s * obj)
     struct csel_subtree item = { NULL, obj };
     utarray_push_back(csel_subtrees, &item, MPL_MEM_COLL);
 
-    /* map the name to idx */
+    /* map the name to tree_idx */
     struct csel_subtree_hash_item *h;
     h = MPL_malloc(sizeof(*h), MPL_MEM_OTHER);
     MPL_strncpy(h->name, name, CSEL_MAX_NAME);
-    h->idx = utarray_len(csel_subtrees) - 1;
+    h->tree_idx = utarray_len(csel_subtrees) - 1;
     HASH_ADD_STR(csel_subtree_hash, name, h, MPL_MEM_COLL);
 
     /* update csel_main_idx if name == "main" */
     if (strcmp(name, "main") == 0) {
-        csel_main_idx = h->idx;
+        csel_main_idx = h->tree_idx;
     }
 }
 
-static void replace_named_tree(int idx, const MPII_Csel_json_s * obj)
+static void replace_named_tree(int tree_idx, const MPII_Csel_json_s * obj)
 {
-    struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, idx);
+    struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, tree_idx);
     MPIR_Assert(p);
     p->json_obj = obj;
     free_tree(p->node);

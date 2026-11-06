@@ -24,7 +24,7 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
                 if (++ncalls > MPII_Csel_num_trees()) {
                     return NULL;
                 }
-                node = MPII_Csel_get_tree_by_idx(node->u.call.idx);
+                node = MPII_Csel_get_tree_by_idx(node->u.call.tree_idx);
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__DISPATCH:{
@@ -37,7 +37,7 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
                     for (int j = 0; j < d->nbits; j++) {
                         c |= ((m >> d->pos[j]) & 1u) << j;
                     }
-                    node = MPII_Csel_get_tree_by_idx(d->idx[c]);
+                    node = MPII_Csel_get_tree_by_idx(d->tree_idx[c]);
                     break;
                 }
 
@@ -73,9 +73,9 @@ MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_
 
 MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name)
 {
-    int idx = MPII_Csel_name_to_idx(name);
-    if (idx >= 0) {
-        return MPII_Csel_get_tree_by_idx(idx);
+    int tree_idx = MPII_Csel_name_to_idx(name);
+    if (tree_idx >= 0) {
+        return MPII_Csel_get_tree_by_idx(tree_idx);
     }
     return NULL;
 }

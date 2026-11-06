@@ -9,20 +9,20 @@
 #include "csel_json.h"
 
 /* "dispatch=<prefix>(<bits>)": continue in the subtree "<prefix>-<m>", m the restrictions (in hex)
- * among bits that hold. idx[] has one subtree per combination of the bits, resolved when the file
- * is loaded: the subtree of the combination, or of its largest subset that has one. */
+ * among bits that hold. tree_idx[] has one subtree per combination of the bits, resolved when the
+ * file is loaded: the subtree of the combination, or of its largest subset that has one. */
 typedef struct MPIR_Csel_dispatch {
     unsigned bits;
     int nbits;
     int pos[32];                /* bit positions of bits, low to high */
-    int idx[];                  /* 1 << nbits subtree indices, by compressed mask */
+    int tree_idx[];             /* 1 << nbits subtree indices, by compressed mask */
 } MPIR_Csel_dispatch_s;
 
 typedef struct MPIR_Csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
-            int idx;
+            int tree_idx;
         } call;
         MPIR_Csel_dispatch_s *dispatch;
         struct {
@@ -52,14 +52,14 @@ int MPIR_Csel_free(void);
 MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name);
 MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
-int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_search_and_run(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig);
 
 /* the named subtrees of csel.c, for csel_validation.c */
 int MPII_Csel_num_trees(void);
 int MPII_Csel_name_to_idx(const char *name);
-const char *MPII_Csel_tree_name(int idx);
-MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int idx);
+const char *MPII_Csel_tree_name(int tree_idx);
+MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int tree_idx);
 int MPII_Csel_validate(void);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
