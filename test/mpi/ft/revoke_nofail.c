@@ -284,6 +284,271 @@ static void test_ibarrier_after_revoke(int rank)
     MPI_Comm_free(&comm);
 }
 
+static void test_bcast_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int buffer = rank;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Bcast(&buffer, 1, MPI_INT, 1, comm);
+    require_revoked(rank, "bcast_after_revoke", "MPI_Bcast", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_ibcast_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int buffer = rank;
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Ibcast(&buffer, 1, MPI_INT, 1, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "ibcast_after_revoke", "MPI_Ibcast", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "ibcast_after_revoke", "MPI_Wait(Ibcast)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_scatter_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf[2] = { 10, 20 };
+    int recvbuf = -1;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Scatter(rank == 1 ? sendbuf : NULL, 1, MPI_INT, &recvbuf, 1, MPI_INT, 1, comm);
+    require_revoked(rank, "scatter_after_revoke", "MPI_Scatter", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_iscatter_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf[2] = { 10, 20 };
+    int recvbuf = -1;
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Iscatter(rank == 1 ? sendbuf : NULL, 1, MPI_INT,
+                      &recvbuf, 1, MPI_INT, 1, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "iscatter_after_revoke", "MPI_Iscatter", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "iscatter_after_revoke", "MPI_Wait(Iscatter)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_reduce_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank + 1;
+    int recvbuf = -1;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Reduce(&sendbuf, &recvbuf, 1, MPI_INT, MPI_SUM, 0, comm);
+    require_revoked(rank, "reduce_after_revoke", "MPI_Reduce", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_ireduce_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank + 1;
+    int recvbuf = -1;
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Ireduce(&sendbuf, &recvbuf, 1, MPI_INT, MPI_SUM, 0, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "ireduce_after_revoke", "MPI_Ireduce", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "ireduce_after_revoke", "MPI_Wait(Ireduce)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_gather_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank;
+    int recvbuf[2] = { -1, -1 };
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Gather(&sendbuf, 1, MPI_INT, rank == 0 ? recvbuf : NULL, 1, MPI_INT, 0, comm);
+    require_revoked(rank, "gather_after_revoke", "MPI_Gather", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_igather_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank;
+    int recvbuf[2] = { -1, -1 };
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Igather(&sendbuf, 1, MPI_INT, rank == 0 ? recvbuf : NULL, 1, MPI_INT, 0, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "igather_after_revoke", "MPI_Igather", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "igather_after_revoke", "MPI_Wait(Igather)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_alltoall_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf[2] = { rank * 10, rank * 10 + 1 };
+    int recvbuf[2] = { -1, -1 };
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Alltoall(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, comm);
+    require_revoked(rank, "alltoall_after_revoke", "MPI_Alltoall", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_ialltoall_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf[2] = { rank * 10, rank * 10 + 1 };
+    int recvbuf[2] = { -1, -1 };
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Ialltoall(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "ialltoall_after_revoke", "MPI_Ialltoall", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "ialltoall_after_revoke", "MPI_Wait(Ialltoall)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_allgather_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank;
+    int recvbuf[2] = { -1, -1 };
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Allgather(&sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, comm);
+    require_revoked(rank, "allgather_after_revoke", "MPI_Allgather", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_iallgather_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank;
+    int recvbuf[2] = { -1, -1 };
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Iallgather(&sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "iallgather_after_revoke", "MPI_Iallgather", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "iallgather_after_revoke", "MPI_Wait(Iallgather)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_allreduce_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank + 1;
+    int recvbuf = -1;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Allreduce(&sendbuf, &recvbuf, 1, MPI_INT, MPI_SUM, comm);
+    require_revoked(rank, "allreduce_after_revoke", "MPI_Allreduce", rc);
+
+    MPI_Comm_free(&comm);
+}
+
+static void test_iallreduce_after_revoke(int rank)
+{
+    MPI_Comm comm = dup_world_with_errhandler();
+    int rc;
+    int sendbuf = rank + 1;
+    int recvbuf = -1;
+    MPI_Request req = MPI_REQUEST_NULL;
+
+    sync_world();
+    if (rank == 1) MPIX_Comm_revoke(comm);
+
+    rc = MPI_Iallreduce(&sendbuf, &recvbuf, 1, MPI_INT, MPI_SUM, comm, &req);
+    if (rc != MPI_SUCCESS) {
+        require_revoked(rank, "iallreduce_after_revoke", "MPI_Iallreduce", rc);
+    } else {
+        rc = MPI_Wait(&req, MPI_STATUS_IGNORE);
+        require_revoked(rank, "iallreduce_after_revoke", "MPI_Wait(Iallreduce)", rc);
+    }
+
+    MPI_Comm_free(&comm);
+}
+
 int main(int argc, char **argv)
 {
     int rank, size;
@@ -317,6 +582,34 @@ int main(int argc, char **argv)
     test_ibarrier_unmatched_forever_after_revoke(rank);
     sync_world();
     test_ibarrier_after_revoke(rank);
+    sync_world();
+    test_bcast_after_revoke(rank);
+    sync_world();
+    test_ibcast_after_revoke(rank);
+    sync_world();
+    test_scatter_after_revoke(rank);
+    sync_world();
+    test_iscatter_after_revoke(rank);
+    sync_world();
+    test_reduce_after_revoke(rank);
+    sync_world();
+    test_ireduce_after_revoke(rank);
+    sync_world();
+    test_gather_after_revoke(rank);
+    sync_world();
+    test_igather_after_revoke(rank);
+    sync_world();
+    test_alltoall_after_revoke(rank);
+    sync_world();
+    test_ialltoall_after_revoke(rank);
+    sync_world();
+    test_allgather_after_revoke(rank);
+    sync_world();
+    test_iallgather_after_revoke(rank);
+    sync_world();
+    test_allreduce_after_revoke(rank);
+    sync_world();
+    test_iallreduce_after_revoke(rank);
     sync_world();
 
     if (rank == 0) {
