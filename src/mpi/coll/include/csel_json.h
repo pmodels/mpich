@@ -22,7 +22,7 @@
  * Anything else is reported as an error with its line and column.
  *
  * The parsed tree lives only while a selection JSON is loaded.
- * MPIR_Csel_load_buf (csel.c), called from MPII_Coll_init for the built-in
+ * MPIR_Csel_load_buf (csel_load.c), called from MPII_Coll_init for the built-in
  * JSON and for MPIR_CVAR_COLL_SELECTION_JSON_FILE, parses the text, converts
  * the tree into the MPIR_Csel_node_s selection trees, and frees it.
  * Collective selection at run time never sees it.
