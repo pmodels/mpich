@@ -15,8 +15,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE (in
-        bytes), then enable GPU-based fast memcpy. The environment variable is valid only when then
-        GPU IPC shmmod is enabled.
+        bytes), then enable GPU-based fast memcpy. It is also the ceiling of the H2D, D2H and
+        D2D thresholds (MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D etc.), so 0 turns off all GPU
+        fast memcpy.
 
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D
       category    : CH4
@@ -27,7 +28,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a receive message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (in
-        bytes), then enable GPU-based fast memcpy.
+        bytes), then enable GPU-based fast memcpy. It is capped by
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE.
 
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H
       category    : CH4
@@ -38,7 +40,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H (in
-        bytes), then enable GPU-based fast memcpy.
+        bytes), then enable GPU-based fast memcpy. It is capped by
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE.
 
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D
       category    : CH4
@@ -49,7 +52,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D (in
-        bytes), then enable GPU-based fast memcpy.
+        bytes), then enable GPU-based fast memcpy. It is capped by
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -339,6 +343,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         } else {
             fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
         }
+        /* MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE is the ceiling of the direction thresholds */
+        fast_copy_threshold = MPL_MIN(fast_copy_threshold, MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
 
         if (copy_sz <= fast_copy_threshold) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
