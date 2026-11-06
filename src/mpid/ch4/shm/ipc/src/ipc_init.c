@@ -92,10 +92,8 @@ int MPIDI_IPC_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    mpi_errno = MPIDI_GPU_mpi_finalize_hook();
+    /* extra just to silence potential unused-label warnings */
     MPIR_ERR_CHECK(mpi_errno);
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;

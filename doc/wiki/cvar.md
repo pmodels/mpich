@@ -2118,16 +2118,6 @@ Sets the minimum send message size, in bytes, for selecting the CMA-based single
 
 Used in functions: `MPIDI_CMA_get_ipc_attr`
 
-### MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
-
-Controls the size behavior of the cache containing GPU IPC mapped buffers. It is used during GPU initialization only when `MPIR_CVAR_ENABLE_GPU` is enabled; the selected value is stored in `MPL_gpu_info.max_cache_entries` before MPL GPU initialization. This setting currently affects only the specialized GPU IPC cache mechanism selected by `MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE`. When active, this CVAR sets whether that cache is unrestricted, limited by another CVAR, or disabled.
-
-* unlimited - do not restrict the specialized GPU IPC mapped-buffer cache size.
-* limited - default, limit the specialized GPU IPC mapped-buffer cache size based on `MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES`.
-* disabled - disable the specialized GPU IPC mapped-buffer cache by setting the maximum cache entries to 0.
-
-Used in functions: `MPII_init_gpu`
-
 ### MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE
 
 Sets the GPU engine type used for CH4 shared-memory GPU IPC point-to-point data copies. It is used only when MPICH is built with the GPU shared-memory IPC submodule and the GPU IPC path is selected for intranode communication; that selection requires eligible GPU device buffers and buffers large enough for `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD` unless the address is detected as repeated. The selected copy direction can also depend on `MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL`. When active, this CVAR selects the MPL GPU transfer engine used by asynchronous GPU IPC read and write copies.
@@ -3567,6 +3557,18 @@ Controls whether MPICH performs runtime error checks, typically to validate inpu
 * false - disable runtime MPI error checking when MPICH is configured for runtime error-checking control.
 
 Used in functions: `MPII_init_local_proc_attrs`
+
+### MPIR_CVAR_GPU_HANDLE_CACHE_SIZE
+
+Sets the maximum number of entries in the cache of the IPC handles and host mmaps of local GPU buffers (`MPIDU_gpu_cache`). The cache is set up in `MPID_Init` when `MPIR_CVAR_ENABLE_GPU` is enabled, and is shared by the GPU IPC shmmod (handles exported to local peers, and the host mmaps used for small IPC copies) and the CH4 OFI netmod (host mmaps used for small staging copies). When the cache is full, the least recently used entry that is not in use is evicted, which closes its IPC handle, unmaps its host mmap and tells the local peers that mapped it to unmap. With the ZE drmfd shareable handle (`MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE`), entries are inserted beyond this limit (up to 1024), because a buffer cannot have a second handle. When active, this CVAR bounds how many local GPU allocations the cache keeps alive.
+
+* 16 - default, cache up to 16 buffers.
+* positive integer - cache up to this many buffers (at most 1024).
+* 0 - do not cache, except where the drmfd handle requires it.
+
+Alternate name: MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
+
+Used in functions: `MPIDU_gpu_cache_init`
 
 ### MPIR_CVAR_GPU_HAS_WAIT_KERNEL
 

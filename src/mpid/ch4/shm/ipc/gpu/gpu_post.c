@@ -6,18 +6,6 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 cvars:
-    - name        : MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
-      category    : CH4
-      type        : int
-      default     : 16
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        The maximum number of entries to hold in the cache containing IPC mapped buffers.
-        When an entry is evicted, the corresponding IPC handle is closed. If MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
-        is 0, IPC handle caching is disabled.
-
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
       type        : int
@@ -92,16 +80,12 @@ cvars:
 #include "gpu_types.h"
 #include "ipc_p2p.h"
 #include "mpir_async_things.h"
+#include "mpidu_gpu_cache.h"
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 
 /* IPC GPU handle/map caching:
- *   * NVIDIA CUDA sender side handle creation is cheap, but receive side mapping is expensive.
-         * if we don't unmap freed handles, new handle may overlap the address, and new map will fail.
-     * Intel ZE handle is actually file handles. They are bound to the allocation.
-         * there won't be stale handle or map issue, since the memory won't be freed if one is active.
-         * But unlimited active entries will cause apparent memory leak to the users and eventually
-           exhaust the memory.
+ *   * The IPC handles of local buffers are cached in MPIDU_gpu_cache (see mpidu_gpu_cache.c).
 
     * Having two independent caching for both sender-side handles and receiver-side mapping is a mess.
       When both side cache drift, we either create stale address issue or inefficient memory horading.
@@ -109,9 +93,10 @@ cvars:
         * Cache miss: IPC send handle, receiver map, tell sender its mapped address via AM.
         * Cache hit: IPC send mapped address directly.
         * Cache invalidate: send AM to each mapped rank to unmap.
+      The remote mapped addresses are kept in the MPIDU_gpu_cache entry (entry->ext), and are
+      unmapped by ipc_remote_maps_free when the entry is dropped.
  */
 
-#define IPC_HANDLE_CACHE_MAX 1024
 #define IPC_STATIC_MAPS_SIZE 1
 
 struct map_entry {
@@ -119,14 +104,8 @@ struct map_entry {
     MPL_gpu_map_t map;
 };
 
-struct handle_cache_entry {
-    const void *base_addr;
-    MPI_Aint len;
-
-    int in_use;
-    unsigned long long usage_stamp;
-
-    MPL_gpu_ipc_mem_handle_t *handle_ptr;
+/* entry->ext of a MPIDU_gpu_cache entry */
+struct ipc_remote_maps {
     /* a dynamic array for remote mapped addrs */
     int num_maps;
     int max_maps;
@@ -223,276 +202,103 @@ struct am_context {
 
 static struct am_context default_am_ctx = { NULL, 0, 0 };
 
-static struct handle_cache_entry ipc_handle_cache[IPC_HANDLE_CACHE_MAX];
-static int ipc_handle_cache_count = 0;
-
-static unsigned long long ipc_handle_cache_usage_counter;       /* for tracking LRU (Least Recently Used) */
-
-/* ipc handle cache utilities */
-#ifdef MPL_HAVE_ZE
-static bool ipc_track_cache_can_insert(void);
-#endif
-static int ipc_track_cache_free(int idx, struct am_context am_ctx);
-static int ipc_track_cache_delete(int idx, struct am_context am_ctx);
-static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_Aint len,
-                                                         struct am_context am_ctx);
-static struct handle_cache_entry *ipc_track_cache_lookup(MPL_gpu_ipc_mem_handle_t * handle_ptr);
-static int ipc_track_cache_check_limit(struct am_context am_ctx);
-static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
-                                  MPL_gpu_ipc_mem_handle_t * handle_ptr,
-                                  struct am_context am_ctx,
-                                  struct handle_cache_entry **entry_out, bool force);
+static struct map_entry *ipc_remote_maps_get(struct MPIDU_gpu_cache_entry *entry,
+                                             int *num_maps_out);
+static int ipc_remote_maps_free(struct MPIDU_gpu_cache_entry *entry, void *ctx);
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank);
 
-#ifdef MPL_HAVE_ZE
-static bool ipc_track_cache_can_insert(void)
+int MPIDI_GPU_ipc_cache_init(void)
 {
-    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
-    return (ipc_handle_cache_count < cache_limit);
+    MPIDU_gpu_cache_set_ext_free(ipc_remote_maps_free);
+    return MPI_SUCCESS;
 }
-#endif
 
-/* free the cache entry without updating ipc_handle_cache array */
-static int ipc_track_cache_free(int idx, struct am_context am_ctx)
+/* the mapped addresses of local peers for a cached buffer */
+static struct map_entry *ipc_remote_maps_get(struct MPIDU_gpu_cache_entry *entry, int *num_maps_out)
+{
+    struct ipc_remote_maps *rmaps = entry->ext;
+    if (!rmaps) {
+        *num_maps_out = 0;
+        return NULL;
+    }
+    *num_maps_out = rmaps->num_maps;
+    return (rmaps->num_maps > IPC_STATIC_MAPS_SIZE) ? rmaps->maps : rmaps->static_maps;
+}
+
+/* called when MPIDU_gpu_cache drops an entry: tell each mapped rank to unmap.
+ * ctx is the struct am_context of the caller, or NULL for default_am_ctx. */
+static int ipc_remote_maps_free(struct MPIDU_gpu_cache_entry *entry, void *ctx)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    struct handle_cache_entry *entry = &ipc_handle_cache[idx];
+    struct ipc_remote_maps *rmaps = entry->ext;
+    if (!rmaps) {
+        goto fn_exit;
+    }
 
-    MPL_gpu_ipc_handle_destroy(entry->handle_ptr);
-    MPL_free(entry->handle_ptr);
-
-    if (entry->num_maps > 0) {
-        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
-            entry->maps : entry->static_maps;
-        for (int i = 0; i < entry->num_maps; i++) {
-            if (maps[i].remote_lrank == MPIR_Process.local_rank) {
-                /* local mmap entry -- just unmap locally, no AM needed */
-                mpi_errno = MPIDI_GPU_ipc_handle_unmap(&maps[i].map);
-                MPIR_ERR_CHECK(mpi_errno);
-            } else {
-                int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
-                mpi_errno = MPIDI_IPC_send_unmap(NULL, grank,
-                                                 am_ctx.local_vci, am_ctx.remote_vci,
-                                                 MPIDI_IPCI_TYPE__GPU, maps[i].map);
-                if (am_ctx.comm == NULL) {
-                    /* ignore the error in case the remote process already exit */
-                    mpi_errno = MPI_SUCCESS;
-                } else {
-                    MPIR_ERR_CHECK(mpi_errno);
-                }
-            }
+    struct am_context am_ctx = ctx ? *(struct am_context *) ctx : default_am_ctx;
+    int num_maps;
+    struct map_entry *maps = ipc_remote_maps_get(entry, &num_maps);
+    for (int i = 0; i < num_maps; i++) {
+        int grank = MPIR_Process.node_local_map[maps[i].remote_lrank];
+        mpi_errno = MPIDI_IPC_send_unmap(NULL, grank, am_ctx.local_vci, am_ctx.remote_vci,
+                                         MPIDI_IPCI_TYPE__GPU, maps[i].map);
+        if (am_ctx.comm == NULL) {
+            /* ignore the error in case the remote process already exit */
+            mpi_errno = MPI_SUCCESS;
+        } else if (mpi_errno) {
+            break;
         }
     }
 
-    if (entry->num_maps > IPC_STATIC_MAPS_SIZE) {
-        MPL_free(entry->maps);
+    if (rmaps->num_maps > IPC_STATIC_MAPS_SIZE) {
+        MPL_free(rmaps->maps);
     }
-
-    /* The caller will take care of shifting ipc_handle_cache and updating ipc_handle_cache_count */
+    MPL_free(rmaps);
+    entry->ext = NULL;
 
   fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* free the cache entry and shift ipc_handle_cache array */
-static int ipc_track_cache_delete(int idx, struct am_context am_ctx)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Assert(idx < ipc_handle_cache_count);
-
-    mpi_errno = ipc_track_cache_free(idx, am_ctx);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    ipc_handle_cache_count--;
-
-    if (ipc_handle_cache_count > idx) {
-        /* shift the entries up to fill the gap */
-        memmove(ipc_handle_cache + idx, ipc_handle_cache + idx + 1,
-                (ipc_handle_cache_count - idx) * sizeof(ipc_handle_cache[0]));
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static struct handle_cache_entry *ipc_track_cache_search(const void *addr, MPI_Aint len,
-                                                         struct am_context am_ctx)
-{
-    struct handle_cache_entry *found = NULL;
-
-    for (int i = 0; i < ipc_handle_cache_count; i++) {
-        struct handle_cache_entry *entry = &ipc_handle_cache[i];
-        if (entry->base_addr == addr &&
-            MPL_gpu_ipc_handle_is_valid(entry->handle_ptr, (void *) addr)) {
-            found = entry;
-            goto fn_exit;
-        }
-        /* check potential stale entry.
-         * Overlap condition between [a1, b1) and [a2, b2) is a1<b2 && b1>a2 */
-        if ((uintptr_t) entry->base_addr < (uintptr_t) addr + len &&
-            (uintptr_t) entry->base_addr + entry->len > (uintptr_t) addr) {
-            ipc_track_cache_delete(i, am_ctx);
-            i--;        /* the cache array has been shifted up */
-            continue;
-        }
-    }
-
-  fn_exit:
-    if (found) {
-        /* update usage_stamp for LRU */
-        found->usage_stamp = ++ipc_handle_cache_usage_counter;
-    }
-    return found;
-}
-
-static struct handle_cache_entry *ipc_track_cache_lookup(MPL_gpu_ipc_mem_handle_t * handle_ptr)
-{
-    for (int i = 0; i < ipc_handle_cache_count; i++) {
-        struct handle_cache_entry *entry = &ipc_handle_cache[i];
-        if (entry->handle_ptr == handle_ptr) {
-            return entry;
-        }
-    }
-    MPIR_Assert(0);
-    return NULL;
 }
 
 static int ipc_track_cache_map_addr(const void *addr, MPL_gpu_map_t map, int lrank)
 {
-    for (int i = 0; i < ipc_handle_cache_count; i++) {
-        struct handle_cache_entry *entry = &ipc_handle_cache[i];
-        if (entry->base_addr == addr) {
-            struct map_entry *maps;
-            if (entry->num_maps < IPC_STATIC_MAPS_SIZE) {
-                maps = entry->static_maps;
-            } else {
-                if (entry->num_maps == IPC_STATIC_MAPS_SIZE) {
-                    /* switch from static maps to dynamic maps */
-                    entry->max_maps = IPC_STATIC_MAPS_SIZE + 10;
-                    entry->maps = MPL_malloc(sizeof(entry->maps[0]) * entry->max_maps,
-                                             MPL_MEM_OTHER);
-                    for (int j = 0; j < entry->num_maps; j++) {
-                        entry->maps[j] = entry->static_maps[j];
-                    }
-                } else if (entry->num_maps == entry->max_maps) {
-                    /* need grow the dynamic maps */
-                    entry->max_maps *= 2;
-                    entry->maps = MPL_realloc(entry->maps,
-                                              sizeof(entry->maps[0]) * entry->max_maps,
-                                              MPL_MEM_OTHER);
-                }
-                MPIR_Assert(entry->maps);
-                maps = entry->maps;
-            }
-            maps[entry->num_maps].remote_lrank = lrank;
-            maps[entry->num_maps].map = map;
-            entry->num_maps++;
-
-            return MPI_SUCCESS;
-        }
-    }
+    struct MPIDU_gpu_cache_entry *entry = MPIDU_gpu_cache_find(addr);
     /* entry must exist when we receive a mapaddr AM */
-    MPIR_Assert(0);
+    MPIR_Assert(entry);
+
+    struct ipc_remote_maps *rmaps = entry->ext;
+    if (!rmaps) {
+        rmaps = MPL_calloc(1, sizeof(*rmaps), MPL_MEM_OTHER);
+        MPIR_Assert(rmaps);
+        entry->ext = rmaps;
+    }
+
+    struct map_entry *maps;
+    if (rmaps->num_maps < IPC_STATIC_MAPS_SIZE) {
+        maps = rmaps->static_maps;
+    } else {
+        if (rmaps->num_maps == IPC_STATIC_MAPS_SIZE) {
+            /* switch from static maps to dynamic maps */
+            rmaps->max_maps = IPC_STATIC_MAPS_SIZE + 10;
+            rmaps->maps = MPL_malloc(sizeof(rmaps->maps[0]) * rmaps->max_maps, MPL_MEM_OTHER);
+            for (int j = 0; j < rmaps->num_maps; j++) {
+                rmaps->maps[j] = rmaps->static_maps[j];
+            }
+        } else if (rmaps->num_maps == rmaps->max_maps) {
+            /* need grow the dynamic maps */
+            rmaps->max_maps *= 2;
+            rmaps->maps = MPL_realloc(rmaps->maps, sizeof(rmaps->maps[0]) * rmaps->max_maps,
+                                      MPL_MEM_OTHER);
+        }
+        MPIR_Assert(rmaps->maps);
+        maps = rmaps->maps;
+    }
+    maps[rmaps->num_maps].remote_lrank = lrank;
+    maps[rmaps->num_maps].map = map;
+    rmaps->num_maps++;
+
     return MPI_SUCCESS;
-}
-
-static int ipc_track_cache_check_limit(struct am_context am_ctx)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
-    if (ipc_handle_cache_count >= cache_limit) {
-        /* find LRU slot */
-        int min_idx = -1;
-        unsigned long long min_stamp;
-        for (int i = 0; i < ipc_handle_cache_count; i++) {
-            if (ipc_handle_cache[i].in_use) {
-                continue;
-            }
-            if (min_idx == -1 || ipc_handle_cache[i].usage_stamp < min_stamp) {
-                min_stamp = ipc_handle_cache[i].usage_stamp;
-                min_idx = i;
-            }
-        }
-
-        if (min_idx != -1) {
-            mpi_errno = ipc_track_cache_delete(min_idx, am_ctx);
-        }
-    }
-
-    return mpi_errno;
-}
-
-static int ipc_track_cache_insert(const void *addr, MPI_Aint len,
-                                  MPL_gpu_ipc_mem_handle_t * handle_ptr,
-                                  struct am_context am_ctx,
-                                  struct handle_cache_entry **entry_out, bool force)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = ipc_track_cache_check_limit(am_ctx);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    int cache_limit;
-    if (force) {
-        cache_limit = IPC_HANDLE_CACHE_MAX;
-    } else {
-        cache_limit = MPL_MIN(MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE, IPC_HANDLE_CACHE_MAX);
-    }
-    if (ipc_handle_cache_count < cache_limit) {
-        struct handle_cache_entry *entry = &ipc_handle_cache[ipc_handle_cache_count];
-        memset(entry, 0, sizeof(*entry));
-        entry->base_addr = addr;
-        entry->len = len;
-        entry->handle_ptr = handle_ptr;
-        entry->usage_stamp = ++ipc_handle_cache_usage_counter;
-        ipc_handle_cache_count++;
-
-        *entry_out = entry;
-    } else {
-        *entry_out = NULL;
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* Optionally we may install a free_hook to more efficiently invalidate entries */
-void MPIDI_GPU_handle_free_hook(void *dptr)
-{
-    for (int i = 0; i < ipc_handle_cache_count; i++) {
-        struct handle_cache_entry *entry = &ipc_handle_cache[i];
-        if (entry->base_addr == dptr) {
-            MPIR_Assert(!entry->in_use);
-            ipc_track_cache_delete(i, default_am_ctx);
-            break;
-        }
-    }
-}
-
-int MPIDI_GPU_ipc_cache_finalize(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    for (int i = 0; i < ipc_handle_cache_count; i++) {
-        MPIR_Assert(!ipc_handle_cache[i].in_use);
-        mpi_errno = ipc_track_cache_free(i, default_am_ctx);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    ipc_handle_cache_count = 0;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -673,14 +479,18 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     struct am_context ctx =
         { req->comm, MPIDIG_REQUEST(req, req->local_vci), MPIDIG_REQUEST(req, req->remote_vci) };
 
-    bool is_cached = false;
-    struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, ctx);
-    if (entry) {
-        is_cached = true;
+    /* on a cache miss, the handle is created and inserted into the cache if there is room */
+    struct MPIDU_gpu_cache_entry *entry = NULL;
+    mpi_errno = MPIDU_gpu_cache_get_handle(pbase, len, &ipc_attr->u.gpu.gpu_attr.device_attr,
+                                           &ctx, &entry, &handle_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    bool is_cached = (entry != NULL);
+    if (is_cached) {
         /* check if we have a cached mapped address for the remote rank */
-        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
-            entry->maps : entry->static_maps;
-        for (int i = 0; i < entry->num_maps; i++) {
+        int num_maps;
+        struct map_entry *maps = ipc_remote_maps_get(entry, &num_maps);
+        for (int i = 0; i < num_maps; i++) {
             if (maps[i].remote_lrank == remote_lrank) {
                 ipc_attr->ipc_type = MPIDI_IPCI_TYPE__DIRECT;
                 ipc_handle->direct.base_addr = maps[i].map.mapped_addr;
@@ -688,55 +498,23 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
 
                 int local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
                 ipc_handle->direct.global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
-                entry->in_use++;
+                entry->range.in_use++;
                 goto fn_done;
             }
         }
-
-        /* cache hit but no mapped addr yet, fill handle from cache */
-        mpi_errno = fill_ipc_handle(ipc_attr, entry->handle_ptr, ipc_handle);
-        MPIR_ERR_CHECK(mpi_errno);
-        entry->in_use++;
-        goto fn_done;
     }
 
-    /* cache miss, create handle and insert into cache */
-    handle_ptr = MPL_malloc(sizeof(MPL_gpu_ipc_mem_handle_t), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!handle_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    int mpl_err;
-    mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->u.gpu.gpu_attr.device_attr, handle_ptr);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_handle_create");
-
+    /* no mapped addr yet, fill the handle */
     mpi_errno = fill_ipc_handle(ipc_attr, handle_ptr, ipc_handle);
     MPIR_ERR_CHECK(mpi_errno);
-
-    bool force = false;
-#ifdef MPL_HAVE_ZE
-    /* the drmfd path cannot have duplicate handles from the same buffer.
-     * Use "force=true" to force caching. */
-    if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
-        force = true;
-    }
-#endif
-    mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, ctx, &entry, force);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (entry) {
-        is_cached = true;
-        entry->in_use++;
+    if (is_cached) {
+        entry->range.in_use++;
     }
 
   fn_done:
     if (req) {
         MPIDI_SHM_REQUEST(req, ipc.u.handle.is_cached) = is_cached;
-        if (is_cached) {
-            MPIR_Assert(entry);
-            MPIDI_SHM_REQUEST(req, ipc.u.handle.handle_ptr) = entry->handle_ptr;
-        } else {
-            MPIDI_SHM_REQUEST(req, ipc.u.handle.handle_ptr) = handle_ptr;
-        }
+        MPIDI_SHM_REQUEST(req, ipc.u.handle.handle_ptr) = handle_ptr;
     }
     if (ipc_attr->ipc_type != MPIDI_IPCI_TYPE__DIRECT) {
         ipc_handle->gpu.handle_is_cached = is_cached;
@@ -745,8 +523,8 @@ int MPIDI_GPU_fill_ipc_handle_cache(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_exit:
     return mpi_errno;
   fn_fail:
-    if (handle_ptr) {
-        MPL_free(handle_ptr);
+    if (handle_ptr && !entry) {
+        MPIDI_GPU_handle_destroy(handle_ptr);
     }
     goto fn_exit;
 }
@@ -756,90 +534,16 @@ int MPIDI_GPU_ipc_cache_map_addr(void *base_addr, MPL_gpu_map_t map, int lrank)
     return ipc_track_cache_map_addr(base_addr, map, lrank);
 }
 
-/* Cache the local device buffer's mmap. Stores the mapping as a map_entry
- * with remote_lrank = local_rank in the ipc_handle_cache. On cache hit,
- * returns the cached mmap pointer. On miss, creates the IPC handle, inserts
- * into cache, maps it, and returns the new mmap pointer. */
+/* Use the cached host mmap of a local device buffer for a copy that is small enough
+ * for fast_memcpy. See MPIDU_gpu_cache_local_mmap. */
 int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
                              MPI_Aint data_sz, void **host_ptr_out)
 {
-    int mpi_errno = MPI_SUCCESS;
-
-    *host_ptr_out = dev_ptr;    /* default: unchanged */
-
-#ifdef MPL_HAVE_ZE
-    if (!MPL_gpu_attr_is_dev(attr)) {
-        goto fn_exit;
-    }
     if (data_sz > MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
-        goto fn_exit;
+        *host_ptr_out = dev_ptr;
+        return MPI_SUCCESS;
     }
-
-    void *pbase;
-    uintptr_t len;
-    int mpl_err = MPL_gpu_get_buffer_bounds(dev_ptr, &pbase, &len);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
-
-    uintptr_t offset = (uintptr_t) dev_ptr - (uintptr_t) pbase;
-    int local_rank = MPIR_Process.local_rank;
-
-    struct handle_cache_entry *entry = ipc_track_cache_search(pbase, len, default_am_ctx);
-    if (entry) {
-        /* search maps for local rank entry */
-        struct map_entry *maps = (entry->num_maps > IPC_STATIC_MAPS_SIZE) ?
-            entry->maps : entry->static_maps;
-        for (int i = 0; i < entry->num_maps; i++) {
-            if (maps[i].remote_lrank == local_rank) {
-                *host_ptr_out = (void *) ((uintptr_t) maps[i].map.mapped_addr + offset);
-                attr->type = MPL_GPU_POINTER_DEV_MMAP;
-                goto fn_exit;
-            }
-        }
-    } else {
-        bool force = false;
-        /* the drmfd path cannot have duplicate handles from the same buffer.
-         * Use "force=true" to force caching. */
-        if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
-            force = true;
-        }
-        if (!force && !ipc_track_cache_can_insert()) {
-            goto fn_exit;
-        }
-        /* cache miss: create IPC handle and insert */
-        MPL_gpu_ipc_mem_handle_t *handle_ptr = MPL_malloc(sizeof(*handle_ptr), MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP(!handle_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        mpl_err = MPL_gpu_ipc_handle_create(pbase, &attr->device_attr, handle_ptr);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_create");
-
-        mpi_errno = ipc_track_cache_insert(pbase, len, handle_ptr, default_am_ctx, &entry, force);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(entry);
-    }
-
-    /* map the local device buffer to host via mmap */
-    int dev_id = MPL_gpu_get_dev_id_from_attr(attr);
-    MPIDI_GPU_ipc_handle_t gpu_handle;
-    memset(&gpu_handle, 0, sizeof(gpu_handle));
-    gpu_handle.ipc_handle = *entry->handle_ptr;
-    gpu_handle.len = entry->len;
-
-    MPL_gpu_map_t map;
-    mpi_errno = MPIDI_GPU_ipc_handle_map_base(gpu_handle, dev_id, &map, true /* do_mmap */);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    ipc_track_cache_map_addr(pbase, map, local_rank);
-
-    *host_ptr_out = (void *) ((uintptr_t) map.mapped_addr + offset);
-    attr->type = MPL_GPU_POINTER_DEV_MMAP;
-
-  fn_exit:
-#endif
-    return mpi_errno;
-#ifdef MPL_HAVE_ZE
-  fn_fail:
-    goto fn_exit;
-#endif
+    return MPIDU_gpu_cache_local_mmap(dev_ptr, attr, host_ptr_out);
 }
 
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
@@ -1182,10 +886,10 @@ int MPIDI_GPU_ipc_handle_complete(MPIR_Request * req)
 
     MPL_gpu_ipc_mem_handle_t *handle_ptr = MPIDI_SHM_REQUEST(req, ipc.u.handle.handle_ptr);
     if (MPIDI_SHM_REQUEST(req, ipc.u.handle.is_cached)) {
-        struct handle_cache_entry *entry = ipc_track_cache_lookup(handle_ptr);
+        struct MPIDU_gpu_cache_entry *entry = MPIDU_gpu_cache_find_handle(handle_ptr);
         MPIR_Assert(entry);
-        entry->in_use--;
-        MPIR_Assert(entry->in_use >= 0);
+        entry->range.in_use--;
+        MPIR_Assert(entry->range.in_use >= 0);
     } else {
         mpi_errno = MPIDI_GPU_handle_destroy(handle_ptr);
         MPIR_ERR_CHECK(mpi_errno);
