@@ -133,6 +133,14 @@ int MPIR_Progress_hook_activate(int id)
     return mpi_errno;
 }
 
+int MPIR_Progress_hook_is_active(int id)
+{
+    int vci, i;
+    PARSE_HOOK_ID(id, vci, i);
+
+    return MPL_atomic_acquire_load_int(&progress_hooks[vci][i].active);
+}
+
 int MPIR_Progress_hook_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;

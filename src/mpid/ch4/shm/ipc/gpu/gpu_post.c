@@ -687,8 +687,7 @@ static int gpu_ipc_async_start(MPIR_Request * req, MPIR_gpu_req * req_p,
         p->yreq.type = MPIR_NULL_REQUEST;
     }
 
-    int vci = MPIDIG_REQUEST(req, req->local_vci);
-    mpi_errno = MPIR_Async_things_add_in_vci(gpu_ipc_async_poll, p, NULL, vci);
+    mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p, NULL);
 
     return mpi_errno;
 }

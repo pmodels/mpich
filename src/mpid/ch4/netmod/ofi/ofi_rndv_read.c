@@ -153,7 +153,7 @@ int MPIDI_OFI_rndvread_recv_mrs_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
     p->u.recv.all_issued = false;
 
     /* issue fi_read */
-    mpi_errno = MPIDI_OFI_async_things_add(rndvread_read_poll, rreq, NULL, p->vci_local);
+    mpi_errno = MPIR_Async_things_add(rndvread_read_poll, rreq, NULL);
 
     return mpi_errno;
 }
@@ -306,8 +306,7 @@ static int async_recv_copy(MPIR_Request * rreq, void *chunk_buf, MPI_Aint chunk_
     p->chunk_buf = chunk_buf;
     p->chunk_sz = chunk_sz;
 
-    int vci = MPIDI_OFI_AMREQ_READ(rreq).vci_local;
-    mpi_errno = MPIDI_OFI_async_things_add(recv_copy_poll, p, NULL, vci);
+    mpi_errno = MPIR_Async_things_add(recv_copy_poll, p, NULL);
 
   fn_exit:
     return mpi_errno;

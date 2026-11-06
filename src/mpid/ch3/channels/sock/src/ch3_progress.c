@@ -801,13 +801,13 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
  * The dynamic-library interface requires a unified Progress routine.
  * This is that routine.
  */
-extern int MPII_async_things_pending;
+int MPIR_Async_things_pending(void);
 
 int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state * state)
 {
     int mpi_errno;
     int spinning = 0;
-    if (MPII_async_things_pending && blocking) {
+    if (MPIR_Async_things_pending() && blocking) {
         /* the caller is going to spin on us instead of blocking */
         blocking = 0;
         spinning = 1;
