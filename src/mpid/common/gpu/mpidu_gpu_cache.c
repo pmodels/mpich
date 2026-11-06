@@ -140,8 +140,10 @@ struct MPIDU_gpu_cache_entry *MPIDU_gpu_cache_find_handle(MPL_gpu_ipc_mem_handle
 
 /* Cache the host mmap of a local device buffer. On success *host_ptr_out is the host
  * address of dev_ptr and attr->type is MPL_GPU_POINTER_DEV_MMAP, so that
- * MPIR_Localcopy_gpu copies directly. Otherwise (not ZE device memory, or no room in
- * the cache) *host_ptr_out is dev_ptr and attr is unchanged. */
+ * MPIR_Localcopy_gpu copies directly. A new buffer evicts the least recently used
+ * entry that is not in use when the cache is full. Otherwise (not ZE device memory,
+ * every entry in use, or caching disabled) *host_ptr_out is dev_ptr and attr is
+ * unchanged. */
 int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -164,7 +166,13 @@ int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!entry) {
-        if (!gpu_cache.force_insert && !MPIR_range_cache_can_insert(&gpu_cache.cache)) {
+        /* evict the least recently used entry if the cache is full */
+        bool has_room;
+        mpi_errno = MPIR_range_cache_make_room(&gpu_cache.cache, gpu_cache.force_insert, NULL,
+                                               &has_room);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (!has_room) {
+            /* every entry is in use, or caching is disabled */
             goto fn_exit;
         }
         MPL_gpu_ipc_mem_handle_t *handle_ptr;

@@ -97,9 +97,22 @@ struct MPIR_range_cache_entry *MPIR_range_cache_find(struct MPIR_range_cache *ca
     return NULL;
 }
 
-bool MPIR_range_cache_can_insert(struct MPIR_range_cache * cache)
+/* evict as insert would; *has_room_out tells whether an insert would succeed */
+int MPIR_range_cache_make_room(struct MPIR_range_cache *cache, bool force, void *ctx,
+                               bool * has_room_out)
 {
-    return cache->count < cache->limit;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = cache_check_limit(cache, ctx);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int limit = force ? cache->max_entries : cache->limit;
+    *has_room_out = (cache->count < limit);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_range_cache_insert(struct MPIR_range_cache *cache, struct MPIR_range_cache_entry *entry,
