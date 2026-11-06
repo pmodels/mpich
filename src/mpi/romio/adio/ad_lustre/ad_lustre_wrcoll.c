@@ -381,6 +381,13 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     ADIO_Offset off, req_off, send_off, iter_st_off, *off_list;
     ADIO_Offset max_size, step_size = 0;
     int real_size;
+    /* First I/O error seen inside the write loop below.  That loop performs
+     * point-to-point exchanges which every rank must take part in, and the
+     * caller ends with a collective MPI_Allreduce on error_code.  Leaving the
+     * loop early on a single rank therefore deadlocks every other rank, so
+     * record the error, stop writing, and keep taking part in the exchanges
+     * until the loop ends. */
+    int deferred_error = MPI_SUCCESS;
     MPI_Count *recv_count, *send_curr_offlen_ptr, *recv_curr_offlen_ptr;
     MPI_Count *recv_size, *send_size;
     MPI_Count *sent_to_proc, *recv_start_pos;
@@ -591,8 +598,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                      buftype_extent, this_buf_idx,
                                      &srt_off, &srt_len, &srt_num, error_code);
 
-        if (*error_code != MPI_SUCCESS)
-            goto over;
+        if (*error_code != MPI_SUCCESS) {
+            if (deferred_error == MPI_SUCCESS)
+                deferred_error = *error_code;
+            *error_code = MPI_SUCCESS;
+        }
 
         flag = 0;
         for (i = 0; i < nprocs; i++)
@@ -600,7 +610,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                 flag = 1;
                 break;
             }
-        if (flag) {
+        if (flag && deferred_error == MPI_SUCCESS) {
             /* check whether to do data sieving */
             if (data_sieving == ADIOI_HINT_ENABLE) {
                 ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
@@ -630,8 +640,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                     ADIO_WriteContig(fd, write_buf + block_offset - off, block_len,
                                                      MPI_BYTE, ADIO_EXPLICIT_OFFSET, block_offset,
                                                      &status, error_code);
-                                    if (*error_code != MPI_SUCCESS)
-                                        goto over;
+                                    if (*error_code != MPI_SUCCESS) {
+                                        if (deferred_error == MPI_SUCCESS)
+                                            deferred_error = *error_code;
+                                        *error_code = MPI_SUCCESS;
+                                    }
                                     block_offset = srt_off[i];
                                     block_len = srt_len[i];
                                 }
@@ -645,17 +658,28 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                          block_len,
                                          MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                          block_offset, &status, error_code);
-                        if (*error_code != MPI_SUCCESS)
-                            goto over;
+                        if (*error_code != MPI_SUCCESS) {
+                            if (deferred_error == MPI_SUCCESS)
+                                deferred_error = *error_code;
+                            *error_code = MPI_SUCCESS;
+                        }
                     }
                 }
             }
-            if (*error_code != MPI_SUCCESS)
-                goto over;
+            if (*error_code != MPI_SUCCESS) {
+                if (deferred_error == MPI_SUCCESS)
+                    deferred_error = *error_code;
+                *error_code = MPI_SUCCESS;
+            }
         }
         iter_st_off += max_size;
     }
-  over:
+
+    /* Surface the deferred error so the caller's collective MPI_Allreduce
+     * reports it on every rank. */
+    if (deferred_error != MPI_SUCCESS)
+        *error_code = deferred_error;
+
     if (srt_off)
         ADIOI_Free(srt_off);
     if (srt_len)
