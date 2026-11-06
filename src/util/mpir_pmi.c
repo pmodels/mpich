@@ -988,17 +988,12 @@ static void free_hwloc_topology(void)
 {
     if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_FALLBACK) {
         hwloc_topology_destroy(hwloc_topology);
-        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
     }
-#ifdef HAVE_PMIX_LOAD_TOPOLOGY
-/* starting pmix 6.1.0, the topology are freed in pmix_finalize. */
-#if !(PMIX_VERSION_MAJOR > 6 || (PMIX_VERSION_MAJOR == 6 && PMIX_VERSION_MINOR >= 1))
-    if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_PMIX) {
-        PMIX_TOPOLOGY_DESTRUCT(&ptopo);
-        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
-    }
-#endif
-#endif
+    /* A topology from PMIx_Load_topology() belongs to the PMIx library,
+     * which frees it when the client finalizes (OpenPMIx 5.0.10 and 6.1.0
+     * and later do; earlier versions leak it).  Destroying it here is a
+     * double free with the newer versions, so just drop our reference. */
+    got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
 }
 
 int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo)
