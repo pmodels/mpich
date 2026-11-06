@@ -19,9 +19,17 @@ struct csel_subtree_hash_item {
     UT_hash_handle hh;
 };
 
+/* what a subtree's name says: a restriction set of coll_type, or a free subtree */
+struct csel_set {
+    int coll_type;              /* -1: a free name, reached only by call= */
+    unsigned mask;
+    unsigned variant_mask;      /* the -xxx variants: tuned under the restrictions xxx_coll */
+};
+
 struct csel_subtree {
     MPIR_Csel_node_s *node;
     const MPII_Csel_json_s *json_obj;   /* valid only while loading */
+    struct csel_set set;
 };
 
 /* a dictionary maps subtree name to index into the utarray csel_subtree */
@@ -33,6 +41,7 @@ int csel_main_idx = -1;
 
 static void add_named_tree(const char *name, const MPII_Csel_json_s * obj);
 static void replace_named_tree(int tree_idx, const MPII_Csel_json_s * obj);
+static bool is_tree_name_valid(const char *name);
 static int parse_named_trees(void);
 static void free_tree(MPIR_Csel_node_s * node);
 
@@ -385,6 +394,12 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         if (is_name && strlen(val->key + 5) >= CSEL_MAX_NAME) {
             return MPII_Csel_json_error(val, "subtree name is too long");
         }
+        if (is_name && !is_tree_name_valid(val->key + 5)) {
+            return MPII_Csel_json_error(val, "malformed restriction set name: the mask is in "
+                                        "lowercase hex without leading zeros, and a variant "
+                                        "-xxx names a restriction xxx_coll, e.g. "
+                                        "bcast-intra-210-gpu");
+        }
     }
 
     if (has_names) {
@@ -577,9 +592,120 @@ const char *MPII_Csel_tree_name(int tree_idx)
     return "?";
 }
 
+static const struct csel_set *tree_set(int tree_idx)
+{
+    struct csel_subtree *p = (void *) utarray_eltptr(csel_subtrees, tree_idx);
+    MPIR_Assert(p);
+    return &p->set;
+}
+
+bool MPII_Csel_tree_is_reserved(int tree_idx)
+{
+    return tree_set(tree_idx)->coll_type >= 0;
+}
+
+bool MPII_Csel_tree_is_coll_type(int tree_idx, int coll_type)
+{
+    return tree_set(tree_idx)->coll_type == coll_type;
+}
+
+/* a local set is where the dispatch first goes when a _local restriction holds; it swaps the
+ * buffers or leaves the local restrictions out with dispatch(<mask>) */
+bool MPII_Csel_tree_is_local(int tree_idx)
+{
+    return MPII_Csel_tree_is_reserved(tree_idx) &&
+        (tree_set(tree_idx)->mask & MPIR_CSEL_LOCAL_RESTRICTIONS);
+}
+
+unsigned MPII_Csel_tree_variant_mask(int tree_idx)
+{
+    return tree_set(tree_idx)->variant_mask;
+}
+
+unsigned MPII_Csel_tree_mask(int tree_idx)
+{
+    return tree_set(tree_idx)->mask;
+}
+
+/* the restriction xxx_coll of a variant -xxx, or -1 */
+static int variant_bit(const char *variant, size_t len)
+{
+    for (int k = 0; k < MPIR_CSEL_NUM_RESTRICTIONS; k++) {
+        const char *rname = MPIR_Csel_condition_names[k];
+        if ((MPIR_CSEL_COLL_RESTRICTIONS & (1u << k)) && strncmp(rname, variant, len) == 0 &&
+            strcmp(rname + len, "_coll") == 0) {
+            return k;
+        }
+    }
+    return -1;
+}
+
+/* Classify a subtree name. A name of the reserved form, <coll>-<intra|inter>-<hex digits>, alone
+ * or followed by "-", is a restriction set, and each "-xxx" after the mask is a variant: a set
+ * tuned under the restriction xxx_coll. It is malformed, and parse_set_name returns false, unless
+ * the mask is in lowercase hex without leading zeros and the variants name _coll restrictions, in
+ * the order of their bits. MPII_Csel_validate checks its restrictions. */
+static bool parse_set_name(const char *name, struct csel_set *set)
+{
+    set->coll_type = -1;
+    set->mask = 0;
+    set->variant_mask = 0;
+
+    for (int t = 0; t < MPIR_CSEL_NUM_COLL_TYPES; t++) {
+        const char *tname = MPIR_Coll_type_names[t];
+        size_t n = strlen(tname);
+        if (strncmp(name, tname, n) != 0 || name[n] != '-') {
+            continue;
+        }
+        const char *hex = name + n + 1;
+        size_t h = strspn(hex, "0123456789abcdefABCDEF");
+        const char *rest = hex + h;
+        if (h == 0 || (*rest != '\0' && *rest != '-')) {
+            /* a free name */
+            return true;
+        }
+
+        char buf[100];
+        unsigned long mask = h <= 8 ? strtoul(hex, NULL, 16) : 0;
+        snprintf(buf, sizeof(buf), "%lx", mask);
+        if (h > 8 || strlen(buf) != h || strncmp(buf, hex, h) != 0) {
+            return false;
+        }
+        int last = -1;
+        while (*rest) {
+            rest++;
+            size_t len = strcspn(rest, "-");
+            int k = variant_bit(rest, len);
+            if (k <= last) {
+                return false;
+            }
+            set->variant_mask |= 1u << k;
+            last = k;
+            rest += len;
+        }
+
+        set->coll_type = t;
+        set->mask = (unsigned) mask;
+        return true;
+    }
+
+    return true;
+}
+
+/* a malformed restriction set name is an error, so that a typo cannot turn a set into a free
+ * subtree that nothing reaches */
+static bool is_tree_name_valid(const char *name)
+{
+    struct csel_set set;
+    return parse_set_name(name, &set);
+}
+
 static void add_named_tree(const char *name, const MPII_Csel_json_s * obj)
 {
-    struct csel_subtree item = { NULL, obj };
+    struct csel_set set;
+    /* is_tree_name_valid has checked the name */
+    parse_set_name(name, &set);
+    struct csel_subtree item = { NULL, obj, set };
     utarray_push_back(csel_subtrees, &item, MPL_MEM_COLL);
 
     /* map the name to tree_idx */

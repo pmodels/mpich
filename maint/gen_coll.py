@@ -723,8 +723,17 @@ def dump_MPIR_Csel_container_type_e():
     for r in local_restrictions():
         local_bits |= 1 << G.restrictions.index(r)
     G.out2.append("")
+    G.out2.append("/* the restrictions are the first conditions; restriction k is mask bit k */")
+    G.out2.append("#define MPIR_CSEL_NUM_RESTRICTIONS %d" % len(G.restrictions))
+    G.out2.append("")
     G.out2.append("/* the restrictions that can differ between the ranks of a call */")
     G.out2.append("#define MPIR_CSEL_LOCAL_RESTRICTIONS 0x%x" % local_bits)
+    coll_bits = 0
+    for r in coll_restrictions():
+        coll_bits |= 1 << G.restrictions.index(r)
+    G.out2.append("")
+    G.out2.append("/* the restrictions that a set name can have as a variant, -xxx for xxx_coll */")
+    G.out2.append("#define MPIR_CSEL_COLL_RESTRICTIONS 0x%x" % coll_bits)
 
 def dump_MPIR_Csel_node_type_e():
     """generate condition IDs as CSEL_NODE_TYPE__OPERATOR__XXX."""
@@ -810,6 +819,10 @@ def load_cvar_file(path):
 def local_restrictions():
     """The restrictions that can differ between the ranks of a call, by their _local suffix."""
     return [r for r in G.restrictions if r.endswith("_local")]
+
+def coll_restrictions():
+    """The restrictions that are the same on all ranks by a promise, by their _coll suffix."""
+    return [r for r in G.restrictions if r.endswith("_coll")]
 
 def check_local_algos():
     """An algorithm restricted on a local condition only clears it and continues in auto, so that

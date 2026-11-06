@@ -55,8 +55,18 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
 int MPIR_Coll_search_and_run(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig);
 
-/* the named subtrees of csel.c, for csel_validation.c */
+/* Two types of subtrees:
+ *   - A reserved-name subtree, <coll>-<intra|inter>-<mask in hex>[-xxx], is a restriction set of
+ *     the collective <coll>-<intra|inter>: the dispatch selects it when the restrictions in mask
+ *     hold, bit k being restriction k. A variant -xxx is a set tuned under the restriction
+ *     xxx_coll.
+ *   - A user-named subtree, any other name, is reachable only via call=. */
 int MPII_Csel_num_trees(void);
+bool MPII_Csel_tree_is_reserved(int tree_idx);
+bool MPII_Csel_tree_is_coll_type(int tree_idx, int coll_type);
+bool MPII_Csel_tree_is_local(int tree_idx);
+unsigned MPII_Csel_tree_variant_mask(int tree_idx);
+unsigned MPII_Csel_tree_mask(int tree_idx);
 int MPII_Csel_name_to_idx(const char *name);
 const char *MPII_Csel_tree_name(int tree_idx);
 MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int tree_idx);
