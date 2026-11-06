@@ -309,6 +309,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             /* Deregister failed socket */
             status = HYDT_dmx_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
+            PMIP_pmi_cancel_pending_reqs(p);
             close(fd);
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
