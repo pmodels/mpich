@@ -92,11 +92,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
+        void *recv_buf = MPIDI_OFI_REQUEST(rreq, buf);
+        MPL_pointer_attr_t recv_attr;
+        MPIR_GPU_query_pointer_attr(recv_buf, &recv_attr);
+        mpi_errno = MPIDI_OFI_gpu_mmap_cached(&recv_buf, MPIDI_OFI_REQUEST(rreq, datatype), count,
+                                              &recv_attr, MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
                                        MPIR_BYTE_INTERNAL, 0, NULL,
-                                       MPIDI_OFI_REQUEST(rreq, buf),
+                                       recv_buf,
                                        MPIDI_OFI_REQUEST(rreq, count),
-                                       MPIDI_OFI_REQUEST(rreq, datatype), 0, NULL,
+                                       MPIDI_OFI_REQUEST(rreq, datatype), 0, &recv_attr,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");

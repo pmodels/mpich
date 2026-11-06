@@ -2498,6 +2498,15 @@ Specifies the maximum number of iovecs CH4 OFI records for libfabric fetch-atomi
 
 Used in functions: `MPIDI_OFI_init_settings`, `dump_global_settings`
 
+### MPIR_CVAR_CH4_OFI_GPU_MMAP_CACHE
+
+Controls whether CH4 OFI uses the cached host mmap of a device buffer for small staging copies between the device buffer and the host pack buffer: the send-side device-to-host copy on the inject and eager paths, and the receive-side host-to-device unpack. It applies only in ZE builds, to contiguous device buffers, and only to copies that are already fast (CPU) copies, i.e. at or below `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H` (send) or `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D` (receive). The mmap and the IPC handle behind it are kept in the GPU handle cache shared with the GPU IPC shmmod, whose size is set by `MPIR_CVAR_GPU_HANDLE_CACHE_SIZE`; a new buffer evicts the least recently used entry that is not in use. When active, a small device-buffer message no longer maps and unmaps the whole allocation on every copy.
+
+* true - default, use the cached host mmap for small staging copies.
+* false - map and unmap the device buffer in every small staging copy, as before.
+
+Used in functions: `MPIDI_OFI_gpu_mmap_cached`
+
 ### MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
 
 Sets the message-size threshold for using GPU direct RDMA with registered GPU memory in CH4 OFI point-to-point transfers. It is used on GPU send and receive paths only when OFI HMEM support and MR HMEM support are enabled; sends also require a strict GPU device buffer and contiguous datatype before the threshold can select the direct RDMA path, and receives additionally require a contiguous datatype and strict GPU device receive buffer before registering memory. When active, this CVAR sets the cutoff at which CH4 OFI stops staging GPU data through host packing for MR HMEM-capable GPU direct RDMA paths.
