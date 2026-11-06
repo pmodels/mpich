@@ -70,8 +70,19 @@ AC_ARG_WITH([cuda-sm],
 # --with-cuda
 AC_ARG_VAR([NVCC], [nvcc compiler to use])
 PAC_SET_HEADER_LIB_PATH([cuda])
+# With --enable-dlopen, CUDA libraries are linked into a separate convenience
+# library rather than libyaksa. Collect the libraries in YAKSA_CUDA_LIBS rather
+# than LIBS.
+YAKSA_CUDA_LIBS=
+AC_SUBST(YAKSA_CUDA_LIBS)
 if test "$with_cuda" != "no" ; then
-    PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+    if test "$yaksa_enable_dlopen" = "yes" ; then
+        PAC_PUSH_FLAG([LIBS])
+        PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+        PAC_POP_FLAG([LIBS])
+    else
+        PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+    fi
     if test "${have_cuda}" = "yes" ; then
         # check if NVCC has been set by the user
         if test -z "$NVCC" ; then
@@ -126,7 +137,9 @@ if test "$with_cuda" != "no" ; then
                 [libstdcpp_works=no])
             PAC_POP_FLAG([LIBS])
             if test "${libstdcpp_works}" = "yes" ; then
-                PAC_APPEND_FLAG([-lstdc++],[LIBS])
+                if test "$yaksa_enable_dlopen" != "yes" ; then
+                    PAC_APPEND_FLAG([-lstdc++],[LIBS])
+                fi
                 AC_MSG_RESULT([yes])
             else
                 have_cuda=no
@@ -140,7 +153,24 @@ if test "$with_cuda" != "no" ; then
         AC_MSG_ERROR([CUDA was requested but it is not functional])
     fi
 fi
+yaksa_cuda_dlopen=no
+if test "${have_cuda}" = "yes" -a "$yaksa_enable_dlopen" = "yes" ; then
+    if test "$enable_shared" = "no" ; then
+        AC_MSG_ERROR([--enable-dlopen requires building shared libraries])
+    fi
+    if test "$enable_embedded" != "yes" ; then
+        AC_MSG_ERROR([--enable-dlopen is only supported when yaksa is embedded in a parent project])
+    fi
+    AC_CHECK_LIB(dl, dlopen)
+    yaksa_cuda_dlopen=yes
+    YAKSA_CUDA_LIBS="-lcudart -lstdc++"
+    AC_DEFINE([YAKSA_CUDA_DLOPEN],[1],[Define if the CUDA backend is built as a piece of a dlopen module])
+    AC_DEFINE([YAKSA_CUDA_MODULE_NAME],["libmpich_cuda.so"],[File name of the dlopen module that contains the CUDA backend])
+fi
 AM_CONDITIONAL([BUILD_CUDA_BACKEND], [test x${have_cuda} = xyes])
+AM_CONDITIONAL([BUILD_CUDA_DLOPEN], [test "$yaksa_cuda_dlopen" = "yes"])
+YAKSA_CUDA_DLOPEN=$yaksa_cuda_dlopen
+AC_SUBST(YAKSA_CUDA_DLOPEN)
 AM_CONDITIONAL([BUILD_CUDA_TESTS], [test x${have_cuda} = xyes])
 
 
