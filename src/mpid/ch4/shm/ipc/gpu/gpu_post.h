@@ -8,8 +8,7 @@
 #include "gpu_pre.h"
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
-void MPIDI_GPU_handle_free_hook(void *dptr);
-int MPIDI_GPU_ipc_cache_finalize(void);
+int MPIDI_GPU_ipc_cache_init(void);
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
@@ -27,7 +26,6 @@ int MPIDI_GPU_ipc_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr,
                              MPI_Aint data_sz, void **host_ptr_out);
 int MPIDI_GPU_init_local(void);
 int MPIDI_GPU_comm_bootstrap(MPIR_Comm * comm);
-int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz);
 int MPIDI_GPU_write_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * sreq);
 int MPIDI_GPU_handle_destroy(void *handle);
