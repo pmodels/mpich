@@ -88,7 +88,7 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
                                      int q_len, int num_pending, int num_chunks, int all_size,
                                      int chunk_size, int last_chunk_size, bool inverse_order,
                                      void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                     MPIR_Comm * comm, int coll_attr)
+                                     MPIR_Comm * comm, int coll_attr, int tag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -116,8 +116,14 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     MPIR_Type_get_true_extent_impl(datatype, &queue->true_lb, &dummy);
     queue->inverse_order = inverse_order;
 
-    mpi_errno = MPIR_Sched_next_tag(comm, &queue->tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* a nonblocking call uses the tag of its call chain. Drawing one from comm could collide
+     * when comm is the local_comm of an intercomm, which shares the intercomm's context id. */
+    if (tag) {
+        queue->tag = tag;
+    } else {
+        mpi_errno = MPIR_Sched_next_tag(comm, &queue->tag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* circular array of pending blocks
      *     block2pending(n): n % num_pending
@@ -186,7 +192,7 @@ void MPII_cga_queue_free(MPII_cga_request_queue * queue)
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
-                              MPIR_Comm * comm, int coll_attr)
+                              MPIR_Comm * comm, int coll_attr, int tag)
 {
     int mpi_errno;
 
@@ -208,7 +214,7 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
 
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
                                           chunk_size, last_chunk_size, inverse_order,
-                                          buf, count, datatype, comm, coll_attr);
+                                          buf, count, datatype, comm, coll_attr, tag);
 
     queue->coll_type = MPII_CGA_BCAST;
     queue->buf_extent = 0;
@@ -240,7 +246,7 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
 
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, all_size,
                                           chunk_size, last_chunk_size, inverse_order,
-                                          buf, count, datatype, comm, coll_attr);
+                                          buf, count, datatype, comm, coll_attr, 0);
 
     queue->coll_type = MPII_CGA_BCAST;
 
@@ -296,7 +302,7 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     bool inverse_order = true;
     mpi_errno = init_request_queue_common(queue, q_len, num_pending, num_chunks, 1,
                                           chunk_size, last_chunk_size, inverse_order,
-                                          recvbuf, count, datatype, comm, coll_attr);
+                                          recvbuf, count, datatype, comm, coll_attr, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     queue->coll_type = MPII_CGA_REDUCE;
