@@ -11,5 +11,6 @@ int MPIR_Progress_hook_register(int vci, int (*progress_fn) (int, int *), int *i
 int MPIR_Progress_hook_deregister(int id);
 int MPIR_Progress_hook_activate(int id);
 int MPIR_Progress_hook_deactivate(int id);
+int MPIR_Progress_hook_is_active(int id);
 
 #endif /* MPIR_PROGRESS_HOOK_H_INCLUDED */

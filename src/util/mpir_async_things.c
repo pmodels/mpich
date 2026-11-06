@@ -10,8 +10,6 @@ static struct MPIR_Async_thing *async_things_list[MPIR_MAX_VCIS + 1];
 static MPID_Thread_mutex_t async_things_mutex[MPIR_MAX_VCIS + 1];
 static int async_things_progress_hook_id[MPIR_MAX_VCIS + 1];
 
-int MPII_async_things_pending = 0;
-
 int MPIR_Async_things_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -70,7 +68,6 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
 
     if (was_empty) {
         MPIR_Progress_hook_activate(async_things_progress_hook_id[vci]);
-        MPII_async_things_pending++;
     }
 
     return MPI_SUCCESS;
@@ -89,6 +86,12 @@ int MPIR_Async_things_add_in_vci(int (*poll_fn) (struct MPIR_Async_thing * entry
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[vci]);
 
     return mpi_errno;
+}
+
+/* For ch3, which has no streams: whether it may block in its progress */
+int MPIR_Async_things_pending(void)
+{
+    return MPIR_Progress_hook_is_active(async_things_progress_hook_id[MPIR_MAX_VCIS]);
 }
 
 /* If we allow async callbacks to call MPI progress, e.g. make blocking MPI calls,
@@ -121,7 +124,6 @@ int MPIR_Async_things_progress(int vci, int *made_progress)
             MPL_free(entry);
             if (async_things_list[vci] == NULL) {
                 MPIR_Progress_hook_deactivate(async_things_progress_hook_id[vci]);
-                MPII_async_things_pending--;
             }
         }
     }

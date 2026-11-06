@@ -57,6 +57,7 @@ int MPIR_Async_things_finalize(void);
 int MPIR_Async_things_add(MPIX_Async_poll_function poll_fn, void *state, MPIR_Stream * stream_ptr);
 int MPIR_Async_things_add_in_vci(MPIX_Async_poll_function poll_fn, void *state,
                                  MPIR_Stream * stream_ptr, int vci);
+int MPIR_Async_things_pending(void);
 int MPIR_Async_things_progress(int vci, int *made_progress);
 
 #endif /* MPIR_ASYNC_THINGS_H_INCLUDED */
