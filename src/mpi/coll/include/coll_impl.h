@@ -152,6 +152,7 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             mpi_errno = MPIR_Coll_greq_create((MPIR_Coll_greq_t **) &coll_sig->sched); \
             MPIR_ERR_CHECK(mpi_errno); \
             coll_sig->sched_type = MPIR_SCHED_GREQ; \
+            ((MPIR_Coll_greq_t *) coll_sig->sched)->tag = coll_sig->tag; \
         } else { \
             MPIR_Assert(coll_sig->sched_type == MPIR_SCHED_GREQ); \
         } \

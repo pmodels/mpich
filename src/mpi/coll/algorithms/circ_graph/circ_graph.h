@@ -135,7 +135,7 @@ int MPIR_cga_finalize(void);
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
                               void *buf, MPI_Aint count, MPI_Datatype datatype,
-                              MPIR_Comm * comm, int coll_attr);
+                              MPIR_Comm * comm, int coll_attr, int tag);
 int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pending,
                                   void *buf, MPI_Aint count, MPI_Datatype datatype,
                                   MPIR_Comm * comm, int coll_attr, int rank, int comm_size);

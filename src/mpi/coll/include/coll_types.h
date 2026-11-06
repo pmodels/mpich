@@ -48,6 +48,7 @@ typedef struct MPIR_Coll_greq {
     void (*free_fn) (void *state);
     /* set up before _init */
     MPIR_Coll_owned_t owned;
+    int tag;                    /* the tag of the call chain */
 } MPIR_Coll_greq_t;
 
 /* Collectives request data structure */

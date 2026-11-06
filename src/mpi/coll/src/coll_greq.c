@@ -16,6 +16,7 @@ int MPIR_Coll_greq_create(MPIR_Coll_greq_t ** greq_out)
     greq->start_fn = NULL;
     greq->free_fn = NULL;
     MPIR_Coll_owned_init(&greq->owned);
+    greq->tag = 0;
 
     *greq_out = greq;
 

@@ -184,7 +184,7 @@ int MPIR_Ibcast_intra_circ_graph_init(void *buffer, MPI_Aint count, MPI_Datatype
     int min_pending_blocks = q * 2;
     int coll_attr = 0;
     mpi_errno = MPII_cga_init_bcast_queue(&state->queue, min_pending_blocks,
-                                          buffer, count, datatype, comm, coll_attr);
+                                          buffer, count, datatype, comm, coll_attr, greq->tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     int n = state->queue.num_chunks;
