@@ -126,7 +126,7 @@ int main(int argc, char **argv)
         }
 
         for (iter = 0; iter < niter; iter++) {
-#	    if defined(TEST_RECV_VECTOR)
+#if defined(TEST_RECV_VECTOR)
             {
                 if (MPI_Recv(buf, msg_sz, MPI_INT, 0, iter, MPI_COMM_WORLD, &status) != MPI_SUCCESS) {
                     printf("ERROR: problem with MPI_Recv\n");
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
                     }
                 }
             }
-#	    else
+#else
             {
                 if (MPI_Recv(buf, 1, dt, 0, iter, MPI_COMM_WORLD, &status)
                     != MPI_SUCCESS) {
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
                     }
                 }
             }
-#	    endif
+#endif
         }
 
         printf("All messages successfully received!\n");

@@ -102,22 +102,22 @@ static int isIdentity(MPI_Comm comm, int mat[])
     MPI_Comm_size(comm, &size);
 
     for (i=0; i<size; i++) {
-	for (j=0; j<size; j++) {
-	    if (j == i) {
-		if (mat[j+i*size] != 1) {
-		    printf("mat(%d,%d) = %d, should = 1\n",
-			    i, j, mat[j+i*size]);
-		    errs++;
-		}
-	    }
-	    else {
-		if (mat[j+i*size] != 0) {
-		    printf("mat(%d,%d) = %d, should = 0\n",
-			    i, j, mat[j+i*size]);
-		    errs++;
-		}
-	    }
-	}
+        for (j=0; j<size; j++) {
+            if (j == i) {
+                if (mat[j+i*size] != 1) {
+                    printf("mat(%d,%d) = %d, should = 1\n",
+                            i, j, mat[j+i*size]);
+                    errs++;
+                }
+            }
+            else {
+                if (mat[j+i*size] != 0) {
+                    printf("mat(%d,%d) = %d, should = 0\n",
+                            i, j, mat[j+i*size]);
+                    errs++;
+                }
+            }
+        }
     }
     return errs;
 }

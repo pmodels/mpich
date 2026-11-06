@@ -16,7 +16,7 @@
    return value of other than MPI_SUCCESS in these routines indicates an
    error in the error handling by the MPI implementation */
 
-#define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(a) if (verbose) { printf a; fflush(stdout); }
 
 #ifdef MTEST_LARGE_PORT_NAME
 #define PORT_SIZE 4096

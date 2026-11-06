@@ -14,7 +14,7 @@
 #include <string.h>
 #endif
 
-#define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(a) if (verbose) { printf a; fflush(stdout); }
 #define DATA_VALUE 123
 #define DATA_TAG 100
 #define SENDER_RANK 0

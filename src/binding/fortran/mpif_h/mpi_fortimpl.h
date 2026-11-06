@@ -13,7 +13,7 @@
 #define MPI_ABI
 
 #if defined(HAVE_VISIBILITY)
-#define MPICH_API_PUBLIC __attribute__((visibility ("default")))
+#define MPICH_API_PUBLIC __attribute__ ((visibility("default")))
 #else
 #define MPICH_API_PUBLIC
 #endif

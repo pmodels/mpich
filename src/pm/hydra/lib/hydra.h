@@ -123,7 +123,7 @@ extern char *HYD_dbg_prefix;
 
 #ifndef ATTRIBUTE
 #ifdef HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a_) __attribute__(a_)
+#define ATTRIBUTE(a_) __attribute__ (a_)
 #else
 #define ATTRIBUTE(a_)
 #endif

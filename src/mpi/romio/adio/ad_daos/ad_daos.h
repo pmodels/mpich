@@ -18,7 +18,7 @@
 
 #define PRINT_MSG(str, fmt, ...)                                        \
     do {                                                                \
-        fprintf(str, "%s:%d %s() - " fmt"\n" ,                          \
+        fprintf(str, "%s:%d %s() - " fmt"\n",                           \
                 __FILE__, __LINE__, __func__, ##__VA_ARGS__);           \
     } while (0)
 

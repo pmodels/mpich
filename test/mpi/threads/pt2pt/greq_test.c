@@ -18,7 +18,7 @@
 #define IF_VERBOSE(a) \
 do { \
     if (verbose) { \
-        printf a ; \
+        printf a; \
         fflush(stdout); \
     } \
 } while (0)

@@ -11,9 +11,9 @@
 int run(const char *arg);
 #endif
 
-#define COUNT		2
-#define SIZE		340
-#define EL_COUNT	1131
+#define COUNT           2
+#define SIZE            340
+#define EL_COUNT        1131
 
 static char s_buf[EL_COUNT * SIZE];
 static char r_buf[EL_COUNT * SIZE];

@@ -20,8 +20,8 @@ int comm_world_size;
 #define CHECK_SUCCESS(status) \
 { \
     if (status != MPI_SUCCESS) { \
-	fprintf(stderr, "Routine on line %d returned with error status\n", __LINE__); \
-	MPI_Abort(MPI_COMM_WORLD, -1); \
+        fprintf(stderr, "Routine on line %d returned with error status\n", __LINE__); \
+        MPI_Abort(MPI_COMM_WORLD, -1); \
     } \
 }
 

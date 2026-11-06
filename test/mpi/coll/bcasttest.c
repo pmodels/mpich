@@ -53,7 +53,7 @@ int run(const char *arg)
                     }
                 }
             }
-#	    ifdef DEBUG
+#ifdef DEBUG
             {
                 printf("rank=%d, n=%d, reps=%d\n", rank, n, reps);
             }

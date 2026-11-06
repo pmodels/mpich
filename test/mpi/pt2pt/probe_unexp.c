@@ -67,12 +67,12 @@ int run(const char *arg)
                                 ("ERROR: unexpected message tag from MPI_Recv(): lp=0, rp=%d, expected=%d, actual=%d, count=%d\n",
                                  status.MPI_SOURCE, status.MPI_TAG, tag, msg_cnt);
                         }
-#		    if defined(VERBOSE)
+#if defined(VERBOSE)
                         {
                             printf("sending message: p=%d s=%d c=%d\n",
                                    status.MPI_SOURCE, msg_size, msg_cnt);
                         }
-#		    endif
+#endif
 
                         /* Send unexpected message which hopefully MPI_Probe() is
                          * already waiting for at the remote process */

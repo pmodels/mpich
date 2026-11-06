@@ -14,7 +14,7 @@
 #include <string.h>
 #endif
 
-#define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(a) if (verbose) { printf a; fflush(stdout); }
 
 /*
 static char MTEST_Descrip[] = "A simple test of Comm_disconnect";

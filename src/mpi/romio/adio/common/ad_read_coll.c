@@ -808,7 +808,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     MPE_Log_event(5032, 0, NULL);
 #endif
 
-    j = 0;            // think of this as a counter of non-zero sends/recs
+    j = 0;      // think of this as a counter of non-zero sends/recs
     if (buftype_is_contig) {
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
