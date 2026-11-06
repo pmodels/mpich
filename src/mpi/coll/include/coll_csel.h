@@ -8,23 +8,15 @@
 
 #include "csel_json.h"
 
-/* "dispatch=<prefix>(<bits>)": continue in the subtree "<prefix>-<m>", m the restrictions (in hex)
- * among bits that hold. tree_idx[] has one subtree per combination of the bits, resolved when the
- * file is loaded: the subtree of the combination, or of its largest subset that has one. */
-typedef struct MPIR_Csel_dispatch {
-    unsigned bits;
-    int nbits;
-    int pos[32];                /* bit positions of bits, low to high */
-    int tree_idx[];             /* 1 << nbits subtree indices, by compressed mask */
-} MPIR_Csel_dispatch_s;
-
 typedef struct MPIR_Csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
             int tree_idx;
         } call;
-        MPIR_Csel_dispatch_s *dispatch;
+        struct {
+            unsigned drop_mask; /* dispatch(drop_mask): the restrictions to leave out */
+        } dispatch;
         struct {
             MPIR_Csel_coll_type_e coll_type;
         } collective;
@@ -49,10 +41,10 @@ extern int *MPIR_Coll_algo_counters;
 int MPIR_Csel_load_file(const char *json_file);
 int MPIR_Csel_load_buf(const char *json_str);
 int MPIR_Csel_free(void);
-MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name);
-MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
+/* the algorithm for coll_sig, from the restriction sets: the search starts at the dispatch */
+MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
-int MPIR_Coll_search_and_run(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_search_and_run(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig);
 
 /* Two types of subtrees:

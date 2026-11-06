@@ -1,83 +1,5 @@
 {
-    "name=main": "call=auto",
-    "name=auto": {
-        "collective=bcast-intra": "call=bcast-intra-auto",
-        "collective=bcast-inter": "call=bcast-inter-auto",
-        "collective=allreduce-intra": "call=allreduce-intra-auto",
-        "collective=allreduce-inter": "call=allreduce-inter-auto",
-        "collective=allgather-intra": "call=allgather-intra-auto",
-        "collective=allgather-inter": "call=allgather-inter-auto",
-        "collective=allgatherv-intra": "call=allgatherv-intra-auto",
-        "collective=allgatherv-inter": "call=allgatherv-inter-auto",
-        "collective=reduce-intra": "call=reduce-intra-auto",
-        "collective=reduce-inter": "call=reduce-inter-auto",
-        "collective=reduce_scatter-intra": "call=reduce_scatter-intra-auto",
-        "collective=reduce_scatter-inter": "call=reduce_scatter-inter-auto",
-        "collective=reduce_scatter_block-intra": "call=reduce_scatter_block-intra-auto",
-        "collective=reduce_scatter_block-inter": "call=reduce_scatter_block-inter-auto",
-        "collective=gather-intra": "call=gather-intra-auto",
-        "collective=gather-inter": "call=gather-inter-auto",
-        "collective=scatter-intra": "call=scatter-intra-auto",
-        "collective=scatter-inter": "call=scatter-inter-auto",
-        "collective=gatherv-intra": "call=gatherv-intra-auto",
-        "collective=gatherv-inter": "call=gatherv-inter-auto",
-        "collective=scatterv-intra": "call=scatterv-intra-auto",
-        "collective=scatterv-inter": "call=scatterv-inter-auto",
-        "collective=scan-intra": "call=scan-intra-auto",
-        "collective=exscan-intra": "call=exscan-intra-auto",
-        "collective=barrier-intra": "call=barrier-intra-auto",
-        "collective=barrier-inter": "call=barrier-inter-auto",
-        "collective=alltoall-intra": "call=alltoall-intra-auto",
-        "collective=alltoall-inter": "call=alltoall-inter-auto",
-        "collective=alltoallv-intra": "call=alltoallv-intra-auto",
-        "collective=alltoallv-inter": "call=alltoallv-inter-auto",
-        "collective=alltoallw-intra": "call=alltoallw-intra-auto",
-        "collective=alltoallw-inter": "call=alltoallw-inter-auto",
-        "collective=neighbor_allgather-intra": "call=neighbor_allgather-intra-auto",
-        "collective=neighbor_allgatherv-intra": "call=neighbor_allgatherv-intra-auto",
-        "collective=neighbor_alltoall-intra": "call=neighbor_alltoall-intra-auto",
-        "collective=neighbor_alltoallv-intra": "call=neighbor_alltoallv-intra-auto",
-        "collective=neighbor_alltoallw-intra": "call=neighbor_alltoallw-intra-auto",
-        "collective=ibarrier-intra": "call=ibarrier-intra-auto",
-        "collective=ibarrier-inter": "call=ibarrier-inter-auto",
-        "collective=iallreduce-intra": "call=iallreduce-intra-auto",
-        "collective=iallreduce-inter": "call=iallreduce-inter-auto",
-        "collective=iallgather-intra": "call=iallgather-intra-auto",
-        "collective=iallgather-inter": "call=iallgather-inter-auto",
-        "collective=iallgatherv-intra": "call=iallgatherv-intra-auto",
-        "collective=iallgatherv-inter": "call=iallgatherv-inter-auto",
-        "collective=ibcast-intra": "call=ibcast-intra-auto",
-        "collective=ibcast-inter": "call=ibcast-inter-auto",
-        "collective=ireduce-intra": "call=ireduce-intra-auto",
-        "collective=ireduce-inter": "call=ireduce-inter-auto",
-        "collective=ireduce_scatter-intra": "call=ireduce_scatter-intra-auto",
-        "collective=ireduce_scatter-inter": "call=ireduce_scatter-inter-auto",
-        "collective=igather-intra": "call=igather-intra-auto",
-        "collective=igather-inter": "call=igather-inter-auto",
-        "collective=iscatter-intra": "call=iscatter-intra-auto",
-        "collective=iscatter-inter": "call=iscatter-inter-auto",
-        "collective=igatherv-intra": "call=igatherv-intra-auto",
-        "collective=igatherv-inter": "call=igatherv-inter-auto",
-        "collective=iscatterv-intra": "call=iscatterv-intra-auto",
-        "collective=iscatterv-inter": "call=iscatterv-inter-auto",
-        "collective=iexscan-intra": "call=iexscan-intra-auto",
-        "collective=ialltoall-intra": "call=ialltoall-intra-auto",
-        "collective=ialltoall-inter": "call=ialltoall-inter-auto",
-        "collective=ialltoallv-intra": "call=ialltoallv-intra-auto",
-        "collective=ialltoallv-inter": "call=ialltoallv-inter-auto",
-        "collective=ialltoallw-intra": "call=ialltoallw-intra-auto",
-        "collective=ialltoallw-inter": "call=ialltoallw-inter-auto",
-        "collective=ireduce_scatter_block-intra": "call=ireduce_scatter_block-intra-auto",
-        "collective=ireduce_scatter_block-inter": "call=ireduce_scatter_block-inter-auto",
-        "collective=iscan-intra": "call=iscan-intra-auto",
-        "collective=ineighbor_allgather-intra": "call=ineighbor_allgather-intra-auto",
-        "collective=ineighbor_allgatherv-intra": "call=ineighbor_allgatherv-intra-auto",
-        "collective=ineighbor_alltoall-intra": "call=ineighbor_alltoall-intra-auto",
-        "collective=ineighbor_alltoallv-intra": "call=ineighbor_alltoallv-intra-auto",
-        "collective=ineighbor_alltoallw-intra": "call=ineighbor_alltoallw-intra-auto",
-        "any": "error"
-    },
-    "name=bcast-intra-auto":
+    "name=bcast-intra-0":
     {
             "MPIDI_CH4_release_gather":
             {
@@ -114,11 +36,11 @@
                 }
             }
     },
-    "name=bcast-inter-auto":
+    "name=bcast-inter-0":
     {
             "algorithm=MPIR_Bcast_inter_remote_send_local_bcast":{}
     },
-    "name=allreduce-intra-auto":
+    "name=allreduce-intra-0":
     {
             "MPIDI_CH4_release_gather":
             {
@@ -140,11 +62,11 @@
                 }
             }
     },
-    "name=allreduce-inter-auto":
+    "name=allreduce-inter-0":
     {
             "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast":{}
     },
-    "name=allgather-intra-auto":
+    "name=allgather-intra-0":
     {
             "pof2":
             {
@@ -219,11 +141,11 @@
                 }
             }
     },
-    "name=allgather-inter-auto":
+    "name=allgather-inter-0":
     {
             "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast":{}
     },
-    "name=allgatherv-intra-auto":
+    "name=allgatherv-intra-0":
     {
             "pof2":
             {
@@ -298,11 +220,11 @@
                 }
             }
     },
-    "name=allgatherv-inter-auto":
+    "name=allgatherv-inter-0":
     {
             "algorithm=MPIR_Allgatherv_inter_remote_gather_local_bcast":{}
     },
-    "name=reduce-intra-auto":
+    "name=reduce-intra-0":
     {
             "MPIDI_CH4_release_gather":
             {
@@ -324,11 +246,11 @@
                 }
             }
     },
-    "name=reduce-inter-auto":
+    "name=reduce-inter-0":
     {
             "algorithm=MPIR_Reduce_inter_local_reduce_remote_send":{}
     },
-    "name=reduce_scatter-intra-auto":
+    "name=reduce_scatter-intra-0":
     {
             "commutative":
             {
@@ -385,11 +307,11 @@
                 }
             }
     },
-    "name=reduce_scatter-inter-auto":
+    "name=reduce_scatter-inter-0":
     {
             "algorithm=MPIR_Reduce_scatter_inter_remote_reduce_local_scatter":{}
     },
-    "name=reduce_scatter_block-intra-auto":
+    "name=reduce_scatter_block-intra-0":
     {
             "commutative":
             {
@@ -439,15 +361,15 @@
                 }
             }
     },
-    "name=reduce_scatter_block-inter-auto":
+    "name=reduce_scatter_block-inter-0":
     {
             "algorithm=MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter":{}
     },
-    "name=gather-intra-auto":
+    "name=gather-intra-0":
     {
             "algorithm=MPIR_Gather_intra_binomial":{}
     },
-    "name=gather-inter-auto":
+    "name=gather-inter-0":
     {
             "msg_size<256":
             {
@@ -458,11 +380,11 @@
                 "algorithm=MPIR_Gather_inter_linear":{}
             }
     },
-    "name=scatter-intra-auto":
+    "name=scatter-intra-0":
     {
             "algorithm=MPIR_Scatter_intra_binomial":{}
     },
-    "name=scatter-inter-auto":
+    "name=scatter-inter-0":
     {
             "msg_size<256":
             {
@@ -473,31 +395,31 @@
                 "algorithm=MPIR_Scatter_inter_linear":{}
             }
     },
-    "name=gatherv-intra-auto":
+    "name=gatherv-intra-0":
     {
         "algorithm=MPIR_Gatherv_allcomm_linear":{}
     },
-    "name=gatherv-inter-auto":
+    "name=gatherv-inter-0":
     {
         "algorithm=MPIR_Gatherv_allcomm_linear":{}
     },
-    "name=scatterv-intra-auto":
+    "name=scatterv-intra-0":
     {
         "algorithm=MPIR_Scatterv_allcomm_linear":{}
     },
-    "name=scatterv-inter-auto":
+    "name=scatterv-inter-0":
     {
         "algorithm=MPIR_Scatterv_allcomm_linear":{}
     },
-    "name=scan-intra-auto":
+    "name=scan-intra-0":
     {
         "algorithm=MPIR_Scan_intra_recursive_doubling":{}
     },
-    "name=exscan-intra-auto":
+    "name=exscan-intra-0":
     {
         "algorithm=MPIR_Exscan_intra_recursive_doubling":{}
     },
-    "name=barrier-intra-auto":
+    "name=barrier-intra-0":
     {
             "MPIDI_CH4_release_gather":
             {
@@ -510,11 +432,11 @@
                 }
             }
     },
-    "name=barrier-inter-auto":
+    "name=barrier-inter-0":
     {
             "algorithm=MPIR_Barrier_inter_bcast":{}
     },
-    "name=alltoall-intra-auto":
+    "name=alltoall-intra-0":
     {
             "inplace":
             {
@@ -550,11 +472,11 @@
                 }
             }
     },
-    "name=alltoall-inter-auto":
+    "name=alltoall-inter-0":
     {
             "algorithm=MPIR_Alltoall_inter_pairwise_exchange":{}
     },
-    "name=alltoallv-intra-auto":
+    "name=alltoallv-intra-0":
     {
             "inplace":
             {
@@ -565,11 +487,11 @@
                 "algorithm=MPIR_Alltoallv_intra_scattered":{}
             }
     },
-    "name=alltoallv-inter-auto":
+    "name=alltoallv-inter-0":
     {
             "algorithm=MPIR_Alltoallv_inter_pairwise_exchange":{}
     },
-    "name=alltoallw-intra-auto":
+    "name=alltoallw-intra-0":
     {
             "inplace":
             {
@@ -580,39 +502,39 @@
                 "algorithm=MPIR_Alltoallw_intra_scattered":{}
             }
     },
-    "name=alltoallw-inter-auto":
+    "name=alltoallw-inter-0":
     {
             "algorithm=MPIR_Alltoallw_inter_pairwise_exchange":{}
     },
-    "name=neighbor_allgather-intra-auto":
+    "name=neighbor_allgather-intra-0":
     {
         "algorithm=MPIR_Coll_nb":{}
     },
-    "name=neighbor_allgatherv-intra-auto":
+    "name=neighbor_allgatherv-intra-0":
     {
         "algorithm=MPIR_Coll_nb":{}
     },
-    "name=neighbor_alltoall-intra-auto":
+    "name=neighbor_alltoall-intra-0":
     {
         "algorithm=MPIR_Coll_nb":{}
     },
-    "name=neighbor_alltoallv-intra-auto":
+    "name=neighbor_alltoallv-intra-0":
     {
         "algorithm=MPIR_Coll_nb":{}
     },
-    "name=neighbor_alltoallw-intra-auto":
+    "name=neighbor_alltoallw-intra-0":
     {
         "algorithm=MPIR_Coll_nb":{}
     },
-    "name=ibarrier-intra-auto":
+    "name=ibarrier-intra-0":
     {
             "algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling":{}
     },
-    "name=ibarrier-inter-auto":
+    "name=ibarrier-inter-0":
     {
             "algorithm=MPIR_Ibarrier_inter_sched_bcast":{}
     },
-    "name=iallreduce-intra-auto":
+    "name=iallreduce-intra-0":
     {
             "msg_size<=2048":
             {
@@ -630,11 +552,11 @@
                 }
             }
     },
-    "name=iallreduce-inter-auto":
+    "name=iallreduce-inter-0":
     {
             "algorithm=MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast":{}
     },
-    "name=iallgather-intra-auto":
+    "name=iallgather-intra-0":
     {
             "pof2":
             {
@@ -709,11 +631,11 @@
                 }
             }
     },
-    "name=iallgather-inter-auto":
+    "name=iallgather-inter-0":
     {
             "algorithm=MPIR_Iallgather_inter_sched_local_gather_remote_bcast":{}
     },
-    "name=iallgatherv-intra-auto":
+    "name=iallgatherv-intra-0":
     {
             "pof2":
             {
@@ -788,11 +710,11 @@
                 }
             }
     },
-    "name=iallgatherv-inter-auto":
+    "name=iallgatherv-inter-0":
     {
             "algorithm=MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast":{}
     },
-    "name=ibcast-intra-auto":
+    "name=ibcast-intra-0":
     {
             "comm_size<8":
             {
@@ -828,11 +750,11 @@
                 }
             }
     },
-    "name=ibcast-inter-auto":
+    "name=ibcast-inter-0":
     {
             "algorithm=MPIR_Ibcast_inter_sched_flat":{}
     },
-    "name=ireduce-intra-auto":
+    "name=ireduce-intra-0":
     {
             "msg_size<=2048":
             {
@@ -850,11 +772,11 @@
                 }
             }
     },
-    "name=ireduce-inter-auto":
+    "name=ireduce-inter-0":
     {
             "algorithm=MPIR_Ireduce_inter_sched_local_reduce_remote_send":{}
     },
-    "name=ireduce_scatter-intra-auto":
+    "name=ireduce_scatter-intra-0":
     {
             "commutative":
             {
@@ -911,15 +833,15 @@
                 }
             }
     },
-    "name=ireduce_scatter-inter-auto":
+    "name=ireduce_scatter-inter-0":
     {
             "algorithm=MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv":{}
     },
-    "name=igather-intra-auto":
+    "name=igather-intra-0":
     {
             "algorithm=MPIR_Igather_intra_sched_binomial":{}
     },
-    "name=igather-inter-auto":
+    "name=igather-inter-0":
     {
             "msg_size<256":
             {
@@ -930,11 +852,11 @@
                 "algorithm=MPIR_Igather_inter_sched_long":{}
             }
     },
-    "name=iscatter-intra-auto":
+    "name=iscatter-intra-0":
     {
             "algorithm=MPIR_Iscatter_intra_sched_binomial":{}
     },
-    "name=iscatter-inter-auto":
+    "name=iscatter-inter-0":
     {
             "msg_size<256":
             {
@@ -945,27 +867,27 @@
                 "algorithm=MPIR_Iscatter_inter_sched_linear":{}
             }
     },
-    "name=igatherv-intra-auto":
+    "name=igatherv-intra-0":
     {
         "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
     },
-    "name=igatherv-inter-auto":
+    "name=igatherv-inter-0":
     {
         "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
     },
-    "name=iscatterv-intra-auto":
+    "name=iscatterv-intra-0":
     {
         "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
     },
-    "name=iscatterv-inter-auto":
+    "name=iscatterv-inter-0":
     {
         "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
     },
-    "name=iexscan-intra-auto":
+    "name=iexscan-intra-0":
     {
         "algorithm=MPIR_Iexscan_intra_sched_recursive_doubling":{}
     },
-    "name=ialltoall-intra-auto":
+    "name=ialltoall-intra-0":
     {
             "inplace":
             {
@@ -1001,11 +923,11 @@
                 }
             }
     },
-    "name=ialltoall-inter-auto":
+    "name=ialltoall-inter-0":
     {
             "algorithm=MPIR_Ialltoall_inter_sched_pairwise_exchange":{}
     },
-    "name=ialltoallv-intra-auto":
+    "name=ialltoallv-intra-0":
     {
             "inplace":
             {
@@ -1016,11 +938,11 @@
                 "algorithm=MPIR_Ialltoallv_intra_sched_blocked":{}
             }
     },
-    "name=ialltoallv-inter-auto":
+    "name=ialltoallv-inter-0":
     {
             "algorithm=MPIR_Ialltoallv_inter_sched_pairwise_exchange":{}
     },
-    "name=ialltoallw-intra-auto":
+    "name=ialltoallw-intra-0":
     {
             "inplace":
             {
@@ -1031,11 +953,11 @@
                 "algorithm=MPIR_Ialltoallw_intra_sched_blocked":{}
             }
     },
-    "name=ialltoallw-inter-auto":
+    "name=ialltoallw-inter-0":
     {
             "algorithm=MPIR_Ialltoallw_inter_sched_pairwise_exchange":{}
     },
-    "name=ireduce_scatter_block-intra-auto":
+    "name=ireduce_scatter_block-intra-0":
     {
             "commutative":
             {
@@ -1085,31 +1007,31 @@
                 }
             }
     },
-    "name=ireduce_scatter_block-inter-auto":
+    "name=ireduce_scatter_block-inter-0":
     {
             "algorithm=MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv":{}
     },
-    "name=iscan-intra-auto":
+    "name=iscan-intra-0":
     {
         "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
     },
-    "name=ineighbor_allgather-intra-auto":
+    "name=ineighbor_allgather-intra-0":
     {
         "algorithm=MPIR_Ineighbor_allgather_allcomm_sched_linear":{}
     },
-    "name=ineighbor_allgatherv-intra-auto":
+    "name=ineighbor_allgatherv-intra-0":
     {
         "algorithm=MPIR_Ineighbor_allgatherv_allcomm_sched_linear":{}
     },
-    "name=ineighbor_alltoall-intra-auto":
+    "name=ineighbor_alltoall-intra-0":
     {
         "algorithm=MPIR_Ineighbor_alltoall_allcomm_sched_linear":{}
     },
-    "name=ineighbor_alltoallv-intra-auto":
+    "name=ineighbor_alltoallv-intra-0":
     {
         "algorithm=MPIR_Ineighbor_alltoallv_allcomm_sched_linear":{}
     },
-    "name=ineighbor_alltoallw-intra-auto":
+    "name=ineighbor_alltoallw-intra-0":
     {
         "algorithm=MPIR_Ineighbor_alltoallw_allcomm_sched_linear":{}
     }

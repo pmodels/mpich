@@ -22,21 +22,24 @@
 #   - restrictions: "index - name: func", a condition whose checker returns bool:
 #     bool (*func)(coll_sig). These are the conditions that can be used as algorithm
 #     restrictions. The index is the condition's position in the table, starting at 0, and
-#     gen_coll.py checks it. It is also the restriction's bit in the masks that tuning tools
-#     use, e.g. in subtree names of a tuning file. Removing a restriction renumbers the ones
-#     after it, so tuning files and masks that use bit numbers must be regenerated; add new
+#     gen_coll.py checks it. It is also the restriction's bit in the masks of the restriction
+#     set names of a tuning file, e.g. bcast-intra-210. Removing a restriction renumbers the
+#     ones after it, so tuning files and masks that use bit numbers must be regenerated; add new
 #     ones at the end.
 #     A restriction's name tells how a JSON tree can use it, because all ranks of a call must reach
 #     the same algorithm:
-#       - <name>_local can differ between the ranks of a call. It is only tested in the tree that
-#         main reaches, never from auto. Its true branch can split on other conditions, and each
-#         leaf is either "call=auto" or an algorithm restricted on it; its next case is
-#         "any": "call=auto". It cannot be negated or used in a dispatch. An algorithm restricted
-#         on it only clears the condition and continues in auto, so it must be a general algorithm
-#         with inner: $coll-intra@comm[<name>_local=0]. All ranks then select in auto without it.
+#       - <name>_local can differ between the ranks of a call. The dispatch takes a local set (a
+#         restriction set with it in its mask) first, whose leaves are an algorithm restricted
+#         on it or "dispatch(<mask>)" leaving it out, which is where the other ranks go.
+#         It cannot be tested elsewhere. An algorithm restricted on it clears the condition
+#         and selects again from the dispatch, so it must be a general algorithm with
+#         inner: $coll-intra@comm[<name>_local=0]. Only algorithms clear it.
 #       - <name>_coll is the same on all ranks, by a promise of the user or by a check. It can
 #         select completely separate subtrees, like every condition without a suffix, which
-#         is the same on all ranks because the arguments it depends on are.
+#         is the same on all ranks because the arguments it depends on are. A set with it in
+#         its mask, e.g. bcast-intra-800, is where an algorithm restricted on it goes, and its
+#         "dispatch(<mask>)" leaving it out prefers the -<name> variants of the sets, tuned
+#         under it. It excludes the _local restrictions: a call where it holds takes no local set.
 #   - conditions: "name(thresh): func", a threshold condition whose checker returns a value:
 #     int (*func)(coll_sig). The thresh marks the upper limit (inclusive) of the condition.
 #   - func can optionally have a macro-guard, e.g. func #if defined(MPIDI_CH4_SHM_POSIX).

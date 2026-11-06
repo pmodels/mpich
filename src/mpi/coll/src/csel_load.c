@@ -36,8 +36,6 @@ struct csel_subtree {
 struct csel_subtree_hash_item *csel_subtree_hash;
 /* a dynamic array of (struct csel_subtree) subtrees */
 UT_array *csel_subtrees = NULL;
-/* index to the main tree */
-int csel_main_idx = -1;
 
 /* ---- csel subtree table per coll_type */
 struct csel_tree_entry {
@@ -262,72 +260,25 @@ static int parse_condition(const MPII_Csel_json_s * obj, MPIR_Csel_node_s * node
     return MPII_Csel_json_error(obj, "unknown condition");
 }
 
-/* "dispatch=<prefix>(<bits>)", e.g. "dispatch=bcast-intra(0x820)": a table of the subtree for
- * every combination of the restriction bits, "<prefix>-<mask in hex>" or that of its largest
- * subset that exists (fewer bits; between equal counts, the lower mask) */
+/* "dispatch(<mask>)": select the restriction set of the call again, leaving out the
+ * restrictions in mask */
 static int parse_dispatch(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** node_out)
 {
-    const char *str = obj->u.str + strlen("dispatch=");
-    const char *lp = strchr(str, '(');
-    int len = lp ? (int) (lp - str) : 0;
-    char *end = NULL;
-    unsigned long bits = lp ? strtoul(lp + 1, &end, 0) : 0;
-    if (len == 0 || len >= CSEL_MAX_NAME - 10 || !end || strcmp(end, ")") != 0 || bits > 0xffffffff) {
-        return MPII_Csel_json_error(obj, "expect \"dispatch=<prefix>(<restriction bits>)\"");
+    const char *hex = obj->u.str + strlen("dispatch(");
+    size_t h = strspn(hex, "0123456789abcdef");
+    if (h == 0 || h > 8 || hex[0] == '0' || strcmp(hex + h, ")") != 0) {
+        return MPII_Csel_json_error(obj, "expect dispatch(<mask>), the restrictions to leave "
+                                    "out, nonzero, in lowercase hex without leading zeros");
     }
-
-    int pos[32], nbits = 0;
-    for (int k = 0; k < 32; k++) {
-        if (bits & (1ul << k)) {
-            pos[nbits++] = k;
-        }
-    }
-    if (nbits > 16) {
-        return MPII_Csel_json_error(obj, "dispatch on more than 16 restrictions");
-    }
-
-    MPIR_Csel_dispatch_s *d = MPL_malloc(sizeof(*d) + (sizeof(int) << nbits), MPL_MEM_COLL);
-    d->bits = (unsigned) bits;
-    d->nbits = nbits;
-    memcpy(d->pos, pos, sizeof(pos));
-    for (int c = 0; c < (1 << nbits); c++) {
-        unsigned m = 0;
-        for (int j = 0; j < nbits; j++) {
-            if (c & (1 << j)) {
-                m |= 1u << pos[j];
-            }
-        }
-        /* every subset s of m, from m down to 0 */
-        int best = -1, best_count = -1;
-        unsigned s = m;
-        while (true) {
-            char name[CSEL_MAX_NAME];
-            snprintf(name, sizeof(name), "%.*s-%x", len, str, s);
-            int tree_idx = MPII_Csel_name_to_idx(name);
-            int count = 0;
-            for (unsigned b = s; b; b &= b - 1) {
-                count++;
-            }
-            if (tree_idx >= 0 && count >= best_count) {
-                best = tree_idx;
-                best_count = count;
-            }
-            if (s == 0) {
-                break;
-            }
-            s = (s - 1) & m;
-        }
-        if (best < 0) {
-            MPL_free(d);
-            return MPII_Csel_json_error(obj,
-                                        "no subtree <prefix>-0 for a dispatch to fall back to");
-        }
-        d->tree_idx[c] = best;
+    unsigned long drop_mask = strtoul(hex, NULL, 16);
+    if (drop_mask >> MPIR_CSEL_NUM_RESTRICTIONS) {
+        return MPII_Csel_json_error(obj, "dispatch(<mask>) leaves out a bit that is not a "
+                                    "restriction");
     }
 
     MPIR_Csel_node_s *tmp = MPL_calloc(sizeof(MPIR_Csel_node_s), 1, MPL_MEM_COLL);
     tmp->type = CSEL_NODE_TYPE__OPERATOR__DISPATCH;
-    tmp->u.dispatch = d;
+    tmp->u.dispatch.drop_mask = (unsigned) drop_mask;
     *node_out = tmp;
     return MPI_SUCCESS;
 }
@@ -345,20 +296,23 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
         return MPI_SUCCESS;
     }
 
-    if (obj->type == MPII_CSEL_JSON_STRING && strncmp(obj->u.str, "dispatch=", 9) == 0) {
+    if (obj->type == MPII_CSEL_JSON_STRING && strncmp(obj->u.str, "dispatch(", 9) == 0) {
         return parse_dispatch(obj, node_out);
     }
 
     if (obj->type != MPII_CSEL_JSON_OBJECT) {
         if (obj->type != MPII_CSEL_JSON_STRING || strncmp(obj->u.str, "call=", 5) != 0) {
-            return MPII_Csel_json_error(obj,
-                                        "expect an object, a \"call=\" or \"dispatch=\" string, "
-                                        "or \"error\"");
+            return MPII_Csel_json_error(obj, "expect an object, a \"call=\" string, or "
+                                        "\"error\"");
         }
 
         int tree_idx = MPII_Csel_name_to_idx(obj->u.str + 5);
         if (tree_idx < 0) {
             return MPII_Csel_json_error(obj, "unknown subtree name");
+        }
+        if (MPII_Csel_tree_is_reserved(tree_idx)) {
+            return MPII_Csel_json_error(obj, "call= names a free subtree; a restriction set is "
+                                        "reached with dispatch(<mask>)");
         }
 
         MPIR_Csel_node_s *tmp;
@@ -479,9 +433,6 @@ static int parse_json_tree(const MPII_Csel_json_s * obj, MPIR_Csel_node_s ** nod
     goto fn_exit;
 }
 
-/* parse the json_object assuming it is a list of "name=xxx": subtree.
- * Otherwise, parse it as a single tree and set the name to "main".
- */
 static void csel_subtree_dtor(void *item)
 {
     struct csel_subtree *p = item;
@@ -492,6 +443,8 @@ static void csel_subtree_dtor(void *item)
     }
 }
 
+/* parse a tuning file: a list of "name=xxx": subtree, the restriction sets and the free subtrees
+ * they call */
 static int parse_json_names(const MPII_Csel_json_s * obj)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -505,20 +458,26 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         utarray_new(csel_subtrees, &csel_subtree_icd, MPL_MEM_COLL);
     }
 
-    /* the keys are either all "name=", or none is and the whole tree is "name=main" */
-    bool has_names = false;
+    /* check the names before any tree is replaced */
     MPII_CSEL_JSON_FOREACH(obj, val) {
-        bool is_name = (strncmp(val->key, "name=", 5) == 0);
-        if (val == obj->u.child) {
-            has_names = is_name;
-        } else if (is_name != has_names) {
-            return MPII_Csel_json_error(val, has_names ? "expect a \"name=\" key" :
-                                        "\"name=\" keys must not mix with other keys");
+        if (strncmp(val->key, "name=", 5) != 0) {
+            return MPII_Csel_json_error(val, "expect a \"name=\" key: a tuning file defines named "
+                                        "subtrees, e.g. \"name=bcast-intra-0\"");
         }
-        if (is_name && strlen(val->key + 5) >= CSEL_MAX_NAME) {
+        const char *name = val->key + 5;
+        if (strlen(name) >= CSEL_MAX_NAME) {
             return MPII_Csel_json_error(val, "subtree name is too long");
         }
-        if (is_name && !is_tree_name_valid(val->key + 5)) {
+        if (strcmp(name, "auto") == 0) {
+            return MPII_Csel_json_error(val, "name=auto is the legacy routing; define the "
+                                        "restriction sets, e.g. \"name=bcast-intra-0\"");
+        }
+        if (strcmp(name, "main") == 0) {
+            return MPII_Csel_json_error(val, "there is no main tree: every selection starts at the "
+                                        "built-in dispatch, so define the restriction sets, e.g. "
+                                        "\"name=bcast-intra-0\"");
+        }
+        if (!is_tree_name_valid(name)) {
             return MPII_Csel_json_error(val, "malformed restriction set name: the mask is in "
                                         "lowercase hex without leading zeros, and a variant "
                                         "-xxx names a restriction xxx_coll, e.g. "
@@ -526,23 +485,16 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
         }
     }
 
-    if (has_names) {
-        MPII_CSEL_JSON_FOREACH(obj, val) {
-            const char *name = val->key + 5;
+    MPII_CSEL_JSON_FOREACH(obj, val) {
+        const char *name = val->key + 5;
 
-            int tree_idx = MPII_Csel_name_to_idx(name);
-            if (tree_idx >= 0) {
-                replace_named_tree(tree_idx, val);
-            } else {
-                add_named_tree(name, val);
-            }
+        int tree_idx = MPII_Csel_name_to_idx(name);
+        if (tree_idx >= 0) {
+            replace_named_tree(tree_idx, val);
+        } else {
+            add_named_tree(name, val);
         }
-    } else {
-        add_named_tree("main", obj);
     }
-
-    MPIR_Assert(csel_main_idx >= 0);
-    /* FIXME: error handling */
 
     mpi_errno = parse_named_trees();
     MPIR_ERR_CHECK(mpi_errno);
@@ -641,7 +593,7 @@ void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level)
     } else if (node->type == CSEL_NODE_TYPE__OPERATOR__CALL) {
         printf("call: subtree %d\n", node->u.call.tree_idx);
     } else if (node->type == CSEL_NODE_TYPE__OPERATOR__DISPATCH) {
-        printf("dispatch: restrictions 0x%x\n", node->u.dispatch->bits);
+        printf("dispatch(%x)\n", node->u.dispatch.drop_mask);
     } else {
         if (!node->u.condition.negate) {
             if (!node->u.condition.thresh) {
@@ -674,9 +626,6 @@ static void free_tree(MPIR_Csel_node_s * node)
 {
     if (node->type == CSEL_NODE_TYPE__CONTAINER) {
         MPL_free(node->u.container);
-        MPL_free(node);
-    } else if (node->type == CSEL_NODE_TYPE__OPERATOR__DISPATCH) {
-        MPL_free(node->u.dispatch);
         MPL_free(node);
     } else {
         if (node->success)
@@ -844,11 +793,6 @@ static void add_named_tree(const char *name, const MPII_Csel_json_s * obj)
     MPL_strncpy(h->name, name, CSEL_MAX_NAME);
     h->tree_idx = utarray_len(csel_subtrees) - 1;
     HASH_ADD_STR(csel_subtree_hash, name, h, MPL_MEM_COLL);
-
-    /* update csel_main_idx if name == "main" */
-    if (strcmp(name, "main") == 0) {
-        csel_main_idx = h->tree_idx;
-    }
 }
 
 static void replace_named_tree(int tree_idx, const MPII_Csel_json_s * obj)

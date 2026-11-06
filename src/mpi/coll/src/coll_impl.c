@@ -114,8 +114,6 @@ cvars:
 
 int MPIR_Nbc_progress_hook_id = 0;
 
-static MPIR_Csel_node_s *csel_tree_main;
-static MPIR_Csel_node_s *csel_tree_auto;
 
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
@@ -194,14 +192,6 @@ int MPII_Coll_init(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    csel_tree_main = MPIR_Csel_get_tree("main");
-    MPIR_Assert(csel_tree_main);
-
-    csel_tree_auto = MPIR_Csel_get_tree("auto");
-    if (!csel_tree_auto) {
-        csel_tree_auto = csel_tree_main;
-    }
-
     mpi_errno = MPIR_cga_init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -250,8 +240,6 @@ int MPII_Coll_finalize(void)
     mpi_errno = MPIR_cga_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    csel_tree_main = NULL;
-    csel_tree_auto = NULL;
 
   fn_exit:
     return mpi_errno;
@@ -319,11 +307,11 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-int MPIR_Coll_search_and_run(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig)
+int MPIR_Coll_search_and_run(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPII_Csel_container_s *cnt = MPIR_Csel_search(tree, coll_sig);
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(coll_sig);
     MPIR_ERR_CHKANDJUMP(!cnt, mpi_errno, MPI_ERR_OTHER, "**csel_noresult");
 
     mpi_errno = MPIR_Coll_algo_table[cnt->id] (coll_sig, cnt);
@@ -336,9 +324,9 @@ int MPIR_Coll_search_and_run(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * col
 }
 
 /* Run the algorithm that the user set with the algorithm CVAR of coll_sig->coll_type, else
- * select from tree. Callers must not reach here twice with the same coll_type and comm, or the
- * CVAR would pick the same algorithm again. */
-static int run_cvar_or_search(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s * tree)
+ * search the restriction sets. Callers must not reach here twice with the same coll_type and
+ * comm, or the CVAR would pick the same algorithm again. */
+static int run_cvar_or_search(MPIR_Csel_coll_sig_s * coll_sig)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -367,7 +355,7 @@ static int run_cvar_or_search(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s 
         }
     }
 
-    mpi_errno = MPIR_Coll_search_and_run(tree, coll_sig);
+    mpi_errno = MPIR_Coll_search_and_run(coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -378,13 +366,13 @@ static int run_cvar_or_search(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Csel_node_s 
 
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig)
 {
-    return run_cvar_or_search(coll_sig, csel_tree_main);
+    return run_cvar_or_search(coll_sig);
 }
 
-/* run the auto tree, for general algorithms that continue the selection */
+/* select again with the dispatch, for general algorithms that continue the selection */
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig)
 {
-    return MPIR_Coll_search_and_run(csel_tree_auto, coll_sig);
+    return MPIR_Coll_search_and_run(coll_sig);
 }
 
 /* run an inner call of a compositional algorithm, described by MPIR_<Coll>_fill_sig */
@@ -393,9 +381,9 @@ int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig)
     MPIR_Assert(MPIR_Coll_sig_check_gpu_coll(coll_sig));
 
     if (MPIR_CVAR_COLLECTIVE_INNER_ALGO_CVARS) {
-        return run_cvar_or_search(coll_sig, csel_tree_auto);
+        return run_cvar_or_search(coll_sig);
     }
-    return MPIR_Coll_search_and_run(csel_tree_auto, coll_sig);
+    return MPIR_Coll_search_and_run(coll_sig);
 }
 
 /* blocking collectives by calling its nonblocking forms */
@@ -417,7 +405,7 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     /* The nonblocking form stands for the whole user call (same communicator and arguments),
      * so its algorithm CVAR applies. It cannot recurse: nb is an algorithm of the blocking
      * types only. */
-    mpi_errno = run_cvar_or_search(coll_sig, csel_tree_auto);
+    mpi_errno = run_cvar_or_search(coll_sig);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Request *req;
