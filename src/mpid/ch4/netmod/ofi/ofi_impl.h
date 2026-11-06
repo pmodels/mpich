@@ -12,6 +12,7 @@
 #include "mpidch4r.h"
 #include "ch4_impl.h"
 #include "utlist.h"
+#include "mpidu_gpu_cache.h"
 
 extern unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
 extern unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
@@ -931,6 +932,47 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
         MPL_free(ptr);
         return 0;
     }
+}
+
+/* For a staging copy between a device buffer and a host pack buffer that is small
+ * enough for a fast (CPU) copy, replace the device buffer with its cached host mmap.
+ * The attr type becomes MPL_GPU_POINTER_DEV_MMAP, so MPIR_Localcopy_gpu copies
+ * directly instead of mmapping and unmapping the whole allocation on every call.
+ * buf and attr are left unchanged if the cache is not used. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_mmap_cached(void **buf, MPI_Datatype datatype,
+                                                       MPI_Aint copy_sz, MPL_pointer_attr_t * attr,
+                                                       MPI_Aint threshold)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef MPL_HAVE_ZE
+    if (!MPIR_CVAR_CH4_OFI_GPU_MMAP_CACHE || !MPL_gpu_attr_is_dev(attr) ||
+        copy_sz == 0 || copy_sz > threshold) {
+        goto fn_exit;
+    }
+
+    bool dt_contig;
+    MPI_Aint true_lb;
+    MPIDI_Datatype_check_contig_lb(datatype, dt_contig, true_lb);
+    if (!dt_contig) {
+        goto fn_exit;
+    }
+
+    void *dev_ptr = MPIR_get_contig_ptr(*buf, true_lb);
+    void *host_ptr;
+    mpi_errno = MPIDU_gpu_cache_local_mmap(dev_ptr, attr, &host_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (host_ptr != dev_ptr) {
+        /* MPIR_Localcopy_gpu adds true_lb back */
+        *buf = (char *) host_ptr - true_lb;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(void)

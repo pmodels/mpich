@@ -243,6 +243,21 @@ cvars:
       description : >-
         The threshold to start using GPU direct RDMA.
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_MMAP_CACHE
+      category    : CH4_OFI
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, small staging copies between a device buffer and the host pack
+        buffer use the cached host mmap of the device buffer (kept in the GPU
+        handle cache shared with the GPU IPC shmmod) instead of mapping and
+        unmapping it on every copy. The copy sizes that use it are still set by
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H (send) and
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (receive).
+
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
       type        : int

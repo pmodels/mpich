@@ -7,6 +7,7 @@
 #include "mpidch4r.h"
 #include "mpidu_init_shm.h"
 #include "stream_workq.h"
+#include "mpidu_gpu_cache.h"
 
 #include <strings.h>    /* for strncasecmp */
 #ifdef HAVE_SIGNAL_H
@@ -399,6 +400,19 @@ int MPID_Init(int requested, int *provided)
     /* internally does per-vci am initialization */
     MPIDIG_am_init();
 
+    if (MPIR_CVAR_ENABLE_GPU) {
+        bool force_insert = false;
+#ifdef MPL_HAVE_ZE
+        /* the drmfd path cannot have duplicate handles from the same buffer, so the
+         * handles are always cached */
+        if (MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE == MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE_drmfd) {
+            force_insert = true;
+        }
+#endif
+        mpi_errno = MPIDU_gpu_cache_init(force_insert);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     /* **** Call NM/SHM init_local **** */
     int shm_tag_bits, nm_tag_bits;
     shm_tag_bits = MPIR_TAG_BITS_DEFAULT;
@@ -517,6 +531,10 @@ int MPID_Finalize(void)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
+    /* before the NM/SHM finalize: dropping a cached entry may send unmap AMs */
+    mpi_errno = MPIDU_gpu_cache_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
     MPIR_ERR_CHECK(mpi_errno);
