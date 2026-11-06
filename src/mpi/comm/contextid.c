@@ -963,8 +963,8 @@ static int gcn_allreduce(struct gcn_state *st)
     MPI_Op op = MPI_BAND;
 
     if (st->req_ptr) {
-        mpi_errno = MPIR_Iallreduce_tag(MPI_IN_PLACE, st->local_mask, count, datatype, op,
-                                        st->comm_ptr, st->tag, &st->u.allreduce_request);
+        mpi_errno = MPIR_Iallreduce_fallback(MPI_IN_PLACE, st->local_mask, count, datatype, op,
+                                             st->comm_ptr, st->tag, &st->u.allreduce_request);
     } else {
         if (st->group_ptr != NULL) {
             int coll_tag = st->tag | MPIR_TAG_COLL_BIT; /* Shift tag into the tagged coll space */
@@ -997,8 +997,8 @@ static int gcn_intercomm_sendrecv(struct gcn_state *st)
 
 static int gcn_intercomm_bcast(struct gcn_state *st)
 {
-    return MPIR_Ibcast_tag(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
-                           st->tag, &st->u.bcast_request);
+    return MPIR_Ibcast_fallback(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
+                                st->tag, &st->u.bcast_request);
 }
 
 static int gcn_complete(struct gcn_state *st)

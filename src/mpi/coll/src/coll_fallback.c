@@ -70,3 +70,59 @@ int MPIR_Reduce_scatter_block_fallback(const void *sendbuf, void *recvbuf, MPI_A
     return MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype,
                                                              op, comm_ptr, coll_attr);
 }
+
+int MPIR_Iallreduce_fallback(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int tag,
+                             MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
+
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Sched_set_tag(s, tag);
+
+    mpi_errno = MPIR_Iallreduce_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype,
+                                                               op, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, request);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (s != MPIR_SCHED_NULL) {
+        MPIR_Sched_free(s);
+    }
+    goto fn_exit;
+}
+
+int MPIR_Ibcast_fallback(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                         MPIR_Comm * comm_ptr, int tag, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
+
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_REGULAR);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Sched_set_tag(s, tag);
+
+    mpi_errno = MPIR_Ibcast_intra_sched_binomial(buffer, count, datatype, root, comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_start(s, comm_ptr, request);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (s != MPIR_SCHED_NULL) {
+        MPIR_Sched_free(s);
+    }
+    goto fn_exit;
+}

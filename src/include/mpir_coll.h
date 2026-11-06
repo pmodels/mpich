@@ -217,6 +217,14 @@ int MPIR_Gather_fallback(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype s
 int MPIR_Reduce_scatter_block_fallback(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
                                        MPI_Datatype datatype, MPI_Op op,
                                        MPIR_Comm * comm_ptr, int coll_attr);
+/* Nonblocking fallbacks with a given tag, for internal operations such as context id allocation
+ * that must not depend on the collective selection. They run from the async progress engine,
+ * so they use schedule algorithms only. */
+int MPIR_Iallreduce_fallback(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int tag,
+                             MPIR_Request ** request);
+int MPIR_Ibcast_fallback(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                         MPIR_Comm * comm_ptr, int tag, MPIR_Request ** request);
 
 
 /* Internal point-to-point communication for collectives */
