@@ -39,6 +39,130 @@ UT_array *csel_subtrees = NULL;
 /* index to the main tree */
 int csel_main_idx = -1;
 
+/* ---- csel subtree table per coll_type */
+struct csel_tree_entry {
+    int tree_idx;
+    unsigned mask;
+    unsigned variant_mask;
+};
+
+struct csel_lookup {
+    /* aggregate mask (via OR) over all trees in the tables */
+    unsigned aggregate_mask;
+    /* local trees satisfies some local restrictions, e.g. gpu_local */
+    int num_local;
+    /* trees with no local restrictions */
+    int num_other;
+    struct csel_tree_entry *local;
+    struct csel_tree_entry *other;
+    struct csel_tree_entry tables[];
+};
+
+static struct csel_lookup *csel_lookups[MPIR_CSEL_NUM_COLL_TYPES];
+
+static int build_lookups(void);
+
+int MPII_Csel_dispatch(MPIR_Csel_coll_sig_s * coll_sig, unsigned drop_mask,
+                       struct csel_dispatch_state *state)
+{
+    const struct csel_lookup *l = csel_lookups[coll_sig->coll_type];
+    if (!l) {
+        return -1;
+    }
+
+    /* build m if needed */
+    if (!state->have_m) {
+        state->m = MPIR_Csel_restriction_mask(coll_sig, l->aggregate_mask);
+        /* a _coll and a _local restriction exclude each other */
+        if (state->m & MPIR_CSEL_COLL_RESTRICTIONS) {
+            state->m &= ~MPIR_CSEL_LOCAL_RESTRICTIONS;
+        }
+        state->have_m = true;
+    }
+    /* apply drop_mask */
+    state->v |= state->m & drop_mask & MPIR_CSEL_COLL_RESTRICTIONS;
+    state->m &= ~drop_mask;
+
+    /* find the first tree whose restrictions hold, and whose variants are among v */
+    for (int k = 0; k < l->num_local; k++) {
+        /* skip if its mask contains bits that cur state does not satisfy */
+        if (!(l->local[k].mask & ~state->m)) {
+            return l->local[k].tree_idx;
+        }
+    }
+    for (int k = 0; k < l->num_other; k++) {
+        /* also skip if its variant is not in cur state's variant */
+        if (!(l->other[k].mask & ~state->m) && !(l->other[k].variant_mask & ~state->v)) {
+            return l->other[k].tree_idx;
+        }
+    }
+    return -1;
+}
+
+static void free_lookups(void)
+{
+    for (int t = 0; t < MPIR_CSEL_NUM_COLL_TYPES; t++) {
+        MPL_free(csel_lookups[t]);
+        csel_lookups[t] = NULL;
+    }
+}
+
+static int compare_trees(const void *a, const void *b);
+
+static int build_lookups(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    free_lookups();
+
+    int n = utarray_len(csel_subtrees);
+    for (int t = 0; t < MPIR_CSEL_NUM_COLL_TYPES; t++) {
+        unsigned aggregate_mask = 0;
+        int num_local = 0, num_other = 0;
+        for (int i = 0; i < n; i++) {
+            if (MPII_Csel_tree_is_coll_type(i, t)) {
+                aggregate_mask |= MPII_Csel_tree_mask(i);
+                if (MPII_Csel_tree_is_local(i)) {
+                    num_local++;
+                } else {
+                    num_other++;
+                }
+            }
+        }
+        if (num_local + num_other == 0) {
+            continue;
+        }
+
+        struct csel_lookup *l = MPL_malloc(sizeof(*l) + (num_local + num_other) *
+                                           sizeof(struct csel_tree_entry), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!l, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        csel_lookups[t] = l;
+        l->aggregate_mask = aggregate_mask;
+        l->num_local = num_local;
+        l->num_other = num_other;
+        l->local = l->tables;
+        l->other = l->tables + num_local;
+
+        int k_local = 0, k_other = 0;
+        for (int i = 0; i < n; i++) {
+            if (MPII_Csel_tree_is_coll_type(i, t)) {
+                struct csel_tree_entry *p = MPII_Csel_tree_is_local(i) ?
+                    &l->local[k_local++] : &l->other[k_other++];
+                p->tree_idx = i;
+                p->mask = MPII_Csel_tree_mask(i);
+                p->variant_mask = MPII_Csel_tree_variant_mask(i);
+            }
+        }
+        qsort(l->local, num_local, sizeof(struct csel_tree_entry), compare_trees);
+        qsort(l->other, num_other, sizeof(struct csel_tree_entry), compare_trees);
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+/* ---- */
+
 static void add_named_tree(const char *name, const MPII_Csel_json_s * obj);
 static void replace_named_tree(int tree_idx, const MPII_Csel_json_s * obj);
 static bool is_tree_name_valid(const char *name);
@@ -426,6 +550,10 @@ static int parse_json_names(const MPII_Csel_json_s * obj)
     mpi_errno = MPII_Csel_validate();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* after the validation, which checks the restrictions in the set names */
+    mpi_errno = build_lookups();
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_fail:
     return mpi_errno;
 }
@@ -481,6 +609,8 @@ int MPIR_Csel_load_file(const char *json_file)
 int MPIR_Csel_free(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    free_lookups();
 
     utarray_clear(csel_subtrees);
     utarray_free(csel_subtrees);
@@ -754,4 +884,27 @@ static int parse_named_trees(void)
         p->json_obj = NULL;
     }
     goto fn_exit;
+}
+
+/* compare functions for sorting subtrees in build_lookups() */
+
+static int compare_trees(const void *a, const void *b)
+{
+    const struct csel_tree_entry *x = a, *y = b;
+    int nx = MPL_popcount(x->variant_mask), ny = MPL_popcount(y->variant_mask);
+    if (nx != ny) {
+        return ny - nx;
+    }
+    nx = MPL_popcount(x->mask);
+    ny = MPL_popcount(y->mask);
+    if (nx != ny) {
+        return ny - nx;
+    }
+    if (x->variant_mask != y->variant_mask) {
+        return x->variant_mask > y->variant_mask ? -1 : 1;
+    }
+    if (x->mask != y->mask) {
+        return x->mask > y->mask ? -1 : 1;
+    }
+    return 0;
 }

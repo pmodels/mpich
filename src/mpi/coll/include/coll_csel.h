@@ -67,6 +67,25 @@ bool MPII_Csel_tree_is_coll_type(int tree_idx, int coll_type);
 bool MPII_Csel_tree_is_local(int tree_idx);
 unsigned MPII_Csel_tree_variant_mask(int tree_idx);
 unsigned MPII_Csel_tree_mask(int tree_idx);
+
+/* The restriction state of a search. It is built at the beginning of MPIR_Csel_search, which
+ * starts with a dispatch, and selects the most specific restriction set that the state satisfies.
+ * Each following dispatch(<mask>) relaxes the state, leaving out the restrictions in its mask, and
+ * selects again.
+ *   m: the restrictions that hold, less those left out so far;
+ *   v: the _coll restrictions left out so far, which select the variants. */
+struct csel_dispatch_state {
+    bool have_m;
+    unsigned m;
+    unsigned v;
+};
+
+/* Dispatch selects a json tree most specifically matching coll_sig, with drop_mask applied to
+ * relax some restrictions. If no trees match, return -1. A fully written json should define all
+ * <coll>-<intra|inter>-0 sets, which will prevent this error return. */
+int MPII_Csel_dispatch(MPIR_Csel_coll_sig_s * coll_sig, unsigned drop_mask,
+                       struct csel_dispatch_state *state);
+
 int MPII_Csel_name_to_idx(const char *name);
 const char *MPII_Csel_tree_name(int tree_idx);
 MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int tree_idx);
