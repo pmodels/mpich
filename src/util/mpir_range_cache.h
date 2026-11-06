@@ -21,7 +21,8 @@
  *     the range without matching are stale and are dropped.
  *   * insert: when the cache holds `limit` entries, the least recently used entry
  *     that is not in use is dropped first. A forced insert may go beyond `limit`, up
- *     to `max_entries`.
+ *     to `max_entries`. make_room does the same eviction without inserting, so that
+ *     the owner can skip creating a resource that would not be cached.
  *   * in_use: the owner counts the users of an entry; an entry in use is never
  *     evicted.
  *
@@ -55,7 +56,8 @@ int MPIR_range_cache_search(struct MPIR_range_cache *cache, const void *base, MP
                             uint64_t tag, void *ctx, struct MPIR_range_cache_entry **entry_out);
 struct MPIR_range_cache_entry *MPIR_range_cache_find(struct MPIR_range_cache *cache,
                                                      const void *base);
-bool MPIR_range_cache_can_insert(struct MPIR_range_cache *cache);
+int MPIR_range_cache_make_room(struct MPIR_range_cache *cache, bool force, void *ctx,
+                               bool * has_room_out);
 int MPIR_range_cache_insert(struct MPIR_range_cache *cache, struct MPIR_range_cache_entry *entry,
                             bool force, void *ctx, bool * inserted_out);
 int MPIR_range_cache_remove(struct MPIR_range_cache *cache, struct MPIR_range_cache_entry *entry,
