@@ -256,7 +256,8 @@ cvars:
         handle cache shared with the GPU IPC shmmod) instead of mapping and
         unmapping it on every copy. The copy sizes that use it are still set by
         MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H (send) and
-        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (receive).
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (receive), both capped by
+        MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE.
 
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI

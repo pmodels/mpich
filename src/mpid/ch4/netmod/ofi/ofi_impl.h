@@ -945,6 +945,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_mmap_cached(void **buf, MPI_Datatype 
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPL_HAVE_ZE
+    /* MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE is the ceiling of the direction thresholds */
+    threshold = MPL_MIN(threshold, MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
     if (!MPIR_CVAR_CH4_OFI_GPU_MMAP_CACHE || !MPL_gpu_attr_is_dev(attr) ||
         copy_sz == 0 || copy_sz > threshold) {
         goto fn_exit;

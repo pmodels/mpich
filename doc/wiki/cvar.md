@@ -2500,7 +2500,7 @@ Used in functions: `MPIDI_OFI_init_settings`, `dump_global_settings`
 
 ### MPIR_CVAR_CH4_OFI_GPU_MMAP_CACHE
 
-Controls whether CH4 OFI uses the cached host mmap of a device buffer for small staging copies between the device buffer and the host pack buffer: the send-side device-to-host copy on the inject and eager paths, and the receive-side host-to-device unpack. It applies only in ZE builds, to contiguous device buffers, and only to copies that are already fast (CPU) copies, i.e. at or below `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H` (send) or `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D` (receive). The mmap and the IPC handle behind it are kept in the GPU handle cache shared with the GPU IPC shmmod, whose size is set by `MPIR_CVAR_GPU_HANDLE_CACHE_SIZE`; a new buffer evicts the least recently used entry that is not in use. When active, a small device-buffer message no longer maps and unmaps the whole allocation on every copy.
+Controls whether CH4 OFI uses the cached host mmap of a device buffer for small staging copies between the device buffer and the host pack buffer: the send-side device-to-host copy on the inject and eager paths, and the receive-side host-to-device unpack. It applies only in ZE builds, to contiguous device buffers, and only to copies that are already fast (CPU) copies, i.e. at or below `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H` (send) or `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D` (receive), each capped by `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE`. The mmap and the IPC handle behind it are kept in the GPU handle cache shared with the GPU IPC shmmod, whose size is set by `MPIR_CVAR_GPU_HANDLE_CACHE_SIZE`; a new buffer evicts the least recently used entry that is not in use. When active, a small device-buffer message no longer maps and unmaps the whole allocation on every copy.
 
 * true - default, use the cached host mmap for small staging copies.
 * false - map and unmap the device buffer in every small staging copy, as before.
@@ -2899,7 +2899,7 @@ Used in functions: `none directly visible in `src/mpid/common/genq/mpidu_genq_sh
 
 ### MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE
 
-Sets the maximum message or window-buffer size for using the GPU fast-copy path where this general threshold applies. It is used for CH4 GPU IPC paths only when the GPU IPC shmmod is enabled, and the mmap-based fast-copy mapping is selected only in ZE builds. It is also used by GPU localcopy for contiguous copies when the copy direction is not covered by the H2D, D2H, or D2D fast-copy thresholds. GPU IPC use still depends on the relevant IPC path being active, including GPU IPC buffer eligibility and any collective IPC size threshold for collective IPC read paths. When active, this CVAR sets the maximum size for selecting GPU fast memcpy or mmap-based GPU IPC fast-copy mapping in those paths.
+Sets the maximum message or window-buffer size for using the GPU fast-copy path where this general threshold applies. It is used for CH4 GPU IPC paths only when the GPU IPC shmmod is enabled, and the mmap-based fast-copy mapping is selected only in ZE builds. GPU localcopy uses it for contiguous copies in a direction not covered by the H2D, D2H, or D2D fast-copy thresholds, and as the ceiling of those three thresholds, so 0 or a negative value turns off GPU fast memcpy in every path. GPU IPC use still depends on the relevant IPC path being active, including GPU IPC buffer eligibility and any collective IPC size threshold for collective IPC read paths. When active, this CVAR sets the maximum size for selecting GPU fast memcpy or mmap-based GPU IPC fast-copy mapping in those paths.
 
 * 4096 - default, use GPU fast memcpy or mmap-based GPU IPC fast-copy mapping for applicable copies or mappings up to 4096 bytes.
 * nonnegative integer - maximum applicable copy or mapping size in bytes for selecting the GPU fast-copy path.
@@ -2909,7 +2909,7 @@ Used in functions: `MPIDI_GPU_copy_data_async`, `MPIDI_GPU_write_data_async`, `M
 
 ### MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D
 
-Sets the maximum device-to-device copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is device-to-device. For larger eligible device-to-device copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for device-to-device localcopy operations.
+Sets the maximum device-to-device copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is device-to-device. For larger eligible device-to-device copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for device-to-device localcopy operations. The effective threshold is the smaller of this CVAR and `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE`.
 
 * 128 - default, use GPU fast memcpy for applicable device-to-device localcopy operations up to 128 bytes.
 * nonnegative integer - maximum device-to-device localcopy size in bytes for selecting GPU fast memcpy.
@@ -2919,7 +2919,7 @@ Used in functions: `do_localcopy_gpu`
 
 ### MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H
 
-Sets the maximum device-to-host send-copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is device-to-host. For larger eligible device-to-host copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for device-to-host localcopy operations.
+Sets the maximum device-to-host send-copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is device-to-host. For larger eligible device-to-host copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for device-to-host localcopy operations. The effective threshold is the smaller of this CVAR and `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE`.
 
 * 256 - default, use GPU fast memcpy for applicable device-to-host localcopy operations up to 256 bytes.
 * nonnegative integer - maximum device-to-host localcopy size in bytes for selecting GPU fast memcpy.
@@ -2929,7 +2929,7 @@ Used in functions: `do_localcopy_gpu`
 
 ### MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D
 
-Sets the maximum host-to-device receive-copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is host-to-device. For larger eligible host-to-device copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for host-to-device localcopy operations.
+Sets the maximum host-to-device receive-copy size for using the GPU fast-copy path. It is used by GPU localcopy for contiguous copies when GPU support is compiled in, the GPU engine type is available, the ZE GPU backend fast-copy implementation is available, and the copy direction is host-to-device. For larger eligible host-to-device copies, GPU localcopy uses the GPU asynchronous memcpy path instead. When active, this CVAR sets the maximum size for selecting GPU fast memcpy for host-to-device localcopy operations. The effective threshold is the smaller of this CVAR and `MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE`.
 
 * 4096 - default, use GPU fast memcpy for applicable host-to-device localcopy operations up to 4096 bytes.
 * nonnegative integer - maximum host-to-device localcopy size in bytes for selecting GPU fast memcpy.
