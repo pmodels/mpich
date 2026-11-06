@@ -11,6 +11,7 @@ include $(top_srcdir)/src/mpi/coll/alltoallv/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/alltoallw/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/barrier/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/bcast/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/cnc/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/exscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gatherv/Makefile.mk

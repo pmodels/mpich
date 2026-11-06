@@ -19,15 +19,143 @@
 typedef intptr_t MPI_Aint;
 typedef int MPI_Datatype;
 typedef int MPI_Op;
+typedef int MPI_Comm;
+typedef struct MPIR_Info MPIR_Info;
+
+#define MPI_IN_PLACE ((void *) -1)
+
+#define MPI_FLOAT   1
+#define MPI_INT     2
+#define MPI_INT32_T 3
+#define MPI_DOUBLE  4
+
+#define MPI_SUM  1
+#define MPI_PROD 2
+#define MPI_MIN  3
+#define MPI_MAX  4
+#define MPI_BAND 5
 
 /* Types that headers under test only mention. Pointers to them are fine as
  * incomplete types; the ones used by value are placeholders whose layout is
  * NOT the real one, so units must not depend on their contents. */
+struct MPIR_Comm {
+    MPI_Comm handle;
+    int rank;
+    int local_size;
+    struct {
+        void *cnc_priv;
+    } coll;
+};
 typedef struct MPIR_Comm MPIR_Comm;
 typedef struct MPIR_Request MPIR_Request;
 typedef struct {
     int placeholder;
 } MPIR_gpu_req;
+
+typedef struct {
+    int isThreaded;
+} MPIR_Thread_info_t;
+extern MPIR_Thread_info_t MPIR_ThreadInfo;
+
+int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
+int MPIR_Comm_release(MPIR_Comm * comm_ptr);
+void MPIR_Datatype_is_contig(MPI_Datatype datatype, int *flag);
+int MPIR_GPU_query_pointer_is_dev(const void *ptr);
+void MPIR_Datatype_get_size_macro(MPI_Datatype datatype, MPI_Aint size);
+void MPIR_Datatype_get_extent_macro(MPI_Datatype datatype, MPI_Aint extent);
+void MPIR_Datatype_get_true_lb(MPI_Datatype datatype, MPI_Aint * true_lb);
+#define MPIR_Datatype_get_size_macro(dt_, sz_) ((sz_) = unit_datatype_size(dt_))
+#define MPIR_Datatype_get_extent_macro(dt_, ext_) ((ext_) = unit_datatype_size(dt_))
+MPI_Aint unit_datatype_size(MPI_Datatype datatype);
+
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Bcast_intra_binomial(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                              MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                               MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Gatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                int coll_attr);
+int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcounts,
+                                 const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
+                                 MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                 MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgather_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                              MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoall_intra_pairwise(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                 MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf, MPI_Aint sendcount,
+                                                  MPI_Datatype sendtype, void *recvbuf,
+                                                  MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                  MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
+                                   const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
+                                   const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf,
+                                                   const MPI_Aint * sendcounts,
+                                                   const MPI_Aint * sdispls, MPI_Datatype sendtype,
+                                                   void *recvbuf, const MPI_Aint * recvcounts,
+                                                   const MPI_Aint * rdispls, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                               int coll_attr);
+int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                            MPI_Datatype datatype, MPI_Op op,
+                                            MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+                                                       MPI_Aint recvcount, MPI_Datatype datatype,
+                                                       MPI_Op op, MPIR_Comm * comm_ptr,
+                                                       int coll_attr);
+
+int MPIR_Barrier_intra_cnc(MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Bcast_intra_cnc(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                         MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Gather_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                          MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Gatherv_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                           void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                           MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Scatter_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                           void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                           MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Scatterv_intra_cnc(const void *sendbuf, const MPI_Aint * sendcounts,
+                            const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
+                            MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                            MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgather_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                             MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Allgatherv_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoall_intra_cnc(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                            MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Alltoallv_intra_cnc(const void *sendbuf, const MPI_Aint * sendcounts,
+                             const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
+                             const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
+                             MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Reduce_intra_cnc(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                          MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                          int coll_attr);
+int MPIR_Allreduce_intra_cnc(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr);
+int MPIR_Reduce_scatter_block_intra_cnc(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
+                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                        int coll_attr);
 
 /* Errors: instead of creating an error code, the MPIR_ERR_ macros format the
  * generic message, or the specific message with its arguments, into
