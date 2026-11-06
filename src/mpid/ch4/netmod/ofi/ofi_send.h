@@ -401,7 +401,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
                 need_free_pack_buf = true;
             }
-            mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
+            void *copy_buf = (void *) buf;
+            MPL_pointer_attr_t copy_attr = attr;
+            mpi_errno = MPIDI_OFI_gpu_mmap_cached(&copy_buf, datatype, data_sz, &copy_attr,
+                                                  MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_Localcopy_gpu(copy_buf, count, datatype, 0, &copy_attr,
                                            pack_buf, data_sz, MPIR_BYTE_INTERNAL, 0,
                                            MPIR_GPU_ATTR_HOST,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
@@ -480,7 +485,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             MPIR_ERR_CHECK(mpi_errno);
 
             data = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
-            mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
+            void *copy_buf = (void *) buf;
+            MPL_pointer_attr_t copy_attr = attr;
+            mpi_errno = MPIDI_OFI_gpu_mmap_cached(&copy_buf, datatype, data_sz, &copy_attr,
+                                                  MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_Localcopy_gpu(copy_buf, count, datatype, 0, &copy_attr,
                                            data, data_sz, MPIR_BYTE_INTERNAL, 0,
                                            MPIR_GPU_ATTR_HOST,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
