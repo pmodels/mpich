@@ -1,374 +1,347 @@
 {
     "name=bcast-intra-0":
     {
-            "MPIDI_CH4_release_gather":
-            {
-                "algorithm=MPIDI_POSIX_mpi_bcast_release_gather":{}
-            },
-            "comm_size<8":
-            {
-                "algorithm=MPIR_Bcast_intra_binomial":{}
-            },
-            "pof2":
-            {
-                "msg_size<=12288":
-                {
-                    "algorithm=MPIR_Bcast_intra_binomial":{}
+            "comm_size(64)": {
+                "msg_size(16384)": {
+                    "comm_size(8)": {"algorithm=MPIR_Bcast_intra_tree": {"tree_type": "kary", "k": 2, "is_non_blocking": 1}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
                 },
-                "msg_size<=524288":
-                {
-                    "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                }
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             },
-            "any":
-            {
-                "msg_size<=12288":
-                {
-                    "algorithm=MPIR_Bcast_intra_binomial":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
-                }
-            }
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
+    "name=bcast-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=bcast-intra-10":
+    {
+            "algorithm=MPIR_Bcast_intra_smp": {}
+    },
+    "name=bcast-intra-200":
+    {
+            "algorithm=MPIDI_POSIX_mpi_bcast_release_gather": {}
+    },
+    "name=bcast-intra-210": "dispatch(200)",
+    "name=bcast-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=bcast-intra-10-gpu":
+    {
+            "msg_size(262144)": {"algorithm=MPIR_Bcast_intra_smp_node_first": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=bcast-intra-800": "dispatch(800)",
     "name=bcast-inter-0":
     {
             "algorithm=MPIR_Bcast_inter_remote_send_local_bcast":{}
     },
     "name=allreduce-intra-0":
     {
-            "MPIDI_CH4_release_gather":
-            {
-                "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather":{}
+            "msg_size(65536)": {
+                "msg_size(4096)": {"algorithm=MPIR_Allreduce_intra_recexch": {"k": 2, "single_phase_recv": 0}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             },
-            "msg_size<8":
-            {
-                "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allreduce-intra-400":
+    {
+            "comm_size(64)": {
+                "msg_size(16384)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+                "any": "dispatch(400)"
             },
-            "any":
-            {
-                "!builtin_op":
-                {
-                    "algorithm=MPIR_Allreduce_intra_recursive_doubling":{}
+            "any": "dispatch(400)"
+    },
+    "name=allreduce-intra-1c":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Allreduce_intra_smp": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allreduce-intra-20c":
+    {
+            "msg_size(4096)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allreduce-intra-20d":
+    {
+            "msg_size(4096)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+            "msg_size(262144)": {
+                "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allreduce-intra-21c": "dispatch(201)",
+    "name=allreduce-intra-21d": "dispatch(10)",
+    "name=allreduce-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=allreduce-intra-20c-gpu":
+    {
+            "comm_size(64)": {
+                "msg_size(65536)": {
+                    "comm_size(4)": {
+                        "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+                        "any": {"algorithm=MPIR_Coll_nb": {}}
+                    },
+                    "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
                 },
-                "any":
-                {
-                    "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather":{}
-                }
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {
+                "msg_size(65536)": {
+                    "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_allreduce_release_gather": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
+                },
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             }
     },
+    "name=allreduce-intra-800": "dispatch(800)",
+    "name=allreduce-intra-81c": "dispatch(800)",
+    "name=allreduce-intra-a0c": "dispatch(800)",
     "name=allreduce-inter-0":
     {
             "algorithm=MPIR_Allreduce_inter_reduce_exchange_bcast":{}
     },
     "name=allgather-intra-0":
     {
-            "pof2":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Allgather_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Allgather_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Allgather_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                }
-            },
-            "any":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<10240":
-                    {
-                        "algorithm=MPIR_Allgather_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<1280":
-                    {
-                        "algorithm=MPIR_Allgather_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<160":
-                    {
-                        "algorithm=MPIR_Allgather_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgather_intra_ring":{}
-                    }
-                }
-            }
+            "algorithm=MPIR_Coll_nb": {}
     },
+    "name=allgather-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=allgather-intra-2":
+    {
+            "comm_size(64)": {
+                "comm_size(16)": {
+                    "comm_size(4)": {"algorithm=MPIR_Allgather_intra_recursive_doubling": {}},
+                    "msg_size(4096)": {"algorithm=MPIR_Allgather_intra_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
+                },
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allgather-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=allgather-intra-800": "dispatch(800)",
     "name=allgather-inter-0":
     {
             "algorithm=MPIR_Allgather_inter_local_gather_remote_bcast":{}
     },
     "name=allgatherv-intra-0":
     {
-            "pof2":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                }
-            },
-            "any":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<10240":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<1280":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<160":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Allgatherv_intra_ring":{}
-                    }
-                }
-            }
+            "algorithm=MPIR_Coll_nb": {}
     },
+    "name=allgatherv-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=allgatherv-intra-2":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {
+                    "comm_size(2)": {"algorithm=MPIR_Allgatherv_intra_brucks": {}},
+                    "msg_size(16384)": {"algorithm=MPIR_Allgatherv_intra_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
+                },
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allgatherv-intra-3":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {
+                    "msg_size(16384)": {"algorithm=MPIR_Allgatherv_intra_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
+                },
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=allgatherv-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=allgatherv-intra-800": "dispatch(800)",
+    "name=allgatherv-intra-803": "dispatch(800)",
     "name=allgatherv-inter-0":
     {
             "algorithm=MPIR_Allgatherv_inter_remote_gather_local_bcast":{}
     },
     "name=reduce-intra-0":
     {
-            "MPIDI_CH4_release_gather":
-            {
-                "algorithm=MPIDI_POSIX_mpi_reduce_release_gather":{}
-            },
-            "msg_size<2048":
-            {
-                "algorithm=MPIR_Reduce_intra_binomial":{}
-            },
-            "any":
-            {
-                "builtin_op":
-                {
-                    "algorithm=MPIR_Reduce_intra_reduce_scatter_gather":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Reduce_intra_binomial":{}
-                }
-            }
+            "msg_size(65536)": {"algorithm=MPIR_Reduce_intra_binomial": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
+    "name=reduce-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=reduce-intra-1c":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce-intra-20c":
+    {
+            "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_reduce_release_gather": {}},
+            "msg_size(4194304)": {"algorithm=MPIR_Coll_nb": {}},
+            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {}}
+    },
+    "name=reduce-intra-21c": "dispatch(200)",
+    "name=reduce-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce-intra-20c-gpu":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Coll_nb": {}},
+            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {}}
+    },
+    "name=reduce-intra-800": "dispatch(800)",
+    "name=reduce-intra-a0c": "dispatch(800)",
     "name=reduce-inter-0":
     {
             "algorithm=MPIR_Reduce_inter_local_reduce_remote_send":{}
     },
     "name=reduce_scatter-intra-0":
     {
-            "commutative":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_pairwise":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_pairwise":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_pairwise":{}
-                    }
-                }
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce_scatter-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=reduce_scatter-intra-10f":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_Reduce_scatter_intra_noncommutative": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_noncommutative": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             },
-            "any":
-            {
-                "block_regular":
-                {
-                    "pof2":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_noncommutative":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_intra_recursive_doubling":{}
-                    }
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Reduce_scatter_intra_recursive_doubling":{}
-                }
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_noncommutative": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             }
     },
+    "name=reduce_scatter-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce_scatter-intra-c-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(6)": {"algorithm=MPIR_Coll_nb": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            }
+    },
+    "name=reduce_scatter-intra-10e-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Coll_nb": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Reduce_scatter_intra_noncommutative": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Reduce_scatter_intra_noncommutative": {}}
+            }
+    },
+    "name=reduce_scatter-intra-10f-gpu": "dispatch(103)",
+    "name=reduce_scatter-intra-800": "dispatch(800)",
+    "name=reduce_scatter-intra-90f": "dispatch(800)",
     "name=reduce_scatter-inter-0":
     {
             "algorithm=MPIR_Reduce_scatter_inter_remote_reduce_local_scatter":{}
     },
     "name=reduce_scatter_block-intra-0":
     {
-            "commutative":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_pairwise":{}
-                    }
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce_scatter_block-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=reduce_scatter_block-intra-e":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {
+                    "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_block_intra_noncommutative": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
                 },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_pairwise":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Reduce_scatter_block_intra_pairwise":{}
-                    }
-                }
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_block_intra_noncommutative": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             },
-            "any":
-            {
-                "pof2":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_noncommutative":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Reduce_scatter_block_intra_recursive_doubling":{}
-                }
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_block_intra_noncommutative": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             }
     },
+    "name=reduce_scatter_block-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=reduce_scatter_block-intra-d-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(6)": {"algorithm=MPIR_Coll_nb": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Reduce_scatter_block_intra_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            }
+    },
+    "name=reduce_scatter_block-intra-800": "dispatch(800)",
+    "name=reduce_scatter_block-intra-80e": "dispatch(800)",
     "name=reduce_scatter_block-inter-0":
     {
             "algorithm=MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter":{}
     },
     "name=gather-intra-0":
     {
-            "algorithm=MPIR_Gather_intra_binomial":{}
+            "comm_size(64)": {
+                "comm_size(3)": {"algorithm=MPIR_Gather_intra_binomial": {}},
+                "msg_size(1024)": {"algorithm=MPIR_Gather_intra_binomial": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {
+                "msg_size(1024)": {"algorithm=MPIR_Gather_intra_binomial": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            }
     },
+    "name=gather-intra-400":
+    {
+            "comm_size(64)": {
+                "msg_size(1024)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+                "any": "dispatch(400)"
+            },
+            "any": "dispatch(400)"
+    },
+    "name=gather-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=gather-intra-800": "dispatch(800)",
     "name=gather-inter-0":
     {
             "msg_size<256":
@@ -382,8 +355,23 @@
     },
     "name=scatter-intra-0":
     {
-            "algorithm=MPIR_Scatter_intra_binomial":{}
+            "comm_size(64)": {
+                "comm_size(16)": {"algorithm=MPIR_Scatter_intra_binomial": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
+    "name=scatter-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=scatter-intra-0-gpu":
+    {
+            "msg_size(16384)": {"algorithm=MPIR_Scatter_intra_binomial": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=scatter-intra-800": "dispatch(800)",
     "name=scatter-inter-0":
     {
             "msg_size<256":
@@ -397,7 +385,12 @@
     },
     "name=gatherv-intra-0":
     {
-        "algorithm=MPIR_Gatherv_allcomm_linear":{}
+            "algorithm=MPIR_Gatherv_allcomm_linear": {}
+    },
+    "name=gatherv-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
     },
     "name=gatherv-inter-0":
     {
@@ -405,7 +398,7 @@
     },
     "name=scatterv-intra-0":
     {
-        "algorithm=MPIR_Scatterv_allcomm_linear":{}
+            "algorithm=MPIR_Scatterv_allcomm_linear": {}
     },
     "name=scatterv-inter-0":
     {
@@ -413,79 +406,177 @@
     },
     "name=scan-intra-0":
     {
-        "algorithm=MPIR_Scan_intra_recursive_doubling":{}
+            "comm_size(64)": {
+                "comm_size(32)": {
+                    "msg_size(4096)": {"algorithm=MPIR_Scan_intra_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Coll_nb": {}}
+                },
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
+    "name=scan-intra-400":
+    {
+            "comm_size(64)": {
+                "msg_size(65536)": "dispatch(400)",
+                "comm_size(4)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+                "any": "dispatch(400)"
+            },
+            "any": "dispatch(400)"
+    },
+    "name=scan-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=scan-intra-c-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Scan_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=scan-intra-2c-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(16)": {"algorithm=MPIR_Coll_nb": {}},
+                "any": {"algorithm=MPIR_Scan_intra_smp": {}}
+            },
+            "any": {"algorithm=MPIR_Scan_intra_smp": {}}
+    },
+    "name=scan-intra-2d-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(32)": "dispatch(21)",
+                "any": {"algorithm=MPIR_Scan_intra_smp": {}}
+            },
+            "any": {"algorithm=MPIR_Scan_intra_smp": {}}
+    },
+    "name=scan-intra-800": "dispatch(800)",
     "name=exscan-intra-0":
     {
-        "algorithm=MPIR_Exscan_intra_recursive_doubling":{}
+            "msg_size(4096)": {"algorithm=MPIR_Exscan_intra_recursive_doubling": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
-    "name=barrier-intra-0":
+    "name=exscan-intra-400":
     {
-            "MPIDI_CH4_release_gather":
-            {
-                "algorithm=MPIDI_POSIX_mpi_barrier_release_gather":{}
+            "comm_size(64)": {
+                "msg_size(1048576)": "dispatch(400)",
+                "any": {"algorithm=MPIR_Coll_buffer_swap": {}}
             },
-            "any":
-            {
-                "algorithm=MPIR_Barrier_intra_k_dissemination":{
-                    "k": 2
-                }
+            "any": "dispatch(400)"
+    },
+    "name=exscan-intra-0-gpu":
+    {
+            "algorithm=MPIR_Exscan_intra_recursive_doubling": {}
+    },
+    "name=exscan-intra-d-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Exscan_intra_recursive_doubling": {}},
+                "!pof2": {"algorithm=MPIR_Exscan_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
+            },
+            "any": {
+                "!pof2": {"algorithm=MPIR_Exscan_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Coll_nb": {}}
             }
     },
+    "name=exscan-intra-800": "dispatch(800)",
+    "name=barrier-intra-0":
+    {
+            "algorithm=MPIR_Barrier_intra_recexch": {"k": 2, "single_phase_recv": 0}
+    },
+    "name=barrier-intra-400":
+    {
+            "comm_size(64)": {
+                "comm_size(12)": "dispatch(400)",
+                "comm_size(16)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+                "any": "dispatch(400)"
+            },
+            "any": "dispatch(400)"
+    },
+    "name=barrier-intra-10":
+    {
+            "algorithm=MPIR_Barrier_intra_smp": {}
+    },
+    "name=barrier-intra-200":
+    {
+            "algorithm=MPIDI_POSIX_mpi_barrier_release_gather": {}
+    },
+    "name=barrier-intra-210": "dispatch(200)",
+    "name=barrier-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(6)": {"algorithm=MPIR_Barrier_intra_k_dissemination": {"k": 2}},
+                "any": {"algorithm=MPIR_Barrier_intra_recexch": {"k": 2, "single_phase_recv": 0}}
+            },
+            "any": {"algorithm=MPIR_Barrier_intra_recexch": {"k": 2, "single_phase_recv": 0}}
+    },
+    "name=barrier-intra-10-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(32)": {
+                    "!pof2": {"algorithm=MPIR_Barrier_intra_smp": {}},
+                    "any": {"algorithm=MPIR_Barrier_intra_recexch": {"k": 2, "single_phase_recv": 0}}
+                },
+                "any": {"algorithm=MPIR_Barrier_intra_smp": {}}
+            },
+            "any": {"algorithm=MPIR_Barrier_intra_smp": {}}
+    },
+    "name=barrier-intra-200-gpu":
+    {
+            "algorithm=MPIDI_POSIX_mpi_barrier_release_gather": {}
+    },
+    "name=barrier-intra-210-gpu": "dispatch(200)",
+    "name=barrier-intra-800": "dispatch(800)",
     "name=barrier-inter-0":
     {
             "algorithm=MPIR_Barrier_inter_bcast":{}
     },
     "name=alltoall-intra-0":
     {
-            "inplace":
-            {
-                "algorithm=MPIR_Alltoall_intra_pairwise_sendrecv_replace":{}
-            },
-            "any":
-            {
-                "comm_size<8":
-                {
-                    "msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_scattered":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_pairwise":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<=256":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_brucks":{}
-                    },
-                    "msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_scattered":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Alltoall_intra_pairwise":{}
-                    }
-                }
-            }
+            "msg_size(4096)": {"algorithm=MPIR_Alltoall_intra_k_brucks": {"k": 2}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
     },
+    "name=alltoall-intra-400":
+    {
+            "comm_size(64)": {"algorithm=MPIR_Coll_buffer_swap": {}},
+            "any": "dispatch(400)"
+    },
+    "name=alltoall-intra-1":
+    {
+            "msg_size(1024)": {"algorithm=MPIR_Alltoall_intra_k_brucks": {"k": 2}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=alltoall-intra-0-gpu":
+    {
+            "algorithm=MPIR_Coll_nb": {}
+    },
+    "name=alltoall-intra-1-gpu":
+    {
+            "msg_size(16384)": {"algorithm=MPIR_Alltoall_intra_scattered": {}},
+            "any": {"algorithm=MPIR_Coll_nb": {}}
+    },
+    "name=alltoall-intra-800": "dispatch(800)",
     "name=alltoall-inter-0":
     {
             "algorithm=MPIR_Alltoall_inter_pairwise_exchange":{}
     },
     "name=alltoallv-intra-0":
     {
-            "inplace":
-            {
-                "algorithm=MPIR_Alltoallv_intra_pairwise_sendrecv_replace":{}
+            "algorithm=MPIR_Alltoallv_intra_scattered": {}
+    },
+    "name=alltoallv-intra-1":
+    {
+            "comm_size(64)": {
+                "comm_size(3)": {
+                    "comm_size(2)": {"algorithm=MPIR_Alltoallv_intra_pairwise_sendrecv_replace": {}},
+                    "any": {"algorithm=MPIR_Alltoallv_intra_scattered": {}}
+                },
+                "any": {"algorithm=MPIR_Alltoallv_intra_scattered": {}}
             },
-            "any":
-            {
-                "algorithm=MPIR_Alltoallv_intra_scattered":{}
-            }
+            "any": {"algorithm=MPIR_Alltoallv_intra_scattered": {}}
     },
     "name=alltoallv-inter-0":
     {
@@ -528,319 +619,394 @@
     },
     "name=ibarrier-intra-0":
     {
-            "algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling":{}
+            "comm_size(64)": {
+                "comm_size(6)": {"algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_TSP_Ibarrier_sched_intra_recexch": {"k": 2}}
+            },
+            "any": {"algorithm=MPIR_TSP_Ibarrier_sched_intra_recexch": {"k": 2}}
     },
+    "name=ibarrier-intra-0-gpu":
+    {
+            "algorithm=MPIR_Ibarrier_intra_sched_recursive_doubling": {}
+    },
+    "name=ibarrier-intra-800": "dispatch(800)",
     "name=ibarrier-inter-0":
     {
             "algorithm=MPIR_Ibarrier_inter_sched_bcast":{}
     },
     "name=iallreduce-intra-0":
     {
-            "msg_size<=2048":
-            {
-                "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-            },
-            "any":
-            {
-                "!builtin_op":
-                {
-                    "algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Iallreduce_intra_sched_reduce_scatter_allgather":{}
-                }
-            }
+            "msg_size(262144)": {"algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling": {}},
+            "any": {"algorithm=MPIR_Iallreduce_intra_sched_naive": {}}
     },
+    "name=iallreduce-intra-c":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Iallreduce_intra_sched_recursive_doubling": {}},
+            "any": {"algorithm=MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv": {"k": 2}}
+    },
+    "name=iallreduce-intra-1c":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Iallreduce_intra_sched_smp": {}},
+            "any": {"algorithm=MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv": {"k": 2}}
+    },
+    "name=iallreduce-intra-0-gpu":
+    {
+            "algorithm=MPIR_Iallreduce_intra_sched_naive": {}
+    },
+    "name=iallreduce-intra-1c-gpu":
+    {
+            "algorithm=MPIR_Iallreduce_intra_sched_smp": {}
+    },
+    "name=iallreduce-intra-800": "dispatch(800)",
+    "name=iallreduce-intra-80c": "dispatch(800)",
     "name=iallreduce-inter-0":
     {
             "algorithm=MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast":{}
     },
     "name=iallgather-intra-0":
     {
-            "pof2":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
+            "comm_size(64)": {
+                "comm_size(24)": {
+                    "comm_size(6)": {"algorithm=MPIR_Iallgather_intra_sched_ring": {}},
+                    "msg_size(4096)": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_doubling": {"k": 2}},
+                    "msg_size(65536)": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}},
+                    "!pof2": {"algorithm=MPIR_Iallgather_intra_sched_ring": {}},
+                    "any": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}}
                 },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
-                }
+                "any": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}}
             },
-            "any":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<10240":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<1280":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<160":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgather_intra_sched_ring":{}
-                    }
-                }
+            "any": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}}
+    },
+    "name=iallgather-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_Iallgather_intra_sched_brucks": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Iallgather_intra_sched_brucks": {}},
+                "any": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Iallgather_intra_sched_brucks": {}},
+                "any": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_halving": {"k": 2}}
             }
     },
+    "name=iallgather-intra-1-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_TSP_Iallgather_sched_intra_recexch_doubling": {"k": 2}},
+                "any": "dispatch(1)"
+            },
+            "any": "dispatch(1)"
+    },
+    "name=iallgather-intra-800": "dispatch(800)",
     "name=iallgather-inter-0":
     {
             "algorithm=MPIR_Iallgather_inter_sched_local_gather_remote_bcast":{}
     },
     "name=iallgatherv-intra-0":
     {
-            "pof2":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_recursive_doubling":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                }
+            "msg_size(4096)": {"algorithm=MPIR_Iallgatherv_intra_sched_brucks": {}},
+            "any": {"algorithm=MPIR_Iallgatherv_intra_sched_ring": {}}
+    },
+    "name=iallgatherv-intra-80":
+    {
+            "comm_size(64)": {
+                "comm_size(24)": "dispatch(83)",
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
             },
-            "any":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<10240":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<1280":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<160":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_brucks":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Iallgatherv_intra_sched_ring":{}
-                    }
-                }
+            "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+    },
+    "name=iallgatherv-intra-81":
+    {
+            "comm_size(64)": {
+                "comm_size(12)": "dispatch(83)",
+                "msg_size(1024)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+            },
+            "any": {
+                "msg_size(1024)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
             }
     },
+    "name=iallgatherv-intra-82":
+    {
+            "comm_size(64)": {
+                "comm_size(16)": {
+                    "comm_size(4)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling": {"k": 2}},
+                    "msg_size(4096)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling": {"k": 2}},
+                    "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+                },
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+            },
+            "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+    },
+    "name=iallgatherv-intra-83": "dispatch(1)",
+    "name=iallgatherv-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+            },
+            "any": {
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+            }
+    },
+    "name=iallgatherv-intra-1-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {
+                    "comm_size(4)": {"algorithm=MPIR_Iallgatherv_intra_sched_ring": {}},
+                    "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}}
+                },
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "msg_size(65536)": {
+                    "comm_size(32)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                    "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+                },
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+            }
+    },
+    "name=iallgatherv-intra-80-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(12)": "dispatch(81)",
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "comm_size(24)": "dispatch(81)",
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_halving": {"k": 2}}
+            }
+    },
+    "name=iallgatherv-intra-81-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(6)": {
+                    "comm_size(3)": {"algorithm=MPIR_Iallgatherv_intra_sched_ring": {}},
+                    "msg_size(16384)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_recexch_doubling": {"k": 2}},
+                    "msg_size(65536)": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_brucks": {"k": 2}},
+                    "any": {"algorithm=MPIR_TSP_Iallgatherv_sched_intra_ring": {}}
+                },
+                "any": "dispatch(1)"
+            },
+            "any": "dispatch(1)"
+    },
+    "name=iallgatherv-intra-800": "dispatch(800)",
+    "name=iallgatherv-intra-881": "dispatch(800)",
+    "name=iallgatherv-intra-882": "dispatch(800)",
     "name=iallgatherv-inter-0":
     {
             "algorithm=MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast":{}
     },
     "name=ibcast-intra-0":
     {
-            "comm_size<8":
-            {
-                "any":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                }
+            "comm_size(64)": {
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "comm_size(32)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             },
-            "pof2":
-            {
-                "msg_size<12288":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                },
-                "msg_size<524288":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                }
-            },
-            "any":
-            {
-                "msg_size<12288":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_binomial":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Ibcast_intra_sched_scatter_ring_allgather":{}
-                }
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             }
     },
+    "name=ibcast-intra-2":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
+                "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
+                "msg_size(262144)": {"algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}}
+            },
+            "any": {
+                "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
+                "msg_size(262144)": {"algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}}
+            }
+    },
+    "name=ibcast-intra-10":
+    {
+            "algorithm=MPIR_Ibcast_intra_sched_smp": {}
+    },
+    "name=ibcast-intra-12":
+    {
+            "comm_size(64)": {
+                "msg_size(65536)": {
+                    "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                    "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+                },
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+            },
+            "any": {
+                "msg_size(65536)": {
+                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                    "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+                },
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+            }
+    },
+    "name=ibcast-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
+            },
+            "any": {
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
+            }
+    },
+    "name=ibcast-intra-2-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
+            },
+            "any": {
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
+            }
+    },
+    "name=ibcast-intra-10-gpu":
+    {
+            "msg_size(262144)": {
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+            },
+            "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
+    },
+    "name=ibcast-intra-12-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}},
+                "any": "dispatch(2)"
+            },
+            "any": "dispatch(2)"
+    },
+    "name=ibcast-intra-800": "dispatch(800)",
+    "name=ibcast-intra-812": "dispatch(800)",
     "name=ibcast-inter-0":
     {
             "algorithm=MPIR_Ibcast_inter_sched_flat":{}
     },
     "name=ireduce-intra-0":
     {
-            "msg_size<=2048":
-            {
-                "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
+            "algorithm=MPIR_Ireduce_intra_sched_binomial": {}
+    },
+    "name=ireduce-intra-c":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": {"algorithm=MPIR_Ireduce_intra_sched_binomial": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather": {}}
             },
-            "any":
-            {
-                "builtin_op":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Ireduce_intra_sched_binomial":{}
-                }
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather": {}}
             }
     },
+    "name=ireduce-intra-1c":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Ireduce_intra_sched_binomial": {}},
+            "any": {"algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather": {}}
+    },
+    "name=ireduce-intra-0-gpu":
+    {
+            "algorithm=MPIR_Ireduce_intra_sched_binomial": {}
+    },
+    "name=ireduce-intra-c-gpu":
+    {
+            "msg_size(65536)": {"algorithm=MPIR_Ireduce_intra_sched_binomial": {}},
+            "any": {"algorithm=MPIR_Ireduce_intra_sched_reduce_scatter_gather": {}}
+    },
+    "name=ireduce-intra-800": "dispatch(800)",
+    "name=ireduce-intra-80c": "dispatch(800)",
     "name=ireduce-inter-0":
     {
             "algorithm=MPIR_Ireduce_inter_sched_local_reduce_remote_send":{}
     },
     "name=ireduce_scatter-intra-0":
     {
-            "commutative":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_pairwise":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_pairwise":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_pairwise":{}
-                    }
-                }
+            "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling": {}
+    },
+    "name=ireduce_scatter-intra-c":
+    {
+            "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving": {}},
+            "any": {"algorithm=MPIR_Ireduce_scatter_intra_sched_pairwise": {}}
+    },
+    "name=ireduce_scatter-intra-10e":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": "dispatch(103)",
+                "any": {"algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative": {}}
             },
-            "any":
-            {
-                "block_regular":
-                {
-                    "pof2":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling":{}
-                    }
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling":{}
-                }
+            "any": {"algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative": {}}
+    },
+    "name=ireduce_scatter-intra-10f":
+    {
+            "algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative": {}
+    },
+    "name=ireduce_scatter-intra-0-gpu":
+    {
+            "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_doubling": {}
+    },
+    "name=ireduce_scatter-intra-c-gpu":
+    {
+            "algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving": {}
+    },
+    "name=ireduce_scatter-intra-10e-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_intra_sched_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Ireduce_scatter_intra_sched_noncommutative": {}}
             }
     },
+    "name=ireduce_scatter-intra-800": "dispatch(800)",
+    "name=ireduce_scatter-intra-80c": "dispatch(800)",
+    "name=ireduce_scatter-intra-90e": "dispatch(800)",
     "name=ireduce_scatter-inter-0":
     {
             "algorithm=MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv":{}
     },
     "name=igather-intra-0":
     {
-            "algorithm=MPIR_Igather_intra_sched_binomial":{}
+            "comm_size(64)": {
+                "comm_size(3)": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "!pof2": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_TSP_Igather_sched_intra_tree": {"k": 2}}
+            },
+            "any": {
+                "!pof2": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_TSP_Igather_sched_intra_tree": {"k": 2}}
+            }
     },
+    "name=igather-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "msg_size(16384)": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "comm_size(3)": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_TSP_Igather_sched_intra_tree": {"k": 2}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Igather_intra_sched_binomial": {}},
+                "any": {"algorithm=MPIR_TSP_Igather_sched_intra_tree": {"k": 2}}
+            }
+    },
+    "name=igather-intra-800": "dispatch(800)",
     "name=igather-inter-0":
     {
             "msg_size<256":
@@ -854,8 +1020,21 @@
     },
     "name=iscatter-intra-0":
     {
-            "algorithm=MPIR_Iscatter_intra_sched_binomial":{}
+            "comm_size(64)": {
+                "comm_size(3)": {"algorithm=MPIR_Iscatter_intra_sched_binomial": {}},
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iscatter_sched_intra_tree": {"k": 2}},
+                "any": {"algorithm=MPIR_Iscatter_intra_sched_binomial": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Iscatter_sched_intra_tree": {"k": 2}},
+                "any": {"algorithm=MPIR_Iscatter_intra_sched_binomial": {}}
+            }
     },
+    "name=iscatter-intra-0-gpu":
+    {
+            "algorithm=MPIR_TSP_Iscatter_sched_intra_tree": {"k": 2}
+    },
+    "name=iscatter-intra-800": "dispatch(800)",
     "name=iscatter-inter-0":
     {
             "msg_size<256":
@@ -869,7 +1048,7 @@
     },
     "name=igatherv-intra-0":
     {
-        "algorithm=MPIR_Igatherv_allcomm_sched_linear":{}
+            "algorithm=MPIR_Igatherv_allcomm_sched_linear": {}
     },
     "name=igatherv-inter-0":
     {
@@ -877,7 +1056,7 @@
     },
     "name=iscatterv-intra-0":
     {
-        "algorithm=MPIR_Iscatterv_allcomm_sched_linear":{}
+            "algorithm=MPIR_Iscatterv_allcomm_sched_linear": {}
     },
     "name=iscatterv-inter-0":
     {
@@ -885,58 +1064,66 @@
     },
     "name=iexscan-intra-0":
     {
-        "algorithm=MPIR_Iexscan_intra_sched_recursive_doubling":{}
+            "algorithm=MPIR_Iexscan_intra_sched_recursive_doubling": {}
     },
     "name=ialltoall-intra-0":
     {
-            "inplace":
-            {
-                "algorithm=MPIR_Ialltoall_intra_sched_inplace":{}
-            },
-            "any":
-            {
-                "comm_size<8":
-                {
-                    "msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_pairwise":{}
-                    }
+            "comm_size(64)": {
+                "msg_size(4096)": {
+                    "comm_size(12)": {"algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv": {}},
+                    "msg_size(256)": {"algorithm=MPIR_Ialltoall_intra_sched_brucks": {}},
+                    "any": {"algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv": {}}
                 },
-                "any":
-                {
-                    "msg_size<=2048":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_brucks":{}
-                    },
-                    "msg_size<=32768":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ialltoall_intra_sched_pairwise":{}
-                    }
-                }
+                "comm_size(4)": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}},
+                "msg_size(16384)": {
+                    "comm_size(8)": {"algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv": {}},
+                    "any": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}}
+                },
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}},
+                "any": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}}
+            },
+            "any": {
+                "msg_size(4096)": {
+                    "msg_size(256)": {"algorithm=MPIR_Ialltoall_intra_sched_brucks": {}},
+                    "any": {"algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv": {}}
+                },
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}},
+                "any": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}}
             }
     },
+    "name=ialltoall-intra-0-gpu":
+    {
+            "comm_size(64)": {
+                "msg_size(16384)": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}},
+                "comm_size(12)": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}},
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}},
+                "any": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}}
+            },
+            "any": {
+                "msg_size(65536)": {"algorithm=MPIR_TSP_Ialltoall_sched_intra_scattered": {"batch_size": 4, "bblock": 64}},
+                "any": {"algorithm=MPIR_Ialltoall_intra_sched_pairwise": {}}
+            }
+    },
+    "name=ialltoall-intra-1-gpu":
+    {
+            "algorithm=MPIR_Ialltoall_intra_sched_permuted_sendrecv": {}
+    },
+    "name=ialltoall-intra-800": "dispatch(800)",
     "name=ialltoall-inter-0":
     {
             "algorithm=MPIR_Ialltoall_inter_sched_pairwise_exchange":{}
     },
     "name=ialltoallv-intra-0":
     {
-            "inplace":
-            {
-                "algorithm=MPIR_Ialltoallv_intra_sched_inplace":{}
+            "algorithm=MPIR_Ialltoallv_intra_sched_blocked": {}
+    },
+    "name=ialltoallv-intra-1":
+    {
+            "comm_size(64)": {
+                "comm_size(3)": {"algorithm=MPIR_Ialltoallv_intra_sched_inplace": {}},
+                "any": {"algorithm=MPIR_Ialltoallv_intra_sched_blocked": {}}
             },
-            "any":
-            {
-                "algorithm=MPIR_Ialltoallv_intra_sched_blocked":{}
-            }
+            "any": {"algorithm=MPIR_Ialltoallv_intra_sched_blocked": {}}
     },
     "name=ialltoallv-inter-0":
     {
@@ -959,62 +1146,104 @@
     },
     "name=ireduce_scatter_block-intra-0":
     {
-            "commutative":
-            {
-                "comm_size<=8":
-                {
-                    "msg_size<65536":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_pairwise":{}
-                    }
-                },
-                "comm_size<=64":
-                {
-                    "msg_size<8192":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_pairwise":{}
-                    }
-                },
-                "any":
-                {
-                    "msg_size<1024":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving":{}
-                    },
-                    "any":
-                    {
-                        "algorithm=MPIR_Ireduce_scatter_block_intra_sched_pairwise":{}
-                    }
-                }
+            "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling": {}
+    },
+    "name=ireduce_scatter_block-intra-c":
+    {
+            "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving": {}},
+            "any": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_pairwise": {}}
+    },
+    "name=ireduce_scatter_block-intra-e":
+    {
+            "comm_size(64)": {
+                "comm_size(8)": "dispatch(2)",
+                "any": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative": {}}
             },
-            "any":
-            {
-                "pof2":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative":{}
-                },
-                "any":
-                {
-                    "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling":{}
-                }
+            "any": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative": {}}
+    },
+    "name=ireduce_scatter_block-intra-0-gpu":
+    {
+            "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling": {}
+    },
+    "name=ireduce_scatter_block-intra-c-gpu":
+    {
+            "algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving": {}
+    },
+    "name=ireduce_scatter_block-intra-d-gpu":
+    {
+            "algorithm=MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch": {"k": 2}
+    },
+    "name=ireduce_scatter_block-intra-e-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(4)": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative": {}}
+            },
+            "any": {
+                "msg_size(16384)": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_recursive_halving": {}},
+                "any": {"algorithm=MPIR_Ireduce_scatter_block_intra_sched_noncommutative": {}}
             }
     },
+    "name=ireduce_scatter_block-intra-f-gpu": "dispatch(1)",
+    "name=ireduce_scatter_block-intra-800": "dispatch(800)",
+    "name=ireduce_scatter_block-intra-80c": "dispatch(800)",
     "name=ireduce_scatter_block-inter-0":
     {
             "algorithm=MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv":{}
     },
     "name=iscan-intra-0":
     {
-        "algorithm=MPIR_Iscan_intra_sched_recursive_doubling":{}
+            "algorithm=MPIR_Iscan_intra_sched_recursive_doubling": {}
     },
+    "name=iscan-intra-2c":
+    {
+            "comm_size(64)": {
+                "comm_size(32)": {
+                    "msg_size(16384)": {"algorithm=MPIR_Iscan_intra_sched_recursive_doubling": {}},
+                    "comm_size(16)": {"algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+                },
+                "msg_size(16384)": {
+                    "msg_size(4096)": {"algorithm=MPIR_Iscan_intra_sched_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+                },
+                "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+            },
+            "any": {
+                "msg_size(16384)": {
+                    "msg_size(4096)": {"algorithm=MPIR_Iscan_intra_sched_recursive_doubling": {}},
+                    "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+                },
+                "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+            }
+    },
+    "name=iscan-intra-0-gpu":
+    {
+            "algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}
+    },
+    "name=iscan-intra-2c-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(32)": {"algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+            },
+            "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+    },
+    "name=iscan-intra-2d-gpu":
+    {
+            "comm_size(64)": {
+                "comm_size(16)": {"algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}},
+                "msg_size(262144)": {"algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+            },
+            "any": {
+                "msg_size(262144)": {"algorithm=MPIR_TSP_Iscan_sched_intra_recursive_doubling": {}},
+                "any": {"algorithm=MPIR_Iscan_intra_sched_smp": {}}
+            }
+    },
+    "name=iscan-intra-800": "dispatch(800)",
+    "name=iscan-intra-82c": "dispatch(800)",
     "name=ineighbor_allgather-intra-0":
     {
         "algorithm=MPIR_Ineighbor_allgather_allcomm_sched_linear":{}
