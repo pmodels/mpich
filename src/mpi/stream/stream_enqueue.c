@@ -45,7 +45,10 @@ static int alloc_send_data(const void *buf, MPI_Aint count, MPI_Datatype datatyp
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        if (p->data_sz > 0) {
+            p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
     }
 
     MPIR_Comm_add_ref(comm_ptr);
@@ -61,10 +64,8 @@ static int alloc_send_data(const void *buf, MPI_Aint count, MPI_Datatype datatyp
 
 static void free_send_data(struct send_data *p)
 {
-    if (p->host_buf) {
-        MPIR_gpu_free_host(p->host_buf);
-    }
     MPIR_Comm_release(p->comm_ptr);
+    MPL_free(p->host_buf);
     MPL_free(p);
 }
 
@@ -161,7 +162,10 @@ static int alloc_recv_data(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_Datatype_get_size_macro(datatype, dt_size);
         p->data_sz = dt_size * count;
 
-        MPIR_gpu_malloc_host(&p->host_buf, p->data_sz);
+        if (p->data_sz > 0) {
+            p->host_buf = MPL_malloc(p->data_sz, MPL_MEM_BUFFER);
+            MPIR_ERR_CHKANDJUMP(!p->host_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
     }
 
     MPIR_Comm_add_ref(comm_ptr);
@@ -177,10 +181,8 @@ static int alloc_recv_data(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
 static void free_recv_data(struct recv_data *p)
 {
-    if (p->host_buf) {
-        MPIR_gpu_free_host(p->host_buf);
-    }
     MPIR_Comm_release(p->comm_ptr);
+    MPL_free(p->host_buf);
     MPL_free(p);
 }
 
