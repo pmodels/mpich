@@ -252,8 +252,10 @@ A memory object id was expected but a non-memory object id was passed instead
 **colljson %d %d %s: Invalid collective tuning JSON at line %d, column %d: %s
 **colljsoncond: Invalid collective tuning JSON: a condition used by a collective that does not define it
 **colljsoncond %s %s %s: Invalid collective tuning JSON: subtree %s splits on %s, which %s does not have (the value would not be the same on every rank, or does not exist)
-**colljsonlocal: Invalid collective tuning JSON: a local condition is not used as coll_algorithms.txt describes
-**colljsonlocal %s %s: Invalid collective tuning JSON: subtree %s tests the local condition %s, which can differ between ranks. It cannot be reached from auto, its branch must end in an algorithm restricted on it or call=auto, and its next case must be any: call=auto
+**colljsonlocal: Invalid collective tuning JSON: a local condition outside a local set
+**colljsonlocal %s %s: Invalid collective tuning JSON: subtree %s tests the local condition %s, which can differ between ranks; only the dispatch tests it, by taking a local set (e.g. <coll>-intra-400) first
+**colljsonset: Invalid collective tuning JSON: a restriction set or dispatch(<mask>) is not used as Collective_Selection.md describes
+**colljsonset %s %s: Invalid collective tuning JSON: subtree %s %s
 
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.

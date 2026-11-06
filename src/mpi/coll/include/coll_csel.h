@@ -8,23 +8,15 @@
 
 #include "csel_json.h"
 
-/* "dispatch=<prefix>(<bits>)": continue in the subtree "<prefix>-<m>", m the restrictions (in hex)
- * among bits that hold. idx[] has one subtree per combination of the bits, resolved when the file
- * is loaded: the subtree of the combination, or of its largest subset that has one. */
-typedef struct MPIR_Csel_dispatch {
-    unsigned bits;
-    int nbits;
-    int pos[32];                /* bit positions of bits, low to high */
-    int idx[];                  /* 1 << nbits subtree indices, by compressed mask */
-} MPIR_Csel_dispatch_s;
-
 typedef struct MPIR_Csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
-            int idx;
+            int tree_idx;
         } call;
-        MPIR_Csel_dispatch_s *dispatch;
+        struct {
+            unsigned drop_mask; /* dispatch(drop_mask): the restrictions to leave out */
+        } dispatch;
         struct {
             MPIR_Csel_coll_type_e coll_type;
         } collective;
@@ -49,17 +41,46 @@ extern int *MPIR_Coll_algo_counters;
 int MPIR_Csel_load_file(const char *json_file);
 int MPIR_Csel_load_buf(const char *json_str);
 int MPIR_Csel_free(void);
-MPIR_Csel_node_s *MPIR_Csel_get_tree(const char *name);
-MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_node_s * csel, MPIR_Csel_coll_sig_s * coll_sig);
+/* the algorithm for coll_sig, from the restriction sets: the search starts at the dispatch */
+MPII_Csel_container_s *MPIR_Csel_search(MPIR_Csel_coll_sig_s * coll_sig);
 void MPIR_Csel_print_tree(MPIR_Csel_node_s * node, int level);
-int MPIR_Coll_run_tree(MPIR_Csel_node_s * tree, MPIR_Csel_coll_sig_s * coll_sig);
+int MPIR_Coll_search_and_run(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_auto(MPIR_Csel_coll_sig_s * coll_sig);
 
-/* the named subtrees of csel.c, for csel_validation.c */
+/* Two types of subtrees:
+ *   - A reserved-name subtree, <coll>-<intra|inter>-<mask in hex>[-xxx], is a restriction set of
+ *     the collective <coll>-<intra|inter>: the dispatch selects it when the restrictions in mask
+ *     hold, bit k being restriction k. A variant -xxx is a set tuned under the restriction
+ *     xxx_coll.
+ *   - A user-named subtree, any other name, is reachable only via call=. */
 int MPII_Csel_num_trees(void);
+bool MPII_Csel_tree_is_reserved(int tree_idx);
+bool MPII_Csel_tree_is_coll_type(int tree_idx, int coll_type);
+bool MPII_Csel_tree_is_local(int tree_idx);
+unsigned MPII_Csel_tree_variant_mask(int tree_idx);
+unsigned MPII_Csel_tree_mask(int tree_idx);
+
+/* The restriction state of a search. It is built at the beginning of MPIR_Csel_search, which
+ * starts with a dispatch, and selects the most specific restriction set that the state satisfies.
+ * Each following dispatch(<mask>) relaxes the state, leaving out the restrictions in its mask, and
+ * selects again.
+ *   m: the restrictions that hold, less those left out so far;
+ *   v: the _coll restrictions left out so far, which select the variants. */
+struct csel_dispatch_state {
+    bool have_m;
+    unsigned m;
+    unsigned v;
+};
+
+/* Dispatch selects a json tree most specifically matching coll_sig, with drop_mask applied to
+ * relax some restrictions. If no trees match, return -1. A fully written json should define all
+ * <coll>-<intra|inter>-0 sets, which will prevent this error return. */
+int MPII_Csel_dispatch(MPIR_Csel_coll_sig_s * coll_sig, unsigned drop_mask,
+                       struct csel_dispatch_state *state);
+
 int MPII_Csel_name_to_idx(const char *name);
-const char *MPII_Csel_tree_name(int idx);
-MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int idx);
+const char *MPII_Csel_tree_name(int tree_idx);
+MPIR_Csel_node_s *MPII_Csel_get_tree_by_idx(int tree_idx);
 int MPII_Csel_validate(void);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */

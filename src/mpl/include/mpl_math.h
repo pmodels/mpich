@@ -59,6 +59,22 @@ static inline int MPL_is_pof2(int val)
 #endif
 }
 
+/* Returns the number of set bits in val. */
+static inline int MPL_popcount(unsigned int val)
+{
+#ifndef MPL_HAVE_BUILTIN_POPCOUNT
+    int count = 0;
+
+    while (val) {
+        val &= val - 1;
+        count++;
+    }
+    return count;
+#else
+    return __builtin_popcount(val);
+#endif
+}
+
 /* Routing to calculate base^exp for integers */
 static inline int MPL_ipow(int base, int exp)
 {
