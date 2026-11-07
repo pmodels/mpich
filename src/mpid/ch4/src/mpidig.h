@@ -140,7 +140,7 @@ extern MPIDIG_global_t MPIDIG_global;
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm, int src_rank)
 {
-    int next_am_tag = MPIDI_COMM(comm, next_am_tag)++;
+    int next_am_tag = MPL_atomic_fetch_add_int(&MPIDI_COMM(comm, next_am_tag), 1);
     int next_am_tag_bits = MPIDI_COMM(comm, next_am_tag_bits);
     int tag = (next_am_tag & ((1 << next_am_tag_bits) - 1));
 
