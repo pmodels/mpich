@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 AC_PREREQ(2.63)
@@ -286,7 +286,7 @@ AC_CONFIG_HEADERS([src/frontend/include/yaksa_config.h])
 AH_TOP([
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef YAKSA_CONFIG_H_INCLUDED
