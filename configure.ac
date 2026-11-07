@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 AC_PREREQ([2.69])
@@ -196,7 +196,7 @@ dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADERS([src/include/mpichconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 #ifndef MPICHCONF_H_INCLUDED
 #define MPICHCONF_H_INCLUDED

@@ -1,6 +1,6 @@
 !
 ! Copyright (C) by Argonne National Laboratory
-!     See COPYRIGHT in top-level directory
+! SPDX-License-Identifier: Apache-2.0
 !
 
 ! Based on a sample program that triggered a segfault in MPICH

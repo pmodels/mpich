@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 external_subdirs = @pmi_srcdir@ @mpl_srcdir@ @hwloc_srcdir@

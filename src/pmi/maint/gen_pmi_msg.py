@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 import re
@@ -383,7 +383,7 @@ def attrs_identical(attrs_a, attrs_b):
 def dump_copyright(out):
     print("/*", file=out)
     print(" * Copyright (C) by Argonne National Laboratory", file=out)
-    print(" *     See COPYRIGHT in top-level directory", file=out)
+    print(" * SPDX-License-Identifier: Apache-2.0", file=out)
     print(" */", file=out)
     print("", file=out)
     print("/* ** This file is auto-generated, do not edit ** */", file=out)

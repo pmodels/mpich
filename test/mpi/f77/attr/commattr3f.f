@@ -1,6 +1,6 @@
 C
 C Copyright (C) by Argonne National Laboratory
-C     See COPYRIGHT in top-level directory
+C SPDX-License-Identifier: Apache-2.0
 C
 
 C  This tests the null copy function (returns flag false; thus the

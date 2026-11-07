@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 skip_words="inout,improbe,nd,alse,ans,parm,parms,stange,faught,gord,sur,hellow,creat,outweights,configury,numer,thrid,offsetp,wronly,indx,inactivate,anc,nneeded,annote"

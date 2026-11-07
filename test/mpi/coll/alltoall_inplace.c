@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* MPI_IN_PLACE alltoall, alltoallv and alltoallw, blocking, nonblocking and persistent. The

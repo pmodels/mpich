@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 #ifndef CMA_POST_H_INCLUDED
 #define CMA_POST_H_INCLUDED

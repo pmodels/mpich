@@ -1,6 +1,6 @@
 !
 ! Copyright (C) by Argonne National Laboratory
-!     See COPYRIGHT in top-level directory
+! SPDX-License-Identifier: Apache-2.0
 !
 
 ! This program tests MPI_Aint_add/diff in MPI-3.1.
