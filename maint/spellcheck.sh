@@ -5,7 +5,7 @@
 ##
 
 skip_words="inout,improbe,nd,alse,ans,parm,parms,stange,faught,gord,sur,hellow,creat,outweights,configury,numer,thrid,offsetp,wronly,indx,inactivate"
-skip_files=".git,*.tex,*.bib,*.sty,*.f,confdb/config.*"
+skip_files="CONTRIBUTORS,.git,*.tex,*.bib,*.sty,*.f,confdb/config.*"
 
 opts=(--ignore-words-list="$skip_words" --skip="$skip_files" --write-changes)
 filelist=""
