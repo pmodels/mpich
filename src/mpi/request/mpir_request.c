@@ -179,6 +179,9 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
             {
                 mpi_errno = MPIR_Grequest_query(request_ptr);
                 MPIR_Request_extract_status(request_ptr, status);
+                if (mpi_errno == MPI_SUCCESS) {
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                }
                 break;
             }
 
@@ -254,6 +257,9 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno = MPIR_Grequest_query(request_ptr);
+                if (mpi_errno == MPI_SUCCESS) {
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                }
 
                 break;
             }
@@ -324,7 +330,7 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
                 MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             } else {
                 /* internal usages of generalized request directly update request_ptr->status */
-                rc = request_ptr->status.MPI_ERROR;
+                rc = MPI_SUCCESS;
             }
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);

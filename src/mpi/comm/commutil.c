@@ -58,6 +58,26 @@ int MPIR_Comm_register_hint(int idx, const char *hint_key, MPIR_Comm_hint_fn_t f
     return idx;
 }
 
+int MPIR_Comm_grequest_start_impl(MPIR_Comm * comm_ptr,
+                                  MPI_Grequest_query_function * query_fn,
+                                  MPI_Grequest_free_function * free_fn,
+                                  MPI_Grequest_cancel_function * cancel_fn,
+                                  void *extra_state, MPIR_Request ** request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, request_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm_add_ref(comm_ptr);
+    (*request_ptr)->comm = comm_ptr;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int parse_string_value(const char *s, int type, int *val)
 {
     if (type == MPIR_COMM_HINT_TYPE_BOOL) {
