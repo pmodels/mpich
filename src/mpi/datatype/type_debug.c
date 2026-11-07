@@ -44,7 +44,7 @@ void MPII_Datatype_printf(MPI_Datatype type,
         MPIR_Datatype *type_ptr;
 
         MPIR_Datatype_get_ptr(type, type_ptr);
-        MPIR_Assert(type_ptr != NULL);
+        MPIR_Assert(type_ptr != NULL && type_ptr->contents != NULL);
         string = MPIR_Datatype_combiner_to_string(type_ptr->contents->combiner);
         MPIR_Assert(string != NULL);
     }

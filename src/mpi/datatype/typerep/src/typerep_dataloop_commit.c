@@ -29,6 +29,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     }
     void **dlp_p = (void **) &typeptr->typerep.handle;
 
+    /* internal types, e.g. unflattened types, may not have contents */
+    MPIR_Assert(typeptr->contents);
     int combiner = MPIR_Type_get_combiner(type);
 
     /* some named types do need dataloops; handle separately. */

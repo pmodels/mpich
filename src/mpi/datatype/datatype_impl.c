@@ -155,6 +155,8 @@ static MPI_Count MPIR_Type_get_element_bytes(MPI_Count * elements_p,
 
     MPIR_Datatype *datatype_ptr;
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+    /* internal types, e.g. unflattened types, may not have contents */
+    MPIR_Assert(datatype_ptr->contents);
 
     MPI_Count element_size = MPIR_Datatype_get_element_size(datatype_ptr);
     if (element_size != -1) {

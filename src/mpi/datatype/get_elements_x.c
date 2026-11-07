@@ -104,6 +104,11 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
 
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);      /* invalid if builtin */
 
+    /* get_elements is only for user datatypes. Internal derived types, e.g.
+     * unflattened types, may not have contents, and internal paths should not
+     * rely on datatype contents. */
+    MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(datatype) || datatype_ptr->contents);
+
     /* if we have gotten down to a type with only one element type,
      * call MPIR_Type_get_basic_type_elements() and return.
      */

@@ -175,7 +175,7 @@ extern int MPIR_fortran_false;
         } else if (HANDLE_IS_BUILTIN(op)) { \
             MPIR_Datatype *dt_ptr; \
             MPIR_Datatype_get_ptr((type), dt_ptr); \
-            MPIR_Assert(dt_ptr); \
+            MPIR_Assert(dt_ptr && dt_ptr->contents); \
             switch (dt_ptr->contents->combiner) { \
                 case MPI_COMBINER_F90_INTEGER: \
                 case MPI_COMBINER_F90_REAL: \
@@ -776,6 +776,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_access_contents(MPIR_Datatype_conten
 MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     MPIR_Datatype_contents *cp = dtp->contents;
+    MPIR_Assert(cp);
 
     int *ints;
     MPI_Aint *aints, *counts;
@@ -812,6 +813,8 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
     } else {
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
+        /* internal types, e.g. unflattened types, may not have contents */
+        MPIR_Assert(dtp->contents);
         return dtp->contents->combiner;
     }
 }
@@ -840,7 +843,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_op_dt_check(MPI_Op op, MPI_Datatype dt)
         /* check types from MPI_Type_create_F90_xxx */
         MPIR_Datatype *dt_ptr;
         MPIR_Datatype_get_ptr(dt, dt_ptr);
-        MPIR_Assert(dt_ptr);
+        MPIR_Assert(dt_ptr && dt_ptr->contents);
         switch (dt_ptr->contents->combiner) {
             case MPI_COMBINER_F90_INTEGER:
                 dt_group = MPIR_DT_GROUP_FORTRAN_INTEGER;
