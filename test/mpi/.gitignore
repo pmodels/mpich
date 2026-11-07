@@ -343,6 +343,7 @@
 /datatype/gaddress
 /datatype/get_elements
 /datatype/get_elements_pairtype
+/datatype/get_elements_mixed
 /datatype/getpartelm
 /datatype/hindexed_block
 /datatype/hindexed_block_contents
