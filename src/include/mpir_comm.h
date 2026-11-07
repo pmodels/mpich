@@ -322,6 +322,12 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
     return mpi_errno;
 }
 
+int MPIR_Comm_grequest_start_impl(MPIR_Comm * comm_ptr,
+                                  MPI_Grequest_query_function * query_fn,
+                                  MPI_Grequest_free_function * free_fn,
+                                  MPI_Grequest_cancel_function * cancel_fn,
+                                  void *extra_state, MPIR_Request ** request_ptr);
+
 MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src_rank, int dst_rank,
                                                        int src_index, int dst_index, int *attr_out)
 {
