@@ -48,7 +48,10 @@ static MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
     if (count < 0) {
         usable_bytes = *bytes_p;
     } else {
-        usable_bytes = MPL_MIN(*bytes_p, count * MPIR_Datatype_get_basic_size(datatype));
+        /* not MPIR_Datatype_get_basic_size, which is 0 for pairtypes such as MPI_FLOAT_INT */
+        MPI_Aint type_sz;
+        MPIR_Datatype_get_size_macro(datatype, type_sz);
+        usable_bytes = MPL_MIN(*bytes_p, count * type_sz);
     }
 
     if (MPIR_Datatype_is_pairtype(datatype)) {
@@ -105,6 +108,8 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
      * call MPIR_Type_get_basic_type_elements() and return.
      */
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
+        /* the type contents keep the original builtin handles, e.g. MPI_2INT */
+        MPIR_DATATYPE_REPLACE_BUILTIN(datatype);
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
     } else if (MPIR_Datatype_get_element_size(datatype_ptr) > 0) {
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;
