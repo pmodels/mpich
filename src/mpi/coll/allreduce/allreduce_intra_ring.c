@@ -16,7 +16,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     int i, src, dst;
     int nranks, is_inplace, rank;
     MPI_Aint extent;
-    MPI_Aint lb, true_extent;
+    MPI_Aint buf_shift, buf_size;
     MPI_Aint *cnts, *displs;    /* Created for the allgatherv call */
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
@@ -26,8 +26,6 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     cnts = (MPI_Aint *) MPL_malloc(nranks * sizeof(MPI_Aint), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!cnts, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -59,8 +57,10 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
     /* Phase 2: Ring based send recv reduce scatter */
     /* Need only 2 spaces for current and previous reduce_id(s) */
-    tmpbuf = MPL_malloc(count * extent, MPL_MEM_COLL);
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
+    tmpbuf = MPL_malloc(buf_size, MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!tmpbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    tmpbuf = (char *) tmpbuf - buf_shift;
 
     src = (nranks + rank - 1) % nranks;
     dst = (rank + 1) % nranks;
@@ -93,7 +93,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
     MPL_free(cnts);
     MPL_free(displs);
-    MPL_free(tmpbuf);
+    MPL_free((char *) tmpbuf + buf_shift);
 
   fn_exit:
     return mpi_errno;

@@ -23,7 +23,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int is_inplace, i;
     int dtcopy_id = -1;
     MPI_Aint extent;
-    MPI_Aint lb, true_extent;
     int is_commutative;
     int nranks, rank;
     int step1_sendto = -1, step1_nrecvs, *step1_recvfrom = NULL;
@@ -46,8 +45,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* For correctness, transport based collectives need to get the
@@ -65,7 +62,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
     recv_id = (int *) MPL_malloc(sizeof(int) * ((step2_nphases * (k - 1)) + 1), MPL_MEM_COLL);  /* to store receive vertex ids */
     vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL);
-    tmp_recvbuf = MPIR_TSP_sched_malloc(count * extent, sched);
+    tmp_recvbuf = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
 
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
@@ -80,7 +77,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     /* Step 1 */
     MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
                                                   datatype, op, is_commutative,
-                                                  tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
+                                                  tag, dtcopy_id, recv_id, reduce_id, vtcs,
                                                   is_inplace, step1_sendto, in_step2, step1_nrecvs,
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
                                                   comm, sched);

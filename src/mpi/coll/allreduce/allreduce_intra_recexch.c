@@ -23,12 +23,12 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int is_commutative, rank, nranks, nbr, myidx;
     int buf = 0;
-    MPI_Aint true_extent, true_lb, extent;
     int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom = NULL;
     int step2_nphases = 0, **step2_nbrs;
     int i, j, phase, p_of_k, T;
     bool in_step2 = true;
     void **nbr_buffer = NULL;
+    void *cached_nbr_buffer[2 * (MAX_RADIX - 1)];
     int index = 0, comm_alloc = 1;
     MPIR_Request *sreqs[MAX_RADIX], *rreqs[MAX_RADIX * 2];
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
@@ -49,9 +49,6 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     }
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    extent = MPL_MAX(extent, true_extent);
     MPI_Aint buf_shift, buf_size;
     MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
 
@@ -111,7 +108,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     /* lazy allocation of 8K recv buffer. If the message size is 8K and if the buffer has not been
      * allocated before, do a lazy allocation here. We do this allocation here since the K value could be updated
      * after the get_nbrs computation */
-    if (k <= MAX_RADIX && (step1_sendto == -1) && count * extent <= 8192 &&
+    if (k <= MAX_RADIX && (step1_sendto == -1) && buf_size <= 8192 &&
         comm->coll.recexch_allreduce_nbr_buffer == NULL) {
         comm->coll.recexch_allreduce_nbr_buffer =
             (void **) MPL_malloc(sizeof(void *) * 2 * (MAX_RADIX - 1), MPL_MEM_COLL);
@@ -124,14 +121,17 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                 MPI_ERR_OTHER, "**nomem");
         }
     }
-    if (k <= MAX_RADIX && step1_sendto == -1 && count * extent <= 8192) {
-        nbr_buffer = comm->coll.recexch_allreduce_nbr_buffer;
+    if (k <= MAX_RADIX && step1_sendto == -1 && buf_size <= 8192) {
+        for (j = 0; j < 2 * (MAX_RADIX - 1); j++) {
+            cached_nbr_buffer[j] = (char *) comm->coll.recexch_allreduce_nbr_buffer[j] - buf_shift;
+        }
+        nbr_buffer = cached_nbr_buffer;
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
 
-    if (in_step2 && (k > MAX_RADIX || count * extent > 8192)) {
+    if (in_step2 && (k > MAX_RADIX || buf_size > 8192)) {
         if (single_phase_recv) {        /* create recvs for single phase */
             nbr_buffer = (void **) MPL_malloc(sizeof(void *) * (k - 1), MPL_MEM_COLL);
             MPIR_ERR_CHKANDJUMP(!nbr_buffer, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -266,7 +266,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (in_step2 && (k > MAX_RADIX || count * extent > 8192)) {
+    if (in_step2 && (k > MAX_RADIX || buf_size > 8192)) {
         if (single_phase_recv == true) {
             for (j = 0; j < (k - 1); j++) {
                 nbr_buffer[j] = (void *) ((char *) nbr_buffer[j] + buf_shift);

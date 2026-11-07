@@ -21,7 +21,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
-    MPI_Aint true_extent, type_lb;
+    MPI_Aint buf_shift, buf_size;
     void **child_buffer = NULL; /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
     MPIR_Treealgo_tree_t my_tree;
@@ -41,8 +41,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &type_lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
+    MPIR_Datatype_get_buffer_span(datatype, count, &buf_shift, &buf_size);
     is_commutative = MPIR_Op_is_commutative(op);
 
     MPIR_CHKLMEM_DECL();
@@ -90,17 +89,14 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     if (!is_tree_leaf) {
         MPIR_CHKLMEM_MALLOC(child_buffer, sizeof(void *) * num_children);
-        child_buffer[0] = MPL_malloc(extent * count, MPL_MEM_BUFFER);
+        child_buffer[0] = MPL_malloc(buf_size, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!child_buffer[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
-        MPIR_ERR_CHKANDJUMP(!child_buffer[0], mpi_errno, MPI_ERR_OTHER, "**nomem");
+        child_buffer[0] = (void *) ((char *) child_buffer[0] - buf_shift);
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
-                child_buffer[i] = MPL_malloc(extent * count, MPL_MEM_BUFFER);
+                child_buffer[i] = MPL_malloc(buf_size, MPL_MEM_BUFFER);
                 MPIR_ERR_CHKANDJUMP(!child_buffer[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
-                child_buffer[i] = (void *) ((char *) child_buffer[i] - type_lb);
-                MPIR_ERR_CHKANDJUMP(!child_buffer[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+                child_buffer[i] = (void *) ((char *) child_buffer[i] - buf_shift);
             } else {
                 child_buffer[i] = child_buffer[0];
             }
@@ -177,10 +173,10 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     }
 
     if (!is_tree_leaf) {
-        MPL_free(child_buffer[0]);
+        MPL_free((char *) child_buffer[0] + buf_shift);
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
-                MPL_free(child_buffer[i]);
+                MPL_free((char *) child_buffer[i] + buf_shift);
             }
         }
     }

@@ -102,6 +102,10 @@ int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t sched, int n_in_vtcs, int *in
 /* Transport function to allocate memory required for schedule execution */
 void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t sched);
 
+/* Transport function to allocate a buffer for count elements of datatype, sized and shifted
+ * as MPIR_alloc_buffer does; the schedule frees it */
+void *MPIR_TSP_sched_alloc_buffer(MPI_Aint count, MPI_Datatype datatype, MPIR_TSP_sched_t sched);
+
 /* Transport function to hand a buffer allocated with MPL_malloc to the schedule, which frees
  * it with the schedule */
 void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);

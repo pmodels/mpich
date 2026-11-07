@@ -12,8 +12,6 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint extent, true_extent;
-    MPI_Aint lb;
     int nranks, rank;
     int is_commutative;
     int mask, recv_reduce = -1;
@@ -32,11 +30,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
-
-    partial_scan = MPIR_TSP_sched_malloc(count * extent, sched);
+    partial_scan = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
 
     int dtcopy_id;
     if (sendbuf != MPI_IN_PLACE) {
@@ -56,7 +50,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
+    tmp_buf = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
     mask = 0x1;
     loop_count = 0;
 

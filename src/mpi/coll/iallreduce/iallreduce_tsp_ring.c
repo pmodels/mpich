@@ -18,7 +18,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     int i, src, dst;
     int nranks, is_inplace, rank;
     MPI_Aint extent;
-    MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;
     int recv_id, *reduce_id, nvtcs, vtcs;
     int send_rank, recv_rank, total_count;
@@ -31,8 +30,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     MPIR_CHKLMEM_MALLOC(cnts, nranks * sizeof(MPI_Aint));
     MPIR_CHKLMEM_MALLOC(displs, nranks * sizeof(MPI_Aint));
@@ -67,7 +64,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     /* Phase 2: Ring based send recv reduce scatter */
     /* Need only 2 spaces for current and previous reduce_id(s) */
     MPIR_CHKLMEM_MALLOC(reduce_id, 2 * sizeof(int));
-    tmpbuf = MPIR_TSP_sched_malloc(count * extent, sched);
+    tmpbuf = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
 
     src = (nranks + rank - 1) % nranks;
     dst = (rank + 1) % nranks;

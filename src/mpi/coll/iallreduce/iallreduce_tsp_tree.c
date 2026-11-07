@@ -18,7 +18,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     MPI_Aint extent, type_size;
-    MPI_Aint type_lb, true_extent;
     int is_commutative;
     int size;
     int rank;
@@ -40,8 +39,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &type_lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
 
@@ -70,13 +67,11 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     if (num_children > 0) {
         child_buffer = MPIR_TSP_sched_malloc(sizeof(void *) * num_children, sched);
         MPIR_Assert(child_buffer != NULL);
-        child_buffer[0] = MPIR_TSP_sched_malloc(extent * count, sched);
+        child_buffer[0] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
         MPIR_Assert(child_buffer[0] != NULL);
-        child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
-                child_buffer[i] = MPIR_TSP_sched_malloc(extent * count, sched);
-                child_buffer[i] = (void *) ((char *) child_buffer[i] - type_lb);
+                child_buffer[i] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
             } else {
                 child_buffer[i] = child_buffer[0];
             }

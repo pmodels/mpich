@@ -83,8 +83,8 @@ typedef struct {
             MPI_Aint type_size; /* for calc chunk_size -> chunk_count */
             MPI_Aint type_extent;
             MPI_Aint chunk_extent;      /* for calc buf offset at a block */
-            MPI_Aint true_lb;   /* adjustment for tmp_buf */
-            MPI_Aint tmpbuf_size;       /* (chunk_count - 1) * extent + true_extent, but 0 if not needed */
+            MPI_Aint tmpbuf_shift;      /* adjustment for tmp_buf */
+            MPI_Aint tmpbuf_size;       /* buffer span of chunk_count elements, but 0 if not needed */
             MPI_Op op;
         } reduce;
     } u;

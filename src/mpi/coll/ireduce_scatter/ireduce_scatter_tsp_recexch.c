@@ -136,7 +136,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
     MPI_Aint extent;
-    MPI_Aint lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0;
     int in_step2;
     int *step1_recvfrom = NULL;
@@ -160,8 +159,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
     MPIR_Assert(MPIR_Op_is_commutative(op) == 1);
 
     total_count = 0;
@@ -184,8 +181,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
                                    &step1_recvfrom, &step1_nrecvs,
                                    &step2_nbrs, &step2_nphases, &p_of_k, &T);
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
-    tmp_results = MPIR_TSP_sched_malloc(total_count * extent, sched);
-    tmp_recvbuf = MPIR_TSP_sched_malloc(total_count * extent, sched);
+    tmp_results = MPIR_TSP_sched_alloc_buffer(total_count, datatype, sched);
+    tmp_recvbuf = MPIR_TSP_sched_alloc_buffer(total_count, datatype, sched);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy"));
 

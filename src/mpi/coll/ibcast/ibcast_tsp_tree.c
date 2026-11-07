@@ -18,7 +18,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     MPI_Aint extent, type_size;
-    MPI_Aint lb, true_extent;
     int size;
     int rank;
     int recv_id;
@@ -31,8 +30,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     /* calculate chunking information for pipelining */
     MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,

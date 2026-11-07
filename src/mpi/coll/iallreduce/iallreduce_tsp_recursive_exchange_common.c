@@ -18,7 +18,6 @@ Input Parameters:
 . datatype - datatype of each buffer element (handle)
 . op - Type of allreduce operation (handle)
 . tag - message tag (integer)
-. extent - extent of datatype (integer)
 . dtcopy_id - id of previous data copy from scheduler (integer)
 . recv_id - array to store ids of the receives from the scheduler (integer array)
 . reduce_id - array to store ids of the reduces from the scheduler (integer array)
@@ -41,7 +40,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
                                                   MPI_Op op, int is_commutative, int tag,
-                                                  MPI_Aint extent, int dtcopy_id, int *recv_id,
+                                                  int dtcopy_id, int *recv_id,
                                                   int *reduce_id, int *vtcs, int is_inplace,
                                                   int step1_sendto, bool in_step2, int step1_nrecvs,
                                                   int *step1_recvfrom, int per_nbr_buffer,
@@ -69,14 +68,15 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
         step1_recvbuf = *step1_recvbuf_ =
             (void **) MPL_malloc(sizeof(void *) * step1_nrecvs, MPL_MEM_COLL);
         if (per_nbr_buffer != 1 && step1_nrecvs > 0) {
-            step1_recvbuf[0] = (*step1_recvbuf_)[0] = MPIR_TSP_sched_malloc(count * extent, sched);
+            step1_recvbuf[0] = (*step1_recvbuf_)[0] =
+                MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
             MPIR_Assert(step1_recvbuf != NULL);
         }
 
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
             if (per_nbr_buffer == 1)
                 step1_recvbuf[i] = (*step1_recvbuf_)[i] =
-                    MPIR_TSP_sched_malloc(count * extent, sched);
+                    MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
             else
                 step1_recvbuf[i] = (*step1_recvbuf_)[i] = (*step1_recvbuf_)[0];
 

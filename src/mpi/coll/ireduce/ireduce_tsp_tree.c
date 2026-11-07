@@ -18,7 +18,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     MPI_Aint extent, type_size;
-    MPI_Aint type_lb, true_extent;
     int is_commutative;
     int size;
     int rank, vtx_id;
@@ -47,8 +46,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     /* main algorithm */
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPIR_Type_get_true_extent_impl(datatype, &type_lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* calculate chunking information for pipelining */
@@ -104,13 +101,11 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     if (!is_tree_leaf) {
         child_buffer = MPIR_TSP_sched_malloc(sizeof(void *) * num_children, sched);
         MPIR_Assert(child_buffer != NULL);
-        child_buffer[0] = MPIR_TSP_sched_malloc(extent * count, sched);
+        child_buffer[0] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
         MPIR_Assert(child_buffer[0] != NULL);
-        child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
         for (i = 1; i < num_children; i++) {
             if (buffer_per_child) {
-                child_buffer[i] = MPIR_TSP_sched_malloc(extent * count, sched);
-                child_buffer[i] = (void *) ((char *) child_buffer[i] - type_lb);
+                child_buffer[i] = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
             } else {
                 child_buffer[i] = child_buffer[0];
             }
@@ -125,8 +120,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype,
                                                  sched, 0, NULL, &dtcopy_id);
     } else if (is_tree_root && !is_root) {
-        reduce_buffer = MPIR_TSP_sched_malloc(extent * count, sched);
-        reduce_buffer = (void *) ((char *) reduce_buffer - type_lb);
+        reduce_buffer = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
         mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, reduce_buffer, count,
                                              datatype, sched, 0, NULL, &dtcopy_id);
     } else if (is_tree_intermediate && is_root) {
@@ -135,8 +129,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype,
                                                  sched, 0, NULL, &dtcopy_id);
     } else if (is_tree_intermediate && !is_root) {
-        reduce_buffer = MPIR_TSP_sched_malloc(extent * count, sched);
-        reduce_buffer = (void *) ((char *) reduce_buffer - type_lb);
+        reduce_buffer = MPIR_TSP_sched_alloc_buffer(count, datatype, sched);
         mpi_errno = MPIR_TSP_sched_localcopy(sendbuf, count, datatype, reduce_buffer, count,
                                              datatype, sched, 0, NULL, &dtcopy_id);
     } else if (is_tree_leaf && is_root) {

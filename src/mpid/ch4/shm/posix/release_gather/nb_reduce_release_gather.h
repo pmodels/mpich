@@ -384,7 +384,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
 
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
 
@@ -397,10 +396,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
     if (send_buf == MPI_IN_PLACE) {
         send_buf = recv_buf;
     }
-    /* Calculate chunking information, using extent handles contiguous and non-contiguous datatypes
-     * both */
+    /* Calculate chunking information, using max(extent, true_extent) handles contiguous and
+     * non-contiguous datatypes both. A chunk starts at offset * extent. */
     MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE,
-                                            extent, count, &num_chunks,
+                                            MPL_MAX(extent, true_extent), count, &num_chunks,
                                             &chunk_count_floor, &chunk_count_ceil);
 
     /* Do pipelined release-gather */

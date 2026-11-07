@@ -48,8 +48,10 @@ int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount,
     for (i = 1; i < comm_size; i++)
         if (min > recvcounts[i])
             min = recvcounts[i];
-    if (min * recvtype_extent < MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE)
-        min = MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE / recvtype_extent;
+    /* the pipeline size is in bytes, and the extent may be negative */
+    MPI_Aint elem_bytes = (recvtype_extent >= 0) ? recvtype_extent : -recvtype_extent;
+    if (min * elem_bytes < MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE)
+        min = MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE / elem_bytes;
     /* Handle the case where the datatype extent is larger than
      * the pipeline size. */
     if (!min)
