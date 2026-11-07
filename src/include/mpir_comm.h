@@ -10,6 +10,8 @@
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
 
+#include "mpir_impl.h"
+
 /* Maximum radix up to which the nbrs from
  * recursive exchange algorithm will be stored in the communicator */
 #define MAX_RADIX 8
@@ -296,6 +298,14 @@ MPL_STATIC_INLINE_PREFIX MPIR_Stream *MPIR_stream_comm_get_local_stream(MPIR_Com
     do { MPIR_Object_add_ref_always((comm_p_)); } while (0)
 #define MPIR_Comm_release_ref(comm_p_, inuse_) \
     do { MPIR_Object_release_ref_always(comm_p_, inuse_); } while (0)
+
+/* Linking a comm to a Grequest allows for correct error handling, per the
+ * comm's error handler. Assumes no comm is already linked to the Grequest. */
+#define MPIR_Comm_link_grequest(comm_p_, greq_p_) \
+    do { \
+        MPIR_Comm_add_ref(comm_p_); \
+        ((MPIR_Request *) greq_p_)->comm = comm_p_; \
+    } while (0)
 
 
 /* Release a reference to a communicator.  If there are no pending
