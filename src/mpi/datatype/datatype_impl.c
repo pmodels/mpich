@@ -156,8 +156,8 @@ static MPI_Count MPIR_Type_get_element_bytes(MPI_Count * elements_p,
     MPIR_Datatype *datatype_ptr;
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
-    if (datatype_ptr->builtin_element_size != -1) {
-        MPI_Count element_size = datatype_ptr->builtin_element_size;
+    MPI_Count element_size = MPIR_Datatype_get_element_size(datatype_ptr);
+    if (element_size != -1) {
         count *= (datatype_ptr->size / element_size);
         if (*elements_p > count) {
             *elements_p -= count;
@@ -275,8 +275,9 @@ int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, 
     } else {
         MPIR_Datatype *datatype_ptr;
         MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-        if (datatype_ptr->builtin_element_size != -1) {
-            nbytes = count * datatype_ptr->builtin_element_size;
+        MPI_Aint element_size = MPIR_Datatype_get_element_size(datatype_ptr);
+        if (element_size != -1) {
+            nbytes = count * element_size;
         } else {
             if (datatype_ptr->size == 0) {
                 nbytes = 0;

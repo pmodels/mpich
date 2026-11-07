@@ -331,9 +331,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->extent = 0;
 
     new_dtp->alignsize = 0;
-    new_dtp->builtin_element_size = 0;
     new_dtp->basic_type = 0;
-    new_dtp->n_builtin_elements = 0;
     new_dtp->is_contig = 1;
 
     *newtype = new_dtp->handle;

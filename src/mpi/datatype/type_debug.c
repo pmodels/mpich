@@ -322,8 +322,8 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         MPI_AINT_FMT_DEC_SPEC " (%s), %s", (MPI_Aint) dtp->size,
                                         (MPI_Aint) dtp->extent, (MPI_Aint) dtp->lb,
                                         (MPI_Aint) dtp->ub, (MPI_Aint) dtp->extent,
-                                        (MPI_Aint) dtp->builtin_element_size,
-                                        dtp->builtin_element_size ==
+                                        MPIR_Datatype_get_element_size(dtp),
+                                        MPIR_Datatype_get_element_size(dtp) ==
                                         -1 ? "multiple types" :
                                         string,
                                         dtp->is_contig ? "is N contig" : "is not N contig"));

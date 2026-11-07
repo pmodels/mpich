@@ -311,15 +311,10 @@ struct MPIR_Datatype {
      * basic_type: describes basic type (predefined type). If the
      *             type is composed of the same basic type, it is
      *             set to that type, otherwise it is set to MPI_DATATYPE_NULL.
-     * n_builtin_elements: refers to the number of builtin type elements.
-     * builtin_element_size: refers to the size of builtin type. If the
-     *                       type is composed of the same builtin type,
-     *                       it is set to size of that type, otherwise it
-     *                       is set to -1.
+     *             The basic type may be a pairtype, e.g. MPI_FLOAT_INT.
+     *             See MPIR_Datatype_get_element_size for the element size.
      */
     int basic_type;
-    MPI_Aint n_builtin_elements;
-    MPI_Aint builtin_element_size;
 
     /* information on contiguity of type, for processing shortcuts.
      *
@@ -794,6 +789,20 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 
     MPL_free(cp);
     dtp->contents = NULL;
+}
+
+/* The size of a basic element if the type is composed of a single builtin type that
+ * is not a pairtype, otherwise -1. A pairtype holds two elements, which are counted
+ * through the type contents.
+ */
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIR_Datatype_get_element_size(MPIR_Datatype * dtp)
+{
+    MPI_Datatype basic_type = dtp->basic_type;
+    if (HANDLE_IS_BUILTIN(basic_type) && !MPIR_Datatype_is_pairtype(basic_type)) {
+        return MPIR_Datatype_get_basic_size(basic_type);
+    } else {
+        return -1;
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
