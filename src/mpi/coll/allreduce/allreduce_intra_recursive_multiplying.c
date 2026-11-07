@@ -93,7 +93,8 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             }
 
             /* Wait for asynchronous operations to complete */
-            MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* Reduce locally */
             for (int i = 0; i < num_reqs; i++) {
@@ -138,7 +139,9 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             }
 
             /* Wait for asynchronous operations to complete */
-            MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_CHECK(mpi_errno);
+
             num_reqs = 0;
             exchanges = 0;
 
@@ -195,7 +198,8 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
-            MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
   fn_exit:
