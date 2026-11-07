@@ -109,15 +109,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         }
         MPIDI_OFI_free_pack_buf(rreq, MPIDI_Request_get_vci(rreq));
     } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
-#ifdef HAVE_ERROR_CHECKING
-        MPI_Count elements;
-        MPI_Count count_x = MPIR_STATUS_GET_COUNT(rreq->status);
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
-        MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
-        if (count_x) {
-            MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
-        }
-#endif
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
     }
 
