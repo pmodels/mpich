@@ -48,7 +48,10 @@ static MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
     if (count < 0) {
         usable_bytes = *bytes_p;
     } else {
-        usable_bytes = MPL_MIN(*bytes_p, count * MPIR_Datatype_get_basic_size(datatype));
+        /* not MPIR_Datatype_get_basic_size, which is 0 for pairtypes such as MPI_FLOAT_INT */
+        MPI_Aint type_sz;
+        MPIR_Datatype_get_size_macro(datatype, type_sz);
+        usable_bytes = MPL_MIN(*bytes_p, count * type_sz);
     }
 
     if (MPIR_Datatype_is_pairtype(datatype)) {
@@ -101,17 +104,24 @@ static MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p, MPI_Count count, MP
 
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);      /* invalid if builtin */
 
+    /* get_elements is only for user datatypes. Internal derived types, e.g.
+     * unflattened types, may not have contents, and internal paths should not
+     * rely on datatype contents. */
+    MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(datatype) || datatype_ptr->contents);
+
     /* if we have gotten down to a type with only one element type,
      * call MPIR_Type_get_basic_type_elements() and return.
      */
     if (MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
+        /* the type contents keep the original builtin handles, e.g. MPI_2INT */
+        MPIR_DATATYPE_REPLACE_BUILTIN(datatype);
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
-    } else if (datatype_ptr->builtin_element_size >= 0) {
+    } else if (MPIR_Datatype_get_element_size(datatype_ptr) > 0) {
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;
         MPIR_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
-        return MPIR_Type_get_basic_type_elements(bytes_p,
-                                                 count * datatype_ptr->n_builtin_elements,
-                                                 basic_type);
+        /* the number of basic elements in one datatype */
+        MPI_Aint n = datatype_ptr->size / MPIR_Datatype_get_element_size(datatype_ptr);
+        return MPIR_Type_get_basic_type_elements(bytes_p, count * n, basic_type);
     } else {
         /* we have bytes left and still don't have a single element size; must
          * recurse.
@@ -263,7 +273,7 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
      * - type with multiple element types (nastiest)
      */
     if (HANDLE_IS_BUILTIN(datatype) ||
-        (datatype_ptr->builtin_element_size != -1 && datatype_ptr->size > 0)) {
+        (MPIR_Datatype_get_element_size(datatype_ptr) != -1 && datatype_ptr->size > 0)) {
         /* in both cases we do not limit the number of types that might
          * be in bytes
          */
@@ -298,7 +308,7 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
         }
     } else {    /* derived type with weird element type or weird size */
 
-        MPIR_Assert(datatype_ptr->builtin_element_size == -1);
+        MPIR_Assert(MPIR_Datatype_get_element_size(datatype_ptr) == -1);
 
         *elements = MPIR_Type_get_elements(byte_count, -1, datatype);
     }

@@ -25,6 +25,7 @@ noinst_PROGRAMS =             \
     gaddress                  \
     get_elements              \
     get_elements_pairtype     \
+    get_elements_mixed        \
     getpartelm                \
     hindexed_zeros            \
     hindexed_block            \

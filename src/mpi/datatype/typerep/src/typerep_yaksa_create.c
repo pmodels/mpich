@@ -48,16 +48,11 @@ static int update_yaksa_type(MPIR_Datatype * newtype, MPI_Datatype oldtype, MPI_
     if (count == 0) {
         /* this is a struct, deal with it in MPIR_Typerep_create_struct */
     } else if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-        newtype->n_builtin_elements = count;
-        newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
 
-        newtype->n_builtin_elements = count * old_dtp->n_builtin_elements;
-        newtype->builtin_element_size = old_dtp->builtin_element_size;
         newtype->basic_type = old_dtp->basic_type;
     }
   fn_exit:
@@ -310,11 +305,9 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
     mpi_errno = update_yaksa_type(newtype, MPI_DATATYPE_NULL, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPI_Aint el_sz = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
     int found_el_type = 0;
     for (int i = 0; i < count; i++) {
-        MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
         MPIR_Datatype *old_dtp = NULL;
 
@@ -322,28 +315,19 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
             continue;
 
         if (HANDLE_IS_BUILTIN(array_of_types[i])) {
-            tmp_el_sz = MPIR_Datatype_get_basic_size(array_of_types[i]);
             tmp_el_type = array_of_types[i];
         } else {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            tmp_el_sz = old_dtp->builtin_element_size;
             tmp_el_type = old_dtp->basic_type;
         }
 
         if (found_el_type == 0) {
-            el_sz = tmp_el_sz;
             el_type = tmp_el_type;
             found_el_type = 1;
-        } else if (el_sz != tmp_el_sz) {
-            el_sz = -1;
-            el_type = MPI_DATATYPE_NULL;
         } else if (el_type != tmp_el_type) {
-            /* Q: should we set el_sz = -1 even though the same? */
             el_type = MPI_DATATYPE_NULL;
         }
     }
-    newtype->n_builtin_elements = -1;   /* TODO */
-    newtype->builtin_element_size = el_sz;
     newtype->basic_type = el_type;
 
     MPL_free(array_of_yaksa_types);

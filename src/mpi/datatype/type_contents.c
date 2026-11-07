@@ -18,6 +18,7 @@ static void MPIR_Type_get_envelope(MPI_Datatype datatype, MPI_Aint * num_integer
     } else {
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
+        MPIR_Assert(dtp->contents);
 
         *combiner = dtp->contents->combiner;
         *num_integers = dtp->contents->nr_ints;
