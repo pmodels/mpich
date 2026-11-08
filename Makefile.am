@@ -212,6 +212,13 @@ install-exec-hook:
 	elif test -e lib/lib@MPILIBNAME@.la ; then \
 	    . lib/lib@MPILIBNAME@.la ; \
 	fi ; \
+	deps= ; \
+	for x in $$dependency_libs ; do \
+	    case $$x in \
+		-R*) deps="$$deps -Wl,-rpath,$${x#-R}" ;; \
+		*) deps="$$deps $$x" ;; \
+	    esac ; \
+	done ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
 		${DESTDIR}${bindir}/@MPICXX_NAME@ ; do \
 		if test -e $${e} ; then \
@@ -220,7 +227,7 @@ install-exec-hook:
 				-e 's|__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${sysconfdir}|g' \
 				-e 's|__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${includedir}|g' \
 				-e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' \
-				-e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$dependency_libs|g" $${e} > $${e}.tmp ; \
+				-e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$deps|g" $${e} > $${e}.tmp ; \
 			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 			rm -f $${e}.tmp ; \
 		fi ; \
