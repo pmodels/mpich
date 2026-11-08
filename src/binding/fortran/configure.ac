@@ -191,6 +191,20 @@ AC_SUBST([mpi_libs])
 # for mpifort wrapper script
 AC_SUBST([mpi_dependency_libs])
 
+# for mpifort -static-mpi: the static archives of mpi_dependency_libs. When
+# built with MPICH, they are installed in the same libdir as mpifort.
+if test "$FROM_MPICH" = "yes" ; then
+    mpi_static_dir='$libdir'
+else
+    mpi_static_dir="$with_mpi/lib"
+fi
+mpi_static_libs=
+for lib in $mpi_dependency_libs ; do
+    mpi_static_libs="$mpi_static_libs $mpi_static_dir/lib${lib#-l}.a"
+done
+AC_SUBST([mpi_static_libs])
+AM_SUBST_NOTMAKE([mpi_static_libs])
+
 if test "$FROM_MPICH" != "yes" ; then
     # check mpi.h if we are not build from MPICH
     if test -z "$MPI_SIZEOF_AINT" ; then
