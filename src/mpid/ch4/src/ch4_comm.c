@@ -111,7 +111,7 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 
     /* initialize next_am_tag for internal messaging */
     int total_tag_bits = get_num_bits(MPIR_Process.attrs.tag_ub);
-    MPIDI_COMM(comm, next_am_tag) = 0;
+    MPL_atomic_relaxed_store_int(&MPIDI_COMM(comm, next_am_tag), 0);
     MPIDI_COMM(comm, next_am_tag_bits) = total_tag_bits - 1;
     /* make sure we have sufficient number of am_tag bits (8 is arbitrary) */
     MPIR_Assert(MPIDI_COMM(comm, next_am_tag_bits) > 8);

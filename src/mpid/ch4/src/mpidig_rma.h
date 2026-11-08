@@ -192,6 +192,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
     int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2, vci, vci_target);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_REQUEST(sreq, is_local) = MPIDI_rank_is_local(target_rank, win->comm_ptr);
+#endif
 
     sreq->u.rma.win = win;
     MPIDIG_REQUEST(sreq, buffer) = origin_addr;
@@ -220,6 +223,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
 
+    if (MPIDIG_can_do_tag(sreq)) {
+        am_hdr.am_tag = MPIDIG_get_next_am_tag(win->comm_ptr, target_rank);
+        CH4_CALL(am_tag_recv(target_rank, win->comm_ptr, MPIDIG_TAG_GET_COMPLETE, am_hdr.am_tag,
+                             origin_addr, origin_count, origin_datatype, vci_target, vci, sreq),
+                 MPIDI_REQUEST(sreq, is_local), mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        am_hdr.am_tag = -1;
+    }
+
     int is_contig;
     MPIR_Datatype_is_contig(target_datatype, &is_contig);
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
@@ -229,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
                           NULL, 0, MPI_DATATYPE_NULL, vci, vci_target, sreq),
-                 MPIDI_rank_is_local(target_rank, win->comm_ptr), mpi_errno);
+                 MPIDI_REQUEST(sreq, is_local), mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -242,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
 
     CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
                       flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL, vci, vci_target, sreq),
-             MPIDI_rank_is_local(target_rank, win->comm_ptr), mpi_errno);
+             MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
