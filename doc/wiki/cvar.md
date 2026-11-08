@@ -3329,6 +3329,12 @@ Alternate name: MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG
 
 Used in functions: `MPII_finalize_memory_tracing`
 
+### MPIR_CVAR_FINALIZE_ATEXIT
+
+Delay MPII_Finalize until at exit. For program using MPI sessions, especially if it requires multiple non-overlapping sessions, set this cvar to prevent MPI fully finalize after the first MPI_Session_finalize and preventing later MPI_Session_init to work due to its dependency library (such as PMI) not supporting multiple init.
+
+Used in functions: `MPII_Init_thread`
+
 ### MPIR_CVAR_INIT_SKIP_PMI_BARRIER
 
 Controls whether MPICH skips the standalone PMI barrier during MPI initialization. It is used after device initialization, where MPICH may otherwise issue a PMI barrier to ensure the debugger process-acquisition mechanism has an opportunity to attach; this is separate from any PMI barrier the device may perform during business-card exchange. It does not rely on another CVAR being enabled, but it is relevant to the MPI initialization path after the device has initialized. When active, this CVAR enables skipping that standalone PMI barrier.
