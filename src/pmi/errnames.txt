@@ -130,8 +130,3 @@
 **pmix_deregister_event_handler %s:PMIX_Deregister_event_handler returned %s
 **pmix_argv_append: PMIX_ARGV_APPEND failed
 **pmix_argv_append %s: PMIX_ARGV_APPEND failed with error %s
-#
-# PMI finalize exit handler registration
-#
-**atexit: Registration of atexit handler failed
-**atexit %d: Registration of atexit handler failed with %d
