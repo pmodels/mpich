@@ -44,7 +44,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 
     /* We allow an empty implementation of this function to 
        simplify building MPICH on systems that have difficulty
-       supporing process creation */
+       supporting process creation */
 #   ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
     mpi_errno = MPIDI_Comm_spawn_multiple(count, array_of_commands, 
 					  array_of_argv, array_of_maxprocs,

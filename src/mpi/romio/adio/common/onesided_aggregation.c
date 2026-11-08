@@ -194,7 +194,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
  * the collective buffer to the file system.  In this fashion the synchronization can be minimized as that
  * only needs to occur during the actual read from or write to the file system.  In the case of gpfs
  * this function is called just once.  The ADIOI_OneSidedStripeParms parameter is used to save the
- * state and re-use variables thru repetitive calls to help in the case of lustre to avoid costly
+ * state and reuse variables thru repetitive calls to help in the case of lustre to avoid costly
  * recomputation, for consistency gpfs utilizes it as well but doesn't use some aspects of it.  This
  * function was originally first written for gpfs only and then modified to support lustre.
  */

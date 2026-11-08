@@ -63,7 +63,7 @@ int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
  * Step 2 is the main step that does the recursive exchange algorithm.
  * Step 1 and Step 3 are done to handle non-power-of-k number of ranks.
  * Only p_of_k (largest power of k that is less than n) ranks participate in Step 2.
- * In Step 1, the non partcipating ranks send their data to ranks
+ * In Step 1, the non participating ranks send their data to ranks
  * participating in Step 2. In Step 3, the ranks that participated in Step 2 send
  * the final data to non-partcipating ranks.
 */
@@ -106,7 +106,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     *step2_nphases = log_p_of_k;
 
     rem = nranks - p_of_k;
-    /* rem is the number of ranks that do not particpate in Step 2
+    /* rem is the number of ranks that do not participate in Step 2
      * We need to identify these non-participating ranks. This is done in the following way.
      * The first T ranks are divided into sets of k consecutive ranks each.
      * In each of these sets, the first k-1 ranks are the non-participating

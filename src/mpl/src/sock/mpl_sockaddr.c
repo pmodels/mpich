@@ -30,7 +30,7 @@
  *            In case this struct is not available (in sys/socket.h), it can be
  *        circumvented by declare following (in mpl_sockaddr.h):
  *                    struct sockaddr_storage {
- *                            unsigend short ss_family;
+ *                            unsigned short ss_family;
  *                            char padding[126];
  *                    };
  *            Since we use typedef MPL_sockaddr_t, there is no need for code change.

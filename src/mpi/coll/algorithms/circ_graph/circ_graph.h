@@ -20,7 +20,7 @@ typedef struct {
 
     int *Skip;                  /* Skip[q+1] - each round process r send to r+Skip[k] and receive from r-Skip[k],
                                  *             with a "MOD p" assumption. */
-    /* The receive schedule R[] and send scheduld S[].
+    /* The receive schedule R[] and send scheduled S[].
      * For bcast and reduce, we only need the schedule for this rank, thus the dimension is R[q] and S[q].
      * For allgather and allreduce, we need schedules for every rank, thus the dimension is R[p][q] and S[p][q].
      *     In the latter case, R[r][q] and S[r][q] are the schedule for root = (rank - r) MOD p.

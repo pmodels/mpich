@@ -32,7 +32,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
 
         MPI_Comm_group(comms[*(int *) arg], &world_group);
 
-        /* Every thread paticipates in a distinct MPI_Comm_create on distinct
+        /* Every thread participates in a distinct MPI_Comm_create on distinct
          * communicators.  Thus, there is no violation of MPI threads +
          * communicators semantics.
          */

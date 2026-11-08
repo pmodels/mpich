@@ -11,7 +11,7 @@
  *  lock_all
  *  req=rget(buf)
  *  unlock_all
- *  re-use buf
+ *  reuse buf
  *  wait(req)
  *
  *  This program is valid but if unlock_all does not implement the synchronization

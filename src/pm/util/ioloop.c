@@ -127,7 +127,7 @@ int MPIE_IODeregister(int fd)
 
 Input Parameters:
 .  timeoutSeconds - Seconds until this routine should return with a
-   timeout error.  If negative, no timeout.  If 0, return immediatedly
+   timeout error.  If negative, no timeout.  If 0, return immediately
    after a nonblocking check for I/O.
 
    Return Value:

@@ -738,7 +738,7 @@ static int dbg_get_filename(char *filename, int len)
                 MPL_strnapp(filename, world_numAsChar, len);
                 pDest += strlen(world_numAsChar);
             } else if (*p == 'p') {
-                /* Appends the pid of the proceess to the file name. */
+                /* Appends the pid of the process to the file name. */
                 char pidAsChar[20];
 #if defined(MPL_HAVE_GETPID)
                 pid_t pid = getpid();

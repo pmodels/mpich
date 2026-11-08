@@ -1078,7 +1078,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
 
     /* check if there are any holes. If yes, must do read-modify-write.
      * holes can be in three places.  'middle' is what you'd expect: the
-     * processes are operating on noncontigous data.  But holes can also show
+     * processes are operating on noncontiguous data.  But holes can also show
      * up at the beginning or end of the file domain (see John Bent ROMIO REQ
      * #835). Missing these holes would result in us writing more data than
      * received by everyone else. */

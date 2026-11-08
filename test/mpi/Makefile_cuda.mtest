@@ -14,7 +14,7 @@ include $(top_srcdir)/Makefile_single.mtest
 AM_DEFAULT_SOURCE_EXT = .cu
 
 # Because libtool does not have a .cu language tag yet, some of the key
-# variables and patter rule is not generated. We manually supply them here.
+# variables and pattern rule is not generated. We manually supply them here.
 
 # Automake silent build macros
 AM_V_CCLD = $(am__v_CCLD_$(V))

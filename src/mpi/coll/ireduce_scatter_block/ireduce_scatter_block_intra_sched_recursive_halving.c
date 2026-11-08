@@ -81,7 +81,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
             MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
-             * process does not pariticipate in recursive
+             * process does not participate in recursive
              * doubling */
             newrank = -1;
         } else {        /* odd */

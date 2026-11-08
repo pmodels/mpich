@@ -62,7 +62,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
             MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
-             * process does not pariticipate in recursive
+             * process does not participate in recursive
              * doubling */
             newrank = -1;
         } else {        /* odd */

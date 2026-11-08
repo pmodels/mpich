@@ -60,7 +60,7 @@ int ADIOI_Type_dispose(MPI_Datatype * datatype)
     return ret;
 }
 
-/* utility function for creating large contiguous types: algorithim from BigMPI
+/* utility function for creating large contiguous types: algorithm from BigMPI
  * https://github.com/jeffhammond/BigMPI */
 
 static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -159,7 +159,7 @@ int ADIOI_Type_create_hindexed_x(MPI_Count count,
     return ret;
 }
 
-/* some systems do not have pread/pwrite, or requrie XOPEN_SOURCE set higher
+/* some systems do not have pread/pwrite, or require XOPEN_SOURCE set higher
  * than we would like.  see #1973 */
 #if (HAVE_DECL_PWRITE == 0)
 

@@ -105,7 +105,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
-             * process does not pariticipate in recursive
+             * process does not participate in recursive
              * doubling */
             newrank = -1;
         } else {        /* even */

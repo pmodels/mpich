@@ -2218,7 +2218,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /*
      * Get a socket for the new connection from the operating system.
      * Make the socket nonblocking, and disable Nagle's
-     * alogorithm (to minimize latency of small messages).
+     * algorithm (to minimize latency of small messages).
      */
     addr_len = sizeof(addr);
     /* FIXME: Either use the syscall macro or correctly wrap this in a
@@ -2808,7 +2808,7 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
 
     if (!env_hostname) {
         /* See if there is a per-process name for the interfaces (e.g.,
-         * the process manager only delievers the same values for the
+         * the process manager only delivers the same values for the
          * environment to each process */
         char namebuf[1024];
         snprintf(namebuf, sizeof(namebuf), "MPICH_INTERFACE_HOSTNAME_R_%d", myRank);

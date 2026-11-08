@@ -446,7 +446,7 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session * session)
     MPIR_T_pvar_handle_t *hnd, *tmp;
 
     /* The draft standard is a bit unclear about the behavior of this function
-     * w.r.t. outstanding pvar handles.  A conservative (from the implementors
+     * w.r.t. outstanding pvar handles.  A conservative (from the implementers
      * viewpoint) interpretation implies that this routine should free all
      * outstanding handles attached to this session.  A more relaxed
      * interpretation puts that burden on the user.  We choose the conservative

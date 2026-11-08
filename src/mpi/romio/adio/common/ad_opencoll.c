@@ -101,7 +101,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
     }
     fd->blksize = 1024 * 1024 * 4;      /* this large default value should be good for
                                          * most file systems.  any ROMIO driver is free
-                                         * to stat the file and find an optimial value */
+                                         * to stat the file and find an optimal value */
 
     /* if we are doing deferred open, non-aggregators should return now */
     if (fd->hints->deferred_open) {

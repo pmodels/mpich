@@ -129,7 +129,7 @@ static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
     PVAR_GATED_ACTION(MODULE, stmt_)
 
 /* The following are interfaces for each pvar class,
- * basically including delcaration, access and registration.
+ * basically including declaration, access and registration.
  */
 
 /* STATE */

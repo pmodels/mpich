@@ -14,7 +14,7 @@ void ChkMsg(int, int, const char[]);
  * message for a code, and prints out the corresponding class and original
  * message.
  *
- * Eventually, we should also access the generic anc specific messages
+ * Eventually, we should also access the generic and specific messages
  * separately.
  */
 void ChkMsg(int err, int msgclass, const char msg[])

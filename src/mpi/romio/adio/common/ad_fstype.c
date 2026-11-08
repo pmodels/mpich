@@ -515,7 +515,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     }
 }
 
-/* all proceeses opening, creating, or deleting a file end up invoking several
+/* all processes opening, creating, or deleting a file end up invoking several
  * stat system calls (unless a fs prefix is given).  Cary out this file system
  * detection in a more scalable way by having rank 0 stat the file and broadcast the result (fs type and error code) to the other mpi processes */
 
@@ -579,7 +579,7 @@ static int ADIO_FileSysType_prefix(const char *filename, int *fstype,
          * detection with a prefix -- maybe the file name is passed to both
          * posix and MPI-IO routines, or maybe the file name is hard-coded into
          * an application.
-         * Assumes all processes set the same environment varialble.  Values:
+         * Assumes all processes set the same environment variable.  Values:
          * the same prefix you would stick on a file path. e.g. pvfs2: --
          * including the colon!
          */

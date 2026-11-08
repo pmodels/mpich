@@ -320,7 +320,7 @@ adio_daos_coh_lookup_create(daos_handle_t poh, struct duns_attr_t *attr, int amo
             }
             rc = dfs_mount(poh, coh, amode, &dfs);
             if (rc) {
-                PRINT_MSG(stderr, "Failed to mount DFS namesapce (%d)\n", rc);
+                PRINT_MSG(stderr, "Failed to mount DFS namespace (%d)\n", rc);
                 goto err_cont;
             }
         } else if (rc) {

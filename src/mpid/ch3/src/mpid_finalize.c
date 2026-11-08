@@ -34,7 +34,7 @@ int MPID_Finalize(void)
       * since a valid program should wait or test for them before entering
       * finalize.  
       * 
-      * The easist fix is to allow an MPI_Barrier over comm_world (and 
+      * The easiest fix is to allow an MPI_Barrier over comm_world (and 
       * any connected processes in the MPI-2 case).  Once the barrier
       * completes, all processes are in finalize and any remaining 
       * unmatched receives will never be matched (by a correct program; 

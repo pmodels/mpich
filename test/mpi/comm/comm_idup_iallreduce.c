@@ -20,7 +20,7 @@ int run(const char *arg);
  * 3.)  Duplicate  COMM_WORLD, overalp iallreduce on one
  *      communicator with comm_idup on the nother communicator
  * 4.)  Split MPI_COMM_WORLD, communicate on the split communicator
-        while dublicating COMM_WORLD
+        while duplicating COMM_WORLD
  *  5.) Duplicate the split communicators with comm_idup
  *      while communicating  onCOMM_WORLD
  *  6.) Create an inter-communicator and duplicate it with comm_idup while
@@ -160,7 +160,7 @@ int run(const char *arg)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
-    /* Test Iallreduce resutls for split-communicator */
+    /* Test Iallreduce results for split-communicator */
     if (sol != out)
         errs++;;
     /* Test new inter-communicator */

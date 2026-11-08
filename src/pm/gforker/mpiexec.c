@@ -120,7 +120,7 @@ int main(int argc, char *argv[], char *envp[])
     MPIE_ProcessInit();
     /* Set a default for the universe size */
     pUniv.size = 64;
-    /* Tell the PMI untility routines that we are the server */
+    /* Tell the PMI utility routines that we are the server */
     PMIU_SetServer();
 
     /* Set defaults for any arguments that are options.  Also check the

@@ -59,7 +59,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 
     /* the HDF5 tests showed a bug in this list processing code (see many many
      * lines down below).  We added a workaround, but common HDF5 file types
-     * are actually contiguous and do not need the expensive workarond */
+     * are actually contiguous and do not need the expensive workaround */
     if (!filetype_is_contig) {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
         if (flat_file->count == 1 && !buftype_is_contig)
