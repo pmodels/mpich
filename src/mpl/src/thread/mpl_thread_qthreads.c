@@ -31,8 +31,8 @@ static int thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * i
         /* Not initialized yet. */
         return MPL_ERR_THREAD;
     }
-    Qthreads_thread_func_t f =  (Qthreads_thread_func_t) func;
-    int err = qthread_fork(f, data, idp); 
+    Qthreads_thread_func_t f = (Qthreads_thread_func_t) func;
+    int err = qthread_fork(f, data, idp);
     return (err == QTHREAD_SUCCESS) ? MPL_SUCCESS : MPL_ERR_THREAD;
 }
 
