@@ -546,11 +546,9 @@ int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, voi
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_fortran_booleans_is_set) {
-        mpi_errno = MPI_ERR_ABI;
-        goto fn_fail;
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ABI, "**abi");
     }
 
-    MPIR_fortran_booleans_is_set = true;
     switch (logical_size) {
 #define SET_FORTRAN_BOOLEANS(intN_t) \
         case sizeof(intN_t): { \
@@ -572,6 +570,8 @@ int MPIR_Abi_set_fortran_booleans_impl(int logical_size, void *logical_true, voi
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_ARG, "**logical_size_unexp",
                                  "**logical_size_unexp %d", logical_size);
     }
+
+    MPIR_fortran_booleans_is_set = true;
 
   fn_exit:
     return mpi_errno;
@@ -647,7 +647,7 @@ int MPIR_Abi_set_fortran_info_impl(MPIR_Info * info)
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_ABI_FORTRAN_IS_SET) {
-        return MPI_ERR_ABI;
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ABI, "**abi");
     }
 
     const char *str_val;

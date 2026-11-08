@@ -528,8 +528,6 @@ unexpected messages queued.
 **mutex_create %s:MPID_Thread_mutex_create failed: %s
 **thread_create:MPID_Thread_create failed
 **thread_create %s:MPID_Thread_create failed: %s
-**logical_size_wrong: logical_size wrong
-**logical_size_wrong %d: logical_size wrong, should be %d
 **logical_size_unexp: logical_size unexpected
 **logical_size_unexp %d: logical_size %d unexpected
 
@@ -778,7 +776,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **fail %s %d:%s (errno %d)
 **init_description:unable to get the host description
 **iocp:unable to create an I/O completion port
-**iocp %s %d:unable to create an I/O copmletion port, %s (erron %d)
+**iocp %s %d:unable to create an I/O completion port, %s (errno %d)
 **pctwice:post close called twice
 **post_accept:post accept failed
 **progress_init:unable to initialize the progress engine
