@@ -211,6 +211,10 @@ install-exec-hook:
 	    . lib/lib@PMPILIBNAME@.la ; \
 	elif test -e lib/lib@MPILIBNAME@.la ; then \
 	    . lib/lib@MPILIBNAME@.la ; \
+	elif test -e lib/lib@PMPIABILIBNAME@.la ; then \
+	    . lib/lib@PMPIABILIBNAME@.la ; \
+	elif test -e lib/lib@MPIABILIBNAME@.la ; then \
+	    . lib/lib@MPIABILIBNAME@.la ; \
 	fi ; \
 	deps= ; \
 	for x in $$dependency_libs ; do \
