@@ -924,6 +924,9 @@ if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
 
+# used in the Fortran binding; declared here so that it shows in configure --help
+AC_ARG_VAR([modincdir],[directory to install the Fortran module files (default: includedir)])
+
 # enable-fast
 # strip off multiple options, separated by commas
 save_IFS="$IFS"

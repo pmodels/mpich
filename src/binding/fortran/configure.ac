@@ -1059,6 +1059,7 @@ AC_SUBST(FCCPP)
 PAC_PROG_FC_AND_C_STDIO_LIBS
 AC_SUBST(FC_OTHER_LIBS)
 
+AC_ARG_VAR([modincdir],[directory to install the Fortran module files (default: includedir)])
 if test "X$modincdir" = "X" ; then
   modincdir=$includedir
 fi
