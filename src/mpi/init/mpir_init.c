@@ -209,12 +209,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (MPIR_CVAR_FINALIZE_ATEXIT) {
-        init_counter++;
-        err = atexit(finalize_atexit);
-        MPIR_ERR_CHKANDJUMP1(err != 0, mpi_errno, MPI_ERR_OTHER, "**atexit", "**atexit %d", err);
-    }
-
     MPIR_Err_init();
     MPII_pre_init_dbg_logging(argc, argv);
     MPII_pre_init_memory_tracing();
@@ -382,6 +376,12 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 #endif
 
   fn_exit:
+    if (MPIR_CVAR_FINALIZE_ATEXIT && init_counter == 1) {
+        init_counter++;
+        err = atexit(finalize_atexit);
+        MPIR_ERR_CHKANDJUMP1(err != 0, mpi_errno, MPI_ERR_OTHER, "**atexit", "**atexit %d", err);
+    }
+
     if (is_world_model) {
         if (!MPIR_Process.comm_world) {
             mpi_errno = MPIR_init_comm_world();
