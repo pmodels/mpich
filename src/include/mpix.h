@@ -15,11 +15,6 @@ extern "C" {
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
 
-/* Generalized requests extensions */
-typedef int MPIX_Grequest_class;
-/* MPI stream objects */
-typedef int MPIX_Stream;
-
 #ifdef MPI_ABI_VERSION
 /* MPI ABI: all MPIX constants are defined here, kept together so their ranges
  * are easy to maintain. They follow the MPI ABI encoding as if they were
@@ -33,12 +28,16 @@ typedef int MPIX_Stream;
 #define MPIX_BFLOAT16     ((MPI_Datatype)0x0000024b)    /* 2-byte C types */
 #define MPIX_EQUAL        ((MPI_Op)0x0000003e)  /* other operations */
 
-/* TODO: convert MPIX_Stream as an ABI handle */
-#define MPIX_STREAM_NULL  ((MPIX_Stream)0x3c000000)
+/* MPIX handle categories are allocated from the back of the MPI ABI
+ * handle encoding to avoid collisions with new standard handles. */
+typedef struct MPIX_ABI_Stream *MPIX_Stream;
+#define MPIX_STREAM_NULL  ((MPIX_Stream)0x000001f8)   /* 0b0001_11111_000 */
+/* Generalized request classes have no predefined handles (0b0001_11110_***) */
+typedef struct MPIX_ABI_Grequest_class *MPIX_Grequest_class;
 
 #else
-/* MPICH native ABI: the MPIX constant values that differ from the MPI ABI
- * are defined in mpi.h */
+/* MPICH native ABI: the MPIX handle types and the constant values that
+ * differ from the MPI ABI are defined in mpi.h */
 #endif
 
 /* MPIX constants passed through libmpi_abi unconverted. A single set serves

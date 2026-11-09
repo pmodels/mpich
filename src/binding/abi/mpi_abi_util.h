@@ -306,6 +306,42 @@ static inline ABI_Session ABI_Session_from_mpi(MPI_Session in)
     return (ABI_Session) (void *) ptr;
 }
 
+static inline MPIX_Stream ABI_Stream_to_mpi(ABI_Stream in)
+{
+    if (in == ABI_STREAM_NULL) {
+        return MPIX_STREAM_NULL;
+    }
+    return ((MPIR_Stream *) in)->handle;
+}
+
+static inline ABI_Stream ABI_Stream_from_mpi(MPIX_Stream in)
+{
+    if (in == MPIX_STREAM_NULL) {
+        return ABI_STREAM_NULL;
+    }
+    MPIR_Stream *ptr;
+    MPIR_Stream_get_ptr(in, ptr);
+    return (ABI_Stream) (void *) ptr;
+}
+
+static inline MPIX_Grequest_class ABI_Grequest_class_to_mpi(ABI_Grequest_class in)
+{
+    if (in == NULL) {
+        return 0;
+    }
+    return ((MPIR_Grequest_class *) in)->handle;
+}
+
+static inline ABI_Grequest_class ABI_Grequest_class_from_mpi(MPIX_Grequest_class in)
+{
+    if (in == 0) {
+        return NULL;
+    }
+    MPIR_Grequest_class *ptr;
+    MPIR_Grequest_class_get_ptr(in, ptr);
+    return (ABI_Grequest_class) (void *) ptr;
+}
+
 static inline MPI_Win ABI_Win_to_mpi(ABI_Win in)
 {
     if (in == ABI_WIN_NULL) {

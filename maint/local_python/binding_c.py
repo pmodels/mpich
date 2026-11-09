@@ -1028,6 +1028,9 @@ def dump_abi_wrappers(func, is_large):
         # special treatment below because it is optional
         array_type = "Datatype"
         array_size = "(*num_elements)"
+    elif re.match(r'mpix_stream_comm_create_multiplex', func['name'], re.IGNORECASE):
+        array_type = "Stream"
+        array_size = "count"
     elif re.match(r'mpi_comm_spawn$', func['name'], re.IGNORECASE):
         pre_filters.append("MPI_Info info = MPI_INFO_NULL;")
         pre_filters.append("if (ABI_Comm_rank(comm_abi) == root) {")
@@ -1054,7 +1057,8 @@ def dump_abi_wrappers(func, is_large):
         name = p['name']
         if name in already_done:
             return
-        T = re.sub(r'MPI_', '', mapping[p['kind']])
+        MPI_T = mapping[p['kind']]  # e.g. MPI_Comm, MPIX_Stream
+        T = re.sub(r'MPIX?_', '', MPI_T)
         # translate to internal parameters
         if p['length']:
             # neighbor_alltoallw
@@ -1066,9 +1070,9 @@ def dump_abi_wrappers(func, is_large):
 
             if re.match(r'mpi_t_event_get_info', func['name'], re.IGNORECASE):
                 # array_of_datatypes[]
-                pre_filters.append("MPI_%s *%s = NULL;" % (array_type, name))
+                pre_filters.append("%s *%s = NULL;" % (MPI_T, name))
                 pre_filters.append("if (num_elements && %s > 0) {" % array_size)
-                pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                pre_filters.append("    %s = MPL_malloc(sizeof(%s) * %s, MPL_MEM_OTHER);" % (name, MPI_T, array_size))
                 pre_filters.append("}")
                 post_filters.append("if (num_elements) {")
                 post_filters.append("    for (int i = 0; i < %s; i++) {" % array_size)
@@ -1077,7 +1081,7 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("}")
             elif array_size:
                 # assume input only
-                pre_filters.append("MPI_%s *%s = NULL;" % (array_type, name))
+                pre_filters.append("%s *%s = NULL;" % (MPI_T, name))
                 if is_alltoallw:
                     if name == "sendtypes":
                         pre_filters.append("if (sendbuf != MPI_IN_PLACE && sendtypes_abi != NULL) {")
@@ -1091,9 +1095,9 @@ def dump_abi_wrappers(func, is_large):
                 pre_filters.append("if (%s > 0) {" % array_size)
                 if array_size == "max_datatypes":
                     # zero the output array so we know whether it is filled at output
-                    pre_filters.append("    %s = MPL_calloc(sizeof(MPI_%s), %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                    pre_filters.append("    %s = MPL_calloc(sizeof(%s), %s, MPL_MEM_OTHER);" % (name, MPI_T, array_size))
                 else:
-                    pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                    pre_filters.append("    %s = MPL_malloc(sizeof(%s) * %s, MPL_MEM_OTHER);" % (name, MPI_T, array_size))
                 pre_filters.append("}")
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                     pre_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
@@ -1143,8 +1147,12 @@ def dump_abi_wrappers(func, is_large):
         else:
             if p['param_direction'] == 'out':
                 # pass NULL thru for error-checking
-                pre_filters.append("MPI_%s %s_i = MPI_%s_NULL;" % (T, name, T.upper()))
-                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                null_handle = MPI_T.upper() + "_NULL"
+                if T == "Grequest_class":
+                    # no predefined null handle
+                    null_handle = "0"
+                pre_filters.append("%s %s_i = %s;" % (MPI_T, name, null_handle))
+                pre_filters.append("%s *%s = NULL;" % (MPI_T, name))
                 pre_filters.append("if (%s_abi != NULL) {" % name)
                 pre_filters.append("    %s = &%s_i;" % (name, name))
                 pre_filters.append("}")
@@ -1153,8 +1161,8 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("}")
             elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
                 # pass NULL thru for error-checking
-                pre_filters.append("MPI_%s %s_i;" % (T, name))
-                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                pre_filters.append("%s %s_i;" % (MPI_T, name))
+                pre_filters.append("%s *%s = NULL;" % (MPI_T, name))
                 pre_filters.append("if (%s_abi != NULL) {" % name)
                 pre_filters.append("    %s_i = ABI_%s_to_mpi(*%s_abi);" % (name, T, name))
                 pre_filters.append("    %s = &%s_i;" % (name, name))
@@ -1163,7 +1171,7 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
                 post_filters.append("}")
             else:
-                pre_filters.append("MPI_%s %s = ABI_%s_to_mpi(%s_abi);" % (T, name, T, name))
+                pre_filters.append("%s %s = ABI_%s_to_mpi(%s_abi);" % (MPI_T, name, T, name))
 
     def out_can_be_undefined(p):
         if p['param_direction'] == 'out':
@@ -1227,12 +1235,12 @@ def dump_abi_wrappers(func, is_large):
     #   1. the regular conversion will reserve the [0, 4096) range
     #   2. ABI handle type can be safely cast into (uintptr_t)
     #
-    if RE.match(r'..._(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)_(toint|c2f)\b', func_name):
+    if RE.match(r'MPIX?_(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream)_(toint|c2f)\b', func_name):
         handle_in = "(uintptr_t) " + func['c_parameters'][0]['name'] + "_abi"
         dump_if_open("%s > 0 && %s < 4096" % (handle_in, handle_in))
         G.out.append("return (int) %s;" % handle_in)
         dump_if_close()
-    elif RE.match(r'..._(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)_(fromint|f2c)\b', func_name):
+    elif RE.match(r'MPIX?_(Comm|Type|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream)_(fromint|f2c)\b', func_name):
         handle_in = func['c_parameters'][0]['name']
         dump_if_open("%s > 0 && %s < 4096" % (handle_in, handle_in))
         ABI_type = "ABI_" + RE.m.group(1)
@@ -1246,7 +1254,7 @@ def dump_abi_wrappers(func, is_large):
 
     if ret != 'int':
         # MPI_Wtime, MPI_Aint_{add,diff}, MPI_{Comm,...}_{c2f,f2c}
-        if RE.match(r'..._(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b', ret):
+        if RE.match(r'..._(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream)\b', ret):
             G.out.append("return ABI_%s_from_mpi(%s);" % (RE.m.group(1), static_call))
         else:
             G.out.append("return " + static_call + ";")
@@ -2991,7 +2999,7 @@ def dump_validate_get_topo_size(func):
 
 def get_abi_re_Handle():
     # the following handle types need perform ABI-swap for abi bindings
-    return r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b'
+    return r'MPIX?_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream|Grequest_class)\b'
 
 def is_type_create(func):
     last_p = func['c_parameters'][-1]

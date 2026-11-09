@@ -49,7 +49,7 @@ def load_mpi_abi_h(mpi_abi_h):
 def dump_mpi_abi_internal_h(mpi_abi_internal_h):
     define_constants = {}
     def gen_mpi_abi_internal_h(out):
-        re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
+        re_Handle = r'\bMPIX?_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream|Grequest_class|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
             if RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
                 # no need to rename status fields
@@ -61,7 +61,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    %s count_lo;" % T)
                 out.append("    %s count_hi_and_cancelled;" % T)
                 out.append("    %s reserved[%d];" % (T, n - 2))
-            elif RE.match(r'#define\s+(MPIX?_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
+            elif RE.match(r'#define\s+(MPIX?_\w+)\s+\(?\((MPIX?_\w+)\)\s*(0x\w+)\)?', line):
                 (name, T, val) = RE.m.group(1,2,3)
                 if T == "MPI_File":
                     # Both ROMIO and ABI use pointers, thus we can directly replace constants

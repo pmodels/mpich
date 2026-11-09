@@ -176,7 +176,11 @@ extern "C" {
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
 #define MPI_MESSAGE_NULL   ((MPI_Message)0x2c000000)
 #define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
+/* MPI stream objects, the MPI ABI definitions are in mpix.h */
+typedef int MPIX_Stream;
 #define MPIX_STREAM_NULL   ((MPIX_Stream)0x3c000000)
+/* Generalized request classes, the MPI ABI definition is in mpix.h */
+typedef int MPIX_Grequest_class;
 
 typedef int MPI_Datatype;
 #define MPI_CHAR           ((MPI_Datatype)0x4c000101)

@@ -18,7 +18,7 @@
 
 int rank, size;
 
-static int test_stream_send(MPIX_Stream stream, int src_idx, int dst_idx);
+static int test_stream_send(MPI_Comm stream_comm, int src_idx, int dst_idx);
 
 int main(int argc, char **argv)
 {
