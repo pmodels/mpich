@@ -64,9 +64,10 @@ static int alloc_send_data(const void *buf, MPI_Aint count, MPI_Datatype datatyp
 
 static void free_send_data(struct send_data *p)
 {
-    MPIR_Comm_release(p->comm_ptr);
+    MPIR_Comm *comm_ptr = p->comm_ptr;
     MPL_free(p->host_buf);
     MPL_free(p);
+    MPIR_Comm_release(comm_ptr);
 }
 
 static void send_enqueue_cb(void *data)
@@ -181,9 +182,10 @@ static int alloc_recv_data(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
 static void free_recv_data(struct recv_data *p)
 {
-    MPIR_Comm_release(p->comm_ptr);
+    MPIR_Comm *comm_ptr = p->comm_ptr;
     MPL_free(p->host_buf);
     MPL_free(p);
+    MPIR_Comm_release(comm_ptr);
 }
 
 static void recv_enqueue_cb(void *data)
@@ -377,6 +379,7 @@ static void wait_enqueue_cb(void *data)
         MPIR_Request_free(real_req);
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
+        MPIR_Request_free(enqueue_req);
         free_send_data(p);
     } else {
         struct recv_data *p = enqueue_req->u.enqueue.data;
@@ -385,11 +388,11 @@ static void wait_enqueue_cb(void *data)
         MPIR_Request_free(real_req);
         MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
+        MPIR_Request_free(enqueue_req);
         if (!p->host_buf) {
             free_recv_data(p);
         }
     }
-    MPIR_Request_free(enqueue_req);
 }
 
 int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
@@ -398,23 +401,22 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
     MPIR_Assert(req_ptr && req_ptr->kind == MPIR_REQUEST_KIND__ENQUEUE);
 
     MPL_gpu_stream_t gpu_stream = req_ptr->u.enqueue.stream_ptr->u.gpu_stream;
+    struct recv_data *p = NULL;
     if (!req_ptr->u.enqueue.is_send) {
-        struct recv_data *p = req_ptr->u.enqueue.data;
+        p = req_ptr->u.enqueue.data;
         p->status = status;
     }
+    bool need_unpack = (p && p->host_buf);
 
     MPL_gpu_launch_hostfn(gpu_stream, wait_enqueue_cb, req_ptr);
 
-    if (!req_ptr->u.enqueue.is_send) {
-        struct recv_data *p = req_ptr->u.enqueue.data;
-        if (p->host_buf) {
-            mpi_errno = MPIR_Typerep_unpack_stream(p->host_buf, p->data_sz,
-                                                   p->buf, p->count, p->datatype, 0,
-                                                   &p->actual_unpack_bytes, &gpu_stream);
-            MPIR_ERR_CHECK(mpi_errno);
+    if (need_unpack) {
+        mpi_errno = MPIR_Typerep_unpack_stream(p->host_buf, p->data_sz,
+                                               p->buf, p->count, p->datatype, 0,
+                                               &p->actual_unpack_bytes, &gpu_stream);
+        MPIR_ERR_CHECK(mpi_errno);
 
-            MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
-        }
+        MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
     }
 
   fn_exit:
@@ -449,17 +451,18 @@ static void waitall_enqueue_cb(void *data)
         MPIR_Request *enqueue_req;
         MPIR_Request_get_ptr(p->array_of_requests[i], enqueue_req);
 
+        MPIR_Request_free(enqueue_req->u.enqueue.real_request);
         if (enqueue_req->u.enqueue.is_send) {
             struct send_data *p2 = enqueue_req->u.enqueue.data;
+            MPIR_Request_free(enqueue_req);
             free_send_data(p2);
         } else {
             struct recv_data *p2 = enqueue_req->u.enqueue.data;
+            MPIR_Request_free(enqueue_req);
             if (!p2->host_buf) {
                 free_recv_data(p2);
             }
         }
-        MPIR_Request_free(enqueue_req->u.enqueue.real_request);
-        MPIR_Request_free(enqueue_req);
     }
     MPL_free(reqs);
     MPL_free(p->array_of_requests);
@@ -470,6 +473,7 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
                               MPI_Status * array_of_statuses)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
 
     MPL_gpu_stream_t gpu_stream = MPL_GPU_STREAM_DEFAULT;
     for (int i = 0; i < count; i++) {
@@ -484,6 +488,12 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
         }
     }
 
+    struct recv_data **unpack_list = NULL;
+    int num_unpack = 0;
+    if (count > 0) {
+        MPIR_CHKLMEM_MALLOC(unpack_list, count * sizeof(struct recv_data *));
+    }
+
     struct waitall_data *p;
     p = MPL_malloc(sizeof(struct waitall_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -493,6 +503,14 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
      * to signify that we are taking over the ownerships */
     p->array_of_requests = MPL_malloc(count * sizeof(MPI_Request), MPL_MEM_OTHER);
     for (int i = 0; i < count; i++) {
+        MPIR_Request *enqueue_req;
+        MPIR_Request_get_ptr(array_of_requests[i], enqueue_req);
+        if (!enqueue_req->u.enqueue.is_send) {
+            struct recv_data *p2 = enqueue_req->u.enqueue.data;
+            if (p2->host_buf) {
+                unpack_list[num_unpack++] = p2;
+            }
+        }
         p->array_of_requests[i] = array_of_requests[i];
         array_of_requests[i] = MPI_REQUEST_NULL;
     }
@@ -501,25 +519,18 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
 
     MPL_gpu_launch_hostfn(gpu_stream, waitall_enqueue_cb, p);
 
-    for (int i = 0; i < count; i++) {
-        MPIR_Request *enqueue_req;
-        MPIR_Request_get_ptr(p->array_of_requests[i], enqueue_req);
-        if (!enqueue_req->u.enqueue.is_send) {
-            struct recv_data *p2 = enqueue_req->u.enqueue.data;
-            if (p2->host_buf) {
-                mpi_errno = MPIR_Typerep_unpack_stream(p2->host_buf, p2->data_sz,
-                                                       p2->buf, p2->count, p2->datatype, 0,
-                                                       &p2->actual_unpack_bytes, &gpu_stream);
-                MPIR_ERR_CHECK(mpi_errno);
+    for (int i = 0; i < num_unpack; i++) {
+        struct recv_data *p2 = unpack_list[i];
+        mpi_errno = MPIR_Typerep_unpack_stream(p2->host_buf, p2->data_sz,
+                                               p2->buf, p2->count, p2->datatype, 0,
+                                               &p2->actual_unpack_bytes, &gpu_stream);
+        MPIR_ERR_CHECK(mpi_errno);
 
-                MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p2);
-            }
-
-        }
-
+        MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p2);
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -637,9 +648,10 @@ static void allreduce_enqueue_cb(void *data)
 
     if (!p->host_recvbuf) {
         /* we are done */
-        MPIR_Comm_release(p->comm_ptr);
+        MPIR_Comm *comm_ptr = p->comm_ptr;
         MPL_free(p->tmp_buf);
         MPL_free(p);
+        MPIR_Comm_release(comm_ptr);
     }
 
     MPIR_disable_gpu_tls = false;
@@ -648,12 +660,13 @@ static void allreduce_enqueue_cb(void *data)
 static void allred_stream_cleanup_cb(void *data)
 {
     struct allreduce_data *p = data;
+    MPIR_Comm *comm_ptr = p->comm_ptr;
 
     MPIR_free_buffer(p->host_recvbuf, p->count, p->datatype);
 
-    MPIR_Comm_release(p->comm_ptr);
     MPL_free(p->tmp_buf);
     MPL_free(p);
+    MPIR_Comm_release(comm_ptr);
 }
 
 int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
@@ -717,9 +730,10 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
         }
     }
 
+    bool need_swapback = (p->host_recvbuf != NULL);
     MPL_gpu_launch_hostfn(gpu_stream, allreduce_enqueue_cb, p);
 
-    if (p->host_recvbuf) {
+    if (need_swapback) {
         HOST_SWAPBACK_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
                              is_contig, p->tmp_buf, p->data_sz);
 
