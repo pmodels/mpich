@@ -37,7 +37,7 @@ def load_mpi_abi_h(mpi_abi_h):
             if RE.search(r'(MPI_ABI|MPIX)_H_INCLUDED', line):
                 # skip the include guard, harmless
                 pass
-            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)', line):
+            elif RE.match(r'^(int|double|void \*|MPIX?_\w+)\s*(P?MPI\w+)\((.*)', line):
                 # handle multi-line function prototypes
                 lines = [line.strip()]
                 while not RE.match(r'(.*)\);', lines[-1]):
@@ -82,7 +82,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 # rename to internal mpi_t struct type
                 T = RE.m.group(1)
                 out.append("typedef struct %s_s *%s;" % (re.sub(r'MPI_', 'MPIR_', T), T))
-            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)\);', line):
+            elif RE.match(r'^(int|double|void \*|MPIX?_\w+)\s*(P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
                 T=re.sub(re_Handle, r'ABI_\1', T)

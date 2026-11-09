@@ -604,10 +604,8 @@ enum MPIR_Combiner_enum {
 #define MPI_COMM_TYPE_HW_UNGUIDED 3
 #define MPI_COMM_TYPE_RESOURCE_GUIDED 4
 
-#endif /* MPICH_BUILD_MPI_ABI */
-/* MPICH-specific types */
-#define MPIX_COMM_TYPE_NEIGHBORHOOD 5
-#ifndef MPICH_BUILD_MPI_ABI
+/* MPIX_COMM_TYPE_NEIGHBORHOOD is defined in mpix.h, shared by the MPICH
+ * native ABI and the MPI ABI */
 
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0
@@ -750,21 +748,8 @@ enum MPIR_Combiner_enum {
 
 #define MPICH_ERR_LAST_CLASS 81     /* It is also helpful to know the
 				       last valid class */
-#define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
-                                  * already using some of the values in this
-                                  * range. All MPIX error codes will be
-                                  * above this value to be ABI complaint. */
-
-#define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1 /* Process failure */
-#define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
-                                                              * to be pending */
-#define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communication object has been revoked */
-#define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
-#define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
-#define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6 /* Invalid stream */
-#define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7 /* Operation timed out */
-
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
+/* MPIX error classes, MPICH_ERR_FIRST_MPIX and MPICH_ERR_LAST_MPIX are
+ * defined in mpix.h, shared by the MPICH native ABI and the MPI ABI */
 
 /* End of MPI's error classes */
 

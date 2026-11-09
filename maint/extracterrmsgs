@@ -47,6 +47,7 @@ foreach my $k ("envvarparse", "cvar_val"){
 
 # Check for special args
 my $mpi_h = "src/include/mpi.h.in";
+my $mpix_h = "src/include/mpix.h";
 my $mpi_abi_h = "src/binding/abi/mpi_abi.h";
 my $baseerrnames_txt = "src/mpi/errhan/baseerrnames.txt";
 my @files = ();
@@ -119,10 +120,11 @@ if ($build_test_pgm && -d "test/mpi/errhan") {
     print TESTFD "{\n    int err;\n    MPI_Init( 0, 0 );\n";
 }
 
-# Load mpi.h for error class constants
+# Load mpi.h for error class constants, and mpix.h for the MPIX error classes
 my %mpi_h_constants;
 $mpi_h_constants{"MPI_SUCCESS"} = 0;
-if (open In, $mpi_h) {
+foreach my $h ($mpi_h, $mpix_h) {
+    open In, $h or die "Unable to read $h\n";
     while (<In>) {
         if (/^#define\s+((MPICH|MPI|MPI_T|MPIX)_ERR_\w+)\s+(.+)/) {
             my ($key, $t) = ($1, $3);
@@ -134,8 +136,6 @@ if (open In, $mpi_h) {
         }
     }
     close In;
-} else {
-    die "Unable to read $mpi_h\n";
 }
 
 # Load mpi_abi.h for ABI error class constants
@@ -154,7 +154,7 @@ if (open In, $mpi_abi_h) {
 
 my $max_err_class = $mpi_h_constants{MPICH_ERR_LAST_MPIX};
 if (!$max_err_class) {
-    die "Failed to load MPICH_ERR_LAST_MPIX from $mpi_h\n";
+    die "Failed to load MPICH_ERR_LAST_MPIX from $mpix_h\n";
 }
 
 # Process the definitions

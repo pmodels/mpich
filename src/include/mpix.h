@@ -15,16 +15,54 @@ extern "C" {
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
 
-#ifndef MPICH
-#define MPIX_C_FLOAT16    ((MPI_Datatype)0x000002f0)
-#define MPIX_BFLOAT16     ((MPI_Datatype)0x000002f1)
-#define MPIX_EQUAL        ((MPI_Op)0x0000003e)
-#endif
-
 /* Generalized requests extensions */
 typedef int MPIX_Grequest_class;
 /* MPI stream objects */
 typedef int MPIX_Stream;
+
+#ifdef MPI_ABI_VERSION
+/* MPI ABI: all MPIX constants are defined here, kept together so their ranges
+ * are easy to maintain. They follow the MPI ABI encoding as if they were
+ * standard constants, and go through the same conversions in libmpi_abi.
+ *
+ * Handle values are picked from unassigned slots of the MPI ABI handle
+ * encoding and may change in the future to avoid collisions with new
+ * standard handles.
+ */
+#define MPIX_C_FLOAT16    ((MPI_Datatype)0x0000024a)    /* 2-byte C types */
+#define MPIX_BFLOAT16     ((MPI_Datatype)0x0000024b)    /* 2-byte C types */
+#define MPIX_EQUAL        ((MPI_Op)0x0000003e)  /* other operations */
+
+/* TODO: convert MPIX_Stream as an ABI handle */
+#define MPIX_STREAM_NULL  ((MPIX_Stream)0x3c000000)
+
+#else
+/* MPICH native ABI: the MPIX constant values that differ from the MPI ABI
+ * are defined in mpi.h */
+#endif
+
+/* MPIX constants passed through libmpi_abi unconverted. A single set serves
+ * both the MPICH native ABI and the MPI ABI as long as the values don't
+ * conflict with either. */
+
+/* MPIX error classes. They stay below 128 because MPICH encodes the error
+ * class in the lowest 7 bits of an error code, so they cannot go above 16384
+ * as MPI 5.0 asks. Starting at 101 leaves room for new standard error
+ * classes. */
+#define MPICH_ERR_FIRST_MPIX 100
+#define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1    /* Process failure */
+#define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2    /* A failure has caused this request
+                                                                 * to be pending */
+#define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3    /* The communication object has been revoked */
+#define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4    /* Operation could not be issued */
+#define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5    /* Cannot allocate request */
+#define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6    /* Invalid stream */
+#define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7    /* Operation timed out */
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
+
+/* MPIX split types for MPI_Comm_split_type. The standard split types are
+ * 221-224 in the MPI ABI and 1-4 in the MPICH native ABI. */
+#define MPIX_COMM_TYPE_NEIGHBORHOOD 5
 
 /* MPIX Async extensions */
 /* poll_fn return following states. */
@@ -74,6 +112,7 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
 int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
 
 int MPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
+void *MPIX_Async_get_state(MPIX_Async_thing async_thing);
 int MPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
                      void *extra_state, MPIX_Stream stream);
 int MPIX_Op_create_x(MPIX_User_function_x * user_fn_x, MPIX_Destructor_function * destructor_fn,
@@ -133,6 +172,8 @@ int MPIX_Stream_comm_create_multiplex(MPI_Comm comm, int count, MPIX_Stream arra
                                       MPI_Comm * newcomm);
 int MPIX_Comm_get_stream(MPI_Comm comm, int idx, MPIX_Stream * stream);
 int MPIX_Stream_progress(MPIX_Stream stream);
+int MPIX_Stream_toint(MPIX_Stream stream);
+MPIX_Stream MPIX_Stream_fromint(int stream);
 int MPIX_Start_progress_thread(MPIX_Stream stream);
 int MPIX_Stop_progress_thread(MPIX_Stream stream);
 int MPIX_Stream_send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
@@ -215,6 +256,7 @@ int PMPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler);
 int PMPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
 
 int PMPIX_Async_start(MPIX_Async_poll_function * poll_fn, void *extra_state, MPIX_Stream stream);
+void *PMPIX_Async_get_state(MPIX_Async_thing async_thing);
 int PMPIX_Async_spawn(MPIX_Async_thing async_thing, MPIX_Async_poll_function * poll_fn,
                       void *extra_state, MPIX_Stream stream);
 int PMPIX_Op_create_x(MPIX_User_function_x * user_fn_x, MPIX_Destructor_function * destructor_fn,
@@ -274,6 +316,8 @@ int PMPIX_Stream_comm_create_multiplex(MPI_Comm comm, int count, MPIX_Stream arr
                                        MPI_Comm * newcomm);
 int PMPIX_Comm_get_stream(MPI_Comm comm, int idx, MPIX_Stream * stream);
 int PMPIX_Stream_progress(MPIX_Stream stream);
+int PMPIX_Stream_toint(MPIX_Stream stream);
+MPIX_Stream PMPIX_Stream_fromint(int stream);
 int PMPIX_Start_progress_thread(MPIX_Stream stream);
 int PMPIX_Stop_progress_thread(MPIX_Stream stream);
 int PMPIX_Stream_send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
