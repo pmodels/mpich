@@ -1018,7 +1018,7 @@ def dump_abi_wrappers(func, is_large):
         # array_size set per parameters
         pre_filters.append("int indegree, outdegree;")
         pre_filters.append("ABI_Comm_neighbors_count(comm_abi, &indegree, &outdegree);")
-    elif re.match(r'mpi_type_(create_struct|struct)', func['name'], re.IGNORECASE):
+    elif re.match(r'mpi_type_create_struct', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         array_size = "count"
     elif re.match(r'mpi_type_get_contents', func['name'], re.IGNORECASE):
