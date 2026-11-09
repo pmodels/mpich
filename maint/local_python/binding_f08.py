@@ -189,8 +189,9 @@ def dump_f08_wrappers_f(func, is_large):
         arg_list.append("c_null_ptr")
         uses['c_null_ptr'] = 1
     elif RE.match(r'MPI_Info_create_env$', func['name'], re.IGNORECASE):
-        arg_list.append("0")
+        arg_list.append("0_c_int")
         arg_list.append("c_null_ptr")
+        uses['c_int'] = 1
         uses['c_null_ptr'] = 1
     elif RE.match(r'mpi_i?alltoall[vw]', func['name'], re.IGNORECASE):
         # Need check MPI_IN_PLACE in order to skip accessing sender arrays

@@ -37,9 +37,9 @@ int MPIR_Status_c2f_impl(const MPI_Status * c_status, MPI_Fint * f_status)
 #ifdef HAVE_FINT_IS_INT
     *(MPI_Status *) f_status = *c_status;
 #else
-    MPI_Fint *c = (void *) c_status;
+    const int *c = (const void *) c_status;
     for (int i = 0; i < MPI_F_STATUS_SIZE; i++) {
-        f_status[i] = (MPI_Fint) c_status[i];
+        f_status[i] = (MPI_Fint) c[i];
     }
 #endif
     return MPI_SUCCESS;
