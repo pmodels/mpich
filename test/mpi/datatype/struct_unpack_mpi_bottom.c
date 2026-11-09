@@ -130,6 +130,8 @@ static const char *memtype_str(mtest_mem_type_e memtype)
         case MTEST_MEM_TYPE__DEVICE:
             return "ze";
 #endif
+        default:
+            break;
     }
 
     snprintf(buf, sizeof(buf), "%d", memtype);

@@ -156,15 +156,17 @@ static int validate_defined_conditions(MPIR_Csel_node_s * node, int tree_idx, in
             case CSEL_NODE_TYPE__OPERATOR__ANY:
                 break;
             default:
-                const char *cond_name;
-                if (coll_type >= 0 && !condition_is_defined(node->type, coll_type, &cond_name)) {
-                    /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
-                    MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
-                    MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
-                                         "**colljsoncond %s %s %s", name, cond_name,
-                                         MPIR_Coll_type_names[coll_type]);
+                {
+                    const char *cond_name;
+                    if (coll_type >= 0 && !condition_is_defined(node->type, coll_type, &cond_name)) {
+                        /* unused when MPIR_ERR_SETANDJUMP3 drops its message arguments */
+                        MPL_UNUSED const char *name = MPII_Csel_tree_name(tree_idx);
+                        MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER, "**colljsoncond",
+                                             "**colljsoncond %s %s %s", name, cond_name,
+                                             MPIR_Coll_type_names[coll_type]);
+                    }
+                    break;
                 }
-                break;
         }
         if (next >= 0) {
             if (!seen[next * ntypes + coll_type + 1]) {

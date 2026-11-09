@@ -53,6 +53,7 @@ static MTEST_THREAD_RETURN_TYPE test_thread(void *arg)
         }
         MPIX_Threadcomm_finish(comm);
     }
+    return (MTEST_THREAD_RETURN_TYPE) NULL;
 }
 
 int main(int argc, char *argv[])
