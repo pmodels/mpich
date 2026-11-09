@@ -129,8 +129,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     }
 
     MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * num_children);
-    /* Leaf nodes send to parent */
-    if (num_children == 0) {
+    /* Leaf nodes send to parent; a root without children (a one-rank comm) still copies */
+    if (num_children == 0 && my_tree.parent != -1) {
         mpi_errno =
             MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, tag, comm, sched, 0,
                                  NULL, &vtx_id);
