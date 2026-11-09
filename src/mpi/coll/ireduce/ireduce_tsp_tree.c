@@ -88,8 +88,8 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     is_tree_root = (rank == tree_root) ? 1 : 0;
     is_tree_leaf = (num_children == 0) ? 1 : 0;
     is_tree_intermediate = (!is_tree_leaf && !is_tree_root);
-    /* ensure exclusiveness */
-    MPIR_Assert(!(is_tree_root && is_tree_leaf));
+    /* ensure exclusiveness; the root is also a leaf only when it is the only rank */
+    MPIR_Assert(!(is_tree_root && is_tree_leaf) || size == 1);
 
     /* Allocate buffers to receive data from children. Any memory required for execution
      * of the schedule, for example child_buffer, reduce_buffer below, is allocated using
