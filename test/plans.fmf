@@ -1,0 +1,18 @@
+discover:
+  how: fmf
+prepare:
+  - summary: Minimum test requirements
+    how: install
+    package:
+      - mpich-devel
+      - gcc
+  - summary: Make sure mpich is loaded during tests
+    how: shell
+    script: |
+      cat << EOF >> $TMT_PLAN_SOURCE_SCRIPT
+      source /etc/profile.d/modules.sh
+      module load mpi/mpich-$(arch)
+      module list
+      EOF
+execute:
+  how: tmt
