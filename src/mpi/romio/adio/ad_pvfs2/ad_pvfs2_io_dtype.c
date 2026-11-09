@@ -10,6 +10,13 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
+#ifdef MPI_LB
+#define ADIOI_PVFS2_IS_LB_UB(t) ((t) == MPI_LB || (t) == MPI_UB)
+#else
+/* MPI_LB and MPI_UB are not defined in the MPI ABI, thus the test is always false */
+#define ADIOI_PVFS2_IS_LB_UB(t) 0
+#endif
+
 int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Status * status, int
@@ -366,7 +373,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
 
         arr_count = 0;
         for (i = 0; i < arr_int[0]; i++) {
-            if (arr_dtype[i] != MPI_LB && arr_dtype[i] != MPI_UB) {
+            if (!ADIOI_PVFS2_IS_LB_UB(arr_dtype[i])) {
                 arr_count++;
             }
         }
@@ -392,7 +399,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
 
         arr_count = 0;
         for (i = 0; i < arr_int[0]; i++) {
-            if (arr_dtype[i] != MPI_LB && arr_dtype[i] != MPI_UB) {
+            if (!ADIOI_PVFS2_IS_LB_UB(arr_dtype[i])) {
                 leaf = convert_mpi_pvfs2_dtype(&arr_dtype[i], &old_pvfs_dtype_arr[arr_count]);
                 if (leaf != 1)
                     MPI_Type_free(&arr_dtype[i]);
@@ -418,7 +425,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
 
             arr_count = 0;
             for (i = 0; i < arr_int[0]; i++) {
-                if (arr_dtype[i] != MPI_LB && arr_dtype[i] != MPI_UB) {
+                if (!ADIOI_PVFS2_IS_LB_UB(arr_dtype[i])) {
                     PVFS_Request_free(&old_pvfs_dtype_arr[arr_count]);
                     arr_count++;
                 }
@@ -445,7 +452,7 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
                 fprintf(stderr, "Error in PVFS_Request_struct\n");
 
             for (i = 0; i < arr_int[0]; i++) {
-                if (arr_dtype[i] != MPI_LB && arr_dtype[i] != MPI_UB)
+                if (!ADIOI_PVFS2_IS_LB_UB(arr_dtype[i]))
                     PVFS_Request_free(&old_pvfs_dtype_arr[i]);
             }
 
