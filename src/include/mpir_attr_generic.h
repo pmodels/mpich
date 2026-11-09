@@ -142,10 +142,6 @@ extern "C" {
      (MPII_Attr_delete_proxy) (MPI_Comm_delete_attr_function * user_function,
                                int handle, int keyval, void *attrib, void *extra_state);
 
-    MPICH_API_PUBLIC void
-     MPII_Keyval_set_proxy(int keyval,
-                           MPII_Attr_copy_proxy copy_proxy, MPII_Attr_delete_proxy delete_proxy);
-
 #if defined(__cplusplus)
 }
 #endif

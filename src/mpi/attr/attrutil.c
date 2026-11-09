@@ -298,17 +298,3 @@ MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
 
     return ret;
 }
-
-/* FIXME: Missing routine description */
-void
-MPII_Keyval_set_proxy(int keyval,
-                      MPII_Attr_copy_proxy copy_proxy, MPII_Attr_delete_proxy delete_proxy)
-{
-    MPII_Keyval *keyval_ptr;
-    MPII_Keyval_get_ptr(keyval, keyval_ptr);
-    if (keyval_ptr == NULL)
-        return;
-
-    keyval_ptr->copyfn.proxy = copy_proxy;
-    keyval_ptr->delfn.proxy = delete_proxy;
-}
