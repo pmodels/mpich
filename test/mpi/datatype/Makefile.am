@@ -86,11 +86,14 @@ noinst_PROGRAMS =             \
 if NOT_STRICTMPI
 noinst_PROGRAMS += \
     indexed_misc_oldapi       \
-    lbub_oldapi               \
     simple_size_extent_oldapi \
+    transpose_pack_oldapi
+if HAVE_MPI_LB_UB
+noinst_PROGRAMS += \
+    lbub_oldapi               \
     struct_no_real_types      \
-    transpose_pack_oldapi     \
     typename_oldapi
+endif
 endif
 
 # Some of the tests use a more comprehensive set of datatype tests.

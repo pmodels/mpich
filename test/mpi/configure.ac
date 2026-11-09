@@ -480,6 +480,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
     [AC_MSG_RESULT([no])
      CFLAGS="$saved_CFLAGS"])
 
+# MPI_LB and MPI_UB were removed from the MPI standard, and the MPI ABI does
+# not provide them even with -mpi-legacy
+AC_MSG_CHECKING([whether mpi.h provides MPI_LB and MPI_UB])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],
+    [MPI_Datatype lb = MPI_LB, ub = MPI_UB; return lb == ub;])],
+    [have_mpi_lb_ub=yes], [have_mpi_lb_ub=no])
+AC_MSG_RESULT([$have_mpi_lb_ub])
+lbub_tests="#"
+if test "$have_mpi_lb_ub" = "yes" ; then
+    lbub_tests=""
+fi
+AC_SUBST(lbub_tests)
+AM_CONDITIONAL([HAVE_MPI_LB_UB], [test "$have_mpi_lb_ub" = "yes"])
+
 # Check whether we are testing MPI derived from MPICH
 MPI_IS_MPICH=no
 AC_MSG_CHECKING([Is the MPI derived from MPICH])
