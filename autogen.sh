@@ -312,6 +312,7 @@ fn_fortran() {
     cp src/binding/c/*.txt $dir/maint/c/
 
     (cd $dir && ./autogen.sh)
+    patch_libtool_dir $dir
 }
 
 # ./autogen.sh -do=test if *only* build testsuite
@@ -509,32 +510,42 @@ autoreconf_amdir() {
         echo "------------------------------------------------------------------------"
         echo "running $autoreconf in $_dir"
         (cd $_dir && $AUTORECONF $autoreconf_args) || exit 1
+        patch_libtool_dir $_dir
+    fi
+}
 
-        # Patching ltmain.sh and libtool.m4
-        # This works with libtool versions 2.4 - 2.4.2.
-        # Older versions are not supported to build mpich.
-        # Newer versions should have this patch already included.
+# Patch the ltmain.sh and libtool.m4 that libtoolize copied into $1/confdb,
+# then regenerate $1/configure. Every directory whose libtool links an MPICH
+# library needs this, including src/binding/fortran, which runs its own
+# autoreconf and gets fresh, unpatched copies.
+patch_libtool_dir() {
+    _dir=$1
+    set_autotools   # for $autoconf; ./autogen.sh -do=fortran comes here without it
 
-        _patch_successful=no
+    # Patching ltmain.sh and libtool.m4
+    # This works with libtool versions 2.4 - 2.4.2.
+    # Older versions are not supported to build mpich.
+    # Newer versions should have this patch already included.
 
-        _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
-        _patch_libtool $_dir/confdb/ltmain.sh  nagfor.patch
-        _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
-        _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
-        _patch_libtool $_dir/confdb/libtool.m4 hpc-sdk.patch
-        if test "$do_fortran" = "yes" ; then
-            _patch_libtool $_dir/confdb/libtool.m4 darwin-ifort.patch
-            _patch_libtool $_dir/confdb/libtool.m4 oracle-fort.patch
-            _patch_libtool $_dir/confdb/libtool.m4 flang.patch
-            _patch_libtool $_dir/confdb/libtool.m4 arm-compiler.patch
-            _patch_libtool $_dir/confdb/libtool.m4 ibm-xlf.patch
-        fi
+    _patch_successful=no
 
-        if test "$_patch_successful" = "yes" ; then
-            (cd $_dir && $autoconf -f) || exit 1
-            # Reset timestamps to avoid confusing make
-            touch -r $_dir/confdb/ltversion.m4 $_dir/confdb/ltmain.sh $_dir/confdb/libtool.m4
-        fi
+    _patch_libtool $_dir/confdb/ltmain.sh  intel-compiler.patch
+    _patch_libtool $_dir/confdb/ltmain.sh  nagfor.patch
+    _patch_libtool $_dir/confdb/libtool.m4 sys_lib_dlsearch_path_spec.patch
+    _patch_libtool $_dir/confdb/libtool.m4 big-sur.patch
+    _patch_libtool $_dir/confdb/libtool.m4 hpc-sdk.patch
+    if test "$do_fortran" = "yes" ; then
+        _patch_libtool $_dir/confdb/libtool.m4 darwin-ifort.patch
+        _patch_libtool $_dir/confdb/libtool.m4 oracle-fort.patch
+        _patch_libtool $_dir/confdb/libtool.m4 flang.patch
+        _patch_libtool $_dir/confdb/libtool.m4 arm-compiler.patch
+        _patch_libtool $_dir/confdb/libtool.m4 ibm-xlf.patch
+    fi
+
+    if test "$_patch_successful" = "yes" ; then
+        (cd $_dir && $autoconf -f) || exit 1
+        # Reset timestamps to avoid confusing make
+        touch -r $_dir/confdb/ltversion.m4 $_dir/confdb/ltmain.sh $_dir/confdb/libtool.m4
     fi
 }
 
@@ -562,6 +573,9 @@ autogen_external() {
             (cd $_dir && ./autogen.sh --pup-max-nesting=$yaksa_depth) || exit 1
         else
             (cd $_dir && ./autogen.sh) || exit 1
+        fi
+        if test "$_dir" = "src/binding/fortran" ; then
+            patch_libtool_dir $_dir
         fi
     else
         error "external directory $_dir missing"
