@@ -9,13 +9,13 @@ Describe semantics for MPI_Func_name.
 //tag::MPI_Psend_init[]
 **MPI_Psend_init** creates a partitioned communication send request that enables multiple contributions from threads or tasks to a single message buffer.
 
-This initialization call is local and binds all arguments of a partitioned send operation to a persistent request. Matching with a corresponding MPI_PRECV_INIT follows standard point-to-point matching rules using communicator, tag, and destination; when these do not uniquely identify a message, the order of initialization calls determines match order. It is erroneous to provide a `partitions` value less than or equal to zero. Multiple threads or tasks may independently mark partitions as ready via MPI_PREADY calls after the operation is started. A smaller number of receiver-side partitions may provide higher performance as a large number may increase overheads.
+This initialization call is local and binds all arguments of a partitioned send operation to a persistent request. Matching with a corresponding MPI_PRECV_INIT follows standard point-to-point matching rules using communicator, tag, and destination; when these do not uniquely identify a message, the order of initialization calls determines match order. It is erroneous to provide a `partitions` value less than or equal to zero. Multiple threads or tasks may independently mark partitions as ready via MPI_PREADY calls after the operation is started.
 //end::MPI_Psend_init[]
 
 //tag::MPI_Precv_init[]
 **MPI_Precv_init** creates a partitioned communication receive request that binds all arguments of a partitioned receive operation to a persistent request.
 
-This initialization call is local and may return before the operation completes. Matching with a corresponding MPI_PSEND_INIT follows standard point-to-point matching rules using communicator, tag, and source; when these do not uniquely identify a message, the order of initialization calls determines match order. Wildcards for `source` and `tag` are not allowed. It is erroneous to provide a `partitions` value less than or equal to zero. Using a smaller number of receiver-side partitions may provide higher performance as a large number may increase overheads.
+This initialization call is local and may return before the operation completes. Matching with a corresponding MPI_PSEND_INIT follows standard point-to-point matching rules using communicator, tag, and source; when these do not uniquely identify a message, the order of initialization calls determines match order. Wildcards for `source` and `tag` are not allowed. It is erroneous to provide a `partitions` value less than or equal to zero.
 //end::MPI_Precv_init[]
 
 //tag::MPI_Pready[]
@@ -145,7 +145,7 @@ This routine has local semantics and subsequent calls querying the same variable
 //tag::MPI_T_pvar_get_index[]
 **MPI_T_pvar_get_index** retrieves the index of a performance variable given a known variable name and class.
 
-This routine has local semantics. The `name` parameter is a null-terminated string provided by the caller, and `pvar_index` is returned by the MPI implementation. This routine enables fast retrieval of performance variables by tools that know the variable name without iterating over all variables. The routine returns `MPI_T_ERR_INVALID_NAME` if `name` does not match the name of any performance variable of the specified `var_class` at the time of the call. Using MPI implementation specific variable names is not portable across MPI implementations, but may provide lower runtime overhead.
+This routine has local semantics. The `name` parameter is a null-terminated string provided by the caller, and `pvar_index` is returned by the MPI implementation. This routine enables fast retrieval of performance variables by tools that know the variable name without iterating over all variables. The routine returns `MPI_T_ERR_INVALID_NAME` if `name` does not match the name of any performance variable of the specified `var_class` at the time of the call. Using MPI implementation specific variable names is not portable across MPI implementations.
 //end::MPI_T_pvar_get_index[]
 
 //tag::MPI_T_pvar_session_create[]
@@ -419,7 +419,7 @@ This function deletes an attribute from a communicator using the specified key v
 //end::MPI_Attr_delete[]
 
 //tag::MPI_Alloc_mem[]
-**MPI_Alloc_mem** allocates memory that may be optimized for message-passing and remote-memory-access operations. Allocated memory may provide faster performance on systems where specially allocated memory improves communication, such as shared memory on an SMP. The use of such memory for communication is not mandatory and it may be used without restrictions as any other dynamically allocated memory. By default, the allocated memory is aligned to at least the alignment required for load/store accesses of any datatype corresponding to a predefined MPI datatype. The `info` argument may specify a desired alternative minimum alignment in bytes via the `mpi_minimum_memory_alignment` key set to an integral power of two, or provide directives controlling the desired location of the allocated memory; `MPI_INFO_NULL` is always valid.
+**MPI_Alloc_mem** allocates memory that may be optimized for message-passing and remote-memory-access operations. The use of such memory for communication is not mandatory and it may be used without restrictions as any other dynamically allocated memory. By default, the allocated memory is aligned to at least the alignment required for load/store accesses of any datatype corresponding to a predefined MPI datatype. The `info` argument may specify a desired alternative minimum alignment in bytes via the `mpi_minimum_memory_alignment` key set to an integral power of two, or provide directives controlling the desired location of the allocated memory; `MPI_INFO_NULL` is always valid.
 
 The function may raise an error of class `MPI_ERR_NO_MEM` if memory is exhausted.
 //end::MPI_Alloc_mem[]
@@ -1283,13 +1283,13 @@ If `comm` is an intra-communicator, the value in `recvbuf` on rank 0 is undefine
 //end::MPI_Exscan[]
 
 //tag::MPI_Test_cancelled[]
-**MPI_Test_cancelled** determines whether a communication operation was successfully cancelled. The function returns `flag` = true if the communication associated with the `status` object was cancelled. When `flag` = true, all other fields of `status` such as `count` or `tag` are undefined. If a receive operation might be cancelled, MPI_TEST_CANCELLED may be called first to check whether the operation was cancelled before examining other fields of the return status. Cancel operations are expensive and are recommended to be used only exceptionally.
+**MPI_Test_cancelled** determines whether a communication operation was successfully cancelled. The function returns `flag` = true if the communication associated with the `status` object was cancelled. When `flag` = true, all other fields of `status` such as `count` or `tag` are undefined. If a receive operation might be cancelled, MPI_TEST_CANCELLED may be called first to check whether the operation was cancelled before examining other fields of the return status.
 //end::MPI_Test_cancelled[]
 
 //tag::MPI_Ibarrier[]
 **MPI_Ibarrier** starts a nonblocking barrier synchronization across all members of a group.
 
-The call returns immediately, independent of whether other processes have called MPI_IBARRIER. If `comm` is an intra-communicator, the corresponding completion operation completes only after all other processes in the communicator have called MPI_IBARRIER. If `comm` is an inter-communicator, the completion operation completes when all processes in the remote group have called MPI_IBARRIER. All processes must call collective operations in the same order per communicator, and nonblocking collective operations do not match with blocking collective operations. A nonblocking barrier may be used to hide latency by moving independent computations between the MPI_IBARRIER call and the subsequent completion call. The semantic properties are useful when mixing collective operations and point-to-point messages.
+The call returns immediately, independent of whether other processes have called MPI_IBARRIER. If `comm` is an intra-communicator, the corresponding completion operation completes only after all other processes in the communicator have called MPI_IBARRIER. If `comm` is an inter-communicator, the completion operation completes when all processes in the remote group have called MPI_IBARRIER. All processes must call collective operations in the same order per communicator, and nonblocking collective operations do not match with blocking collective operations.
 //end::MPI_Ibarrier[]
 
 //tag::MPI_Ibcast[]
@@ -1735,7 +1735,7 @@ All processes in the group that collectively opened the file must call this rout
 //tag::MPI_File_write_ordered[]
 **MPI_File_write_ordered** is a collective version of MPI_FILE_WRITE_SHARED that writes to a file using the shared file pointer with accesses ordered by process rank.
 
-All processes in the group that collectively opened the file must call this routine, and all processes must use the same file view. Accesses to the file occur in the order determined by the ranks of the processes within the group. For each process, the location in the file at which data is written is the position at which the shared file pointer would be after all processes with lower ranks had written their data. The call may return only after all processes in the group have initiated their accesses. When the call returns, the shared file pointer points to the next etype after the last one requested, according to the file view used by all processes. Upon completion, the amount of data accessed is returned in `status`. In multithreaded implementations, any split collective begin and end operation called by a process on a file handle must be called from the same thread. Using ordered routines may enable an implementation to optimize access when data access need not occur strictly in process rank order, improving performance.
+All processes in the group that collectively opened the file must call this routine, and all processes must use the same file view. Accesses to the file occur in the order determined by the ranks of the processes within the group. For each process, the location in the file at which data is written is the position at which the shared file pointer would be after all processes with lower ranks had written their data. The call may return only after all processes in the group have initiated their accesses. When the call returns, the shared file pointer points to the next etype after the last one requested, according to the file view used by all processes. Upon completion, the amount of data accessed is returned in `status`. In multithreaded implementations, any split collective begin and end operation called by a process on a file handle must be called from the same thread.
 //end::MPI_File_write_ordered[]
 
 //tag::MPI_File_seek_shared[]
@@ -1875,7 +1875,7 @@ Attaching overlapping memory concurrently within the same window is erroneous, a
 //tag::MPI_Win_detach[]
 **MPI_Win_detach** detaches a previously attached memory region beginning at `base` from a dynamic window. This is a local procedure that is not collective. The arguments `base` and `win` must match the arguments passed to a previous call to MPI_WIN_ATTACH. After memory has been detached, it may not be the target of an RMA operation on that window unless the memory is re-attached with MPI_WIN_ATTACH. Memory becomes detached when the associated dynamic memory window is freed.
 
-Memory is recommended to be detached before it is freed by the user, and detaching memory that is no longer needed may permit the implementation to make more efficient use of resources.
+Memory is recommended to be detached before it is freed by the user.
 //end::MPI_Win_detach[]
 
 //tag::MPI_Win_free[]
@@ -1900,8 +1900,6 @@ This procedure is collective over the group of `win`. The operation has no effec
 
 //tag::MPI_Put[]
 **MPI_Put** is a nonblocking one-sided communication operation that transfers data from the origin process memory to the target process window. The operation is similar to a send by the origin and a matching receive by the target, except all arguments are provided by the origin. The `target_datatype` may not specify overlapping entries in the target buffer, and the message must fit without truncation in the target buffer. The target buffer must fit within the target window or attached memory in a dynamic window. `MPI_PROC_NULL` is a valid `target_rank`, with the same effect as in point-to-point communication.
-
-Transfers to a target window in memory allocated by MPI_ALLOC_MEM or MPI_WIN_ALLOCATE may be faster on shared memory systems, and transfers from contiguous buffers are faster on most systems.
 //end::MPI_Put[]
 
 //tag::MPI_Fetch_and_op[]
@@ -2191,7 +2189,7 @@ If `message` is `MPI_MESSAGE_NO_PROC`, the call returns immediately with a reque
 //tag::MPI_Cancel[]
 **MPI_Cancel** marks a pending nonblocking communication operation for cancellation. This procedure is local and returns immediately, possibly before the communication is actually cancelled. A call to MPI_REQUEST_FREE, MPI_WAIT, or MPI_TEST is still required after MPI_Cancel; if marked for cancellation, MPI_WAIT is guaranteed to return regardless of other MPI processes. Either the cancellation succeeds or the communication succeeds, but not both.
 
-Nonblocking communication operations are nonovertaking. Cancelling a send request is deprecated, and cancel may be an expensive operation that is recommended to be used only exceptionally.
+Nonblocking communication operations are nonovertaking. Cancelling a send request is deprecated.
 //end::MPI_Cancel[]
 
 //tag::MPI_Send_init[]
@@ -2410,13 +2408,13 @@ This operation is local. The resulting `newgroup` is obtained by deleting from `
 //tag::MPI_Group_range_incl[]
 **MPI_Group_range_incl** creates a new group from an existing group using an array of range triplets specifying MPI processes to include.
 
-This operation is local. Each triplet in `ranges` specifies a first rank, last rank, and stride, and `newgroup` consists of the sequence of MPI processes in `group` computed from these ranges in the order defined by `ranges`. Each computed rank must be a valid rank in `group` and all computed ranks must be distinct, or the program is erroneous. The stride may be negative but cannot be zero, and first may be greater than last. MPI programmers are recommended to use range operations when possible, as high-quality implementations may take advantage of their scalability.
+This operation is local. Each triplet in `ranges` specifies a first rank, last rank, and stride, and `newgroup` consists of the sequence of MPI processes in `group` computed from these ranges in the order defined by `ranges`. Each computed rank must be a valid rank in `group` and all computed ranks must be distinct, or the program is erroneous. The stride may be negative but cannot be zero, and first may be greater than last.
 //end::MPI_Group_range_incl[]
 
 //tag::MPI_Group_range_excl[]
 **MPI_Group_range_excl** creates a new group by excluding MPI processes from an existing group using an array of range triplets.
 
-This operation is local. Each triplet in `ranges` specifies a first rank, last rank, and stride, and `newgroup` is obtained by deleting from `group` those MPI processes with ranks computed from these ranges, preserving the order in `group`. Each computed rank must be a valid rank in `group` and all computed ranks must be distinct, or the program is erroneous. The stride may be negative but cannot be zero. MPI programmers are recommended to use range operations when possible, as high-quality implementations may take advantage of their scalability.
+This operation is local. Each triplet in `ranges` specifies a first rank, last rank, and stride, and `newgroup` is obtained by deleting from `group` those MPI processes with ranks computed from these ranges, preserving the order in `group`. Each computed rank must be a valid rank in `group` and all computed ranks must be distinct, or the program is erroneous. The stride may be negative but cannot be zero.
 //end::MPI_Group_range_excl[]
 
 //tag::MPI_Group_from_session_pset[]
@@ -2472,7 +2470,7 @@ This operation is collective over all MPI processes in the group of `comm`. For 
 
 This function is collective over all MPI processes in `group`, not over all processes in `comm`. Each MPI process must provide a `group` argument that is a subgroup of the group associated with `comm`. If a nonempty `group` is specified, then all MPI processes in that group must call the function with the same arguments, including a `group` that contains the same members with the same ordering. If the calling MPI process is a member of the group given as the `group` argument, then `newcomm` is a communicator with `group` as its associated group. No cached information or virtual topology information propagates from `comm` to `newcomm`.
 
-If the calling MPI process is not a member of `group`, including when `group` is `MPI_GROUP_EMPTY`, then the call is local and `MPI_COMM_NULL` is returned as `newcomm`. The `tag` argument does not conflict with tags used in point-to-point communication and wildcards are not permitted for `tag`. If multiple threads at a given MPI process perform concurrent MPI_COMM_CREATE_GROUP operations, they must distinguish these operations by providing different `tag` or `comm` arguments. MPI_COMM_CREATE may provide lower overhead than MPI_COMM_CREATE_GROUP because it may use collective communication on `comm` when constructing `newcomm`.
+If the calling MPI process is not a member of `group`, including when `group` is `MPI_GROUP_EMPTY`, then the call is local and `MPI_COMM_NULL` is returned as `newcomm`. The `tag` argument does not conflict with tags used in point-to-point communication and wildcards are not permitted for `tag`. If multiple threads at a given MPI process perform concurrent MPI_COMM_CREATE_GROUP operations, they must distinguish these operations by providing different `tag` or `comm` arguments.
 //end::MPI_Comm_create_group[]
 
 //tag::MPI_Comm_set_info[]
@@ -2662,7 +2660,7 @@ If a neighbor is `MPI_PROC_NULL`, the buffer is still part of the sequence of ne
 //end::MPI_Ineighbor_alltoallw[]
 
 //tag::MPI_Neighbor_allgather_init[]
-**MPI_Neighbor_allgather_init** creates a persistent collective communication request for the neighborhood allgather operation on a communicator with an associated virtual topology. This collective operation supports Cartesian, graph, and distributed graph communicators. Persistent variants may offer significant performance benefits for programs with repetitive communication patterns. Each process sends its send buffer to all outgoing neighbors and receives data from all incoming neighbors into the receive buffer. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1. For distributed graph topologies, the sequence of neighbors is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcount` and `sendtype` at a process must equal the type signature associated with `recvcount` and `recvtype` at all neighboring processes.
+**MPI_Neighbor_allgather_init** creates a persistent collective communication request for the neighborhood allgather operation on a communicator with an associated virtual topology. This collective operation supports Cartesian, graph, and distributed graph communicators. Each process sends its send buffer to all outgoing neighbors and receives data from all incoming neighbors into the receive buffer. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1. For distributed graph topologies, the sequence of neighbors is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcount` and `sendtype` at a process must equal the type signature associated with `recvcount` and `recvtype` at all neighboring processes.
 
 If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated.
 //end::MPI_Neighbor_allgather_init[]
@@ -2670,25 +2668,25 @@ If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated no
 //tag::MPI_Neighbor_allgatherv_init[]
 **MPI_Neighbor_allgatherv_init** creates a persistent collective communication request for the neighborhood allgatherv operation on a communicator with an associated virtual topology.
 
-This collective operation supports Cartesian, graph, and distributed graph communicators. Persistent variants may offer significant performance benefits for programs with repetitive communication patterns. Each process sends its `sendbuf` to all outgoing neighbors and receives varying amounts of data from incoming neighbors into the receive buffer at displacements specified by `displs`. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcount` and `sendtype` at process j must equal the type signature associated with `recvcounts[l]` and `recvtype` at any other process where `srcs[l]` = j. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated. The in-place option is not meaningful for this operation.
+This collective operation supports Cartesian, graph, and distributed graph communicators. Each process sends its `sendbuf` to all outgoing neighbors and receives varying amounts of data from incoming neighbors into the receive buffer at displacements specified by `displs`. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcount` and `sendtype` at process j must equal the type signature associated with `recvcounts[l]` and `recvtype` at any other process where `srcs[l]` = j. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated. The in-place option is not meaningful for this operation.
 //end::MPI_Neighbor_allgatherv_init[]
 
 //tag::MPI_Neighbor_alltoall_init[]
 **MPI_Neighbor_alltoall_init** creates a persistent collective communication request for the neighborhood alltoall operation on a communicator with an associated virtual topology.
 
-This collective operation supports Cartesian, graph, and distributed graph communicators. Persistent variants may offer significant performance benefits for programs with repetitive communication patterns. Each process sends distinct data blocks to its outgoing neighbors and receives data blocks from its incoming neighbors. The k-th block in the send buffer is sent to the k-th outgoing neighbor and the l-th block in the receive buffer is received from the l-th incoming neighbor. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature at a process must equal the type signature at any other process for each communicating pair. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated.
+This collective operation supports Cartesian, graph, and distributed graph communicators. Each process sends distinct data blocks to its outgoing neighbors and receives data blocks from its incoming neighbors. The k-th block in the send buffer is sent to the k-th outgoing neighbor and the l-th block in the receive buffer is received from the l-th incoming neighbor. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature at a process must equal the type signature at any other process for each communicating pair. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated.
 //end::MPI_Neighbor_alltoall_init[]
 
 //tag::MPI_Neighbor_alltoallv_init[]
 **MPI_Neighbor_alltoallv_init** creates a persistent collective communication request for the neighborhood alltoallv operation on a communicator with an associated virtual topology.
 
-This collective operation supports Cartesian, graph, and distributed graph communicators. Persistent variants may offer significant performance benefits for programs with repetitive communication patterns. Each process sends varying amounts of data to its outgoing neighbors starting at offset `sdispls[k]` elements and receives data from incoming neighbors into offset `rdispls[l]` elements. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcounts[k]` and `sendtype` at process i must equal the type signature associated with `recvcounts[l]` and `recvtype` at process j where the k-th destination of i is j and the l-th source of j is i. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated. The in-place option is not meaningful for this operation.
+This collective operation supports Cartesian, graph, and distributed graph communicators. Each process sends varying amounts of data to its outgoing neighbors starting at offset `sdispls[k]` elements and receives data from incoming neighbors into offset `rdispls[l]` elements. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature associated with `sendcounts[k]` and `sendtype` at process i must equal the type signature associated with `recvcounts[l]` and `recvtype` at process j where the k-th destination of i is j and the l-th source of j is i. If a neighbor is `MPI_PROC_NULL`, the buffer position is neither communicated nor updated. The in-place option is not meaningful for this operation.
 //end::MPI_Neighbor_alltoallv_init[]
 
 //tag::MPI_Neighbor_alltoallw_init[]
 **MPI_Neighbor_alltoallw_init** creates a persistent collective communication request for the neighborhood alltoallw operation on a communicator with an associated virtual topology.
 
-This collective operation supports Cartesian, graph, and distributed graph communicators. Persistent variants may offer significant performance benefits for programs with repetitive communication patterns. Each process sends data to outgoing neighbors and receives data from incoming neighbors, with different datatypes permitted to and from each neighbor. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature of data sent must match the type signature of data received pairwise between every pair of communicating processes. If a neighbor is `MPI_PROC_NULL`, the buffer is still part of the sequence of neighbors but is neither communicated nor updated. The in-place option is not meaningful for this operation.
+This collective operation supports Cartesian, graph, and distributed graph communicators. Each process sends data to outgoing neighbors and receives data from incoming neighbors, with different datatypes permitted to and from each neighbor. For Cartesian topologies, the sequence of neighbors follows dimension order with negative direction first, then positive direction with displacement 1; for distributed graph topologies, the sequence is defined by MPI_DIST_GRAPH_NEIGHBORS. The type signature of data sent must match the type signature of data received pairwise between every pair of communicating processes. If a neighbor is `MPI_PROC_NULL`, the buffer is still part of the sequence of neighbors but is neither communicated nor updated. The in-place option is not meaningful for this operation.
 //end::MPI_Neighbor_alltoallw_init[]
 
 //tag::MPI_Type_create_indexed_block[]
@@ -2699,8 +2697,6 @@ This operation is local and does not require communication with other processes.
 
 //tag::MPI_Type_create_struct[]
 **MPI_Type_create_struct** is the most general datatype constructor, allowing each block to consist of replications of different datatypes. This operation is local and generalizes MPI_TYPE_CREATE_HINDEXED by permitting distinct datatypes for each block. The newly created datatype has a type map with entries defined by the arrays of block lengths, byte displacements, and types.
-
-Structures combining different basic datatypes are recommended to be defined so that there are no gaps based on alignment rules. If such a datatype is used to create an array of structures, alignment gaps at the end of the structure are recommended to be avoided. Gaps may be added explicitly to both the structure and the MPI derived datatype handle because communication of a contiguous derived datatype may be significantly faster than one that is noncontiguous due to alignment gaps.
 //end::MPI_Type_create_struct[]
 
 //tag::MPI_Type_create_darray[]
@@ -2828,7 +2824,7 @@ Whether `errorcode` is returned from the executable or from the MPI process star
 //tag::MPI_Comm_spawn[]
 **MPI_Comm_spawn** starts MPI processes and establishes communication with them, returning an inter-communicator.
 
-This function is collective over `comm` and may not return until MPI_INIT has been called in the children. MPI_INIT in the children may not return until all parents have called MPI_Comm_spawn, forming a collective operation over the union of parent and child processes. The spawned children have their own `MPI_COMM_WORLD`, which is separate from that of the parents. The returned inter-communicator contains parent processes in the local group and child processes in the remote group. If MPI is unable to spawn `maxprocs` processes, it raises an error of class `MPI_ERR_SPAWN`. An implementation may allow the `info` argument with the `soft` key to spawn a smaller number of processes instead of raising an error; the number of spawned processes is given by the size of the remote group of `intercomm`. Processes spawned at the same time using MPI_COMM_SPAWN_MULTIPLE are placed in the same `MPI_COMM_WORLD`. The constant `MPI_ERRCODES_IGNORE` may be passed in `array_of_errcodes` if error codes are not needed. Starting an application by spawning processes via MPI_Comm_spawn after initialization is discouraged for performance reasons; starting all processes at once as a single MPI application is recommended when possible.
+This function is collective over `comm` and may not return until MPI_INIT has been called in the children. MPI_INIT in the children may not return until all parents have called MPI_Comm_spawn, forming a collective operation over the union of parent and child processes. The spawned children have their own `MPI_COMM_WORLD`, which is separate from that of the parents. The returned inter-communicator contains parent processes in the local group and child processes in the remote group. If MPI is unable to spawn `maxprocs` processes, it raises an error of class `MPI_ERR_SPAWN`. An implementation may allow the `info` argument with the `soft` key to spawn a smaller number of processes instead of raising an error; the number of spawned processes is given by the size of the remote group of `intercomm`. Processes spawned at the same time using MPI_COMM_SPAWN_MULTIPLE are placed in the same `MPI_COMM_WORLD`. The constant `MPI_ERRCODES_IGNORE` may be passed in `array_of_errcodes` if error codes are not needed.
 //end::MPI_Comm_spawn[]
 
 //tag::MPI_Comm_get_parent[]
@@ -2840,7 +2836,7 @@ This function is collective over `comm` and may not return until MPI_INIT has be
 
 This function is collective over `comm` and may not return until MPI_INIT has been called in the children. MPI_INIT in the children may not return until all parents have called MPI_Comm_spawn_multiple, forming a collective operation over the union of parent and child processes. All spawned processes share the same `MPI_COMM_WORLD`, with ranks assigned consecutively according to the order of commands in `array_of_commands`. The returned inter-communicator contains parent processes in the local group and child processes in the remote group. If MPI is unable to spawn the requested processes, it raises an error of class `MPI_ERR_SPAWN`. An implementation may allow the `info` argument with the `soft` key to spawn a smaller number of processes instead of raising an error.
 
-Using MPI_Comm_spawn_multiple instead of calling MPI_COMM_SPAWN multiple times is recommended because it creates children with a single `MPI_COMM_WORLD`, may be faster than spawning sequentially, and may enable faster communication between processes spawned together. The constant `MPI_ERRCODES_IGNORE` may be passed in `array_of_errcodes` if error codes are not needed, and `MPI_ARGVS_NULL` may be used to specify no arguments for any commands.
+Using MPI_Comm_spawn_multiple instead of calling MPI_COMM_SPAWN multiple times is recommended because it creates children with a single `MPI_COMM_WORLD`. The constant `MPI_ERRCODES_IGNORE` may be passed in `array_of_errcodes` if error codes are not needed, and `MPI_ARGVS_NULL` may be used to specify no arguments for any commands.
 //end::MPI_Comm_spawn_multiple[]
 
 //tag::MPI_Open_port[]
