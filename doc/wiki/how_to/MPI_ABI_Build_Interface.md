@@ -124,7 +124,8 @@ the optional parts (see `src/include/mpi.h.in`).
 
 ### `-mpi-mpix`
 
-Defines `MPI_MPIX`, which causes `mpi.h` to include `mpix.h`. This
+Defines `MPI_MPIX`, which causes `mpi.h` to include `mpix.h`. `-mpix` is
+a shorter alias. This
 provides access to MPIX extension functions (e.g. `MPIX_Query_cuda_support`).
 
 The MPIX declarations are split into a separate header because
@@ -154,8 +155,16 @@ that loads both `libmpi_abi.so` and `libmpi.so` (see the warning above).
 ### `-mpi-legacy`
 
 Defines `MPI_LEGACY`, which causes `mpi.h` to include `mpi_legacy.h`.
-This provides deprecated or removed MPI symbols for backward
-compatibility.
+This provides the APIs removed from the MPI standard for source
+compatibility with old codes. On the MPI ABI they are mapped to their
+replacements with macros and static inline functions (e.g. `MPI_Address`
+to `MPI_Get_address`), so `libmpi_abi` exports no removed symbol and the
+program runs on any MPI ABI implementation. `MPI_LB` and `MPI_UB` are
+not provided on the MPI ABI, because they only work if the library
+interprets them; use `MPI_Type_create_resized` instead.
+
+With the MPICH ABI the removed APIs are always available as real
+functions in `libmpi`, and the flag has no effect.
 
 ## What Gets Built and Installed
 
@@ -191,7 +200,7 @@ from `main` installs `libmpi.so.0`; stable releases restore the
 | `mpi_abi.h` | MPI ABI is built | The standard MPI ABI header (`MPI_ABI_VERSION` 1, `MPI_ABI_SUBVERSION` 0). |
 | `mpi_proto.h` | MPICH ABI is built | MPICH ABI prototypes. |
 | `mpix.h` | always | MPICH extensions (`MPIX_`), see `-mpi-mpix`. |
-| `mpi_legacy.h` | always | Deprecated or removed MPI symbols, see `-mpi-legacy`. |
+| `mpi_legacy.h` | always | APIs removed from the MPI standard, for the MPI ABI, see `-mpi-legacy`. |
 | `mpi_fortran.h` | the Fortran binding is built | Fortran interoperability for C code, see `-mpi-fortran`. |
 
 ### Tools
