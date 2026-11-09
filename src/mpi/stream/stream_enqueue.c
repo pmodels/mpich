@@ -8,6 +8,22 @@
 /* Allow per-thread level disabling GPU path */
 MPL_TLS bool MPIR_disable_gpu_tls = false;
 
+static MPL_atomic_int_t enqueue_cb_cnt = MPL_ATOMIC_INT_T_INITIALIZER(0);
+
+static void launch_hostfn(MPL_gpu_stream_t gpu_stream, MPL_gpu_hostfn fn, void *data)
+{
+    MPL_atomic_fetch_add_int(&enqueue_cb_cnt, 1);
+    int mpl_err = MPL_gpu_launch_hostfn(gpu_stream, fn, data);
+    MPIR_Assertp(mpl_err == MPL_SUCCESS);
+}
+
+void MPIR_Stream_enqueue_finalize(void)
+{
+    while (MPL_atomic_acquire_load_int(&enqueue_cb_cnt) > 0) {
+        MPL_thread_yield();
+    }
+}
+
 /* send enqueue */
 struct send_data {
     const void *buf;
@@ -94,6 +110,7 @@ static void send_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     free_send_data(p);
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -115,7 +132,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPL_gpu_launch_hostfn(gpu_stream, send_enqueue_cb, p);
+    launch_hostfn(gpu_stream, send_enqueue_cb, p);
 
   fn_exit:
     return mpi_errno;
@@ -213,6 +230,7 @@ static void recv_enqueue_cb(void *data)
         /* we are done */
         free_recv_data(p);
     }
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 static void recv_stream_cleanup_cb(void *data)
@@ -221,6 +239,7 @@ static void recv_stream_cleanup_cb(void *data)
     MPIR_Assertp(p->actual_unpack_bytes == p->data_sz);
 
     free_recv_data(p);
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -237,15 +256,15 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (p->host_buf) {
-        MPL_gpu_launch_hostfn(gpu_stream, recv_enqueue_cb, p);
+        launch_hostfn(gpu_stream, recv_enqueue_cb, p);
 
         mpi_errno = MPIR_Typerep_unpack_stream(p->host_buf, p->data_sz, buf, count, datatype, 0,
                                                &p->actual_unpack_bytes, &gpu_stream);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
+        launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
     } else {
-        MPL_gpu_launch_hostfn(gpu_stream, recv_enqueue_cb, p);
+        launch_hostfn(gpu_stream, recv_enqueue_cb, p);
     }
 
   fn_exit:
@@ -275,6 +294,7 @@ static void isend_enqueue_cb(void *data)
     MPIR_Assertp(request_ptr != NULL);
 
     p->req->u.enqueue.real_request = request_ptr;
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -305,7 +325,7 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPL_gpu_launch_hostfn(gpu_stream, isend_enqueue_cb, p);
+    launch_hostfn(gpu_stream, isend_enqueue_cb, p);
 
   fn_exit:
     return mpi_errno;
@@ -332,6 +352,7 @@ static void irecv_enqueue_cb(void *data)
     MPIR_Assertp(request_ptr != NULL);
 
     p->req->u.enqueue.real_request = request_ptr;
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -356,7 +377,7 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     (*req)->u.enqueue.data = p;
     p->req = *req;
 
-    MPL_gpu_launch_hostfn(gpu_stream, irecv_enqueue_cb, p);
+    launch_hostfn(gpu_stream, irecv_enqueue_cb, p);
 
   fn_exit:
     return mpi_errno;
@@ -393,6 +414,7 @@ static void wait_enqueue_cb(void *data)
             free_recv_data(p);
         }
     }
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
@@ -408,7 +430,7 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
     }
     bool need_unpack = (p && p->host_buf);
 
-    MPL_gpu_launch_hostfn(gpu_stream, wait_enqueue_cb, req_ptr);
+    launch_hostfn(gpu_stream, wait_enqueue_cb, req_ptr);
 
     if (need_unpack) {
         mpi_errno = MPIR_Typerep_unpack_stream(p->host_buf, p->data_sz,
@@ -416,7 +438,7 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
                                                &p->actual_unpack_bytes, &gpu_stream);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
+        launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p);
     }
 
   fn_exit:
@@ -467,6 +489,7 @@ static void waitall_enqueue_cb(void *data)
     MPL_free(reqs);
     MPL_free(p->array_of_requests);
     MPL_free(p);
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
@@ -517,7 +540,7 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
     /* User is still responsible for array_of_statuses since they may need to check them */
     p->array_of_statuses = array_of_statuses;
 
-    MPL_gpu_launch_hostfn(gpu_stream, waitall_enqueue_cb, p);
+    launch_hostfn(gpu_stream, waitall_enqueue_cb, p);
 
     for (int i = 0; i < num_unpack; i++) {
         struct recv_data *p2 = unpack_list[i];
@@ -526,7 +549,7 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
                                                &p2->actual_unpack_bytes, &gpu_stream);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPL_gpu_launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p2);
+        launch_hostfn(gpu_stream, recv_stream_cleanup_cb, p2);
     }
 
   fn_exit:
@@ -655,6 +678,7 @@ static void allreduce_enqueue_cb(void *data)
     }
 
     MPIR_disable_gpu_tls = false;
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 static void allred_stream_cleanup_cb(void *data)
@@ -667,6 +691,7 @@ static void allred_stream_cleanup_cb(void *data)
     MPL_free(p->tmp_buf);
     MPL_free(p);
     MPIR_Comm_release(comm_ptr);
+    MPL_atomic_fetch_sub_int(&enqueue_cb_cnt, 1);
 }
 
 int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
@@ -731,13 +756,13 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     }
 
     bool need_swapback = (p->host_recvbuf != NULL);
-    MPL_gpu_launch_hostfn(gpu_stream, allreduce_enqueue_cb, p);
+    launch_hostfn(gpu_stream, allreduce_enqueue_cb, p);
 
     if (need_swapback) {
         HOST_SWAPBACK_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
                              is_contig, p->tmp_buf, p->data_sz);
 
-        MPL_gpu_launch_hostfn(gpu_stream, allred_stream_cleanup_cb, p);
+        launch_hostfn(gpu_stream, allred_stream_cleanup_cb, p);
     }
 
   fn_exit:
