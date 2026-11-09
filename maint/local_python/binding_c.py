@@ -1044,7 +1044,7 @@ def dump_abi_wrappers(func, is_large):
         pre_filters.append("if (ABI_Comm_rank(comm_abi) == root) {")
         pre_filters.append("    count_info = count;")
         pre_filters.append("}")
-    elif re.match(r'mpi_((wait|test|request_get_status_)(all|any)|startall)', func['name'], re.IGNORECASE):
+    elif re.match(r'mpi_((wait|test|request_get_status_)(all|any)|startall)|mpix_waitall_enqueue', func['name'], re.IGNORECASE):
         array_type = "Request"
         array_size = "count"
     elif re.match(r'mpi_(wait|test|request_get_status_)some', func['name'], re.IGNORECASE):
@@ -1216,6 +1216,8 @@ def dump_abi_wrappers(func, is_large):
     ret = "int"
     if 'return' in func:
         ret = mapping[func['return']]
+        if func['return'] == 'EXTRA_STATE':
+            ret = 'void *'
         ret = re.sub(re_Handle, r'ABI_\1', ret)
 
     if 'impl' in func and func['impl'] == "skip":

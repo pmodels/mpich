@@ -180,13 +180,6 @@ def main():
             if 'replace' in func and 'body' not in func:
                 continue
 
-            if re.match(r'MPIX_', func['name']):
-                if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
-                    # needed by ROMIO
-                    pass
-                else:
-                    continue
-
             dump_func_abi(func)
             if '_replaces' in func:
                 for t_func in func['_replaces']:

@@ -15,6 +15,7 @@
   from the MPI C library. mpifort now explicitly links -lmpi (or -lmpi_abi).
 
 # Split mpix.h from mpi.h. MPIX constants are available with ABI conversion support.
+  libmpi_abi provides the MPIX functions (mpicc -mpi-mpix).
 
 # Added circulant graph (circ_graph) algorithms for Bcast, Reduce, Allgather, and
   nonblocking IBcast.

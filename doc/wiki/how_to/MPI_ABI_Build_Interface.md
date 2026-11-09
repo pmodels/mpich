@@ -129,7 +129,10 @@ provides access to MPIX extension functions (e.g. `MPIX_Query_cuda_support`).
 
 The MPIX declarations are split into a separate header because
 `mpi_abi.h` does not declare them. This flag makes them available
-regardless of which ABI is in use.
+regardless of which ABI is in use, and `libmpi_abi` provides the MPIX
+functions, converting MPIX handles such as `MPIX_Stream` like the
+standard ones. The Fortran binding does not use MPIX on the MPI ABI yet
+(see below).
 
 ### `-mpi-fortran`
 
