@@ -104,22 +104,22 @@ int main(int argc, char **argv)
 
     pq_handle = MPI_T_PVAR_HANDLE_NULL;
     MPI_T_pvar_handle_alloc(session, pq_idx, NULL, &pq_handle, &count);
-    assert(count = 1);
+    assert(count == 1);
     assert(pq_handle != MPI_T_PVAR_HANDLE_NULL);
 
     uq_handle = MPI_T_PVAR_HANDLE_NULL;
     MPI_T_pvar_handle_alloc(session, uq_idx, NULL, &uq_handle, &count);
-    assert(count = 1);
+    assert(count == 1);
     assert(uq_handle != MPI_T_PVAR_HANDLE_NULL);
 
     pqm_handle = MPI_T_PVAR_HANDLE_NULL;
     MPI_T_pvar_handle_alloc(session, pqm_idx, NULL, &pqm_handle, &count);
-    assert(count = 1);
+    assert(count == 1);
     assert(pqm_handle != MPI_T_PVAR_HANDLE_NULL);
 
     uqm_handle = MPI_T_PVAR_HANDLE_NULL;
     MPI_T_pvar_handle_alloc(session, uqm_idx, NULL, &uqm_handle, &count);
-    assert(count = 1);
+    assert(count == 1);
     assert(uqm_handle != MPI_T_PVAR_HANDLE_NULL);
 
     /* now send/recv some messages and track the lengths of the queues */
