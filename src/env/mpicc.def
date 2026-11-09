@@ -381,7 +381,7 @@ subcode: parse_args
     subcode: parse_need_mpix
         $(block:parse_args_init)
             need_mpix=
-        &call case, -mpi-mpix
+        &call case, -mpi-mpix|-mpix
             need_mpix="yes"
 
     subcode: parse_need_fortran
