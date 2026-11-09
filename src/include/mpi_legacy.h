@@ -4,12 +4,13 @@
  */
 
 /* This header provides declarations for MPI functions and types that have
- * been removed from the MPI standard. It is included by mpi.h when the
- * MPI_LEGACY macro is defined (e.g. via mpicc -mpi-legacy).
+ * been removed from the MPI standard. It is for the MPI ABI only: the MPI ABI
+ * mpi.h includes it when the MPI_LEGACY macro is defined (e.g. via
+ * mpicc -mpi-legacy). This is the only header that declares them for the
+ * MPI ABI; mpix.h is for MPIX extensions only.
  *
- * For MPICH ABI builds, these declarations are also available via mpix.h
- * and mpi.h directly. For MPI ABI builds, this header is the only way
- * to access them.
+ * The MPICH native mpi.h does not include this header. It declares the
+ * removed functions in mpi_proto.h, with native constant values.
  *
  * New code should use the replacement functions specified by the MPI standard.
  */
