@@ -230,7 +230,9 @@ mixed Fortran/C programs can still be linked with `mpifort`.
 
 On the MPI ABI, the Fortran binding does not provide the `MPIX_` routines
 (`--disable-fortran-mpix` is implied) and is compiled with
-`FORTRAN_BUILD_MPI_ABI`.
+`FORTRAN_BUILD_MPI_ABI`. It still uses the MPIX callbacks of the C library
+(`HAS_MPIX_CALLBACKS`, e.g. `MPIX_Op_create_x`) for its user-function
+proxies, whenever the library provides them.
 
 ### Fortran on the MPI ABI in a Dual Build
 
