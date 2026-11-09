@@ -521,6 +521,10 @@ subcode: set_final_vars
         if [ "$mpi_abi" = no ] ; then
             mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
             mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
+            $(if:cc=cxx)
+                # the C++ binding is only built on the MPICH ABI
+                mpi_libs_shared="@LMPICXXLIBNAME@ $mpi_libs_shared"
+                mpi_libs_static="@LMPICXXLIBNAME@ $mpi_libs_static"
         else
             final_cppflags="-DMPI_ABI ${final_cppflags}"
             mpi_libs_shared="-l@MPIABILIBNAME@ @LPMPIABILIBNAME@"
@@ -564,9 +568,7 @@ subcode: set_cmd_macros
         \x23 suppressing linking, such as -c or -M.
 
     $(set:LD0=-L$libdir)
-    $(if:cc=cxx)
-        $(set:LD0.= @LMPICXXLIBNAME@)
-    $(elif:cc=fc)
+    $(if:cc=fc)
         $(set:LD0.= -l@MPIFCLIBNAME@)
 
     $(if:cc!=fc)
