@@ -184,6 +184,17 @@ static void dloop_copy(void *dest, void *src, MPI_Aint size)
     return;
 }
 
+/* Move pointer p by ptrdiff bytes. The addition is done in uintptr_t, where
+ * overflow is defined to wrap around modulo 2^N, so the result is the correct
+ * address even when ptrdiff is negative or has itself wrapped (the two copies
+ * are more than 2 GB apart on a 32-bit platform). Adding in MPI_Aint instead
+ * is signed overflow there, which fails ubsan on i386:
+ *     runtime error: signed integer overflow: 1494824016 + 2078313456 cannot
+ *     be represented in type 'int'
+ */
+#define UPDATE_PTR(p, ptrdiff) \
+    (p) = (void *) ((uintptr_t) (p) + (uintptr_t) (ptrdiff))
+
 /*@
   MPII_Dataloop_update - update pointers after a copy operation
 
@@ -203,21 +214,10 @@ void MPII_Dataloop_update(MPII_Dataloop * dataloop, MPI_Aint ptrdiff)
     switch (dataloop->kind & MPII_DATALOOP_KIND_MASK) {
         case MPII_DATALOOP_KIND_CONTIG:
         case MPII_DATALOOP_KIND_VECTOR:
-            /*
-             * All these really ugly assignments are really of the form:
-             *
-             * ((char *) dataloop->loop_params.c_t.loop) += ptrdiff;
-             *
-             * However, some compilers spit out warnings about casting on the
-             * LHS, so we get this much nastier form instead (using common
-             * struct for contig and vector):
-             */
-
             if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
                 MPIR_Assert(dataloop->loop_params.cm_t.dataloop);
 
-                dataloop->loop_params.cm_t.dataloop = (MPII_Dataloop *) (void *)
-                    ((MPI_Aint) (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
+                UPDATE_PTR(dataloop->loop_params.cm_t.dataloop, ptrdiff);
 
                 MPII_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
             }
@@ -226,14 +226,12 @@ void MPII_Dataloop_update(MPII_Dataloop * dataloop, MPI_Aint ptrdiff)
         case MPII_DATALOOP_KIND_BLOCKINDEXED:
             MPIR_Assert(dataloop->loop_params.bi_t.offset_array);
 
-            dataloop->loop_params.bi_t.offset_array = (MPI_Aint *) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.bi_t.offset_array, ptrdiff);
 
             if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
                 MPIR_Assert(dataloop->loop_params.bi_t.dataloop);
 
-                dataloop->loop_params.bi_t.dataloop = (MPII_Dataloop *) (void *)
-                    ((MPI_Aint) (char *) dataloop->loop_params.bi_t.dataloop + ptrdiff);
+                UPDATE_PTR(dataloop->loop_params.bi_t.dataloop, ptrdiff);
 
                 MPII_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
             }
@@ -242,19 +240,16 @@ void MPII_Dataloop_update(MPII_Dataloop * dataloop, MPI_Aint ptrdiff)
         case MPII_DATALOOP_KIND_INDEXED:
             MPIR_Assert(dataloop->loop_params.i_t.blocksize_array);
 
-            dataloop->loop_params.i_t.blocksize_array = (MPI_Aint *) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.i_t.blocksize_array, ptrdiff);
 
             MPIR_Assert(dataloop->loop_params.i_t.offset_array);
 
-            dataloop->loop_params.i_t.offset_array = (MPI_Aint *) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.i_t.offset_array, ptrdiff);
 
             if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
                 MPIR_Assert(dataloop->loop_params.i_t.dataloop);
 
-                dataloop->loop_params.i_t.dataloop = (MPII_Dataloop *) (void *)
-                    ((MPI_Aint) (char *) dataloop->loop_params.i_t.dataloop + ptrdiff);
+                UPDATE_PTR(dataloop->loop_params.i_t.dataloop, ptrdiff);
 
                 MPII_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
             }
@@ -263,29 +258,25 @@ void MPII_Dataloop_update(MPII_Dataloop * dataloop, MPI_Aint ptrdiff)
         case MPII_DATALOOP_KIND_STRUCT:
             MPIR_Assert(dataloop->loop_params.s_t.blocksize_array);
 
-            dataloop->loop_params.s_t.blocksize_array = (MPI_Aint *) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.s_t.blocksize_array, ptrdiff);
 
             MPIR_Assert(dataloop->loop_params.s_t.offset_array);
 
-            dataloop->loop_params.s_t.offset_array = (MPI_Aint *) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.s_t.offset_array, ptrdiff);
 
             if (dataloop->kind & MPII_DATALOOP_FINAL_MASK)
                 break;
 
             MPIR_Assert(dataloop->loop_params.s_t.dataloop_array);
 
-            dataloop->loop_params.s_t.dataloop_array = (MPII_Dataloop **) (void *)
-                ((MPI_Aint) (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
+            UPDATE_PTR(dataloop->loop_params.s_t.dataloop_array, ptrdiff);
 
             /* fix the N dataloop pointers too */
             looparray = dataloop->loop_params.s_t.dataloop_array;
             for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
                 MPIR_Assert(looparray[i]);
 
-                looparray[i] = (MPII_Dataloop *) (void *)
-                    ((MPI_Aint) (char *) looparray[i] + ptrdiff);
+                UPDATE_PTR(looparray[i], ptrdiff);
             }
 
             for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
