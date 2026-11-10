@@ -549,6 +549,8 @@ unexpected messages queued.
 **opnotpredefined %d:only predefined ops are valid (op = %d)
 **opnotpredefined:only predefined ops are valid
 
+**atexit: Registration of atexit handler failed
+**atexit %d: Registration of atexit handler failed with %d
 **init:Initialization failed
 **progresshookstoomany: too many progress hooks are registered
 
