@@ -347,6 +347,7 @@ AC_ARG_ENABLE([two-level-namespace],
 
 FCLIB_LDFLAGS=
 AC_SUBST([FCLIB_LDFLAGS])
+use_flat_namespace=no
 
 if test "X$enable_shared" = "Xyes" ; then
     # see ticket #1590 for some more background on these Darwin linking issues
@@ -396,11 +397,21 @@ if test "X$enable_shared" = "Xyes" ; then
             # approximation will work for now.
             if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
                 FCLIB_LDFLAGS="-Wl,-flat_namespace"
+                use_flat_namespace=yes
             fi
         fi
         ]
     )
 fi
+
+# The BLOCK DATA in setbotf_data.f defines the sentinel common blocks as
+# initialized data, so that GNU ld resolves the common blocks of other shared
+# libraries to libmpifort's (see #8020). With -flat_namespace, dyld binds the
+# common blocks of the program and libmpifort to one copy instead, so leave it
+# out and keep the Darwin build as it was. Never put the BLOCK DATA in the same
+# object as mpirinitf: gfortran then references the blocks directly instead of
+# through the GOT, and dyld cannot bind mpirinitf to the program's copy.
+AM_CONDITIONAL([BUILD_SENTINEL_BLOCK_DATA], [test "$use_flat_namespace" != "yes"])
 
 # Determine characteristics of the Fortran 90 compiler
 # Find a Fortran 90 compiler.  Sets FC

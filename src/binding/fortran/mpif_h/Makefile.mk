@@ -19,6 +19,10 @@ lib_libf77_mpi_la_SOURCES = \
 	mpif_h/setbot.c \
 	mpif_h/setbotf.f
 
+if BUILD_SENTINEL_BLOCK_DATA
+lib_libf77_mpi_la_SOURCES += mpif_h/setbotf_data.f
+endif BUILD_SENTINEL_BLOCK_DATA
+
 lib_libf77_mpi_la_CPPFLAGS = $(f77_cppflags)
 
 if BUILD_LIBF77_PMPI
@@ -43,7 +47,7 @@ noinst_HEADERS += \
 	mpif_h/mpi_fortimpl.h \
 	mpif_h/mpifnoext.h
 
-# setbotf.f includes mpifnoext.h
+# setbotf_data.f includes mpifnoext.h
 BUILT_SOURCES += mpif_h/mpifnoext.h
 
 endif BUILD_F77_BINDING
@@ -51,7 +55,7 @@ endif BUILD_F77_BINDING
 # A version of mpif.h with no external commands, including declarations
 # such as `REAL*8 MPI_WTIME, PMPI_WTIME`. Filtering on `PMPI_` covers those
 # lines. It is valid in both fixed and free source form. It is used in
-# BLOCK DATA (setbotf.f) and in the mpi module (use_mpi).
+# BLOCK DATA (setbotf_data.f) and in the mpi module (use_mpi).
 # NOTE: do not use extended regex to allow posix sed.
 mpif_h/mpifnoext.h: mpif_h/mpif.h
 	rm -f $@
