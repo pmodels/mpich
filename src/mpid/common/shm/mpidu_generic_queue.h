@@ -21,48 +21,48 @@
 #define GENERIC_Q_HEAD(q) ((q).head)
 
 #define GENERIC_Q_ENQUEUE_EMPTY(qp, ep, next_field) do {        \
-        MPIR_Assert (GENERIC_Q_EMPTY (*(qp)));                  \
+        MPIR_Assert(GENERIC_Q_EMPTY(*(qp)));                    \
         (qp)->head = (qp)->tail = ep;                           \
         (ep)->next_field = NULL;                                \
-        PRINT_QUEUE (qp, next_field);                           \
+        PRINT_QUEUE(qp, next_field);                            \
     } while (0)
 
 #define GENERIC_Q_ENQUEUE(qp, ep, next_field) do {              \
-        if (GENERIC_Q_EMPTY (*(qp)))                            \
-            GENERIC_Q_ENQUEUE_EMPTY (qp, ep, next_field);       \
+        if (GENERIC_Q_EMPTY(*(qp)))                             \
+            GENERIC_Q_ENQUEUE_EMPTY(qp, ep, next_field);        \
         else                                                    \
         {                                                       \
             (qp)->tail->next_field = ep;                        \
             (qp)->tail = ep;                                    \
             (ep)->next_field = NULL;                            \
         }                                                       \
-        PRINT_QUEUE (qp, next_field);                           \
+        PRINT_QUEUE(qp, next_field);                            \
     } while (0)
 
 #define GENERIC_Q_ENQUEUE_AT_HEAD(qp, ep, next_field) do {      \
-        if (GENERIC_Q_EMPTY (*(qp)))                            \
-            GENERIC_Q_ENQUEUE_EMPTY (qp, ep, next_field);       \
+        if (GENERIC_Q_EMPTY(*(qp)))                             \
+            GENERIC_Q_ENQUEUE_EMPTY(qp, ep, next_field);        \
         else                                                    \
         {                                                       \
             (ep)->next_field = (qp)->head;                      \
             (qp)->head = ep;                                    \
         }                                                       \
-        PRINT_QUEUE (qp, next_field);                           \
+        PRINT_QUEUE(qp, next_field);                            \
     } while (0)
 
 /* the _MULTIPLE routines assume that ep0 is the head and ep1 is the
    tail of a linked list of elements.  The list is inserted on the end
    of the queue. */
 #define GENERIC_Q_ENQUEUE_EMPTY_MULTIPLE(qp, ep0, ep1, next_field) do { \
-        MPIR_Assert (GENERIC_Q_EMPTY (*(qp)));                          \
+        MPIR_Assert(GENERIC_Q_EMPTY(*(qp)));                            \
         (qp)->head = ep0;                                               \
         (qp)->tail = ep1;                                               \
         (ep1)->next_field = NULL;                                       \
     } while (0)
 
 #define GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, next_field) do {               \
-        if (GENERIC_Q_EMPTY (*(qp)))                                            \
-            GENERIC_Q_ENQUEUE_EMPTY_MULTIPLE (qp, ep0, ep1, next_field);        \
+        if (GENERIC_Q_EMPTY(*(qp)))                                             \
+            GENERIC_Q_ENQUEUE_EMPTY_MULTIPLE(qp, ep0, ep1, next_field);         \
         else                                                                    \
         {                                                                       \
             (qp)->tail->next_field = ep0;                                       \
@@ -73,17 +73,17 @@
 
 
 #define GENERIC_Q_DEQUEUE(qp, epp, next_field) do {     \
-        MPIR_Assert (!GENERIC_Q_EMPTY (*(qp)));         \
+        MPIR_Assert(!GENERIC_Q_EMPTY(*(qp)));           \
         *(epp) = (qp)->head;                            \
         (qp)->head = (*(epp))->next_field;              \
         if ((qp)->head == NULL)                         \
             (qp)->tail = NULL;                          \
-        PRINT_QUEUE (qp, next_field);                   \
+        PRINT_QUEUE(qp, next_field);                    \
     } while (0)
 
 /* remove the elements from the top of the queue starting with ep0 through ep1 */
 #define GENERIC_Q_REMOVE_ELEMENTS(qp, ep0, ep1, next_field) do {        \
-        MPIR_Assert (GENERIC_Q_HEAD (*(qp)) == (ep0));                  \
+        MPIR_Assert(GENERIC_Q_HEAD(*(qp)) == (ep0));                    \
         (qp)->head = (ep1)->next_field;                                 \
         if ((qp)->head == NULL)                                         \
             (qp)->tail = NULL;                                          \
@@ -157,48 +157,48 @@
 #define GENERICM_Q_HEAD(q) ((q).head)
 
 #define GENERICM_Q_ENQUEUE_EMPTY(qp, ep, next_field_macro, next_field) do {     \
-        MPIR_Assert (GENERICM_Q_EMPTY (*(qp)));                                 \
+        MPIR_Assert(GENERICM_Q_EMPTY(*(qp)));                                   \
         (qp)->head = (qp)->tail = ep;                                           \
         next_field_macro(ep, next_field) = NULL;                                \
-        PRINTM_QUEUE (qp, next_field_macro, next_field);                        \
+        PRINTM_QUEUE(qp, next_field_macro, next_field);                         \
     } while (0)
 
 #define GENERICM_Q_ENQUEUE(qp, ep, next_field_macro, next_field) do {           \
-        if (GENERICM_Q_EMPTY (*(qp)))                                           \
-            GENERICM_Q_ENQUEUE_EMPTY (qp, ep, next_field_macro, next_field);    \
+        if (GENERICM_Q_EMPTY(*(qp)))                                            \
+            GENERICM_Q_ENQUEUE_EMPTY(qp, ep, next_field_macro, next_field);     \
         else                                                                    \
         {                                                                       \
             next_field_macro((qp)->tail, next_field) = ep;                      \
             (qp)->tail = ep;                                                    \
             next_field_macro(ep, next_field) = NULL;                            \
         }                                                                       \
-        PRINTM_QUEUE (qp, next_field_macro, next_field);                        \
+        PRINTM_QUEUE(qp, next_field_macro, next_field);                         \
     } while (0)
 
 #define GENERICM_Q_ENQUEUE_AT_HEAD(qp, ep, next_field_macro, next_field) do {   \
-        if (GENERICM_Q_EMPTY (*(qp)))                                           \
-            GENERICM_Q_ENQUEUE_EMPTY (qp, ep, next_field_macro, next_field);    \
+        if (GENERICM_Q_EMPTY(*(qp)))                                            \
+            GENERICM_Q_ENQUEUE_EMPTY(qp, ep, next_field_macro, next_field);     \
         else                                                                    \
         {                                                                       \
             next_field_macro(ep, next_field) = (qp)->head;                      \
             (qp)->head = ep;                                                    \
         }                                                                       \
-        PRINTM_QUEUE (qp, next_field_macro, next_field);                        \
+        PRINTM_QUEUE(qp, next_field_macro, next_field);                         \
     } while (0)
 
 /* the _MULTIPLE routines assume that ep0 is the head and ep1 is the
    tail of a linked list of elements.  The list is inserted on the end
    of the queue. */
 #define GENERICM_Q_ENQUEUE_EMPTY_MULTIPLE(qp, ep0, ep1, next_field_macro, next_field) do {      \
-        MPIR_Assert (GENERICM_Q_EMPTY (*(qp)));                                                 \
+        MPIR_Assert(GENERICM_Q_EMPTY(*(qp)));                                                   \
         (qp)->head = ep0;                                                                       \
         (qp)->tail = ep1;                                                                       \
         next_field_macro(ep1, next_field) = NULL;                                               \
     } while (0)
 
 #define GENERICM_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, next_field_macro, next_field) do {            \
-        if (GENERICM_Q_EMPTY (*(qp)))                                                           \
-            GENERICM_Q_ENQUEUE_EMPTY_MULTIPLE (qp, ep0, ep1, next_field_macro, next_field);     \
+        if (GENERICM_Q_EMPTY(*(qp)))                                                            \
+            GENERICM_Q_ENQUEUE_EMPTY_MULTIPLE(qp, ep0, ep1, next_field_macro, next_field);      \
         else                                                                                    \
         {                                                                                       \
             next_field_macro((qp)->tail, next_field) = ep0;                                     \
@@ -209,7 +209,7 @@
 
 
 #define GENERICM_Q_DEQUEUE(qp, epp, next_field_macro, next_field) do {  \
-        MPIR_Assert (!GENERICM_Q_EMPTY (*(qp)));                        \
+        MPIR_Assert(!GENERICM_Q_EMPTY(*(qp)));                          \
         *(epp) = (qp)->head;                                            \
         (qp)->head = next_field_macro(*(epp), next_field);              \
         if ((qp)->head == NULL)                                         \
@@ -218,7 +218,7 @@
 
 /* remove the elements from the top of the queue starting with ep0 through ep1 */
 #define GENERICM_Q_REMOVE_ELEMENTS(qp, ep0, ep1, next_field_macro, next_field) do {     \
-        MPIR_Assert (GENERICM_Q_HEAD (*(qp)) == (ep0));                                 \
+        MPIR_Assert(GENERICM_Q_HEAD(*(qp)) == (ep0));                                   \
         (qp)->head = next_field_macro(ep1, next_field);                                 \
         if ((qp)->head == NULL)                                                         \
             (qp)->tail = NULL;                                                          \
@@ -286,14 +286,14 @@
 #define GENERIC_L_HEAD(q) ((q).head)
 
 #define GENERIC_L_ADD_EMPTY(qp, ep, next_field, prev_field) do {        \
-        MPIR_Assert (GENERIC_L_EMPTY (*(qp)));                          \
+        MPIR_Assert(GENERIC_L_EMPTY(*(qp)));                            \
         (qp)->head = ep;                                                \
         (ep)->next_field = (ep)->prev_field = NULL;                     \
     } while (0)
 
 #define GENERIC_L_ADD(qp, ep, next_field, prev_field) do {              \
-        if (GENERIC_L_EMPTY (*(qp)))                                    \
-            GENERIC_L_ADD_EMPTY (qp, ep, next_field, prev_field);       \
+        if (GENERIC_L_EMPTY(*(qp)))                                     \
+            GENERIC_L_ADD_EMPTY(qp, ep, next_field, prev_field);        \
         else                                                            \
         {                                                               \
             (ep)->prev_field = NULL;                                    \
@@ -304,7 +304,7 @@
     } while (0)
 
 #define GENERIC_L_REMOVE(qp, ep, next_field, prev_field) do {   \
-        MPIR_Assert (!GENERIC_L_EMPTY (*(qp)));                 \
+        MPIR_Assert(!GENERIC_L_EMPTY(*(qp)));                   \
         if ((ep)->prev_field)                                   \
             ((ep)->prev_field)->next_field = (ep)->next_field;  \
         else                                                    \

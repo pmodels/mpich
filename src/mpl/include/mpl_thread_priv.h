@@ -26,7 +26,7 @@ void MPLI_cleanup_tls(void *a);
     do {                                                                \
         void *thread_ptr;                                               \
                                                                         \
-        MPL_thread_tls_create(MPLI_cleanup_tls, &(key) , err_ptr_);     \
+        MPL_thread_tls_create(MPLI_cleanup_tls, &(key), err_ptr_);      \
         if (unlikely(*((int *) err_ptr_)))                              \
             break;                                                      \
         thread_ptr = MPL_calloc(1, sizeof(var), class_);                \

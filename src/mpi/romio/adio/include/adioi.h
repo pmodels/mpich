@@ -868,7 +868,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
 #ifdef HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a) __attribute__(a)
+#define ATTRIBUTE(a) __attribute__ (a)
 #else
 #define ATTRIBUTE(a)
 #endif

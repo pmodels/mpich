@@ -36,7 +36,7 @@
 
 #if !defined ATTRIBUTE
 #if defined MPL_HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a_) __attribute__(a_)
+#define ATTRIBUTE(a_) __attribute__ (a_)
 #else /* MPL_HAVE_GCC_ATTRIBUTE */
 #define ATTRIBUTE(a_)
 #endif /* MPL_HAVE_GCC_ATTRIBUTE */
@@ -52,13 +52,13 @@
 #endif
 
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_ALIGNED
-#define MPL_ATTR_ALIGNED(x) __attribute__((aligned(x)))
+#define MPL_ATTR_ALIGNED(x) __attribute__ ((aligned(x)))
 #else
 #define MPL_ATTR_ALIGNED(x)
 #endif
 
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_USED
-#define MPL_USED __attribute__((used))
+#define MPL_USED __attribute__ ((used))
 #else
 #define MPL_USED
 #endif
@@ -94,7 +94,7 @@
     Since it is compile time error, we don't care (much) about how the error message look.
  */
 #define MPL_static_assert(cond_,msg_) \
-    do { switch(0) { case 0: case (cond_): default: break; } } while (0)
+    do { switch (0) { case 0: case (cond_): default: break; } } while (0)
 #endif
 
 #define MPL_COMPILE_TIME_ASSERT(cond_) MPL_static_assert(cond_, "MPL_COMPILE_TIME_ASSERT failure")

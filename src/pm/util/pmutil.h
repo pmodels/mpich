@@ -16,7 +16,7 @@
 */
 #ifndef ATTRIBUTE
 #ifdef HAVE_GCC_ATTRIBUTE
-#define ATTRIBUTE(a_) __attribute__(a_)
+#define ATTRIBUTE(a_) __attribute__ (a_)
 #else
 #define ATTRIBUTE(a_)
 #endif
@@ -48,8 +48,8 @@ extern int MPIE_Debug;
 #define DBG_COND(cond,a)
 #endif
 #define DBG(stmt) DBG_COND(MPIE_Debug,stmt)
-#define DBG_PRINTFCOND(cond,a)  DBG_COND(cond,printf a ; fflush(stdout))
-#define DBG_EPRINTFCOND(cond,a) DBG_COND(cond,fprintf a ; fflush(stderr))
+#define DBG_PRINTFCOND(cond,a)  DBG_COND(cond,printf a; fflush(stdout))
+#define DBG_EPRINTFCOND(cond,a) DBG_COND(cond,fprintf a; fflush(stderr))
 #define DBG_EPRINTF(a) DBG_EPRINTFCOND(MPIE_Debug,a)
 #define DBG_PRINTF(a)  DBG_PRINTFCOND(MPIE_Debug,a)
 
@@ -62,7 +62,7 @@ extern int MPIE_Debug;
 #ifdef USE_LOG_SYSCALLS
 #include <errno.h>
 #define MPIE_SYSCALL(a_,b_,c_) { \
-    printf("about to call %s (%s,%d)\n", #b_ ,__FILE__, __LINE__);\
+    printf("about to call %s (%s,%d)\n", #b_,__FILE__, __LINE__); \
           fflush(stdout); errno = 0;\
           a_ = (int)b_ c_;          \
     if ((a_)>=0 || errno==0) {\

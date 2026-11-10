@@ -34,8 +34,8 @@ void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
             c_type_ * restrict a = (c_type_ *)inoutvec;    \
             const c_type_ * restrict b = (c_type_ *)invec; \
             for (i=0; i<len; i++) {                      \
-                a[i].re = MPIR_LSUM(a[i].re ,b[i].re);     \
-                a[i].im = MPIR_LSUM(a[i].im ,b[i].im);     \
+                a[i].re = MPIR_LSUM(a[i].re,b[i].re);      \
+                a[i].im = MPIR_LSUM(a[i].im,b[i].im);      \
             }                                              \
             break;                                         \
         }

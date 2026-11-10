@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  [goodell@ 2010-12-20]
 
  - Added _N (for LL_ macros) and _NP (for DL_ and CDL_ macros)
-   variants to each macro.  Thease take additional parameters to specify the
+   variants to each macro.  These take additional parameters to specify the
    next or next and prev fields, respectively.  The field name should be used in
    those parameters.  E.g., say the struct looks like this:
 
@@ -417,11 +417,11 @@ do {                                                                            
 
 #define LL_FOREACH(head,el) LL_FOREACH_N(head,el,next)
 #define LL_FOREACH_N(head,el,_next)                                                        \
-    for(el=head;el;el=el->_next)
+    for (el=head;el;el=el->_next)
 
 #define LL_FOREACH_SAFE(head,el,tmp) LL_FOREACH_SAFE_N(head,el,tmp,next)
 #define LL_FOREACH_SAFE_N(head,el,tmp,_next)                                               \
-    for((el)=(head);(el) && (tmp = (el)->_next, 1); (el) = tmp)
+    for ((el)=(head);(el) && (tmp = (el)->_next, 1); (el) = tmp)
 
 #define LL_SEARCH_SCALAR(head,out,field,val) LL_SEARCH_SCALAR_N(head,out,field,val,next)
 #define LL_SEARCH_SCALAR_N(head,out,field,val,_next)                                       \
@@ -507,12 +507,12 @@ do {                                                                            
 
 #define DL_FOREACH(head,el) DL_FOREACH_NP(head,el,next,prev)
 #define DL_FOREACH_NP(head,el,_next,_prev)                                                 \
-    for(el=head;el;el=el->_next)
+    for (el=head;el;el=el->_next)
 
 /* this version is safe for deleting the elements during iteration */
 #define DL_FOREACH_SAFE(head,el,tmp) DL_FOREACH_SAFE_NP(head,el,tmp,next,prev)
 #define DL_FOREACH_SAFE_NP(head,el,tmp,_next,_prev)                                        \
-  for((el)=(head);(el) && (tmp = (el)->_next, 1); (el) = tmp)
+  for ((el)=(head);(el) && (tmp = (el)->_next, 1); (el) = tmp)
 
 /* these are identical to their singly-linked list counterparts */
 #define DL_SEARCH_SCALAR LL_SEARCH_SCALAR
@@ -552,11 +552,11 @@ do {                                                                            
 
 #define CDL_FOREACH(head,el) CDL_FOREACH_NP(head,el,next,prev)
 #define CDL_FOREACH_NP(head,el,_next,_prev)                                                \
-    for(el=head;el;el=(el->_next==head ? 0L : el->_next))
+    for (el=head;el;el=(el->_next==head ? 0L : el->_next))
 
 #define CDL_FOREACH_SAFE(head,el,tmp1,tmp2) CDL_FOREACH_SAFE_NP(head,el,tmp1,tmp2,next,prev)
 #define CDL_FOREACH_SAFE_NP(head,el,tmp1,tmp2,_next,_prev)                                 \
-  for((el)=(head), ((tmp1)=(head)?((head)->_prev):NULL);                                       \
+  for ((el)=(head), ((tmp1)=(head)?((head)->_prev):NULL);                                      \
       (el) && ((tmp2)=(el)->_next, 1);                                                         \
       ((el) = (((el)==(tmp1)) ? 0L : (tmp2))))
 

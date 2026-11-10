@@ -116,7 +116,7 @@ extern "C" {
 /*#define BFD_CLR(bfd, s)       FD_CLR(bget_fd(bfd), & (s) -> set)*/
 #define BFD_CLR(bfd, s)       bclr(bfd, s)
 #define BFD_ZERO(s)           { FD_ZERO(& (s) -> set); (s) -> n = 0; }
-#define BFD_SET(bfd, s)       bset(bfd , s)
+#define BFD_SET(bfd, s)       bset(bfd, s)
 #define BFD_ISSET(bfd, s)     FD_ISSET(bget_fd(bfd), & (s) -> set)
 /*
 #define bfd_set                 fd_set

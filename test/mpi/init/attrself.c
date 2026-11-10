@@ -129,11 +129,11 @@ int checkNoAttrs(MPI_Comm comm, int n, int lkey[])
     int i, flag, *val_p;
 
     for (i=0; i<n; i++) {
-	MPI_Comm_get_attr(comm, lkey[i], &val_p, &flag);
-	if (flag) {
-	    lerrs++;
-	    fprintf(stderr, "Attribute for key %d set but should be deleted\n", i);
-	}
+        MPI_Comm_get_attr(comm, lkey[i], &val_p, &flag);
+        if (flag) {
+            lerrs++;
+            fprintf(stderr, "Attribute for key %d set but should be deleted\n", i);
+        }
     }
 
     return lerrs;

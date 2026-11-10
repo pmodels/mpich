@@ -16,7 +16,7 @@
 
 #define GAVL_TREE_NODE_CMP(node_ptr, addr, len, mode, ret)      \
     do {                                                        \
-        switch(mode) {                                                  \
+        switch (mode) {                                                 \
             case MPLI_GAVL_SUBSET_SEARCH:                               \
                 ret = MPLI_gavl_subset_cmp_func(node_ptr, addr, len);   \
                 break;                                                  \

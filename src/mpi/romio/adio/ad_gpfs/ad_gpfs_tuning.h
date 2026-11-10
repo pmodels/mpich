@@ -83,17 +83,17 @@ void ad_gpfs_timing_crw_report(int rw, ADIO_File fd, int myrank, int nprocs);
     {                                                   \
         int _i;                                         \
         for (_i = 0; _i < GPFSMPIO_CIO_LAST; _i ++)     \
-            gpfsmpio_prof_c##RW [ _i ] = 0;             \
+            gpfsmpio_prof_c##RW [_i] = 0;               \
     }
 
 #define GPFSMPIO_T_CIO_REPORT(RW, FD, MYRANK, NPROCS)   \
-    ad_gpfs_timing_crw_report (RW, FD, MYRANK, NPROCS); \
+    ad_gpfs_timing_crw_report(RW, FD, MYRANK, NPROCS); \
 
 #define GPFSMPIO_T_CIO_SET_GET(RW, ISSET, ISGET, VAR1, VAR2)            \
     {                                                                   \
         double temp = MPI_Wtime();                                      \
-        if (ISSET) gpfsmpio_prof_c##RW [ VAR1 ] = temp;                 \
-        if (ISGET) gpfsmpio_prof_c##RW [ VAR2 ] = temp - gpfsmpio_prof_c##RW [ VAR2 ] ; \
+        if (ISSET) gpfsmpio_prof_c##RW [VAR1] = temp;                   \
+        if (ISGET) gpfsmpio_prof_c##RW [VAR2] = temp - gpfsmpio_prof_c##RW [VAR2]; \
     }
 
 #endif /* AD_GPFS_TUNING_H_INCLUDED */

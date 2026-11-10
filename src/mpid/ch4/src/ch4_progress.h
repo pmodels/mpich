@@ -86,13 +86,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 }
 
 #define MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci)         \
-    if (!MPIDI_VCI_IS_EXPLICIT(vci) && !(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {	\
+    if (!MPIDI_VCI_IS_EXPLICIT(vci) && !(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {   \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci)); \
     }
 
 #define MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci)          \
     if (!MPIDI_VCI_IS_EXPLICIT(vci) && !(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {  \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));	\
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));  \
     } while (0)
 
 
@@ -100,7 +100,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 #ifdef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_PROGRESS(vci, is_global) \
     do {                                              \
-        if (state->flag & MPIDI_PROGRESS_NM && (is_global || !made_progress)) {	      \
+        if (state->flag & MPIDI_PROGRESS_NM && (is_global || !made_progress)) {       \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);  \
             mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);   \

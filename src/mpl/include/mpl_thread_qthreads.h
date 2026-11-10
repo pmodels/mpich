@@ -171,7 +171,7 @@ void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affi
  *    Implementation of conditionals
  * ======================================================================*/
 
-static inline int qthread_cond_init(MPL_thread_cond_t *p_cond)
+static inline int qthread_cond_init(MPL_thread_cond_t * p_cond)
 {
     qthread_spinlock_init(&p_cond->m_lock, false /* is_recursive */);
     p_cond->m_waiter_head = NULL;
@@ -179,13 +179,12 @@ static inline int qthread_cond_init(MPL_thread_cond_t *p_cond)
     return QTHREAD_SUCCESS;
 }
 
-static inline void qthread_cond_wait(MPL_thread_cond_t *p_cond,
-                                                  MPL_thread_mutex_t *p_mutex)
+static inline void qthread_cond_wait(MPL_thread_cond_t * p_cond, MPL_thread_mutex_t * p_mutex)
 {
     /* This thread is taking "lock", so only this thread can access this
      * condition variable.  */
     qthread_spinlock_lock(&p_cond->m_lock);
-    qthread_cond_waiter_t waiter = {0, NULL};
+    qthread_cond_waiter_t waiter = { 0, NULL };
     if (NULL == p_cond->m_waiter_head) {
         p_cond->m_waiter_tail = &waiter;
     } else {
@@ -208,7 +207,7 @@ static inline void qthread_cond_wait(MPL_thread_cond_t *p_cond,
     }
 }
 
-static inline void qthread_cond_broadcast(MPL_thread_cond_t *p_cond)
+static inline void qthread_cond_broadcast(MPL_thread_cond_t * p_cond)
 {
     qthread_spinlock_lock(&p_cond->m_lock);
     while (NULL != p_cond->m_waiter_tail) {
@@ -222,7 +221,7 @@ static inline void qthread_cond_broadcast(MPL_thread_cond_t *p_cond)
     qthread_spinlock_unlock(&p_cond->m_lock);
 }
 
-static inline void qthread_cond_signal(MPL_thread_cond_t *p_cond)
+static inline void qthread_cond_signal(MPL_thread_cond_t * p_cond)
 {
     qthread_spinlock_lock(&p_cond->m_lock);
     if (NULL != p_cond->m_waiter_tail) {
@@ -237,7 +236,7 @@ static inline void qthread_cond_signal(MPL_thread_cond_t *p_cond)
     qthread_spinlock_unlock(&p_cond->m_lock);
 }
 
-static inline void qthread_cond_destroy(MPL_thread_cond_t *p_cond)
+static inline void qthread_cond_destroy(MPL_thread_cond_t * p_cond)
 {
     /* No destructor is needed. */
 }

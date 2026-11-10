@@ -33,7 +33,7 @@
 /* Is the progress poke function overwritten by the device? */
 #ifndef MPIDI_COMMON_UCC_PROGRESS_POKE_DEV
 /* If not, define how to poke for progress in MPIDI_COMMON_UCC_WAIT_AND_CHECK() */
-#define MPIDI_COMMON_UCC_PROGRESS_POKE_DEV(...)	\
+#define MPIDI_COMMON_UCC_PROGRESS_POKE_DEV(...) \
     MPID_Progress_poke();
 #endif
 

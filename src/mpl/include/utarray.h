@@ -90,7 +90,7 @@ typedef struct {
   if ((a)->n) {                                                               \
     if ((a)->icd->dtor) {                                                     \
       size_t _ut_i;                                                           \
-      for(_ut_i=0; _ut_i < (a)->i; _ut_i++) {                                 \
+      for (_ut_i=0; _ut_i < (a)->i; _ut_i++) {                                \
         (a)->icd->dtor(utarray_eltptr(a,_ut_i));                              \
       }                                                                       \
     }                                                                         \
@@ -171,7 +171,7 @@ typedef struct {
   }                                                                           \
   if ((a)->icd->copy) {                                                         \
     size_t _ut_i;                                                             \
-    for(_ut_i=0;_ut_i<(w)->i;_ut_i++) {                                       \
+    for (_ut_i=0;_ut_i<(w)->i;_ut_i++) {                                      \
       (a)->icd->copy(_utarray_eltptr(a,j+_ut_i), _utarray_eltptr(w,_ut_i));   \
     }                                                                         \
   } else {                                                                    \
@@ -185,14 +185,14 @@ typedef struct {
   size_t _ut_i;                                                               \
   if (dst->i > (size_t)(num)) {                                               \
     if ((dst)->icd->dtor) {                                                   \
-      for(_ut_i=num; _ut_i < dst->i; _ut_i++) {                               \
+      for (_ut_i=num; _ut_i < dst->i; _ut_i++) {                              \
         (dst)->icd->dtor(utarray_eltptr(dst,_ut_i));                          \
       }                                                                       \
     }                                                                         \
   } else if (dst->i < (size_t)(num)) {                                        \
     utarray_reserve(dst,num-dst->i,class);                                    \
     if ((dst)->icd->init) {                                                   \
-      for(_ut_i=dst->i; _ut_i < num; _ut_i++) {                               \
+      for (_ut_i=dst->i; _ut_i < num; _ut_i++) {                              \
         (dst)->icd->init(utarray_eltptr(dst,_ut_i));                          \
       }                                                                       \
     } else {                                                                  \
@@ -209,7 +209,7 @@ typedef struct {
 #define utarray_erase(a,pos,len) do {                                         \
   if ((a)->icd->dtor) {                                                       \
     size_t _ut_i;                                                             \
-    for(_ut_i=0; _ut_i < len; _ut_i++) {                                      \
+    for (_ut_i=0; _ut_i < len; _ut_i++) {                                     \
       (a)->icd->dtor(utarray_eltptr(a,pos+_ut_i));                            \
     }                                                                         \
   }                                                                           \
@@ -224,7 +224,7 @@ typedef struct {
   if ((a)->i > 0) {                                                           \
     if ((a)->icd->dtor) {                                                     \
       size_t _ut_i;                                                           \
-      for(_ut_i=0; _ut_i < (a)->i; _ut_i++) {                                 \
+      for (_ut_i=0; _ut_i < (a)->i; _ut_i++) {                                \
         (a)->icd->dtor(utarray_eltptr(a,_ut_i));                              \
       }                                                                       \
     }                                                                         \

@@ -49,7 +49,7 @@ void MTestFreeStringList(char **str, int num);
     do {                                                                \
         int i_, err_;                                                   \
         DTP_obj_s obj_;                                                 \
-        for(i_ = 0; i_ < testsize_; i_++) {                             \
+        for (i_ = 0; i_ < testsize_; i_++) {                            \
             err_ = DTP_obj_create(dtp_, &obj_, maxbufsize);             \
             if (err_ != DTP_SUCCESS) {                                  \
                 errs_++;                                                \

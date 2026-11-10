@@ -9,7 +9,7 @@
 #include <string.h>
 #include "mpitest.h"
 
-#define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
+#define IF_VERBOSE(a) if (verbose) { printf a; fflush(stdout); }
 
 #ifdef MTEST_LARGE_PORT_NAME
 #define PORT_SIZE 4096
