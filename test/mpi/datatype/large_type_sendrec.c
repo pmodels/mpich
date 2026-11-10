@@ -121,6 +121,12 @@ int main(int argc, char *argv[])
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
 
+    /* the buffers do not fit in a 32-bit address space */
+    if (sizeof(void *) < 8) {
+        MTest_Finalize(errs);
+        return MTestReturnValue(errs);
+    }
+
     MPI_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
     MPI_ASSERT(MPI_Comm_size(MPI_COMM_WORLD, &size));
 
