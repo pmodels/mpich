@@ -1673,9 +1673,21 @@ AC_SUBST(iodir)
 impldir=""
 #
 # Check for implementation to enable implementation-specific options
-if test $enable_strictmpi != "yes" ; then
-    if test "$MPI_IS_MPICH" = "yes" ; then
+if test "$MPI_IS_MPICH" = "yes" ; then
+    if test $enable_strictmpi != "yes" ; then
         impldir="mpich"
+    elif test "$enable_mpi_abi" = "yes" ; then
+        # MPICH's MPI ABI library provides the MPIX functions; mpi.h declares
+        # them with -mpi-mpix
+        AC_MSG_CHECKING([whether MPIX functions are available with -mpi-mpix])
+        saved_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS -mpi-mpix"
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],
+            [return MPIX_Stream_toint(MPIX_STREAM_NULL);])],
+            [AC_MSG_RESULT([yes])
+             impldir="mpich"],
+            [AC_MSG_RESULT([no])
+             CFLAGS="$saved_CFLAGS"])
     fi
 fi
 AC_SUBST(impldir)
