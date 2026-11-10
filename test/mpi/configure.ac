@@ -101,7 +101,8 @@ AC_ARG_ENABLE(echo,
 
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
-        yes|all   - Enable all available Fortran implementations (F77, F90, F08)
+        yes|all   - Enable all available Fortran implementations (F77, F90, F08);
+                    fail if an mpif.h or "use mpi" program cannot be built
         no|none   - No Fortran support
 ],,[enable_fortran=auto])
 
@@ -1521,8 +1522,10 @@ if test "$enable_f08" = "yes" ; then
         f08dir=f08
     ],[
         AC_MSG_RESULT(no)
+        # mpi_f08 needs Fortran 2008 support, which not every Fortran build of
+        # MPI has, so it is not required even with --enable-fortran
         if test $enable_fortran != "auto"; then
-            AC_MSG_ERROR([unable to build "use mpi_f08" program. consider using --disable-fortran or --enable-fortran=auto.])
+            AC_MSG_WARN([unable to build "use mpi_f08" program, skipping the f08 tests.])
         fi
     ])
     AC_LANG_POP([Fortran])
