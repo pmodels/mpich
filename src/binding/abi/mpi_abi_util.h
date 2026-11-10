@@ -62,12 +62,15 @@ static inline MPIR_Comm *ABI_Comm_ptr(ABI_Comm comm_abi)
     return comm_ptr;
 }
 
+/* rank and size count threads on a threadcomm, as in MPI_Comm_rank/size */
 static inline int ABI_Comm_rank(ABI_Comm comm_abi)
 {
     MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
     int rank = MPI_PROC_NULL;
     if (comm_ptr != NULL) {
-        MPIR_Comm_rank_impl(comm_ptr, &rank);
+        int size;
+        MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
+        (void) size;
     }
     return rank;
 }
@@ -82,7 +85,9 @@ static inline int ABI_Comm_peer_size(ABI_Comm comm_abi)
         if (flag) {
             MPIR_Comm_remote_size_impl(comm_ptr, &size);
         } else {
-            MPIR_Comm_size_impl(comm_ptr, &size);
+            int rank;
+            MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
+            (void) rank;
         }
     }
     return size;
