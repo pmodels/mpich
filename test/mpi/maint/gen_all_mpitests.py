@@ -84,6 +84,14 @@ def main():
     if ldadd:
         out.append("")
         out.append("run_mpitests_LDADD = $(LDADD) " + ldadd)
+        # rules to build the extra util libraries, since "make testing" may
+        # come before "make all" has built the util folder
+        for lib in ldadd.split():
+            m = re.match(r'\$\(top_builddir\)/util/(\w+\.la)$', lib)
+            if m:
+                out.append("")
+                out.append("%s:" % lib)
+                out.append("\t(cd $(top_builddir)/util && $(MAKE) %s)" % m.group(1))
 
     f = "Makefile_mpitests.mtest"
     print(" -> [%s]" % f)
