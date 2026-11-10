@@ -433,13 +433,17 @@ def dump_f08_wrappers_f(func, is_large):
         convert_list_pre.append("%s = c_loc(%s)" % (arg, p['name']))
 
         check = None
+        # int conversions run after the check sets has_xxx
+        conv_pre = []
         if p['name'] == "argv":
             check = "MPI_ARGV_NULL"
         elif p['name'] == "array_of_argv":
             check = "MPI_ARGVS_NULL"
         elif RE.match(r'\w*weights', p['name']):
             # weights are input int array
-            c_decl_list.append("LOGICAL :: has_%s = .false." % p['name'])
+            # initialized in code, an initializer would imply SAVE
+            c_decl_list.append("LOGICAL :: has_%s" % p['name'])
+            convert_list_pre.append("has_%s = .false." % p['name'])
             check = "MPI_UNWEIGHTED"
             if RE.match(r'mpi_dist_graph_create$', func['name'], re.IGNORECASE):
                 length = "sum(degrees)"
@@ -458,10 +462,10 @@ def dump_f08_wrappers_f(func, is_large):
 
             if need_int_conversions:
                 c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
-                convert_list_pre.append("IF (has_%s) THEN" % p['name'])
-                convert_list_pre.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
-                convert_list_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
-                convert_list_pre.append("END IF")
+                conv_pre.append("IF (has_%s) THEN" % p['name'])
+                conv_pre.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
+                conv_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
+                conv_pre.append("END IF")
                 # output conversion for MPI_Dist_graph_neighbors
                 if p['param_direction'] == 'out':
                     convert_list_post.append("IF (has_%s) THEN" % p['name'])
@@ -470,7 +474,8 @@ def dump_f08_wrappers_f(func, is_large):
 
         elif p['name'] == "array_of_errcodes":
             # errcodes are output int array
-            c_decl_list.append("LOGICAL :: has_errcodes_ignore = .false.")
+            c_decl_list.append("LOGICAL :: has_errcodes_ignore")
+            convert_list_pre.append("has_errcodes_ignore = .false.")
             check = "MPI_ERRCODES_IGNORE"
             if need_int_conversions:
                 if RE.match(r'mpi_comm_spawn_multiple', func['name'], re.IGNORECASE):
@@ -478,9 +483,9 @@ def dump_f08_wrappers_f(func, is_large):
                 else: # mpi_comm_spawn
                     length = "maxprocs"
                 c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
-                convert_list_pre.append("IF (.not. has_errcodes_ignore) THEN")
-                convert_list_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
-                convert_list_pre.append("END IF")
+                conv_pre.append("IF (.not. has_errcodes_ignore) THEN")
+                conv_pre.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
+                conv_pre.append("END IF")
                 convert_list_post.append("IF (.not. has_errcodes_ignore) THEN")
                 convert_list_post.append("    %s(1:%s) = %s_c" % (p['name'], length, p['name']))
                 convert_list_post.append("END IF")
@@ -506,6 +511,7 @@ def dump_f08_wrappers_f(func, is_large):
                 convert_list_pre.append("    %s = c_loc(%s)" % (arg, p['name']))
                 convert_list_pre.append("    has_%s = .true." % p['name'])
             convert_list_pre.append("END IF")
+        convert_list_pre.extend(conv_pre)
 
         return arg
 
