@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
                 /* In no hybird case, local memory type can be used to select algorithm */
                 MPL_pointer_attr_t pointer_attr;
                 MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
-                if (MPL_gpu_attr_is_strict_dev(&pointer_attr)) {
+                if (MPL_gpu_attr_is_dev(&pointer_attr)) {
                     cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm_gpu), coll_sig);
                 } else {
                     cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
