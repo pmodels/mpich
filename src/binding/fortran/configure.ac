@@ -581,24 +581,29 @@ information to configure with the FCFLAGS environment variable.])
 
    #
    # Some Fortran compilers now pass CHARACTER length as a size_t instead
-   # of as an int.  This is hard to test for, since the data is passed by
-   # value and for characters less than about 2GB long, the correct
-   # value will be used.  In this case, we must use an approach similar to
-   # the one used by libtool for shared library options - look at the
-   # compiler name or vendor.
-   # Known compilers that use size_t instead of int:
-   #    Intel Fortran
-   #    gfortran
-   # Add others as they become known
+   # of as an int (gfortran since GCC 8, Intel Fortran).  Reading a size_t
+   # length as int usually still works, since the value is in a register or
+   # in its own 8-byte stack slot.  It fails on ABIs that pack stack
+   # arguments (Apple arm64) once two or more lengths are on the stack, e.g.
+   # in MPI_Comm_spawn.  By default (auto) a run test picks the type: int if
+   # it works, otherwise size_t.  With --enable-f77characterlen=yes the type
+   # is chosen from the compiler name instead.
    AC_ARG_ENABLE(f77characterlen,
        AS_HELP_STRING([--enable-f77characterlen],
-           [Select between int and size_t for the length of a Fortran CHARACTER, depending on the F77 compiler.  If --enable-f77characterlen=size_t is given, force the use of size_t.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=no)
+           [Select between int and size_t for the length of a Fortran CHARACTER.  The default (auto) uses a run test, int or size_t forces that type, yes selects it from the F77 compiler name, and no uses int.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=auto)
 
    # Set the default
    f77_uses_int_for_str=default
 
    case "$enable_f77characterlen" in
       yes|no)
+      ;;
+      auto)
+         PAC_F77_CHARACTER_LEN_TYPE
+         if test "$pac_cv_prog_f77_character_len_type" = "size_t" ; then
+             f77_uses_int_for_str=no
+             enable_f77characterlen=yes
+         fi
       ;;
       size_t)
          f77_uses_int_for_str=no
