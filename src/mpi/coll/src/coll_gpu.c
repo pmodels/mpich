@@ -40,7 +40,7 @@ cvars:
 #define MAX_COLL_BUFS 2
 
 struct coll_buf {
-    void **field;               /* the buffer field in coll_sig */
+    void **buf_ref;             /* points at the buffer field in coll_sig */
     MPI_Aint count;
     MPI_Datatype datatype;
     int dir;
@@ -68,7 +68,7 @@ static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
                           MPI_Datatype recvtype, bool has_recv);
-static void add_buf(struct coll_bufs *bufs, const void **field, MPI_Aint count,
+static void add_buf(struct coll_bufs *bufs, const void **buf_ref, MPI_Aint count,
                     MPI_Datatype datatype, int dir);
 static MPI_Aint get_span(const MPI_Aint * counts, const MPI_Aint * displs, int n);
 
@@ -87,7 +87,7 @@ void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
     bool all_dev = true;
     for (int i = 0; i < bufs.n; i++) {
         MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(*bufs.bufs[i].field, &attr);
+        MPIR_GPU_query_pointer_attr(*bufs.bufs[i].buf_ref, &attr);
         if (MPL_gpu_attr_is_dev(&attr)) {
             any_dev = true;
         } else {
@@ -118,7 +118,7 @@ bool MPIR_Coll_sig_check_gpu_coll(MPIR_Csel_coll_sig_s * coll_sig)
 
     for (int i = 0; i < bufs.n; i++) {
         MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(*bufs.bufs[i].field, &attr);
+        MPIR_GPU_query_pointer_attr(*bufs.bufs[i].buf_ref, &attr);
         if (!MPL_gpu_attr_is_dev(&attr)) {
             return false;
         }
@@ -192,12 +192,12 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
 
     for (int i = 0; i < bufs.n; i++) {
         struct coll_buf *b = &bufs.bufs[i];
-        if (!MPIR_GPU_query_pointer_is_dev(*b->field)) {
+        if (!MPIR_GPU_query_pointer_is_dev(*b->buf_ref)) {
             continue;
         }
-        swaps[i].user = *b->field;
+        swaps[i].user = *b->buf_ref;
         swaps[i].host = alloc_host_buf(b->count, b->datatype, &swaps[i].raw);
-        *b->field = swaps[i].host;
+        *b->buf_ref = swaps[i].host;
         if (is_blocking && (b->dir & COLL_BUF_READ)) {
             mpi_errno = MPIR_Localcopy(swaps[i].user, b->count, b->datatype,
                                        swaps[i].host, b->count, b->datatype);
@@ -225,7 +225,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
   fn_exit:
     for (int i = 0; i < bufs.n; i++) {
         if (swaps[i].user) {
-            *bufs.bufs[i].field = swaps[i].user;
+            *bufs.bufs[i].buf_ref = swaps[i].user;
             /* NULL once the schedule owns it */
             MPL_free(swaps[i].raw);
         }
@@ -510,16 +510,16 @@ static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint
     }
 }
 
-/* Skips empty buffers. The field is cast to non-const so that buffer_swap can redirect it. */
-static void add_buf(struct coll_bufs *bufs, const void **field, MPI_Aint count,
+/* Skips empty buffers. buf_ref is cast to non-const so that buffer_swap can redirect it. */
+static void add_buf(struct coll_bufs *bufs, const void **buf_ref, MPI_Aint count,
                     MPI_Datatype datatype, int dir)
 {
-    if (count == 0 || *field == NULL) {
+    if (count == 0 || *buf_ref == NULL) {
         return;
     }
     MPIR_Assert(bufs->n < MAX_COLL_BUFS);
     struct coll_buf *b = &bufs->bufs[bufs->n++];
-    b->field = (void **) field;
+    b->buf_ref = (void **) buf_ref;
     b->count = count;
     b->datatype = datatype;
     b->dir = dir;
