@@ -8,16 +8,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* The backends have no kernels for struct types, so a struct is packed through
- * the frontend with one call per field per element, which is very slow. We replace
- * the struct with an hindexed type over its contiguous pieces, resized to the
- * struct's lb and extent, so the backend kernels apply.
- *
- * A side effect: a struct of mixed types becomes hindexed bytes, so a partial pack
- * or unpack (e.g. a pipelined send) can stop at any chunk boundary rather than only
- * at an element boundary. */
-
-#define FLATTEN_MAX_PIECES (1024)
+/* ---- struct type creation ---- */
 
 /* Builds an hindexed type over the struct's contiguous pieces and returns it in
  * *flat. Returns *flat = NULL when it is not suitable:
@@ -178,6 +169,68 @@ int yaksi_type_create_struct(intptr_t count, const intptr_t * array_of_blockleng
     goto fn_exit;
 }
 
+YAKSA_API_PUBLIC int yaksa_type_create_struct(intptr_t count,
+                                              const intptr_t * array_of_blocklengths,
+                                              const intptr_t * array_of_displs,
+                                              const yaksa_type_t * array_of_types,
+                                              yaksa_info_t info, yaksa_type_t * newtype)
+{
+    int rc = YAKSA_SUCCESS;
+
+    assert(yaksu_atomic_load(&yaksi_is_initialized));
+
+    uintptr_t total_size;
+    total_size = 0;
+    for (intptr_t i = 0; i < count; i++) {
+        yaksi_type_s *type;
+        rc = yaksi_type_get(array_of_types[i], &type);
+        YAKSU_ERR_CHECK(rc, fn_fail);
+
+        total_size += type->size * array_of_blocklengths[i];
+    }
+    if (total_size == 0) {
+        *newtype = YAKSA_TYPE__NULL;
+        goto fn_exit;
+    }
+
+    assert(count > 0);
+    yaksi_type_s **array_of_intypes;
+    array_of_intypes = (yaksi_type_s **) malloc(count * sizeof(yaksi_type_s *));
+
+    for (intptr_t i = 0; i < count; i++) {
+        rc = yaksi_type_get(array_of_types[i], &array_of_intypes[i]);
+        YAKSU_ERR_CHECK(rc, fn_fail);
+    }
+
+    yaksi_type_s *outtype;
+    rc = yaksi_type_create_struct(count, array_of_blocklengths, array_of_displs, array_of_intypes,
+                                  &outtype);
+    YAKSU_ERR_CHECK(rc, fn_fail);
+
+    rc = yaksi_type_handle_alloc(outtype, newtype);
+    YAKSU_ERR_CHECK(rc, fn_fail);
+
+    free(array_of_intypes);
+
+  fn_exit:
+    return rc;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* ---- struct flattening ---- */
+
+/* The backends have no kernels for struct types, so a struct is packed through
+ * the frontend with one call per field per element, which is very slow. We replace
+ * the struct with an hindexed type over its contiguous pieces, resized to the
+ * struct's lb and extent, so the backend kernels apply.
+ *
+ * A side effect: a struct of mixed types becomes hindexed bytes, so a partial pack
+ * or unpack (e.g. a pipelined send) can stop at any chunk boundary rather than only
+ * at an element boundary. */
+
+#define FLATTEN_MAX_PIECES (1024)
+
 static void find_leaf_type(yaksi_type_s * type, yaksi_type_s ** leaf, bool * is_mixed);
 
 static int flatten_struct(yaksi_type_s * type, yaksi_type_s ** flat)
@@ -323,53 +376,4 @@ static void find_leaf_type(yaksi_type_s * type, yaksi_type_s ** leaf, bool * is_
         default:
             assert(0);
     }
-}
-
-YAKSA_API_PUBLIC int yaksa_type_create_struct(intptr_t count,
-                                              const intptr_t * array_of_blocklengths,
-                                              const intptr_t * array_of_displs,
-                                              const yaksa_type_t * array_of_types,
-                                              yaksa_info_t info, yaksa_type_t * newtype)
-{
-    int rc = YAKSA_SUCCESS;
-
-    assert(yaksu_atomic_load(&yaksi_is_initialized));
-
-    uintptr_t total_size;
-    total_size = 0;
-    for (intptr_t i = 0; i < count; i++) {
-        yaksi_type_s *type;
-        rc = yaksi_type_get(array_of_types[i], &type);
-        YAKSU_ERR_CHECK(rc, fn_fail);
-
-        total_size += type->size * array_of_blocklengths[i];
-    }
-    if (total_size == 0) {
-        *newtype = YAKSA_TYPE__NULL;
-        goto fn_exit;
-    }
-
-    assert(count > 0);
-    yaksi_type_s **array_of_intypes;
-    array_of_intypes = (yaksi_type_s **) malloc(count * sizeof(yaksi_type_s *));
-
-    for (intptr_t i = 0; i < count; i++) {
-        rc = yaksi_type_get(array_of_types[i], &array_of_intypes[i]);
-        YAKSU_ERR_CHECK(rc, fn_fail);
-    }
-
-    yaksi_type_s *outtype;
-    rc = yaksi_type_create_struct(count, array_of_blocklengths, array_of_displs, array_of_intypes,
-                                  &outtype);
-    YAKSU_ERR_CHECK(rc, fn_fail);
-
-    rc = yaksi_type_handle_alloc(outtype, newtype);
-    YAKSU_ERR_CHECK(rc, fn_fail);
-
-    free(array_of_intypes);
-
-  fn_exit:
-    return rc;
-  fn_fail:
-    goto fn_exit;
 }
