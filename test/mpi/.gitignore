@@ -1299,6 +1299,7 @@
 /pt2pt/sendrecv1
 /pt2pt/sendrecv2
 /pt2pt/sendrecv3
+/pt2pt/sendrecv_struct
 /pt2pt/sendself
 /pt2pt/testlist
 /pt2pt/testlist
