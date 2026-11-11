@@ -997,7 +997,7 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #if defined(__cplusplus)
 extern "C" {
 #endif
-#include <mpi_proto.h>
+#include "mpi_proto.h"
 #if defined(__cplusplus)
 }
 #endif
