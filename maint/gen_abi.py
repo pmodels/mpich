@@ -25,7 +25,6 @@ class RE:
 def main():
     load_mpi_abi_h("src/binding/abi/mpi_abi.h")
     load_mpi_abi_h("src/include/mpix.h")
-    load_mpi_abi_h("src/include/mpi_legacy.h")
     dump_mpi_abi_internal_h("src/binding/abi/mpi_abi_internal.h")
     dump_io_abi_internal_h("src/binding/abi/io_abi_internal.h")
     dump_romio_abi_internal_h("src/mpi/romio/include/romio_abi_internal.h")
@@ -37,7 +36,7 @@ def load_mpi_abi_h(mpi_abi_h):
             if RE.search(r'(MPI_ABI|MPIX)_H_INCLUDED', line):
                 # skip the include guard, harmless
                 pass
-            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)', line):
+            elif RE.match(r'^(int|double|void \*|MPIX?_\w+)\s*(P?MPI\w+)\((.*)', line):
                 # handle multi-line function prototypes
                 lines = [line.strip()]
                 while not RE.match(r'(.*)\);', lines[-1]):
@@ -49,7 +48,7 @@ def load_mpi_abi_h(mpi_abi_h):
 def dump_mpi_abi_internal_h(mpi_abi_internal_h):
     define_constants = {}
     def gen_mpi_abi_internal_h(out):
-        re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
+        re_Handle = r'\bMPIX?_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|Stream|Grequest_class|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
             if RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
                 # no need to rename status fields
@@ -61,7 +60,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    %s count_lo;" % T)
                 out.append("    %s count_hi_and_cancelled;" % T)
                 out.append("    %s reserved[%d];" % (T, n - 2))
-            elif RE.match(r'#define\s+(MPIX?_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
+            elif RE.match(r'#define\s+(MPIX?_\w+)\s+\(?\((MPIX?_\w+)\)\s*(0x\w+)\)?', line):
                 (name, T, val) = RE.m.group(1,2,3)
                 if T == "MPI_File":
                     # Both ROMIO and ABI use pointers, thus we can directly replace constants
@@ -82,7 +81,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 # rename to internal mpi_t struct type
                 T = RE.m.group(1)
                 out.append("typedef struct %s_s *%s;" % (re.sub(r'MPI_', 'MPIR_', T), T))
-            elif RE.match(r'^(int|double|MPI_\w+)\s+(P?MPI\w+)\((.*)\);', line):
+            elif RE.match(r'^(int|double|void \*|MPIX?_\w+)\s*(P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
                 T=re.sub(re_Handle, r'ABI_\1', T)

@@ -3,107 +3,147 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* This header provides declarations for MPI functions and types that have
- * been removed from the MPI standard. It is included by mpi.h when the
- * MPI_LEGACY macro is defined (e.g. via mpicc -mpi-legacy).
+/* This header provides the MPI functions and types that have been removed
+ * from the MPI standard, for source compatibility with old codes. New code
+ * should use the replacement functions specified by the MPI standard.
  *
- * For MPICH ABI builds, these declarations are also available via mpix.h
- * and mpi.h directly. For MPI ABI builds, this header is the only way
- * to access them.
+ * MPI ABI: the MPI ABI mpi.h includes this header when MPI_LEGACY is defined
+ * (e.g. via mpicc -mpi-legacy). The removed APIs are mapped to their
+ * replacements with macros and static inline functions, so libmpi_abi does
+ * not export any removed symbol and the program stays portable across MPI ABI
+ * implementations. MPI_LB and MPI_UB are not provided.
  *
- * New code should use the replacement functions specified by the MPI standard.
+ * MPICH native ABI: the removed APIs are always available. They are real
+ * functions in libmpi for backward compatibility, declared in mpi.h and
+ * mpi_proto.h.
  */
 
 #ifndef MPI_LEGACY_H_INCLUDED
 #define MPI_LEGACY_H_INCLUDED
 
+#ifdef MPI_ABI_VERSION
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-/* ---- Removed datatype constants ---- */
+/* ---- Removed types and constants ---- */
 
-/* MPI_LB and MPI_UB were removed from the MPI standard. These values are
- * picked from the unassigned slots in the language-independent datatype
- * range (0b0010_00000_***) of the MPI ABI handle encoding and may change
- * in the future to avoid collisions with new standard datatypes.
+#define MPI_Copy_function              MPI_Comm_copy_attr_function
+#define MPI_Delete_function            MPI_Comm_delete_attr_function
+#define MPI_Handler_function           MPI_Comm_errhandler_function
+
+#define MPI_DUP_FN                     MPI_COMM_DUP_FN
+#define MPI_NULL_COPY_FN               MPI_COMM_NULL_COPY_FN
+#define MPI_NULL_DELETE_FN             MPI_COMM_NULL_DELETE_FN
+
+/* Defined to unique values so legacy switch cases can compile */
+#define MPI_COMBINER_HVECTOR_INTEGER   (MPI_COMBINER_NAMED-1)
+#define MPI_COMBINER_HINDEXED_INTEGER  (MPI_COMBINER_NAMED-2)
+#define MPI_COMBINER_STRUCT_INTEGER    (MPI_COMBINER_NAMED-3)
+
+/* MPI_LB and MPI_UB are not provided, so using them is a compile-time
+ * error. They are markers that only work if the MPI library interprets
+ * them, which a standard libmpi_abi need not do. Use MPI_Type_create_resized
+ * to set the lower bound and extent of a datatype instead.
  */
-#define MPI_LB ((MPI_Datatype)0x206)
-#define MPI_UB ((MPI_Datatype)0x205)
 
-/* ---- Removed typedefs ---- */
+/* ---- Removed functions ---- */
 
-/* Removed in MPI-2.2 (replaced by MPI_Comm_errhandler_function) */
-typedef void (MPI_Handler_function) (MPI_Comm *, int *, ...);
+#define MPI_Address                    MPI_Get_address
 
-/* Removed in MPI-5.0 (replaced by MPI_Comm_copy_attr_function / MPI_Comm_delete_attr_function) */
-typedef int (MPI_Copy_function)(MPI_Comm comm, int keyval, void *extra_state,
-                                void *attribute_val_in, void *attribute_val_out, int *flag);
-typedef int (MPI_Delete_function)(MPI_Comm comm, int keyval,
-                                  void *attribute_val, void *extra_state);
+#define MPI_Attr_delete                MPI_Comm_delete_attr
+#define MPI_Attr_get                   MPI_Comm_get_attr
+#define MPI_Attr_put                   MPI_Comm_set_attr
 
-/* ---- Removed constants ---- */
+#define MPI_Errhandler_create          MPI_Comm_create_errhandler
+#define MPI_Errhandler_get             MPI_Comm_get_errhandler
+#define MPI_Errhandler_set             MPI_Comm_set_errhandler
 
-/* Removed in MPI-5.0 (replaced by MPI_COMM_NULL_COPY_FN etc.) */
-#define MPI_NULL_COPY_FN   ((MPI_Copy_function *)0)
-#define MPI_NULL_DELETE_FN ((MPI_Delete_function *)0)
-#define MPI_DUP_FN         ((MPI_Copy_function *)0x1)
+#define MPI_Keyval_create              MPI_Comm_create_keyval
+#define MPI_Keyval_free                MPI_Comm_free_keyval
 
-/* ---- Removed MPI-1 functions (replaced in MPI-2.0) ---- */
+#define MPI_Type_hindexed              MPI_Type_create_hindexed
+#define MPI_Type_hvector               MPI_Type_create_hvector
+#define MPI_Type_struct                MPI_Type_create_struct
 
-int MPI_Address(void *location, MPI_Aint *address);
-int MPI_Type_hindexed(int count, int array_of_blocklengths[],
-                      MPI_Aint array_of_displacements[],
-                      MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride,
-                     MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPI_Type_struct(int count, int array_of_blocklengths[],
-                    MPI_Aint array_of_displacements[],
-                    MPI_Datatype array_of_types[], MPI_Datatype *newtype);
-int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent);
-int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement);
-int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement);
-int MPI_Errhandler_create(MPI_Comm_errhandler_function *comm_errhandler_fn,
-                          MPI_Errhandler *errhandler);
-int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler);
-int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
+#define MPI_Type_extent                MPI_ABI_Type_extent
+#define MPI_Type_lb                    MPI_ABI_Type_lb
+#define MPI_Type_ub                    MPI_ABI_Type_ub
 
-/* ---- Removed MPI-1 attribute functions (replaced in MPI-2.0) ---- */
+static inline int MPI_Type_extent(MPI_Datatype MPI_datatype, MPI_Aint * MPI_extent)
+{
+    MPI_Aint MPI_lb;
+    return MPI_Type_get_extent(MPI_datatype, &MPI_lb, MPI_extent);
+}
 
-int MPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn,
-                      int *keyval, void *extra_state);
-int MPI_Keyval_free(int *keyval);
-int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val);
-int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag);
-int MPI_Attr_delete(MPI_Comm comm, int keyval);
+static inline int MPI_Type_lb(MPI_Datatype MPI_datatype, MPI_Aint * MPI_lb)
+{
+    MPI_Aint MPI_extent;
+    return MPI_Type_get_extent(MPI_datatype, MPI_lb, &MPI_extent);
+}
 
-/* ---- PMPI variants ---- */
+static inline int MPI_Type_ub(MPI_Datatype MPI_datatype, MPI_Aint * MPI_ub)
+{
+    MPI_Aint MPI_lb;
+    int MPI_ierr;
+    MPI_ierr = MPI_Type_get_extent(MPI_datatype, &MPI_lb, MPI_ub);
+    if (MPI_ierr == MPI_SUCCESS && MPI_ub)
+        *MPI_ub += MPI_lb;
+    return MPI_ierr;
+}
 
-int PMPI_Address(void *location, MPI_Aint *address);
-int PMPI_Type_hindexed(int count, int array_of_blocklengths[],
-                       MPI_Aint array_of_displacements[],
-                       MPI_Datatype oldtype, MPI_Datatype *newtype);
-int PMPI_Type_hvector(int count, int blocklength, MPI_Aint stride,
-                      MPI_Datatype oldtype, MPI_Datatype *newtype);
-int PMPI_Type_struct(int count, int array_of_blocklengths[],
-                     MPI_Aint array_of_displacements[],
-                     MPI_Datatype array_of_types[], MPI_Datatype *newtype);
-int PMPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent);
-int PMPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement);
-int PMPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement);
-int PMPI_Errhandler_create(MPI_Comm_errhandler_function *comm_errhandler_fn,
-                           MPI_Errhandler *errhandler);
-int PMPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler);
-int PMPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler);
-int PMPI_Keyval_create(MPI_Copy_function *copy_fn, MPI_Delete_function *delete_fn,
-                       int *keyval, void *extra_state);
-int PMPI_Keyval_free(int *keyval);
-int PMPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val);
-int PMPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag);
-int PMPI_Attr_delete(MPI_Comm comm, int keyval);
+/* ---- Removed PMPI functions ---- */
+
+#define PMPI_Address                   PMPI_Get_address
+
+#define PMPI_Attr_delete               PMPI_Comm_delete_attr
+#define PMPI_Attr_get                  PMPI_Comm_get_attr
+#define PMPI_Attr_put                  PMPI_Comm_set_attr
+
+#define PMPI_Errhandler_create         PMPI_Comm_create_errhandler
+#define PMPI_Errhandler_get            PMPI_Comm_get_errhandler
+#define PMPI_Errhandler_set            PMPI_Comm_set_errhandler
+
+#define PMPI_Keyval_create             PMPI_Comm_create_keyval
+#define PMPI_Keyval_free               PMPI_Comm_free_keyval
+
+#define PMPI_Type_hindexed             PMPI_Type_create_hindexed
+#define PMPI_Type_hvector              PMPI_Type_create_hvector
+#define PMPI_Type_struct               PMPI_Type_create_struct
+
+#define PMPI_Type_extent               PMPI_ABI_Type_extent
+#define PMPI_Type_lb                   PMPI_ABI_Type_lb
+#define PMPI_Type_ub                   PMPI_ABI_Type_ub
+
+static inline int PMPI_Type_extent(MPI_Datatype MPI_datatype, MPI_Aint * MPI_extent)
+{
+    MPI_Aint MPI_lb;
+    return PMPI_Type_get_extent(MPI_datatype, &MPI_lb, MPI_extent);
+}
+
+static inline int PMPI_Type_lb(MPI_Datatype MPI_datatype, MPI_Aint * MPI_lb)
+{
+    MPI_Aint MPI_extent;
+    return PMPI_Type_get_extent(MPI_datatype, MPI_lb, &MPI_extent);
+}
+
+static inline int PMPI_Type_ub(MPI_Datatype MPI_datatype, MPI_Aint * MPI_ub)
+{
+    MPI_Aint MPI_lb;
+    int MPI_ierr;
+    MPI_ierr = PMPI_Type_get_extent(MPI_datatype, &MPI_lb, MPI_ub);
+    if (MPI_ierr == MPI_SUCCESS && MPI_ub)
+        *MPI_ub += MPI_lb;
+    return MPI_ierr;
+}
 
 #if defined(__cplusplus)
 }
 #endif
+
+#else
+/* MPICH native ABI: the removed APIs are declared in mpi.h and mpi_proto.h */
+#endif /* MPI_ABI_VERSION */
 
 #endif /* MPI_LEGACY_H_INCLUDED */

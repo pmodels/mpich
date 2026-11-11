@@ -62,12 +62,15 @@ static inline MPIR_Comm *ABI_Comm_ptr(ABI_Comm comm_abi)
     return comm_ptr;
 }
 
+/* rank and size count threads on a threadcomm, as in MPI_Comm_rank/size */
 static inline int ABI_Comm_rank(ABI_Comm comm_abi)
 {
     MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
     int rank = MPI_PROC_NULL;
     if (comm_ptr != NULL) {
-        MPIR_Comm_rank_impl(comm_ptr, &rank);
+        int size;
+        MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
+        (void) size;
     }
     return rank;
 }
@@ -82,7 +85,9 @@ static inline int ABI_Comm_peer_size(ABI_Comm comm_abi)
         if (flag) {
             MPIR_Comm_remote_size_impl(comm_ptr, &size);
         } else {
-            MPIR_Comm_size_impl(comm_ptr, &size);
+            int rank;
+            MPIR_COMM_RANK_SIZE(comm_ptr, rank, size);
+            (void) rank;
         }
     }
     return size;
@@ -304,6 +309,42 @@ static inline ABI_Session ABI_Session_from_mpi(MPI_Session in)
     MPIR_Session *ptr;
     MPIR_Session_get_ptr(in, ptr);
     return (ABI_Session) (void *) ptr;
+}
+
+static inline MPIX_Stream ABI_Stream_to_mpi(ABI_Stream in)
+{
+    if (in == ABI_STREAM_NULL) {
+        return MPIX_STREAM_NULL;
+    }
+    return ((MPIR_Stream *) in)->handle;
+}
+
+static inline ABI_Stream ABI_Stream_from_mpi(MPIX_Stream in)
+{
+    if (in == MPIX_STREAM_NULL) {
+        return ABI_STREAM_NULL;
+    }
+    MPIR_Stream *ptr;
+    MPIR_Stream_get_ptr(in, ptr);
+    return (ABI_Stream) (void *) ptr;
+}
+
+static inline MPIX_Grequest_class ABI_Grequest_class_to_mpi(ABI_Grequest_class in)
+{
+    if (in == NULL) {
+        return 0;
+    }
+    return ((MPIR_Grequest_class *) in)->handle;
+}
+
+static inline ABI_Grequest_class ABI_Grequest_class_from_mpi(MPIX_Grequest_class in)
+{
+    if (in == 0) {
+        return NULL;
+    }
+    MPIR_Grequest_class *ptr;
+    MPIR_Grequest_class_get_ptr(in, ptr);
+    return (ABI_Grequest_class) (void *) ptr;
 }
 
 static inline MPI_Win ABI_Win_to_mpi(ABI_Win in)

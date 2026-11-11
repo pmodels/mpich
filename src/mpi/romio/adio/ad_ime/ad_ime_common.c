@@ -52,7 +52,8 @@ void ADIOI_IME_Init(int rank, int *error_code)
 
     *error_code = MPI_SUCCESS;
 
-    MPI_Comm_create_keyval(MPI_NULL_COPY_FN, ADIOI_IME_End_call, &ADIOI_IME_Initialized, (void *) 0);
+    MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, ADIOI_IME_End_call, &ADIOI_IME_Initialized,
+                           (void *) 0);
     /* just like romio does, we make a dummy attribute so we
      * get cleaned up */
     MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_IME_Initialized, (void *) 0);

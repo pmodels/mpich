@@ -202,8 +202,8 @@ else:
 ## Fallback Without MPIX
 
 When building against an MPI implementation that does not provide these
-MPIX extensions (or with `--disable-fortran-mpix`), the binding falls
-back to standard MPI functions with degraded behavior:
+MPIX extensions, the binding falls back to standard MPI functions with
+degraded behavior:
 
 | Feature | With MPIX | Fallback (without MPIX) |
 |---------|-----------|------------------------|
@@ -211,6 +211,11 @@ back to standard MPI functions with degraded behavior:
 | User op | Proxy converts `MPI_Datatype` to `MPI_Fint` via `MPI_Type_toint` | Fortran function called directly by MPI; `datatype` argument is a C pointer, **unusable in Fortran** |
 | Error handler | Proxy converts handle to `MPI_Fint` | Fortran function called directly; handle argument is a C pointer, **unusable in Fortran** |
 | Attr get/set | Uses `MPIX_*_as_fortran` with correct Fortran value semantics | Uses `MPI_*_get_attr` / `MPI_*_set_attr` with C pointer semantics (see notes below) |
+
+The first three rows depend only on whether the C library provides the
+MPIX callbacks (`HAS_MPIX_CALLBACKS`). The attribute get/set row depends on
+whether the binding includes the MPIX routines (`--disable-fortran-mpix`,
+and always off on the MPI ABI for now).
 
 The fallback is functional for programs that do not inspect callback
 arguments (e.g. error handlers that only print the error code, or ops
@@ -238,11 +243,15 @@ AC_CHECK_FUNCS([MPIX_Comm_create_keyval_x],
     [has_mpix_callbacks=yes], [has_mpix_callbacks=no])
 ```
 
-If not found, `HAS_MPIX_CALLBACKS` is not defined and the Python binding
-generators receive `-skip-mpix` to omit MPIX function wrappers from the
-generated Fortran bindings.
+In-tree builds assume the callbacks on both ABIs. When they are available,
+`HAS_MPIX_CALLBACKS` and `MPI_MPIX` (so that `mpi.h` declares them) are
+defined and the proxies use them, independent of `--disable-fortran-mpix`.
 
-Users can explicitly disable with `--disable-fortran-mpix`.
+Separately, `enable_fortran_mpix` decides whether the generated bindings
+include the MPIX routines; otherwise the Python binding generators receive
+`-skip-mpix`. It defaults to whether the callbacks were found, can be
+turned off with `--disable-fortran-mpix`, and is always off on the MPI ABI
+for now.
 
 ## Fortran Initialization: `MPIX_Init_fortran`
 

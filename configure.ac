@@ -2955,7 +2955,7 @@ fi
 AC_SUBST(LPMPILIBNAME)
 AC_SUBST(LPMPIABILIBNAME)
 
-if test "enable_cxx" = "yes" ; then
+if test "$enable_cxx" = "yes" ; then
     LMPICXXLIBNAME="-l${MPICXXLIBNAME}"
 else
     LMPICXXLIBNAME=

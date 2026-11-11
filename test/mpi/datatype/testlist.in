@@ -1,7 +1,7 @@
 contents 1
 gaddress 1
 lbub 1
-lbub_oldapi 1 strict=FALSE
+@lbub_tests@lbub_oldapi 1 strict=FALSE
 localpack 1
 pack_external 1
 simple_pack 1
@@ -16,7 +16,7 @@ struct_pack_mpi_bottom 1
 struct_unpack_mpi_bottom 1
 typecommit 1
 typename 1
-typename_oldapi 1 strict=FALSE
+@lbub_tests@typename_oldapi 1 strict=FALSE
 typefree 1
 zeroparms 1
 concurrent_irecv 3
@@ -46,7 +46,7 @@ pairtype_size_extent 1
 simple_commit 1
 simple_size_extent 1
 simple_size_extent_oldapi 1 strict=FALSE
-struct_no_real_types 1 strict=FALSE
+@lbub_tests@struct_no_real_types 1 strict=FALSE
 struct_empty_el 1
 contig_zero_count 1
 simple_resized 1

@@ -17,13 +17,14 @@ int MPIR_ROMIO_Set_file_errhand(MPI_File, ABI_Errhandler);
 
 static int get_file_errhand(MPI_File file, MPI_Errhandler * eh_ptr)
 {
-    ABI_Errhandler eh_abi;
+    ABI_Errhandler eh_abi = NULL;
     int ret = MPIR_ROMIO_Get_file_errhand(file, &eh_abi);
     if (!eh_abi) {
         *eh_ptr = 0;
     } else {
         *eh_ptr = ABI_Errhandler_to_mpi(eh_abi);
     }
+    return ret;
 }
 
 static int set_file_errhand(MPI_File file, MPI_Errhandler eh)

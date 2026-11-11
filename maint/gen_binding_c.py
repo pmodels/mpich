@@ -177,20 +177,11 @@ def main():
         G.out.append("")
 
         for func in func_list:
-            if 'replace' in func and 'body' not in func:
+            if 'replace' in func:
+                # removed functions are header-only in the MPI ABI (mpi_legacy.h)
                 continue
 
-            if re.match(r'MPIX_', func['name']):
-                if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
-                    # needed by ROMIO
-                    pass
-                else:
-                    continue
-
             dump_func_abi(func)
-            if '_replaces' in func:
-                for t_func in func['_replaces']:
-                    dump_func_abi(t_func)
 
         abi_file_path = G.abi_dir + "/c_binding_abi.c"
         G.check_write_path(abi_file_path)

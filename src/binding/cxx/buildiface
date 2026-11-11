@@ -2281,7 +2281,19 @@ void operator delete[](void *p) {
 
     # Keyval and attribute routines
     print $OUTFD <<EOT;
-#include \"mpir_attr_generic.h\"
+/* The user's C++ attribute callbacks, passed as the extra_state of the
+ * MPIX_*_create_keyval_x callbacks */
+struct CXX_keyval_state {
+    void (*copy_fn) (void);
+    void (*delete_fn) (void);
+    void *extra_state;
+};
+
+static void CXX_keyval_free(void *extra_state)
+{
+    delete((CXX_keyval_state *) extra_state);
+}
+
 static
 int
 MPIR_Comm_delete_attr_cxx_proxy(
@@ -2401,6 +2413,30 @@ EOT
     print $OUTFD <<EOT;
 }
 
+static int CXX_Comm_copy_attr_proxy(MPI_Comm comm, int keyval, void *extra_state,
+                                    void *attrib, void *new_value, int *flag)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->copy_fn) {
+        /* NULL_COPY_FN: do not copy */
+        *flag = 0;
+        return MPI_SUCCESS;
+    }
+    return MPII_Comm_copy_attr_cxx_proxy((MPI_Comm_copy_attr_function *) p->copy_fn, comm, keyval,
+                                         p->extra_state, attrib, (void **) new_value, flag);
+}
+
+static int CXX_Comm_delete_attr_proxy(MPI_Comm comm, int keyval, void *attrib, void *extra_state)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->delete_fn) {
+        /* NULL_DELETE_FN */
+        return MPI_SUCCESS;
+    }
+    return MPIR_Comm_delete_attr_cxx_proxy((MPI_Comm_delete_attr_function *) p->delete_fn, comm,
+                                           keyval, attrib, p->extra_state);
+}
+
 int Comm::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *extra_state )
 {
     int keyval;
@@ -2410,10 +2446,12 @@ int Comm::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void 
 EOT
     &printCoverageStart( $OUTFD, "Comm_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALLWORLD( MPI_Comm_create_keyval( (MPI_Comm_copy_attr_function *)cf, 
-				       (MPI_Comm_delete_attr_function *)df,
-				      &keyval, extra_state ) );
-    MPII_Keyval_set_proxy( keyval, MPII_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );
+    CXX_keyval_state *p = new(CXX_keyval_state);
+    p->copy_fn = (void (*)(void)) cf;
+    p->delete_fn = (void (*)(void)) df;
+    p->extra_state = extra_state;
+    MPIX_CALLWORLD( MPIX_Comm_create_keyval_x( CXX_Comm_copy_attr_proxy, CXX_Comm_delete_attr_proxy,
+                                            CXX_keyval_free, &keyval, p ) );
 EOT
     &printCoverageEnd( $OUTFD, "Comm_create_keyval", 3 );
     print $OUTFD <<EOT;
@@ -2455,6 +2493,31 @@ MPIR_Type_copy_attr_cxx_proxy(
     return f( d, keyval, extra_state, value, new_value, *(bool*)flag );
 }
 
+static int CXX_Type_copy_attr_proxy(MPI_Datatype datatype, int keyval, void *extra_state,
+                                    void *attrib, void *new_value, int *flag)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->copy_fn) {
+        /* NULL_COPY_FN: do not copy */
+        *flag = 0;
+        return MPI_SUCCESS;
+    }
+    return MPIR_Type_copy_attr_cxx_proxy((MPI_Type_copy_attr_function *) p->copy_fn, datatype,
+                                         keyval, p->extra_state, attrib, (void **) new_value, flag);
+}
+
+static int CXX_Type_delete_attr_proxy(MPI_Datatype datatype, int keyval, void *attrib,
+                                      void *extra_state)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->delete_fn) {
+        /* NULL_DELETE_FN */
+        return MPI_SUCCESS;
+    }
+    return MPIR_Type_delete_attr_cxx_proxy((MPI_Type_delete_attr_function *) p->delete_fn, datatype,
+                                           keyval, attrib, p->extra_state);
+}
+
 int Datatype::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *extra_state )
 {
     int keyval;
@@ -2464,10 +2527,12 @@ int Datatype::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, v
 EOT
     &printCoverageStart( $OUTFD, "Type_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALLWORLD( MPI_Type_create_keyval( (MPI_Type_copy_attr_function *)cf, 
-			       (MPI_Type_delete_attr_function *)df,
-		 	       &keyval, extra_state ) );
-    MPII_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );
+    CXX_keyval_state *p = new(CXX_keyval_state);
+    p->copy_fn = (void (*)(void)) cf;
+    p->delete_fn = (void (*)(void)) df;
+    p->extra_state = extra_state;
+    MPIX_CALLWORLD( MPIX_Type_create_keyval_x( CXX_Type_copy_attr_proxy, CXX_Type_delete_attr_proxy,
+                                            CXX_keyval_free, &keyval, p ) );
 EOT
     &printCoverageEnd( $OUTFD, "Type_create_keyval", 3 );
     print $OUTFD <<EOT;
@@ -2509,6 +2574,30 @@ MPIR_Win_copy_attr_cxx_proxy(
     return f( w, keyval, extra_state, value, new_value, *(bool*)flag );
 }
 
+static int CXX_Win_copy_attr_proxy(MPI_Win win, int keyval, void *extra_state,
+                                   void *attrib, void *new_value, int *flag)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->copy_fn) {
+        /* NULL_COPY_FN: do not copy */
+        *flag = 0;
+        return MPI_SUCCESS;
+    }
+    return MPIR_Win_copy_attr_cxx_proxy((MPI_Win_copy_attr_function *) p->copy_fn, win, keyval,
+                                        p->extra_state, attrib, (void **) new_value, flag);
+}
+
+static int CXX_Win_delete_attr_proxy(MPI_Win win, int keyval, void *attrib, void *extra_state)
+{
+    CXX_keyval_state *p = (CXX_keyval_state *) extra_state;
+    if (!p->delete_fn) {
+        /* NULL_DELETE_FN */
+        return MPI_SUCCESS;
+    }
+    return MPIR_Win_delete_attr_cxx_proxy((MPI_Win_delete_attr_function *) p->delete_fn, win,
+                                          keyval, attrib, p->extra_state);
+}
+
 int Win::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *extra_state )
 {
     int keyval;
@@ -2518,10 +2607,12 @@ int Win::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *
 EOT
     &printCoverageStart( $OUTFD, "Win_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALLWORLD( MPI_Win_create_keyval( (MPI_Win_copy_attr_function *)cf, 
-				       (MPI_Win_delete_attr_function *)df,
-				      &keyval, extra_state ) );
-    MPII_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );
+    CXX_keyval_state *p = new(CXX_keyval_state);
+    p->copy_fn = (void (*)(void)) cf;
+    p->delete_fn = (void (*)(void)) df;
+    p->extra_state = extra_state;
+    MPIX_CALLWORLD( MPIX_Win_create_keyval_x( CXX_Win_copy_attr_proxy, CXX_Win_delete_attr_proxy,
+                                            CXX_keyval_free, &keyval, p ) );
 EOT
     &printCoverageEnd( $OUTFD, "Win_create_keyval", 3 );
     print $OUTFD <<EOT;

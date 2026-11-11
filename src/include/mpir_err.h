@@ -17,17 +17,12 @@ struct MPIR_Errhandler;
 struct MPIR_Group;
 
 /* Bindings for internal routines */
-MPICH_API_PUBLIC int MPIR_Err_return_comm(struct MPIR_Comm *, const char[], int);
-MPICH_API_PUBLIC int MPIR_Err_return_win(struct MPIR_Win *, const char[], int);
-MPICH_API_PUBLIC int MPIR_Err_return_session(struct MPIR_Session *, const char[], int);
-MPICH_API_PUBLIC int MPIR_Err_return_session_init(struct MPIR_Errhandler *, const char[], int);
-MPICH_API_PUBLIC int MPIR_Err_return_group(struct MPIR_Group *, const char[], int);
-MPICH_API_PUBLIC int MPIR_Err_return_comm_create_from_group(struct MPIR_Errhandler *, const char[],
-                                                            int);
-#ifdef MPI__FILE_DEFINED
-/* Only define if we have MPI_File */
-MPICH_API_PUBLIC int MPIR_Err_return_file(MPI_File, const char[], int); /* Romio version */
-#endif
+int MPIR_Err_return_comm(struct MPIR_Comm *, const char[], int);
+int MPIR_Err_return_win(struct MPIR_Win *, const char[], int);
+int MPIR_Err_return_session(struct MPIR_Session *, const char[], int);
+int MPIR_Err_return_session_init(struct MPIR_Errhandler *, const char[], int);
+int MPIR_Err_return_group(struct MPIR_Group *, const char[], int);
+int MPIR_Err_return_comm_create_from_group(struct MPIR_Errhandler *, const char[], int);
 /* FIXME:
  * Update this description to match the current version of the routine,
  * in particular, the pseudo-format types (even better, fix it so that
@@ -107,8 +102,7 @@ MPICH_API_PUBLIC int MPIR_Err_return_file(MPI_File, const char[], int); /* Romio
   Error
 
   @*/
-MPICH_API_PUBLIC int MPIR_Err_create_code(int, int, const char[], int, int, const char[],
-                                          const char[], ...);
+int MPIR_Err_create_code(int, int, const char[], int, int, const char[], const char[], ...);
 
 int MPIR_Err_create_code_valist(int, int, const char[], int, int, const char[], const char[],
                                 va_list);

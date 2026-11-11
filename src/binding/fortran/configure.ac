@@ -246,23 +246,24 @@ AC_ARG_ENABLE([gen-bindings], [AS_HELP_STRING([--disable-gen-bindings], [skip ge
 AC_ARG_ENABLE([fortran-mpix], [AS_HELP_STRING([--disable-fortran-mpix], [skip mpix in Fortran bindings])],
     [enable_fortran_mpix=$enableval], [enable_fortran_mpix=auto])
 
-if test "$enable_fortran_mpix" != "no" ; then
-    # unless --disable-fortran-mpix, we probe whether MPIX callbacks are available
-    if test "$FROM_MPICH" = "yes" ; then
-        has_mpix_callbacks=yes
-        if test "$WITH_MPI" != "mpich" ; then
-            # For now, ABI build does not provide MPIX functions
-            has_mpix_callbacks=no
-            enable_fortran_mpix=no
-            AC_DEFINE([FORTRAN_BUILD_MPI_ABI],1,[Define to build Fortran binding on MPI ABI])
-        fi
-    else
-        AC_CHECK_FUNCS([MPIX_Comm_create_keyval_x], [has_mpix_callbacks=yes], [has_mpix_callbacks=no])
-        if test "$has_mpix_callbacks" = "no" -a "$MPI_IS_MPICH" = "yes" ; then
-            # mpich's mpi.h require -DMPI_ABI for abi build
-            AC_DEFINE([FORTRAN_BUILD_MPI_ABI],1,[Define to build Fortran binding on MPI ABI])
-        fi
+if test "$WITH_MPI" = "abi" ; then
+    if test "$FROM_MPICH" = "yes" -o "$MPI_IS_MPICH" = "yes" ; then
+        # mpich's mpi.h require -DMPI_ABI for abi build
+        AC_DEFINE([FORTRAN_BUILD_MPI_ABI],1,[Define to build Fortran binding on MPI ABI])
     fi
+fi
+
+# The binding uses the MPIX callbacks (e.g. MPIX_Comm_create_keyval_x) internally
+# when the C library provides them, independent of --disable-fortran-mpix
+if test "$FROM_MPICH" = "yes" ; then
+    has_mpix_callbacks=yes
+else
+    AC_CHECK_FUNCS([MPIX_Comm_create_keyval_x], [has_mpix_callbacks=yes], [has_mpix_callbacks=no])
+fi
+
+if test "$WITH_MPI" = "abi" ; then
+    # For now, the Fortran binding does not provide MPIX routines on the MPI ABI
+    enable_fortran_mpix=no
 fi
 
 if test "$has_mpix_callbacks" = "yes" ; then
@@ -1090,9 +1091,10 @@ export modincdir
 AC_SUBST(modincdir)
 
 gen_cmd_common="-mpi-h=$mpi_h"
-if test "$enable_fortran_mpix" = "yes" ; then
-    AC_DEFINE([MPI_MPIX], 1, [Define if the fortran binding supports MPIX])
-else
+if test "$has_mpix_callbacks" = "yes" -o "$enable_fortran_mpix" = "yes" ; then
+    AC_DEFINE([MPI_MPIX], 1, [Define to get the MPIX declarations from mpi.h])
+fi
+if test "$enable_fortran_mpix" != "yes" ; then
     gen_cmd_common="$gen_cmd_common -skip-mpix"
 fi
 

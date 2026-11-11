@@ -1,7 +1,6 @@
 ===============================================================================
                                Changes in 5.1
 ===============================================================================
-<<<<<<< HEAD
 # Removed MPID collective interfaces. Binding layer call MPIR_Xxx_impl instead of
   MPIR_Xxx. Use a single json config file. Generate json parsing from
   coll_algorithms.txt. MPIR_Xxx_impl functions call MPIR_Coll_auto for CSEL
@@ -16,6 +15,11 @@
   from the MPI C library. mpifort now explicitly links -lmpi (or -lmpi_abi).
 
 # Split mpix.h from mpi.h. MPIX constants are available with ABI conversion support.
+  libmpi_abi provides the MPIX functions (mpicc -mpi-mpix, or its alias -mpix).
+
+# libmpi_abi no longer exports the APIs removed from the MPI standard. With
+  mpicc -mpi-legacy, mpi_legacy.h maps them to their replacements; MPI_LB and
+  MPI_UB are not available in the MPI ABI.
 
 # Added circulant graph (circ_graph) algorithms for Bcast, Reduce, Allgather, and
   nonblocking IBcast.

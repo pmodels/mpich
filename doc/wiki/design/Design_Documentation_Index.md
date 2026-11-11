@@ -42,6 +42,7 @@
     - [Overriding Collective Functions](Overriding_Collective_Functions.md)
 
 - Language Bindings
+    - [The `mpi.h` Header](MPI_Header.md)
     - [Fortran Bindings](Fortran_Binding.md)
     - [Stand-Alone Fortran Binding](Standalone_Fortran_Binding.md)
 
