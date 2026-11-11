@@ -62,6 +62,8 @@ static int test_new_pending_block(MPII_cga_request_queue * queue, int block, int
 
 /* return true all pending recvs on the same block are COMPLETED */
 static int clear_pending_recvs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
+/* return true if no other send on the same block is still packing into its packbuf */
+static int clear_pending_packs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
 /* return true if the pending requests of the same op_type and peer_rank are ISSUED. */
 static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, bool * flag);
 
@@ -989,6 +991,28 @@ static int clear_pending_recvs(MPII_cga_request_queue * queue, int cur_req_id, b
     return MPI_SUCCESS;
 }
 
+/* A bcast block has one persist packbuf, filled by the first send of the block (pack) or
+ * by its recv. A later send of the block reuses it, so it must wait until no other send
+ * is still packing into it (an async copy from a device buffer). */
+static int clear_pending_packs(MPII_cga_request_queue * queue, int cur_req_id, bool * flag)
+{
+    int block = queue->requests[cur_req_id].block;
+    int root = queue->requests[cur_req_id].root;
+
+    *flag = true;
+    int req_id = get_pending_req_id(queue, block, root);
+    while (req_id >= 0) {
+        if (req_id != cur_req_id && queue->requests[req_id].op_type == MPII_CGA_OP_SEND &&
+            queue->requests[req_id].op_stage == MPII_CGA_STAGE_COPY) {
+            *flag = false;
+            break;
+        }
+        req_id = queue->requests[req_id].next_req_id;
+    }
+
+    return MPI_SUCCESS;
+}
+
 static int check_pending_ops(MPII_cga_request_queue * queue, int cur_req_id, bool * flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1088,6 +1112,8 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
                         REQi.op_stage = MPII_CGA_STAGE_COPY;
                     } else {
                         MPIR_Assert(queue->coll_type == MPII_CGA_BCAST);
+                        /* the send that packs this block may not be done */
+                        TEST_PENDING(clear_pending_packs(queue, i, &flag));
                         REQi.packbuf = pack_buf;
                         /* make sure all sends are in order */
                         TEST_PENDING(check_pending_ops(queue, i, &flag));
