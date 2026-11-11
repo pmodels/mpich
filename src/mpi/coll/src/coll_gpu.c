@@ -44,6 +44,9 @@ struct coll_buf {
     MPI_Aint count;
     MPI_Datatype datatype;
     int dir;
+    MPI_Datatype *type_ref;     /* points at the datatype field in coll_sig for a collective
+                                 * without an op, so that the swap can replace the datatype with
+                                 * a packed one; NULL for a reduction, whose op needs it */
 };
 
 struct coll_bufs {
@@ -67,9 +70,10 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
 static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
-                          MPI_Datatype recvtype, bool has_recv);
+                          MPI_Datatype recvtype, bool has_recv, MPI_Datatype * send_type_ref,
+                          MPI_Datatype * recv_type_ref);
 static void add_buf(struct coll_bufs *bufs, const void **buf_ref, MPI_Aint count,
-                    MPI_Datatype datatype, int dir);
+                    MPI_Datatype datatype, int dir, MPI_Datatype * type_ref);
 static MPI_Aint get_span(const MPI_Aint * counts, const MPI_Aint * displs, int n);
 
 void MPIR_Coll_sig_prepare_gpu(MPIR_Csel_coll_sig_s * coll_sig)
@@ -345,33 +349,35 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
     switch (coll_sig->coll_type) {
           COLL_TYPE_INTRA_CASE(BCAST):
             add_buf(bufs, (const void **) &U(bcast)->buffer, U(bcast)->count,
-                    U(bcast)->datatype, rank == U(bcast)->root ? COLL_BUF_READ : COLL_BUF_WRITE);
+                    U(bcast)->datatype, rank == U(bcast)->root ? COLL_BUF_READ : COLL_BUF_WRITE,
+                    &U(bcast)->datatype);
             break;
           COLL_TYPE_INTRA_CASE(REDUCE):
             add_send_recv(bufs, &U(reduce)->sendbuf, U(reduce)->count, U(reduce)->datatype,
                           &U(reduce)->recvbuf, U(reduce)->count, U(reduce)->datatype,
-                          rank == U(reduce)->root);
+                          rank == U(reduce)->root, NULL, NULL);
             break;
           COLL_TYPE_INTRA_CASE(ALLREDUCE):
             add_send_recv(bufs, &U(allreduce)->sendbuf, U(allreduce)->count,
                           U(allreduce)->datatype, &U(allreduce)->recvbuf, U(allreduce)->count,
-                          U(allreduce)->datatype, true);
+                          U(allreduce)->datatype, true, NULL, NULL);
             break;
           COLL_TYPE_INTRA_CASE(SCAN):
             add_send_recv(bufs, &U(scan)->sendbuf, U(scan)->count, U(scan)->datatype,
-                          &U(scan)->recvbuf, U(scan)->count, U(scan)->datatype, true);
+                          &U(scan)->recvbuf, U(scan)->count, U(scan)->datatype, true, NULL, NULL);
             break;
           COLL_TYPE_INTRA_CASE(EXSCAN):
             if (rank > 0) {
                 add_send_recv(bufs, &U(exscan)->sendbuf, U(exscan)->count, U(exscan)->datatype,
-                              &U(exscan)->recvbuf, U(exscan)->count, U(exscan)->datatype, true);
+                              &U(exscan)->recvbuf, U(exscan)->count, U(exscan)->datatype, true,
+                              NULL, NULL);
             } else if (U(exscan)->sendbuf == MPI_IN_PLACE) {
                 /* rank 0 gets no result: its recvbuf is only input, and must stay unchanged */
                 add_buf(bufs, (const void **) &U(exscan)->recvbuf, U(exscan)->count,
-                        U(exscan)->datatype, COLL_BUF_READ);
+                        U(exscan)->datatype, COLL_BUF_READ, NULL);
             } else {
                 add_buf(bufs, &U(exscan)->sendbuf, U(exscan)->count, U(exscan)->datatype,
-                        COLL_BUF_READ);
+                        COLL_BUF_READ, &U(gatherv)->sendtype);
             }
             break;
           COLL_TYPE_INTRA_CASE(REDUCE_SCATTER):
@@ -382,13 +388,13 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                 }
                 if (U(reduce_scatter)->sendbuf == MPI_IN_PLACE) {
                     add_buf(bufs, (const void **) &U(reduce_scatter)->recvbuf, total,
-                            U(reduce_scatter)->datatype, COLL_BUF_RW);
+                            U(reduce_scatter)->datatype, COLL_BUF_RW, NULL);
                 } else {
                     add_buf(bufs, &U(reduce_scatter)->sendbuf, total,
-                            U(reduce_scatter)->datatype, COLL_BUF_READ);
+                            U(reduce_scatter)->datatype, COLL_BUF_READ, NULL);
                     add_buf(bufs, (const void **) &U(reduce_scatter)->recvbuf,
                             U(reduce_scatter)->recvcounts[rank], U(reduce_scatter)->datatype,
-                            COLL_BUF_WRITE);
+                            COLL_BUF_WRITE, NULL);
                 }
             }
             break;
@@ -398,19 +404,20 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                 MPI_Datatype datatype = U(reduce_scatter_block)->datatype;
                 if (U(reduce_scatter_block)->sendbuf == MPI_IN_PLACE) {
                     add_buf(bufs, (const void **) &U(reduce_scatter_block)->recvbuf,
-                            count * size, datatype, COLL_BUF_RW);
+                            count * size, datatype, COLL_BUF_RW, NULL);
                 } else {
                     add_buf(bufs, &U(reduce_scatter_block)->sendbuf, count * size, datatype,
-                            COLL_BUF_READ);
+                            COLL_BUF_READ, NULL);
                     add_buf(bufs, (const void **) &U(reduce_scatter_block)->recvbuf, count,
-                            datatype, COLL_BUF_WRITE);
+                            datatype, COLL_BUF_WRITE, NULL);
                 }
             }
             break;
           COLL_TYPE_INTRA_CASE(ALLGATHER):
             add_send_recv(bufs, &U(allgather)->sendbuf, U(allgather)->sendcount,
                           U(allgather)->sendtype, &U(allgather)->recvbuf,
-                          U(allgather)->recvcount * size, U(allgather)->recvtype, true);
+                          U(allgather)->recvcount * size, U(allgather)->recvtype, true,
+                          &U(allgather)->sendtype, &U(allgather)->recvtype);
             break;
           COLL_TYPE_INTRA_CASE(ALLGATHERV):
             span = get_span(U(allgatherv)->recvcounts, U(allgatherv)->displs, size);
@@ -419,20 +426,20 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             }
             if (U(allgatherv)->sendbuf != MPI_IN_PLACE) {
                 add_buf(bufs, &U(allgatherv)->sendbuf, U(allgatherv)->sendcount,
-                        U(allgatherv)->sendtype, COLL_BUF_READ);
+                        U(allgatherv)->sendtype, COLL_BUF_READ, &U(allgatherv)->sendtype);
             }
             add_buf(bufs, (const void **) &U(allgatherv)->recvbuf, span,
-                    U(allgatherv)->recvtype, COLL_BUF_RW);
+                    U(allgatherv)->recvtype, COLL_BUF_RW, &U(allgatherv)->recvtype);
             break;
           COLL_TYPE_INTRA_CASE(GATHER):
             add_send_recv(bufs, &U(gather)->sendbuf, U(gather)->sendcount, U(gather)->sendtype,
                           &U(gather)->recvbuf, U(gather)->recvcount * size, U(gather)->recvtype,
-                          rank == U(gather)->root);
+                          rank == U(gather)->root, &U(gather)->sendtype, &U(gather)->recvtype);
             break;
           COLL_TYPE_INTRA_CASE(GATHERV):
             if (U(gatherv)->sendbuf != MPI_IN_PLACE) {
                 add_buf(bufs, &U(gatherv)->sendbuf, U(gatherv)->sendcount, U(gatherv)->sendtype,
-                        COLL_BUF_READ);
+                        COLL_BUF_READ, NULL);
             }
             if (rank == U(gatherv)->root) {
                 span = get_span(U(gatherv)->recvcounts, U(gatherv)->displs, size);
@@ -440,17 +447,17 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                     return false;
                 }
                 add_buf(bufs, (const void **) &U(gatherv)->recvbuf, span, U(gatherv)->recvtype,
-                        COLL_BUF_RW);
+                        COLL_BUF_RW, &U(gatherv)->recvtype);
             }
             break;
           COLL_TYPE_INTRA_CASE(SCATTER):
             if (rank == U(scatter)->root) {
                 add_buf(bufs, &U(scatter)->sendbuf, U(scatter)->sendcount * size,
-                        U(scatter)->sendtype, COLL_BUF_READ);
+                        U(scatter)->sendtype, COLL_BUF_READ, &U(scatter)->sendtype);
             }
             if (U(scatter)->recvbuf != MPI_IN_PLACE) {
                 add_buf(bufs, (const void **) &U(scatter)->recvbuf, U(scatter)->recvcount,
-                        U(scatter)->recvtype, COLL_BUF_WRITE);
+                        U(scatter)->recvtype, COLL_BUF_WRITE, &U(scatter)->recvtype);
             }
             break;
           COLL_TYPE_INTRA_CASE(SCATTERV):
@@ -459,17 +466,19 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                 if (span < 0) {
                     return false;
                 }
-                add_buf(bufs, &U(scatterv)->sendbuf, span, U(scatterv)->sendtype, COLL_BUF_READ);
+                add_buf(bufs, &U(scatterv)->sendbuf, span, U(scatterv)->sendtype, COLL_BUF_READ,
+                        &U(scatterv)->sendtype);
             }
             if (U(scatterv)->recvbuf != MPI_IN_PLACE) {
                 add_buf(bufs, (const void **) &U(scatterv)->recvbuf, U(scatterv)->recvcount,
-                        U(scatterv)->recvtype, COLL_BUF_WRITE);
+                        U(scatterv)->recvtype, COLL_BUF_WRITE, &U(scatterv)->recvtype);
             }
             break;
           COLL_TYPE_INTRA_CASE(ALLTOALL):
             add_send_recv(bufs, &U(alltoall)->sendbuf, U(alltoall)->sendcount * size,
                           U(alltoall)->sendtype, &U(alltoall)->recvbuf,
-                          U(alltoall)->recvcount * size, U(alltoall)->recvtype, true);
+                          U(alltoall)->recvcount * size, U(alltoall)->recvtype, true,
+                          &U(alltoall)->sendtype, &U(alltoall)->recvtype);
             break;
           COLL_TYPE_INTRA_CASE(ALLTOALLV):
             if (U(alltoallv)->sendbuf != MPI_IN_PLACE) {
@@ -477,14 +486,15 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                 if (span < 0) {
                     return false;
                 }
-                add_buf(bufs, &U(alltoallv)->sendbuf, span, U(alltoallv)->sendtype, COLL_BUF_READ);
+                add_buf(bufs, &U(alltoallv)->sendbuf, span, U(alltoallv)->sendtype, COLL_BUF_READ,
+                        &U(alltoallv)->sendtype);
             }
             span = get_span(U(alltoallv)->recvcounts, U(alltoallv)->rdispls, size);
             if (span < 0) {
                 return false;
             }
             add_buf(bufs, (const void **) &U(alltoallv)->recvbuf, span, U(alltoallv)->recvtype,
-                    COLL_BUF_RW);
+                    COLL_BUF_RW, &U(alltoallv)->recvtype);
             break;
         default:
             return false;
@@ -498,21 +508,23 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
  * MPI_IN_PLACE the recvbuf holds the input too. */
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
-                          MPI_Datatype recvtype, bool has_recv)
+                          MPI_Datatype recvtype, bool has_recv, MPI_Datatype * send_type_ref,
+                          MPI_Datatype * recv_type_ref)
 {
     bool inplace = (*sendbuf == MPI_IN_PLACE);
     if (!inplace) {
-        add_buf(bufs, sendbuf, sendcount, sendtype, COLL_BUF_READ);
+        add_buf(bufs, sendbuf, sendcount, sendtype, COLL_BUF_READ, send_type_ref);
     }
     if (has_recv) {
         add_buf(bufs, (const void **) recvbuf, recvcount, recvtype,
-                inplace ? COLL_BUF_RW : COLL_BUF_WRITE);
+                inplace ? COLL_BUF_RW : COLL_BUF_WRITE, recv_type_ref);
     }
 }
 
-/* Skips empty buffers. buf_ref is cast to non-const so that buffer_swap can redirect it. */
+/* Skips empty buffers. buf_ref is cast to non-const so that buffer_swap can redirect it.
+ * type_ref points at the datatype field for a collective without an op, else NULL. */
 static void add_buf(struct coll_bufs *bufs, const void **buf_ref, MPI_Aint count,
-                    MPI_Datatype datatype, int dir)
+                    MPI_Datatype datatype, int dir, MPI_Datatype * type_ref)
 {
     if (count == 0 || *buf_ref == NULL) {
         return;
@@ -523,6 +535,7 @@ static void add_buf(struct coll_bufs *bufs, const void **buf_ref, MPI_Aint count
     b->count = count;
     b->datatype = datatype;
     b->dir = dir;
+    b->type_ref = type_ref;
 }
 
 /* The span of a v-collective buffer, in elements of its datatype: from the buffer start to
