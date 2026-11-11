@@ -406,8 +406,11 @@ char *MPIR_pmi_get_jobattr(const char *key)
 
 #ifdef PMI_FROM_3RD_PARTY
     /* assume 3rd party pmi (e.g. Cray, Slurm, OpenPMIx) does not support special keys */
-    /* FIXME: add exceptions such as PMI_process_mapping */
-    goto fn_exit;
+    /* exception: PMIX_ANL_MAP is a standard PMIx attribute, and pmix_get_jobattr
+     * fetches it with PMIX_OPTIONAL so a server that lacks it cannot block us */
+    if (MPIR_CVAR_PMI_VERSION != MPIR_CVAR_PMI_VERSION_x || strcmp(key, "PMI_process_mapping") != 0) {
+        goto fn_exit;
+    }
 #endif
 
     valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);

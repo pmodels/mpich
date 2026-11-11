@@ -238,12 +238,12 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
         key = PMIX_ANL_MAP;
     }
 
-    /* if this is a non-reserved key, we want to make sure not to block
-     * by using PMIX_IMMEDIATE */
+    /* PMIX_OPTIONAL confines the lookup to the client's local store, so a
+     * server that does not provide the key cannot block us */
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);
     int flag = 1;
-    PMIx_Info_load(info, PMIX_IMMEDIATE, &flag, PMIX_BOOL);
+    PMIx_Info_load(info, PMIX_OPTIONAL, &flag, PMIX_BOOL);
 
     int pmi_errno = PMIx_Get(&pmix_wcproc, key, info, 1, &pvalue);
     if (pmi_errno == PMIX_SUCCESS) {
