@@ -578,7 +578,13 @@ across ranks and enable the condition for them.
 each device buffer into a host buffer (only the ones the
 collective reads; a v-collective's recvbuf is copied in too, to keep the gaps
 between blocks), points `coll_sig` at the host buffers, clears both flags and
-selects again from the dispatch. Afterwards it copies the written buffers back
+selects again from the dispatch. A contiguous datatype, or any datatype of a
+collective with an op (the op needs it), keeps its layout in the host buffer.
+For a noncontiguous datatype of a collective without an op the host buffer is
+packed, element i at offset i times the type size, so each copy is a single
+pack or unpack. `coll_sig` then describes it with a contiguous datatype of the
+type's size and the same counts and displacements, so every rank still splits
+the data into the same elements. Afterwards it copies the written buffers back
 and frees the host buffers. With the flags clear, the selection cannot pick it
 again; a tree that selects it where `gpu_local` does not hold gets an error. The
 default tree does not use it; a tuning file opts in with local sets, e.g. for

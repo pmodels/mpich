@@ -27,11 +27,11 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* The buffers of a collective call that this rank uses, for the gpu_local and gpu_coll restrictions and for
- * buffer swapping. Each entry is a user buffer as a (count, datatype) span, and whether the
- * collective reads it, writes it, or both. A buffer whose span has gaps between the blocks
- * (e.g. the recvbuf of allgatherv) is marked as read too, so that copying the span back does
- * not overwrite the gaps. */
+/* Staging GPU buffers into host buffers for collectives.
+ *
+ * If the datatype is contiguous or the collective is a reduction, the host buffer keeps the user
+ * layout. Otherwise, the host buffer is packed (contiguous). All copies use MPIR_Localcopy; for a
+ * packed host buffer it does a single pack (copy-in) or unpack (copy-out). */
 
 #define COLL_BUF_READ  0x1
 #define COLL_BUF_WRITE 0x2
@@ -59,6 +59,8 @@ struct swap_buf {
     void *user;
     void *host;
     void *raw;
+    /* only for a noncontig datatype that is packed: the contiguous datatype created for it */
+    MPI_Datatype packed_type;
 };
 
 static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
@@ -68,6 +70,14 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
 static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
                           struct swap_buf *swaps);
 static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
+static MPI_Datatype get_host_type(struct coll_buf *b, struct swap_buf *swap);
+
+/* allocates the host buffer, fills swap, and points the coll_sig fields that b refers to at it */
+static int swap_in(struct coll_buf *b, struct swap_buf *swap);
+static int swap_in_packed(struct coll_buf *b, struct swap_buf *swap);
+/* restores the coll_sig fields that b refers to, and frees the datatype swap_in created */
+static void swap_out(struct coll_buf *b, struct swap_buf *swap);
+
 static void add_send_recv(struct coll_bufs *bufs, const void **sendbuf, MPI_Aint sendcount,
                           MPI_Datatype sendtype, void **recvbuf, MPI_Aint recvcount,
                           MPI_Datatype recvtype, bool has_recv, MPI_Datatype * send_type_ref,
@@ -199,12 +209,11 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
         if (!MPIR_GPU_query_pointer_is_dev(*b->buf_ref)) {
             continue;
         }
-        swaps[i].user = *b->buf_ref;
-        swaps[i].host = alloc_host_buf(b->count, b->datatype, &swaps[i].raw);
-        *b->buf_ref = swaps[i].host;
+        mpi_errno = swap_in(b, &swaps[i]);
+        MPIR_ERR_CHECK(mpi_errno);
         if (is_blocking && (b->dir & COLL_BUF_READ)) {
             mpi_errno = MPIR_Localcopy(swaps[i].user, b->count, b->datatype,
-                                       swaps[i].host, b->count, b->datatype);
+                                       swaps[i].host, b->count, get_host_type(b, &swaps[i]));
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -216,7 +225,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
         for (int i = 0; i < bufs.n; i++) {
             struct coll_buf *b = &bufs.bufs[i];
             if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                mpi_errno = MPIR_Localcopy(swaps[i].host, b->count, b->datatype,
+                mpi_errno = MPIR_Localcopy(swaps[i].host, b->count, get_host_type(b, &swaps[i]),
                                            swaps[i].user, b->count, b->datatype);
                 MPIR_ERR_CHECK(mpi_errno);
             }
@@ -229,7 +238,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
   fn_exit:
     for (int i = 0; i < bufs.n; i++) {
         if (swaps[i].user) {
-            *bufs.bufs[i].buf_ref = swaps[i].user;
+            swap_out(&bufs.bufs[i], &swaps[i]);
             /* NULL once the schedule owns it */
             MPL_free(swaps[i].raw);
         }
@@ -253,6 +262,9 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             if (swaps[i].user) {
                 MPIR_Sched_add_buffer(s, swaps[i].raw);
                 swaps[i].raw = NULL;
+                if (swaps[i].packed_type != MPI_DATATYPE_NULL) {
+                    MPIR_Sched_add_handle(s, swaps[i].packed_type);
+                }
             }
         }
 
@@ -261,7 +273,8 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             struct coll_buf *b = &bufs->bufs[i];
             if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
                 mpi_errno = MPIR_Sched_copy(swaps[i].user, b->count, b->datatype,
-                                            swaps[i].host, b->count, b->datatype, s);
+                                            swaps[i].host, b->count,
+                                            get_host_type(b, &swaps[i]), s);
                 MPIR_ERR_CHECK(mpi_errno);
                 n++;
             }
@@ -274,7 +287,7 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
         for (int i = 0; i < bufs->n; i++) {
             struct coll_buf *b = &bufs->bufs[i];
             if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                mpi_errno = MPIR_Sched_copy(swaps[i].host, b->count, b->datatype,
+                mpi_errno = MPIR_Sched_copy(swaps[i].host, b->count, get_host_type(b, &swaps[i]),
                                             swaps[i].user, b->count, b->datatype, s);
                 MPIR_ERR_CHECK(mpi_errno);
             }
@@ -285,6 +298,9 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             if (swaps[i].user) {
                 MPIR_TSP_sched_add_buffer(s, swaps[i].raw);
                 swaps[i].raw = NULL;
+                if (swaps[i].packed_type != MPI_DATATYPE_NULL) {
+                    MPIR_TSP_sched_add_handle(s, swaps[i].packed_type);
+                }
             }
         }
 
@@ -292,7 +308,8 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             struct coll_buf *b = &bufs->bufs[i];
             if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
                 mpi_errno = MPIR_TSP_sched_localcopy_front(swaps[i].user, b->count, b->datatype,
-                                                           swaps[i].host, b->count, b->datatype, s);
+                                                           swaps[i].host, b->count,
+                                                           get_host_type(b, &swaps[i]), s);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -303,7 +320,8 @@ static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
             struct coll_buf *b = &bufs->bufs[i];
             if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
                 int vtx_id;
-                mpi_errno = MPIR_TSP_sched_localcopy(swaps[i].host, b->count, b->datatype,
+                mpi_errno = MPIR_TSP_sched_localcopy(swaps[i].host, b->count,
+                                                     get_host_type(b, &swaps[i]),
                                                      swaps[i].user, b->count, b->datatype,
                                                      s, 0, NULL, &vtx_id);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -329,6 +347,77 @@ static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw)
     *raw = MPL_malloc(size, MPL_MEM_OTHER);
     MPIR_Assert(*raw);
     return (char *) *raw - shift;
+}
+
+/* Allocates the host buffer, fills swap, and points the coll_sig fields at it; the data is
+ * copied later. A contiguous datatype, or any datatype of a collective with an op, keeps the
+ * user layout. A noncontig datatype of a collective without an op is packed. */
+static int swap_in(struct coll_buf *b, struct swap_buf *swap)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_contig;
+    MPIR_Datatype_is_contig(b->datatype, &is_contig);
+
+    swap->packed_type = MPI_DATATYPE_NULL;
+    if (is_contig || !b->type_ref) {
+        swap->host = alloc_host_buf(b->count, b->datatype, &swap->raw);
+    } else {
+        mpi_errno = swap_in_packed(b, swap);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    swap->user = *b->buf_ref;
+    *b->buf_ref = swap->host;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* The packed case of swap_in, which also creates the datatype.
+ * The host buffer holds count elements of type_size bytes, element i at offset i * type_size,
+ * and the datatype field is pointed at a contiguous datatype of type_size bytes created here,
+ * so the counts and displacements stay the same. swap_out frees the datatype; a schedule holds
+ * a reference of its own. */
+static int swap_in_packed(struct coll_buf *b, struct swap_buf *swap)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint type_size;
+    MPIR_Datatype_get_size_macro(b->datatype, type_size);
+
+    mpi_errno = MPIR_Type_contiguous_impl((int) type_size, MPIR_BYTE_INTERNAL, &swap->packed_type);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Type_commit_impl(&swap->packed_type);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    swap->raw = MPL_malloc(MPL_MAX(b->count * type_size, 1), MPL_MEM_OTHER);
+    MPIR_Assert(swap->raw);
+    swap->host = swap->raw;
+    *b->type_ref = swap->packed_type;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    if (swap->packed_type != MPI_DATATYPE_NULL) {
+        MPIR_Type_free_impl(&swap->packed_type);
+    }
+    goto fn_exit;
+}
+
+/* The datatype of the host buffer: the created one if packed, else the user datatype */
+static MPI_Datatype get_host_type(struct coll_buf *b, struct swap_buf *swap)
+{
+    return swap->packed_type != MPI_DATATYPE_NULL ? swap->packed_type : b->datatype;
+}
+
+/* Restores the fields that swap_in changed, and frees the datatype it created */
+static void swap_out(struct coll_buf *b, struct swap_buf *swap)
+{
+    *b->buf_ref = swap->user;
+    if (swap->packed_type != MPI_DATATYPE_NULL) {
+        *b->type_ref = b->datatype;
+        MPIR_Type_free_impl(&swap->packed_type);
+    }
 }
 
 /* Fills bufs with the buffers this rank uses. Returns false for the collectives it doesn't
@@ -377,7 +466,7 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
                         U(exscan)->datatype, COLL_BUF_READ, NULL);
             } else {
                 add_buf(bufs, &U(exscan)->sendbuf, U(exscan)->count, U(exscan)->datatype,
-                        COLL_BUF_READ, &U(gatherv)->sendtype);
+                        COLL_BUF_READ, NULL);
             }
             break;
           COLL_TYPE_INTRA_CASE(REDUCE_SCATTER):
@@ -439,7 +528,7 @@ static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *buf
           COLL_TYPE_INTRA_CASE(GATHERV):
             if (U(gatherv)->sendbuf != MPI_IN_PLACE) {
                 add_buf(bufs, &U(gatherv)->sendbuf, U(gatherv)->sendcount, U(gatherv)->sendtype,
-                        COLL_BUF_READ, NULL);
+                        COLL_BUF_READ, &U(gatherv)->sendtype);
             }
             if (rank == U(gatherv)->root) {
                 span = get_span(U(gatherv)->recvcounts, U(gatherv)->displs, size);
