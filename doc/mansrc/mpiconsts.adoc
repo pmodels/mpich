@@ -377,6 +377,8 @@ MPI_Delete_function:: Function to delete attributes (see 'MPI_Keyval_create')
 MPI_ERRORS_ARE_FATAL:: Error handler that forces exit on error
 MPI_ERRORS_RETURN:: Error handler that returns error codes (as value of MPI routine in C and through last argument in Fortran)
 MPI_ERRORS_ABORT:: Error handler that forces exit on error (only aborts local process if the error handler is invoked on a session)
+MPI_CONVERSION_FN_NULL:: Conversion function for 'MPI_Register_datarep' that makes MPI use the native data representation instead of calling a conversion function
+MPI_CONVERSION_FN_NULL_C:: The same for 'MPI_Register_datarep_c'
 
 == MPI Attribute Default Functions
 MPI_COMM_NULL_COPY_FN:: Predefined attribute copy function for communicators

@@ -41,30 +41,6 @@ A call to MPI_Pready_list has the same effect as calling MPI_PREADY for each par
 A call on an active partitioned communication request returns `flag` = true if the operation for the specified partition is complete. The request is not marked as complete or inactive by this procedure; a subsequent call to a completing procedure such as MPI_TEST or MPI_WAIT is required. MPI_Parrived may be called multiple times for a partition and returns `flag` = true when called with a null or inactive `request`. Multiple threads may independently call MPI_Parrived to test different partitions. Calling MPI_Parrived on a request that does not correspond to a partitioned receive operation is erroneous.
 //end::MPI_Parrived[]
 
-//tag::MPI_Comm_revoke[]
-**MPI_Comm_revoke** notifies all MPI processes in the groups associated with a communicator that the communicator is revoked.
-
-The revocation completes non-local MPI operations on `comm` at all MPI processes by raising an error of class MPI_ERR_REVOKED. This procedure is not collective and does not have a matching call on remote MPI processes. All non-failed MPI processes belonging to `comm` will be notified of the revocation despite failures. In a multithreaded application, a thread calling MPI_COMM_IS_REVOKED may return true before the operation that raises the first exception of class MPI_ERR_REVOKED has completed in a concurrent thread.
-//end::MPI_Comm_revoke[]
-
-//tag::MPI_Comm_is_revoked[]
-**MPI_Comm_is_revoked** returns whether a communicator is revoked at the calling process.
-
-This operation is local. It returns `flag` = true if the communicator is revoked and `flag` = false otherwise. In a multithreaded application, a thread calling MPI_COMM_IS_REVOKED may return `flag` = true before the operation that raises the first exception of class MPI_ERR_REVOKED has completed in a concurrent thread.
-//end::MPI_Comm_is_revoked[]
-
-//tag::MPI_Comm_get_failed[]
-**MPI_Comm_get_failed** returns the group of MPI processes from a communicator that are locally known to have failed.
-
-This local procedure returns `failedgrp` containing any MPI process whose failure caused an operation on `comm` to raise a process failure error at the calling process. The returned group may be MPI_GROUP_EMPTY. When an MPI process is a member of `failedgrp`, it is also a member with the same rank in any group produced by a subsequent call to MPI_COMM_GET_FAILED on `comm` at the same calling process. An implementation may update the group of locally known failed MPI processes only when entering a procedure that must raise a fault tolerance error. It is possible that only the calling MPI process has detected the reported failure.
-//end::MPI_Comm_get_failed[]
-
-//tag::MPI_Comm_ack_failed[]
-**MPI_Comm_ack_failed** acknowledges locally notified process failures on a communicator.
-
-This local procedure acknowledges the first `num_to_ack` process failures on `comm`, corresponding to members with ranks lower than `num_to_ack` in the group that would be produced by a concurrent call to MPI_COMM_GET_FAILED. The operation sets `num_acked` to the current number of acknowledged process failures, which may be larger than `num_to_ack` if failures were acknowledged in a prior call. After a process failure is acknowledged, unmatched MPI_ANY_SOURCE receive operations on `comm` that would have raised MPI_ERR_PROC_FAILED_PENDING proceed without raising errors due to that acknowledged failure. Users may query the number of currently acknowledged process failures without side effect by supplying 0 in `num_to_ack`, or may acknowledge all currently known failures by supplying the size of the group of `comm` in `num_to_ack`. Acknowledging failures on a communicator has no effect on collective operations; collective operations may continue to raise errors due to failed processes.
-//end::MPI_Comm_ack_failed[]
-
 //tag::MPI_T_init_thread[]
 **MPI_T_init_thread** initializes the MPI tool information interface and its thread environment.
 
@@ -581,12 +557,6 @@ The `required` parameter specifies the desired level of thread support: `MPI_THR
 
 If the packed size cannot be expressed by the `size` output parameter, it is set to `MPI_UNDEFINED`.
 //end::MPI_Pack_size[]
-
-//tag::MPI_Sizeof[]
-**MPI_Sizeof** is deprecated and superseded by Fortran intrinsic functions `storage_size()` and `c_sizeof()`.
-
-This function returns the size in bytes of the machine representation of a given variable. It is a generic Fortran routine and has a Fortran binding only. If given an array argument, it returns the size of the base element, not the size of the whole array.
-//end::MPI_Sizeof[]
 
 //tag::MPI_Type_get_extent_x[]
 **MPI_Type_get_extent_x** is deprecated and may be removed in a future version of the MPI specification.
@@ -1820,10 +1790,6 @@ If the `datatype` extent cannot be represented in `extent`, it is set to `MPI_UN
 This is a local operation that only registers the data representation for the calling MPI process. The `datarep` identifier can then be passed to MPI_FILE_SET_VIEW, causing subsequent data access operations to call the conversion functions for converting data between file and native representations. If `datarep` is already defined, an error of class `MPI_ERR_DUP_DATAREP` is raised using the default file error handler. The length of a data representation string is limited to `MPI_MAX_DATAREP_STRING`. The conversion functions must be reentrant, are restricted to use byte alignment for all types, and cannot call collective routines or free `datatype`.
 //end::MPI_Register_datarep[]
 
-//tag::MPI_CONVERSION_FN_NULL[]
-**MPI_CONVERSION_FN_NULL** is a predefined constant function pointer that may be passed as either the `read_conversion_fn` or `write_conversion_fn` argument to MPI_REGISTER_DATAREP. When used, MPI will not invoke the corresponding conversion function but will instead perform the requested data access using the native data representation. The large count variant `MPI_CONVERSION_FN_NULL_C` is available for use with MPI_Register_datarep_c.
-//end::MPI_CONVERSION_FN_NULL[]
-
 //tag::MPI_File_set_atomicity[]
 **MPI_File_set_atomicity** sets the consistency semantics for data access operations on file handles created from one collective open.
 
@@ -2243,12 +2209,6 @@ Users are advised not to reuse status fields for values other than those for whi
 
 Users are advised not to reuse status fields for values other than those for which they were intended, as doing so may lead to unexpected results. The `extra_state` argument provided with a generalized request may be used to return information that does not logically belong in status. Modifying values in a status set internally by MPI may lead to unpredictable results and is strongly discouraged.
 //end::MPI_Status_set_error[]
-
-//tag::MPI_F_sync_reg[]
-**MPI_F_sync_reg** is a Fortran-only routine that forces the compiler to flush a cached register value of `buf` back to memory or invalidate the register value.
-
-This routine has no executable statements and is compiled in the MPI library so that a Fortran compiler cannot detect that the routine has an empty body. It has no `ierror` return argument because there is no operation that can fail. This routine may be used to prevent code movement and register optimization problems when using nonblocking operations, one-sided communication, or MPI_BOTTOM with absolute displacements. If only a part of an array is used in a nonblocking routine, passing the whole array to MPI_F_sync_reg is recommended to minimize overhead. This routine need not be called if `MPI_ASYNC_PROTECTS_NONBLOCKING` is `.TRUE.` and the application fully uses the facilities of `ASYNCHRONOUS` arrays.
-//end::MPI_F_sync_reg[]
 
 //tag::MPI_Type_create_f90_complex[]
 **MPI_Type_create_f90_complex** returns a predefined MPI datatype that matches a Fortran COMPLEX variable of KIND `selected_real_kind(p, r)`.
