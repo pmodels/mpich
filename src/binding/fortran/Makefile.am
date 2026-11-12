@@ -91,53 +91,59 @@ endif INSTALL_MPIF77
 
 # ---- install man pages --------------------
 
-SUFFIXES =
-doc1_src_txt = env/mpifort.txt
+# man pages of the C functions in this library (the f2c functions), generated
+# by "make mandoc" from the mansrc made by "autogen.sh --with-doc", or shipped
+# pregenerated in $(srcdir)/man by a release tarball
+doc3_src =
+include $(srcdir)/mansrc/Makefile.mk
 
-#.PHONY: mandoc mandoc-local htmldoc htmldoc-local
-SUFFIXES += .man-phony .html-phony .man1-phony .html1-phony .txt
+SUFFIXES = .man3-phony .html3-phony .adoc
 
 # "make V=1" support for our documentation recipes
 doctextman_verbose = $(doctextman_verbose_$(V))
 doctextman_verbose_ = $(doctextman_verbose_$(AM_DEFAULT_VERBOSITY))
-doctextman_verbose_0 = @echo "   DOCTEXTMAN  " $@;
+doctextman_verbose_0 = @echo "   ASCIIDOCMAN  " $@;
 doctexthtml_verbose = $(doctexthtml_verbose_$(V))
 doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
-doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
+doctexthtml_verbose_0 = @echo "   ASCIIDOCHTML  " $@;
 
-# Build dir paths where the man pages will be created. Will usually be
-# overridden by MPICH make.
-mandoc_path1=${DESTDIR}${sharedir}/man/man1
-mandoc_path3=${DESTDIR}${sharedir}/man/man3
-htmldoc_path1=${DESTDIR}${sharedir}/www/www1
-htmldoc_path3=${DESTDIR}${sharedir}/www/www3
-doctext_docnotes=
+mandoc_path3=$(abs_top_builddir)/man/man3
+# the top-level "make htmldoc" overrides this, so the pages join MPICH's
+# html index and are installed with it
+htmldoc_path3=$(abs_top_builddir)/www/www3
 
-.c.man-phony:
-	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path3) -ext 3 \
-	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
-.c.html-phony:
-	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path3) \
-	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
+.adoc.man3-phony:
+	$(doctextman_verbose)$(ASCIIDOC) -b manpage -D $(mandoc_path3) $<
+.adoc.html3-phony:
+	$(doctexthtml_verbose)$(ASCIIDOC) -b html5 -D $(htmldoc_path3) $<
 
-.txt.man1-phony:
-	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path1) -ext 1 \
-	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
-.txt.html1-phony:
-	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path1) \
-	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
-
-# use mandoc-local target to force directory creation before running DOCTEXT
+# use mandoc-local target to force directory creation before running ASCIIDOC
 mandoc:
-	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
 	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
 	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
-mandoc-local: $(doc1_src_txt:.txt=.man1-phony)
+mandoc-local: $(doc3_src:.adoc=.man3-phony)
 
-# use htmldoc-local target to force directory creation before running DOCTEXT
 htmldoc:
-	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
-	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
+	test -d $(htmldoc_path3) || $(MKDIR_P) $(htmldoc_path3)
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
-htmldoc-local: $(doc1_src_txt:.txt=.html1-phony)
+htmldoc-local: $(doc3_src:.adoc=.html3-phony)
 
+if INSTALL_DOCS
+install-data-local: install-man-local
+endif
+install-man-local:
+	@dir= ; \
+	if test -d $(builddir)/man/man3 ; then \
+	    dir=$(builddir)/man/man3 ; \
+	elif test -d $(srcdir)/man/man3 ; then \
+	    dir=$(srcdir)/man/man3 ; \
+	fi ; \
+	if test -n "$$dir" ; then \
+	    $(MKDIR_P) $(DESTDIR)$(mandir)/man3 ; \
+	    for f in $$dir/*.3 ; do \
+	        if test -f $$f ; then \
+	            echo "$(INSTALL_DATA) $$f $(DESTDIR)$(mandir)/man3" ; \
+	            $(INSTALL_DATA) $$f $(DESTDIR)$(mandir)/man3 ; \
+	        fi ; \
+	    done ; \
+	fi

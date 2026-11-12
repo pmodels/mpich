@@ -1199,7 +1199,14 @@ fc_shlib_conf=fc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
 AC_SUBST_FILE([fc_shlib_conf])
 
-
+# man pages of the C functions built in this library (e.g. MPI_Comm_c2f)
+AC_PATH_PROG(ASCIIDOC,asciidoctor,false)
+AC_SUBST(ASCIIDOC)
+AC_ARG_ENABLE([doc],
+              [AS_HELP_STRING([--disable-doc],
+                              [Do not install man pages])],
+              [],[enable_doc=yes])
+AM_CONDITIONAL([INSTALL_DOCS],[test "X$enable_doc" = "Xyes"])
 
 # ---------------------------------------------
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
