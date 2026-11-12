@@ -829,11 +829,13 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     # NOTE: is_large check is to exclude MPI_Op_create_c
     if '_fortran_MPII' in func and not is_large:
         if RE.match(r'mpi_op_create', func['name'], re.IGNORECASE):
-            c_name = "MPII_op_create"
+            c_name = "MPII_op_create_f08"
         elif RE.match(r'mpi_grequest_start', func['name'], re.IGNORECASE):
             c_name = "MPII_greq_start_f08"
         else:
             c_name = re.sub(r'MPI_', r'MPII_', func['name'])
+    elif RE.match(r'mpi_op_create$', func['name'], re.IGNORECASE) and is_large:
+        c_name = "MPII_op_create_c_f08"
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name

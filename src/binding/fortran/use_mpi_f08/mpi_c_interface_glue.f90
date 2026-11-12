@@ -28,6 +28,8 @@ public :: MPIR_Init_fortran
 public :: MPII_Attr_convert_builtin
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
+public :: MPII_f08_op_trampoline
+public :: MPII_f08_op_trampoline_c
 
 contains
 
@@ -85,5 +87,47 @@ subroutine MPIR_Fortran_string_c2f(cstring, fstring)
         fstring(j:j) = ' '
     end do
 end subroutine MPIR_Fortran_string_c2f
+
+! ---- user op trampolines ----
+! C calls these instead of the user's MPI_User_function: the compiler decides how
+! a non-BIND(C) procedure receives its VALUE arguments (ifort -assume std_value
+! passes a reference), so the last call has to be made from Fortran.
+subroutine MPII_f08_op_trampoline(fn, invec, inoutvec, len, datatype) bind(C, name="MPII_f08_op_trampoline")
+    use, intrinsic :: iso_c_binding, only : c_funptr, c_ptr, c_int, c_f_procpointer
+    use :: mpi_f08_types, only : MPI_Datatype
+    use :: mpi_f08_callbacks, only : MPI_User_function
+    implicit none
+    type(c_funptr), value :: fn
+    type(c_ptr), value :: invec, inoutvec
+    integer(c_int), value :: len, datatype
+    procedure(MPI_User_function), pointer :: user_fn
+    integer :: len_f
+    type(MPI_Datatype) :: dt
+
+    call c_f_procpointer(fn, user_fn)
+    len_f = len
+    dt%MPI_VAL = datatype
+    call user_fn(invec, inoutvec, len_f, dt)
+end subroutine MPII_f08_op_trampoline
+
+subroutine MPII_f08_op_trampoline_c(fn, invec, inoutvec, len, datatype) bind(C, name="MPII_f08_op_trampoline_c")
+    use, intrinsic :: iso_c_binding, only : c_funptr, c_ptr, c_int, c_f_procpointer
+    use :: mpi_f08_types, only : MPI_Datatype
+    use :: mpi_f08_callbacks, only : MPI_User_function_c
+    use :: mpi_f08_compile_constants, only : MPI_COUNT_KIND
+    implicit none
+    type(c_funptr), value :: fn
+    type(c_ptr), value :: invec, inoutvec
+    integer(kind=MPI_COUNT_KIND), value :: len
+    integer(c_int), value :: datatype
+    procedure(MPI_User_function_c), pointer :: user_fn
+    integer(kind=MPI_COUNT_KIND) :: len_f
+    type(MPI_Datatype) :: dt
+
+    call c_f_procpointer(fn, user_fn)
+    len_f = len
+    dt%MPI_VAL = datatype
+    call user_fn(invec, inoutvec, len_f, dt)
+end subroutine MPII_f08_op_trampoline_c
 
 end module mpi_c_interface_glue
