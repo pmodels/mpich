@@ -7,9 +7,13 @@
 !
 ! Test user-defined operations.  This tests a simple commutative operation
 !
-      subroutine uop( cin, cout, count, datatype )
+      module uallreduce_uop
+      contains
+      subroutine uop( cin_p, cout_p, count, datatype )
       use mpi_f08
-      integer cin(*), cout(*)
+      use, intrinsic :: iso_c_binding, only : c_ptr, c_f_pointer
+      type(c_ptr), value :: cin_p, cout_p
+      integer, pointer :: cin(:), cout(:)
       integer count
       TYPE(MPI_Datatype) datatype
       integer i
@@ -19,14 +23,18 @@
          return
       endif
 
+      call c_f_pointer( cin_p, cin, [count] )
+      call c_f_pointer( cout_p, cout, [count] )
+
       do i=1, count
          cout(i) = cin(i) + cout(i)
       enddo
-      end
+      end subroutine
+      end module
 
       program main
       use mpi_f08
-      external uop
+      use uallreduce_uop
       integer ierr, errs
       integer count, vin(65000), vout(65000), i, size
       TYPE(MPI_Op) sumop

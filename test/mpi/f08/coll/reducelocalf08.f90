@@ -7,9 +7,13 @@
 !
 ! Test Fortran MPI_Reduce_local with MPI_OP_SUM and with user-defined operation.
 !
-      subroutine user_op( invec, outvec, count, datatype )
+      module reducelocal_uop
+      contains
+      subroutine user_op( invec_p, outvec_p, count, datatype )
       use mpi_f08
-      integer invec(*), outvec(*)
+      use, intrinsic :: iso_c_binding, only : c_ptr, c_f_pointer
+      type(c_ptr), value :: invec_p, outvec_p
+      integer, pointer :: invec(:), outvec(:)
       integer count
       TYPE(MPI_Datatype) datatype
       integer ii
@@ -19,18 +23,22 @@
          return
       endif
 
+      call c_f_pointer( invec_p, invec, [count] )
+      call c_f_pointer( outvec_p, outvec, [count] )
+
       do ii=1, count
          outvec(ii) = invec(ii) * 2 + outvec(ii)
       enddo
 
-      end
+      end subroutine
+      end module
 
       program main
       use mpi_f08
+      use reducelocal_uop
       integer max_buf_size
       parameter (max_buf_size=65000)
       integer vin(max_buf_size), vout(max_buf_size)
-      external user_op
       integer ierr, errs
       integer count
       TYPE(MPI_Op) myop

@@ -5,9 +5,13 @@
 
 ! This file created from test/mpi/f77/coll/redscatf.f with f77tof90
 
-      subroutine uop( cin, cout, count, datatype )
+      module redscat_uop
+      contains
+      subroutine uop( cin_p, cout_p, count, datatype )
       use mpi_f08
-      integer cin(*), cout(*)
+      use, intrinsic :: iso_c_binding, only : c_ptr, c_f_pointer
+      type(c_ptr), value :: cin_p, cout_p
+      integer, pointer :: cin(:), cout(:)
       integer count
       TYPE(MPI_Datatype) datatype
       integer i
@@ -17,10 +21,14 @@
          return
       endif
 
+      call c_f_pointer( cin_p, cin, [count] )
+      call c_f_pointer( cout_p, cout, [count] )
+
       do i=1, count
          cout(i) = cin(i) + cout(i)
       enddo
-      end
+      end subroutine
+      end module
 !
 ! Test of reduce scatter.
 !
@@ -32,6 +40,7 @@
 
       program main
       use mpi_f08
+      use redscat_uop
       integer errs, ierr, toterr
       integer maxsize
       parameter (maxsize=1024)
@@ -39,7 +48,6 @@
       integer size, rank, i, sumval
       TYPE(MPI_Comm) comm
       TYPE(MPI_Op) sumop
-      external uop
 
       errs = 0
 
