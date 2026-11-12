@@ -45,14 +45,17 @@ cvars:
 
     - name        : MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK
       category    : CH4_OFI
-      type        : boolean
-      default     : false
+      type        : int
+      default     : -1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         When true, contiguous device buffers do not force packing, enabling RDMA
-        read/write rendezvous protocols directly.
+        read/write rendezvous protocols directly. When unset (-1), packing is
+        skipped if the provider reports peer-to-peer HMEM support through
+        FI_OPT_FI_HMEM_P2P, but only when MPIR_CVAR_CH4_OFI_RNDV_SELECTION is
+        efa; otherwise packing is not skipped without explicitly requesting it.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
