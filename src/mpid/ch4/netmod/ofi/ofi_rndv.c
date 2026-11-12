@@ -51,6 +51,8 @@ static int get_rndv_protocol(bool send_need_pack, bool recv_need_pack, MPI_Aint 
         return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write;
     } else if (recv_need_pack) {
         return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
+    } else if (MPIDI_OFI_global.num_nics > 1 && recv_data_sz > MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
     } else if (recv_data_sz < MPIDI_OFI_global.max_msg_size) {
         return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct;
     } else {
