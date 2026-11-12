@@ -580,67 +580,37 @@ information to configure with the FCFLAGS environment variable.])
    fi
 
    #
-   # Some Fortran compilers now pass CHARACTER length as a size_t instead
-   # of as an int (gfortran since GCC 8, Intel Fortran).  Reading a size_t
-   # length as int usually still works, since the value is in a register or
-   # in its own 8-byte stack slot.  It fails on ABIs that pack stack
-   # arguments (Apple arm64) once two or more lengths are on the stack, e.g.
-   # in MPI_Comm_spawn.  By default (auto) a run test picks the type: int if
-   # it works, otherwise size_t.  With --enable-f77characterlen=yes the type
-   # is chosen from the compiler name instead.
+   # The C type of the hidden CHARACTER length arguments.  Most current
+   # compilers (gfortran since GCC 8, Intel Fortran) pass size_t.  Reading a
+   # size_t length as int usually still works, since the value is in a
+   # register or in its own 8-byte stack slot.  It fails on ABIs that pack
+   # stack arguments (Apple arm64) once two or more lengths are on the stack,
+   # e.g. in MPI_Comm_spawn.  By default (auto) a run test picks the type:
+   # int if it works, otherwise size_t.  int or size_t forces that type.
    AC_ARG_ENABLE(f77characterlen,
-       AS_HELP_STRING([--enable-f77characterlen],
-           [Select between int and size_t for the length of a Fortran CHARACTER.  The default (auto) uses a run test, int or size_t forces that type, yes selects it from the F77 compiler name, and no uses int.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=auto)
-
-   # Set the default
-   f77_uses_int_for_str=default
+       AS_HELP_STRING([--enable-f77characterlen=auto|int|size_t],
+           [Select the C type for the length of a Fortran CHARACTER passed between C and Fortran.  The default, auto (also yes), uses a run test that picks int if it works and size_t otherwise, and falls back to int when cross-compiling.  int or size_t forces that type; no is the same as int.  Provided for experts.]),,enable_f77characterlen=auto)
 
    case "$enable_f77characterlen" in
-      yes|no)
-      ;;
-      auto)
+      auto|yes)
          PAC_F77_CHARACTER_LEN_TYPE
+         f77_character_len_type=int
          if test "$pac_cv_prog_f77_character_len_type" = "size_t" ; then
-             f77_uses_int_for_str=no
-             enable_f77characterlen=yes
+             f77_character_len_type=size_t
          fi
       ;;
-      size_t)
-         f77_uses_int_for_str=no
-	 enable_f77characterlen=yes
+      int|no)
+         f77_character_len_type=int
       ;;
-      int)
-         f77_uses_int_for_str=yes
-	 enable_f77characterlen=yes
+      size_t)
+         f77_character_len_type=size_t
       ;;
       *)
-      AC_MSG_ERROR([Invalid value provided for --enable-f77characterlen])
+         AC_MSG_ERROR([Invalid value provided for --enable-f77characterlen])
       ;;
    esac
 
-   # If we might change the size (enable) and we haven't set the choice,
-   # attempt to determine it from the compiler name.  Risky, but we haven't
-   # found a reliable way to do this with test codes.
-   if test "$enable_f77characterlen" = "yes" -a \
-           "$f77_uses_int_for_str" = "default" ; then
-       f77_uses_int_for_str=yes
-       f77Basename=`basename $F77`
-       case $f77Basename in
-       ifort*)
-       f77_uses_int_for_str=no
-       ;;
-       gfortran*)
-       f77_uses_int_for_str=no
-       ;;
-       esac
-   fi
-   # This test is disabled for now.  Despite information in documentation
-   # on gfortran, it appears to pass lengths as int, at least in some
-   # builds (it used movl when tested in 2/2013).  Tests that failed
-   # included infotestf.f, in a call to mpi_info_get.
-   # Leave this as a place holder until a proper test can be determined.
-   if test  "$enable_f77characterlen" = "yes" -a \
-            "$f77_uses_int_for_str" = "no" ; then
+   if test "$f77_character_len_type" = "size_t" ; then
        AC_DEFINE(USE_FORT_STR_LEN_SIZET,1,[Define if the length of a CHARACTER*(*) string in Fortran should be passed as size_t instead of int] )
    fi
 

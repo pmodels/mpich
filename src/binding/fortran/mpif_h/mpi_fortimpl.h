@@ -60,16 +60,10 @@ int MPIR_Status_c2f08_impl(const MPI_Status * c_status, MPI_F08_status * f08_sta
  */
 /*
  * Many Fortran compilers at some point changed from passing the length of
- * a CHARACTER*(N) in an int to using a size_t.  This definition allows
- * us to select either size_t or int.  Determining which one the compiler
- * is using may require reading the documentation or examining the generated
- * code.
- *
- * The default is left as "int" because that is the correct legacy choice.
- * Configure may need to check the compiler vendor and version to decide
- * whether to select size_t.  And despite documentation to the contrary,
- * in our experiments, gfortran used int instead of size_t, which was
- * verified by inspecting the assembly code.
+ * a CHARACTER*(N) in an int to using a size_t (gfortran since GCC 8).
+ * Configure selects the type with a run test (PAC_F77_CHARACTER_LEN_TYPE)
+ * and defines USE_FORT_STR_LEN_SIZET when int does not work; the
+ * --enable-f77characterlen option overrides it.
  */
 #ifdef USE_FORT_STR_LEN_SIZET
 #define FORT_SIZE_INT size_t
