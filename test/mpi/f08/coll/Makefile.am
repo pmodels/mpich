@@ -10,6 +10,7 @@ include $(top_srcdir)/Makefile_f08.mtest
 AM_DEFAULT_SOURCE_EXT = .f90
 
 noinst_PROGRAMS = uallreducef08       \
+                  uallreduceopf08     \
                   exscanf08           \
                   alltoallwf08        \
                   inplacef08          \
