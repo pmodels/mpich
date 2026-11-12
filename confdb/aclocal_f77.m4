@@ -1409,6 +1409,95 @@ if test -n "$true_val" -a -n "$false_val" ; then
     AC_DEFINE_UNQUOTED(F77_FALSE_VALUE,$false_val,[The value of false in Fortran])
 fi
 ])
+dnl
+dnl PAC_F77_CHARACTER_LEN_TYPE - Determine the C type that receives the hidden
+dnl length of a Fortran CHARACTER argument.
+dnl
+dnl Sets pac_cv_prog_f77_character_len_type to int, size_t or unknown.
+dnl
+dnl A length passed as size_t and read as int usually still gives the right
+dnl value, since it sits in a register or in its own 8-byte stack slot.  The
+dnl Apple arm64 ABI packs stack arguments to their natural size instead, so
+dnl once two or more lengths are passed on the stack, an int-declared callee
+dnl reads the wrong bytes.  The test passes 9 pointer arguments and 2 strings,
+dnl which puts both lengths on the stack on every common 64-bit ABI, and
+dnl checks whether int or size_t reads them correctly.  int is preferred when
+dnl both work.
+dnl
+AC_DEFUN([PAC_F77_CHARACTER_LEN_TYPE],[
+AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
+AC_MSG_CHECKING([for the C type of Fortran CHARACTER lengths])
+AC_CACHE_VAL(pac_cv_prog_f77_character_len_type,[
+pac_cv_prog_f77_character_len_type=unknown
+PAC_LANG_PUSH_C_PIE
+AC_COMPILE_IFELSE([
+    AC_LANG_SOURCE([
+#include <stdio.h>
+#include <stddef.h>
+#ifdef F77_NAME_UPPER
+#define fslenint_ FSLENINT
+#define fslensz_ FSLENSZ
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define fslenint_ fslenint
+#define fslensz_ fslensz
+#endif
+void fslenint_(char *a, char *b, int *r, int *p4, int *p5, int *p6, int *p7,
+               int *p8, int *p9, int la, int lb);
+void fslensz_(char *a, char *b, int *r, int *p4, int *p5, int *p6, int *p7,
+              int *p8, int *p9, size_t la, size_t lb);
+static int int_ok = 0;
+void fslenint_(char *a, char *b, int *r, int *p4, int *p5, int *p6, int *p7,
+               int *p8, int *p9, int la, int lb)
+{
+    int_ok = (la == 3 && lb == 5);
+}
+void fslensz_(char *a, char *b, int *r, int *p4, int *p5, int *p6, int *p7,
+              int *p8, int *p9, size_t la, size_t lb)
+{
+    FILE *f = fopen("conftestval", "w");
+    if (!f) return;
+    fprintf(f, "%d %d\n", int_ok, (la == 3 && lb == 5));
+    fclose(f);
+}
+    ])
+],[
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    saved_LIBS="$LIBS"
+    LIBS="pac_conftest.$OBJEXT $saved_LIBS"
+    AC_LANG_PUSH([Fortran 77])
+    rm -f conftestval
+    AC_RUN_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            character*3 a
+            character*5 b
+            integer i
+            a = 'abc'
+            b = 'defgh'
+            i = 0
+            call fslenint(a, b, i, i, i, i, i, i, i)
+            call fslensz(a, b, i, i, i, i, i, i, i)
+            end
+        ])
+    ],[
+        case "`cat conftestval 2>/dev/null`" in
+            "1 "*) pac_cv_prog_f77_character_len_type=int ;;
+            "0 1") pac_cv_prog_f77_character_len_type=size_t ;;
+        esac
+    ],[
+        AC_MSG_WARN([Failed to build/run program to determine the type of Fortran CHARACTER lengths.])
+    ],[
+        # Cross-compiling: the caller falls back to its default.
+        :
+    ])
+    AC_LANG_POP([Fortran 77])
+    LIBS="$saved_LIBS"
+    rm -f pac_conftest.$OBJEXT conftestval
+])
+PAC_LANG_POP_C_PIE
+])
+AC_MSG_RESULT([$pac_cv_prog_f77_character_len_type])
+])
 dnl/*D
 dnl PAC_PROG_F77_MISMATCHED_ARGS([option],[AllOnly]) - Determine whether the 
 dnl Fortran compiler allows routines to be called with different 
