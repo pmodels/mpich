@@ -274,6 +274,7 @@ Makefile.am-stamp
 
 # /doc/mansrc/
 /doc/mansrc/createhtmlindex
+/doc/mansrc/binding/
 
 # /doc/namepub/
 /doc/namepub/namepub.ps

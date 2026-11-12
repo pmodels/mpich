@@ -184,14 +184,19 @@ def dump_Makefile_mk(f):
             else:
                 print("    %s" % f, file=Out)
 
-        n = len(G.doc3_src)
-        if n > 0:
-            print("doc3_src+= \\", file=Out)
-            for i, f in enumerate(G.doc3_src):
-                if i < n - 1:
-                    print("    %s \\" % f, file=Out)
-                else:
-                    print("    %s" % f, file=Out)
+# lists the man page sources for "make mandoc" and "make htmldoc"; written
+# even when empty, since Makefile.am includes it
+def dump_doc3_src_mk(f, doc3_src):
+    print("  --> [%s]" % f)
+    G.check_write_path(f)
+    with open(f, "w") as Out:
+        for l in G.copyright_mk:
+            print(l, file=Out)
+
+        print("doc3_src +=", end='', file=Out)
+        for a in doc3_src:
+            print(" \\\n    %s" % a, end='', file=Out)
+        print("", file=Out)
 
 def dump_mpir_impl_h(f):
     def dump_mpix_symbols():

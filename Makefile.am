@@ -484,6 +484,10 @@ mandoc-local: $(doc1_src:.adoc=.man1-phony) \
 		fi \
 	    fi \
 	done
+## the Fortran binding keeps its man pages and installs them itself
+	if test -n "$(fortrandir)" ; then \
+	    ( cd $(fortrandir) && $(MAKE) $(AM_MAKEFLAGS) mandoc ) ; \
+	fi
 	$(srcdir)/maint/alias_mancnst -srcdir=$(top_srcdir)
 
 # use htmldoc-local target to force directory creation before running ASCIIDOC
@@ -512,6 +516,10 @@ htmldoc-local: $(doc1_src:.adoc=.html1-phony) \
 		fi \
 	    fi \
 	done
+	if test -n "$(fortrandir)" ; then \
+	    ( cd $(fortrandir) && $(MAKE) $(AM_MAKEFLAGS) \
+		htmldoc_path3=$(htmldoc_path3) htmldoc ) ; \
+	fi
 	$(srcdir)/maint/createhtmlindex -wwwroot=$(top_builddir) -srcdir=$(top_srcdir)
 
 # install-man does not have a special "-local" target for some reason

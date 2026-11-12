@@ -259,7 +259,7 @@ if ($has_asciidoctor || $has_latex) {
     print("===> Creating secondary codebase for the docs... ");
     run_cmd("mkdir ${expdir}-build");
     chdir("${expdir}-build");
-    run_cmd("${expdir}/configure --with-device=ch4:stubnm --disable-fortran --disable-cxx");
+    run_cmd("${expdir}/configure --with-device=ch4:stubnm --disable-cxx");
     print("done\n");
 
     if ($has_asciidoctor) {
@@ -267,6 +267,8 @@ if ($has_asciidoctor || $has_latex) {
         run_cmd("make mandoc && make htmldoc");
         run_cmd("cp -a man ${expdir}");
         run_cmd("cp -a www ${expdir}");
+        # the Fortran binding installs its own man pages
+        run_cmd("cp -a src/binding/fortran/man ${expdir}/src/binding/fortran");
         print("done\n");
     }
 
