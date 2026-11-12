@@ -9,6 +9,8 @@ from local_python.binding_c import *
 from local_python import RE
 from local_python.info_hints import collect_info_hint_blocks
 import glob
+import os
+import shutil
 
 def main():
     # currently support: -single-source
@@ -30,9 +32,12 @@ def main():
 
     do_doc = False
     mansrc_dir = 'doc/mansrc/binding'
+    # the f2c functions are built in libmpifort, so their man pages go with the Fortran binding
+    f2c_mansrc_dir = 'src/binding/fortran/mansrc/binding'
     if 'output-mansrc' in G.opts:
         do_doc = True
         G.check_write_path(mansrc_dir + '/')
+        G.check_write_path(f2c_mansrc_dir + '/')
         G.hints = collect_info_hint_blocks("src")
         G.semantics = collect_mansrc_semantics("doc/mansrc/semantics.adoc")
         collect_function_notes("doc/mansrc/funcnotes.txt")
@@ -83,10 +88,18 @@ def main():
         G.check_write_path(file_path)
         dump_c_file(file_path, G.out)
 
+    # writes the man page source of func into dir_path, returns the file path
+    def dump_mansrc(func, dir_path):
+        manpage_out = []
+        dump_manpage(func, manpage_out)
+        f = get_mansrc_file_path(func, dir_path)
+        with open(f, "w") as Out:
+            for l in manpage_out:
+                print(l.rstrip(), file=Out)
+        return f
+
     def dump_func(func, do_doc):
         G.err_codes = {}
-        if do_doc:
-            manpage_out = []
 
         # dumps the code to G.out array
         dump_mpi_c(func, False)
@@ -94,12 +107,7 @@ def main():
             dump_mpi_c(func, True)
 
         if do_doc:
-            dump_manpage(func, manpage_out)
-            f = get_mansrc_file_path(func, mansrc_dir)
-            with open(f, "w") as Out:
-                for l in manpage_out:
-                    print(l.rstrip(), file=Out)
-            G.doc3_src.append(f)
+            G.doc3_src.append(dump_mansrc(func, mansrc_dir))
             if func['_has_poly']:
                 G.poly_aliases.append(func['name'])
 
@@ -218,9 +226,22 @@ def main():
         G.out.append("#include \"mpi_fortimpl.h\"")
         G.out.append("")
 
+        f2c_doc3_src = []
         for func in f2c_func_list:
             dump_func_f2c(func)
+            if do_doc:
+                G.err_codes = {}
+                check_func_directives(func)
+                # relative to the Fortran binding's top srcdir
+                f = dump_mansrc(func, f2c_mansrc_dir)
+                f2c_doc3_src.append(re.sub(r'^src/binding/fortran/', '', f))
         dump_out_no_make(G.f77_dir + "/f2c.c")
+
+        if do_doc:
+            # the man page sources include ../semantics.adoc and ../docnotes.adoc
+            for a in ["semantics.adoc", "docnotes.adoc"]:
+                shutil.copy("doc/mansrc/" + a, os.path.dirname(f2c_mansrc_dir))
+        dump_doc3_src_mk("src/binding/fortran/mansrc/Makefile.mk", f2c_doc3_src)
 
     # ----
     dump_c_binding()
