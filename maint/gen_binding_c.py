@@ -240,6 +240,7 @@ def main():
     G.check_write_path("src/mpi_t")
     G.check_write_path("src/include/mpi_proto.h")
     dump_Makefile_mk("%s/Makefile.mk" % G.c_dir)
+    dump_doc3_src_mk(mansrc_dir + "/Makefile.mk", G.doc3_src)
     dump_mpir_impl_h("src/include/mpir_impl.h")
     dump_mpir_io_impl_h("src/include/mpir_io_impl.h")
     dump_errnames_txt("%s/errnames.txt" % G.c_dir)
