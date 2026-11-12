@@ -44,6 +44,7 @@ noinst_PROGRAMS =  \
     sendflood      \
     sendrecv2      \
     sendrecv3      \
+    sendrecv_struct \
     waitany_null   \
     probe_unexp    \
     probenull      \

@@ -334,6 +334,7 @@ pt2pt/sendall
 pt2pt/sendflood
 pt2pt/sendrecv2
 pt2pt/sendrecv3
+pt2pt/sendrecv_struct
 pt2pt/waitany_null
 pt2pt/waittestnull
 pt2pt/send_tests
