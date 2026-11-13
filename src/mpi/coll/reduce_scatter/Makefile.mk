@@ -12,4 +12,5 @@ mpi_core_sources +=											\
     src/mpi/coll/reduce_scatter/reduce_scatter_intra_pairwise.c				\
     src/mpi/coll/reduce_scatter/reduce_scatter_intra_recursive_doubling.c		\
     src/mpi/coll/reduce_scatter/reduce_scatter_intra_noncommutative.c				\
+    src/mpi/coll/reduce_scatter/reduce_scatter_intra_bine.c                         \
     src/mpi/coll/reduce_scatter/reduce_scatter_inter_remote_reduce_local_scatter.c

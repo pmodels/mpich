@@ -9,6 +9,8 @@
 
 mpi_core_sources += \
     src/mpi/coll/reduce/reduce_intra_binomial.c \
+    src/mpi/coll/reduce/reduce_intra_bine_lat.c \
+    src/mpi/coll/reduce/reduce_intra_bine_bdw.c \
     src/mpi/coll/reduce/reduce_intra_reduce_scatter_gather.c \
     src/mpi/coll/reduce/reduce_intra_smp.c \
     src/mpi/coll/reduce/reduce_intra_circ_graph.c \

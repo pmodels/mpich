@@ -114,7 +114,6 @@ cvars:
 
 int MPIR_Nbc_progress_hook_id = 0;
 
-
 /* table of all collective algorithms */
 MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 
@@ -137,6 +136,13 @@ int *MPIR_Coll_algo_counters;
                             (int) cvar##_topology_aware_k == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K && \
                             (int) cvar##_topology_wave == MPIR_TREE_TYPE_TOPOLOGY_WAVE)
 
+#define CHECK_BINE_TYPE_CVAR(cvar) \
+    MPL_COMPILE_TIME_ASSERT((int) cvar##_permute == MPIR_BINE_TYPE_PERMUTE && \
+                            (int) cvar##_send_remap == MPIR_BINE_TYPE_SEND_REMAP && \
+                            (int) cvar##_block_by_block == MPIR_BINE_TYPE_BLOCK_BY_BLOCK)
+#define CHECK_BINE_TYPE_CVAR_TWO_BLOCKS(cvar) \
+    MPL_COMPILE_TIME_ASSERT((int) cvar##_two_blocks == MPIR_BINE_TYPE_TWO_BLOCKS)
+
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -151,6 +157,12 @@ int MPII_Coll_init(void)
     CHECK_TREE_TYPE_CVAR_TOPO(MPIR_CVAR_BCAST_TREE_TYPE);
     CHECK_TREE_TYPE_CVAR(MPIR_CVAR_IREDUCE_TREE_TYPE);
     CHECK_TREE_TYPE_CVAR_TOPO(MPIR_CVAR_IREDUCE_TREE_TYPE);
+
+    /* The BINE_TYPE CVARs are passed as MPIR_Bine_type_t, so their enum values must
+     * list the bine types in the same order */
+    CHECK_BINE_TYPE_CVAR(MPIR_CVAR_ALLGATHER_BINE_TYPE);
+    CHECK_BINE_TYPE_CVAR_TWO_BLOCKS(MPIR_CVAR_ALLGATHER_BINE_TYPE);
+    CHECK_BINE_TYPE_CVAR(MPIR_CVAR_REDUCE_SCATTER_BINE_TYPE);
 
     /* register non blocking collectives progress hook */
     mpi_errno = MPIR_Progress_hook_register(-1, MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);

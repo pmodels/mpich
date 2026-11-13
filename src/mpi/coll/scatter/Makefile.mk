@@ -10,4 +10,5 @@
 mpi_core_sources +=									\
     src/mpi/coll/scatter/scatter_intra_binomial.c			\
     src/mpi/coll/scatter/scatter_inter_linear.c \
-    src/mpi/coll/scatter/scatter_inter_remote_send_local_scatter.c
+    src/mpi/coll/scatter/scatter_inter_remote_send_local_scatter.c \
+    src/mpi/coll/scatter/scatter_intra_bine.c

@@ -24,6 +24,14 @@ typedef enum MPIR_Tree_type_t {
     MPIR_TREE_TYPE_TOPOLOGY_WAVE,
 } MPIR_Tree_type_t;
 
+/* enumerator for different bine tree types */
+typedef enum MPIR_Bine_type_t {
+    MPIR_BINE_TYPE_PERMUTE = 0,
+    MPIR_BINE_TYPE_SEND_REMAP,
+    MPIR_BINE_TYPE_BLOCK_BY_BLOCK,
+    MPIR_BINE_TYPE_TWO_BLOCKS,
+} MPIR_Bine_type_t;
+
 /* enumerator for different recexch types */
 enum {
     MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER = 0,
