@@ -70,7 +70,7 @@ static int order_multi_nic_by_pref(int pref);
 #ifdef HAVE_LIBFABRIC_NIC
 static bool is_nic_pci_valid(struct fi_info *info);
 static bool try_set_nic_close_by_gpu(MPIDI_OFI_nic_info_t * nics, int nic_count);
-static int set_nic_info(void);
+static void set_nic_info(void);
 #endif
 
 /* ================================== */
@@ -202,8 +202,7 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
             }
             if (all_valid) {
                 /* determine close via nic_pci */
-                mpi_errno = set_nic_info();
-                MPIR_ERR_CHECK(mpi_errno);
+                set_nic_info();
             } else {
                 /* just choose the first nic */
                 MPIDI_OFI_global.nic_info[0].close = 1;
@@ -652,7 +651,7 @@ static void set_nic_close_by_cpu(MPIDI_OFI_nic_info_t * nics, int nic_count)
     }
 }
 
-static int set_nic_info(void)
+static void set_nic_info(void)
 {
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
     int nic_count = MPIDI_OFI_global.num_nics_available;
@@ -661,8 +660,6 @@ static int set_nic_info(void)
     if (!MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY || !try_set_nic_close_by_gpu(nics, nic_count)) {
         set_nic_close_by_cpu(nics, nic_count);
     }
-
-    return MPI_SUCCESS;
 }
 
 #endif
