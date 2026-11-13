@@ -121,6 +121,8 @@ endif INSTALL_MPIF77
 # pregenerated in $(srcdir)/man by a release tarball
 doc3_src =
 include $(srcdir)/mansrc/Makefile.mk
+# the Fortran-only routines, which have no C function to generate a page from
+doc3_src += doc/MPI_F_sync_reg.adoc doc/MPI_Sizeof.adoc
 
 SUFFIXES = .man3-phony .html3-phony .adoc
 

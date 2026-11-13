@@ -1,0 +1,51 @@
+= MPI_Sizeof(3)
+:doctype: manpage
+:man manual: Library Function Manual
+:man source: MPICH
+
+== Name
+MPI_Sizeof - Returns the size of a variable's machine representation (Fortran only, deprecated)
+
+== Synopsis
+[source,Fortran]
+----
+USE mpi_f08
+MPI_Sizeof(x, size, ierror)
+    TYPE(*), DIMENSION(..) :: x
+    INTEGER, INTENT(OUT) :: size
+    INTEGER, OPTIONAL, INTENT(OUT) :: ierror
+----
+
+[source,Fortran]
+----
+USE mpi
+MPI_SIZEOF(X, SIZE, IERROR)
+    <type> X
+    INTEGER SIZE, IERROR
+----
+
+== Input Parameters
+_x_:: a Fortran variable of numeric intrinsic type (choice)
+
+== Output Parameters
+_size_:: size of machine representation of that type (integer)
+
+== Description
+**MPI_Sizeof** is deprecated. Use the Fortran intrinsics `storage_size()` or
+`c_sizeof()` instead.
+
+**MPI_Sizeof** returns the size in bytes of the machine representation of
+`x`. It is a generic Fortran routine and has no C binding. For an array
+argument, it returns the size of one element, not of the whole array.
+
+== Notes
+It is not available through `mpif.h`, which cannot declare generic routines.
+
+With `USE mpi`, MPICH accepts CHARACTER, LOGICAL, INTEGER*1, INTEGER*2,
+INTEGER*4, INTEGER*8, REAL*4, REAL*8, COMPLEX*8 and COMPLEX*16 variables,
+as scalars or one-dimensional arrays. For an array of higher rank, pass one
+of its elements.
+
+With `USE mpi_f08`, MPICH accepts CHARACTER, LOGICAL, the INTEGER kinds
+int8 to int64, and the REAL and COMPLEX kinds real32, real64 and (when the
+compiler has it) real128, of any rank.
