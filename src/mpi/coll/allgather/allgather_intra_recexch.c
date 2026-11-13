@@ -213,7 +213,8 @@ static int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
             MPIR_ERR_CHECK(mpi_errno);
         }
         /* wait on prev recvs */
-        MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
+        mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (is_halving)
             phase--;
