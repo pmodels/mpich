@@ -574,7 +574,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     coll_bufsize = atoi(value);
     ADIOI_Free(value);
 
-    if (gpfsmpio_pthreadio == 1) {
+    if (romio_pthreadio == 1) {
         /* ROMIO will spawn an additional thread. both threads use separate
          * halves of the collective buffer*/
         coll_bufsize = coll_bufsize / 2;
@@ -614,7 +614,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
 
     write_buf = fd->io_buf;
-    if (gpfsmpio_pthreadio == 1) {
+    if (romio_pthreadio == 1) {
         write_buf2 = fd->io_buf + coll_bufsize;
     }
 
@@ -671,7 +671,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     done = 0;
     off = st_loc;
 
-    if (gpfsmpio_pthreadio == 1)
+    if (romio_pthreadio == 1)
         io_thread = pthread_self();
 
 #ifdef PROFILE
@@ -794,7 +794,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
             char round[50];
             snprintf(round, sizeof(round), "two-phase-round=%d", m);
             setenv("LIBIOLOG_EXTRA_INFO", round, 1);
-            if (gpfsmpio_pthreadio == 1) {
+            if (romio_pthreadio == 1) {
                 /* there is no such thing as "invalid pthread identifier", so
                  * we'll use pthread_self() instead.  Before we do I/O we want
                  * to complete I/O from any previous iteration -- but only a
@@ -833,7 +833,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
         off += size;
         done += size;
     }
-    if (gpfsmpio_pthreadio == 1) {
+    if (romio_pthreadio == 1) {
         if (!pthread_equal(io_thread, pthread_self())) {
             pthread_join(io_thread, &thread_ret);
             *error_code = *(int *) thread_ret;
