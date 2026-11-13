@@ -723,8 +723,10 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
      *  - hybrid of the two; claim table used across node_comm initialization to avoid
      *  suboptimal NIC assignment
      */
-    mpi_errno = MPIDI_OFI_order_nics(node_comm);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_CVAR_CH4_OFI_ENABLE_NIC_SORT) {
+        mpi_errno = MPIDI_OFI_order_nics(node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (!MPIDI_OFI_global.fabric_initialized) {
         if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {

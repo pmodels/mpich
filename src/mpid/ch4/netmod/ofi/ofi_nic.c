@@ -39,6 +39,19 @@ cvars:
         per-rank CUDA_VISIBLE_DEVICES should be constrained to device(s) that could
         effectively share the same NIC assignments; see mpiexec manual for GPU
         visibility options
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_NIC_SORT
+      category    : CH4_OFI
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls whether discovered NICs are sorted alphabetically, ordered by
+        CPU/GPU locality, and rotated across node-local ranks. When false, NICs
+        are used in the exact order returned by fi_getinfo(), and
+        MPIR_CVAR_CH4_OFI_PREF_NIC has no effect. Must be the same on all processes.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
