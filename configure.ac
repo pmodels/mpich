@@ -1548,6 +1548,8 @@ case "$with_pmilib" in
   default|mpich|install)
     m4_define([pmi_embedded_dir], [src/pmi])
     PAC_CONFIG_PMI
+    # the embedded libpmi always provides the PMI-1.2 extensions
+    AC_DEFINE([HAVE_PMI_BARRIER_GROUP], 1, [Define if PMI_Barrier_group is available])
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
