@@ -1,0 +1,607 @@
+sources:
+    src/mpi/coll/cnc/cnc_coll.c
+
+include:
+    src/mpi/coll/cnc
+
+shim:
+    core
+    cnc
+
+template:
+    #include "mpiimpl.h"
+    #include <cnc/collective.h>
+    #include <cnc/cnc_oob_mpi.h>
+    #include "cnc_internal.h"
+
+    MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
+
+    struct cnc_transport {
+        MPI_Comm comm;
+    };
+
+    static int next_handle = 100;
+    static int live_comms = 0;
+    static int live_oob = 0;
+    static int live_transports = 0;
+    static int is_dev_ptr = 0;
+    static MPI_Aint true_lb_val = 0;
+    static int fail_comm_copy = 0;
+    static int fail_oob_create = 0;
+    static int fail_cnc_init = 0;
+    static MPIR_Comm *init_dup_comm = NULL;
+
+    int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr)
+    {
+        if (fail_comm_copy) {
+            return MPI_ERR_OTHER;
+        }
+        MPIR_Comm *c = calloc(1, sizeof(*c));
+        c->handle = ++next_handle;
+        c->rank = comm_ptr->rank;
+        c->local_size = size;
+        live_comms++;
+        init_dup_comm = c;
+        *outcomm_ptr = c;
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Comm_release(MPIR_Comm * comm_ptr)
+    {
+        live_comms--;
+        free(comm_ptr);
+        return MPI_SUCCESS;
+    }
+
+    void MPIR_Datatype_is_contig(MPI_Datatype datatype, int *flag)
+    {
+        *flag = (datatype != 99);
+    }
+
+    int MPIR_GPU_query_pointer_is_dev(const void *ptr)
+    {
+        return is_dev_ptr;
+    }
+
+    MPI_Aint unit_datatype_size(MPI_Datatype datatype)
+    {
+        return (datatype == MPI_DOUBLE) ? 8 : 4;
+    }
+
+    void MPIR_Datatype_get_true_lb(MPI_Datatype datatype, MPI_Aint * true_lb)
+    {
+        *true_lb = true_lb_val;
+    }
+
+    int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                       void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype)
+    {
+        printf("localcopy sc=%ld st=%x rc=%ld rt=%x\n",
+               (long) sendcount, (unsigned) sendtype, (long) recvcount, (unsigned) recvtype);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_barrier\n");
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Bcast_intra_binomial(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
+                                  MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_bcast count=%ld root=%d\n", (long) count, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                   int root, MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_gather sc=%ld rc=%ld root=%d\n", (long) sendcount, (long) recvcount, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Gatherv_allcomm_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, const MPI_Aint * recvcounts,
+                                    const MPI_Aint * displs, MPI_Datatype recvtype, int root,
+                                    MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_gatherv sc=%ld root=%d\n", (long) sendcount, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                    int root, MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_scatter sc=%ld rc=%ld root=%d\n", (long) sendcount, (long) recvcount, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcounts,
+                                     const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
+                                     MPI_Aint recvcount, MPI_Datatype recvtype, int root,
+                                     MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_scatterv rc=%ld root=%d\n", (long) recvcount, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Allgather_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                  MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_allgather sc=%ld rc=%ld\n", (long) sendcount, (long) recvcount);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Allgatherv_intra_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, const MPI_Aint * recvcounts,
+                                   const MPI_Aint * displs, MPI_Datatype recvtype,
+                                   MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_allgatherv sc=%ld\n", (long) sendcount);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Alltoall_intra_pairwise(const void *sendbuf, MPI_Aint sendcount,
+                                     MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_alltoall sc=%ld rc=%ld\n", (long) sendcount, (long) recvcount);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf, MPI_Aint sendcount,
+                                                      MPI_Datatype sendtype, void *recvbuf,
+                                                      MPI_Aint recvcount, MPI_Datatype recvtype,
+                                                      MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_alltoall_inplace rc=%ld\n", (long) recvcount);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
+                                       const MPI_Aint * sdispls, MPI_Datatype sendtype,
+                                       void *recvbuf, const MPI_Aint * recvcounts,
+                                       const MPI_Aint * rdispls, MPI_Datatype recvtype,
+                                       MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_alltoallv\n");
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf,
+                                                       const MPI_Aint * sendcounts,
+                                                       const MPI_Aint * sdispls,
+                                                       MPI_Datatype sendtype, void *recvbuf,
+                                                       const MPI_Aint * recvcounts,
+                                                       const MPI_Aint * rdispls,
+                                                       MPI_Datatype recvtype,
+                                                       MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_alltoallv_inplace\n");
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                   MPI_Datatype datatype, MPI_Op op, int root,
+                                   MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_reduce count=%ld dt=%x op=%d root=%d\n",
+               (long) count, (unsigned) datatype, op, root);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_allreduce count=%ld dt=%x op=%d\n",
+               (long) count, (unsigned) datatype, op);
+        return MPI_SUCCESS;
+    }
+
+    int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+                                                           MPI_Aint recvcount,
+                                                           MPI_Datatype datatype, MPI_Op op,
+                                                           MPIR_Comm * comm_ptr, int coll_attr)
+    {
+        printf("fallback_reduce_scatter_block rc=%ld dt=%x op=%d\n",
+               (long) recvcount, (unsigned) datatype, op);
+        return MPI_SUCCESS;
+    }
+
+    cnc_status_t cnc_oob_mpi_create(cnc_oob_t * oob, MPI_Comm comm)
+    {
+        if (fail_oob_create) {
+            return CNC_ERR;
+        }
+        memset(oob, 0, sizeof(*oob));
+        oob->context = malloc(sizeof(MPI_Comm));
+        *(MPI_Comm *) oob->context = comm;
+        live_oob++;
+        printf("oob_create\n");
+        return CNC_OK;
+    }
+
+    void cnc_oob_mpi_destroy(cnc_oob_t * oob)
+    {
+        free(oob->context);
+        oob->context = NULL;
+        live_oob--;
+        printf("oob_destroy\n");
+    }
+
+    cnc_status_t cnc_init(cnc_transport_t ** out, const cnc_oob_t * oob)
+    {
+        if (fail_cnc_init) {
+            return CNC_ERR;
+        }
+        /* Simulate mpi_backend.c calling MPI_Allreduce on dup_comm during cnc_init:
+         * CNC_PRIV_SKIP must route this to the fallback, not recurse into cnc_init. */
+        if (init_dup_comm) {
+            int dummy = 0;
+            MPIR_Allreduce_intra_cnc(&dummy, &dummy, 1, MPI_INT, MPI_MIN, init_dup_comm, 0);
+        }
+        cnc_transport_t *t = calloc(1, sizeof(*t));
+        t->comm = *(MPI_Comm *) oob->context;
+        live_transports++;
+        *out = t;
+        printf("cnc_init\n");
+        return CNC_OK;
+    }
+
+    void cnc_fini(cnc_transport_t * t)
+    {
+        free(t);
+        live_transports--;
+        printf("cnc_fini\n");
+    }
+
+    void cnc_barrier(int n, int rank, cnc_transport_t * t)
+    {
+        printf("cnc_barrier n=%d rank=%d\n", n, rank);
+    }
+
+    cnc_status_t cnc_bcast(const void *sendbuf, void *recvbuf, size_t nbytes,
+                           int n, int rank, int root, cnc_transport_t * t,
+                           const cnc_bcast_opts_t * opts)
+    {
+        printf("cnc_bcast inplace=%d nbytes=%zu n=%d rank=%d root=%d\n",
+               sendbuf == CNC_IN_PLACE, nbytes, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_gather(const void *sendbuf, void *recvbuf, size_t nbytes,
+                            int n, int rank, int root, cnc_transport_t * t,
+                            const cnc_gather_opts_t * opts)
+    {
+        printf("cnc_gather alias_slot=%d nbytes=%zu n=%d rank=%d root=%d\n",
+               recvbuf && sendbuf == (const char *) recvbuf + (size_t) rank * nbytes,
+               nbytes, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_gatherv_linear(const void *sendbuf, size_t sendcount, void *recvbuf,
+                                    const size_t * recvcounts, const ptrdiff_t * displs,
+                                    int n, int rank, int root, cnc_transport_t * t)
+    {
+        printf("cnc_gatherv alias_slot=%d sc=%zu rc_rank=%zu disp_null=%d n=%d rank=%d root=%d\n",
+               recvbuf && displs && sendbuf == (const char *) recvbuf + displs[rank],
+               sendcount, recvcounts[rank], displs == NULL, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_scatter(const void *sendbuf, void *recvbuf, size_t nbytes,
+                             int n, int rank, int root, cnc_transport_t * t,
+                             const cnc_scatter_opts_t * opts)
+    {
+        printf("cnc_scatter snull=%d rinplace=%d nbytes=%zu n=%d rank=%d root=%d\n",
+               sendbuf == NULL, recvbuf == CNC_IN_PLACE, nbytes, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_scatterv_linear(const void *sendbuf, const size_t * sendcounts,
+                                     const ptrdiff_t * displs, void *recvbuf, size_t recvcount,
+                                     int n, int rank, int root, cnc_transport_t * t)
+    {
+        printf("cnc_scatterv snull=%d alias_slot=%d rc=%zu sc_rank=%zu disp_null=%d n=%d rank=%d root=%d\n",
+               sendbuf == NULL,
+               sendbuf && displs && recvbuf == (const char *) sendbuf + displs[rank],
+               recvcount, sendcounts[rank], displs == NULL, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_allgather(const void *sendbuf, void *recvbuf, size_t nbytes,
+                               int n, int rank, cnc_transport_t * t,
+                               const cnc_allgather_opts_t * opts)
+    {
+        printf("cnc_allgather alias_slot=%d nbytes=%zu n=%d rank=%d\n",
+               sendbuf == (const char *) recvbuf + (size_t) rank * nbytes,
+               nbytes, n, rank);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_allgatherv_ring(const void *sendbuf, void *recvbuf,
+                                     const size_t * recvcounts, const ptrdiff_t * displs,
+                                     int n, int rank, cnc_transport_t * t)
+    {
+        printf("cnc_allgatherv alias_slot=%d rc_rank=%zu disp_rank=%td n=%d rank=%d\n",
+               sendbuf == (const char *) recvbuf + displs[rank],
+               recvcounts[rank], displs[rank], n, rank);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_alltoall(const void *sendbuf, void *recvbuf, size_t nbytes,
+                              int n, int rank, cnc_transport_t * t,
+                              const cnc_alltoall_opts_t * opts)
+    {
+        printf("cnc_alltoall nbytes=%zu n=%d rank=%d\n", nbytes, n, rank);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_alltoallv_pairwise(const void *sendbuf, const size_t * sendcounts,
+                                        const ptrdiff_t * sdispls, void *recvbuf,
+                                        const size_t * recvcounts, const ptrdiff_t * rdispls,
+                                        int n, int rank, cnc_transport_t * t)
+    {
+        printf("cnc_alltoallv sc0=%zu sd1=%td rc0=%zu rd1=%td n=%d rank=%d\n",
+               sendcounts[0], sdispls[1], recvcounts[0], rdispls[1], n, rank);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_reduce(const void *sendbuf, void *recvbuf, size_t count,
+                            cnc_datatype_t datatype, int n, int rank, int root,
+                            cnc_transport_t * t, const cnc_reduce_opts_t * opts)
+    {
+        printf("cnc_reduce s_eq_r=%d count=%zu dt=%d op=%d n=%d rank=%d root=%d\n",
+               sendbuf == recvbuf, count, datatype, opts ? (int) opts->op : 0, n, rank, root);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_allreduce(const void *sendbuf, void *recvbuf, size_t count,
+                               cnc_datatype_t datatype, int n, int rank,
+                               cnc_transport_t * t, const cnc_allreduce_opts_t * opts)
+    {
+        printf("cnc_allreduce inplace=%d count=%zu dt=%d op=%d n=%d rank=%d\n",
+               sendbuf == CNC_IN_PLACE, count, datatype, opts ? (int) opts->op : 0, n, rank);
+        return CNC_OK;
+    }
+
+    cnc_status_t cnc_reduce_scatter(const void *sendbuf, void *recvbuf, size_t count,
+                                    cnc_datatype_t datatype, int n, int rank,
+                                    cnc_transport_t * t, const cnc_reduce_scatter_opts_t * opts)
+    {
+        printf("cnc_reduce_scatter count=%zu dt=%d op=%d n=%d rank=%d\n",
+               count, datatype, opts ? (int) opts->op : 0, n, rank);
+        return CNC_OK;
+    }
+
+    int main(int argc, char **argv)
+    {
+        MPIR_Comm comm = { .handle = 1, .rank = 1, .local_size = 4 };
+        char sbuf[128] = { 0 }, rbuf[128] = { 0 };
+        const char *mode = argc > 1 ? argv[1] : "";
+
+        if (strcmp(mode, "bcast") == 0) {
+            true_lb_val = 8;
+            MPIR_Bcast_intra_cnc(rbuf, 5, MPI_INT, 0, &comm, 0);
+            MPIR_Bcast_intra_cnc(rbuf, 3, MPI_FLOAT, 2, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "allreduce") == 0) {
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_FLOAT, MPI_SUM, &comm, 0);
+            MPIR_Allreduce_intra_cnc(MPI_IN_PLACE, rbuf, 6, MPI_INT, MPI_MAX, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 2, MPI_INT32_T, MPI_PROD, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 2, MPIR_FLOAT32, MPI_MIN, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 5, MPIR_INT32, MPI_SUM, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "other_colls") == 0) {
+            MPIR_Barrier_intra_cnc(&comm, 0);
+            /* gather: non-root then root (out-of-place and in-place) */
+            MPIR_Gather_intra_cnc(sbuf, 3, MPI_INT, NULL, 0, MPI_INT, 0, &comm, 0);
+            MPIR_Gather_intra_cnc(sbuf, 3, MPI_INT, rbuf, 3, MPI_INT, 1, &comm, 0);
+            MPIR_Gather_intra_cnc(MPI_IN_PLACE, 0, MPI_INT, rbuf, 3, MPI_INT, 1, &comm, 0);
+            /* gatherv: non-root (NULL counts/displs) then root (out-of-place and in-place) */
+            {
+                MPI_Aint rc[4] = { 1, 2, 3, 4 };
+                MPI_Aint rd[4] = { 0, 1, 3, 6 };
+                MPIR_Gatherv_intra_cnc(sbuf, 2, MPI_INT, NULL, NULL, NULL, MPI_INT, 0, &comm, 0);
+                MPIR_Gatherv_intra_cnc(sbuf, 2, MPI_INT, rbuf, rc, rd, MPI_INT, 1, &comm, 0);
+                MPIR_Gatherv_intra_cnc(MPI_IN_PLACE, 0, MPI_INT, rbuf, rc, rd, MPI_INT, 1, &comm, 0);
+            }
+            /* scatter: non-root then root (out-of-place and in-place) */
+            MPIR_Scatter_intra_cnc(NULL, 0, MPI_INT, rbuf, 2, MPI_INT, 0, &comm, 0);
+            MPIR_Scatter_intra_cnc(sbuf, 2, MPI_INT, rbuf, 2, MPI_INT, 1, &comm, 0);
+            MPIR_Scatter_intra_cnc(sbuf, 2, MPI_INT, MPI_IN_PLACE, 0, MPI_INT, 1, &comm, 0);
+            /* scatterv: non-root (NULL counts/displs) then root (out-of-place and in-place) */
+            {
+                MPI_Aint sc[4] = { 1, 2, 3, 4 };
+                MPI_Aint sd[4] = { 0, 1, 3, 6 };
+                MPIR_Scatterv_intra_cnc(NULL, NULL, NULL, MPI_INT, rbuf, 2, MPI_INT, 0, &comm, 0);
+                MPIR_Scatterv_intra_cnc(sbuf, sc, sd, MPI_INT, rbuf, 2, MPI_INT, 1, &comm, 0);
+                MPIR_Scatterv_intra_cnc(sbuf, sc, sd, MPI_INT, MPI_IN_PLACE, 0, MPI_INT, 1, &comm,
+                                        0);
+            }
+            /* allgather: out-of-place and in-place */
+            MPIR_Allgather_intra_cnc(sbuf, 4, MPI_INT, rbuf, 4, MPI_INT, &comm, 0);
+            MPIR_Allgather_intra_cnc(MPI_IN_PLACE, 0, MPI_INT, rbuf, 4, MPI_INT, &comm, 0);
+            /* allgatherv: out-of-place and in-place */
+            {
+                MPI_Aint rc[4] = { 1, 2, 3, 4 };
+                MPI_Aint rd[4] = { 0, 1, 3, 6 };
+                MPIR_Allgatherv_intra_cnc(sbuf, 2, MPI_INT, rbuf, rc, rd, MPI_INT, &comm, 0);
+                MPIR_Allgatherv_intra_cnc(MPI_IN_PLACE, 0, MPI_INT, rbuf, rc, rd, MPI_INT, &comm,
+                                          0);
+            }
+            /* alltoall and alltoallv */
+            MPIR_Alltoall_intra_cnc(sbuf, 2, MPI_INT, rbuf, 2, MPI_INT, &comm, 0);
+            {
+                MPI_Aint sc[4] = { 1, 2, 3, 4 };
+                MPI_Aint sd[4] = { 0, 1, 3, 6 };
+                MPIR_Alltoallv_intra_cnc(sbuf, sc, sd, MPI_INT, rbuf, sc, sd, MPI_INT, &comm, 0);
+            }
+            /* reduce: non-root, root out-of-place, root in-place */
+            MPIR_Reduce_intra_cnc(sbuf, NULL, 5, MPI_FLOAT, MPI_SUM, 0, &comm, 0);
+            MPIR_Reduce_intra_cnc(sbuf, rbuf, 5, MPI_INT, MPI_MAX, 1, &comm, 0);
+            MPIR_Reduce_intra_cnc(MPI_IN_PLACE, rbuf, 5, MPI_INT, MPI_MIN, 1, &comm, 0);
+            /* reduce_scatter_block */
+            MPIR_Reduce_scatter_block_intra_cnc(sbuf, rbuf, 3, MPI_FLOAT, MPI_SUM, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "fallback") == 0) {
+            /* unsupported datatype and op (uniform across ranks) */
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_DOUBLE, MPI_SUM, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_BAND, &comm, 0);
+            MPIR_Reduce_intra_cnc(sbuf, rbuf, 4, MPI_DOUBLE, MPI_SUM, 0, &comm, 0);
+            MPIR_Reduce_scatter_block_intra_cnc(sbuf, rbuf, 4, MPI_DOUBLE, MPI_SUM, &comm, 0);
+            MPIR_Reduce_scatter_block_intra_cnc(MPI_IN_PLACE, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            MPIR_Alltoall_intra_cnc(MPI_IN_PLACE, 0, MPI_INT, rbuf, 4, MPI_INT, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, 99, MPI_SUM, &comm, 0);
+            /* non-contiguous datatype (99) stages locally via MPIR_Localcopy
+             * instead of diverging per rank */
+            MPIR_Bcast_intra_cnc(rbuf, 4, 99, 0, &comm, 0);
+            MPIR_Gather_intra_cnc(sbuf, 4, 99, rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPIR_Scatter_intra_cnc(sbuf, 4, MPI_INT, rbuf, 4, 99, 0, &comm, 0);
+            MPIR_Allgather_intra_cnc(sbuf, 4, MPI_INT, rbuf, 4, 99, &comm, 0);
+            /* GPU buffer stages locally via MPIR_Localcopy */
+            is_dev_ptr = 1;
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            is_dev_ptr = 0;
+            /* multi-threaded */
+            MPIR_ThreadInfo.isThreaded = 1;
+            MPIR_Barrier_intra_cnc(&comm, 0);
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            MPIR_ThreadInfo.isThreaded = 0;
+            MPII_Cnc_comm_cleanup(&comm);
+        } else if (strcmp(mode, "errors") == 0) {
+            fail_comm_copy = 1;
+            printf("rc_copy=%d\n", MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0) == MPI_SUCCESS);
+            fail_comm_copy = 0;
+            /* Cached failure skips retrying setup until cleanup resets it. */
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+
+            fail_oob_create = 1;
+            printf("rc_oob=%d\n", MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0) == MPI_SUCCESS);
+            fail_oob_create = 0;
+            MPIR_Bcast_intra_cnc(rbuf, 4, MPI_INT, 0, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+
+            fail_cnc_init = 1;
+            printf("rc_init=%d\n", MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0) == MPI_SUCCESS);
+            fail_cnc_init = 0;
+            MPIR_Allreduce_intra_cnc(sbuf, rbuf, 4, MPI_INT, MPI_SUM, &comm, 0);
+            MPII_Cnc_comm_cleanup(&comm);
+        }
+
+        printf("leaks=%d\n", live_comms + live_oob + live_transports);
+        return 0;
+    }
+
+TESTS:
+    cmd: ./t bcast
+    expect:
+        oob_create
+        fallback_allreduce count=1 dt=4c810405 op=3
+        cnc_init
+        cnc_bcast inplace=1 nbytes=20 n=4 rank=1 root=0
+        cnc_bcast inplace=1 nbytes=12 n=4 rank=1 root=2
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t allreduce
+    expect:
+        oob_create
+        fallback_allreduce count=1 dt=4c810405 op=3
+        cnc_init
+        cnc_allreduce inplace=0 count=4 dt=0 op=0 n=4 rank=1
+        cnc_allreduce inplace=1 count=6 dt=1 op=3 n=4 rank=1
+        cnc_allreduce inplace=0 count=2 dt=1 op=1 n=4 rank=1
+        cnc_allreduce inplace=0 count=2 dt=0 op=2 n=4 rank=1
+        cnc_allreduce inplace=0 count=5 dt=1 op=0 n=4 rank=1
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t other_colls
+    expect:
+        oob_create
+        fallback_allreduce count=1 dt=4c810405 op=3
+        cnc_init
+        cnc_barrier n=4 rank=1
+        cnc_gather alias_slot=0 nbytes=12 n=4 rank=1 root=0
+        cnc_gather alias_slot=0 nbytes=12 n=4 rank=1 root=1
+        cnc_gather alias_slot=1 nbytes=12 n=4 rank=1 root=1
+        cnc_gatherv alias_slot=0 sc=8 rc_rank=8 disp_null=1 n=4 rank=1 root=0
+        cnc_gatherv alias_slot=0 sc=8 rc_rank=8 disp_null=0 n=4 rank=1 root=1
+        cnc_gatherv alias_slot=1 sc=8 rc_rank=8 disp_null=0 n=4 rank=1 root=1
+        cnc_scatter snull=1 rinplace=0 nbytes=8 n=4 rank=1 root=0
+        cnc_scatter snull=0 rinplace=0 nbytes=8 n=4 rank=1 root=1
+        cnc_scatter snull=0 rinplace=1 nbytes=8 n=4 rank=1 root=1
+        cnc_scatterv snull=1 alias_slot=0 rc=8 sc_rank=8 disp_null=1 n=4 rank=1 root=0
+        cnc_scatterv snull=0 alias_slot=0 rc=8 sc_rank=8 disp_null=0 n=4 rank=1 root=1
+        cnc_scatterv snull=0 alias_slot=1 rc=8 sc_rank=8 disp_null=0 n=4 rank=1 root=1
+        cnc_allgather alias_slot=0 nbytes=16 n=4 rank=1
+        cnc_allgather alias_slot=1 nbytes=16 n=4 rank=1
+        cnc_allgatherv alias_slot=0 rc_rank=8 disp_rank=4 n=4 rank=1
+        cnc_allgatherv alias_slot=1 rc_rank=8 disp_rank=4 n=4 rank=1
+        cnc_alltoall nbytes=8 n=4 rank=1
+        cnc_alltoallv sc0=4 sd1=4 rc0=4 rd1=4 n=4 rank=1
+        cnc_reduce s_eq_r=0 count=5 dt=0 op=0 n=4 rank=1 root=0
+        cnc_reduce s_eq_r=0 count=5 dt=1 op=3 n=4 rank=1 root=1
+        cnc_reduce s_eq_r=1 count=5 dt=1 op=2 n=4 rank=1 root=1
+        cnc_reduce_scatter count=12 dt=0 op=0 n=4 rank=1
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t fallback
+    expect:
+        fallback_allreduce count=4 dt=4c83080b op=1
+        fallback_allreduce count=4 dt=4c810405 op=5
+        fallback_reduce count=4 dt=4c83080b op=1 root=0
+        fallback_reduce_scatter_block rc=4 dt=4c83080b op=1
+        fallback_reduce_scatter_block rc=4 dt=4c810405 op=1
+        fallback_alltoall_inplace rc=4
+        fallback_allreduce count=4 dt=63 op=1
+        oob_create
+        fallback_allreduce count=1 dt=4c810405 op=3
+        cnc_init
+        cnc_bcast inplace=1 nbytes=16 n=4 rank=1 root=0
+        localcopy sc=16 st=4c820100 rc=4 rt=63
+        localcopy sc=4 st=63 rc=16 rt=4c820100
+        cnc_gather alias_slot=0 nbytes=16 n=4 rank=1 root=0
+        cnc_scatter snull=1 rinplace=0 nbytes=16 n=4 rank=1 root=0
+        localcopy sc=16 st=4c820100 rc=4 rt=63
+        cnc_allgather alias_slot=0 nbytes=16 n=4 rank=1
+        localcopy sc=64 st=4c820100 rc=16 rt=63
+        cnc_bcast inplace=1 nbytes=16 n=4 rank=1 root=0
+        localcopy sc=16 st=4c820100 rc=4 rt=4c810405
+        localcopy sc=4 st=4c810405 rc=16 rt=4c820100
+        cnc_allreduce inplace=0 count=4 dt=1 op=0 n=4 rank=1
+        localcopy sc=16 st=4c820100 rc=4 rt=4c810405
+        fallback_barrier
+        fallback_bcast count=4 root=0
+        fallback_allreduce count=4 dt=4c810405 op=1
+        cnc_fini
+        oob_destroy
+        leaks=0
+
+    cmd: ./t errors
+    expect:
+        fallback_bcast count=4 root=0
+        rc_copy=1
+        fallback_bcast count=4 root=0
+        fallback_bcast count=4 root=0
+        rc_oob=1
+        fallback_bcast count=4 root=0
+        oob_create
+        oob_destroy
+        fallback_allreduce count=4 dt=4c810405 op=1
+        rc_init=1
+        fallback_allreduce count=4 dt=4c810405 op=1
+        leaks=0

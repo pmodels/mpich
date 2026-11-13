@@ -173,6 +173,8 @@ barrier-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 barrier-inter:
     bcast
         inner: barrier-intra@local_comm, bcast-inter@comm
@@ -210,6 +212,8 @@ bcast-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 ibcast-intra:
     sched_binomial
     sched_smp
@@ -243,6 +247,8 @@ ibcast-inter:
 
 gather-intra:
     binomial
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 gather-inter:
     linear
     local_gather_remote_send
@@ -260,6 +266,8 @@ igather-inter:
 gatherv-intra:
     linear
         allcomm: 1
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 gatherv-inter:
     linear
         allcomm: 1
@@ -276,6 +284,8 @@ igatherv-inter:
 
 scatter-intra:
     binomial
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 scatter-inter:
     linear
     remote_send_local_scatter
@@ -293,6 +303,8 @@ iscatter-inter:
 scatterv-intra:
     linear
         allcomm: 1
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 scatterv-inter:
     linear
         allcomm: 1
@@ -322,6 +334,8 @@ allgather-intra:
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     circ_graph
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 allgather-inter:
     local_gather_remote_bcast
         inner: gather-intra@local_comm, bcast-inter@comm
@@ -349,6 +363,8 @@ allgatherv-intra:
     recursive_doubling
         restrictions: pof2
     ring
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 allgatherv-inter:
     remote_gather_local_bcast
         inner: gatherv-inter@comm
@@ -385,6 +401,8 @@ alltoall-intra:
         restrictions: inplace
     scattered
         inplace_copy: 1
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 alltoall-inter:
     pairwise_exchange
 ialltoall-intra:
@@ -411,6 +429,8 @@ alltoallv-intra:
         restrictions: inplace
     scattered
         inplace_copy: 1
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 alltoallv-inter:
     pairwise_exchange
 ialltoallv-intra:
@@ -466,6 +486,8 @@ reduce-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 reduce-inter:
     local_reduce_remote_send
         inner: reduce-intra@local_comm
@@ -518,6 +540,8 @@ allreduce-intra:
         inline: 1
         macro_guard: defined(MPIDI_CH4_SHM_POSIX)
         restrictions: MPIDI_CH4_release_gather
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 allreduce-inter:
     reduce_exchange_bcast
         inner: reduce-intra@local_comm, bcast-intra@local_comm
@@ -587,6 +611,8 @@ reduce_scatter_block-intra:
         restrictions: commutative
     recursive_halving
         restrictions: commutative
+    cnc
+        macro_guard: defined(ENABLE_CNC)
 reduce_scatter_block-inter:
     remote_reduce_local_scatter
         inner: reduce-inter@comm, scatter-intra@local_comm
