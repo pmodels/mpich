@@ -47,7 +47,7 @@ errnames_txt_files =
 
 external_subdirs = @mpl_srcdir@ @hwloc_srcdir@ @yaksa_srcdir@ @pmi_srcdir@
 external_ldflags = @RPATHS@
-external_libs = @WRAPPER_LIBS@
+external_libs = @EXTERNAL_LIBS@
 
 # convenience libs that do not depend on MPI
 pmpi_convenience_libs = @mpl_lib@ @hwloc_lib@ @yaksa_lib@ @pmi_lib@
@@ -211,7 +211,18 @@ install-exec-hook:
 	    . lib/lib@PMPILIBNAME@.la ; \
 	elif test -e lib/lib@MPILIBNAME@.la ; then \
 	    . lib/lib@MPILIBNAME@.la ; \
+	elif test -e lib/lib@PMPIABILIBNAME@.la ; then \
+	    . lib/lib@PMPIABILIBNAME@.la ; \
+	elif test -e lib/lib@MPIABILIBNAME@.la ; then \
+	    . lib/lib@MPIABILIBNAME@.la ; \
 	fi ; \
+	deps= ; \
+	for x in $$dependency_libs ; do \
+	    case $$x in \
+		-R*) deps="$$deps -Wl,-rpath,$${x#-R}" ;; \
+		*) deps="$$deps $$x" ;; \
+	    esac ; \
+	done ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
 		${DESTDIR}${bindir}/@MPICXX_NAME@ ; do \
 		if test -e $${e} ; then \
@@ -220,7 +231,7 @@ install-exec-hook:
 				-e 's|__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${sysconfdir}|g' \
 				-e 's|__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${includedir}|g' \
 				-e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' \
-				-e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$dependency_libs|g" $${e} > $${e}.tmp ; \
+				-e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$deps|g" $${e} > $${e}.tmp ; \
 			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 			rm -f $${e}.tmp ; \
 		fi ; \
@@ -283,7 +294,11 @@ uninstall-local:
 	done ; \
 	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
-	done
+	done ; \
+	rm -f ${DESTDIR}${pkgconfigdir}/mpich.pc ; \
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+		rm -f ${DESTDIR}${pkgconfigdir}/mpi-c.pc ${DESTDIR}${pkgconfigdir}/mpi-cxx.pc ; \
+	fi
 
 # --------------------------------------------------------------------------
 #  coverage rules

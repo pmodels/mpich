@@ -105,7 +105,6 @@ subcode: description
     \x23    $(CC)                 - $(C) compiler
     \x23    WRAPPER_$(CFLAGS)     - Any special flags needed to compile
     \x23    WRAPPER_LDFLAGS    - Any special flags needed to link
-    \x23    WRAPPER_LIBS       - Any special libraries needed in order to link
     $(if:cc=fc)
         \x23    FC_OTHER_LIBS       - Yet more libraries, needed just with FC
 
@@ -547,9 +546,18 @@ subcode: set_final_vars
             fi
         fi
     $(else)
-        # libmpi should be added in WRAPPER_DEPENDENCY_LDFLAGS
+        mpifort_lib="-l@MPIFCLIBNAME@"
         mpi_libs_shared="@mpi_dependency_libs@"
-        mpi_libs_static="@mpi_dependency_libs@"
+        if test "$static_mpi" = yes ; then
+            mpifort_lib="$libdir/lib@MPIFCLIBNAME@.a"
+            mpi_libs_static="@mpi_static_libs@"
+            for a in $mpifort_lib $mpi_libs_static ; do
+                if ! test -e "$a" ; then
+                    echo "Error: -static-mpi needs $a, which is not found"
+                    exit 1
+                fi
+            done
+        fi
 
     $(if:cc=fc)
         $call patch_final_fcflags
@@ -569,7 +577,7 @@ subcode: set_cmd_macros
 
     $(set:LD0=-L$libdir)
     $(if:cc=fc)
-        $(set:LD0.= -l@MPIFCLIBNAME@)
+        $(set:LD0.= ${mpifort_lib})
 
     $(if:cc!=fc)
         $(set:OPTS_CC=${final_cppflags} $PROFILE_INCPATHS ${final_$(cflags)})

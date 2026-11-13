@@ -23,6 +23,20 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
+pkgconfigdir = @pkgconfigdir@
+nodist_pkgconfig_DATA = mpich-fortran.pc
+
+# generic name used by e.g. CMake's FindMPI
+install-data-hook:
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+	    cd ${DESTDIR}${pkgconfigdir} && ln -f -s mpich-fortran.pc mpi-fort.pc ; \
+	fi
+
+uninstall-local:
+	if test "@enable_generic_pkgconfig@" = "yes" ; then \
+	    rm -f ${DESTDIR}${pkgconfigdir}/mpi-fort.pc ; \
+	fi
+
 include $(srcdir)/mpif_h/Makefile.mk
 include $(srcdir)/use_mpi/Makefile.mk
 include $(srcdir)/use_mpi_f08/Makefile.mk
@@ -61,6 +75,17 @@ env/@MPIFORT_NAME@: env/mpifort.$(shell)
 	cp -p env/mpifort.$(shell) env/@MPIFORT_NAME@
 
 install-exec-hook:
+	if test -e lib/lib@MPIFCLIBNAME@.la ; then \
+	    . lib/lib@MPIFCLIBNAME@.la ; \
+	fi ; \
+	deps= ; \
+	for x in $$dependency_libs ; do \
+	    case $$x in \
+		*.la) ;; \
+		-R*) deps="$$deps -Wl,-rpath,$${x#-R}" ;; \
+		*) deps="$$deps $$x" ;; \
+	    esac ; \
+	done ; \
 	for e in ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
 	    if test -e $${e} ; then \
 		sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
@@ -68,7 +93,7 @@ install-exec-hook:
 		    -e 's|__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${sysconfdir}|g' \
 		    -e 's|__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${includedir}|g' \
 		    -e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' \
-		    -e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$dependency_libs|g" \
+		    -e "s|__LIBS_TO_BE_FILLED_AT_INSTALL_TIME__|$$deps|g" \
 		    $${e} > $${e}.tmp ; \
 		$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 		rm -f $${e}.tmp ; \

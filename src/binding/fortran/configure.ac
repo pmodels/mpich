@@ -191,6 +191,20 @@ AC_SUBST([mpi_libs])
 # for mpifort wrapper script
 AC_SUBST([mpi_dependency_libs])
 
+# for mpifort -static-mpi: the static archives of mpi_dependency_libs. When
+# built with MPICH, they are installed in the same libdir as mpifort.
+if test "$FROM_MPICH" = "yes" ; then
+    mpi_static_dir='$libdir'
+else
+    mpi_static_dir="$with_mpi/lib"
+fi
+mpi_static_libs=
+for lib in $mpi_dependency_libs ; do
+    mpi_static_libs="$mpi_static_libs $mpi_static_dir/lib${lib#-l}.a"
+done
+AC_SUBST([mpi_static_libs])
+AM_SUBST_NOTMAKE([mpi_static_libs])
+
 if test "$FROM_MPICH" != "yes" ; then
     # check mpi.h if we are not build from MPICH
     if test -z "$MPI_SIZEOF_AINT" ; then
@@ -1059,6 +1073,7 @@ AC_SUBST(FCCPP)
 PAC_PROG_FC_AND_C_STDIO_LIBS
 AC_SUBST(FC_OTHER_LIBS)
 
+AC_ARG_VAR([modincdir],[directory to install the Fortran module files (default: includedir)])
 if test "X$modincdir" = "X" ; then
   modincdir=$includedir
 fi
@@ -1191,7 +1206,10 @@ if test -z "$INTERLIB_DEPS" ; then
 fi
 AC_SUBST(INTERLIB_DEPS)
 
-WRAPPER_DEPENDENCY_LDFLAGS=""
+# User LDFLAGS, needed by mpifort only if $interlib_deps is "no"
+if test "$FROM_MPICH" != "yes" ; then
+    WRAPPER_DEPENDENCY_LDFLAGS=""
+fi
 AC_SUBST(WRAPPER_DEPENDENCY_LDFLAGS)
 
 # generate rpath-related macros, needed for substitute with_wrapper_dl_type
@@ -1209,6 +1227,48 @@ AC_ARG_ENABLE([doc],
 AM_CONDITIONAL([INSTALL_DOCS],[test "X$enable_doc" = "Xyes"])
 
 # ---------------------------------------------
+# Substitutions for mpich-fortran.pc
+
+if test -z "$pkgconfigdir" ; then
+    pkgconfigdir=$libdir/pkgconfig
+fi
+AC_SUBST(pkgconfigdir)
+
+AC_ARG_ENABLE(generic-pkgconfig,
+        AS_HELP_STRING([--disable-generic-pkgconfig], [Do not install the generic pkg-config
+                        file mpi-fort.pc, which links to mpich-fortran.pc]),,[enable_generic_pkgconfig=yes])
+AC_SUBST(enable_generic_pkgconfig)
+
+# Same as WRAPPER_C_DYNAMIC_LOADING_FLAGS in the top-level configure, but
+# from $fc_shlib_conf. Source it in a subshell, since it sets libtool
+# variables (e.g. library_names_spec) that AC_OUTPUT still needs.
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"`
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=`. ./$fc_shlib_conf; eval echo \"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"`
+else
+    WRAPPER_FC_DYNAMIC_LOADING_FLAGS=""
+fi
+AC_SUBST(WRAPPER_FC_DYNAMIC_LOADING_FLAGS)
+
+# Fortran modules may be installed outside of includedir
+if test "$modincdir" != "$includedir" ; then
+    PC_FCMODINC="${FCMODINCFLAG}\${modincdir}"
+else
+    PC_FCMODINC=""
+fi
+AC_SUBST(PC_FCMODINC)
+
+# mpich-fortran.pc requires the pkg-config file of the C library that
+# libmpifort links, which is installed whether or not the generic mpi-c.pc is
+if test "$WITH_MPI" = "abi" ; then
+    PC_REQUIRES_MPI=mpich-mpi-abi
+else
+    PC_REQUIRES_MPI=mpich-mpich-abi
+fi
+AC_SUBST(PC_REQUIRES_MPI)
+
+# ---------------------------------------------
 AM_CONDITIONAL([INSTALL_MPIF90],[true])
 AM_CONDITIONAL([INSTALL_MPIF77],[true])
 
@@ -1219,5 +1279,6 @@ AC_CONFIG_FILES([Makefile \
                  mpif_h/mpi_fortran.h \
                  env/mpifort.sh \
                  env/mpifort.bash \
+                 mpich-fortran.pc \
                  localdefs])
 AC_OUTPUT
