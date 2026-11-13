@@ -1,0 +1,41 @@
+= MPI_F_sync_reg(3)
+:doctype: manpage
+:man manual: Library Function Manual
+:man source: MPICH
+
+== Name
+MPI_F_sync_reg - Prevents register optimization of a buffer (Fortran only)
+
+== Synopsis
+[source,Fortran]
+----
+USE mpi_f08
+MPI_F_sync_reg(buf)
+    TYPE(*), DIMENSION(..), ASYNCHRONOUS :: buf
+----
+
+[source,Fortran]
+----
+USE mpi    ! or INCLUDE 'mpif.h'
+MPI_F_SYNC_REG(BUF)
+    <type> BUF(*)
+----
+
+== Input/Output Parameters
+_buf_:: initial address of buffer (choice)
+
+== Description
+**MPI_F_sync_reg** forces the compiler to flush a cached register value of
+`buf` back to memory, or to invalidate the register value. Use it to prevent
+code movement and register optimization problems with nonblocking
+operations, one-sided communication, or `MPI_BOTTOM` with absolute
+displacements. If only part of an array is used in a nonblocking routine,
+pass the whole array to minimize overhead. The call is not needed if
+`MPI_ASYNC_PROTECTS_NONBLOCKING` is `.TRUE.` and the application fully uses
+`ASYNCHRONOUS` arrays.
+
+The routine has no executable statements. It is compiled in the MPI library
+so that the Fortran compiler cannot see that its body is empty. It has no
+`ierror` argument because nothing can fail.
+
+There is no C binding.
