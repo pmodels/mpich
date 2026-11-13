@@ -1235,6 +1235,60 @@ static int pmix_deregister_event_handlers(void)
 
 #endif /* ENABLE_PMIX */
 
+#ifdef ENABLE_PMIX
+/* Get the processes on a node from this client's local data store. This is what
+ * PMIx_Resolve_peers did before openpmix PR 3529; since then it asks the PMIx server. */
+static pmix_status_t pmix_get_local_peers(const char *node, pmix_proc_t ** procs, size_t * nprocs)
+{
+    pmix_info_t *info;
+    PMIX_INFO_CREATE(info, 3);
+    bool flag = true;
+    PMIx_Info_load(&info[0], PMIX_OPTIONAL, &flag, PMIX_BOOL);
+    PMIx_Info_load(&info[1], PMIX_NODE_INFO, &flag, PMIX_BOOL);
+    PMIx_Info_load(&info[2], PMIX_HOSTNAME, node, PMIX_STRING);
+
+    pmix_proc_t proc = pmix_proc;
+    proc.rank = PMIX_RANK_UNDEF;
+    pmix_value_t *val = NULL;
+    pmix_status_t rc = PMIx_Get(&proc, PMIX_LOCAL_PEERS, info, 3, &val);
+    PMIX_INFO_FREE(info, 3);
+    if (rc != PMIX_SUCCESS) {
+        return rc;
+    }
+    if (val == NULL) {
+        return PMIX_ERR_NOT_FOUND;
+    }
+    if (val->type != PMIX_STRING || val->data.string == NULL) {
+        PMIX_VALUE_RELEASE(val);
+        return PMIX_ERR_NOT_FOUND;
+    }
+
+    /* the value is a comma-separated list of ranks */
+    char **ranks = PMIx_Argv_split(val->data.string, ',');
+    size_t n = PMIx_Argv_count(ranks);
+    PMIX_VALUE_RELEASE(val);
+    if (n == 0) {
+        PMIx_Argv_free(ranks);
+        return PMIX_ERR_NOT_FOUND;
+    }
+
+    pmix_proc_t *pa;
+    PMIX_PROC_CREATE(pa, n);
+    if (pa == NULL) {
+        PMIx_Argv_free(ranks);
+        return PMIX_ERR_NOMEM;
+    }
+    for (size_t i = 0; i < n; i++) {
+        MPL_strncpy(pa[i].nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
+        pa[i].rank = strtoul(ranks[i], NULL, 10);
+    }
+    PMIx_Argv_free(ranks);
+    *procs = pa;
+    *nprocs = n;
+    return PMIX_SUCCESS;
+}
+#endif /* ENABLE_PMIX */
+
 /* build nodemap using PMIx_Resolve_nodes */
 static int pmix_build_nodemap(int *nodemap, int sz)
 {
@@ -1254,7 +1308,10 @@ static int pmix_build_nodemap(int *nodemap, int sz)
 
     node = strtok(nodelist, ",");
     while (node) {
-        pmi_errno = PMIx_Resolve_peers(node, pmix_proc.nspace, &procs, &nprocs);
+        pmi_errno = pmix_get_local_peers(node, &procs, &nprocs);
+        if (pmi_errno != PMIX_SUCCESS) {
+            pmi_errno = PMIx_Resolve_peers(node, pmix_proc.nspace, &procs, &nprocs);
+        }
         MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                              "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
         for (int i = 0; i < nprocs; i++) {
