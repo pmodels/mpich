@@ -828,6 +828,7 @@ static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Comm *
     /* Internally we can use NULL for query_fn, free_fn, and cancel_fn */
     mpi_errno = MPIR_Grequest_start_impl(NULL, NULL, NULL, NULL, req);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm_link_grequest(comm_ptr, *req);
 
     struct gcn_state *st = NULL;
     MPIR_CHKPMEM_MALLOC(st, sizeof(struct gcn_state), MPL_MEM_COMM);
