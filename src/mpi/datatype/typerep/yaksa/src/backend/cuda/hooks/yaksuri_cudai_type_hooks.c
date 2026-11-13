@@ -54,7 +54,7 @@ int yaksuri_cudai_type_create_hook(yaksi_type_s * type)
     cuda = (yaksuri_cudai_type_s *) type->backend.cuda.priv;
 
     cuda->num_elements = get_num_elements(type);
-    cuda->md = NULL;
+    cuda->dev_md = NULL;
     pthread_mutex_init(&cuda->mdmutex, NULL);
 
     rc = yaksuri_cudai_populate_pupfns(type);
@@ -68,34 +68,12 @@ int yaksuri_cudai_type_create_hook(yaksi_type_s * type)
 
 int yaksuri_cudai_type_free_hook(yaksi_type_s * type)
 {
-    int rc = YAKSA_SUCCESS;
     yaksuri_cudai_type_s *cuda = (yaksuri_cudai_type_s *) type->backend.cuda.priv;
-    cudaError_t cerr;
+
+    int rc = yaksuri_cudai_md_free(type);
 
     pthread_mutex_destroy(&cuda->mdmutex);
-    if (cuda->md) {
-        if (type->kind == YAKSI_TYPE_KIND__BLKHINDX) {
-            assert(cuda->md->u.blkhindx.array_of_displs);
-            cerr = cudaFree((void *) cuda->md->u.blkhindx.array_of_displs);
-            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-        } else if (type->kind == YAKSI_TYPE_KIND__HINDEXED) {
-            assert(cuda->md->u.hindexed.array_of_displs);
-            cerr = cudaFree((void *) cuda->md->u.hindexed.array_of_displs);
-            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-
-            assert(cuda->md->u.hindexed.array_of_blocklengths);
-            cerr = cudaFree((void *) cuda->md->u.hindexed.array_of_blocklengths);
-            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-        }
-
-        cerr = cudaFree(cuda->md);
-        YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-    }
-
     free(cuda);
 
-  fn_exit:
     return rc;
-  fn_fail:
-    goto fn_exit;
 }
