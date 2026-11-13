@@ -6,8 +6,17 @@
 lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_common.c
 
 if MPL_HAVE_CUDA
+if MPL_CUDA_DLOPEN
+# The code that calls CUDA is built as a separate convenience library, which
+# the parent project links into a module that is dlopen-ed at runtime.
+lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda_dl.c
+noinst_LTLIBRARIES += lib@MPLLIBNAME@_cuda.la
+lib@MPLLIBNAME@_cuda_la_SOURCES = src/gpu/mpl_gpu_cuda.c src/gpu/mpl_gpu_cuda_kernels.cu
+lib@MPLLIBNAME@_cuda_la_LIBADD = $(MPL_CUDA_LIBS)
+else
 lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda.c
 lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda_kernels.cu
+endif
 
 .cu.lo:
 	@if $(AM_V_P) ; then \
