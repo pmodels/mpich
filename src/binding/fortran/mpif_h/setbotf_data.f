@@ -1,6 +1,6 @@
 !
 !     Copyright (C) by Argonne National Laboratory
-!         See COPYRIGHT in top-level directory
+! SPDX-License-Identifier: Apache-2.0
 !
 !     Initialize the common blocks so they are defined as initialized
 !     data (.data) instead of uninitialized (.bss). Otherwise, a shared

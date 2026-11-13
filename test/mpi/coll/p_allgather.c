@@ -1,6 +1,5 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ * Copyright (C) by Argonne National Laboratory
  * SPDX-License-Identifier: Apache-2.0
  */
 
