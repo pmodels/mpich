@@ -20,6 +20,7 @@ my $root = cwd();
 my $with_autoconf = "";
 my $with_automake = "";
 my $git_repo = "";
+my $jobs;
 
 my $logfile = "release.log";
 
@@ -32,6 +33,7 @@ sub usage
     print "\t--branch             git branch to be packaged (required)\n";
     print "\t--version            tarball version (required)\n";
     print "\t--append-commit-id   append git commit description (optional)\n";
+    print "\t-j N, --jobs=N       parallel make jobs for documentation (optional)\n";
 
     print "\n";
 
@@ -135,6 +137,7 @@ sub make_tarball
     run_cmd("cp -a $name.tar.gz ${root}/");
 }
 
+Getopt::Long::Configure("bundling_override");
 GetOptions(
     "branch=s" => \$branch,
     "version=s" => \$version,
@@ -143,6 +146,7 @@ GetOptions(
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
     "git-repo=s" => \$git_repo,
+    "jobs|j=i" => \$jobs,
     "help"     => \&usage,
 
     # old deprecated args, retained with usage() to help catch non-updated cron
@@ -157,6 +161,11 @@ if (scalar(@ARGV) != 0) {
 if (!$branch || !$version) {
     usage();
 }
+
+if (defined($jobs) && $jobs < 1) {
+    die "--jobs must be a positive integer\n";
+}
+my $make = defined($jobs) ? "make -j$jobs" : "make";
 
 my $has_asciidoctor = check_package("asciidoctor");
 my $has_git = check_package("git");
@@ -277,7 +286,8 @@ if ($has_asciidoctor || $has_latex) {
 
     if ($has_asciidoctor) {
         print("===> Creating man pages and HTML documentation... ");
-        run_cmd("make mandoc && make htmldoc");
+        run_cmd("$make mandoc");
+        run_cmd("$make htmldoc");
         run_cmd("cp -a man ${expdir}");
         run_cmd("cp -a www ${expdir}");
         # the Fortran binding installs its own man pages; they are built only
@@ -295,7 +305,7 @@ if ($has_asciidoctor || $has_latex) {
 
     if ($has_latex) {
         print("===> Creating PDF documentation... ");
-        run_cmd("make latexdoc");
+        run_cmd("$make latexdoc");
         run_cmd("cp -a doc/userguide/user.pdf ${expdir}/doc/userguide");
         run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
         print("done\n");
@@ -305,7 +315,7 @@ if ($has_asciidoctor || $has_latex) {
 if ($has_latex) {
     print("===> Creating ROMIO docs... ");
     chdir("${expdir}/src/mpi/romio/doc");
-    run_cmd("make");
+    run_cmd($make);
     run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
     print("done\n");
 }
