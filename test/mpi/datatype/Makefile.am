@@ -76,7 +76,6 @@ noinst_PROGRAMS =             \
     typecommit                \
     typefree                  \
     typelb                    \
-    typename                  \
     unpack                    \
     unusual_noncontigs        \
     vecblklen                 \
@@ -103,4 +102,7 @@ LDADDDATA = $(top_builddir)/util/libdtypes.la
 $(top_builddir)/util/libdtypes.la:
 	(cd $(top_builddir)/util && $(MAKE))
 
+if HAS_F77
+noinst_PROGRAMS += typename
 typename_LDFLAGS = -mpi-fortran
+endif

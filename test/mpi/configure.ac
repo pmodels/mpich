@@ -1148,6 +1148,12 @@ fi
 if test "$f77dir" = "f77" ; then
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
 fi
+# Tests of Fortran interop (e.g. f2c/c2f) need libmpifort
+fortran_tests="#"
+if test "$f77dir" = "f77" ; then
+    fortran_tests=""
+fi
+AC_SUBST(fortran_tests)
 
 
 AC_ARG_VAR([MPI_SIZEOF_AINT],[if set, force MPI_Aint to a width of this many bytes])
