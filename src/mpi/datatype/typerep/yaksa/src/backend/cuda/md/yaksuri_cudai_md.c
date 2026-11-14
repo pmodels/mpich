@@ -17,21 +17,23 @@
  * time a kernel on that device needs it. Managed memory would instead be migrated to
  * the device when a kernel first touches it, and that migration fails with an illegal
  * memory access in the kernel if other allocations have filled the device memory.
- * With device memory, a full device is reported by cudaMalloc. */
+ * With device memory, a full device is reported by cudaMalloc.
+ *
+ * A copy is one allocation: the struct, followed by the arrays it points to. Creating
+ * it takes one cudaMalloc and one copy, and freeing it one cudaFree, since the type
+ * tests and applications create and free many types and these calls can synchronize
+ * the device. */
 
 /* Build the metadata of the type, and of its children if needed, on the device, which
- * is the current device. A failure leaves dev empty. */
-static int build_md(yaksi_type_s * type, int device, yaksuri_cudai_dev_md_s * dev);
-/* copy the array to new memory on the current device */
-static int alloc_array(const intptr_t * array, intptr_t count, intptr_t ** dev_array);
-/* allocate on the current device; a full device is reported as out of memory */
-static int dev_malloc(void **ptr, size_t size);
-/* Copy to the current device and wait, since the source may be on the stack and the
+ * is the current device. On failure *dev_md stays NULL. */
+static int build_md(yaksi_type_s * type, int device, yaksuri_cudai_md_s ** dev_md);
+/* Copy to the current device and wait, since the source is freed right after and the
  * kernels that read the metadata may run on any stream. The copy runs on a stream of
  * its own, so that the wait does not include pack or unpack work queued on the device. */
-static int copy_to_device(void *dst, const void *src, size_t size);
-/* free one device copy; returns the first error, but frees everything */
-static cudaError_t free_dev_md(yaksuri_cudai_dev_md_s * dev);
+static int copy_to_device(int device, void *dst, const void *src, size_t size);
+
+/* guards the creation of the copy streams, which may be asked for by several threads */
+static pthread_mutex_t copy_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Create the metadata of the type, and of its children, in the memory of the device,
  * unless it is there already. yaksuri_cudai_md_get returns it. */
@@ -39,20 +41,18 @@ int yaksuri_cudai_md_alloc(yaksi_type_s * type, int device)
 {
     int rc = YAKSA_SUCCESS;
     yaksuri_cudai_type_s *cuda = (yaksuri_cudai_type_s *) type->backend.cuda.priv;
-    yaksuri_cudai_dev_md_s *dev;
     int cur_device = -1;
     cudaError_t cerr;
 
     pthread_mutex_lock(&cuda->mdmutex);
 
     if (!cuda->dev_md) {
-        cuda->dev_md = (yaksuri_cudai_dev_md_s *) calloc(yaksuri_cudai_global.ndevices,
-                                                         sizeof(yaksuri_cudai_dev_md_s));
+        cuda->dev_md = (yaksuri_cudai_md_s **) calloc(yaksuri_cudai_global.ndevices,
+                                                      sizeof(yaksuri_cudai_md_s *));
         YAKSU_ERR_CHKANDJUMP(!cuda->dev_md, rc, YAKSA_ERR__OUT_OF_MEM, fn_fail);
     }
 
-    dev = &cuda->dev_md[device];
-    if (!dev->md) {
+    if (!cuda->dev_md[device]) {
         cerr = cudaGetDevice(&cur_device);
         YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
@@ -61,7 +61,7 @@ int yaksuri_cudai_md_alloc(yaksi_type_s * type, int device)
             YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
         }
 
-        rc = build_md(type, device, dev);
+        rc = build_md(type, device, &cuda->dev_md[device]);
         YAKSU_ERR_CHECK(rc, fn_fail);
     }
 
@@ -88,9 +88,11 @@ int yaksuri_cudai_md_free(yaksi_type_s * type)
 
     if (cuda->dev_md) {
         for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
-            cudaError_t e = free_dev_md(&cuda->dev_md[i]);
-            if (e != cudaSuccess && cerr == cudaSuccess) {
-                cerr = e;
+            if (cuda->dev_md[i]) {
+                cudaError_t e = cudaFree(cuda->dev_md[i]);
+                if (e != cudaSuccess && cerr == cudaSuccess) {
+                    cerr = e;
+                }
             }
         }
         free(cuda->dev_md);
@@ -104,18 +106,85 @@ int yaksuri_cudai_md_free(yaksi_type_s * type)
     goto fn_exit;
 }
 
-static int build_md(yaksi_type_s * type, int device, yaksuri_cudai_dev_md_s * dev)
+/* The stream for metadata copies to the device, created on first use. When the wait
+ * kernel is enabled, yaksuri_cuda_init_hook creates it up front instead, since creating
+ * a stream would deadlock with the wait kernel. */
+int yaksuri_cudai_get_copy_stream(int device, cudaStream_t * stream)
+{
+    int rc = YAKSA_SUCCESS;
+    cudai_stream *s = &yaksuri_cudai_global.copy_streams[device];
+    int cur_device = -1;
+    cudaError_t cerr;
+
+    pthread_mutex_lock(&copy_stream_mutex);
+
+    if (!s->created) {
+        cerr = cudaGetDevice(&cur_device);
+        YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
+        if (cur_device != device) {
+            cerr = cudaSetDevice(device);
+            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+        }
+
+        cerr = cudaStreamCreateWithFlags(&s->stream, cudaStreamNonBlocking);
+        YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+        s->created = true;
+    }
+    *stream = s->stream;
+
+  fn_exit:
+    if (cur_device >= 0 && cur_device != device) {
+        cerr = cudaSetDevice(cur_device);
+        if (cerr != cudaSuccess && rc == YAKSA_SUCCESS) {
+            YAKSURI_CUDAI_CUDA_ERR_CHECK(cerr);
+            rc = YAKSA_ERR__INTERNAL;
+        }
+    }
+    pthread_mutex_unlock(&copy_stream_mutex);
+    return rc;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int build_md(yaksi_type_s * type, int device, yaksuri_cudai_md_s ** dev_md)
 {
     int rc = YAKSA_SUCCESS;
     yaksuri_cudai_type_s *cuda = (yaksuri_cudai_type_s *) type->backend.cuda.priv;
-    yaksuri_cudai_md_s md, *dev_ptr;
+    yaksuri_cudai_md_s *md;
+    intptr_t *host_arrays, *dev_arrays;
+    intptr_t array_len = 0;
+    char *host = NULL, *dev = NULL;
+    size_t size;
+    cudaError_t cerr;
 
     assert(type->kind != YAKSI_TYPE_KIND__STRUCT);
     assert(type->kind != YAKSI_TYPE_KIND__SUBARRAY);
 
-    memset(&md, 0, sizeof(md));
-    md.extent = type->extent;
-    md.num_elements = cuda->num_elements;
+    /* the arrays follow the struct, whose size is a multiple of the alignment of intptr_t */
+    if (type->kind == YAKSI_TYPE_KIND__BLKHINDX) {
+        array_len = type->u.blkhindx.count;
+    } else if (type->kind == YAKSI_TYPE_KIND__HINDEXED) {
+        array_len = 2 * type->u.hindexed.count;
+    }
+    size = sizeof(yaksuri_cudai_md_s) + array_len * sizeof(intptr_t);
+
+    host = (char *) calloc(1, size);
+    YAKSU_ERR_CHKANDJUMP(!host, rc, YAKSA_ERR__OUT_OF_MEM, fn_fail);
+
+    cerr = cudaMalloc((void **) &dev, size);
+    if (cerr != cudaSuccess) {
+        dev = NULL;
+    }
+    YAKSU_ERR_CHKANDJUMP(cerr == cudaErrorMemoryAllocation, rc, YAKSA_ERR__OUT_OF_MEM, fn_fail);
+    YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
+    md = (yaksuri_cudai_md_s *) host;
+    host_arrays = (intptr_t *) (host + sizeof(yaksuri_cudai_md_s));
+    dev_arrays = (intptr_t *) (dev + sizeof(yaksuri_cudai_md_s));
+
+    md->extent = type->extent;
+    md->num_elements = cuda->num_elements;
 
     switch (type->kind) {
         case YAKSI_TYPE_KIND__BUILTIN:
@@ -124,154 +193,94 @@ static int build_md(yaksi_type_s * type, int device, yaksuri_cudai_dev_md_s * de
         case YAKSI_TYPE_KIND__RESIZED:
             rc = yaksuri_cudai_md_alloc(type->u.resized.child, device);
             YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.resized.child = yaksuri_cudai_md_get(type->u.resized.child, device);
+            md->u.resized.child = yaksuri_cudai_md_get(type->u.resized.child, device);
             break;
 
         case YAKSI_TYPE_KIND__HVECTOR:
-            md.u.hvector.count = type->u.hvector.count;
-            md.u.hvector.blocklength = type->u.hvector.blocklength;
-            md.u.hvector.stride = type->u.hvector.stride;
+            md->u.hvector.count = type->u.hvector.count;
+            md->u.hvector.blocklength = type->u.hvector.blocklength;
+            md->u.hvector.stride = type->u.hvector.stride;
 
             rc = yaksuri_cudai_md_alloc(type->u.hvector.child, device);
             YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.hvector.child = yaksuri_cudai_md_get(type->u.hvector.child, device);
+            md->u.hvector.child = yaksuri_cudai_md_get(type->u.hvector.child, device);
             break;
 
         case YAKSI_TYPE_KIND__BLKHINDX:
-            md.u.blkhindx.count = type->u.blkhindx.count;
-            md.u.blkhindx.blocklength = type->u.blkhindx.blocklength;
+            md->u.blkhindx.count = type->u.blkhindx.count;
+            md->u.blkhindx.blocklength = type->u.blkhindx.blocklength;
 
-            rc = alloc_array(type->u.blkhindx.array_of_displs, type->u.blkhindx.count,
-                             &dev->array_of_displs);
-            YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.blkhindx.array_of_displs = dev->array_of_displs;
+            memcpy(host_arrays, type->u.blkhindx.array_of_displs,
+                   type->u.blkhindx.count * sizeof(intptr_t));
+            md->u.blkhindx.array_of_displs = dev_arrays;
 
             rc = yaksuri_cudai_md_alloc(type->u.blkhindx.child, device);
             YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.blkhindx.child = yaksuri_cudai_md_get(type->u.blkhindx.child, device);
+            md->u.blkhindx.child = yaksuri_cudai_md_get(type->u.blkhindx.child, device);
             break;
 
         case YAKSI_TYPE_KIND__HINDEXED:
-            md.u.hindexed.count = type->u.hindexed.count;
+            md->u.hindexed.count = type->u.hindexed.count;
 
-            rc = alloc_array(type->u.hindexed.array_of_displs, type->u.hindexed.count,
-                             &dev->array_of_displs);
-            YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.hindexed.array_of_displs = dev->array_of_displs;
+            memcpy(host_arrays, type->u.hindexed.array_of_displs,
+                   type->u.hindexed.count * sizeof(intptr_t));
+            md->u.hindexed.array_of_displs = dev_arrays;
 
-            rc = alloc_array(type->u.hindexed.array_of_blocklengths, type->u.hindexed.count,
-                             &dev->array_of_blocklengths);
-            YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.hindexed.array_of_blocklengths = dev->array_of_blocklengths;
+            memcpy(host_arrays + type->u.hindexed.count, type->u.hindexed.array_of_blocklengths,
+                   type->u.hindexed.count * sizeof(intptr_t));
+            md->u.hindexed.array_of_blocklengths = dev_arrays + type->u.hindexed.count;
 
             rc = yaksuri_cudai_md_alloc(type->u.hindexed.child, device);
             YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.hindexed.child = yaksuri_cudai_md_get(type->u.hindexed.child, device);
+            md->u.hindexed.child = yaksuri_cudai_md_get(type->u.hindexed.child, device);
             break;
 
         case YAKSI_TYPE_KIND__CONTIG:
-            md.u.contig.count = type->u.contig.count;
-            md.u.contig.stride = type->u.contig.child->extent;
+            md->u.contig.count = type->u.contig.count;
+            md->u.contig.stride = type->u.contig.child->extent;
 
             rc = yaksuri_cudai_md_alloc(type->u.contig.child, device);
             YAKSU_ERR_CHECK(rc, fn_fail);
-            md.u.contig.child = yaksuri_cudai_md_get(type->u.contig.child, device);
+            md->u.contig.child = yaksuri_cudai_md_get(type->u.contig.child, device);
             break;
 
         default:
             assert(0);
     }
 
-    /* dev->md is set last, so that it marks a complete copy */
-    rc = dev_malloc((void **) &dev_ptr, sizeof(md));
+    rc = copy_to_device(device, dev, host, size);
     YAKSU_ERR_CHECK(rc, fn_fail);
 
-    rc = copy_to_device(dev_ptr, &md, sizeof(md));
-    if (rc) {
-        cudaFree(dev_ptr);
+    /* set last, so that it marks a complete copy */
+    *dev_md = (yaksuri_cudai_md_s *) dev;
+
+  fn_exit:
+    free(host);
+    return rc;
+  fn_fail:
+    if (dev) {
+        cudaFree(dev);
     }
-    YAKSU_ERR_CHECK(rc, fn_fail);
-
-    dev->md = dev_ptr;
-
-  fn_exit:
-    return rc;
-  fn_fail:
-    /* drop the arrays of a partial copy, so that the next call starts over */
-    free_dev_md(dev);
     goto fn_exit;
 }
 
-static int alloc_array(const intptr_t * array, intptr_t count, intptr_t ** dev_array)
+static int copy_to_device(int device, void *dst, const void *src, size_t size)
 {
     int rc = YAKSA_SUCCESS;
-
-    rc = dev_malloc((void **) dev_array, count * sizeof(intptr_t));
-    YAKSU_ERR_CHECK(rc, fn_fail);
-
-    rc = copy_to_device(*dev_array, array, count * sizeof(intptr_t));
-    YAKSU_ERR_CHECK(rc, fn_fail);
-
-  fn_exit:
-    return rc;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int dev_malloc(void **ptr, size_t size)
-{
-    int rc = YAKSA_SUCCESS;
-    cudaError_t cerr;
-
-    cerr = cudaMalloc(ptr, size);
-    if (cerr != cudaSuccess) {
-        *ptr = NULL;
-    }
-    YAKSU_ERR_CHKANDJUMP(cerr == cudaErrorMemoryAllocation, rc, YAKSA_ERR__OUT_OF_MEM, fn_fail);
-    YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-
-  fn_exit:
-    return rc;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int copy_to_device(void *dst, const void *src, size_t size)
-{
-    int rc = YAKSA_SUCCESS;
-    cudaError_t cerr;
     cudaStream_t stream;
+    cudaError_t cerr;
 
-    cerr = cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
-    YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+    rc = yaksuri_cudai_get_copy_stream(device, &stream);
+    YAKSU_ERR_CHECK(rc, fn_fail);
 
     cerr = cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream);
-    if (cerr == cudaSuccess) {
-        cerr = cudaStreamSynchronize(stream);
-    }
-    cudaStreamDestroy(stream);
+    YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
+    cerr = cudaStreamSynchronize(stream);
     YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
   fn_exit:
     return rc;
   fn_fail:
     goto fn_exit;
-}
-
-static cudaError_t free_dev_md(yaksuri_cudai_dev_md_s * dev)
-{
-    cudaError_t ret = cudaSuccess;
-    void *ptrs[3] = { dev->md, dev->array_of_displs, dev->array_of_blocklengths };
-
-    for (int i = 0; i < 3; i++) {
-        if (ptrs[i]) {
-            cudaError_t cerr = cudaFree(ptrs[i]);
-            if (cerr != cudaSuccess && ret == cudaSuccess) {
-                ret = cerr;
-            }
-        }
-    }
-    memset(dev, 0, sizeof(*dev));
-
-    return ret;
 }

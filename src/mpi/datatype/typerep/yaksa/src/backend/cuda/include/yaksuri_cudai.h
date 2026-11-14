@@ -34,14 +34,6 @@ extern "C" {
         }                                                               \
     } while (0)
 
-/* The metadata of a type in the memory of one device, and the device arrays it
- * points to, so that they can be freed without reading device memory. */
-typedef struct {
-    yaksuri_cudai_md_s *md;
-    intptr_t *array_of_displs;
-    intptr_t *array_of_blocklengths;
-} yaksuri_cudai_dev_md_s;
-
 typedef struct yaksuri_cudai_type_s {
     void (*pack) (const void *inbuf, void *outbuf, uintptr_t count, yaksa_op_t op,
                   yaksuri_cudai_md_s * md, int n_threads, int n_blocks_x, int n_blocks_y,
@@ -50,7 +42,7 @@ typedef struct yaksuri_cudai_type_s {
                     yaksuri_cudai_md_s * md, int n_threads, int n_blocks_x, int n_blocks_y,
                     int n_blocks_z, cudaStream_t stream);
     const char *name;
-    yaksuri_cudai_dev_md_s *dev_md;     /* one per device, allocated on first use */
+    yaksuri_cudai_md_s **dev_md;        /* one per device, built on first use */
     pthread_mutex_t mdmutex;
     uintptr_t num_elements;
 } yaksuri_cudai_type_s;
@@ -87,12 +79,13 @@ int yaksuri_cudai_get_ptr_attr(const void *inbuf, void *outbuf, yaksi_info_s * i
 
 int yaksuri_cudai_md_alloc(yaksi_type_s * type, int device);
 int yaksuri_cudai_md_free(yaksi_type_s * type);
+int yaksuri_cudai_get_copy_stream(int device, cudaStream_t * stream);
 
 /* the metadata of the type on the device, once yaksuri_cudai_md_alloc has created it */
 static inline yaksuri_cudai_md_s *yaksuri_cudai_md_get(yaksi_type_s * type, int device)
 {
     yaksuri_cudai_type_s *cuda = (yaksuri_cudai_type_s *) type->backend.cuda.priv;
-    return cuda->dev_md[device].md;
+    return cuda->dev_md[device];
 }
 
 int yaksuri_cudai_populate_pupfns(yaksi_type_s * type);
