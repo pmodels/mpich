@@ -869,6 +869,20 @@ static int async_get_cid(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Comm *
     goto fn_exit;
 }
 
+#define GCN_COMPLETE_IF_ERR(st_) \
+    do { \
+        if (unlikely((st_)->error)) { \
+            gcn_complete(st_); \
+            return MPIX_ASYNC_DONE; \
+        } \
+    } while (0)
+#define GCN_REQUEST_CLEANUP(st_, r_) \
+    do { \
+        if ((st_)->error == MPI_SUCCESS) \
+            (st_)->error = (r_)->status.MPI_ERROR; \
+        MPIR_Request_free(r_); \
+    } while (0)
+
 static int async_gcn_poll(MPIX_Async_thing thing)
 {
     struct gcn_state *st = MPIR_Async_thing_get_state(thing);
@@ -879,7 +893,7 @@ static int async_gcn_poll(MPIX_Async_thing thing)
             MPIR_Assert(st->error == MPI_SUCCESS);
 
             st->error = gcn_allreduce(st);
-            MPIR_Assert(st->error == MPI_SUCCESS);
+            GCN_COMPLETE_IF_ERR(st);
 
             st->stage = MPIR_GCN__ALLREDUCE;
             return MPIX_ASYNC_NOPROGRESS;
@@ -888,7 +902,8 @@ static int async_gcn_poll(MPIX_Async_thing thing)
             if (!MPIR_Request_is_complete(st->u.allreduce_request)) {
                 return MPIX_ASYNC_NOPROGRESS;
             } else {
-                MPIR_Request_free(st->u.allreduce_request);
+                GCN_REQUEST_CLEANUP(st, st->u.allreduce_request);
+                GCN_COMPLETE_IF_ERR(st);
 
                 int newctxid = gcn_allocate_cid(st);
                 if (newctxid) {
@@ -897,11 +912,9 @@ static int async_gcn_poll(MPIX_Async_thing thing)
                     if (st->ctx1)
                         *st->ctx1 = newctxid;
                 }
+                GCN_COMPLETE_IF_ERR(st);
 
-                if (st->error) {
-                    gcn_complete(st);
-                    return MPIX_ASYNC_DONE;
-                } else if (*st->ctx0 == 0) {
+                if (*st->ctx0 == 0) {
                     /* retry */
                     st->stage = MPIR_GCN__COPYMASK;
                     return MPIX_ASYNC_NOPROGRESS;
@@ -911,13 +924,13 @@ static int async_gcn_poll(MPIX_Async_thing thing)
                     return MPIX_ASYNC_DONE;
                 } else if (st->comm_ptr_inter->rank == 0) {
                     st->error = gcn_intercomm_sendrecv(st);
-                    MPIR_Assert(st->error == MPI_SUCCESS);
+                    GCN_COMPLETE_IF_ERR(st);
 
                     st->stage = MPIR_GCN__INTERCOMM_SENDRECV;
                     return MPIX_ASYNC_NOPROGRESS;
                 } else {
                     st->error = gcn_intercomm_bcast(st);
-                    MPIR_Assert(st->error == MPI_SUCCESS);
+                    GCN_COMPLETE_IF_ERR(st);
 
                     st->stage = MPIR_GCN__INTERCOMM_BCAST;
                     return MPIX_ASYNC_NOPROGRESS;
@@ -929,11 +942,12 @@ static int async_gcn_poll(MPIX_Async_thing thing)
                 !MPIR_Request_is_complete(st->u.sendrecv_reqs[1])) {
                 return MPIX_ASYNC_NOPROGRESS;
             } else {
-                MPIR_Request_free(st->u.sendrecv_reqs[0]);
-                MPIR_Request_free(st->u.sendrecv_reqs[1]);
+                GCN_REQUEST_CLEANUP(st, st->u.sendrecv_reqs[0]);
+                GCN_REQUEST_CLEANUP(st, st->u.sendrecv_reqs[1]);
+                GCN_COMPLETE_IF_ERR(st);
 
                 st->error = gcn_intercomm_bcast(st);
-                MPIR_Assert(st->error == MPI_SUCCESS);
+                GCN_COMPLETE_IF_ERR(st);
 
                 st->stage = MPIR_GCN__INTERCOMM_BCAST;
                 return MPIX_ASYNC_NOPROGRESS;
@@ -943,7 +957,7 @@ static int async_gcn_poll(MPIX_Async_thing thing)
             if (!MPIR_Request_is_complete(st->u.bcast_request)) {
                 return MPIX_ASYNC_NOPROGRESS;
             } else {
-                MPIR_Request_free(st->u.bcast_request);
+                GCN_REQUEST_CLEANUP(st, st->u.bcast_request);
 
                 gcn_complete(st);
                 return MPIX_ASYNC_DONE;
@@ -989,7 +1003,13 @@ static int gcn_intercomm_sendrecv(struct gcn_state *st)
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIC_Isend(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE,
                            0, st->tag, st->comm_ptr_inter, &st->u.sendrecv_reqs[1], 0);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (unlikely(mpi_errno)) {
+        // For proper cleanup of the recv request above, we will pretend the
+        // send was created and failed with the same error afterwards.
+        st->u.sendrecv_reqs[1] = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        st->u.sendrecv_reqs[1]->status.MPI_ERROR = mpi_errno;
+        mpi_errno = MPI_SUCCESS;
+    }
 
   fn_fail:
     return mpi_errno;
