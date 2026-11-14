@@ -119,7 +119,7 @@ int yaksuri_cudai_ipack_with_stream(const void *inbuf, void *outbuf, uintptr_t c
             offset += actual_iov_len;
         }
     } else {
-        rc = yaksuri_cudai_md_alloc(type);
+        rc = yaksuri_cudai_md_alloc(type, target);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
         unsigned int n_threads;
@@ -134,8 +134,8 @@ int yaksuri_cudai_ipack_with_stream(const void *inbuf, void *outbuf, uintptr_t c
         cerr = cudaSetDevice(target);
         YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-        cuda_type->pack(inbuf, outbuf, count, op, cuda_type->md, n_threads, n_blocks_x, n_blocks_y,
-                        n_blocks_z, stream);
+        cuda_type->pack(inbuf, outbuf, count, op, yaksuri_cudai_md_get(type, target), n_threads,
+                        n_blocks_x, n_blocks_y, n_blocks_z, stream);
 
         cerr = cudaSetDevice(cur_device);
         YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
@@ -184,7 +184,7 @@ int yaksuri_cudai_iunpack_with_stream(const void *inbuf, void *outbuf, uintptr_t
             offset += actual_iov_len;
         }
     } else {
-        rc = yaksuri_cudai_md_alloc(type);
+        rc = yaksuri_cudai_md_alloc(type, target);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
         unsigned int n_threads;
@@ -199,8 +199,8 @@ int yaksuri_cudai_iunpack_with_stream(const void *inbuf, void *outbuf, uintptr_t
         cerr = cudaSetDevice(target);
         YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-        cuda_type->unpack(inbuf, outbuf, count, op, cuda_type->md, n_threads, n_blocks_x,
-                          n_blocks_y, n_blocks_z, stream);
+        cuda_type->unpack(inbuf, outbuf, count, op, yaksuri_cudai_md_get(type, target), n_threads,
+                          n_blocks_x, n_blocks_y, n_blocks_z, stream);
 
         cerr = cudaSetDevice(cur_device);
         YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);

@@ -54,7 +54,7 @@ int yaksuri_hipi_type_create_hook(yaksi_type_s * type)
     hip = (yaksuri_hipi_type_s *) type->backend.hip.priv;
 
     hip->num_elements = get_num_elements(type);
-    hip->md = NULL;
+    hip->dev_md = NULL;
     pthread_mutex_init(&hip->mdmutex, NULL);
 
     rc = yaksuri_hipi_populate_pupfns(type);
@@ -68,34 +68,12 @@ int yaksuri_hipi_type_create_hook(yaksi_type_s * type)
 
 int yaksuri_hipi_type_free_hook(yaksi_type_s * type)
 {
-    int rc = YAKSA_SUCCESS;
     yaksuri_hipi_type_s *hip = (yaksuri_hipi_type_s *) type->backend.hip.priv;
-    hipError_t cerr;
+
+    int rc = yaksuri_hipi_md_free(type);
 
     pthread_mutex_destroy(&hip->mdmutex);
-    if (hip->md) {
-        if (type->kind == YAKSI_TYPE_KIND__BLKHINDX) {
-            assert(hip->md->u.blkhindx.array_of_displs);
-            cerr = hipFree((void *) hip->md->u.blkhindx.array_of_displs);
-            YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-        } else if (type->kind == YAKSI_TYPE_KIND__HINDEXED) {
-            assert(hip->md->u.hindexed.array_of_displs);
-            cerr = hipFree((void *) hip->md->u.hindexed.array_of_displs);
-            YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-
-            assert(hip->md->u.hindexed.array_of_blocklengths);
-            cerr = hipFree((void *) hip->md->u.hindexed.array_of_blocklengths);
-            YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-        }
-
-        cerr = hipFree(hip->md);
-        YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
-    }
-
     free(hip);
 
-  fn_exit:
     return rc;
-  fn_fail:
-    goto fn_exit;
 }
