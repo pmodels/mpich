@@ -21,6 +21,7 @@
 typedef struct {
     int ndevices;
     hipStream_t *stream;
+    hipStream_t *copy_stream;   /* streams for metadata copies, one for each device */
     bool **p2p;
 } yaksuri_hipi_global_s;
 extern yaksuri_hipi_global_s yaksuri_hipi_global;
