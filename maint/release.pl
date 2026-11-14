@@ -121,6 +121,20 @@ sub run_cmd
     }
 }
 
+# Remove build leftovers (autoconf backups, autom4te caches, Python byte
+# code) from a package directory in the current directory, then tar it up
+# and copy the tarball to $root. The docs build and each "autogen.sh -do=..." run after
+# the main cleanup, so do this right before creating each tarball.
+sub make_tarball
+{
+    my $name = shift;
+
+    run_cmd("find $name \\( -name autom4te.cache -o -name __pycache__ \\) -prune -exec rm -rf {} +");
+    run_cmd("find $name -name '*~' -type f -delete");
+    run_cmd("tar -czvf $name.tar.gz $name");
+    run_cmd("cp -a $name.tar.gz ${root}/");
+}
+
 GetOptions(
     "branch=s" => \$branch,
     "version=s" => \$version,
@@ -251,7 +265,6 @@ print("done\n");
 print("===> Removing unnecessary files in the main codebase... ");
 chdir($expdir);
 run_cmd("rm -rf maint/config.log maint/config.status unusederr.txt");
-run_cmd("find . -name autom4te.cache -o -name __pycache__ | xargs rm -rf");
 print("done\n");
 
 # Get docs
@@ -292,8 +305,7 @@ if ($has_latex) {
 # Create the main tarball
 print("===> Creating the final mpich tarball... ");
 chdir("${tdir}");
-run_cmd("tar -czvf mpich-${version}.tar.gz mpich-${version}");
-run_cmd("cp -a mpich-${version}.tar.gz ${root}/");
+make_tarball("mpich-${version}");
 print("done\n");
 
 # Create the hydra tarball
@@ -302,8 +314,7 @@ chdir("${expdir}");
 run_cmd("./autogen.sh -do=hydra");
 chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/pm/hydra hydra-${version}");
-run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
-run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
+make_tarball("hydra-${version}");
 print("done\n");
 
 # Create the pmi tarball
@@ -312,8 +323,7 @@ chdir("${expdir}");
 run_cmd("./autogen.sh -do=pmi");
 chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/pmi libpmi-${version}");
-run_cmd("tar -czvf libpmi-${version}.tar.gz libpmi-${version}");
-run_cmd("cp -a libpmi-${version}.tar.gz ${root}/");
+make_tarball("libpmi-${version}");
 print("done\n");
 
 # Create the fortran tarball
@@ -322,8 +332,7 @@ chdir("${expdir}");
 run_cmd("./autogen.sh -do=fortran");
 chdir("${tdir}");
 run_cmd("cp -a ${expdir}/src/binding/fortran mpich-fortran-${version}");
-run_cmd("tar -czvf mpich-fortran-${version}.tar.gz mpich-fortran-${version}");
-run_cmd("cp -a mpich-fortran-${version}.tar.gz ${root}/");
+make_tarball("mpich-fortran-${version}");
 print("done\n");
 
 # Create the testsuite tarball
@@ -333,8 +342,7 @@ run_cmd("./autogen.sh -do=test");
 chdir("${tdir}");
 my $target = "mpich-testsuite-$version";
 run_cmd("cp -a ${expdir}/test/mpi $target");
-run_cmd("tar -czvf $target.tar.gz $target");
-run_cmd("cp -a $target.tar.gz ${root}/");
+make_tarball($target);
 print("done\n\n");
 
 # make sure we are outside of the tempdir so that the CLEANUP logic can run
