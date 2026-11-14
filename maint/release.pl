@@ -280,9 +280,17 @@ if ($has_asciidoctor || $has_latex) {
         run_cmd("make mandoc && make htmldoc");
         run_cmd("cp -a man ${expdir}");
         run_cmd("cp -a www ${expdir}");
-        # the Fortran binding installs its own man pages
-        run_cmd("cp -a src/binding/fortran/man ${expdir}/src/binding/fortran");
-        print("done\n");
+        # the Fortran binding installs its own man pages; they are built only
+        # when the docs build configures the Fortran binding
+        if (-d "src/binding/fortran/man") {
+            run_cmd("cp -a src/binding/fortran/man ${expdir}/src/binding/fortran");
+            print("done\n");
+        }
+        else {
+            print("done\n");
+            print("\tWARNING: Fortran binding not configured. Fortran man pages\n");
+            print("\t         will be skipped in the release package.\n\n");
+        }
     }
 
     if ($has_latex) {
