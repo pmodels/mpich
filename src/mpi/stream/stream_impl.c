@@ -201,12 +201,18 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(!MPL_gpu_stream_is_valid(stream_ptr->u.gpu_stream),
                             mpi_errno, MPI_ERR_OTHER, "**invalidgpustream");
+#ifdef MPICH_IS_THREADED
+        /* GPU stream enqueue callbacks execute on a runtime background thread */
+        MPIR_ThreadInfo.isThreaded = 1;
+#endif
     }
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     mpi_errno = allocate_vci(&stream_ptr->vci, stream_ptr->type == MPIR_STREAM_GPU);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPID_Stream_create_hook(stream_ptr);
+    if (mpi_errno == MPI_SUCCESS) {
+        mpi_errno = MPID_Stream_create_hook(stream_ptr);
+    }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     MPIR_ERR_CHECK(mpi_errno);
 
     *p_stream_ptr = stream_ptr;
@@ -226,12 +232,14 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
     int ref_cnt;
     MPIR_Object_release_ref(stream_ptr, &ref_cnt);
     if (ref_cnt == 0) {
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
         mpi_errno = MPID_Stream_free_hook(stream_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (stream_ptr->vci) {
+        if (mpi_errno == MPI_SUCCESS && stream_ptr->vci) {
             mpi_errno = deallocate_vci(stream_ptr->vci);
         }
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+        MPIR_ERR_CHECK(mpi_errno);
+
         MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
     } else {
         /* The stream is still in use */

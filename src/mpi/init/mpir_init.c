@@ -430,6 +430,8 @@ int MPII_Finalize(MPIR_Session * session_ptr)
         goto fn_exit;
     }
 
+    MPIR_Stream_enqueue_finalize();
+
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 

@@ -270,6 +270,7 @@ int MPIR_Start_progress_thread_impl(MPIR_Stream * stream_ptr)
 #endif
 
     MPL_atomic_store_int(&p->state, MPIR_ASYNC_STATE_RUNNING);
+    MPIR_ThreadInfo.isThreaded = 1;
     int err = 0;
     MPID_Thread_create((MPID_Thread_func_t) progress_fn, (void *) p, &p->thread_id, &err);
     MPIR_ERR_CHECK(mpi_errno);
