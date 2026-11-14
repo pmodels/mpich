@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef BSCI_H_INCLUDED
@@ -81,7 +81,7 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
  * \param[in]   debug           Enable/disable debugging
  *
  * This function initializes the bootstrap control device. This needs
- * to be called before any other BSCI function. Implementors are
+ * to be called before any other BSCI function. Implementers are
  * expected to set any bootstrap implementation specific function
  * pointers in this function to be used by later BSCI calls.
  */

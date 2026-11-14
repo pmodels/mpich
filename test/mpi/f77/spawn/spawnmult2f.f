@@ -1,6 +1,6 @@
 C
 C Copyright (C) by Argonne National Laboratory
-C     See COPYRIGHT in top-level directory
+C SPDX-License-Identifier: Apache-2.0
 C
 
 C This tests spawn_mult by using the same executable and no command-line

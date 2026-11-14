@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* a test to exercise very large extents: on most platforms with 32 bit

@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 import sys
@@ -29,7 +29,7 @@ def copyright_c(outfile):
     OUTFILE = open(outfile, "w")
     OUTFILE.write("/*\n")
     OUTFILE.write(" * Copyright (C) by Argonne National Laboratory\n")
-    OUTFILE.write(" *     See COPYRIGHT in top-level directory\n")
+    OUTFILE.write(" * SPDX-License-Identifier: Apache-2.0\n")
     OUTFILE.write(" *\n")
     OUTFILE.write(" * DO NOT EDIT: AUTOMATICALLY GENERATED FILE !!\n")
     OUTFILE.write(" */\n")
@@ -40,7 +40,7 @@ def copyright_makefile(outfile):
     OUTFILE = open(outfile, "w")
     OUTFILE.write("##\n")
     OUTFILE.write("## Copyright (C) by Argonne National Laboratory\n")
-    OUTFILE.write("##     See COPYRIGHT in top-level directory\n")
+    OUTFILE.write("## SPDX-License-Identifier: Apache-2.0\n")
     OUTFILE.write("##\n")
     OUTFILE.write("## DO NOT EDIT: AUTOMATICALLY GENERATED FILE !!\n")
     OUTFILE.write("##\n")

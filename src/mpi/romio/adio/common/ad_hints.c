@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "adio.h"
@@ -226,7 +226,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                              &(fd->hints->ds_write), myname, error_code);
 
         if (ok_to_override_cb_nodes) {
-            /* MPI_File_open path sets up some data structrues that don't
+            /* MPI_File_open path sets up some data structures that don't
              * get resized in the MPI_File_set_view path, so ignore
              * cb_nodes in the set_view case */
             ADIOI_Info_check_and_install_int(fd, users_info, "cb_nodes",

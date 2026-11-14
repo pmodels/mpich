@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # mpi_sources includes only the routines that are MPI function entry points

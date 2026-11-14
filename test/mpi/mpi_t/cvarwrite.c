@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpi.h"
@@ -45,7 +45,7 @@ int run(const char *arg)
 
     for (i = 0; i < num_cvar; i++) {
         MPI_T_cvar_get_info(i, name, &namelen, &verbosity, &datatype, &enumtype,
-                            NULL /* desc is intentionly ignored to test NULL input */ , &desclen,
+                            NULL /* desc is intentionally ignored to test NULL input */ , &desclen,
                             &binding, &scope);
         if (binding != MPI_T_BIND_NO_OBJECT)
             continue;

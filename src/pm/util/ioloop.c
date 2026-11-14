@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /*
@@ -127,7 +127,7 @@ int MPIE_IODeregister(int fd)
 
 Input Parameters:
 .  timeoutSeconds - Seconds until this routine should return with a
-   timeout error.  If negative, no timeout.  If 0, return immediatedly
+   timeout error.  If negative, no timeout.  If 0, return immediately
    after a nonblocking check for I/O.
 
    Return Value:

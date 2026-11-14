@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # conditional includes/build of "sock" controlled in the past by

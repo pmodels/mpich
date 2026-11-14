@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef CH4_REQUEST_H_INCLUDED
@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    required CH4 layer fields initialized.
 
    The net/shm mods can upcall to MPIDIG to create a request, or
-   they can iniitalize their own requests internally, but note
+   they can initialize their own requests internally, but note
    that all the fields from the upper layers must be initialized
    properly.
 

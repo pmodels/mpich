@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpichconf.h"
@@ -56,7 +56,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,
-	   the process manager only delievers the same values for the
+	   the process manager only delivers the same values for the
 	   environment to each process.  There's no way to do this with
 	   the cvar interface, so we need to use getenv() here. */
 	char namebuf[1024];

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef MPIR_OP_UTIL_H_INCLUDED
@@ -75,7 +75,7 @@ MPIR_OP_TYPE_GROUP(INTEGER)
 #else
 #define MPIR_OP_TYPE_MACRO_HAVE_FLOAT128(mpi_type_,c_type_)
 #endif
-/* non IEEE 784 alterante float (e.g. long double) */
+/* non IEEE 784 alternate float (e.g. long double) */
 #if defined(MPIR_ALT_FLOAT96_CTYPE)
 #undef MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96
 #define MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)

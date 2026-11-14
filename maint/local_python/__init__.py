@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 import os
@@ -173,7 +173,7 @@ class MPI_API_Global:
     copyright_c = [
         "/*",
         " * Copyright (C) by Argonne National Laboratory",
-        " *     See COPYRIGHT in top-level directory",
+        " * SPDX-License-Identifier: Apache-2.0",
         " */",
         "",
         "/* -- THIS FILE IS AUTO-GENERATED -- */",
@@ -183,7 +183,7 @@ class MPI_API_Global:
     copyright_mk = [
         "##",
         "## Copyright (C) by Argonne National Laboratory",
-        "##     See COPYRIGHT in top-level directory",
+        "## SPDX-License-Identifier: Apache-2.0",
         "##",
         "",
         "# -- THIS FILE IS AUTO-GENERATED -- ",
@@ -193,7 +193,7 @@ class MPI_API_Global:
     copyright_f77 = [
         "C      ",
         "C      Copyright (C) by Argonne National Laboratory",
-        "C          See COPYRIGHT in top-level directory",
+        "C SPDX-License-Identifier: Apache-2.0",
         "C      ",
         "C      ",
         "C      -- THIS FILE IS AUTO-GENERATED -- ",
@@ -203,7 +203,7 @@ class MPI_API_Global:
     copyright_f90 = [
         "!",
         "! Copyright (C) by Argonne National Laboratory",
-        "!     See COPYRIGHT in top-level directory",
+        "! SPDX-License-Identifier: Apache-2.0",
         "!",
         "",
         "! -- THIS FILE IS AUTO-GENERATED -- ",

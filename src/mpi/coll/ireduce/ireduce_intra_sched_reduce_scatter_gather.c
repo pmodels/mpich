@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpiimpl.h"
@@ -108,7 +108,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
             MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
-             * process does not pariticipate in recursive
+             * process does not participate in recursive
              * doubling */
             newrank = -1;
         } else {        /* even */

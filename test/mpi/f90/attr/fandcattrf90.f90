@@ -1,6 +1,6 @@
 !
 ! Copyright (C) by Argonne National Laboratory
-!     See COPYRIGHT in top-level directory
+! SPDX-License-Identifier: Apache-2.0
 !
 
 ! To do: Create a keyval from c, then change the attribute from Fortran,

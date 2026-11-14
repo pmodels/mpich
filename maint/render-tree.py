@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # This python script renders the files dumped by MPIR_CVAR_TREE_DUMP.

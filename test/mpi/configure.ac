@@ -1,6 +1,6 @@
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 dnl Process this file with autoconf to produce a configure script.
@@ -26,7 +26,7 @@ AC_INIT([mpich-testsuite],
 AC_CONFIG_HEADERS([include/mpitestconf.h])
 AH_TOP([/*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 #ifndef MPITESTCONF_H_INCLUDED
 #define MPITESTCONF_H_INCLUDED

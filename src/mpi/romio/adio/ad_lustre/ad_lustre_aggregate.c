@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "ad_lustre.h"
@@ -58,7 +58,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int *striping_info, int mode)
         /* nprocs_for_coll is less than stripe_count */
         /* avail_cb_nodes should divide stripe_count */
         /* e.g. if stripe_count=60 and nprocs_for_coll=8 then
-         * avail_cb_nodes should be egal to 6 */
+         * avail_cb_nodes should be equal to 6 */
         /* This could be done with :
          * while (stripe_count % avail_cb_nodes != 0) avail_cb_nodes--;
          * but this can be optimized for large values of nprocs_for_coll and

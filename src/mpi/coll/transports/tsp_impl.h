@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #ifndef TSP_IMPL_H_INCLUDED
@@ -12,7 +12,7 @@ int MPII_TSP_init(void);
 /* transport cleanup */
 int MPII_TSP_finalize(void);
 
-/* communicator-specific initializtion */
+/* communicator-specific initialization */
 int MPII_TSP_comm_init(MPIR_Comm * comm_ptr);
 
 /* communicator-specific cleanup */

@@ -1,6 +1,6 @@
 C
 C Copyright (C) by Argonne National Laboratory
-C     See COPYRIGHT in top-level directory
+C SPDX-License-Identifier: Apache-2.0
 C
 
 C Test Fortran MPI_Reduce_local with MPI_OP_SUM and with user-defined operation.

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpioimpl.h"
@@ -16,7 +16,7 @@
 static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
                                             const char *dirname, MPI_Comm * newcomm)
 {
-    /* If you run this at scale against GPFS, be prepared to spend 30 mintues
+    /* If you run this at scale against GPFS, be prepared to spend 30 minutes
      * creating 10,000 files -- and the numbers only get worse from there.
      *
      * - create random directory

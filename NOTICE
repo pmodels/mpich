@@ -1,0 +1,36 @@
+MPICH
+Copyright (c) 1998-2026 UChicago Argonne, LLC and other MPICH contributors.
+
+This product includes software developed at Argonne National Laboratory
+(https://www.mpich.org).
+
+Organizations and individuals who have contributed to MPICH are listed in
+the CONTRIBUTORS file. Per-file authorship can be traced through the git
+commit history.
+
+-------------------------------------------------------------------------
+GOVERNMENT LICENSE
+-------------------------------------------------------------------------
+
+Portions of this material resulted from work developed under a U.S.
+Government Contract and are subject to the following license: the Government
+is granted for itself and others acting on its behalf a paid-up, nonexclusive,
+irrevocable worldwide license in this computer software to reproduce, prepare
+derivative works, and perform publicly and display publicly.
+
+-------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+-------------------------------------------------------------------------
+
+MPICH includes or bundles the following third-party software, each under
+its own license. See the license file or header in each component.
+
+  * hwloc       (modules/hwloc)       BSD-3-Clause
+  * libfabric   (modules/libfabric)   BSD-2-Clause or GPL-2.0
+  * UCX         (modules/ucx)         BSD-3-Clause
+  * mydef_boot  (modules/mydef_boot)  MIT
+  * uthash      (src/mpl/include/ut*.h,
+                 src/mpi/datatype/typerep/yaksa/src/external/y*.h)
+                                      BSD-1-Clause
+  * Autoconf macros and helper scripts (confdb/, yaksa/m4/)
+                                      licenses as stated in each file

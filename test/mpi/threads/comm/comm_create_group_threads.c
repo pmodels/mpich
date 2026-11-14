@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 
         MPI_Comm_group(comms[*(int *) arg], &world_group);
 
-        /* Every thread paticipates in a distinct MPI_Comm_create group,
+        /* Every thread participates in a distinct MPI_Comm_create group,
          * distinguished by its thread-id (used as the tag).  Threads on even
          * ranks join an even comm and threads on odd ranks join the odd comm.
          */

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* Allow fprintf in debug statements */
@@ -811,7 +811,7 @@ static int communicators_changed(mqs_process * proc)
  * Find a matching communicator on our list. We check the recv context
  * as well as the address since the communicator structures may be
  * being re-allocated from a free list, in which case the same
- * address will be re-used a lot, which could confuse us.
+ * address will be reused a lot, which could confuse us.
  */
 static communicator_t *find_communicator(mpich_process_info * p_info,
                                          mqs_taddr_t comm_base, int recv_ctx)

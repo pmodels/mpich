@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpiimpl.h"
@@ -345,7 +345,7 @@ static inline void set_level_rank_indices(struct hierarchy_t *level, int r, int 
         level->myrank_idx = idx;
 }
 
-/*Toplogy tree helpers*/
+/*Topology tree helpers*/
 
 /* Swap two item in an UT_array with their indexes */
 static void swap_idx(UT_array * array, int idx0, int idx1)

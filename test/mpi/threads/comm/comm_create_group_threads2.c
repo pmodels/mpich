@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 /* This test test MPI_Comm_create_group tests calling by multiple threads
@@ -42,7 +42,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 
         MPI_Comm_group(MPI_COMM_WORLD, &full_group);
         MPI_Group_range_incl(full_group, 1, range, &half_group);
-        /* Every thread paticipates in a distinct MPI_Comm_create_group,
+        /* Every thread participates in a distinct MPI_Comm_create_group,
          * distinguished by its thread-id (used as the tag).
          */
         if (verbose)

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "adio.h"
@@ -65,7 +65,7 @@ enum ladvise_flag {
 /* Masks of valid flags for each advice */
 #define LF_LOCKNOEXPAND_MASK LF_UNSET
 #define LF_LOCKAHEAD_MASK LF_NONBLOCK
-/* Flags valid for all advices not explicitly specified */
+/* Flags valid for all advice not explicitly specified */
 #define LF_DEFAULT_MASK LF_ASYNC
 /* All flags */
 #define LF_MASK (LF_ASYNC | LF_UNSET | LF_NONBLOCK)
@@ -79,12 +79,12 @@ enum ladvise_flag {
  * only used locally. */
 struct llapi_ladvise_hdr {
     __u32 lah_magic;            /* LADVISE_MAGIC */
-    __u32 lah_count;            /* number of advices */
+    __u32 lah_count;            /* number of advice entries */
     __u64 lah_flags;            /* from enum ladvise_flag */
     __u32 lah_value1;           /* unused */
     __u32 lah_value2;           /* unused */
     __u64 lah_value3;           /* unused */
-    struct llapi_lu_ladvise lah_advise[0];      /* advices in this header */
+    struct llapi_lu_ladvise lah_advise[0];      /* advice entries in this header */
 };
 
 #define LAH_COUNT_MAX   (1024)

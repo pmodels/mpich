@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <stdio.h>
@@ -14,7 +14,7 @@ void ChkMsg(int, int, const char[]);
  * message for a code, and prints out the corresponding class and original
  * message.
  *
- * Eventually, we should also access the generic anc specific messages
+ * Eventually, we should also access the generic and specific messages
  * separately.
  */
 void ChkMsg(int err, int msgclass, const char msg[])

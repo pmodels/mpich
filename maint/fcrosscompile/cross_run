@@ -1,7 +1,7 @@
 #! /bin/sh
 ##
 ## Copyright (C) by Argonne National Laboratory
-##     See COPYRIGHT in top-level directory
+## SPDX-License-Identifier: Apache-2.0
 ##
 
 # This script takes one argument, $pgm, and run it on $BACKEND.
@@ -24,7 +24,7 @@ wdir="`mktemp --tmpdir=/tmp fcross.XXXXXX`"
 $SSH $BACKEND "mkdir $wdir" 2> /dev/null && \
 # Copy the $pgm to the remote directory.
 $SCP -p $pgm ${BACKEND}:${wdir} && \
-# Launch the $pgm from the remote diectory.
+# Launch the $pgm from the remote directory.
 $SSH $BACKEND "cd $wdir && $pgm" 2> /dev/null && \
 # Copy whatever remote files created due to $pgm back to local directory.
 $SCP ${BACKEND}:${wdir}/* . && \

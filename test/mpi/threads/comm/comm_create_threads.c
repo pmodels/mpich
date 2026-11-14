@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <stdio.h>
@@ -32,7 +32,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
 
         MPI_Comm_group(comms[*(int *) arg], &world_group);
 
-        /* Every thread paticipates in a distinct MPI_Comm_create on distinct
+        /* Every thread participates in a distinct MPI_Comm_create on distinct
          * communicators.  Thus, there is no violation of MPI threads +
          * communicators semantics.
          */

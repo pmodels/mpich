@@ -1,6 +1,6 @@
 !
 ! Copyright (C) by Argonne National Laboratory
-!     See COPYRIGHT in top-level directory
+! SPDX-License-Identifier: Apache-2.0
 !
 
 !
@@ -47,7 +47,7 @@
 ! bytes than the maximum-sized attribute, in which case the high
 ! bytes are stored as zero).  When a value is retrieved, if the
 ! destination location is smaller, the low bytes (in value) are
-! saved; this is the same as trunction.  If the destination location
+! saved; this is the same as truncation.  If the destination location
 ! is longer, then then value is sign-extended (See MPI-3, 17.2.7).
 !
 ! Specifically, if the value was set from Fortran, C will return a

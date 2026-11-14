@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "hydra.h"
@@ -62,7 +62,7 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
  *
  * This is a variation of HYDU_add_to_node_list. It checks for existing nodes. If exist,
  * update the core_count to the max of both; Otherwise, add to existing nodes. It returns
- * the ndoe id from the node list.
+ * the node id from the node list.
  */
 static HYD_status merge_to_node_list(const char *hostname, int num_procs,
                                      struct HYD_node **node_list, int *new_node_id)

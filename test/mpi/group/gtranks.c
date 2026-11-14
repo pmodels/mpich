@@ -1,6 +1,6 @@
 /*
  * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "mpi.h"
@@ -37,7 +37,7 @@ int run(const char *arg)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     if (size < 4) {
-        fprintf(stderr, "This test requiers at least 4 processes\n");
+        fprintf(stderr, "This test requires at least 4 processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
