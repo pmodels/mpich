@@ -15,7 +15,7 @@ structpack2 1
 struct_pack_mpi_bottom 1
 struct_unpack_mpi_bottom 1
 typecommit 1
-typename 1
+@fortran_tests@typename 1
 @lbub_tests@typename_oldapi 1 strict=FALSE
 typefree 1
 zeroparms 1
