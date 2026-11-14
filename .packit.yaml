@@ -16,12 +16,14 @@ srpm_build_deps:
   - autoconf
   - automake
   - gcc
+  - gcc-gfortran
   - git
   - libtool
   - make
   - perl
   - python3
   - rubygem-asciidoctor
+  - texlive-latex
 files_to_sync:
   - src: packaging/rpm/
     dest: ./
