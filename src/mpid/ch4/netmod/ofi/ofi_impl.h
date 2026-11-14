@@ -547,7 +547,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_rndv_need_pack(int dt_contig, MPL_pointe
     if (!dt_contig)
         return true;
     if (!MPL_gpu_attr_is_host(attr))
-        return !MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK;
+        return !MPIDI_OFI_global.rndv_gpu_no_pack;
     return false;
 }
 

@@ -623,6 +623,22 @@ static void host_free_registered(void *ptr)
     MPL_free(ptr);
 }
 
+static bool hmem_p2p_supported(struct fid_ep *ep)
+{
+#if FI_VERSION_GE(FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION), FI_VERSION(1, 14))
+    int p2p_opt;
+    size_t optlen = sizeof(p2p_opt);
+
+    if (!MPIDI_OFI_ENABLE_HMEM)
+        return false;
+    if (fi_getopt(&ep->fid, FI_OPT_ENDPOINT, FI_OPT_FI_HMEM_P2P, &p2p_opt, &optlen))
+        return false;
+    return p2p_opt != FI_HMEM_P2P_DISABLED;
+#else
+    return false;
+#endif
+}
+
 int MPIDI_OFI_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -772,6 +788,11 @@ int MPIDI_OFI_init_fabric(MPIR_Comm * comm)
          * This code maybe moved to a later stage */
         mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK != -1)
+            MPIDI_OFI_global.rndv_gpu_no_pack = MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK;
+        else
+            MPIDI_OFI_global.rndv_gpu_no_pack = hmem_p2p_supported(MPIDI_OFI_global.ctx[0].ep);
 
         char *addrname[FI_NAME_MAX];
         size_t addrnamelen = FI_NAME_MAX;

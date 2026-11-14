@@ -458,6 +458,7 @@ typedef struct {
     uint64_t max_buffered_write;
     uint64_t max_msg_size;
     uint64_t stripe_threshold;
+    bool rndv_gpu_no_pack;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
