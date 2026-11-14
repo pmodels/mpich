@@ -41,8 +41,7 @@ int MPIDI_OFI_init_per_vci(int vci);
 bool MPIDI_OFI_nic_is_up(struct fi_info *prov);
 
 int MPIDI_OFI_fill_prov_use(struct fi_info *prov);
-int MPIDI_OFI_order_multi_nic_local(void);
-int MPIDI_OFI_order_multi_nic_global(MPIR_Comm * node_comm);
+int MPIDI_OFI_order_nics(MPIR_Comm * node_comm);
 
 int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm);
 

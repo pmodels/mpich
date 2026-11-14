@@ -2420,6 +2420,15 @@ Controls whether striping of large messages across multiple NICs is enabled in t
 
 Used in functions: `MPIDI_OFI_comm_init`, `MPIDI_OFI_comm_set_hints`
 
+### MPIR_CVAR_CH4_OFI_ENABLE_NIC_SORT
+
+Controls whether CH4 OFI orders the discovered NICs when the fabric is initialized: sort them by name, mark the NICs close to the process (by `MPIR_CVAR_CH4_OFI_PREF_NIC` or CPU/GPU locality), and rotate the close NICs across node-local ranks so each rank uses a different NIC by default. Turning it off keeps the order returned by `fi_getinfo()`, e.g. on rail-only networks where the provider or launcher already gives each rank the NIC on its rail. It must be the same on all processes, since ordering for comm world includes an allgather over node-local ranks.
+
+* true - default, sort, rank and rotate the NICs.
+* false - use the NICs in `fi_getinfo()` order; `MPIR_CVAR_CH4_OFI_PREF_NIC` has no effect.
+
+Used in functions: `MPIDI_OFI_init_fabric`
+
 ### MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK
 
 Controls whether CH4 OFI records the point-to-point no-pack capability setting. It is used while OFI runtime settings are initialized and debug settings are printed. It can override the provider capability-set default; no dependency on another CVAR or mode is visible in `src/mpid/ch4/netmod/ofi/ofi_init.c` or `src/mpid/ch4/netmod/ofi/init_settings.c`. When active, this CVAR enables the CH4 OFI capability setting for point-to-point transfers without packing.

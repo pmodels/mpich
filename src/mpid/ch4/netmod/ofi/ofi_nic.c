@@ -39,6 +39,19 @@ cvars:
         per-rank CUDA_VISIBLE_DEVICES should be constrained to device(s) that could
         effectively share the same NIC assignments; see mpiexec manual for GPU
         visibility options
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_NIC_SORT
+      category    : CH4_OFI
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls whether discovered NICs are sorted alphabetically, ordered by
+        CPU/GPU locality, and rotated across node-local ranks. When false, NICs
+        are used in the exact order returned by fi_getinfo(), and
+        MPIR_CVAR_CH4_OFI_PREF_NIC has no effect. Must be the same on all processes.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -70,7 +83,7 @@ static int order_multi_nic_by_pref(int pref);
 #ifdef HAVE_LIBFABRIC_NIC
 static bool is_nic_pci_valid(struct fi_info *info);
 static bool try_set_nic_close_by_gpu(MPIDI_OFI_nic_info_t * nics, int nic_count);
-static int set_nic_info(void);
+static void set_nic_info(void);
 #endif
 
 /* ================================== */
@@ -157,16 +170,10 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
 
         MPIDI_OFI_global.num_nics_available = 1;
         MPIDI_OFI_global.num_nics = 1;
-        MPIDI_OFI_global.nic_info[0].nic = MPIDI_OFI_global.prov_use[0];
-        MPIDI_OFI_global.nic_info[0].id = 0;
-        MPIDI_OFI_global.nic_info[0].close = 1;
     } else {
         MPIDI_OFI_global.num_nics_available = nic_count;
 
         /* nic_count >= 1 */
-        /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
-        qsort(MPIDI_OFI_global.prov_use, nic_count, sizeof(struct fi_info *), compare_nic_names);
-
         int num_nics = 1;
         if (MPIR_CVAR_CH4_OFI_MAX_NICS == -1) {
             /* use all nics */
@@ -179,62 +186,17 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
             num_nics = 1;
         }
         MPIDI_OFI_global.num_nics = num_nics;
-
-        for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
-            MPIDI_OFI_global.nic_info[i].nic = MPIDI_OFI_global.prov_use[i];
-            MPIDI_OFI_global.nic_info[i].id = i;
-            MPIDI_OFI_global.nic_info[i].close = 0;
-        }
-
-        if (MPIR_CVAR_CH4_OFI_PREF_NIC > -1 &&
-            MPIR_CVAR_CH4_OFI_PREF_NIC < MPIDI_OFI_global.num_nics_available) {
-            /* set the pref_nic's close to 1, all other nics' close to 0 */
-            MPIDI_OFI_global.nic_info[MPIR_CVAR_CH4_OFI_PREF_NIC].close = 1;
-        } else {
-#ifdef HAVE_LIBFABRIC_NIC
-            /* check all nics have valid pci info */
-            bool all_valid = true;
-            for (int i = 0; i < nic_count; ++i) {
-                if (!is_nic_pci_valid(MPIDI_OFI_global.prov_use[i])) {
-                    all_valid = false;
-                    break;
-                }
-            }
-            if (all_valid) {
-                /* determine close via nic_pci */
-                mpi_errno = set_nic_info();
-                MPIR_ERR_CHECK(mpi_errno);
-            } else {
-                /* just choose the first nic */
-                MPIDI_OFI_global.nic_info[0].close = 1;
-            }
-        }
-#else
-            /* just choose the first nic */
-            MPIDI_OFI_global.nic_info[0].close = 1;
-        }
-#endif
     }
 
-    int num_close_nics = 0;
+    /* NICs stay in fi_getinfo order, all considered close, until MPIDI_OFI_order_nics */
     for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
-        if (MPIDI_OFI_global.nic_info[i].close) {
-            num_close_nics++;
-        }
+        MPIDI_OFI_global.nic_info[i].nic = MPIDI_OFI_global.prov_use[i];
+        MPIDI_OFI_global.nic_info[i].id = i;
+        MPIDI_OFI_global.nic_info[i].close = 1;
     }
-    /* If there were zero NICs on my socket, then just consider every NIC close
-     * and share them among all ranks with a similar view */
-    if (num_close_nics == 0) {
-        for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
-            MPIDI_OFI_global.nic_info[i].close = 1;
-        }
-        num_close_nics = MPIDI_OFI_global.num_nics_available;
-    }
-
-    MPIDI_OFI_global.num_close_nics = num_close_nics;
+    MPIDI_OFI_global.num_close_nics = MPIDI_OFI_global.num_nics_available;
 
     MPIR_Assert(MPIDI_OFI_global.num_nics_available > 0);
-    MPIR_Assert(MPIDI_OFI_global.num_close_nics > 0);
 
     char nics_str[32];
     MPIR_Info *info_ptr = NULL;
@@ -253,12 +215,121 @@ int MPIDI_OFI_fill_prov_use(struct fi_info *prov)
 
 /* -- NIC ordering ---------------------------------------------- */
 
-int MPIDI_OFI_order_multi_nic_local(void)
-{
-    /* TODO: pass comm and use comm->local_rank */
-    int pref = MPIR_Process.local_rank % MPIDI_OFI_global.num_close_nics;
+/* Sort the NICs by name, so all ranks share the same NIC ids. The ids are what
+ * MPIR_CVAR_CH4_OFI_PREF_NIC and the multi-NIC pref_nic hint refer to. */
+static void sort_nics_by_name(void);
+/* Mark the NICs close to this process, by MPIR_CVAR_CH4_OFI_PREF_NIC or by locality */
+static void set_nic_closeness(void);
+static int compute_nic_pref_global(MPIR_Comm * node_comm);
 
-    return order_multi_nic_by_pref(pref);
+/* Order the NICs so that prov_use[0] is the NIC this process uses by default.
+ * The name sort and closeness run once, before the fabric is initialized; the
+ * order is never changed after that. With node_comm, the close NICs are balanced
+ * across the node-local ranks collectively, so node_comm ranks must all call it. */
+int MPIDI_OFI_order_nics(MPIR_Comm * node_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* with a single NIC (possibly without nic info) there is nothing to sort */
+    if (!MPIDI_OFI_global.fabric_initialized && MPIDI_OFI_global.num_nics_available > 1) {
+        sort_nics_by_name();
+        set_nic_closeness();
+    }
+
+    int pref = -1;
+    if (node_comm) {
+        /* collective, called even if fabric_initialized */
+        pref = compute_nic_pref_global(node_comm);
+    }
+
+    if (!MPIDI_OFI_global.fabric_initialized) {
+        if (pref < 0) {
+            /* Fallback: no global info available or unsupported topology */
+            /* TODO: pass comm and use comm->local_rank */
+            int local_rank = node_comm ? node_comm->rank : MPIR_Process.local_rank;
+            pref = local_rank % MPIDI_OFI_global.num_close_nics;
+        }
+        mpi_errno = order_multi_nic_by_pref(pref);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void sort_nics_by_name(void)
+{
+    int nic_count = MPIDI_OFI_global.num_nics_available;
+
+    qsort(MPIDI_OFI_global.prov_use, nic_count, sizeof(struct fi_info *), compare_nic_names);
+    for (int i = 0; i < nic_count; i++) {
+        MPIDI_OFI_global.nic_info[i].nic = MPIDI_OFI_global.prov_use[i];
+        MPIDI_OFI_global.nic_info[i].id = i;
+    }
+}
+
+static void set_nic_closeness(void)
+{
+    for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
+        MPIDI_OFI_global.nic_info[i].close = 0;
+    }
+
+    if (MPIR_CVAR_CH4_OFI_PREF_NIC > -1 &&
+        MPIR_CVAR_CH4_OFI_PREF_NIC < MPIDI_OFI_global.num_nics_available) {
+        /* set the pref_nic's close to 1, all other nics' close to 0 */
+        MPIDI_OFI_global.nic_info[MPIR_CVAR_CH4_OFI_PREF_NIC].close = 1;
+    } else {
+#ifdef HAVE_LIBFABRIC_NIC
+        /* check all nics have valid pci info */
+        int nic_count = MPIDI_OFI_global.num_nics_available;
+        bool all_valid = true;
+        for (int i = 0; i < nic_count; ++i) {
+            if (!is_nic_pci_valid(MPIDI_OFI_global.prov_use[i])) {
+                all_valid = false;
+                break;
+            }
+        }
+        if (all_valid) {
+            /* determine close via nic_pci */
+            set_nic_info();
+        } else {
+            /* just choose the first nic */
+            MPIDI_OFI_global.nic_info[0].close = 1;
+        }
+    }
+#else
+        /* just choose the first nic */
+        MPIDI_OFI_global.nic_info[0].close = 1;
+    }
+#endif
+
+    int num_close_nics = 0;
+    for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
+        if (MPIDI_OFI_global.nic_info[i].close) {
+            num_close_nics++;
+        }
+    }
+    /* If there were zero NICs on my socket, then just consider every NIC close
+     * and share them among all ranks with a similar view */
+    if (num_close_nics == 0) {
+        for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
+            MPIDI_OFI_global.nic_info[i].close = 1;
+        }
+        num_close_nics = MPIDI_OFI_global.num_nics_available;
+    }
+
+    MPIDI_OFI_global.num_close_nics = num_close_nics;
+
+    MPIR_Assert(MPIDI_OFI_global.num_close_nics > 0);
+
+    char nics_str[32];
+    MPIR_Info *info_ptr = NULL;
+    MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
+
+    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_close_nics);
+    MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 }
 
 /* Exchange NIC affinity masks across node-local ranks and compute a preferred
@@ -338,21 +409,6 @@ static int compute_nic_pref_global(MPIR_Comm * node_comm)
   fn_fail:
     pref = -1;
     goto fn_exit;
-}
-
-int MPIDI_OFI_order_multi_nic_global(MPIR_Comm * node_comm)
-{
-    int pref = compute_nic_pref_global(node_comm);
-
-    if (MPIDI_OFI_global.fabric_initialized) {
-        return MPI_SUCCESS;
-    }
-
-    if (pref < 0) {
-        /* Fallback: no global info available or unsupported topology */
-        pref = node_comm->rank % MPIDI_OFI_global.num_close_nics;
-    }
-    return order_multi_nic_by_pref(pref);
 }
 
 /* ================================== */
@@ -652,7 +708,7 @@ static void set_nic_close_by_cpu(MPIDI_OFI_nic_info_t * nics, int nic_count)
     }
 }
 
-static int set_nic_info(void)
+static void set_nic_info(void)
 {
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
     int nic_count = MPIDI_OFI_global.num_nics_available;
@@ -661,8 +717,6 @@ static int set_nic_info(void)
     if (!MPIR_CVAR_CH4_OFI_NIC_GPU_AFFINITY || !try_set_nic_close_by_gpu(nics, nic_count)) {
         set_nic_close_by_cpu(nics, nic_count);
     }
-
-    return MPI_SUCCESS;
 }
 
 #endif
