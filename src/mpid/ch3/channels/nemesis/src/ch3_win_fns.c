@@ -337,10 +337,9 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         /* serialize handle and broadcast it to the other processes in win */
-        mpi_errno =
-            MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->info_shm_segment_handle,
-                                                &serialized_hnd_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->info_shm_segment_handle,
+                                                    &serialized_hnd_ptr);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
         mpi_errno = MPIR_Bcast_fallback(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL,
                                         0, node_comm_ptr, 0);
@@ -498,17 +497,15 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             char *serialized_hnd_ptr = NULL;
 
             /* create shared memory region for all processes in win and map */
-            mpi_errno =
-                MPL_shm_seg_create_and_attach((*win_ptr)->shm_segment_handle,
-                                                (*win_ptr)->shm_segment_len,
-                                                &(*win_ptr)->shm_base_addr, 0);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_create_and_attach((*win_ptr)->shm_segment_handle,
+                                                    (*win_ptr)->shm_segment_len,
+                                                    &(*win_ptr)->shm_base_addr, 0);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             /* serialize handle and broadcast it to the other processes in win */
-            mpi_errno =
-                MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->shm_segment_handle,
-                                                    &serialized_hnd_ptr);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->shm_segment_handle,
+                                                        &serialized_hnd_ptr);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             mpi_errno = MPIR_Bcast_fallback(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL,
                                             0, node_comm_ptr, 0);
@@ -530,10 +527,9 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                             node_comm_ptr, 0);
             MPIR_ERR_CHECK(mpi_errno);
 
-            mpi_errno =
-                MPL_shm_hnd_deserialize((*win_ptr)->shm_segment_handle, serialized_hnd,
-                                          strlen(serialized_hnd));
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_hnd_deserialize((*win_ptr)->shm_segment_handle, serialized_hnd,
+                                              strlen(serialized_hnd));
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
             /* attach to shared memory region created by rank 0 */
             mpl_err = MPL_shm_seg_attach((*win_ptr)->shm_segment_handle,
@@ -553,19 +549,17 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             char *serialized_hnd_ptr = NULL;
 
             /* create shared memory region for all processes in win and map */
-            mpi_errno =
-                MPL_shm_seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle,
-                                                sizeof(MPIDI_CH3I_SHM_MUTEX),
-                                                (void **) &(*win_ptr)->shm_mutex, 0);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle,
+                                                    sizeof(MPIDI_CH3I_SHM_MUTEX),
+                                                    (void **) &(*win_ptr)->shm_mutex, 0);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             MPIDI_CH3I_SHM_MUTEX_INIT(*win_ptr);
 
             /* serialize handle and broadcast it to the other processes in win */
-            mpi_errno =
-                MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->shm_mutex_segment_handle,
-                                                    &serialized_hnd_ptr);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_hnd_get_serialized_by_ref((*win_ptr)->shm_mutex_segment_handle,
+                                                        &serialized_hnd_ptr);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             mpi_errno = MPIR_Bcast_fallback(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL,
                                             0, node_comm_ptr, 0);
@@ -587,10 +581,9 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                             node_comm_ptr, 0);
             MPIR_ERR_CHECK(mpi_errno);
 
-            mpi_errno =
-                MPL_shm_hnd_deserialize((*win_ptr)->shm_mutex_segment_handle, serialized_hnd,
-                                          strlen(serialized_hnd));
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_hnd_deserialize((*win_ptr)->shm_mutex_segment_handle, serialized_hnd,
+                                              strlen(serialized_hnd));
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
             /* attach to shared memory region created by rank 0 */
             mpl_err = MPL_shm_seg_attach((*win_ptr)->shm_mutex_segment_handle,

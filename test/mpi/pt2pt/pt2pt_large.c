@@ -57,6 +57,12 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    /* the large-count buffers do not fit in a 32-bit address space */
+    if (option > 0 && sizeof(void *) < 8) {
+        MTest_Finalize(0);
+        return 0;
+    }
+
     MPI_Comm comm;
     comm = MPI_COMM_WORLD;
 

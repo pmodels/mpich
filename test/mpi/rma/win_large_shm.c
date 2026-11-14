@@ -23,6 +23,11 @@ int run(const char *arg)
     int i;
     int shm_win_size = 1024 * 1024 * 1024 * sizeof(char);       /* 1GB */
 
+    /* every process maps all ranks' 1GB windows, which does not fit a 32-bit address space */
+    if (sizeof(void *) < 8) {
+        return 0;
+    }
+
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     for (i = 0; i < 2; i++) {
