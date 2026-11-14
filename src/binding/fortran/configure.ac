@@ -1251,6 +1251,17 @@ else
 fi
 AC_SUBST(WRAPPER_FC_DYNAMIC_LOADING_FLAGS)
 
+# Stand-alone: mpifort and mpich-fortran.pc link the MPI library from
+# $with_mpi/lib, which is not the libdir of libmpifort.
+if test "$FROM_MPICH" != "yes" ; then
+    mpi_libdir="$with_mpi/lib"
+    PAC_APPEND_FLAG([-L$mpi_libdir], [WRAPPER_LDFLAGS])
+    if test "X${with_wrapper_dl_type}" = "Xrunpath" -o "X${with_wrapper_dl_type}" = "Xrpath" ; then
+        mpi_rpath_flags=`. ./$fc_shlib_conf; libdir=$mpi_libdir; eval echo \"${hardcode_libdir_flag_spec}\"`
+        PAC_APPEND_FLAG([$mpi_rpath_flags], [WRAPPER_LDFLAGS])
+    fi
+fi
+
 # Fortran modules may be installed outside of includedir
 if test "$modincdir" != "$includedir" ; then
     PC_FCMODINC="${FCMODINCFLAG}\${modincdir}"
