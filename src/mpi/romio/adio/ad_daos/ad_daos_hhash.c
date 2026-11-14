@@ -195,7 +195,7 @@ int adio_daos_poh_lookup_connect(struct duns_attr_t *attr, struct adio_daos_hdl 
 #endif
     if (rc < 0) {
         PRINT_MSG(stderr, "Failed to connect to pool (%d)\n", rc);
-        goto free_hdl;
+        return rc;
     }
 
     rc = adio_daos_poh_insert(attr, poh, &phdl);
@@ -209,9 +209,7 @@ int adio_daos_poh_lookup_connect(struct duns_attr_t *attr, struct adio_daos_hdl 
     return 0;
 
   err_pool:
-    daos_pool_disconnect(phdl->open_hdl, NULL);
-  free_hdl:
-    ADIOI_Free(phdl);
+    daos_pool_disconnect(poh, NULL);
     return rc;
 }
 
