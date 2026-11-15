@@ -22,79 +22,94 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
+/* An unsupported optional type may be a valid handle that MPI calls reject,
+ * so check it with an error-returning call (needs MPI_ERRORS_RETURN). */
+static bool type_is_available(MPI_Datatype dtype)
+{
+    int size = 0;
+    if (dtype == MPI_DATATYPE_NULL) {
+        return false;
+    }
+    int err = MPI_Type_size(dtype, &size);
+    return err == MPI_SUCCESS && size > 0;
+}
+
 int main(int argc, char *argv[])
 {
     int num_ints, num_adds, num_types, combiner, errs = 0;
 
     MPI::Init();
 
+    /* Errors not tied to an object go to the handler on MPI_COMM_SELF */
+    MPI::COMM_SELF.Set_errhandler(MPI::ERRORS_RETURN);
+
     /* Check for the Fortran Datatypes */
 #ifdef HAVE_FORTRAN_BINDING
-    /* First, the optional types.  We allow these to be DATATYPE_NULL */
-    if (MPI::REAL4 != MPI::DATATYPE_NULL) {
+    /* First, the optional types.  We skip the ones that are not available */
+    if (type_is_available(MPI::REAL4)) {
         MPI::REAL4.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "REAL4 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::REAL8 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::REAL8)) {
         MPI::REAL8.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "REAL8 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::REAL16 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::REAL16)) {
         MPI::REAL16.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "REAL16 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::COMPLEX8 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::COMPLEX8)) {
         MPI::COMPLEX8.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "COMPLEX8 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::COMPLEX16 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::COMPLEX16)) {
         MPI::COMPLEX16.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "COMPLEX16 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::COMPLEX32 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::COMPLEX32)) {
         MPI::COMPLEX32.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "COMPLEX32 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::INTEGER1 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::INTEGER1)) {
         MPI::INTEGER1.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "INTEGER1 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::INTEGER2 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::INTEGER2)) {
         MPI::INTEGER2.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "INTEGER2 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::INTEGER4 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::INTEGER4)) {
         MPI::INTEGER4.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "INTEGER4 not a NAMED type" << "\n";
             errs++;
         }
     }
-    if (MPI::INTEGER8 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::INTEGER8)) {
         MPI::INTEGER8.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "INTEGER8 not a NAMED type" << "\n";
@@ -102,7 +117,7 @@ int main(int argc, char *argv[])
         }
     }
 #ifdef HAVE_MPI_INTEGER16
-    if (MPI::INTEGER16 != MPI::DATATYPE_NULL) {
+    if (type_is_available(MPI::INTEGER16)) {
         MPI::INTEGER16.Get_envelope(num_ints, num_adds, num_types, combiner);
         if (combiner != MPI::COMBINER_NAMED) {
             cout << "INTEGER16 not a NAMED type" << "\n";
