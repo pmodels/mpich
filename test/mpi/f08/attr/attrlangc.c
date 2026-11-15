@@ -372,7 +372,8 @@ void cmpif1read_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Fint * expected,
                  MPI_Fint * errs, const char *msg, int msglen)
 {
     void *attrval;
-    int flag, result;
+    int flag;
+    MPI_Fint result;
     MPI_Comm comm = MPI_Comm_f2c(*fcomm);
     char lmsg[MAX_ATTRTEST_MSG];
 
@@ -407,7 +408,8 @@ void cmpif2read_(MPI_Fint * fcomm, MPI_Fint * fkey, MPI_Aint * expected,
                  MPI_Fint * errs, const char *msg, int msglen)
 {
     void *attrval;
-    int flag, result;
+    int flag;
+    MPI_Fint result;
     MPI_Comm comm = MPI_Comm_f2c(*fcomm);
     char lmsg[MAX_ATTRTEST_MSG];
 
@@ -440,7 +442,8 @@ void cmpif2readtype_(MPI_Fint * ftype, MPI_Fint * fkey, MPI_Aint * expected,
                      MPI_Fint * errs, const char *msg, int msglen)
 {
     void *attrval;
-    int flag, result;
+    int flag;
+    MPI_Fint result;
     MPI_Datatype dtype = MPI_Type_f2c(*ftype);
     char lmsg[MAX_ATTRTEST_MSG];
 
@@ -473,7 +476,8 @@ void cmpif2readwin_(MPI_Fint * fwin, MPI_Fint * fkey, MPI_Aint * expected,
                     MPI_Fint * errs, const char *msg, int msglen)
 {
     void *attrval;
-    int flag, result;
+    int flag;
+    MPI_Fint result;
     MPI_Win win = MPI_Win_f2c(*fwin);
     char lmsg[MAX_ATTRTEST_MSG];
 
@@ -572,8 +576,8 @@ void ccompareint2aint_(MPI_Fint * in1, MPI_Aint * in2, MPI_Fint * result)
                 fprintf(stderr, "Unable to determine low word of Fint in Aint\n");
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            *result = *in1 == v2[idx];
         }
+        *result = *in1 == v2[idx];
     } else {
         fprintf(stderr, "PANIC: sizeof(MPI_Fint) = %d > sizeof(MPI_Aint) %d\n",
                 (int) sizeof(MPI_Fint), (int) sizeof(MPI_Aint));
@@ -606,8 +610,8 @@ void ccompareint2void_(MPI_Fint * in1, void *in2, MPI_Fint * result)
                 fprintf(stderr, "Unable to determine low word of Fint in void*\n");
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            *result = *in1 == v2[idx];
         }
+        *result = *in1 == v2[idx];
     } else {
         fprintf(stderr, "PANIC: sizeof(MPI_Fint) = %d > sizeof(void*) %d\n",
                 (int) sizeof(MPI_Fint), (int) sizeof(void *));
