@@ -32,6 +32,18 @@ typedef struct mpi_names_t {
 static mpi_names_t *mpi_names = 0;
 void InitMPINames(void);
 
+/* An unsupported optional type may be a valid handle that MPI calls reject,
+ * so check it with an error-returning call (needs MPI_ERRORS_RETURN). */
+static bool type_is_available(MPI_Datatype dtype)
+{
+    int size = 0;
+    if (dtype == MPI_DATATYPE_NULL) {
+        return false;
+    }
+    int err = MPI_Type_size(dtype, &size);
+    return err == MPI_SUCCESS && size > 0;
+}
+
 int main(int argc, char **argv)
 {
     char *name;
@@ -44,6 +56,9 @@ int main(int argc, char **argv)
     name = new char[MPI::MAX_OBJECT_NAME];
 
     InitMPINames();
+
+    /* Errors not tied to an object go to the handler on MPI_COMM_SELF */
+    MPI::COMM_SELF.Set_errhandler(MPI::ERRORS_RETURN);
 
     /* Sample some datatypes */
     /* See 8.4, "Naming Objects" in MPI-2.  The default name is the same
@@ -64,8 +79,8 @@ int main(int argc, char **argv)
     /* Now we try them ALL */
     for (i = 0; mpi_names[i].name != 0; i++) {
         /* The size-specific types, as well as the language optional
-         * long long and long double, may be DATATYPE_NULL */
-        if (mpi_names[i].dtype == MPI::DATATYPE_NULL)
+         * long long and long double, may not be available */
+        if (!type_is_available(mpi_names[i].dtype))
             continue;
         name[0] = 0;
         mpi_names[i].dtype.Get_name(name, namelen);
