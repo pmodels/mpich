@@ -594,7 +594,7 @@ void ccompareint2aint_(MPI_Fint * in1, MPI_Aint * in2, MPI_Fint * result)
                         (int) sizeof(MPI_Aint), (int) sizeof(MPI_Fint));
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            for (idx = sizeof(MPI_Aint) / sizeof(MPI_Fint); idx >= 0; idx--)
+            for (idx = sizeof(MPI_Aint) / sizeof(MPI_Fint) - 1; idx >= 0; idx--)
                 if (fa[idx])
                     break;
             if (idx < 0) {
@@ -628,7 +628,7 @@ void ccompareint2void_(MPI_Fint * in1, void *in2, MPI_Fint * result)
                         (int) sizeof(void *), (int) sizeof(MPI_Fint));
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            for (idx = sizeof(void *) / sizeof(MPI_Fint); idx >= 0; idx--)
+            for (idx = sizeof(void *) / sizeof(MPI_Fint) - 1; idx >= 0; idx--)
                 if (fa[idx])
                     break;
             if (idx < 0) {
