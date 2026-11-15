@@ -767,12 +767,13 @@ def dump_MPII_Csel_container():
                         G.out2.append("            int %s;" % a)
                 G.out2.append("        } %s;" % algo_struct_name(algo))
 
-    G.out2.append("typedef struct MPII_Csel_container {")
+    # MPII_Csel_container_s is typedef'ed in mpir_coll.h
+    G.out2.append("struct MPII_Csel_container {")
     G.out2.append("    MPII_Csel_container_type_e id;")
     G.out2.append("    union {")
     dump_algo_params()
     G.out2.append("    } u;")
-    G.out2.append("} MPII_Csel_container_s;")
+    G.out2.append("};")
 
 #----------------------------------------
 def dump_conditional_conditions(out):

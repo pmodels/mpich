@@ -8,7 +8,8 @@
 
 #include "csel_json.h"
 
-typedef struct MPIR_Csel_node {
+/* MPIR_Csel_node_s is typedef'ed in mpir_coll.h */
+struct MPIR_Csel_node {
     MPIR_Csel_node_type_e type;
     union {
         struct {
@@ -28,7 +29,7 @@ typedef struct MPIR_Csel_node {
     } u;
     struct MPIR_Csel_node *success;
     struct MPIR_Csel_node *failure;
-} MPIR_Csel_node_s;
+};
 
 extern MPIR_Coll_algo_fn *MPIR_Coll_algo_table;
 extern const int *const MPIR_Coll_cvar_table[];
