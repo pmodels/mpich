@@ -118,8 +118,32 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* Used to dlsym MPIX_Init_fortran */
+/* MPI_Init registers the Fortran named types by calling MPIX_Init_fortran when
+ * libmpifort is linked in. On ELF we take a weak reference, which is bound to
+ * libmpifort.so at load time or to libmpifort.a at link time, and stays NULL
+ * without libmpifort; mpicc -mpi-fortran passes "-u MPIX_Init_fortran" so that
+ * the linker pulls it out of libmpifort.a. Elsewhere we look it up with dlsym,
+ * which cannot find it in a static libmpifort. */
+#if defined(__ELF__)
+extern void MPIX_Init_fortran(void) __attribute__ ((weak));
+#define MPII_INIT_FORTRAN() \
+    do { \
+        if (MPIX_Init_fortran) { \
+            MPIX_Init_fortran(); \
+        } \
+    } while (0)
+#elif defined(HAVE_DLOPEN)
 typedef void (*init_func_t) (void);
+#define MPII_INIT_FORTRAN() \
+    do { \
+        init_func_t func = (init_func_t) dlsym(RTLD_DEFAULT, "MPIX_Init_fortran"); \
+        if (func) { \
+            func(); \
+        } \
+    } while (0)
+#else
+#define MPII_INIT_FORTRAN() do { } while (0)
+#endif
 
 /* MPIR_world_model_state tracks so we only init and finalize once in world model */
 MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
@@ -368,12 +392,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 
-#ifdef HAVE_DLOPEN
-    init_func_t func = (init_func_t) dlsym(RTLD_DEFAULT, "MPIX_Init_fortran");
-    if (func) {
-        func();
-    }
-#endif
+    MPII_INIT_FORTRAN();
 
   fn_exit:
     if (MPIR_CVAR_FINALIZE_ATEXIT && init_counter == 1) {
