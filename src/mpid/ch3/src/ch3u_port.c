@@ -532,6 +532,8 @@ static int MPIDI_CH3I_Release_tmp_comm(MPIR_Comm *tmp_comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Free_contextid(tmp_comm->recvcontext_id);
+    /* MPIR_Comm_create put tmp_comm on the debugger's communicator list */
+    MPII_COMML_FORGET(tmp_comm);
     MPIR_Handle_obj_free(&MPIR_Comm_mem, tmp_comm);
 
   fn_exit:
