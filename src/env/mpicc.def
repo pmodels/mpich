@@ -540,9 +540,14 @@ subcode: set_final_vars
 
         if test "$need_fortran" = "yes" ; then
             final_cppflags="${final_cppflags} -DMPI_FORTRAN"
-            mpi_libs_shared="$no_as_needed-l@MPIFCLIBNAME@ $mpi_libs_shared"
+            \x23 -u pulls MPIX_Init_fortran from libmpifort.a, see the weak reference in mpir_init.c
+            fortran_init_ldflags=""
+            if test -n "@WRAPPER_LD_UNDEFINED@" ; then
+                fortran_init_ldflags="@WRAPPER_LD_UNDEFINED@MPIX_Init_fortran"
+            fi
+            mpi_libs_shared="$fortran_init_ldflags $no_as_needed-l@MPIFCLIBNAME@ $mpi_libs_shared"
             if test -e "$libdir/lib@MPIFCLIBNAME@.a" ; then
-                mpi_libs_static="$libdir/lib@MPIFCLIBNAME@.a $mpi_libs_static"
+                mpi_libs_static="$fortran_init_ldflags $libdir/lib@MPIFCLIBNAME@.a $mpi_libs_static"
             fi
         fi
     $(else)

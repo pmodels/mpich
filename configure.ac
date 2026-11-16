@@ -923,6 +923,13 @@ AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran l
 if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPIFCLIBNAME
 AC_SUBST(MPIFCLIBNAME)
+# linker flag that the compiler wrappers prepend to a symbol name to keep it
+# undefined, so that a static link pulls it from an archive (ELF only)
+case "$host_os" in
+    darwin*|cygwin*|mingw*) WRAPPER_LD_UNDEFINED="" ;;
+    *) WRAPPER_LD_UNDEFINED="-Wl,-u," ;;
+esac
+AC_SUBST(WRAPPER_LD_UNDEFINED)
 
 # used in the Fortran binding; declared here so that it shows in configure --help
 AC_ARG_VAR([modincdir],[directory to install the Fortran module files (default: includedir)])
