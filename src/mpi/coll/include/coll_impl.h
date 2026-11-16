@@ -173,7 +173,7 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             mpi_errno = MPIR_Coll_greq_start(sched, request); \
             MPIR_ERR_CHECK(mpi_errno); \
         } else { \
-            MPIR_Assert(0); \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_INTERN, "**intern"); \
         } \
     } while (0)
 
