@@ -129,10 +129,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         parents_tree.num_children = 0;
     }
 
-    MPI_Aint recv_size;
-    recv_size = cnts[rank];
     lend = lrank + 1;   /* the end of my subtree in logical ranks */
-    /* total size of the data to be received from the parent. */
     for (i = 0; i < num_children; i++) {
         current_child = ((*(int *) utarray_eltptr(my_tree.children, i)) - root + size) % size;  /* Dereference and calculate the current child */
 
@@ -156,10 +153,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%ld",
-                         i, rank, current_child, next_child, child_subtree_size[i],
-                         (long) recv_size));
-        recv_size += child_subtree_size[i];
+                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d",
+                         i, rank, current_child, next_child, child_subtree_size[i]));
         lend = next_child;
     }
     if (my_tree.parent != -1)
