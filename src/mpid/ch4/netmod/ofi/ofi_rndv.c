@@ -17,6 +17,33 @@ static bool cts_is_probe(int flag)
     return (flag & MPIDI_OFI_CTS_FLAG__PROBE);
 }
 
+static int get_rndv_protocol_generic(bool send_need_pack, bool recv_need_pack,
+                                     MPI_Aint recv_data_sz)
+{
+    if (send_need_pack && recv_need_pack) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline;
+    } else if (send_need_pack) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write;
+    } else if (recv_need_pack) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
+    } else if (recv_data_sz < MPIDI_OFI_global.max_msg_size) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct;
+    } else {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
+    }
+}
+
+static int get_rndv_protocol_efa(bool send_need_pack, bool recv_need_pack, MPI_Aint recv_data_sz)
+{
+    /* Without packing, generic selection goes to direct, which sends through a single NIC. Use
+     * read instead when there is more than a chunk of data, so it can be striped over NICs. */
+    if (!send_need_pack && !recv_need_pack && MPIDI_OFI_global.num_nics > 1 &&
+        recv_data_sz > MPIR_CVAR_CH4_OFI_PIPELINE_CHUNK_SZ) {
+        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
+    }
+    return get_rndv_protocol_generic(send_need_pack, recv_need_pack, recv_data_sz);
+}
+
 static int get_rndv_protocol(bool send_need_pack, bool recv_need_pack, MPI_Aint recv_data_sz)
 {
     /* NOTE: some protocols may not work, fallback to auto */
@@ -44,17 +71,11 @@ static int get_rndv_protocol(bool send_need_pack, bool recv_need_pack, MPI_Aint 
             break;
     }
 
-    /* auto */
-    if (send_need_pack && recv_need_pack) {
-        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_pipeline;
-    } else if (send_need_pack) {
-        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_write;
-    } else if (recv_need_pack) {
-        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
-    } else if (recv_data_sz < MPIDI_OFI_global.max_msg_size) {
-        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_direct;
-    } else {
-        return MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL_read;
+    switch (MPIR_CVAR_CH4_OFI_RNDV_SELECTION) {
+        case MPIR_CVAR_CH4_OFI_RNDV_SELECTION_efa:
+            return get_rndv_protocol_efa(send_need_pack, recv_need_pack, recv_data_sz);
+        default:
+            return get_rndv_protocol_generic(send_need_pack, recv_need_pack, recv_data_sz);
     }
 }
 
