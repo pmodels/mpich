@@ -268,7 +268,7 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
-    if (prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT && prov) {
+    if ((prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT || prov_idx == MPIDI_OFI_SET_NUMBER_EFA) && prov) {
         /* update some default settings based on capabilities provided by the provider */
         if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
 #ifdef FI_MR_VIRT_ADDR
