@@ -280,6 +280,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->offset = 0;
+    p->carry_sz = 0;
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         /* it's ready, rreq status to be set */
     } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
@@ -310,6 +311,59 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
     }
 }
 
+/* Data sent as MPI_PACKED may split a basic element between segments, since the
+ * sender can't track the element boundaries. As a work-around, carry the left-over
+ * bytes over to the next segment. */
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_recv_unpack_seg(void *payload, MPI_Aint payload_sz,
+                                                     MPIR_Request * rreq)
+{
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
+    MPI_Aint actual_unpack_bytes;
+
+    /* p->offset counts the received bytes, including the carried ones */
+    MPI_Aint unpacked = p->offset - p->carry_sz;
+    p->offset += payload_sz;
+
+    if (p->carry_sz > 0) {
+        /* complete the carried element with the head of this segment */
+        MPI_Aint n = MPL_MIN(payload_sz, MPIDIG_RECV_CARRY_MAX - p->carry_sz);
+        MPIR_Memcpy(p->carry + p->carry_sz, payload, n);
+        MPIR_Typerep_unpack(p->carry, p->carry_sz + n,
+                            MPIDIG_REQUEST(rreq, buffer),
+                            MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype),
+                            unpacked, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        if (actual_unpack_bytes == 0) {
+            if (n < payload_sz) {
+                return false;
+            }
+            p->carry_sz += n;
+            return true;
+        }
+        MPI_Aint used = actual_unpack_bytes - p->carry_sz;
+        payload = (char *) payload + used;
+        payload_sz -= used;
+        unpacked += actual_unpack_bytes;
+    }
+
+    actual_unpack_bytes = 0;
+    if (payload_sz > 0) {
+        MPIR_Typerep_unpack(payload, payload_sz,
+                            MPIDIG_REQUEST(rreq, buffer),
+                            MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype),
+                            unpacked, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+    }
+
+    MPI_Aint left = payload_sz - actual_unpack_bytes;
+    if (left >= MPIDIG_RECV_CARRY_MAX) {
+        return false;
+    }
+    p->carry_sz = left;
+    MPIR_Memcpy(p->carry, (char *) payload + actual_unpack_bytes, p->carry_sz);
+    return true;
+}
+
 /* copy a segment to data buffer recorded in rreq. */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payload_sz,
                                                   MPIR_Request * rreq)
@@ -322,14 +376,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
          * it's the last segment */
         return (p->in_data_sz == 0);
     } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
-        MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(payload, payload_sz,
-                            MPIDIG_REQUEST(rreq, buffer),
-                            MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype),
-                            p->offset, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
-        p->offset += payload_sz;
-        if (payload_sz > actual_unpack_bytes) {
+        bool ok = MPIDIG_recv_unpack_seg(payload, payload_sz, rreq);
+        if (!ok || (p->in_data_sz == 0 && p->carry_sz > 0)) {
             /* basic element size mismatch */
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,

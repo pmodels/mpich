@@ -48,6 +48,7 @@ noinst_PROGRAMS =             \
     simple_commit             \
     simple_pack               \
     pack_external             \
+    packed_recv               \
     simple_pack_external      \
     simple_pack_external2     \
     simple_resized            \
