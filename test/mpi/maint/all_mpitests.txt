@@ -233,6 +233,7 @@ datatype/lbub
 datatype/localpack
 datatype/lots_of_types
 datatype/pack_external
+datatype/packed_recv
 datatype/pairtype_size_extent
 datatype/sendrecvt2 $(top_builddir)/util/libdtypes.la
 datatype/sendrecvt4 $(top_builddir)/util/libdtypes.la
