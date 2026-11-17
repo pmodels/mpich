@@ -161,14 +161,26 @@ typedef enum {
 
 typedef int (*MPIDIG_recv_data_copy_cb) (MPIR_Request * req);
 
+/* larger than any basic element */
+#define MPIDIG_RECV_CARRY_MAX 32
+
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
     bool is_device_buffer;
+    uint8_t carry_sz;           /* used with MPIDIG_RECV_DATATYPE */
     MPI_Aint in_data_sz;
     MPI_Aint offset;
-    struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
-    MPI_Aint iov_num;           /* used with MPIDIG_RECV_IOV */
-    struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
+    /* the iov fields are not used with MPIDIG_RECV_DATATYPE, so the carry shares
+     * their space, which keeps MPIDIG_req_ext_t within MPIDIU_REQUEST_POOL_CELL_SIZE */
+    union {
+        struct {
+            struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
+            MPI_Aint iov_num;   /* used with MPIDIG_RECV_IOV */
+            struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
+        };
+        /* the received bytes of a basic element split between segments */
+        char carry[MPIDIG_RECV_CARRY_MAX];
+    };
     MPIDIG_recv_data_copy_cb data_copy_cb;      /* called in recv_init/recv_type_init for async
                                                  * data copying */
 } MPIDIG_rreq_async_t;
