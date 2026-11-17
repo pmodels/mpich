@@ -485,6 +485,7 @@ void MPII_CommL_remember(MPIR_Comm * comm_ptr)
     MPID_THREAD_CS_ENTER(VCI, lock);
     if (comm_ptr == MPIR_All_communicators.head) {
         MPL_internal_error_printf("Internal error: communicator is already on free list\n");
+        MPID_THREAD_CS_EXIT(VCI, lock);
         return;
     }
     comm_ptr->comm_next = MPIR_All_communicators.head;
