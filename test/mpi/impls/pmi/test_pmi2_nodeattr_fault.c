@@ -14,6 +14,12 @@
 
 int kill(pid_t pid, int sig);
 
+/* Exit without signal status: Hydra reports a signaled rank on stdout. */
+static void waiter_exit(int sig)
+{
+    _exit(3);
+}
+
 #define CHECK_PMI2(call, exit_code) do { \
     int check_rc = (call); \
     if (check_rc != PMI2_SUCCESS) { \
@@ -47,6 +53,7 @@ int main(int argc, char **argv)
 
     if (rank == 0) {
         char pid[32];
+        signal(SIGTERM, waiter_exit);
         snprintf(pid, sizeof(pid), "%ld", (long) getpid());
         CHECK_PMI2(PMI2_Info_PutNodeAttr("pmi2_fault_waiter_pid", pid), 2);
 
@@ -76,7 +83,7 @@ int main(int argc, char **argv)
 
         /* Allow the blocked GetNodeAttr to reach Hydra's pending queue. */
         sleep(2);
-        if (kill((pid_t) pid, SIGKILL)) {
+        if (kill((pid_t) pid, SIGTERM)) {
             fprintf(stderr, "rank %d: kill(%ld) failed: %s\n", rank, pid, strerror(errno));
             return 6;
         }
