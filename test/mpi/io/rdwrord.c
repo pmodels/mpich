@@ -39,6 +39,10 @@ int run(const char *arg)
         return 1;
     }
 #endif
+    /* the large-count buffers do not fit in a 32-bit address space */
+    if (do_large_count && sizeof(void *) < 8) {
+        return 0;
+    }
 
     comm = MPI_COMM_WORLD;
     MPI_File_open(comm, (char *) "test.ord",
