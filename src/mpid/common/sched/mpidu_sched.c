@@ -139,8 +139,13 @@ struct MPIDU_Sched_state {
 /* holds on to all incomplete schedules on which progress should be made */
 static struct MPIDU_Sched_state all_schedules = { NULL };
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+/* process-wide: call_user_op may release the global lock in the middle of sched progress */
+static int in_sched_progress = 0;
+#else
 /* set while this thread holds SCHED_LIST_MUTEX in MPIDU_Sched_progress */
 static MPL_TLS int in_sched_progress = 0;
+#endif
 
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
