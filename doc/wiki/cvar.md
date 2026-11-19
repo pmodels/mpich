@@ -6,6 +6,7 @@
 - [CH4 Device Layer](#ch4-device-layer) (92)
 - [CH3 Device Layer](#ch3-device-layer) (25)
 - [Process Management](#process-management) (7)
+- [ROMIO (MPI-IO)](#romio-mpi-io) (6)
 - [Debugging and Development](#debugging-and-development) (15)
 - [Other](#other) (26)
 
@@ -3282,6 +3283,66 @@ Selects the process-management interface used by MPICH PMI wrapper routines. It 
 * auto - default, detect the PMI interface from the runtime environment or choose an available interface for singleton initialization.
 
 Used in functions: `check_MPIR_CVAR_PMI_VERSION`, `MPIR_pmi_finalize_on_exit`, `MPIR_pmi_init`, `MPIR_pmi_abort`, `MPIR_pmi_kvs_put`, `MPIR_pmi_kvs_get`, `MPIR_pmi_kvs_parent_get`, `MPIR_pmi_get_jobattr`, `MPIR_pmi_build_nodemap`, `MPIR_pmi_barrier`, `MPIR_pmi_barrier_only`, `MPIR_pmi_barrier_local`, `MPIR_pmi_barrier_group`, `optimized_put`, `optimized_get`, `put_ex`, `get_ex`, `optional_bcast_barrier`, `MPIR_pmi_get_universe_size`, `MPIR_pmi_spawn_multiple`, `MPIR_pmi_publish`, `MPIR_pmi_lookup`, `MPIR_pmi_unpublish`, `MPIR_pmi_load_hwloc_topology`, `MPIR_pmi_pset_event_init`, `MPIR_pmi_pset_event_finalize`
+
+## ROMIO (MPI-IO)
+
+ROMIO reads these CVARs when a file is opened or its hints are set, so a change through MPI_T applies from the next open.
+
+### MPIR_CVAR_ROMIO_WRITE_AGGMETHOD
+
+Selects the collective write aggregation in ROMIO. The one-sided methods reduce communication and memory overhead, but holes in the data are not filled when writing to a pre-existing file unless read-modify-write is enabled (see `MPIR_CVAR_ROMIO_ONESIDED_NO_RMW` and `MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW`). Also read from the legacy ROMIO environment variable `ROMIO_WRITE_AGGMETHOD`.
+
+* 0 - default, normal two-phase collective I/O.
+* 1 - one-sided, a separate `MPI_Put` for each contiguous chunk.
+* 2 - one-sided, one `MPI_Put` with a derived datatype built from all the contiguous chunks.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_write_aggmethod` for `ADIOI_GPFS_WriteStridedColl`, `ADIOI_LUSTRE_WriteStridedColl`, `ADIOI_OneSidedWriteAggregation`
+
+### MPIR_CVAR_ROMIO_READ_AGGMETHOD
+
+Selects the collective read aggregation in ROMIO. Also read from the legacy ROMIO environment variable `ROMIO_READ_AGGMETHOD`.
+
+* 0 - default, normal two-phase collective I/O.
+* 1 - one-sided, a separate `MPI_Get` for each contiguous chunk.
+* 2 - one-sided, one `MPI_Get` with a derived datatype built from all the contiguous chunks.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_read_aggmethod` for `ADIOI_GPFS_ReadStridedColl`, `ADIOI_OneSidedReadAggregation`
+
+### MPIR_CVAR_ROMIO_ONESIDED_NO_RMW
+
+For one-sided write aggregation, skips the detection of holes in the data when writing to a pre-existing file, avoiding its communication overhead. Also read from the legacy ROMIO environment variable `ROMIO_ONESIDED_NO_RMW`.
+
+* false - default, detect holes and redo the write with read-modify-write when any are found.
+* true - skip hole detection.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_onesided_no_rmw` for `ADIOI_GPFS_WriteStridedColl`, `ADIOI_LUSTRE_IterateOneSided`, `ADIOI_OneSidedWriteAggregation`
+
+### MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW
+
+For one-sided write aggregation, always pre-reads the file range being written so holes in the data are filled. Implies `MPIR_CVAR_ROMIO_ONESIDED_NO_RMW`. Also read from the legacy ROMIO environment variable `ROMIO_ONESIDED_ALWAYS_RMW`.
+
+* false - default, pre-read only after holes are detected.
+* true - always pre-read.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_onesided_always_rmw` for `ADIOI_GPFS_WriteStridedColl`, `ADIOI_LUSTRE_IterateOneSided`, `ADIOI_OneSidedWriteAggregation`
+
+### MPIR_CVAR_ROMIO_ONESIDED_INFORM_RMW
+
+For one-sided write aggregation, prints a message on rank 0 when holes are found and the write is redone with read-modify-write. Also read from the legacy ROMIO environment variable `ROMIO_ONESIDED_INFORM_RMW`.
+
+* false - default, no message.
+* true - print the message.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_onesided_inform_rmw` for `ADIOI_GPFS_WriteStridedColl`, `ADIOI_LUSTRE_IterateOneSided`
+
+### MPIR_CVAR_ROMIO_TUNEGATHER
+
+Selects how the starting and ending offsets are collected for aggregator collective I/O. Also read from the legacy ROMIO environment variable `ROMIO_TUNEGATHER`.
+
+* true - default, one `MPI_Allreduce(MPI_MAX)`.
+* false - two or three `MPI_Allgather` calls.
+
+Used in functions: `ad_get_env_vars`, which copies it to `romio_tunegather` for `ADIOI_GPFS_WriteStridedColl`, `ADIOI_GPFS_ReadStridedColl`, `ADIOI_LUSTRE_WriteStridedColl`
 
 ## Debugging and Development
 

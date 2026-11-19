@@ -83,6 +83,16 @@ void MPIR_Ext_gpu_swap_back(void *host_buf, void *gpu_buf, MPI_Aint count, MPI_D
 /* make comm split based on access to a common file system easier */
 int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id);
 
+/* ROMIO tuning CVARs, declared in romio/adio/common/ad_tuning.c.
+ * TODO: have maint/extractcvars generate these declarations; mpir_cvars.h
+ * cannot be included in ROMIO because it pulls in mpiimpl.h. */
+extern int MPIR_CVAR_ROMIO_WRITE_AGGMETHOD;
+extern int MPIR_CVAR_ROMIO_READ_AGGMETHOD;
+extern int MPIR_CVAR_ROMIO_ONESIDED_NO_RMW;
+extern int MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW;
+extern int MPIR_CVAR_ROMIO_ONESIDED_INFORM_RMW;
+extern int MPIR_CVAR_ROMIO_TUNEGATHER;
+
 #ifdef ENABLE_QMPI
 extern void (**MPIR_QMPI_pointers) (void);
 extern void **MPIR_QMPI_storage;

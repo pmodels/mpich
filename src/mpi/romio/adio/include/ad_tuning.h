@@ -18,13 +18,16 @@
 #define AD_TUNING_H_INCLUDED
 
 #include "adio.h"
+#ifdef ROMIO_INSIDE_MPICH
+#include "mpir_ext.h"
+#endif
 
 
 /*-----------------------------------------
  *  Global variables for the control of performance tuning.
  *-----------------------------------------*/
 
-/* corresponds to environment variables to select optimizations */
+/* copies of the MPIR_CVAR_ROMIO_* tuning CVARs, set by ad_get_env_vars() */
 extern int romio_write_aggmethod;
 extern int romio_read_aggmethod;
 extern int romio_onesided_no_rmw;
@@ -32,7 +35,7 @@ extern int romio_onesided_always_rmw;
 extern int romio_onesided_inform_rmw;
 extern int romio_tunegather;
 
-/* set internal variables for tuning environment variables */
+/* set the tuning variables from the CVARs */
 void ad_get_env_vars(void);
 
 #endif /* AD_TUNING_H_INCLUDED */
