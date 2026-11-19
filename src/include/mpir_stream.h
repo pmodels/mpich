@@ -32,4 +32,6 @@ struct MPIR_Stream {
 extern MPIR_Object_alloc_t MPIR_Stream_mem;
 extern MPIR_Stream MPIR_Stream_direct[];
 
+void MPIR_Stream_enqueue_finalize(void);
+
 #endif
