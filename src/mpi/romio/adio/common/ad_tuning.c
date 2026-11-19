@@ -75,11 +75,13 @@ int romio_pthreadio;
  *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
  *   - Default is 1.
  *
- * - ROMIO_PTHREADIO - Enables a very simple form of asynchronous io where a
- *   pthread is spawned to do the posix writes while the main thread does the
- *   data aggregation - useful for large files where multiple rounds are
- *   required (more that the cb_buffer_size of data per aggregator).   User
- *   must ensure there is hw resource available for the thread to run.
+ * - ROMIO_PTHREADIO - Enables a very simple form of asynchronous io in
+ *   two-phase collective writes: a pthread does the writes of one round
+ *   while the main thread does the data aggregation of the next - useful for
+ *   large files where multiple rounds are required (more than cb_buffer_size
+ *   of data per aggregator).  Except on Lustre, each round then uses half of
+ *   cb_buffer_size.  User must ensure there is hw resource available for the
+ *   thread to run.
  *   - 0 (disabled) or 1 (enabled)
  *   - Default is 0
  *
