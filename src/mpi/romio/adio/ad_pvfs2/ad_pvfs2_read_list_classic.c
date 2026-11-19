@@ -180,7 +180,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         fd->fp_sys_posn = -1;   /* set it to null. */
 
 #ifdef HAVE_STATUS_SET_BYTES
-        MPIR_Status_set_bytes(status, datatype, bufsize);
+        MPIR_Status_set_bytes(status, datatype, (MPI_Count) total_bytes_read);
         /* This isa temporary way of filling in status.  The right way is to
          * keep tracke of how much data was actually read and placed in buf
          * by ADIOI_BUFFERED_READ. */
@@ -309,6 +309,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         /* for file arrays that are of MAX_ARRAY_SIZE, build arrays */
         for (i = 0; i < n_read_lists; i++) {
             file_list_count = MAX_ARRAY_SIZE;
+            mem_length = 0;
             if (!i) {
                 file_offsets[0] = offset;
                 file_lengths[0] = st_frd_size;
@@ -319,7 +320,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     file_offsets[k] = disp +
                         ((ADIO_Offset) n_filetypes) * filetype_extent + flat_file->indices[j];
                     file_lengths[k] = flat_file->blocklens[j];
-                    mem_lengths += file_lengths[k];
+                    mem_length += file_lengths[k];
                 }
                 if (j < (flat_file->count - 1))
                     j++;
@@ -387,6 +388,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         /* for file arrays smaller than MAX_ARRAY_SIZE (last read_list call) */
         if (extra_blks) {
             file_list_count = extra_blks;
+            mem_length = 0;
             if (!i) {
                 file_offsets[0] = offset;
                 file_lengths[0] = MPL_MIN(st_frd_size, bufsize);
@@ -396,12 +398,12 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     file_offsets[k] = disp +
                         ((ADIO_Offset) n_filetypes) * filetype_extent + flat_file->indices[j];
                     if (k == (extra_blks - 1)) {
-                        file_lengths[k] = bufsize - (int32_t) mem_lengths
-                            - mem_offset + (int32_t) buf;
+                        file_lengths[k] = (int32_t) bufsize - mem_length -
+                            (int32_t) (mem_offset - (intptr_t) buf);
                     } else
                         file_lengths[k] = flat_file->blocklens[j];
                 }       /* if (i || k) */
-                mem_lengths += file_lengths[k];
+                mem_length += file_lengths[k];
                 if (j < (flat_file->count - 1))
                     j++;
                 else {
@@ -863,7 +865,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     fd->fp_sys_posn = -1;       /* set it to null. */
 
 #ifdef HAVE_STATUS_SET_BYTES
-    MPIR_Status_set_bytes(status, datatype, bufsize);
+    MPIR_Status_set_bytes(status, datatype, (MPI_Count) total_bytes_read);
     /* This is a temporary way of filling in status. The right way is to
      * keep track of how much data was actually read and placed in buf
      * by ADIOI_BUFFERED_READ. */
