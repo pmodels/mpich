@@ -20,8 +20,6 @@
 #include "mpe.h"
 #endif
 
-#include <pthread.h>
-
 #ifdef HAVE_GPFS_H
 #include <gpfs.h>
 #endif
@@ -558,9 +556,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     MPI_Aint coll_bufsize;
     char *value;
     static char myname[] = "ADIOI_EXCH_AND_WRITE";
-    pthread_t io_thread;
-    void *thread_ret;
-    ADIOI_IO_ThreadFuncData io_thread_args;
+    ADIOI_IO_Thread io_thread;
+    int err;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
     /* only I/O errors are currently reported */
@@ -671,8 +668,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     done = 0;
     off = st_loc;
 
-    if (romio_pthreadio == 1)
-        io_thread = pthread_self();
+    ADIOI_IO_Thread_init(&io_thread);
 
 #ifdef PROFILE
     MPE_Log_event(14, 0, "end computation");
@@ -779,8 +775,10 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                             others_req, send_buf_idx, curr_to_proc,
                                             done_to_proc, &hole, m, buftype_extent, buf_idx,
                                             error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
+            ADIOI_IO_Thread_wait(&io_thread);
             return;
+        }
 #ifdef PROFILE
         MPE_Log_event(8, 0, "end communication");
 #endif
@@ -795,33 +793,12 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
             snprintf(round, sizeof(round), "two-phase-round=%d", m);
             setenv("LIBIOLOG_EXTRA_INFO", round, 1);
             if (romio_pthreadio == 1) {
-                /* there is no such thing as "invalid pthread identifier", so
-                 * we'll use pthread_self() instead.  Before we do I/O we want
-                 * to complete I/O from any previous iteration -- but only a
-                 * previous iteration that had I/O work to do (i.e. set 'flag')
-                 */
-                if (!pthread_equal(io_thread, pthread_self())) {
-                    pthread_join(io_thread, &thread_ret);
-                    *error_code = *(int *) thread_ret;
-                    if (*error_code != MPI_SUCCESS)
-                        return;
-                    io_thread = pthread_self();
-
-                }
-                io_thread_args.fd = fd;
-                /* do a little pointer shuffling: background I/O works from one
-                 * buffer while two-phase machinery fills up another */
-                io_thread_args.buf = write_buf;
-                write_buf = write_buf2;
-                write_buf2 = io_thread_args.buf;
-                io_thread_args.io_kind = ADIOI_WRITE;
-                io_thread_args.size = size;
-                io_thread_args.offset = off;
-                io_thread_args.status = &status;
-                io_thread_args.error_code = *error_code;
-                if ((pthread_create(&io_thread, NULL,
-                                    ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)
-                    io_thread = pthread_self();
+                /* background I/O works from one buffer while two-phase
+                 * machinery fills up another */
+                *error_code = ADIOI_IO_Thread_write(&io_thread, fd, &write_buf, &write_buf2,
+                                                    size, off);
+                if (*error_code != MPI_SUCCESS)
+                    return;
             } else {
                 ADIO_WriteContig(fd, write_buf, size, MPI_BYTE,
                                  ADIO_EXPLICIT_OFFSET, off, &status, error_code);
@@ -833,12 +810,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
         off += size;
         done += size;
     }
-    if (romio_pthreadio == 1) {
-        if (!pthread_equal(io_thread, pthread_self())) {
-            pthread_join(io_thread, &thread_ret);
-            *error_code = *(int *) thread_ret;
-        }
-    }
+    err = ADIOI_IO_Thread_wait(&io_thread);
+    if (*error_code == MPI_SUCCESS)
+        *error_code = err;
 
     for (i = 0; i < nprocs; i++)
         count[i] = recv_size[i] = 0;
