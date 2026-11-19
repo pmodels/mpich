@@ -330,7 +330,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
 #define MPIDI_PROGRESS_YIELD() MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
 #else
-#define MPIDI_PROGRESS_YIELD() MPID_Thread_yield()
+#define MPIDI_PROGRESS_YIELD() \
+    do { \
+        if (MPIR_ThreadInfo.isThreaded) { \
+            MPID_Thread_yield(); \
+        } \
+    } while (0)
 #endif
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
