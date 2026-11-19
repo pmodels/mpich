@@ -411,7 +411,7 @@ if __name__ == '__main__':
     filename = "src/backend/cuda/pup/Makefile.pup.mk"
     yutils.copyright_makefile(filename)
     OUTFILE = open(filename, "a")
-    yutils.display(OUTFILE, "libyaksa_la_SOURCES += \\\n")
+    yutils.display(OUTFILE, "yaksa_cuda_sources += \\\n")
     for b in builtin_types:
         yutils.display(OUTFILE, "\tsrc/backend/cuda/pup/yaksuri_cudai_pup_%s.cu \\\n" % b.replace(" ","_"))
         if args.pup_max_nesting > 0:

@@ -23,6 +23,16 @@ extern "C" {
 
 #include <yaksuri_cudai_base.h>
 
+#ifdef YAKSA_CUDA_DLOPEN
+/* built into a dlopen module that does not link with libyaksa */
+extern yaksuri_cuda_host_s yaksuri_cudai_host;
+#define YAKSURI_CUDAI_HAS_WAIT_KERNEL (yaksuri_cudai_host.has_wait_kernel)
+#define YAKSURI_CUDAI_IOV             (yaksuri_cudai_host.iov)
+#else
+#define YAKSURI_CUDAI_HAS_WAIT_KERNEL (yaksuri_global.has_wait_kernel)
+#define YAKSURI_CUDAI_IOV             yaksi_iov
+#endif
+
 #define YAKSURI_KERNEL_NULL  NULL
 
 #define YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail)            \

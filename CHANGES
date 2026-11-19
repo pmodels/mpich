@@ -9,6 +9,13 @@
 # Support building both MPICH-native and MPI Standard ABI libraries simultaneously
   with --enable-mpi-abi=dual. This builds both libmpi.so and libmpi_abi.so.
 
+# Added --enable-dlopen configure option. With CUDA, libmpi.so no longer links
+  with the CUDA libraries. The CUDA support is built into a separate module,
+  libmpich_cuda.so, installed next to libmpi.so and loaded at runtime. If the
+  module cannot be loaded, e.g. on a node without CUDA, MPICH runs without GPU
+  support. Requires shared libraries and a non-embedded libfabric. NCCL
+  collectives and hydra GPU binding are not available with this option yet.
+
 # Fortran 77/90/08 bindings now supported for MPI ABI builds.
 
 # Support standalone Fortran binding that can be configured and built independently
