@@ -111,7 +111,9 @@ foreach my $p (@cvars) {
         foreach my $elmt (@alts) {
             $elmt =~ s/${ns}_//;
         }
-        $p->{'alt-env'} = [@alts];
+        # ROMIO_ names are ROMIO's legacy environment variables; use them as is
+        $p->{'raw-env'} = [grep { /^ROMIO_/ } @alts];
+        $p->{'alt-env'} = [grep { !/^ROMIO_/ } @alts];
     }
 }
 
@@ -332,6 +334,7 @@ foreach my $p (@cvars) {
     my @env_names = ();
 
     # Process extra envs first so the primary always wins
+    push @env_names, @{$p->{'raw-env'}} if exists $p->{'raw-env'};
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
@@ -490,6 +493,7 @@ foreach my $p (@cvars) {
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, @{$p->{'raw-env'}} if exists $p->{'raw-env'};
 
     print OUTPUT_README "${uc_ns}_$p->{name}\n";
 
