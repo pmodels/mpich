@@ -19,7 +19,7 @@
     } while (0)
 
 typedef struct {
-    int ndevices;
+    unsigned ndevices;
     hipStream_t *stream;
     bool **p2p;
 } yaksuri_hipi_global_s;
