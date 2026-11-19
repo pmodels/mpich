@@ -972,6 +972,20 @@ typedef struct wcThreadFuncData {
 
 void *ADIOI_IO_Thread_Func(void *vptr_args);
 
+/* background write of one two-phase round (ROMIO_PTHREADIO) */
+#include <pthread.h>
+typedef struct {
+    int active;                 /* a write is in flight */
+    pthread_t thread;
+    ADIOI_IO_ThreadFuncData args;
+    ADIO_Status status;
+} ADIOI_IO_Thread;
+
+void ADIOI_IO_Thread_init(ADIOI_IO_Thread * t);
+int ADIOI_IO_Thread_wait(ADIOI_IO_Thread * t);
+int ADIOI_IO_Thread_write(ADIOI_IO_Thread * t, ADIO_File fd, char **buf, char **next_buf,
+                          MPI_Count size, ADIO_Offset offset);
+
 
 #ifdef HAVE_LIMITS_H
 #include <limits.h>

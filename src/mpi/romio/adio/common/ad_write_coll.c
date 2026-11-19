@@ -5,6 +5,7 @@
 
 #include "adio.h"
 #include "adio_extern.h"
+#include "ad_tuning.h"
 
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
@@ -268,7 +269,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     ADIO_Offset size = 0;
     int hole, i, m, ntimes, max_ntimes, buftype_is_contig;
     ADIO_Offset st_loc = -1, end_loc = -1, off, done, req_off;
-    char *write_buf = NULL;
+    char *write_buf = NULL, *write_buf2 = NULL;
     MPI_Count *curr_offlen_ptr, *send_size, *count, req_len, *recv_size;
     MPI_Count *partial_recv, *sent_to_proc, *start_pos;
     int flag;
@@ -280,6 +281,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     MPI_Aint coll_bufsize;
     char *value;
     static char myname[] = "ADIOI_EXCH_AND_WRITE";
+    ADIOI_IO_Thread io_thread;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
     /* only I/O errors are currently reported */
@@ -293,6 +295,11 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     coll_bufsize = atoi(value);
     ADIOI_Free(value);
 
+    if (romio_pthreadio == 1) {
+        /* a background thread writes one half of the collective buffer
+         * while the next round is exchanged into the other half */
+        coll_bufsize = coll_bufsize / 2;
+    }
 
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
@@ -320,6 +327,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
 
     write_buf = fd->io_buf;
+    if (romio_pthreadio == 1)
+        write_buf2 = fd->io_buf + coll_bufsize;
 
     curr_offlen_ptr = ADIOI_Calloc(nprocs * 10, sizeof(*curr_offlen_ptr));
     /* its use is explained below. calloc initializes to 0. */
@@ -373,6 +382,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
     done = 0;
     off = st_loc;
+
+    ADIOI_IO_Thread_init(&io_thread);
 
     for (m = 0; m < ntimes; m++) {
         /* go through all others_req and check which will be satisfied
@@ -459,8 +470,10 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, send_buf_idx, curr_to_proc,
                               done_to_proc, &hole, m, buftype_extent, buf_idx, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
+            ADIOI_IO_Thread_wait(&io_thread);
             return;
+        }
 
         flag = 0;
         for (i = 0; i < nprocs; i++)
@@ -468,8 +481,12 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                 flag = 1;
 
         if (flag) {
-            ADIO_WriteContig(fd, write_buf, size, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
-                             off, &status, error_code);
+            if (romio_pthreadio == 1)
+                *error_code = ADIOI_IO_Thread_write(&io_thread, fd, &write_buf, &write_buf2,
+                                                    size, off);
+            else
+                ADIO_WriteContig(fd, write_buf, size, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+                                 off, &status, error_code);
             if (*error_code != MPI_SUCCESS)
                 return;
         }
@@ -477,6 +494,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
         off += size;
         done += size;
     }
+    *error_code = ADIOI_IO_Thread_wait(&io_thread);
+    if (*error_code != MPI_SUCCESS)
+        return;
 
     for (i = 0; i < nprocs; i++)
         count[i] = recv_size[i] = 0;

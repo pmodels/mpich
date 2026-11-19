@@ -50,7 +50,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
 #ifdef ROMIO_GPFS
-    if (gpfsmpio_pthreadio == 1) {
+    if (romio_pthreadio == 1) {
         /* split buffer in half for a kind of double buffering with the threads */
         coll_bufsize = fd->hints->cb_buffer_size / 2;
     }
@@ -176,7 +176,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     int currentWriteBuf = 0;
     int useIOBuffer = 0;
 #ifdef ROMIO_GPFS
-    if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
+    if (romio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
     }
 #endif
@@ -579,7 +579,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
 #ifdef ROMIO_GPFS
-    if (gpfsmpio_pthreadio == 1)
+    if (romio_pthreadio == 1)
         /* share buffer between working threads */
         coll_bufsize = coll_bufsize / 2;
 #endif
@@ -709,7 +709,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     int currentReadBuf = 0;
     int useIOBuffer = 0;
 #ifdef ROMIO_GPFS
-    if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
+    if (romio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
     }
 #endif

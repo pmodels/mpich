@@ -29,7 +29,6 @@ int gpfsmpio_comm;
 int gpfsmpio_tuneblocking;
 long bglocklessmpio_f_type;
 int gpfsmpio_bg_nagg_pset;
-int gpfsmpio_pthreadio;
 int gpfsmpio_p2pcontig;
 int gpfsmpio_balancecontig;
 int gpfsmpio_devnullio;
@@ -73,16 +72,6 @@ double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
  *   compute group (compute nodes + i/o nodes).    Possible values:
  *   - any integer
  *   - Default is 8
- *
- * - GPFSMPIO_PTHREADIO - Enables a very simple form of asynchronous io where a
- *   pthread is spawned to do the posix writes while the main thread does the
- *   data aggregation - useful for large files where multiple rounds are
- *   required (more that the cb_buffer_size of data per aggregator).   User
- *   must ensure there is hw resource available for the thread to run.  I
- *   am sure there is a better way to do this involving comm threads - this is
- *   just a start.  NOTE: For some reason the stats collected when this is
- *   enabled misses some of the data so the data sizes are off a bit - this is
- *   a statistical issue only, the data is still accurately written out
  *
  * - GPFSMPIO_P2PCONTIG -  Does simple point-to-point communication between the
  *   aggregator and the procs that feed it.  Performance could be enhanced by a
