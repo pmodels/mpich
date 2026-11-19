@@ -3,19 +3,120 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * \file ad_tuning.c
- * \brief Defines common performance tuning env var options
+/* Common performance tuning variables for collective I/O. Inside MPICH they
+ * are CVARs (MPIR_CVAR_ROMIO_*, declared below, extern declarations in
+ * mpir_ext.h); each also reads its legacy ROMIO_ environment variable.
+ * ad_get_env_vars() copies them into the romio_* globals whenever a file's
+ * hints are set up, so a change through MPI_T applies from the next open.
+ * ROMIO may change its copies during an operation, never the CVARs.
+ * Outside MPICH, ad_get_env_vars() reads the ROMIO_ environment variables.
  */
 
-/*---------------------------------------------------------------------
- * ad_tuning.c
- *
- * defines common global variables and functions for performance tuning
- * and functional debugging.
- *---------------------------------------------------------------------*/
-
 #include "ad_tuning.h"
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+   - name : ROMIO
+     description : >-
+        A category for ROMIO (MPI-IO) variables. ROMIO reads them when a
+        file is opened or its hints are set, so a change through MPI_T
+        applies from the next open.
+
+cvars:
+    - name        : MPIR_CVAR_ROMIO_WRITE_AGGMETHOD
+      alt-env     : ROMIO_WRITE_AGGMETHOD
+      category    : ROMIO
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Replaces the two-phase collective write aggregation with a one-sided
+        algorithm, significantly reducing communication and memory overhead.
+        It supports all datasets and datatypes. The caveat is that holes in
+        the data when writing to a pre-existing file are ignored unless
+        read-modify-write is enabled (see MPIR_CVAR_ROMIO_ONESIDED_NO_RMW and
+        MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW), so middleware such as PnetCDF
+        that relies on read-modify-write (e.g. for fill values) may be
+        affected.
+        0 - Normal two-phase collective I/O.
+        1 - A separate MPI_Put for each contiguous chunk of data.
+        2 - One MPI_Put with a derived datatype built from all the contiguous chunks.
+
+    - name        : MPIR_CVAR_ROMIO_READ_AGGMETHOD
+      alt-env     : ROMIO_READ_AGGMETHOD
+      category    : ROMIO
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Replaces the two-phase collective read aggregation with a one-sided
+        algorithm.
+        0 - Normal two-phase collective I/O.
+        1 - A separate MPI_Get for each contiguous chunk of data.
+        2 - One MPI_Get with a derived datatype built from all the contiguous chunks.
+
+    - name        : MPIR_CVAR_ROMIO_ONESIDED_NO_RMW
+      alt-env     : ROMIO_ONESIDED_NO_RMW
+      category    : ROMIO
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        For one-sided write aggregation (MPIR_CVAR_ROMIO_WRITE_AGGMETHOD 1 or
+        2), skip the detection of holes in the data when writing to a
+        pre-existing file, avoiding its communication overhead.
+
+    - name        : MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW
+      alt-env     : ROMIO_ONESIDED_ALWAYS_RMW
+      category    : ROMIO
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        For one-sided write aggregation (MPIR_CVAR_ROMIO_WRITE_AGGMETHOD 1 or
+        2), always pre-read the file range being written, filling any holes
+        in the data. Implies MPIR_CVAR_ROMIO_ONESIDED_NO_RMW.
+
+    - name        : MPIR_CVAR_ROMIO_ONESIDED_INFORM_RMW
+      alt-env     : ROMIO_ONESIDED_INFORM_RMW
+      category    : ROMIO
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        For one-sided write aggregation (MPIR_CVAR_ROMIO_WRITE_AGGMETHOD 1 or
+        2), print a message when holes are found in the data, which requires
+        a read-modify-write, so the user can set
+        MPIR_CVAR_ROMIO_ONESIDED_NO_RMW on later runs to avoid the hole
+        detection overhead.
+
+    - name        : MPIR_CVAR_ROMIO_TUNEGATHER
+      alt-env     : ROMIO_TUNEGATHER
+      category    : ROMIO
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        How the starting and ending offsets are collected for aggregator
+        collective I/O: one MPI_Allreduce(MPI_MAX) if true, two or three
+        MPI_Allgather calls if false.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 int romio_write_aggmethod;
 int romio_read_aggmethod;
@@ -24,91 +125,31 @@ int romio_onesided_always_rmw;
 int romio_onesided_inform_rmw;
 int romio_tunegather;
 
-/* set internal variables for tuning environment variables */
-/** \page mpiio_vars MPIIO Configuration
-  \section env_sec Environment Variables
- *
- * - ROMIO_WRITE_AGGMETHOD/ROMIO_READ_AGGMETHOD -  Replaces the two-phase
- *   collective IO aggregation
- *   with a one-sided algorithm, significantly reducing communication and
- *   memory overhead.  Fully
- *   supports all datasets and datatypes, the only caveat is that any holes in the data
- *   when writing to a pre-existing file are ignored -- there is no read-modify-write
- *   support to maintain the correctness of regions of pre-existing data so every byte
- *   must be explicitly written to maintain correctness.  Users must beware of middle-ware
- *   libraries like PNETCDF which may count on read-modify-write functionality for certain
- *   features (like fill values).  Possible values:
- *   - 0 - Normal two-phase collective IO is used.
- *   - 1 - A separate one-sided MPI_Put or MPI_Get is used for each contiguous chunk of data
- *         for a compute to write to or read from the collective buffer on the aggregator.
- *   - 2 - An MPI derived datatype is created using all the contiguous chunks and just one
- *         call to MPI_Put or MPI_Get is done with the derived datatype.  On Blue Gene /Q
- *         optimal performance for this is achieved when paired with PAMID_TYPED_ONESIDED=1.
- *   - Default is 0
- *
- * - ROMIO_ONESIDED_NO_RMW - For one-sided write aggregation (ROMIO_WRITE_AGGMETHOD = 1 or 2)
- *   disable the detection of holes in the data when writing to a pre-existing
- *   file requiring a read-modify-write, thereby avoiding the communication
- *   overhead for this detection.
- *   - 0 (hole detection enabled) or 1 (hole detection disabled)
- *   - Default is 0
- *
- * - ROMIO_ONESIDED_ALWAYS_RMW - For one-sided write aggregation (ROMIO_WRITE_AGGMETHOD = 1 or 2)
- *   always pre-read the offset range being written to a pre-existing file thereby filling
- *   any holes that may exist in the data before being written.
- *   - 0 (do not pre-read file offset range) or 1 (pre-read file offset range)
- *   - Default is 0
- *
- * - ROMIO_ONESIDED_INFORM_RMW - For one-sided aggregation
- *   (ROMIO_WRITE_AGGMETHOD = 1 or 2) generate an informational message informing
- *   the user whether holes exist in the data when writing to a pre-existing
- *   file requiring a read-modify-write, thereby educating the user to set
- *   ROMIO_ONESIDED_NO_RMW=1 on a future run to avoid the communication
- *   overhead for this detection.
- *   - 0 (disabled) or 1 (enabled)
- *   - Default is 0
- *
- * - ROMIO_TUNEGATHER - Tune how starting and ending offsets are communicated
- *   for aggregator collective i/o.  Possible values:
- *   - 0 - Use two or three MPI_Allgather's to collect starting and ending offsets.
- *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
- *   - Default is 1.
- *
- */
+#ifndef ROMIO_INSIDE_MPICH
+static int get_env_int(const char *name, int dflt)
+{
+    char *x = getenv(name);
+    return x ? atoi(x) : dflt;
+}
+#endif
 
 void ad_get_env_vars(void)
 {
-    char *x;
-
-    romio_write_aggmethod = 0;
-    x = getenv("ROMIO_WRITE_AGGMETHOD");
-    if (x)
-        romio_write_aggmethod = atoi(x);
-
-    romio_read_aggmethod = 0;
-    x = getenv("ROMIO_READ_AGGMETHOD");
-    if (x)
-        romio_read_aggmethod = atoi(x);
-
-    romio_onesided_no_rmw = 0;
-    x = getenv("ROMIO_ONESIDED_NO_RMW");
-    if (x)
-        romio_onesided_no_rmw = atoi(x);
-
-    romio_onesided_always_rmw = 0;
-    x = getenv("ROMIO_ONESIDED_ALWAYS_RMW");
-    if (x)
-        romio_onesided_always_rmw = atoi(x);
+#ifdef ROMIO_INSIDE_MPICH
+    romio_write_aggmethod = MPIR_CVAR_ROMIO_WRITE_AGGMETHOD;
+    romio_read_aggmethod = MPIR_CVAR_ROMIO_READ_AGGMETHOD;
+    romio_onesided_no_rmw = MPIR_CVAR_ROMIO_ONESIDED_NO_RMW;
+    romio_onesided_always_rmw = MPIR_CVAR_ROMIO_ONESIDED_ALWAYS_RMW;
+    romio_onesided_inform_rmw = MPIR_CVAR_ROMIO_ONESIDED_INFORM_RMW;
+    romio_tunegather = MPIR_CVAR_ROMIO_TUNEGATHER;
+#else
+    romio_write_aggmethod = get_env_int("ROMIO_WRITE_AGGMETHOD", 0);
+    romio_read_aggmethod = get_env_int("ROMIO_READ_AGGMETHOD", 0);
+    romio_onesided_no_rmw = get_env_int("ROMIO_ONESIDED_NO_RMW", 0);
+    romio_onesided_always_rmw = get_env_int("ROMIO_ONESIDED_ALWAYS_RMW", 0);
+    romio_onesided_inform_rmw = get_env_int("ROMIO_ONESIDED_INFORM_RMW", 0);
+    romio_tunegather = get_env_int("ROMIO_TUNEGATHER", 1);
+#endif
     if (romio_onesided_always_rmw)
         romio_onesided_no_rmw = 1;
-
-    romio_onesided_inform_rmw = 0;
-    x = getenv("ROMIO_ONESIDED_INFORM_RMW");
-    if (x)
-        romio_onesided_inform_rmw = atoi(x);
-
-    romio_tunegather = 1;
-    x = getenv("ROMIO_TUNEGATHER");
-    if (x)
-        romio_tunegather = atoi(x);
 }
