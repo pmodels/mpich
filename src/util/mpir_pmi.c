@@ -221,6 +221,23 @@ static void MPIR_pmi_finalize_on_exit(void)
     }
 }
 
+/* The kvs name identifies the world in dynamic processes (e.g. MPI_Comm_connect),
+ * so singletons need names that differ across processes and hosts. The PMI
+ * client's singleton name may be a constant or only unique within a host. Keep
+ * the "singinit-" prefix, which the PMI-1 client recognizes. */
+static void set_singleton_kvs_name(void)
+{
+    char hostname[64];
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        hostname[0] = '\0';
+    }
+    hostname[sizeof(hostname) - 1] = '\0';
+
+    MPL_free(pmi_kvs_name);
+    pmi_kvs_name = MPL_malloc(MPIR_NAMESPACE_MAX, MPL_MEM_OTHER);
+    snprintf(pmi_kvs_name, MPIR_NAMESPACE_MAX, "singinit-%s-%d", hostname, (int) getpid());
+}
+
 int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -251,13 +268,13 @@ int MPIR_pmi_init(void)
         pmi_hostname = MPL_strdup(hostname);
     }
 
+    bool is_singleton = !have_pmi && !have_pmix;
     unsigned world_id = 0;
-    if (pmi_kvs_name) {
-        if (!strcmp(pmi_kvs_name, "singinit") || !strcmp(pmi_kvs_name, "0")) {
-            world_id = getpid();
-        } else {
-            HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
-        }
+    if (is_singleton) {
+        set_singleton_kvs_name();
+        world_id = getpid();
+    } else if (pmi_kvs_name) {
+        HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
     }
 
     if (!MPIR_CVAR_FINALIZE_ATEXIT && !pmi_connected) {
