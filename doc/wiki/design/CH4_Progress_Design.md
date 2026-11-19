@@ -16,7 +16,7 @@ The ch3 device has its own progress engine, described in
 | Function | Used by | What it polls |
 |---|---|---|
 | `MPID_Progress_test(state)` | everything below | the VCIs and parts in `state`; `NULL` means every implicit VCI, every part |
-| `MPID_Progress_wait(state)` | blocking loops (`MPIR_Wait_state`, ...) | `MPID_Progress_test(state)`, then a yield. It never blocks. |
+| `MPID_Progress_wait(state)` | blocking loops (`MPIR_Wait_state`, ...) | `MPID_Progress_test(state)`, then a yield when multithreaded. It never blocks. |
 | `MPID_Progress_poke()` | | `MPID_Progress_test(NULL)` |
 | `MPID_Progress_start(state)` / `_end` | the legacy `MPIR_*_impl` waits | `start` fills `state` for global progress; `end` does nothing |
 | `MPID_Test*`, `MPID_Wait*` (`ch4_wait.h`) | `MPI_Test`, `MPI_Wait` and their array forms | only the VCIs of the requests (`MPIDI_set_progress_vci`, `_vci_n`) |
@@ -168,7 +168,7 @@ global progress takes every VCI lock in turn.
   threads can enter.
 - With `--enable-thread-cs=per-vci` (`MPICH_THREAD_GRANULARITY__VCI`), each
   part is polled under its VCI lock as above, and `MPID_Progress_wait`
-  yields the thread.
+  yields the thread when multithreaded (`MPIR_ThreadInfo.isThreaded`).
 - The MT model (`MPIDI_CH4_MT_MODEL`: `direct` or `lockless`, see
   `mpidpre.h`) decides whether netmod progress takes the VCI lock.
 - Progress hooks have their own locks; async things poll and add without
