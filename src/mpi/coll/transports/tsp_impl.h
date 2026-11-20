@@ -21,7 +21,15 @@ int MPII_TSP_comm_cleanup(MPIR_Comm * comm_ptr);
 /* check if there are any pending schedules */
 int MPII_TSP_scheds_are_pending(void);
 
-/* TSP sched interfaces */
+/* TSP sched interfaces
+ *
+ * Order of sends and receives: the sends to one peer, and the receives from one peer, are
+ * issued in the order they were added to the schedule, whatever order their dependencies
+ * complete in. Messages with the same tag then match in that order. An algorithm must add the
+ * operations between each pair of ranks in the same order on both sides.
+ *
+ * A vertex type added with MPIR_TSP_sched_new_type whose issue function sends or receives is
+ * outside this ordering: it must order its own messages. */
 typedef void *MPIR_TSP_sched_t;
 
 typedef int (*MPIR_TSP_sched_issue_fn) (void *data, int *done);
