@@ -26,16 +26,36 @@ cvars:
         write - RDMA write.
         direct - direct send data using libfabric after the RNDV handshake.
 
+    - name        : MPIR_CVAR_CH4_OFI_RNDV_SELECTION
+      category    : CH4_OFI
+      type        : enum
+      default     : generic
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : |-
+        Specify the logic used to choose a rendezvous protocol when
+        MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL is auto.
+        generic - choose based on buffer attributes and datatypes only.
+        efa - Protocol selection is informed by probing OFI provider's P2P support.
+          If P2P support is present, will disable host bouncing of data buffers
+          by default. Also provides a path to use `read` protocol for multi-NIC
+          configurations. This logic is tested/optimized for EFA systems that
+          have tight GPU/NIC affinity, but can be used with other providers.
+
     - name        : MPIR_CVAR_CH4_OFI_RNDV_GPU_NO_PACK
       category    : CH4_OFI
-      type        : boolean
-      default     : false
+      type        : int
+      default     : -1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         When true, contiguous device buffers do not force packing, enabling RDMA
-        read/write rendezvous protocols directly.
+        read/write rendezvous protocols directly. When unset (-1), packing is
+        skipped if the provider reports peer-to-peer HMEM support through
+        FI_OPT_FI_HMEM_P2P, but only when MPIR_CVAR_CH4_OFI_RNDV_SELECTION is
+        efa; otherwise packing is not skipped without explicitly requesting it.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
