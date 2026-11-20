@@ -10,16 +10,6 @@
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
-/* Create a completed RMA request. Used when a request-based operation (e.g. RPUT)
- * completes immediately (=without actually issuing active messages) */
-#define MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq_)                        \
-    do {                                                                \
-        /* create a completed request for user if issuing is completed immediately. */ \
-        (sreq_) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA); \
-        MPIR_ERR_CHKANDSTMT((sreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, \
-                            goto fn_fail, "**nomemreq");                \
-    } while (0)
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint origin_count,
                                            MPI_Datatype origin_datatype, int target_rank,
                                            MPI_Aint target_disp, MPI_Aint target_count,
@@ -39,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     if (origin_data_sz == 0)
-        goto immed_cmpl;
+        goto fn_exit;
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
@@ -48,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
                                    origin_datatype,
                                    (char *) win->base + offset, target_count, target_datatype);
         MPIR_ERR_CHECK(mpi_errno);
-        goto immed_cmpl;
+        goto fn_exit;
     }
 
     /* Only create request when issuing is not completed.
@@ -148,11 +138,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
     MPIR_FUNC_EXIT;
     return mpi_errno;
 
-  immed_cmpl:
-    if (sreq_ptr)
-        MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
-    goto fn_exit;
-
   fn_fail:
     goto fn_exit;
 }
@@ -175,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
 
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     if (target_data_sz == 0)
-        goto immed_cmpl;
+        goto fn_exit;
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
@@ -183,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
                                    target_count,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
         MPIR_ERR_CHECK(mpi_errno);
-        goto immed_cmpl;
+        goto fn_exit;
     }
 
     /* Only create request when issuing is not completed.
@@ -267,11 +252,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
     MPIR_FUNC_EXIT;
     return mpi_errno;
 
-  immed_cmpl:
-    if (sreq_ptr)
-        MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
-    goto fn_exit;
-
   fn_fail:
     goto fn_exit;
 }
@@ -298,7 +278,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, MPI_A
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, origin_data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     if (origin_data_sz == 0 || target_data_sz == 0) {
-        goto immed_cmpl;
+        goto fn_exit;
     }
 
     /* Only create request when issuing is not completed.
@@ -398,11 +378,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, MPI_A
     MPIR_FUNC_EXIT;
     return mpi_errno;
 
-  immed_cmpl:
-    if (sreq_ptr)
-        MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
-    goto fn_exit;
-
   fn_fail:
     goto fn_exit;
 }
@@ -445,7 +420,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIDI_Datatype_check_size(result_datatype, result_count, result_data_sz);
 
     if (target_data_sz == 0 || (origin_data_sz == 0 && result_data_sz == 0)) {
-        goto immed_cmpl;
+        goto fn_exit;
     }
 
     /* Only create request when issuing is not completed.
@@ -551,11 +526,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
-
-  immed_cmpl:
-    if (sreq_ptr)
-        MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
-    goto fn_exit;
 
   fn_fail:
     goto fn_exit;

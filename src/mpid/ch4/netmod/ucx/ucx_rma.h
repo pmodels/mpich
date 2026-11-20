@@ -393,12 +393,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                      win, addr, winattr, &sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (sreq == NULL) {
-            /* create a completed request for user if issuing is completed immediately. */
-            sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-            MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                                "**nomemreq");
-        }
         *request = sreq;
     }
 
@@ -497,12 +491,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                      win, addr, winattr, &sreq);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (sreq == NULL) {
-            /* create a completed request for user if issuing is completed immediately. */
-            sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-            MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                                "**nomemreq");
-        }
         *request = sreq;
     }
 

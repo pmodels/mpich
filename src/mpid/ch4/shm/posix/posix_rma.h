@@ -540,7 +540,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        *request = NULL;
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
@@ -649,7 +649,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
                                           target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+    *request = NULL;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -692,7 +692,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
                                               target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+    *request = NULL;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -808,7 +808,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        *request = NULL;
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
