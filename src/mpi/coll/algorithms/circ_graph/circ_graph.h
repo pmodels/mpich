@@ -104,6 +104,8 @@ typedef struct {
         bool persist_packbuf_loaded;    /* avoid sending unloaded packbuf */
         bool in_staging;        /* for allreduce, whether data is in staging_buf */
         bool unstaged;          /* for allreduce, rank 0 has issued the copy back of its result */
+        MPIR_gpu_req staging_areq;      /* for allreduce, the load of the block into staging_buf,
+                                         * which every reduce into staging_buf waits for */
     } *pending_blocks;
     int pending_head;
     int pending_head_block;
@@ -120,7 +122,8 @@ typedef struct {
             MPIR_gpu_req async_req;
             MPIR_Request *req;
         } u;
-        MPIR_gpu_req staging_areq;      /* allreduce may issue a concurrent staging_buf copy */
+        MPIR_gpu_req staging_areq;      /* rank 0's copy of a block from staging_buf back to the
+                                         * user buffer, concurrent with its first bcast send */
         void *packbuf;          /* if need_pack, allocated chunk buffer */
         void *tmpbuf;           /* reduce need recv into a tmpbuf before reduce_local */
         int block;
