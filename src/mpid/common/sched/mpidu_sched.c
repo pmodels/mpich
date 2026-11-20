@@ -171,6 +171,10 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 #endif
     MPIR_FUNC_ENTER;
 
+    /* only a user-level nonblocking collective call draws a tag; everything below it, such as
+     * an inner call on a subcomm, uses that one */
+    MPIR_Assert(!(comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM));
+
     *tag = comm_ptr->next_sched_tag;
     ++comm_ptr->next_sched_tag;
 

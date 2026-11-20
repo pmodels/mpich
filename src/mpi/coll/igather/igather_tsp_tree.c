@@ -15,7 +15,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
-    int i, j, tag, is_inplace = false;
+    int i, j, is_inplace = false;
     MPI_Aint sendtype_lb, sendtype_extent, sendtype_true_extent;
     MPI_Aint recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id, *recv_id = NULL;
@@ -41,10 +41,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     if (rank == root && is_inplace) {
         sendtype = recvtype;
@@ -132,7 +128,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     /* Leaf nodes send to parent; a root without children (a one-rank comm) still copies */
     if (num_children == 0 && my_tree.parent != -1) {
         mpi_errno =
-            MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, tag, comm, sched, 0,
+            MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, comm, sched, 0,
                                  NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv\n", rank));
@@ -156,14 +152,14 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
             int child = *(int *) utarray_eltptr(my_tree.children, i);
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_buf + child_data_offset[i] * recvtype_extent,
-                                     child_subtree_size[i] * recvcount, recvtype, child, tag, comm,
+                                     child_subtree_size[i] * recvcount, recvtype, child, comm,
                                      sched, num_dependencies, &dtcopy_id, &recv_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (my_tree.parent != -1) {
             mpi_errno = MPIR_TSP_sched_isend(tmp_buf, recv_size, recvtype, my_tree.parent,
-                                             tag, comm, sched, num_children, recv_id, &vtx_id);
+                                             comm, sched, num_children, recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

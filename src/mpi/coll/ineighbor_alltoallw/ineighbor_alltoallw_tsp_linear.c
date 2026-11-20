@@ -22,7 +22,7 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
     int i, k, l;
     bool is_cartesian;
     int *srcs, *dsts;
-    int tag, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL();
@@ -36,10 +36,6 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
                                     outdegree, dsts, MPI_UNWEIGHTED);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
         char *sb;
@@ -48,8 +44,7 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
         /* the type of an empty entry is not held by the schedule and may not be valid anymore */
         MPI_Datatype dt = (sendcounts[k] > 0) ? sendtypes[k] : MPIR_BYTE_INTERNAL;
         mpi_errno =
-            MPIR_TSP_sched_isend(sb, sendcounts[k], dt, dsts[k], tag, comm_ptr, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_isend(sb, sendcounts[k], dt, dsts[k], comm_ptr, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -66,8 +61,7 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
         char *rb = ((char *) recvbuf) + rdispls[l];
         MPI_Datatype dt = (recvcounts[l] > 0) ? recvtypes[l] : MPIR_BYTE_INTERNAL;
         mpi_errno =
-            MPIR_TSP_sched_irecv(rb, recvcounts[l], dt, srcs[l], tag, comm_ptr, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_irecv(rb, recvcounts[l], dt, srcs[l], comm_ptr, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -21,7 +21,15 @@ int MPII_TSP_comm_cleanup(MPIR_Comm * comm_ptr);
 /* check if there are any pending schedules */
 int MPII_TSP_scheds_are_pending(void);
 
-/* TSP sched interfaces */
+/* TSP sched interfaces
+ *
+ * Order of sends and receives: the sends to one peer, and the receives from one peer, are
+ * issued in the order they were added to the schedule, whatever order their dependencies
+ * complete in. Messages with the same tag then match in that order. An algorithm must add the
+ * operations between each pair of ranks in the same order on both sides.
+ *
+ * A vertex type added with MPIR_TSP_sched_new_type whose issue function sends or receives is
+ * outside this ordering: it must order its own messages. */
 typedef void *MPIR_TSP_sched_t;
 
 typedef int (*MPIR_TSP_sched_issue_fn) (void *data, int *done);
@@ -48,7 +56,6 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
@@ -57,7 +64,6 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
@@ -66,7 +72,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
@@ -76,7 +81,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
-                          int tag,
                           MPIR_Comm * comm_ptr,
                           MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
@@ -113,6 +117,10 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
 /* Transport function to hold a reference on a comm/datatype/op handle until the schedule is
  * freed */
 void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
+
+/* The tag of the collective call, set when the schedule is created (MPII_CSEL_CREATE_TSP_SCHED).
+ * Every send and receive of the schedule uses it. */
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t sched, int tag);
 
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);

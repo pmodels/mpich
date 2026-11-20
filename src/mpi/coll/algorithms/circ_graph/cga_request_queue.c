@@ -118,13 +118,12 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     MPIR_Type_get_true_extent_impl(datatype, &queue->true_lb, &dummy);
     queue->inverse_order = inverse_order;
 
-    /* a nonblocking call uses the tag of its call chain. Drawing one from comm could collide
-     * when comm is the local_comm of an intercomm, which shares the intercomm's context id. */
+    /* a nonblocking call uses the tag of its call chain, and a blocking one (tag 0) the
+     * blocking tag. Nothing below a user-level call draws a tag. */
     if (tag) {
         queue->tag = tag;
     } else {
-        mpi_errno = MPIR_Sched_next_tag(comm, &queue->tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        queue->tag = MPIR_COLL_BLOCKING_TAG;
     }
 
     /* circular array of pending blocks

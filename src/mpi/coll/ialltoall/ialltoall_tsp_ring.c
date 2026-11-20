@@ -42,7 +42,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     int i, src, dst, copy_dst;
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;
-    int tag, vtx_id;
+    int vtx_id;
 
     int size;
     int rank;
@@ -113,10 +113,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     int send_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
-        /* For correctness, transport based collectives need to get the
-         * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;
         /* schedule send */
@@ -130,7 +126,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm, sched,
+            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, comm, sched,
                                  nvtcs, vtcs, &send_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
         /* schedule recv */
@@ -148,7 +144,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm, sched,
+            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, comm, sched,
                                  nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
 

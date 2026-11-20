@@ -17,15 +17,11 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
     int rank, comm_size;
     MPI_Aint extent;
     int i;
-    int tag, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* If I'm the root, then scatter */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
@@ -52,7 +48,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
                     }
                 } else {
                     mpi_errno = MPIR_TSP_sched_isend(((char *) sendbuf + displs[i] * extent),
-                                                     sendcounts[i], sendtype, i, tag, comm_ptr,
+                                                     sendcounts[i], sendtype, i, comm_ptr,
                                                      sched, 0, NULL, &vtx_id);
                 }
             }
@@ -64,7 +60,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
             mpi_errno =
-                MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, tag, comm_ptr, sched, 0,
+                MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, comm_ptr, sched, 0,
                                      NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }

@@ -15,6 +15,14 @@ UT_icd vtx_t_icd = {
     MPII_Genutil_vtx_dtor
 };
 
+/* UT_icd helper structure for MPII_Genutil_chan_op_t utarray */
+static UT_icd chan_op_t_icd = {
+    sizeof(MPII_Genutil_chan_op_t),
+    NULL,
+    NULL,
+    NULL
+};
+
 /* UT_icd helper structure for MPII_Genutil_vtx_type_t utarray */
 UT_icd vtx_type_t_icd = {
     sizeof(MPII_Genutil_vtx_type_t),
@@ -37,11 +45,14 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 
     MPIR_Coll_owned_init(&sched->owned);
     utarray_init(&sched->generic_types, &vtx_type_t_icd);
+    utarray_init(&sched->chan_ops, &chan_op_t_icd);
+    sched->chans = NULL;
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
 
     sched->is_persistent = is_persistent;
+    sched->tag = 0;
 
     *s = sched;
     return MPI_SUCCESS;
@@ -101,6 +112,8 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 
     utarray_done(&sched->vtcs);
     utarray_done(&sched->generic_types);
+    utarray_done(&sched->chan_ops);
+    MPII_Genutil_chan_free(sched);
     MPL_free(sched);
 
   fn_exit:
@@ -170,7 +183,6 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id)
 {
@@ -187,8 +199,8 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.count = count;
     vtxp->u.isend.dt = dt;
     vtxp->u.isend.dest = dest;
-    vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
+    vtxp->chan_op = MPII_Genutil_chan_add_op(sched, *vtx_id, 0, comm_ptr, dest, false);
 
     /* the schedule's builder holds the comm and datatype until the schedule is freed */
 
@@ -203,7 +215,6 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id)
 {
@@ -221,8 +232,8 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.count = count;
     vtxp->u.irecv.dt = dt;
     vtxp->u.irecv.src = source;
-    vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
+    vtxp->chan_op = MPII_Genutil_chan_add_op(sched, *vtx_id, 0, comm_ptr, source, true);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", *vtx_id));
@@ -234,7 +245,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
@@ -252,9 +262,9 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.count = count;
     vtxp->u.irecv_status.dt = dt;
     vtxp->u.irecv_status.src = source;
-    vtxp->u.irecv_status.tag = tag;
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
+    vtxp->chan_op = MPII_Genutil_chan_add_op(sched, *vtx_id, 0, comm_ptr, source, true);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv_status", *vtx_id));
@@ -269,7 +279,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
-                          int tag,
                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                           int *vtx_id)
 {
@@ -289,12 +298,19 @@ int MPIR_TSP_sched_imcast(const void *buf,
     utarray_init(&vtxp->u.imcast.dests, &ut_int_icd);
     utarray_reserve(&vtxp->u.imcast.dests, num_dests, MPL_MEM_COLL);
     memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
-    vtxp->u.imcast.tag = tag;
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =
         (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
                                             MPL_MEM_COLL);
     vtxp->u.imcast.last_complete = -1;
+    for (int i = 0; i < num_dests; i++) {
+        vtxp->u.imcast.req[i] = NULL;
+        /* consecutive, so the operation of destination i is vtxp->chan_op + i */
+        int op_id = MPII_Genutil_chan_add_op(sched, *vtx_id, i, comm_ptr, dests[i], false);
+        if (i == 0) {
+            vtxp->chan_op = op_id;
+        }
+    }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
@@ -541,6 +557,12 @@ void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t s, int handle)
     MPIR_Coll_owned_add_handle(&sched->owned, handle);
 }
 
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t s, int tag)
+{
+    MPII_Genutil_sched_t *sched = s;
+    sched->tag = tag;
+}
+
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
@@ -635,6 +657,10 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
 
     sched->completed_vtcs = 0;
     sched->issued_head = sched->issued_tail = NULL;
+
+    for (i = 0; i < utarray_len(&sched->chan_ops); i++) {
+        ((MPII_Genutil_chan_op_t *) utarray_eltptr(&sched->chan_ops, i))->issued = false;
+    }
 
     vtx = ut_type_array(&sched->vtcs, vtx_t *);
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {

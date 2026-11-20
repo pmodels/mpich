@@ -22,7 +22,7 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
     int i, k, l;
     bool is_cartesian;
     int *srcs, *dsts;
-    int tag, vtx_id;
+    int vtx_id;
     MPI_Aint sendtype_extent, recvtype_extent;
 
     MPIR_FUNC_ENTER;
@@ -41,15 +41,11 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
                                     outdegree, dsts, MPI_UNWEIGHTED);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + sdispls[k] * sendtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_isend(sb, sendcounts[k], sendtype, dsts[k], tag, comm_ptr, sched, 0,
+            MPIR_TSP_sched_isend(sb, sendcounts[k], sendtype, dsts[k], comm_ptr, sched, 0,
                                  NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -66,7 +62,7 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf,
         }
         char *rb = ((char *) recvbuf) + rdispls[l] * recvtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_irecv(rb, recvcounts[l], recvtype, srcs[l], tag, comm_ptr, sched, 0,
+            MPIR_TSP_sched_irecv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, sched, 0,
                                  NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }

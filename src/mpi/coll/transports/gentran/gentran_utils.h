@@ -28,6 +28,14 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 /* Function to get a new vertex in the graph */
 int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** vtx);
 
+/* Adds a send to, or a receive from, peer on comm by vertex vtx_id (destination dest_idx of
+ * an imcast) at the end of its channel. Returns the index of the operation. */
+int MPII_Genutil_chan_add_op(MPII_Genutil_sched_t * sched, int vtx_id, int dest_idx,
+                             MPIR_Comm * comm, int peer, bool is_recv);
+
+/* Frees the channel map of the schedule */
+void MPII_Genutil_chan_free(MPII_Genutil_sched_t * sched);
+
 /* Function to make progress on the schedule */
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress);
 
