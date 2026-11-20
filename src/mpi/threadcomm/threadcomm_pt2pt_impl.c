@@ -82,7 +82,7 @@ int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
             MPID_Irecv(buf, count, datatype, src_rank, new_tag, threadcomm->comm, attr, req);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (has_status && !(*req)->comm) {
+        if (has_status && *req && !(*req)->comm) {
             (*req)->comm = threadcomm->comm;
             MPIR_Comm_add_ref(threadcomm->comm);
         }

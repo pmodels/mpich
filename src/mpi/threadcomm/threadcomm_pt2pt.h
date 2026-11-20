@@ -125,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX
 
         int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, buf, count, datatype, threadcomm);
         if (ret == MPI_SUCCESS) {
-            *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+            *req = NULL;
             goto fn_exit;
         }
     }
@@ -181,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX
             threadcomm_set_status(hdr, &(*req)->status, p);
             MPIR_Request_complete(*req);
         } else {
-            *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
+            *req = NULL;
         }
         threadcomm_data_copy(hdr, buf, count, datatype, p);
         threadcomm_complete_unexp(hdr, p);
