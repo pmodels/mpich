@@ -197,13 +197,10 @@ struct MPIR_Request {
         struct {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
-            void *sched;
-        } persist;              /* kind : MPIR_REQUEST_KIND__PREQUEST_SEND or MPIR_REQUEST_KIND__PREQUEST_RECV */
-        struct {
-            struct MPIR_Request *real_request;
             enum MPIR_sched_type sched_type;
             void *sched;
-        } persist_coll;         /* kind : MPIR_REQUEST_KIND__PREQUEST_COLL */
+            bool is_active;
+        } persist;              /* kind : MPIR_REQUEST_KIND__PREQUEST_SEND, PREQUEST_RECV, or PREQUEST_COLL */
         struct {
             int partitions;     /* Needed for parameter error check */
             MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.
@@ -407,9 +404,8 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
         switch (req_ptr->kind) {
             case MPIR_REQUEST_KIND__PREQUEST_SEND:
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
-                return (req_ptr)->u.persist.real_request != NULL;
             case MPIR_REQUEST_KIND__PREQUEST_COLL:
-                return (req_ptr)->u.persist_coll.real_request != NULL;
+                return (req_ptr)->u.persist.is_active;
             case MPIR_REQUEST_KIND__PART_SEND:
             case MPIR_REQUEST_KIND__PART_RECV:
                 return MPIR_Part_request_is_active(req_ptr);
@@ -480,6 +476,12 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     switch (kind) {
         case MPIR_REQUEST_KIND__COLL:
             req->u.nbc.coll_attr = 0;
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:
+        case MPIR_REQUEST_KIND__PREQUEST_RECV:
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
+            req->u.persist.real_request = NULL;
+            req->u.persist.is_active = false;
             break;
         default:
             break;
