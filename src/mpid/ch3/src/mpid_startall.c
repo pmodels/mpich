@@ -69,6 +69,9 @@ int MPID_Startall(int count, MPIR_Request * requests[])
         if (preq->dev.match.parts.rank == MPI_PROC_NULL)
             continue;
 
+        preq->u.persist.is_active = true;
+        preq->u.persist.real_request = NULL;
+
 	/* FIXME: The odd 7th arg (match.context_id - comm->context_id) 
 	   is probably to get the context offset.  Do we really need the
 	   context offset? Is there any case where the offset isn't zero? */
@@ -134,7 +137,12 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	if (rc == MPI_SUCCESS)
 	{
 	    preq->status.MPI_ERROR = MPI_SUCCESS;
-	    preq->cc_ptr = &preq->u.persist.real_request->cc;
+            if (preq->u.persist.real_request) {
+                preq->cc_ptr = &preq->u.persist.real_request->cc;
+            } else {
+                preq->cc_ptr = &preq->cc;
+                MPIR_cc_set(&preq->cc, 0);
+            }
 	}
 	/* --BEGIN ERROR HANDLING-- */
 	else

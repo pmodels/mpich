@@ -953,9 +953,9 @@ def dump_coll_impl(name, blocking_type):
         G.out.append("MPIR_Comm_add_ref(comm_ptr);")
         G.out.append("req->comm = comm_ptr;")
         G.out.append("MPIR_Comm_save_inactive_request(comm_ptr, req);")
-        G.out.append("req->u.persist_coll.sched_type = coll_sig.sched_type;")
-        G.out.append("req->u.persist_coll.sched = coll_sig.sched;")
-        G.out.append("req->u.persist_coll.real_request = NULL;")
+        G.out.append("req->u.persist.sched_type = coll_sig.sched_type;")
+        G.out.append("req->u.persist.sched = coll_sig.sched;")
+        G.out.append("req->u.persist.real_request = NULL;")
         G.out.append("*request = req;")
         G.out.append("")
     else:
