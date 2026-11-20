@@ -260,6 +260,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
+    if (MPIR_Request_is_complete(request_ptr)) {
+        return MPI_SUCCESS;
+    }
     return MPIR_Wait_impl(request_ptr, status);
 }
 

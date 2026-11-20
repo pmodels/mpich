@@ -29,24 +29,22 @@ int MPID_Rput(const void *origin_addr, MPI_Aint origin_count,
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
-    /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-
-    /* This request is referenced by user and ch3 by default. */
-    MPIR_Object_set_ref(ureq, 2);
-
     /* Enqueue or perform the RMA operation */
     if (data_sz != 0) {
+        /* Create user request, initially cc=1, ref=1 */
+        ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+
+        /* This request is referenced by user and ch3 by default. */
+        MPIR_Object_set_ref(ureq, 2);
+
         mpi_errno = MPIDI_CH3I_Put(origin_addr, origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
         MPIR_ERR_CHECK(mpi_errno);
-    }
-    else {
-        mpi_errno = MPID_Request_complete(ureq);
-        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        ureq = NULL;
     }
 
     *request = ureq;
@@ -82,24 +80,22 @@ int MPID_Rget(void *origin_addr, MPI_Aint origin_count,
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
-    /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-
-    /* This request is referenced by user and ch3 by default. */
-    MPIR_Object_set_ref(ureq, 2);
-
     /* Enqueue or perform the RMA operation */
     if (data_sz != 0) {
+        /* Create user request, initially cc=1, ref=1 */
+        ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+
+        /* This request is referenced by user and ch3 by default. */
+        MPIR_Object_set_ref(ureq, 2);
+
         mpi_errno = MPIDI_CH3I_Get(origin_addr, origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
         MPIR_ERR_CHECK(mpi_errno);
-    }
-    else {
-        mpi_errno = MPID_Request_complete(ureq);
-        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        ureq = NULL;
     }
 
     *request = ureq;
@@ -133,26 +129,24 @@ int MPID_Raccumulate(const void *origin_addr, MPI_Aint origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-
-    /* This request is referenced by user and ch3 by default. */
-    MPIR_Object_set_ref(ureq, 2);
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     /* Enqueue or perform the RMA operation */
     if (data_sz != 0) {
+        /* Create user request, initially cc=1, ref=1 */
+        ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+
+        /* This request is referenced by user and ch3 by default. */
+        MPIR_Object_set_ref(ureq, 2);
+
         mpi_errno = MPIDI_CH3I_Accumulate(origin_addr, origin_count,
                                           origin_datatype, target_rank,
                                           target_disp, target_count,
                                           target_datatype, op, win_ptr, ureq);
         MPIR_ERR_CHECK(mpi_errno);
-    }
-    else {
-        mpi_errno = MPID_Request_complete(ureq);
-        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        ureq = NULL;
     }
 
     *request = ureq;
@@ -187,29 +181,27 @@ int MPID_Rget_accumulate(const void *origin_addr, MPI_Aint origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-
-    /* This request is referenced by user and ch3 by default. */
-    MPIR_Object_set_ref(ureq, 2);
-
     /* Note that GACC is only a no-op if no data goes in both directions */
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, trg_data_sz, dtp, dt_true_lb);
 
     /* Enqueue or perform the RMA operation */
     if (data_sz != 0 || trg_data_sz != 0) {
+        /* Create user request, initially cc=1, ref=1 */
+        ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+
+        /* This request is referenced by user and ch3 by default. */
+        MPIR_Object_set_ref(ureq, 2);
+
         mpi_errno = MPIDI_CH3I_Get_accumulate(origin_addr, origin_count,
                                               origin_datatype, result_addr,
                                               result_count, result_datatype,
                                               target_rank, target_disp,
                                               target_count, target_datatype, op, win_ptr, ureq);
         MPIR_ERR_CHECK(mpi_errno);
-    }
-    else {
-        mpi_errno = MPID_Request_complete(ureq);
-        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        ureq = NULL;
     }
 
     *request = ureq;

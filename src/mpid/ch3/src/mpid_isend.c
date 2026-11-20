@@ -37,7 +37,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr)) {
-        return MPID_Issend(buf, count, datatype, rank, tag, comm, attr, &sreq);
+        return MPID_Issend(buf, count, datatype, rank, tag, comm, attr, request);
     }
 
     MPIR_FUNC_ENTER;
