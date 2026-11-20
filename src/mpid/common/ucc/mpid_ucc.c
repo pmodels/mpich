@@ -157,10 +157,6 @@ static ucc_status_t mpidi_ucc_oob_allgather(void *sbuf, void *rbuf, size_t msgle
         return UCC_ERR_NO_MESSAGE;
     }
 
-    if (!request) {
-        request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
-    }
-
     *req = request;
 
     MPIDI_COMMON_UCC_DEBUG(MPIDI_COMMON_UCC_VERBOSE_LEVEL_BASIC, "oob allgather called");

@@ -581,8 +581,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
             mpi_errno = MPIR_TSP_sched_free(sched);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
-        MPIR_ERR_CHKANDSTMT(*req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        *req = NULL;
         goto fn_exit;
     }
 

@@ -170,9 +170,8 @@ static int send_nb(dte_data_representation_t data,
     dtype = MPIR_BYTE_INTERNAL;
     request = NULL;
     mpi_errno = MPIC_Isend(buffer, size, dtype, ec_h.rank, tag, comm, &request, 0);
-    MPIR_Assert(request);
     req->data = (void *) request;
-    req->status = HCOLRTE_REQUEST_ACTIVE;
+    req->status = request ? HCOLRTE_REQUEST_ACTIVE : HCOLRTE_REQUEST_DONE;
   fn_exit:
     return mpi_errno;
   fn_fail:

@@ -277,6 +277,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 if (MPIR_CVAR_REQUEST_ERR_FATAL) {
                     return ret_errno;
                 }
+            } else if (e->u.send.sreq == NULL) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -303,6 +305,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 if (MPIR_CVAR_REQUEST_ERR_FATAL) {
                     return ret_errno;
                 }
+            } else if (e->u.recv.rreq == NULL) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -316,6 +320,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 if (MPIR_CVAR_REQUEST_ERR_FATAL) {
                     return ret_errno;
                 }
+            } else if (e->u.send.sreq == NULL) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -329,6 +335,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 if (MPIR_CVAR_REQUEST_ERR_FATAL) {
                     return ret_errno;
                 }
+            } else if (e->u.recv.rreq == NULL) {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }

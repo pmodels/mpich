@@ -178,12 +178,16 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
             case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
                 if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
                     if (vtxp->u.irecv_status.status != MPI_STATUS_IGNORE) {
-                        MPI_Aint recvd;
-                        vtxp->u.irecv_status.status->MPI_ERROR =
-                            vtxp->u.irecv_status.req->status.MPI_ERROR;
-                        MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status, MPIR_BYTE_INTERNAL,
-                                            &recvd);
-                        MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                        if (vtxp->u.irecv_status.req) {
+                            MPI_Aint recvd;
+                            vtxp->u.irecv_status.status->MPI_ERROR =
+                                vtxp->u.irecv_status.req->status.MPI_ERROR;
+                            MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status,
+                                                MPIR_BYTE_INTERNAL, &recvd);
+                            MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                        } else {
+                            MPIR_Status_set_procnull(vtxp->u.irecv_status.status);
+                        }
                     }
                     MPIR_Request_free(vtxp->u.irecv_status.req);
                     vtxp->u.irecv_status.req = NULL;
@@ -560,12 +564,16 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
 
                 if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
                     if (vtxp->u.irecv_status.status != MPI_STATUS_IGNORE) {
-                        MPI_Aint recvd;
-                        vtxp->u.irecv_status.status->MPI_ERROR =
-                            vtxp->u.irecv_status.req->status.MPI_ERROR;
-                        MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status,
-                                            MPIR_BYTE_INTERNAL, &recvd);
-                        MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                        if (vtxp->u.irecv_status.req) {
+                            MPI_Aint recvd;
+                            vtxp->u.irecv_status.status->MPI_ERROR =
+                                vtxp->u.irecv_status.req->status.MPI_ERROR;
+                            MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status,
+                                                MPIR_BYTE_INTERNAL, &recvd);
+                            MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                        } else {
+                            MPIR_Status_set_procnull(vtxp->u.irecv_status.status);
+                        }
                     }
                     MPIR_Request_free(vtxp->u.irecv_status.req);
                     vtxp->u.irecv_status.req = NULL;

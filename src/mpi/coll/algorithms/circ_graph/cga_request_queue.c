@@ -1423,7 +1423,7 @@ static int progress_for_request(MPII_cga_request_queue * queue, int i)
             }
 
             /* -- transition -- */
-            MPIR_Assert(REQi.u.req->status.MPI_ERROR == MPI_SUCCESS);
+            MPIR_Assert(!REQi.u.req || REQi.u.req->status.MPI_ERROR == MPI_SUCCESS);
             MPIR_Request_free(REQi.u.req);
 
             if (REQi.op_type == MPII_CGA_OP_SEND) {

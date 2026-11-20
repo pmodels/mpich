@@ -113,6 +113,10 @@ int MPIC_Wait(MPIR_Request * request_ptr)
 
     MPIR_FUNC_ENTER;
 
+    if (!request_ptr) {
+        goto fn_exit;
+    }
+
     mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -270,23 +274,14 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
 
-    /* If source is MPI_PROC_NULL, create a completed request and return. */
     if (unlikely(source == MPI_PROC_NULL)) {
-        recv_req_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(recv_req_ptr == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        MPIR_Status_set_procnull(&recv_req_ptr->status);
+        MPIR_Status_set_procnull(status);
     } else {
         DO_MPID_IRECV(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr, attr, &recv_req_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If dest is MPI_PROC_NULL, create a completed request and return. */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        send_req_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(send_req_ptr == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-    } else {
+    if (likely(dest != MPI_PROC_NULL)) {
         DO_MPID_ISEND(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, attr, &send_req_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -297,18 +292,20 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     if (mpi_errno)
         MPIR_ERR_POPFATAL(mpi_errno);
 
-    *status = recv_req_ptr->status;
+    if (recv_req_ptr) {
+        *status = recv_req_ptr->status;
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = recv_req_ptr->status.MPI_ERROR;
+        }
+        MPIR_Request_free(recv_req_ptr);
+    }
 
-    if (mpi_errno == MPI_SUCCESS) {
-        mpi_errno = recv_req_ptr->status.MPI_ERROR;
-
+    if (send_req_ptr) {
         if (mpi_errno == MPI_SUCCESS) {
             mpi_errno = send_req_ptr->status.MPI_ERROR;
         }
+        MPIR_Request_free(send_req_ptr);
     }
-
-    MPIR_Request_free(send_req_ptr);
-    MPIR_Request_free(recv_req_ptr);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -361,21 +358,14 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If source is MPI_PROC_NULL, create a completed request and return. */
     if (unlikely(source == MPI_PROC_NULL)) {
-        rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Status_set_procnull(&rreq->status);
+        MPIR_Status_set_procnull(status);
     } else {
         DO_MPID_IRECV(buf, count, datatype, source, recvtag, comm_ptr, attr, &rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If dest is MPI_PROC_NULL, create a completed request and return. */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
+    if (likely(dest != MPI_PROC_NULL)) {
         DO_MPID_ISEND(tmpbuf, actual_pack_bytes, MPIR_BYTE_INTERNAL, dest, sendtag, comm_ptr, attr,
                       &sreq);
         MPIR_ERR_CHECK(mpi_errno);
@@ -394,18 +384,20 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     mpi_errno = MPIC_Wait(rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *status = rreq->status;
+    if (rreq) {
+        *status = rreq->status;
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = rreq->status.MPI_ERROR;
+        }
+        MPIR_Request_free(rreq);
+    }
 
-    if (mpi_errno == MPI_SUCCESS) {
-        mpi_errno = rreq->status.MPI_ERROR;
-
+    if (sreq) {
         if (mpi_errno == MPI_SUCCESS) {
             mpi_errno = sreq->status.MPI_ERROR;
         }
+        MPIR_Request_free(sreq);
     }
-
-    MPIR_Request_free(sreq);
-    MPIR_Request_free(rreq);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -429,11 +421,8 @@ static int do_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int 
 
     MPIR_FUNC_ENTER;
 
-    /* Create a completed request and return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
-        *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT((*request_ptr) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
+        *request_ptr = NULL;
         goto fn_exit;
     }
 
@@ -479,12 +468,8 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 
     MPIR_FUNC_ENTER;
 
-    /* Create a completed request and return immediately for dummy process */
     if (unlikely(source == MPI_PROC_NULL)) {
-        MPIR_Request *rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        *request_ptr = rreq;
-        MPIR_Status_set_procnull(&rreq->status);
+        *request_ptr = NULL;
         goto fn_exit;
     }
 
@@ -533,11 +518,13 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
      * in the future, this function is used for multiple collectives at a
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
-        if (requests[i]->kind == MPIR_REQUEST_KIND__RECV) {
-            mpi_errno = MPIR_Process_status(&status_array[i]);
-            MPIR_ERR_CHECK(mpi_errno);
+        if (requests[i]) {
+            if (requests[i]->kind == MPIR_REQUEST_KIND__RECV) {
+                mpi_errno = MPIR_Process_status(&status_array[i]);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+            MPIR_Request_free(requests[i]);
         }
-        MPIR_Request_free(requests[i]);
     }
 
   fn_exit:

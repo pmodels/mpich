@@ -53,8 +53,6 @@ int MPIR_Coll_greq_start(MPIR_Coll_greq_t * greq, MPIR_Request ** request)
     if (req == NULL) {
         /* nothing to do */
         MPIR_Coll_greq_free(greq);
-        req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
-        MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPIX_ERR_NOREQ, "**nomemreq");
     } else {
         MPIR_Assert(req->kind == MPIR_REQUEST_KIND__GREQUEST);
         MPIR_Assert(req->u.ureq.greq_fns->U.C.free_fn == NULL);

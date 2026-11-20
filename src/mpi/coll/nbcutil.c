@@ -153,9 +153,11 @@ int MPIR_Coll_inner_test(struct MPIR_Coll_inner *inner, bool * done)
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_Request_is_complete(inner->req)) {
-        mpi_errno = inner->req->status.MPI_ERROR;
-        MPIR_Request_free(inner->req);
-        inner->req = NULL;
+        if (inner->req) {
+            mpi_errno = inner->req->status.MPI_ERROR;
+            MPIR_Request_free(inner->req);
+            inner->req = NULL;
+        }
         *done = true;
     }
 
@@ -189,11 +191,6 @@ static int persist_sched_start(enum MPIR_sched_type sched_type, void *sched, MPI
         MPIR_Coll_greq_t *greq = sched;
         mpi_errno = greq->start_fn(greq->state, request);
         MPIR_ERR_CHECK(mpi_errno);
-        if (*request == NULL) {
-            /* nothing to do */
-            *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
-            MPIR_ERR_CHKANDJUMP(!*request, mpi_errno, MPIX_ERR_NOREQ, "**nomemreq");
-        }
     } else {
         /* TODO: proper error return */
         MPIR_Assert(0);
