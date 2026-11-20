@@ -98,36 +98,44 @@ static char *hwloc_topology_xmlfile;
     }
 
 
-static int check_MPIR_CVAR_PMI_VERSION(void)
+/* Check the environment for a PMI-1/2 or PMIx process manager */
+static int detect_pmi_env(int *have_pmi_out, int *have_pmix_out)
+{
+    int have_pmi, have_pmix, env_int;
+    const char *env_str = NULL;
+
+    /* Env var PMI_SIZE is used for both PMI-1 and PMI-2. If enabled, PMI-1
+     * has precedence over PMI-2 in the auto-detection. */
+    if ((have_pmi = MPL_env2int("PMI_SIZE", &env_int)) < 0) {
+        return MPI_ERR_INTERN;
+    }
+
+    if (!have_pmi) {
+        int have_pmi_port, have_pmi_id;
+        /* If neither of the two are set, check for PMI_PORT and PMI_ID
+         * to cover hydra's -pmi-port option. */
+        have_pmi_port = MPL_env2str("PMI_PORT", &env_str);
+        have_pmi_id = MPL_env2int("PMI_ID", &env_int);
+        if (have_pmi_id < 0) {
+            return MPI_ERR_INTERN;
+        }
+        have_pmi = (have_pmi_port > 0) && (have_pmi_id > 0);
+    }
+
+    /* Env var PMIX_NAMESPACE is checked for PMIx */
+    have_pmix = MPL_env2str("PMIX_NAMESPACE", &env_str);
+
+    *have_pmi_out = have_pmi;
+    *have_pmix_out = have_pmix;
+    return MPI_SUCCESS;
+}
+
+static int check_MPIR_CVAR_PMI_VERSION(int have_pmi, int have_pmix)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_auto) {
         /* Auto-detection of PMI version */
-        int have_pmi, have_pmix, env_int;
-        const char *env_str = NULL;
-
-        /* Env var PMI_SIZE is used for both PMI-1 and PMI-2. If enabled, PMI-1
-         * has precedence over PMI-2 in the auto-detection. */
-        if ((have_pmi = MPL_env2int("PMI_SIZE", &env_int)) < 0) {
-            return MPI_ERR_INTERN;
-        }
-
-        if (!have_pmi) {
-            int have_pmi_port, have_pmi_id;
-            /* If neither of the two are set, check for PMI_PORT and PMI_ID
-             * to cover hydra's -pmi-port option. */
-            have_pmi_port = MPL_env2str("PMI_PORT", &env_str);
-            have_pmi_id = MPL_env2int("PMI_ID", &env_int);
-            if (have_pmi_id < 0) {
-                return MPI_ERR_INTERN;
-            }
-            have_pmi = (have_pmi_port > 0) && (have_pmi_id > 0);
-        }
-
-        /* Env var PMIX_NAMESPACE is checked for PMIx */
-        have_pmix = MPL_env2str("PMIX_NAMESPACE", &env_str);
-
         if (have_pmi && have_pmix) {
             /* There is something wrong with the runtime environment.
              * Multiple PMI versions are detected. */
@@ -213,6 +221,23 @@ static void MPIR_pmi_finalize_on_exit(void)
     }
 }
 
+/* The kvs name identifies the world in dynamic processes (e.g. MPI_Comm_connect),
+ * so singletons need names that differ across processes and hosts. The PMI
+ * client's singleton name may be a constant or only unique within a host. Keep
+ * the "singinit-" prefix, which the PMI-1 client recognizes. */
+static void set_singleton_kvs_name(void)
+{
+    char hostname[64];
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        hostname[0] = '\0';
+    }
+    hostname[sizeof(hostname) - 1] = '\0';
+
+    MPL_free(pmi_kvs_name);
+    pmi_kvs_name = MPL_malloc(MPIR_NAMESPACE_MAX, MPL_MEM_OTHER);
+    snprintf(pmi_kvs_name, MPIR_NAMESPACE_MAX, "singinit-%s-%d", hostname, (int) getpid());
+}
+
 int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -221,7 +246,11 @@ int MPIR_pmi_init(void)
     if (finalize_pending > 0) {
         finalize_pending--;
     }
-    mpi_errno = check_MPIR_CVAR_PMI_VERSION();
+    int have_pmi, have_pmix;
+    mpi_errno = detect_pmi_env(&have_pmi, &have_pmix);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = check_MPIR_CVAR_PMI_VERSION(have_pmi, have_pmix);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* See if the user wants to override our default values */
@@ -239,13 +268,13 @@ int MPIR_pmi_init(void)
         pmi_hostname = MPL_strdup(hostname);
     }
 
+    bool is_singleton = !have_pmi && !have_pmix;
     unsigned world_id = 0;
-    if (pmi_kvs_name) {
-        if (!strcmp(pmi_kvs_name, "singinit") || !strcmp(pmi_kvs_name, "0")) {
-            world_id = getpid();
-        } else {
-            HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
-        }
+    if (is_singleton) {
+        set_singleton_kvs_name();
+        world_id = getpid();
+    } else if (pmi_kvs_name) {
+        HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
     }
 
     if (!MPIR_CVAR_FINALIZE_ATEXIT && !pmi_connected) {
