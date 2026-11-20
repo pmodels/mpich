@@ -73,9 +73,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
         recv_rank = (nranks + rank - 2 - i) % nranks;
         send_rank = (nranks + rank - 1 - i) % nranks;
 
-        /* get a new tag to prevent out of order messages */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        tag = MPIR_TSP_sched_get_tag(sched);
 
         nvtcs = (i == 0) ? 0 : 1;
         vtcs = (i == 0) ? 0 : reduce_id[(i - 1) % 2];

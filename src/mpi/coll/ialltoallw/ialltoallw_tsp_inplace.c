@@ -27,10 +27,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* FIXME: Here we allocate tmp_buf using extent and send/recv with datatype directly,
      *        which can be potentially very inefficient. Why don't we use bytes as in

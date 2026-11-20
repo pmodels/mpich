@@ -162,6 +162,9 @@ typedef struct MPII_Genutil_sched_t {
     MPII_Genutil_chan_t *chans;
 
     bool is_persistent;
+
+    /* the tag of the collective call; all its sends and receives use it */
+    int tag;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;

@@ -122,6 +122,11 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
  * freed */
 void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
 
+/* The tag of the collective call, set when the schedule is created (MPII_CSEL_CREATE_TSP_SCHED).
+ * Algorithms use it rather than drawing tags of their own. */
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t sched, int tag);
+int MPIR_TSP_sched_get_tag(MPIR_TSP_sched_t sched);
+
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);
 

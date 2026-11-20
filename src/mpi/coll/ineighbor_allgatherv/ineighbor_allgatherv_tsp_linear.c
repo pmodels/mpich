@@ -36,10 +36,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
                                     outdegree, dsts, MPI_UNWEIGHTED);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     for (k = 0; k < outdegree; ++k) {
         mpi_errno =

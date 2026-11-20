@@ -259,10 +259,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Ain
 
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
