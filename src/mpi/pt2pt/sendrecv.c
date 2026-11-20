@@ -14,23 +14,15 @@ int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
     MPIR_Request *sreq = NULL;
     MPIR_Request *rreq = NULL;
 
-    /* FIXME - Performance for small messages might be better if MPID_Send() were used here instead of MPID_Isend() */
-    /* If source is MPI_PROC_NULL, create a completed request and return. */
     if (unlikely(source == MPI_PROC_NULL)) {
-        rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Status_set_procnull(&rreq->status);
+        MPIR_Status_set_procnull(status);
     } else {
         mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr, 0, &rreq);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
     }
 
-    /* If dest is MPI_PROC_NULL, create a completed request and return. */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
+    if (likely(dest != MPI_PROC_NULL)) {
         mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, 0, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
@@ -56,7 +48,7 @@ int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
                 /* --END ERROR HANDLING-- */
             }
 
-            if (unlikely(MPIR_Request_is_anysrc_mismatched(rreq))) {
+            if (unlikely(rreq && MPIR_Request_is_anysrc_mismatched(rreq))) {
                 /* --BEGIN ERROR HANDLING-- */
                 mpi_errno = MPIR_Request_handle_proc_failed(rreq);
                 if (!MPIR_Request_is_complete(sreq)) {
@@ -70,14 +62,18 @@ int MPIR_Sendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
         MPID_Progress_end(&progress_state);
     }
 
-    mpi_errno = rreq->status.MPI_ERROR;
-    MPIR_Request_extract_status(rreq, status);
-    MPIR_Request_free(rreq);
-
-    if (mpi_errno == MPI_SUCCESS) {
-        mpi_errno = sreq->status.MPI_ERROR;
+    if (rreq) {
+        mpi_errno = rreq->status.MPI_ERROR;
+        MPIR_Request_extract_status(rreq, status);
+        MPIR_Request_free(rreq);
     }
-    MPIR_Request_free(sreq);
+
+    if (sreq) {
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = sreq->status.MPI_ERROR;
+        }
+        MPIR_Request_free(sreq);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -111,22 +107,14 @@ int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* If source is MPI_PROC_NULL, create a completed request and return. */
     if (unlikely(source == MPI_PROC_NULL)) {
-        rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Status_set_procnull(&rreq->status);
+        MPIR_Status_set_procnull(status);
     } else {
         mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag, comm_ptr, 0, &rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-
-    /* If dest is MPI_PROC_NULL, create a completed request and return. */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
+    if (likely(dest != MPI_PROC_NULL)) {
         mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPIR_BYTE_INTERNAL, dest,
                                sendtag, comm_ptr, 0, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
@@ -146,20 +134,22 @@ int MPIR_Sendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (status != MPI_STATUS_IGNORE) {
-        *status = rreq->status;
+    if (rreq) {
+        if (status != MPI_STATUS_IGNORE) {
+            *status = rreq->status;
+        }
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = rreq->status.MPI_ERROR;
+        }
+        MPIR_Request_free(rreq);
     }
 
-    if (mpi_errno == MPI_SUCCESS) {
-        mpi_errno = rreq->status.MPI_ERROR;
-
+    if (sreq) {
         if (mpi_errno == MPI_SUCCESS) {
             mpi_errno = sreq->status.MPI_ERROR;
         }
+        MPIR_Request_free(sreq);
     }
-
-    MPIR_Request_free(sreq);
-    MPIR_Request_free(rreq);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -177,9 +167,7 @@ int MPIR_Isendrecv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     int mpi_errno = MPI_SUCCESS;
 
     if (unlikely(dest == MPI_PROC_NULL && source == MPI_PROC_NULL)) {
-        MPIR_Request *lw_req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        *p_req = lw_req;
+        *p_req = NULL;
         goto fn_exit;
     } else if (unlikely(source == MPI_PROC_NULL)) {
         /* recv from MPI_PROC_NULL, just send */
@@ -230,9 +218,7 @@ int MPIR_Isendrecv_replace_impl(void *buf, MPI_Aint count, MPI_Datatype datatype
     int mpi_errno = MPI_SUCCESS;
 
     if (unlikely(dest == MPI_PROC_NULL && source == MPI_PROC_NULL)) {
-        MPIR_Request *lw_req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT(lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        *p_req = lw_req;
+        *p_req = NULL;
         goto fn_exit;
     } else if (unlikely(source == MPI_PROC_NULL)) {
         /* recv from MPI_PROC_NULL, just send */

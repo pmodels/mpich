@@ -141,7 +141,7 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
     } while (0)
 #endif
 
-#define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
+#define MPIR_Request_is_complete(req_) ((req_) == NULL || MPIR_cc_is_complete((req_)->cc_ptr))
 
 /* types of sched structure used in persistent collective */
 enum MPIR_sched_type {
@@ -549,12 +549,11 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr);
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
                                                  int need_safety, int *errno_out)
 {
-    int pool = MPIR_REQUEST_POOL(req);
-
-    if (HANDLE_IS_BUILTIN(req->handle)) {
-        /* do not free builtin request objects */
+    if (req == NULL || HANDLE_IS_BUILTIN(req->handle)) {
         return;
     }
+
+    int pool = MPIR_REQUEST_POOL(req);
 
     if (need_safety) {
         MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);

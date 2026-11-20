@@ -155,6 +155,9 @@ MPI_Irsend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    if (!request_ptr) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    }
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irsend, lower-level access is
      * responsible for its own consistency, while upper-level field access is
@@ -173,6 +176,9 @@ MPI_Isend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    if (!request_ptr) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    }
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
      * responsible for its own consistency, while upper-level field access is
@@ -190,6 +196,9 @@ MPI_Issend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    if (!request_ptr) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    }
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for issend, lower-level access is
      * responsible for its own consistency, while upper-level field access is

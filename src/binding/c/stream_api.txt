@@ -94,7 +94,9 @@ MPIX_Stream_isend:
                            attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    if (!request_ptr) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    }
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is

@@ -334,12 +334,20 @@ static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint pa
         MPID_Isend(elt->buf, packsize, MPIR_BYTE_INTERNAL, dest, tag, comm_ptr, 0, &elt->req);
     MPIR_ERR_CHECK(mpi_errno);
 
-    struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
-    DL_APPEND(*head_p, elt);
+    if (elt->req) {
+        struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
+        DL_APPEND(*head_p, elt);
 
-    if (request) {
-        MPIR_Request_add_ref(elt->req);
-        *request = elt->req;
+        if (request) {
+            MPIR_Request_add_ref(elt->req);
+            *request = elt->req;
+        }
+    } else {
+        MPL_free(elt->buf);
+        MPL_free(elt);
+        if (request) {
+            *request = NULL;
+        }
     }
 
   fn_exit:
@@ -561,6 +569,8 @@ static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsiz
                     MPIR_Request_add_ref(p->request);
                     *request = p->request;
                 }
+            } else if (request) {
+                *request = NULL;
             }
             break;
         }

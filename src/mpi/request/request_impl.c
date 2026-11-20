@@ -210,12 +210,20 @@ int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Test(request_ptr, flag, status);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (request_ptr == NULL) {
+        *flag = TRUE;
+        MPIR_Status_set_empty(status);
+        goto fn_exit;
+    }
 
-    if (MPIR_Request_has_poll_fn(request_ptr)) {
-        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Test(request_ptr, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (MPIR_Request_has_poll_fn(request_ptr)) {
+            mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     if (MPIR_Request_is_complete(request_ptr)) {
@@ -718,17 +726,24 @@ int MPIR_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_Request_has_poll_fn(request_ptr)) {
-        while (!MPIR_Request_is_complete(request_ptr)) {
-            mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-            MPIR_ERR_CHECK(mpi_errno);
+    if (request_ptr == NULL) {
+        MPIR_Status_set_empty(status);
+        goto fn_exit;
+    }
 
-            /* Avoid blocking other threads since I am inside an infinite loop */
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        if (MPIR_Request_has_poll_fn(request_ptr)) {
+            while (!MPIR_Request_is_complete(request_ptr)) {
+                mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+                MPIR_ERR_CHECK(mpi_errno);
+
+                /* Avoid blocking other threads since I am inside an infinite loop */
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            }
+        } else {
+            mpi_errno = MPID_Wait(request_ptr, status);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-    } else {
-        mpi_errno = MPID_Wait(request_ptr, status);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status);

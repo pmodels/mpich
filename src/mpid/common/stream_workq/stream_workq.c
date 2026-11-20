@@ -157,11 +157,17 @@ void MPIDU_stream_workq_progress_ops(int vci)
                 }
                 /* optionally enqueue to waitlist */
                 if (op->request) {
-                    MPIDU_stream_workq_wait_item_t item;
-                    item.done_event = op->done_event;
-                    item.request = *(op->request);
-                    item.status = op->status;
-                    utarray_push_back(workq->wait_list, &item, MPL_MEM_OTHER);
+                    if (*(op->request) == NULL) {
+                        if (op->done_event) {
+                            MPL_gpu_event_complete(op->done_event);
+                        }
+                    } else {
+                        MPIDU_stream_workq_wait_item_t item;
+                        item.done_event = op->done_event;
+                        item.request = *(op->request);
+                        item.status = op->status;
+                        utarray_push_back(workq->wait_list, &item, MPL_MEM_OTHER);
+                    }
                 }
                 /* free op */
                 MPL_free(op->data);

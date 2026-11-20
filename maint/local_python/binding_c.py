@@ -2007,6 +2007,14 @@ def dump_body_topo_fns(func, method):
     dump_body_impl(func)
     dump_if_close()
 
+def get_request_kind(func):
+    if func['dir'] in ('coll', 'comm'):
+        return "MPIR_REQUEST_KIND__COLL"
+    elif func['dir'] == 'rma':
+        return "MPIR_REQUEST_KIND__RMA"
+    else:
+        return "MPIR_REQUEST_KIND__SEND"
+
 def dump_body_impl(func, prefix='mpir'):
     # mpi_errno = MPIR_Xxx_impl(...);
     if func['_has_handle_out']:
@@ -2045,6 +2053,11 @@ def dump_body_impl(func, prefix='mpir'):
                 G.out.append("win_ptr->name[0] = 0;")
                 G.out.append("win_ptr->errhandler = 0;")
             G.out.append("MPIR_OBJ_PUBLISH_HANDLE(*%s, %s_ptr->handle);" % (name, name))
+            if kind == 'REQUEST' and not RE.search(r'(_init|grequest_start)$', func['name'], re.IGNORECASE):
+                dump_else()
+                req_kind = get_request_kind(func)
+                G.out.append("%s_ptr = MPIR_Request_create_complete(%s);" % (name, req_kind))
+                G.out.append("*%s = %s_ptr->handle;" % (name, name))
             dump_if_close()
     elif '_has_handle_inout' in func:
         # assuming we the func is free the handle
@@ -2071,6 +2084,10 @@ def dump_body_threadcomm(func):
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
     if RE.match(r'.*request_ptr$', args):
+        req_kind = get_request_kind(func)
+        dump_if_open("!request_ptr")
+        G.out.append("request_ptr = MPIR_Request_create_complete(%s);" % req_kind)
+        dump_if_close()
         G.out.append("*request = request_ptr->handle;")
     elif RE.match(r'.*newcomm_ptr$', args):
         G.out.append("*newcomm = newcomm_ptr->handle;")
