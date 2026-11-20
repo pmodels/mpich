@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
                                             buf, count, datatype, 0, vci_src, vci_dst, &bytes_sent);
             if (rc == MPIDI_POSIX_OK) {
                 done = true;
-                *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+                *request = NULL;
             }
         }
     }

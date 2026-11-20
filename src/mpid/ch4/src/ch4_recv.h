@@ -234,7 +234,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPII_RECVQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    if (*request) {
+        MPII_RECVQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

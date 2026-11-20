@@ -421,7 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             MPL_free(pack_buf);
         }
 
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        *request = NULL;
         MPIR_ERR_CHECK(mpi_errno);
     } else if (!is_am && data_sz > MPIDI_OFI_EAGER_THRESH) {
         /* new pipeline send */

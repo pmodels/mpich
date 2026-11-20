@@ -62,7 +62,6 @@ static void send_enqueue_cb(void *data)
     mpi_errno = MPID_Send(p->buf, p->count, p->datatype, p->dest, p->tag, p->comm_ptr,
                           0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-    MPIR_Assertp(request_ptr != NULL);
 
     p->req = request_ptr;
 }
@@ -141,7 +140,6 @@ static void recv_enqueue_cb(void *data)
     mpi_errno = MPID_Irecv(p->buf, p->count, p->datatype, p->source, p->tag, p->comm_ptr,
                            0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-    MPIR_Assertp(request_ptr != NULL);
 
     p->req = request_ptr;
 }
@@ -213,7 +211,6 @@ static void isend_enqueue_cb(void *data)
     mpi_errno = MPID_Send(p->buf, p->count, p->datatype, p->dest, p->tag, p->comm_ptr,
                           0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-    MPIR_Assertp(request_ptr != NULL);
 
     p->req->u.enqueue.real_request = request_ptr;
 }
@@ -284,7 +281,6 @@ static void irecv_enqueue_cb(void *data)
     mpi_errno = MPID_Irecv(p->buf, p->count, p->datatype, p->source, p->tag, p->comm_ptr,
                            0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-    MPIR_Assertp(request_ptr != NULL);
 
     p->req->u.enqueue.real_request = request_ptr;
 }

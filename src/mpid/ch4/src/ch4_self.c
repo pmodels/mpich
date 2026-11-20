@@ -134,7 +134,6 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
         /* comm will be released by MPIR_Request_free(rreq) */
         MPIR_Datatype_release_if_not_builtin(rreq->dev.ch4.self.datatype);
         MPIR_Request_complete(rreq);
-        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     } else {
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         ENQUEUE_SELF_SEND(sreq, buf, count, datatype, tag, comm->context_id);

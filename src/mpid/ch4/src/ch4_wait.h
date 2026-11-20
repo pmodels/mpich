@@ -96,6 +96,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
 {
     MPID_Progress_state progress_state;
 
+    if (MPIR_Request_is_complete(request_ptr)) {
+        return MPI_SUCCESS;
+    }
+
     MPIDI_set_progress_vci(request_ptr, &progress_state);
     return MPIR_Wait_state(request_ptr, status, &progress_state);
 }
