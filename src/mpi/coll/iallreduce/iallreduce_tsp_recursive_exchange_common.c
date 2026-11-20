@@ -17,7 +17,6 @@ Input Parameters:
 . count - number of elements in send buffer/recv buffer (if sendbuf is MPI_INPLACE) (nonnegative integer)
 . datatype - datatype of each buffer element (handle)
 . op - Type of allreduce operation (handle)
-. tag - message tag (integer)
 . dtcopy_id - id of previous data copy from scheduler (integer)
 . recv_id - array to store ids of the receives from the scheduler (integer array)
 . reduce_id - array to store ids of the reduces from the scheduler (integer array)
@@ -39,7 +38,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   void *recvbuf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
-                                                  MPI_Op op, int is_commutative, int tag,
+                                                  MPI_Op op, int is_commutative,
                                                   int dtcopy_id, int *recv_id,
                                                   int *reduce_id, int *vtcs, int is_inplace,
                                                   int step1_sendto, bool in_step2, int step1_nrecvs,
@@ -61,7 +60,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
         else
             buf_to_send = sendbuf;
         mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0,
+            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, comm, sched, 0,
                                  NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* Step 2 participating rank */
@@ -89,7 +88,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                  reduce_id[i - 1]));
             }
             mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
+                                             step1_recvfrom[i], comm, sched, nvtcs, vtcs,
                                              &recv_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
             if (count != 0) {   /* Reduce only if data is present */

@@ -17,7 +17,7 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int tag, vtx_id;
+    int vtx_id;
     MPI_Aint recvtype_extent;
     MPIR_FUNC_ENTER;
 
@@ -34,11 +34,10 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
                                     outdegree, dsts, MPI_UNWEIGHTED);
     MPIR_ERR_CHECK(mpi_errno);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     for (k = 0; k < outdegree; ++k) {
         mpi_errno =
-            MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, dsts[k], tag, comm_ptr, sched, 0,
+            MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, dsts[k], comm_ptr, sched, 0,
                                  NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -46,7 +45,7 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, MPI_A
     for (l = 0; l < indegree; ++l) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], tag, comm_ptr, sched, 0, NULL,
+            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], comm_ptr, sched, 0, NULL,
                                  &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }

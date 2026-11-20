@@ -57,8 +57,7 @@ static int chan_op_issue(MPII_Genutil_sched_t * sched, int op_id)
                            vtxp->u.isend.count,
                            vtxp->u.isend.dt,
                            vtxp->u.isend.dest,
-                           vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req,
-                           r->u.nbc.coll_attr);
+                           sched->tag, vtxp->u.isend.comm, &vtxp->u.isend.req, r->u.nbc.coll_attr);
 
                 if (MPIR_Request_is_complete(vtxp->u.isend.req)) {
                     MPIR_Request_free(vtxp->u.isend.req);
@@ -78,7 +77,7 @@ static int chan_op_issue(MPII_Genutil_sched_t * sched, int op_id)
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (isend) issued, tag = %d",
-                                     vtxp->u.isend.tag));
+                                     sched->tag));
                     vtx_record_issue(vtxp, sched);
                 }
             }
@@ -88,8 +87,7 @@ static int chan_op_issue(MPII_Genutil_sched_t * sched, int op_id)
                 MPIC_Irecv(vtxp->u.irecv.buf,
                            vtxp->u.irecv.count,
                            vtxp->u.irecv.dt,
-                           vtxp->u.irecv.src, vtxp->u.irecv.tag, vtxp->u.irecv.comm,
-                           &vtxp->u.irecv.req);
+                           vtxp->u.irecv.src, sched->tag, vtxp->u.irecv.comm, &vtxp->u.irecv.req);
 
                 if (MPIR_Request_is_complete(vtxp->u.irecv.req)) {
                     MPIR_Request_free(vtxp->u.irecv.req);
@@ -117,7 +115,7 @@ static int chan_op_issue(MPII_Genutil_sched_t * sched, int op_id)
                 MPIC_Irecv(vtxp->u.irecv_status.buf,
                            vtxp->u.irecv_status.count,
                            vtxp->u.irecv_status.dt,
-                           vtxp->u.irecv_status.src, vtxp->u.irecv_status.tag,
+                           vtxp->u.irecv_status.src, sched->tag,
                            vtxp->u.irecv_status.comm, &vtxp->u.irecv_status.req);
 
                 if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
@@ -153,13 +151,13 @@ static int chan_op_issue(MPII_Genutil_sched_t * sched, int op_id)
         case MPII_GENUTIL_VTX_KIND__IMCAST:{
                 int dest = ut_int_array(&vtxp->u.imcast.dests)[op->dest_idx];
                 MPIC_Isend(vtxp->u.imcast.buf, vtxp->u.imcast.count, vtxp->u.imcast.dt, dest,
-                           vtxp->u.imcast.tag, vtxp->u.imcast.comm,
+                           sched->tag, vtxp->u.imcast.comm,
                            &vtxp->u.imcast.req[op->dest_idx], r->u.nbc.coll_attr);
 
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "  --> GENTRAN transport (imcast) issued to %d, tag = %d", dest,
-                                 vtxp->u.imcast.tag));
+                                 sched->tag));
                 if (vtxp->vtx_state == MPII_GENUTIL_VTX_STATE__INIT) {
                     vtx_record_issue(vtxp, sched);
                 }

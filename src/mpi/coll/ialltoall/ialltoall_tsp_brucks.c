@@ -135,14 +135,12 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int packsize, num_unpacks_in_last_phase;
     void *tmp_buf = NULL;
     const void *senddata;
-    int tag;
     int coll_attr ATTRIBUTE((unused)) = 0;
 
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_CHKLMEM_MALLOC(pack_invtcs, sizeof(int) * k);
     MPIR_CHKLMEM_MALLOC(recv_invtcs, sizeof(int) * k);
@@ -275,7 +273,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             unpack_ninvtcs = 1;
 
             mpi_errno =
-                MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPIR_BYTE_INTERNAL, dst, tag,
+                MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPIR_BYTE_INTERNAL, dst,
                                      comm, sched, 1, &packids[j - 1], &sendids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -285,8 +283,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
             mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPIR_BYTE_INTERNAL,
-                                     src, tag, comm, sched, recv_ninvtcs, recv_invtcs,
-                                     &recvids[j - 1]);
+                                     src, comm, sched, recv_ninvtcs, recv_invtcs, &recvids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
             *(unpack_invtcs + 1) = recvids[j - 1];

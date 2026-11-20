@@ -18,12 +18,11 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
     int i, j, comm_block, dst;
-    int tag = 0, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
@@ -49,7 +48,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank + j + i) % nranks;
             if (recvcounts[dst] && recvtype_size) {
                 mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst] * recv_extent,
-                                                 recvcounts[dst], recvtype, dst, tag, comm, sched,
+                                                 recvcounts[dst], recvtype, dst, comm, sched,
                                                  0, NULL, &vtx_id);
                 MPIR_ERR_CHECK(mpi_errno);
             }
@@ -59,7 +58,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank - j - i + nranks) % nranks;
             if (sendcounts[dst] && sendtype_size) {
                 mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * send_extent,
-                                                 sendcounts[dst], sendtype, dst, tag, comm, sched,
+                                                 sendcounts[dst], sendtype, dst, comm, sched,
                                                  0, NULL, &vtx_id);
                 MPIR_ERR_CHECK(mpi_errno);
             }

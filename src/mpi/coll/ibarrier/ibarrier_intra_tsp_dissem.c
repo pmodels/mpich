@@ -12,7 +12,7 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
     int i, j, nranks, rank;
     int p_of_k, shift, to, from;        /* minimum power of k that is greater than or equal to number of ranks */
     int nphases = 0;
-    int tag, vtx_id;
+    int vtx_id;
     int *recv_ids = NULL;
     MPIR_CHKLMEM_DECL();
 
@@ -20,7 +20,6 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     p_of_k = 1;
     while (p_of_k < nranks) {
@@ -46,14 +45,14 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduling recv from %d\n", from));
             mpi_errno =
-                MPIR_TSP_sched_irecv(NULL, 0, MPIR_BYTE_INTERNAL, from, tag, comm, sched, 0, NULL,
+                MPIR_TSP_sched_irecv(NULL, 0, MPIR_BYTE_INTERNAL, from, comm, sched, 0, NULL,
                                      &recv_ids[i * (k - 1) + j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduling send to %d\n", to));
             mpi_errno =
-                MPIR_TSP_sched_isend(NULL, 0, MPIR_BYTE_INTERNAL, to, tag, comm, sched, i * (k - 1),
+                MPIR_TSP_sched_isend(NULL, 0, MPIR_BYTE_INTERNAL, to, comm, sched, i * (k - 1),
                                      recv_ids, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
 

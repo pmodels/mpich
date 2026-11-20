@@ -29,7 +29,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int sink_id;
     int nvtcs;
-    int tag, vtx_id;
+    int vtx_id;
     int root = 0;
     MPIR_CHKLMEM_DECL();
 
@@ -105,7 +105,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
 
-        tag = MPIR_TSP_sched_get_tag(sched);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
@@ -125,7 +124,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
                 nvtcs = 1;
             }
 
-            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
+            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
@@ -172,7 +171,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
         /* send data to the parent */
         if (rank != root) {
             mpi_errno =
-                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
+                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, comm,
                                      sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -186,7 +185,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
         if (my_tree.parent != -1) {
             mpi_errno =
                 MPIR_TSP_sched_irecv(reduce_address, msgsize, datatype,
-                                     my_tree.parent, tag, comm, sched, 1, &sink_id, &bcast_recv_id);
+                                     my_tree.parent, comm, sched, 1, &sink_id, &bcast_recv_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -195,7 +194,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
             nvtcs = 1;
             vtcs[0] = bcast_recv_id;
             mpi_errno = MPIR_TSP_sched_imcast(reduce_address, msgsize, datatype,
-                                              ut_int_array(my_tree.children), num_children, tag,
+                                              ut_int_array(my_tree.children), num_children,
                                               comm, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }

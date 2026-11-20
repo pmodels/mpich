@@ -19,7 +19,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     int nranks, is_inplace, rank;
     int send_rank, recv_rank;
     void *data_buf, *buf1, *buf2, *sbuf, *rbuf;
-    int tag, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -78,7 +78,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         recv_rank = (rank - i - 1 + nranks) % nranks;   /* Rank whose data you're receiving */
         send_rank = (rank - i + nranks) % nranks;       /* Rank whose data you're sending */
 
-        tag = MPIR_TSP_sched_get_tag(sched);
 
         int nvtcs, vtcs[3];
         if (i == 0) {
@@ -86,7 +85,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[0] = dtcopy_id[0];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, comm, sched,
                                      nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_CHECK(mpi_errno);
             nvtcs = 0;
@@ -96,7 +95,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[1] = send_id[(i - 1) % 3];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, comm, sched,
                                      nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -113,7 +112,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, sched,
+            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, comm, sched,
                                  nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
         /* Copy to correct position in recvbuf */

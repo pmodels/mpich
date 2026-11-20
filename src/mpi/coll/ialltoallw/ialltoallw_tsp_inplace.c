@@ -15,7 +15,6 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPI_Aint recv_extent;
     MPI_Aint true_extent, true_lb;
     int nranks, rank, nvtcs;
@@ -27,7 +26,6 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* FIXME: Here we allocate tmp_buf using extent and send/recv with datatype directly,
      *        which can be potentially very inefficient. Why don't we use bytes as in
@@ -61,11 +59,11 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             adj_tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst],
-                                             recvcounts[dst], dt, dst, tag, comm, sched,
+                                             recvcounts[dst], dt, dst, comm, sched,
                                              nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
-                MPIR_TSP_sched_irecv(adj_tmp_buf, recvcounts[dst], dt, dst, tag, comm,
+                MPIR_TSP_sched_irecv(adj_tmp_buf, recvcounts[dst], dt, dst, comm,
                                      sched, nvtcs, vtcs, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 

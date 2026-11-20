@@ -56,7 +56,6 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
@@ -65,7 +64,6 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
@@ -74,7 +72,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
@@ -84,7 +81,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
-                          int tag,
                           MPIR_Comm * comm_ptr,
                           MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
@@ -123,9 +119,8 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
 void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
 
 /* The tag of the collective call, set when the schedule is created (MPII_CSEL_CREATE_TSP_SCHED).
- * Algorithms use it rather than drawing tags of their own. */
+ * Every send and receive of the schedule uses it. */
 void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t sched, int tag);
-int MPIR_TSP_sched_get_tag(MPIR_TSP_sched_t sched);
 
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);

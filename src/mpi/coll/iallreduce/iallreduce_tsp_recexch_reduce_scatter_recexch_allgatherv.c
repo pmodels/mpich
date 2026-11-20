@@ -35,7 +35,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     bool in_step2 = false;
     void *tmp_recvbuf;
     void **step1_recvbuf = NULL;
-    int tag, vtx_id;
+    int vtx_id;
     int is_dist_halving = 1;
     MPIR_CHKLMEM_DECL();
 
@@ -47,7 +47,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPIR_Datatype_get_extent_macro(datatype, extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
@@ -74,7 +73,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     /* Step 1 */
     MPIR_TSP_Iallreduce_sched_intra_recexch_step1(sendbuf, recvbuf, count,
                                                   datatype, op, is_commutative,
-                                                  tag, dtcopy_id, recv_id, reduce_id, vtcs,
+                                                  dtcopy_id, recv_id, reduce_id, vtcs,
                                                   is_inplace, step1_sendto, in_step2, step1_nrecvs,
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
                                                   comm, sched);
@@ -106,7 +105,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
         }
 
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(recvbuf, tmp_recvbuf,
-                                                           cnts, displs, datatype, op, extent, tag,
+                                                           cnts, displs, datatype, op, extent,
                                                            comm, k, is_dist_halving,
                                                            step2_nphases, step2_nbrs, rank, nranks,
                                                            sink_id, 0, NULL, sched);
@@ -115,7 +114,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
 
         MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(step1_sendto, step2_nphases, step2_nbrs,
                                                        rank, nranks, k, p_of_k, log_pofk, T, &nvtcs,
-                                                       &recv_id, tag, recvbuf, extent, cnts, displs,
+                                                       &recv_id, recvbuf, extent, cnts, displs,
                                                        datatype, is_dist_halving, comm, sched);
 
     }
@@ -126,13 +125,13 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
      * send the data to non-partcipating ranks */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 1,
+            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, comm, sched, 1,
                                  &sink_id, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
             mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
+                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], comm, sched,
                                      nvtcs, recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }

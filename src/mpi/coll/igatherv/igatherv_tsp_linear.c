@@ -27,11 +27,9 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
     int i, vtx_id;
     int comm_size, rank;
     MPI_Aint extent;
-    int tag;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
@@ -53,7 +51,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                     }
                 } else {
                     mpi_errno = MPIR_TSP_sched_irecv(((char *) recvbuf + displs[i] * extent),
-                                                     recvcounts[i], recvtype, i, tag, comm_ptr,
+                                                     recvcounts[i], recvtype, i, comm_ptr,
                                                      sched, 0, NULL, &vtx_id);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
@@ -62,7 +60,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
     } else if (root != MPI_PROC_NULL) {
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (sendcount) {
-            mpi_errno = MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, root, tag, comm_ptr,
+            mpi_errno = MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, root, comm_ptr,
                                              sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }

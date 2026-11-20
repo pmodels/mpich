@@ -38,7 +38,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
     MPI_Aint true_lb, true_extent;
-    int size, rank, tag;
+    int size, rank;
     int i, j, x, is_contig;
     void *tmp_buf = NULL;
     MPI_Aint *cnts, *displs;
@@ -52,7 +52,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     MPI_Aint offs[2], lens[2];
     MPIR_CHKLMEM_DECL();
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_FUNC_ENTER;
 
@@ -168,7 +167,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
             ibcast_state->n_bytes = lens[i];
             mpi_errno =
                 MPIR_TSP_sched_irecv_status((char *) tmp_buf + offs[i], lens[i],
-                                            MPIR_BYTE_INTERNAL, my_tree.parent, tag, comm,
+                                            MPIR_BYTE_INTERNAL, my_tree.parent, comm,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
@@ -176,7 +175,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_buf + offs[i], lens[i], MPIR_BYTE_INTERNAL,
-                                     my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                     my_tree.parent, comm, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 #endif
             recv_ids[nrecv++] = recv_id;
@@ -199,7 +198,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         npieces = get_pieces(lchild, lchild_end, root, size, displs, offs, lens);
         for (j = 0; j < npieces; j++) {
             mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + offs[j], lens[j],
-                                             MPIR_BYTE_INTERNAL, child, tag, comm, sched,
+                                             MPIR_BYTE_INTERNAL, child, comm, sched,
                                              num_send_dependencies, recv_ids, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
