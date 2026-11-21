@@ -196,7 +196,6 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id)
 {
@@ -213,7 +212,6 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.count = count;
     vtxp->u.isend.dt = dt;
     vtxp->u.isend.dest = dest;
-    vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
 
     /* the schedule's builder holds the comm and datatype until the schedule is freed */
@@ -229,7 +227,6 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id)
 {
@@ -247,7 +244,6 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.count = count;
     vtxp->u.irecv.dt = dt;
     vtxp->u.irecv.src = source;
-    vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -260,7 +256,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
@@ -278,7 +273,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.count = count;
     vtxp->u.irecv_status.dt = dt;
     vtxp->u.irecv_status.src = source;
-    vtxp->u.irecv_status.tag = tag;
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
 
@@ -295,7 +289,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           MPI_Datatype dt,
                           int *dests,
                           int num_dests,
-                          int tag,
                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                           int *vtx_id)
 {
@@ -315,7 +308,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
     utarray_init(&vtxp->u.imcast.dests, &ut_int_icd);
     utarray_reserve(&vtxp->u.imcast.dests, num_dests, MPL_MEM_COLL);
     memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
-    vtxp->u.imcast.tag = tag;
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =
         (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
@@ -530,12 +522,6 @@ void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t s, int tag)
 {
     MPII_Genutil_sched_t *sched = s;
     sched->tag = tag;
-}
-
-int MPIR_TSP_sched_get_tag(MPIR_TSP_sched_t s)
-{
-    MPII_Genutil_sched_t *sched = s;
-    return sched->tag;
 }
 
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t s)

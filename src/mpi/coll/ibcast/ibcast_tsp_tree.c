@@ -23,7 +23,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     int recv_id;
     int num_children;
     MPIR_Treealgo_tree_t my_tree;
-    int tag;
     int *send_id = NULL;        /* the last send to each child */
     MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
@@ -58,14 +57,13 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         ibcast_state->n_bytes = msgsize * type_size;
 #endif
 
-        tag = MPIR_TSP_sched_get_tag(sched);
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {
 #ifdef HAVE_ERROR_CHECKING
             mpi_errno =
                 MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
-                                            datatype, my_tree.parent, tag, comm,
+                                            datatype, my_tree.parent, comm,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
             int vtx_id;
@@ -74,7 +72,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
-                                     my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                     my_tree.parent, comm, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 #endif
         }
@@ -85,7 +83,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         for (int c = 0; c < num_children; c++) {
             int prev_send_id = send_id[c];
             mpi_errno = MPIR_TSP_sched_isend((char *) buffer + offset * extent, msgsize, datatype,
-                                             ut_int_array(my_tree.children)[c], tag, comm, sched,
+                                             ut_int_array(my_tree.children)[c], comm, sched,
                                              (my_tree.parent != -1) ? 1 : 0, &recv_id, &send_id[c]);
             MPIR_ERR_CHECK(mpi_errno);
             if (i > 0) {

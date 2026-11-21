@@ -20,7 +20,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int rank;
     MPIR_COMM_RANK_SIZE(comm, rank, size);
     int is_inplace = (sendbuf == MPI_IN_PLACE);
-    int tag;
     int vtx_id;
     MPI_Aint recvtype_lb, recvtype_extent;
     MPI_Aint sendtype_lb, sendtype_extent;
@@ -81,21 +80,20 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* Get new tag for each cycle so that the send-recv pairs are matched correctly */
-        tag = MPIR_TSP_sched_get_tag(sched);
 
         int vtcs[3], nvtcs;
         if (i == 0) {
             nvtcs = 1;
             vtcs[0] = dtcopy_id[0];
             mpi_errno = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
-                                             dst, tag, comm, sched, nvtcs, vtcs, &send_id[0]);
+                                             dst, comm, sched, nvtcs, vtcs, &send_id[0]);
             nvtcs = 0;
         } else {
             nvtcs = 2;
             vtcs[0] = recv_id[(i - 1) % 3];
             vtcs[1] = send_id[(i - 1) % 3];
             mpi_errno = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
-                                             dst, tag, comm, sched, nvtcs, vtcs, &send_id[i % 3]);
+                                             dst, comm, sched, nvtcs, vtcs, &send_id[i % 3]);
             if (i == 1) {
                 nvtcs = 2;
                 vtcs[0] = send_id[0];
@@ -110,7 +108,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_TSP_sched_irecv((char *) rbuf, recvcount, recvtype,
-                                         src, tag, comm, sched, nvtcs, vtcs, &recv_id[i % 3]);
+                                         src, comm, sched, nvtcs, vtcs, &recv_id[i % 3]);
 
         MPIR_ERR_CHECK(mpi_errno);
 

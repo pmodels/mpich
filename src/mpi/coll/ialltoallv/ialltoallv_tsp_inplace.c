@@ -19,10 +19,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     int nranks, rank, nvtcs;
     int i, dst, send_id, recv_id, dtcopy_id = -1, vtcs[2];
     void *tmp_buf = NULL;
-    int tag = 0;
     MPIR_FUNC_ENTER;
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
@@ -45,12 +43,12 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             vtcs[0] = dtcopy_id;
 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst] * recv_extent,
-                                             recvcounts[dst], recvtype, dst, tag, comm,
+                                             recvcounts[dst], recvtype, dst, comm,
                                              sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, tag, comm,
+                MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, comm,
                                      sched, nvtcs, vtcs, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 

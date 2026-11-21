@@ -16,7 +16,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int i, j;
     int nphases = 0;
     int n_invtcs;
-    int tag;
     int src, dst, p_of_k = 0;   /* Largest power of k that is (strictly) smaller than 'size' */
     int rank;
     int size;
@@ -35,7 +34,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     void *tmp_recvbuf = NULL;
     MPIR_CHKLMEM_DECL();
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_FUNC_ENTER;
 
@@ -111,17 +109,17 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Receive at the exact location. */
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                     count, recvtype, src, tag, comm, sched, 0, NULL, &vtx_id);
+                                     count, recvtype, src, comm, sched, 0, NULL, &vtx_id);
 
             MPIR_ERR_CHECK(mpi_errno);
             recv_id[i_recv++] = vtx_id;
             /* Send from the start of recv till `count` amount of data. */
             if (i == 0)
                 mpi_errno =
-                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag, comm, sched, 0,
+                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, comm, sched, 0,
                                          NULL, &vtx_id);
             else
-                mpi_errno = MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag,
+                mpi_errno = MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst,
                                                  comm, sched, n_invtcs, recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }

@@ -35,7 +35,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int dtcopy_id = -1;
     int nvtcs;
-    int tag;
     int send_id = -1;
     MPIR_CHKLMEM_DECL();
 
@@ -159,7 +158,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
 
-        tag = MPIR_TSP_sched_get_tag(sched);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
@@ -179,7 +177,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             }
 
             int prev_recv_id = recv_id[i];
-            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
+            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
@@ -235,7 +233,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         /* send data to the parent */
         if (!is_tree_root) {
             mpi_errno =
-                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
+                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, comm,
                                      sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -244,12 +242,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         if (tree_root != root) {
             if (is_tree_root) { /* tree_root sends data to root */
                 mpi_errno =
-                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm, sched,
+                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, comm, sched,
                                          nvtcs, vtcs, &send_id);
             } else if (is_root) {       /* root receives data from tree_root */
                 mpi_errno =
                     MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
-                                         tree_root, tag, comm, sched, 0, NULL, &vtx_id);
+                                         tree_root, comm, sched, 0, NULL, &vtx_id);
             }
             MPIR_ERR_CHECK(mpi_errno);
         }

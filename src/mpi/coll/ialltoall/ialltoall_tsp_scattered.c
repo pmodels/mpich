@@ -51,10 +51,8 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
     MPI_Aint recvtype_lb, sendtype_lb, sendtype_true_extent, recvtype_true_extent;
     int size, rank, vtx_id;
     int is_inplace;
-    int tag = 0;
     MPIR_FUNC_ENTER;
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_COMM_RANK_SIZE(comm, rank, size);
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -104,13 +102,13 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
         src = (rank + i) % size;
         mpi_errno =
             MPIR_TSP_sched_irecv((char *) recvbuf + src * recvcount * recvtype_extent,
-                                 recvcount, recvtype, src, tag, comm, sched, 0, NULL, &recv_id[i]);
+                                 recvcount, recvtype, src, comm, sched, 0, NULL, &recv_id[i]);
         MPIR_ERR_CHECK(mpi_errno);
 
         dst = (rank - i + size) % size;
         mpi_errno =
             MPIR_TSP_sched_isend((char *) data_buf + dst * sendcount * sendtype_extent,
-                                 sendcount, sendtype, dst, tag, comm, sched, 0, NULL, &send_id[i]);
+                                 sendcount, sendtype, dst, comm, sched, 0, NULL, &send_id[i]);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -131,14 +129,14 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, MPI_Aint sendc
             src = (rank + i + j) % size;
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) recvbuf + src * recvcount * recvtype_extent,
-                                     recvcount, recvtype, src, tag, comm, sched, 1, &invtcs,
+                                     recvcount, recvtype, src, comm, sched, 1, &invtcs,
                                      &recv_id[(i + j) % bblock]);
             MPIR_ERR_CHECK(mpi_errno);
 
             dst = (rank - i - j + size) % size;
             mpi_errno =
                 MPIR_TSP_sched_isend((char *) data_buf + dst * sendcount * sendtype_extent,
-                                     sendcount, sendtype, dst, tag, comm, sched, 1, &invtcs,
+                                     sendcount, sendtype, dst, comm, sched, 1, &invtcs,
                                      &send_id[(i + j) % bblock]);
             MPIR_ERR_CHECK(mpi_errno);
         }

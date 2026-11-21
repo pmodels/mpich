@@ -19,7 +19,7 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
     bool is_cartesian;
     int *srcs, *dsts;
     MPI_Aint sendtype_extent, recvtype_extent;
-    int tag, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
     MPIR_CHKLMEM_DECL();
@@ -36,13 +36,12 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
                                     outdegree, dsts, MPI_UNWEIGHTED);
     MPIR_ERR_CHECK(mpi_errno);
 
-    tag = MPIR_TSP_sched_get_tag(sched);
 
 
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + k * sendcount * sendtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_isend(sb, sendcount, sendtype, dsts[k], tag, comm_ptr, sched, 0, NULL,
+            MPIR_TSP_sched_isend(sb, sendcount, sendtype, dsts[k], comm_ptr, sched, 0, NULL,
                                  &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -59,7 +58,7 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
         }
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], tag, comm_ptr, sched, 0, NULL,
+            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], comm_ptr, sched, 0, NULL,
                                  &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
