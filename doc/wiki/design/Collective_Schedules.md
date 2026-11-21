@@ -232,8 +232,8 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
 }
 ```
 
-- Vertex kinds: `MPIR_TSP_sched_isend`, `_irecv` (`_irecv_status`), `_imcast`
-  (one buffer to several ranks), `_reduce_local`, `_localcopy`, `_cb`, a
+- Vertex kinds: `MPIR_TSP_sched_isend`, `_irecv` (`_irecv_status`),
+  `_reduce_local`, `_localcopy`, `_cb`, a
   generic kind registered with `MPIR_TSP_sched_new_type`, and a nested
   schedule (`MPIR_TSP_sched_sub_sched`).
 - `MPIR_TSP_sched_sink` adds a vertex that depends on every earlier vertex

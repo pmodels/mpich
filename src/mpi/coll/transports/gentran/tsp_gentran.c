@@ -69,10 +69,6 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
                 break;
             case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
                 break;
-            case MPII_GENUTIL_VTX_KIND__IMCAST:
-                MPL_free(vtx->u.imcast.req);
-                utarray_done(&vtx->u.imcast.dests);
-                break;
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:
                 break;
             case MPII_GENUTIL_VTX_KIND__LOCALCOPY:
@@ -283,41 +279,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
 }
 
 
-
-int MPIR_TSP_sched_imcast(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int *dests,
-                          int num_dests,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                          int *vtx_id)
-{
-    MPII_Genutil_sched_t *sched = s;
-    vtx_t *vtxp;
-    int mpi_errno = MPI_SUCCESS;
-    /* assign a new vertex */
-    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IMCAST;
-    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
-
-    /* store the arguments */
-    vtxp->u.imcast.buf = (void *) buf;
-    vtxp->u.imcast.count = count;
-    vtxp->u.imcast.dt = dt;
-    vtxp->u.imcast.num_dests = num_dests;
-    utarray_init(&vtxp->u.imcast.dests, &ut_int_icd);
-    utarray_reserve(&vtxp->u.imcast.dests, num_dests, MPL_MEM_COLL);
-    memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
-    vtxp->u.imcast.comm = comm_ptr;
-    vtxp->u.imcast.req =
-        (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
-                                            MPL_MEM_COLL);
-    vtxp->u.imcast.last_complete = -1;
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
-    return mpi_errno;
-}
 
 int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t s,
@@ -620,9 +581,6 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
         vtx->pending_dependencies = vtx->num_dependencies;
         vtx->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
         switch (vtx->vtx_kind) {
-            case MPII_GENUTIL_VTX_KIND__IMCAST:
-                vtx->u.imcast.last_complete = -1;
-                break;
             case MPII_GENUTIL_VTX_KIND__SCHED:
                 MPIR_TSP_sched_reset(vtx->u.sched.sched);
                 break;

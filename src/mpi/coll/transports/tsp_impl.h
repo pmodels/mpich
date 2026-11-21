@@ -85,15 +85,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
-/* Transport function to schedule an imcast vertex */
-int MPIR_TSP_sched_imcast(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int *dests,
-                          int num_dests,
-                          MPIR_Comm * comm_ptr,
-                          MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
-
 
 /* Transport function to schedule a local reduce vertex */
 int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count,

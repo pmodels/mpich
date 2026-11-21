@@ -36,7 +36,6 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
 {
     int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPIR_Request *r = sched->req;
-    int i;
     bool done = false;          /* complete already */
 
     MPIR_FUNC_ENTER;
@@ -135,22 +134,6 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued"));
                 }
-            }
-            break;
-
-        case MPII_GENUTIL_VTX_KIND__IMCAST:{
-                int *dests = ut_int_array(&vtxp->u.imcast.dests);
-                for (i = 0; i < vtxp->u.imcast.num_dests; i++)
-                    MPIC_Isend(vtxp->u.imcast.buf,
-                               vtxp->u.imcast.count,
-                               vtxp->u.imcast.dt,
-                               dests[i],
-                               sched->tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
-                               r->u.nbc.coll_attr);
-
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST,
-                                 "  --> GENTRAN transport (imcast) issued, tag = %d", sched->tag));
             }
             break;
 
@@ -530,7 +513,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched)
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     vtx_t *vtxp, *vtxp_tmp;
 
     MPIR_FUNC_ENTER;
@@ -582,26 +564,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 #endif
                     done = true;
                 }
-                break;
-
-            case MPII_GENUTIL_VTX_KIND__IMCAST:
-                for (i = vtxp->u.imcast.last_complete + 1; i < vtxp->u.imcast.num_dests; i++) {
-                    if (MPIR_Request_is_complete(vtxp->u.imcast.req[i])) {
-                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                        (MPL_DBG_FDEST,
-                                         "  --> GENTRAN transport imcast vertex %d complete", i));
-                        MPIR_Request_free(vtxp->u.imcast.req[i]);
-                        vtxp->u.imcast.req[i] = NULL;
-                        vtxp->u.imcast.last_complete = i;
-                        if (made_progress)
-                            *made_progress = TRUE;
-                    } else {
-                        /* we are only checking in sequence, hence break
-                         * out at the first incomplete isend */
-                        break;
-                    }
-                }
-                done = (i == vtxp->u.imcast.num_dests);
                 break;
 
             case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
