@@ -64,4 +64,14 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(MPI_Aint chunk_size, M
     return mpi_errno;
 }
 
+/* Whether a pipeline sends chunk i synchronously: every sync_interval-th chunk, starting with chunk
+ * sync_interval-1, so that a message of fewer chunks never does (sync_interval 0: never). Waiting on
+ * a synchronous send bounds the chunks the receiver holds unmatched, which a window over eager
+ * sends does not. */
+static inline bool MPIR_Algo_pipeline_sync(int i, int sync_interval) ATTRIBUTE((unused));
+static inline bool MPIR_Algo_pipeline_sync(int i, int sync_interval)
+{
+    return sync_interval > 0 && i % sync_interval == sync_interval - 1;
+}
+
 #endif /* ALGO_COMMON_H_INCLUDED */

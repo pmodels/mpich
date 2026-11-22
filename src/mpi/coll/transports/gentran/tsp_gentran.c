@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "tsp_impl.h"
+#include "algo_common.h"
 #include "gentran_impl.h"
 
 /* UT_icd helper structure for vtx_t utarray */
@@ -186,6 +187,41 @@ int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t s, int vtx_id, int dep_id, enum MPIR
     vtx->pending_dependencies++;
 
     return MPI_SUCCESS;
+}
+
+/* A synchronous send completes only once the receiver has matched it. If the window waited for it,
+ * the sender would stop window chunks after each one until the receiver catches up and its
+ * acknowledgment is back, and the receiver would run out of chunks: the pipeline drains at every
+ * synchronous send. Waiting for it only from the next synchronous send gives the acknowledgment
+ * sync_interval chunks to come back, and still bounds the chunks waiting unmatched at the receiver
+ * (to about 2 * sync_interval + window). */
+int MPIR_TSP_sched_add_window_deps(MPIR_TSP_sched_t sched, int i, int vtx_id, int *last,
+                                   int window, int sync_interval)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (i > 0) {
+        mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[(i - 1) % window],
+                                           MPIR_TSP_DEP_ISSUE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (i >= window && !MPIR_Algo_pipeline_sync(i - window, sync_interval)) {
+        mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[i % window], MPIR_TSP_DEP_COMPLETE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (MPIR_Algo_pipeline_sync(i, sync_interval)) {
+        if (i >= sync_interval) {
+            mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[window], MPIR_TSP_DEP_COMPLETE);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        last[window] = vtx_id;
+    }
+    last[i % window] = vtx_id;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int sched_isend(const void *buf, MPI_Aint count, MPI_Datatype dt, int dest,

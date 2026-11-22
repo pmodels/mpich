@@ -61,6 +61,15 @@ enum MPIR_TSP_dep_type {
 int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t sched, int vtx_id, int dep_id,
                            enum MPIR_TSP_dep_type type);
 
+/* Bounds the chunk operations on one channel, e.g. the sends to one peer: operation i (vtx_id) is
+ * issued after operation i-1, so that they match in order, and only once operation i-window has
+ * completed. On a send channel with sync_interval > 0, where the sends picked by
+ * MPIR_Algo_pipeline_sync are synchronous, the window does not wait for a synchronous send to
+ * complete; instead each synchronous send waits for the previous one. last[window + 1] holds the
+ * channel's last window operations, indexed by i % window, and its last synchronous send. */
+int MPIR_TSP_sched_add_window_deps(MPIR_TSP_sched_t sched, int i, int vtx_id, int *last,
+                                   int window, int sync_interval);
+
 /* Transport function to schedule an isend vertex */
 int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
