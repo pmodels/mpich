@@ -6,6 +6,20 @@
 #include "mpiimpl.h"
 #include "gentran_impl.h"
 
+/* LL_DELETE for use inside LL_FOREACH_SAFE: unlinks del in O(1), given its predecessor prev
+ * (NULL if del is the head) */
+#define MY_LL_DELETE_INLINE(head, tail, prev, del) \
+    do { \
+        if (prev) { \
+            (prev)->next = (del)->next; \
+        } else { \
+            (head) = (del)->next; \
+        } \
+        if ((tail) == (del)) { \
+            (tail) = (prev); \
+        } \
+    } while (0)
+
 static void vtx_release_dependents(UT_array * deps, MPII_Genutil_sched_t * sched);
 
 static inline void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
@@ -479,6 +493,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                          sched->total_vtcs, sched->completed_vtcs));
     }
 
+    vtx_t *prev = NULL;
     LL_FOREACH_SAFE(sched->issued_head, vtxp, vtxp_tmp) {
         bool done = false;
         MPIR_Assert(vtxp->vtx_state == MPII_GENUTIL_VTX_STATE__ISSUED);
@@ -595,11 +610,14 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                 break;
         }
 
-        if (done) {
+        if (!done) {
+            prev = vtxp;
+        } else {
+            MY_LL_DELETE_INLINE(sched->issued_head, sched->issued_tail, prev, vtxp);
+
             vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__COMPLETE;
             sched->completed_vtcs++;
             vtx_release_dependents(&vtxp->completion_out_vtcs, sched);
-            LL_DELETE(sched->issued_head, sched->issued_tail, vtxp);
             if (made_progress)
                 *made_progress = TRUE;
         }
