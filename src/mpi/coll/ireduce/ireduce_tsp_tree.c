@@ -159,10 +159,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
 
-        /* For correctness, transport based collectives need to get the
-         * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        tag = MPIR_TSP_sched_get_tag(sched);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;

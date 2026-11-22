@@ -78,9 +78,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         recv_rank = (rank - i - 1 + nranks) % nranks;   /* Rank whose data you're receiving */
         send_rank = (rank - i + nranks) % nranks;       /* Rank whose data you're sending */
 
-        /* New tag for each send-recv pair. */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        tag = MPIR_TSP_sched_get_tag(sched);
 
         int nvtcs, vtcs[3];
         if (i == 0) {

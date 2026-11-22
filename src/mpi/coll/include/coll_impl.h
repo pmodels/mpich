@@ -124,6 +124,8 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             coll_sig->sched_type = MPIR_SCHED_GENTRAN; \
             bool is_persistent = (coll_sig)->flags & MPIR_COLL_SIG_FLAG__PERSISTENT; \
             MPIR_TSP_sched_create(&coll_sig->sched, is_persistent); \
+            MPIR_Assert(coll_sig->tag); \
+            MPIR_TSP_sched_set_tag(coll_sig->sched, coll_sig->tag); \
         } else { \
             MPIR_Assert(coll_sig->sched_type == MPIR_SCHED_GENTRAN); \
         } \

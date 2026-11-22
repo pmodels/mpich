@@ -41,10 +41,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     if (rank == root && is_inplace) {
         sendtype = recvtype;

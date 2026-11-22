@@ -43,6 +43,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     utarray_init(&sched->ready_vtcs_during_poke, &ut_int_icd);
 
     sched->is_persistent = is_persistent;
+    sched->tag = 0;
 
     *s = sched;
     return MPI_SUCCESS;
@@ -523,6 +524,18 @@ void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t s, int handle)
 {
     MPII_Genutil_sched_t *sched = s;
     MPIR_Coll_owned_add_handle(&sched->owned, handle);
+}
+
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t s, int tag)
+{
+    MPII_Genutil_sched_t *sched = s;
+    sched->tag = tag;
+}
+
+int MPIR_TSP_sched_get_tag(MPIR_TSP_sched_t s)
+{
+    MPII_Genutil_sched_t *sched = s;
+    return sched->tag;
 }
 
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t s)

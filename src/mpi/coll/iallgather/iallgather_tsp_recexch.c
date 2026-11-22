@@ -242,10 +242,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint
 
     MPIR_FUNC_ENTER;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);

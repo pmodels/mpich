@@ -142,10 +142,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     MPIR_FUNC_ENTER;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     MPIR_CHKLMEM_MALLOC(pack_invtcs, sizeof(int) * k);
     MPIR_CHKLMEM_MALLOC(recv_invtcs, sizeof(int) * k);

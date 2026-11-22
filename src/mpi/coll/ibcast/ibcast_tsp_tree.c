@@ -58,10 +58,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         ibcast_state->n_bytes = msgsize * type_size;
 #endif
 
-        /* For correctness, transport based collectives need to get the
-         * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        tag = MPIR_TSP_sched_get_tag(sched);
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {

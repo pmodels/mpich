@@ -21,7 +21,11 @@ int MPII_TSP_comm_cleanup(MPIR_Comm * comm_ptr);
 /* check if there are any pending schedules */
 int MPII_TSP_scheds_are_pending(void);
 
-/* TSP sched interfaces */
+/* TSP sched interfaces
+ *
+ * NOTE: A single tag is used. All messages need be issued in order: a send (or a receive)
+ * must be issued after the previous send (or receive) to the same peer, e.g. with an issue
+ * dependency (MPIR_TSP_DEP_ISSUE). */
 typedef void *MPIR_TSP_sched_t;
 
 typedef int (*MPIR_TSP_sched_issue_fn) (void *data, int *done);
@@ -127,6 +131,11 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
 /* Transport function to hold a reference on a comm/datatype/op handle until the schedule is
  * freed */
 void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
+
+/* The tag of the collective call, set when the schedule is created (MPII_CSEL_CREATE_TSP_SCHED).
+ * Algorithms use it rather than drawing tags of their own. */
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t sched, int tag);
+int MPIR_TSP_sched_get_tag(MPIR_TSP_sched_t sched);
 
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);

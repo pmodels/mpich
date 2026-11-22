@@ -28,10 +28,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
     if (bblock == 0)
         bblock = nranks;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
     for (i = 0; i < nranks; i += bblock) {

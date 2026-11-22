@@ -47,10 +47,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPIR_Datatype_get_extent_macro(datatype, extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
+    tag = MPIR_TSP_sched_get_tag(sched);
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
