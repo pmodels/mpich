@@ -118,30 +118,6 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
                                    MPII_Csel_container_type_e algo_id,
                                    MPII_Csel_container_s * algo_cnt);
 
-#define MPII_GENTRAN_CREATE_SCHED_P() \
-    do { \
-        *sched_type_p = MPIR_SCHED_GENTRAN; \
-        MPIR_TSP_sched_create(sched_p, is_persistent); \
-    } while (0)
-
-#define MPII_SCHED_CREATE_SCHED_P() \
-    do { \
-        MPIR_Sched_t s = MPIR_SCHED_NULL; \
-        enum MPIR_Sched_kind sched_kind = MPIR_SCHED_KIND_REGULAR; \
-        if (is_persistent) { \
-            sched_kind = MPIR_SCHED_KIND_PERSISTENT; \
-        } \
-        mpi_errno = MPIR_Sched_create(&s, sched_kind); \
-        MPIR_ERR_CHECK(mpi_errno); \
-        if (!tag) { \
-            mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
-            MPIR_ERR_CHECK(mpi_errno); \
-        } \
-        MPIR_Sched_set_tag(s, tag); \
-        *sched_type_p = MPIR_SCHED_NORMAL; \
-        *sched_p = s; \
-    } while (0)
-
 #define MPII_CSEL_CREATE_TSP_SCHED(coll_sig) \
     do { \
         if (coll_sig->sched == NULL) { \
