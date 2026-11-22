@@ -166,6 +166,29 @@ int MPIR_TSP_sched_generic(int type_id, void *data,
     goto fn_exit;
 }
 
+int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t s, int vtx_id, int dep_id, enum MPIR_TSP_dep_type type)
+{
+    MPII_Genutil_sched_t *sched = s;
+
+    /* only while the schedule is built */
+    MPIR_Assert(sched->completed_vtcs == 0 && sched->issued_head == NULL);
+    /* dependencies point to older vertices, as with in_vtcs */
+    MPIR_Assert(0 <= dep_id && dep_id < vtx_id && vtx_id < sched->total_vtcs);
+
+    vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + vtx_id;
+    vtx_t *dep = ut_type_array(&sched->vtcs, vtx_t *) + dep_id;
+
+    if (type == MPIR_TSP_DEP_ISSUE) {
+        utarray_push_back_int(&dep->issue_out_vtcs, &vtx_id, MPL_MEM_COLL);
+    } else {
+        utarray_push_back_int(&dep->out_vtcs, &vtx_id, MPL_MEM_COLL);
+    }
+    vtx->num_dependencies++;
+    vtx->pending_dependencies++;
+
+    return MPI_SUCCESS;
+}
+
 int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,

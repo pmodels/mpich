@@ -43,6 +43,20 @@ int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn
 int MPIR_TSP_sched_generic(int type_id, void *data,
                            MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
+/* A vertex waits for each of its dependencies either to complete (the n_in_vtcs/in_vtcs given when
+ * it is added) or only to be issued. An issue dependency orders, e.g., two sends to the same peer
+ * without waiting for the first to complete. */
+enum MPIR_TSP_dep_type {
+    MPIR_TSP_DEP_COMPLETE,
+    MPIR_TSP_DEP_ISSUE,
+};
+
+/* Adds a dependency of vertex vtx_id on dep_id, while the schedule is built. As with in_vtcs,
+ * dep_id must be older than vtx_id. Both an issue and a completion dependency on the same vertex
+ * are allowed; the completion one implies the other. */
+int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t sched, int vtx_id, int dep_id,
+                           enum MPIR_TSP_dep_type type);
+
 /* Transport function to schedule an isend vertex */
 int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,

@@ -8,6 +8,7 @@
 
 static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
                                          int remove);
+static void vtx_release_dependents(UT_array * deps, MPII_Genutil_sched_t * sched);
 
 static inline void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
 {
@@ -245,6 +246,8 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                 }
         }
 
+        vtx_release_dependents(&vtxp->issue_out_vtcs, sched);
+
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */
         {
@@ -264,6 +267,20 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
     goto fn_exit;
 }
 
+
+/* Releases the dependents in deps of a vertex that was issued (its issue_out_vtcs) or that
+ * completed (its out_vtcs): a dependent with no dependency left is issued */
+static void vtx_release_dependents(UT_array * deps, MPII_Genutil_sched_t * sched)
+{
+    for (int i = 0; i < utarray_len(deps); i++) {
+        int outvtx_id = ut_int_array(deps)[i];
+        vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + outvtx_id;
+
+        if (--vtx->pending_dependencies == 0) {
+            vtx_issue(outvtx_id, vtx, sched);
+        }
+    }
+}
 
 static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
                                          int remove)
@@ -376,6 +393,8 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
 
     utarray_init(&dst->out_vtcs, &ut_int_icd);
     utarray_concat(&dst->out_vtcs, &src->out_vtcs, MPL_MEM_COLL);
+    utarray_init(&dst->issue_out_vtcs, &ut_int_icd);
+    utarray_concat(&dst->issue_out_vtcs, &src->issue_out_vtcs, MPL_MEM_COLL);
 
     dst->pending_dependencies = src->pending_dependencies;
     dst->num_dependencies = src->num_dependencies;
@@ -389,6 +408,7 @@ void MPII_Genutil_vtx_dtor(void *_elt)
     vtx_t *elt = (vtx_t *) _elt;
 
     utarray_done(&elt->out_vtcs);
+    utarray_done(&elt->issue_out_vtcs);
 }
 
 
@@ -453,6 +473,7 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
     vtxp = *vtx;
 
     utarray_init(&vtxp->out_vtcs, &ut_int_icd);
+    utarray_init(&vtxp->issue_out_vtcs, &ut_int_icd);
 
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
     vtxp->vtx_id = sched->total_vtcs++;
