@@ -140,10 +140,7 @@ void MPIR_Coll_init_algo_container(MPIR_Csel_coll_sig_s * coll_sig,
             } \
             mpi_errno = MPIR_Sched_create(&s, sched_kind); \
             MPIR_ERR_CHECK(mpi_errno); \
-            if (!coll_sig->tag) { \
-                mpi_errno = MPIR_Sched_next_tag(coll_sig->comm_ptr, &coll_sig->tag); \
-                MPIR_ERR_CHECK(mpi_errno); \
-            } \
+            MPIR_Assert(coll_sig->tag); \
             MPIR_Sched_set_tag(s, coll_sig->tag); \
             coll_sig->sched_type = MPIR_SCHED_NORMAL; \
             coll_sig->sched = s; \
