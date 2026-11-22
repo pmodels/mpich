@@ -308,17 +308,21 @@ int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reques
         MPL_free(ack_req->ack_hdr);
         MPL_free(ack_req);
     } else {
+        /* just reply with data_sz. Receiver will send another CTS.
+         * NOTE: read hdr before re-issuing the ack recv. The re-issued recv
+         * may match an unexpected CTS (e.g. another probe of the same message)
+         * right away and overwrite ack_hdr. */
+        struct rndv_info_hdr rndv_info;
+        rndv_info.sreq = sreq;
+        rndv_info.rreq = hdr->rreq;
+        rndv_info.data_sz = p->data_sz;
+
         /* re-issue the ack recv */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ack_req->ctx_idx].rx,
                                       ack_req->ack_hdr, ack_req->ack_hdr_sz, NULL,
                                       ack_req->remote_addr, ack_req->match_bits, 0ULL,
                                       (void *) &(ack_req->context)), ack_req->vci_local, trecvsync);
 
-        /* just reply with data_sz. Receiver will send another CTS */
-        struct rndv_info_hdr rndv_info;
-        rndv_info.sreq = sreq;
-        rndv_info.rreq = hdr->rreq;
-        rndv_info.data_sz = p->data_sz;
         mpi_errno = MPIDI_NM_am_send_hdr_reply(sreq->comm, p->remote_rank,
                                                MPIDI_OFI_RNDV_INFO, &rndv_info, sizeof(rndv_info),
                                                p->vci_local, p->vci_remote);
