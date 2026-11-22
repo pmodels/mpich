@@ -181,7 +181,7 @@ int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t s, int vtx_id, int dep_id, enum MPIR
     if (type == MPIR_TSP_DEP_ISSUE) {
         utarray_push_back_int(&dep->issue_out_vtcs, &vtx_id, MPL_MEM_COLL);
     } else {
-        utarray_push_back_int(&dep->out_vtcs, &vtx_id, MPL_MEM_COLL);
+        utarray_push_back_int(&dep->completion_out_vtcs, &vtx_id, MPL_MEM_COLL);
     }
     vtx->num_dependencies++;
     vtx->pending_dependencies++;
@@ -437,7 +437,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
         else {
             /* this vertex only depends on the sink when it has no
              * outgoing dependence     */
-            if (utarray_len(&sched_fence->out_vtcs) == 0)
+            if (utarray_len(&sched_fence->completion_out_vtcs) == 0)
                 in_vtcs[n_in_vtcs++] = i;
         }
         sched_fence--;

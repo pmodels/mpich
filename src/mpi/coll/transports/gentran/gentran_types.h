@@ -34,7 +34,7 @@ struct MPII_Genutil_sched_t;
 typedef struct MPII_Genutil_vtx_t {
     /* the vertices that wait for this one to complete, and those that wait for it to be issued
      * (MPIR_TSP_DEP_ISSUE) */
-    UT_array out_vtcs;
+    UT_array completion_out_vtcs;
     UT_array issue_out_vtcs;
 
     int vtx_kind;
