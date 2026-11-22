@@ -270,25 +270,19 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
 }
 
 
-/* vtx_release_in_poke is recursive: through vtx_release_dependents_impl, it issues the released
- * vertices, and releases their dependents in turn */
 static void vtx_release_in_start(UT_array * deps, MPII_Genutil_sched_t * sched);
 static void vtx_release_in_poke(UT_array * deps, MPII_Genutil_sched_t * sched);
+static void push_ready(MPII_Genutil_sched_t * sched, int vtx_id);
+static int drain_ready(MPII_Genutil_sched_t * sched);
 
-static void vtx_release_dependents_impl(UT_array * deps, MPII_Genutil_sched_t * sched, bool issue)
+static void vtx_release_dependents_impl(UT_array * deps, MPII_Genutil_sched_t * sched, bool queue)
 {
     for (int i = 0; i < utarray_len(deps); i++) {
         int outvtx_id = ut_int_array(deps)[i];
         vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + outvtx_id;
 
-        if (--vtx->pending_dependencies == 0 && issue) {
-            bool done;
-
-            vtx_issue(outvtx_id, vtx, sched, &done);
-            if (done) {
-                vtx_release_in_poke(&vtx->completion_out_vtcs, sched);
-            }
-            vtx_release_in_poke(&vtx->issue_out_vtcs, sched);
+        if (--vtx->pending_dependencies == 0 && queue) {
+            push_ready(sched, outvtx_id);
         }
     }
 }
@@ -300,10 +294,49 @@ static void vtx_release_in_start(UT_array * deps, MPII_Genutil_sched_t * sched)
     vtx_release_dependents_impl(deps, sched, false);
 }
 
-/* Counts down the dependents in deps, and issues the released ones */
+/* Counts down the dependents in deps, and queues the released ones in ready_vtcs_during_poke,
+ * which the poke drains in order, instead of issuing them here.
+ *
+ * The queue issues sends to multiple targets round robin. Issuing the released vertices here,
+ * recursively, would go depth first: at the root of a pipelined tree, the send of a chunk to the
+ * first child releases the next chunk to that child, and so on, so a message to a later child
+ * waits until every ready chunk to the earlier children has been issued, which adds to its
+ * latency. */
 static void vtx_release_in_poke(UT_array * deps, MPII_Genutil_sched_t * sched)
 {
     vtx_release_dependents_impl(deps, sched, true);
+}
+
+static void push_ready(MPII_Genutil_sched_t * sched, int vtx_id)
+{
+    utarray_push_back_int(&sched->ready_vtcs_during_poke, &vtx_id, MPL_MEM_COLL);
+}
+
+/* Issues the ready vertices in the order they became ready */
+static int drain_ready(MPII_Genutil_sched_t * sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    UT_array *ready = &sched->ready_vtcs_during_poke;
+
+    /* vtx_issue may append more */
+    for (int head = 0; head < utarray_len(ready); head++) {
+        int id = ut_int_array(ready)[head];
+        vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + id;
+        bool done;
+
+        mpi_errno = vtx_issue(id, vtx, sched, &done);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (done) {
+            vtx_release_in_poke(&vtx->completion_out_vtcs, sched);
+        }
+        vtx_release_in_poke(&vtx->issue_out_vtcs, sched);
+    }
+
+  fn_exit:
+    utarray_clear(ready);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -650,6 +683,9 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                          sched->total_vtcs));
     }
 #endif
+
+    mpi_errno = drain_ready(sched);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *is_complete = (sched->completed_vtcs == sched->total_vtcs);
     if (*is_complete) {

@@ -130,6 +130,9 @@ typedef struct MPII_Genutil_sched_t {
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;
 
+    /* temporary FIFO queue of released vtcs in a poke; kept here to avoid allocating per poke */
+    UT_array ready_vtcs_during_poke;
+
     /* list of new type */
     UT_array generic_types;
 

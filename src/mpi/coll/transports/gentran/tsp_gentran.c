@@ -40,6 +40,7 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
+    utarray_init(&sched->ready_vtcs_during_poke, &ut_int_icd);
 
     sched->is_persistent = is_persistent;
 
@@ -101,6 +102,7 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 
     utarray_done(&sched->vtcs);
     utarray_done(&sched->generic_types);
+    utarray_done(&sched->ready_vtcs_during_poke);
     MPL_free(sched);
 
   fn_exit:
