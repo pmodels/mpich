@@ -28,7 +28,8 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 /* Function to get a new vertex in the graph */
 int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** vtx);
 
-/* Function to make progress on the schedule */
+/* Functions to start the schedule, and to make progress on it */
+int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched);
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress);
 
 /* Hook to make progress on nonblocking collective operations  */

@@ -556,8 +556,6 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
 {
     MPII_Genutil_sched_t *sched = s;
     int mpi_errno = MPI_SUCCESS;
-    int is_complete;
-    int made_progress;
     MPIR_Request *reqp;
 
     MPIR_FUNC_ENTER;
@@ -581,14 +579,11 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     sched->req = reqp;
 
     MPIR_Assert(sched->completed_vtcs == 0);
-    /* Kick start progress on this collective's schedule */
-    mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
-    if (is_complete) {
-        MPIR_Request_complete(reqp);
-        goto fn_exit;
-    }
+    mpi_errno = MPII_Genutil_sched_start(sched);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Enqueue schedule and activate progress hook if not already activated */
+    /* Enqueue schedule and activate progress hook if not already activated. A schedule that is
+     * complete already is completed by the hook's next poke. */
     reqp->u.nbc.coll.sched = (void *) sched;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
