@@ -249,6 +249,8 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr);
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, MPIR_Request ** request, int coll_attr);
+int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
+                MPIR_Comm * comm_ptr, MPIR_Request ** request, int coll_attr);
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIC_Waitall(int numreq, MPIR_Request ** requests, MPI_Status * statuses);
