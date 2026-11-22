@@ -30,6 +30,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     int sink_id;
     int nvtcs;
     int tag, vtx_id;
+    int send_id = -1;
     int root = 0;
     MPIR_CHKLMEM_DECL();
 
@@ -128,10 +129,17 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
                 nvtcs = 1;
             }
 
+            int prev_recv_id = recv_id[i];
             mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
+            /* the receives from a child are issued in chunk order */
+            if (j > 0) {
+                mpi_errno = MPIR_TSP_sched_add_dep(sched, recv_id[i], prev_recv_id,
+                                                   MPIR_TSP_DEP_ISSUE);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
             vtcs[0] = recv_id[i];
             nvtcs = 1;
@@ -172,12 +180,18 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
                 vtcs[0] = reduce_id[num_children - 1];
         }
 
-        /* send data to the parent */
+        /* send data to the parent, in chunk order */
         if (rank != root) {
+            int prev_send_id = send_id;
             mpi_errno =
                 MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs, &vtx_id);
+                                     sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
+            if (prev_send_id != -1) {
+                mpi_errno = MPIR_TSP_sched_add_dep(sched, send_id, prev_send_id,
+                                                   MPIR_TSP_DEP_ISSUE);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
 
         /* Broadcast start here */

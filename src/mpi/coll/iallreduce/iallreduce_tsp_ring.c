@@ -19,7 +19,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     int nranks, is_inplace, rank;
     MPI_Aint extent;
     MPI_Aint *cnts, *displs;
-    int recv_id, *reduce_id, nvtcs, vtcs;
+    int recv_id, *reduce_id, nvtcs, vtcs, send_id, prev_send_id = -1;
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
     int tag, vtx_id;
@@ -93,8 +93,15 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
         mpi_errno =
             MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                                 datatype, dst, tag, comm, sched, nvtcs, &vtcs, &vtx_id);
+                                 datatype, dst, tag, comm, sched, nvtcs, &vtcs, &send_id);
         MPIR_ERR_CHECK(mpi_errno);
+
+        /* the sends to dst are issued in step order */
+        if (prev_send_id != -1) {
+            mpi_errno = MPIR_TSP_sched_add_dep(sched, send_id, prev_send_id, MPIR_TSP_DEP_ISSUE);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        prev_send_id = send_id;
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, 2 * sizeof(int));
 

@@ -137,7 +137,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         if (i == 0)
             nvtcs = 0;
         else if (i == 1) {
-            nvtcs = 1;
+            nvtcs = 2;
             vtcs[0] = send_id[(i - 1) % 3];
             vtcs[1] = recv_id[(i - 1) % 3];
         } else {

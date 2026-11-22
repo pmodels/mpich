@@ -23,7 +23,9 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     int recv_id;
     int num_children;
     MPIR_Treealgo_tree_t my_tree;
-    int tag, vtx_id;
+    int tag;
+    int *send_id = NULL;        /* the last send to each child */
+    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
     MPIR_COMM_RANK_SIZE(comm, rank, size);
@@ -38,6 +40,9 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
+    if (num_children > 0) {
+        MPIR_CHKLMEM_MALLOC(send_id, num_children * sizeof(int));
+    }
 
     /* do pipelined tree broadcast */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -66,6 +71,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
                                             datatype, my_tree.parent, tag, comm,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
+            int vtx_id;
             MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
                               &vtx_id);
 #else
@@ -76,13 +82,20 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #endif
         }
 
-        if (num_children) {
-            /* Multicast data to the children */
-            mpi_errno = MPIR_TSP_sched_imcast((char *) buffer + offset * extent, msgsize, datatype,
-                                              ut_int_array(my_tree.children), num_children, tag,
-                                              comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
-                                              &vtx_id);
+        /* Send the chunk to each child on its own, once it is received (except at the root),
+         * and issued after the send of the previous chunk to that child, so that the chunks go
+         * to each child in order. A multicast would make all children wait for the slowest. */
+        for (int c = 0; c < num_children; c++) {
+            int prev_send_id = send_id[c];
+            mpi_errno = MPIR_TSP_sched_isend((char *) buffer + offset * extent, msgsize, datatype,
+                                             ut_int_array(my_tree.children)[c], tag, comm, sched,
+                                             (my_tree.parent != -1) ? 1 : 0, &recv_id, &send_id[c]);
             MPIR_ERR_CHECK(mpi_errno);
+            if (i > 0) {
+                mpi_errno = MPIR_TSP_sched_add_dep(sched, send_id[c], prev_send_id,
+                                                   MPIR_TSP_DEP_ISSUE);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
         offset += msgsize;
     }
@@ -90,6 +103,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

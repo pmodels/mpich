@@ -36,6 +36,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int dtcopy_id = -1;
     int nvtcs;
     int tag;
+    int send_id = -1;
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
@@ -180,10 +181,17 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 nvtcs = 1;
             }
 
+            int prev_recv_id = recv_id[i];
             mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
+            /* the receives from a child are issued in chunk order */
+            if (j > 0) {
+                mpi_errno = MPIR_TSP_sched_add_dep(sched, recv_id[i], prev_recv_id,
+                                                   MPIR_TSP_DEP_ISSUE);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
             vtcs[0] = recv_id[i];
             nvtcs = 1;
@@ -223,11 +231,15 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 vtcs[0] = reduce_id[num_children - 1];
         }
 
+        /* a rank sends its chunks, to the parent or, from the tree root, to the root, in chunk
+         * order */
+        int prev_send_id = send_id;
+
         /* send data to the parent */
         if (!is_tree_root) {
             mpi_errno =
                 MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs, &vtx_id);
+                                     sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -236,12 +248,17 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             if (is_tree_root) { /* tree_root sends data to root */
                 mpi_errno =
                     MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm, sched,
-                                         nvtcs, vtcs, &vtx_id);
+                                         nvtcs, vtcs, &send_id);
             } else if (is_root) {       /* root receives data from tree_root */
                 mpi_errno =
                     MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
                                          tree_root, tag, comm, sched, 0, NULL, &vtx_id);
             }
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        if (prev_send_id != -1 && send_id != prev_send_id) {
+            mpi_errno = MPIR_TSP_sched_add_dep(sched, send_id, prev_send_id, MPIR_TSP_DEP_ISSUE);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
