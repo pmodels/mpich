@@ -402,11 +402,10 @@ int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * me)
     MPIR_Assert(coll_sig->coll_type % 2 == 0);
     coll_sig->coll_type += 1;
 
-    /* a blocking call enters here without a tag: one for the whole call chain, as in the
-     * generated nonblocking entries */
+    /* a blocking call enters here without a tag. It uses the blocking tag for the whole call
+     * chain: only a user-level nonblocking call draws a tag. */
     if (!coll_sig->tag) {
-        mpi_errno = MPIR_Sched_next_tag(coll_sig->comm_ptr, &coll_sig->tag);
-        MPIR_ERR_CHECK(mpi_errno);
+        coll_sig->tag = MPIR_COLL_BLOCKING_TAG;
     }
 
     /* The nonblocking form stands for the whole user call (same communicator and arguments),
