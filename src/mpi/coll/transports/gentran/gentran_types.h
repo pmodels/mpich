@@ -51,6 +51,7 @@ typedef struct MPII_Genutil_vtx_t {
             int dest;
             MPIR_Comm *comm;
             MPIR_Request *req;
+            bool sync;          /* a synchronous send (MPIR_TSP_sched_issend) */
         } isend;
         struct {
             void *buf;

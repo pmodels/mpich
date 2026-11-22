@@ -45,11 +45,15 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
 
     switch (vtxp->vtx_kind) {
         case MPII_GENUTIL_VTX_KIND__ISEND:{
-                MPIC_Isend(vtxp->u.isend.buf,
-                           vtxp->u.isend.count,
-                           vtxp->u.isend.dt,
-                           vtxp->u.isend.dest,
-                           sched->tag, vtxp->u.isend.comm, &vtxp->u.isend.req, r->u.nbc.coll_attr);
+                if (vtxp->u.isend.sync) {
+                    MPIC_Issend(vtxp->u.isend.buf, vtxp->u.isend.count, vtxp->u.isend.dt,
+                                vtxp->u.isend.dest, sched->tag, vtxp->u.isend.comm,
+                                &vtxp->u.isend.req, r->u.nbc.coll_attr);
+                } else {
+                    MPIC_Isend(vtxp->u.isend.buf, vtxp->u.isend.count, vtxp->u.isend.dt,
+                               vtxp->u.isend.dest, sched->tag, vtxp->u.isend.comm,
+                               &vtxp->u.isend.req, r->u.nbc.coll_attr);
+                }
 
                 if (MPIR_Request_is_complete(vtxp->u.isend.req)) {
                     MPIR_Request_free(vtxp->u.isend.req);

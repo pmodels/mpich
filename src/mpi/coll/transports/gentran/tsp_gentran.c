@@ -188,12 +188,9 @@ int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t s, int vtx_id, int dep_id, enum MPIR
     return MPI_SUCCESS;
 }
 
-int MPIR_TSP_sched_isend(const void *buf,
-                         MPI_Aint count,
-                         MPI_Datatype dt,
-                         int dest,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                         int *vtx_id)
+static int sched_isend(const void *buf, MPI_Aint count, MPI_Datatype dt, int dest,
+                       MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                       int *vtx_id, bool sync)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -209,6 +206,7 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.dt = dt;
     vtxp->u.isend.dest = dest;
     vtxp->u.isend.comm = comm_ptr;
+    vtxp->u.isend.sync = sync;
 
     /* the schedule's builder holds the comm and datatype until the schedule is freed */
 
@@ -216,6 +214,26 @@ int MPIR_TSP_sched_isend(const void *buf,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", *vtx_id));
 
     return mpi_errno;
+}
+
+int MPIR_TSP_sched_isend(const void *buf,
+                         MPI_Aint count,
+                         MPI_Datatype dt,
+                         int dest,
+                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                         int *vtx_id)
+{
+    return sched_isend(buf, count, dt, dest, comm_ptr, s, n_in_vtcs, in_vtcs, vtx_id, false);
+}
+
+int MPIR_TSP_sched_issend(const void *buf,
+                          MPI_Aint count,
+                          MPI_Datatype dt,
+                          int dest,
+                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                          int *vtx_id)
+{
+    return sched_isend(buf, count, dt, dest, comm_ptr, s, n_in_vtcs, in_vtcs, vtx_id, true);
 }
 
 
