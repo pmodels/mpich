@@ -102,6 +102,18 @@ static void debug_queue(MPII_cga_request_queue * queue);
 #endif
 
 /* Routines for managing non-blocking send/recv of chunks  */
+
+/* Whether the chunks go through pack buffers. The queues decide it before chunking. */
+static void init_pack_attr(MPII_cga_request_queue * queue, void *buf, MPI_Datatype datatype)
+{
+    int dt_contig;
+    MPIR_Datatype_is_contig(datatype, &dt_contig);
+    queue->dt_contig = dt_contig;
+
+    MPIR_GPU_query_pointer_attr(buf, &queue->attr);
+    queue->need_pack = (!dt_contig || MPL_gpu_attr_is_dev(&queue->attr));
+}
+
 static int init_request_queue_common(MPII_cga_request_queue * queue,
                                      int q_len, int num_pending, MPI_Aint num_chunks, int all_size,
                                      MPI_Aint chunk_size, MPI_Aint last_chunk_size,
@@ -110,12 +122,6 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
                                      MPIR_Comm * comm, int coll_attr, int tag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    int dt_contig;
-    MPIR_Datatype_is_contig(datatype, &dt_contig);
-
-    MPIR_GPU_query_pointer_attr(buf, &queue->attr);
-    queue->need_pack = (!dt_contig || MPL_gpu_attr_is_dev(&queue->attr));
 
     /* With chunking (chunk_size > 0) every chunk fits in a cell of the chunk pool. Without it
      * (chunk_size == 0) there may be no pool, and the single chunk is the whole message,
@@ -135,7 +141,6 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     MPI_Aint dummy;
     MPIR_Type_get_true_extent_impl(datatype, &queue->true_lb, &dummy);
     queue->inverse_order = inverse_order;
-    queue->dt_contig = dt_contig;
 
     queue->mmap_buf = NULL;
     queue->mmap_entry = NULL;
@@ -290,6 +295,8 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
         q_len = 2;
     }
 
+    init_pack_attr(queue, buf, datatype);
+
     MPI_Aint type_size, data_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     data_size = count * type_size;
@@ -321,6 +328,8 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
     if (q_len < 2) {
         q_len = 2;
     }
+
+    init_pack_attr(queue, buf, datatype);
 
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -356,6 +365,8 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     if (q_len < 2) {
         q_len = 2;
     }
+
+    init_pack_attr(queue, recvbuf, datatype);
 
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
