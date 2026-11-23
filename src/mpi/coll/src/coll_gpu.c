@@ -67,8 +67,8 @@ static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt
 static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
                         MPII_Csel_container_s * cnt);
 static bool get_coll_bufs(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs);
-static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
-                          struct swap_buf *swaps);
+static int wrap_swap_copies(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
+                            struct swap_buf *swaps);
 static void *alloc_host_buf(MPI_Aint count, MPI_Datatype datatype, void **raw);
 static MPI_Datatype get_host_type(struct coll_buf *b, struct swap_buf *swap);
 
@@ -179,10 +179,9 @@ static int run_auto(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt
  * fn, which either selects (run_auto) or is an algorithm.
  *
  * A blocking collective copies in, runs, and copies out inline. For nonblocking and persistent
- * collectives, fn only builds the schedule, so the copies are added to the schedule before
- * it starts: the copy-in at the front and the copy-out at the back. A persistent schedule
- * replays them on every start. The schedule owns the host buffers and frees them with
- * itself. */
+ * collectives, fn only builds the schedule, so the schedule is wrapped (MPIR_Coll_wrap_sched)
+ * with the copy-in before it starts and the copy-out after it completes, at every start. The
+ * wrapper owns the host buffers and frees them with itself. */
 static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
                         MPII_Csel_container_s * cnt)
 {
@@ -197,8 +196,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
 
     /* blocking coll_type is even */
     bool is_blocking = (coll_sig->coll_type % 2 == 0);
-    /* Nothing selects into an existing schedule yet: the nonblocking compositions are
-     * disabled. Swapping inside one would need the copies around the sub-call's steps only. */
+    /* fn creates the schedule, which the swap then wraps */
     MPIR_Assert(coll_sig->sched == NULL);
 
     /* the gpu_local flag is only set for the collectives get_coll_bufs describes */
@@ -231,7 +229,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
             }
         }
     } else {
-        mpi_errno = add_swap_steps(coll_sig, &bufs, swaps);
+        mpi_errno = wrap_swap_copies(coll_sig, &bufs, swaps);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -239,7 +237,7 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
     for (int i = 0; i < bufs.n; i++) {
         if (swaps[i].user) {
             swap_out(&bufs.bufs[i], &swaps[i]);
-            /* NULL once the schedule owns it */
+            /* NULL once the wrapper owns it */
             MPL_free(swaps[i].raw);
         }
     }
@@ -248,88 +246,38 @@ static int swap_and_run(MPIR_Csel_coll_sig_s * coll_sig, MPIR_Coll_algo_fn fn,
     goto fn_exit;
 }
 
-/* Adds the copy-in steps at the front of the schedule auto built, and the copy-out steps at
- * the back after a barrier (normal) or fence (gentran), and hands the host buffers to the
- * schedule. */
-static int add_swap_steps(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
-                          struct swap_buf *swaps)
+/* Wraps the schedule fn built with the copy-ins and copy-outs, and hands the host buffers and
+ * the packed datatypes to the wrapper */
+static int wrap_swap_copies(MPIR_Csel_coll_sig_s * coll_sig, struct coll_bufs *bufs,
+                            struct swap_buf *swaps)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {
-        MPIR_Sched_t s = coll_sig->sched;
-        for (int i = 0; i < bufs->n; i++) {
-            if (swaps[i].user) {
-                MPIR_Sched_add_buffer(s, swaps[i].raw);
-                swaps[i].raw = NULL;
-                if (swaps[i].packed_type != MPI_DATATYPE_NULL) {
-                    MPIR_Sched_add_handle(s, swaps[i].packed_type);
-                }
-            }
+    struct MPIR_Coll_wrap *wrap;
+    mpi_errno = MPIR_Coll_wrap_sched(coll_sig, &wrap);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Coll_owned_t *owned = MPIR_Coll_wrap_get_owned(wrap);
+    for (int i = 0; i < bufs->n; i++) {
+        struct coll_buf *b = &bufs->bufs[i];
+        if (!swaps[i].user) {
+            continue;
+        }
+        MPIR_Coll_owned_add_buffer(owned, swaps[i].raw);
+        swaps[i].raw = NULL;
+        if (swaps[i].packed_type != MPI_DATATYPE_NULL) {
+            MPIR_Coll_owned_add_handle(owned, swaps[i].packed_type);
         }
 
-        int n = 0;
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
-                mpi_errno = MPIR_Sched_copy(swaps[i].user, b->count, b->datatype,
-                                            swaps[i].host, b->count,
-                                            get_host_type(b, &swaps[i]), s);
-                MPIR_ERR_CHECK(mpi_errno);
-                n++;
-            }
+        MPI_Datatype host_type = get_host_type(b, &swaps[i]);
+        if (b->dir & COLL_BUF_READ) {
+            MPIR_Coll_wrap_add_copy(wrap, false, swaps[i].user, b->count, b->datatype,
+                                    swaps[i].host, b->count, host_type);
         }
-        mpi_errno = MPIR_Sched_move_to_front(s, n);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIR_Sched_barrier(s);
-        MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                mpi_errno = MPIR_Sched_copy(swaps[i].host, b->count, get_host_type(b, &swaps[i]),
-                                            swaps[i].user, b->count, b->datatype, s);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+        if (b->dir & COLL_BUF_WRITE) {
+            MPIR_Coll_wrap_add_copy(wrap, true, swaps[i].host, b->count, host_type,
+                                    swaps[i].user, b->count, b->datatype);
         }
-    } else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {
-        MPIR_TSP_sched_t s = coll_sig->sched;
-        for (int i = 0; i < bufs->n; i++) {
-            if (swaps[i].user) {
-                MPIR_TSP_sched_add_buffer(s, swaps[i].raw);
-                swaps[i].raw = NULL;
-                if (swaps[i].packed_type != MPI_DATATYPE_NULL) {
-                    MPIR_TSP_sched_add_handle(s, swaps[i].packed_type);
-                }
-            }
-        }
-
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_READ)) {
-                mpi_errno = MPIR_TSP_sched_localcopy_front(swaps[i].user, b->count, b->datatype,
-                                                           swaps[i].host, b->count,
-                                                           get_host_type(b, &swaps[i]), s);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
-
-        mpi_errno = MPIR_TSP_sched_fence(s);
-        MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < bufs->n; i++) {
-            struct coll_buf *b = &bufs->bufs[i];
-            if (swaps[i].user && (b->dir & COLL_BUF_WRITE)) {
-                int vtx_id;
-                mpi_errno = MPIR_TSP_sched_localcopy(swaps[i].host, b->count,
-                                                     get_host_type(b, &swaps[i]),
-                                                     swaps[i].user, b->count, b->datatype,
-                                                     s, 0, NULL, &vtx_id);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
-    } else {
-        /* MPIR_SCHED_GREQ has no steps to add; nothing produces it for now */
-        MPIR_Assert(0);
     }
 
   fn_exit:
@@ -377,7 +325,7 @@ static int swap_in(struct coll_buf *b, struct swap_buf *swap)
 /* The packed case of swap_in, which also creates the datatype.
  * The host buffer holds count elements of type_size bytes, element i at offset i * type_size,
  * and the datatype field is pointed at a contiguous datatype of type_size bytes created here,
- * so the counts and displacements stay the same. swap_out frees the datatype; a schedule holds
+ * so the counts and displacements stay the same. swap_out frees the datatype; the wrapper holds
  * a reference of its own. */
 static int swap_in_packed(struct coll_buf *b, struct swap_buf *swap)
 {

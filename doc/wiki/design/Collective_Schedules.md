@@ -317,8 +317,8 @@ int MPIR_Ibcast_intra_circ_graph_init(void *buffer, MPI_Aint count, MPI_Datatype
 - `MPIR_Coll_greq_free(greq)`: `greq->free_fn(greq->state)` if set,
   `MPIR_Coll_owned_free`, `MPL_free`.
 
-A greq algorithm may not set `gpu_swap`, since there is no schedule to add the
-swap steps to. It handles device buffers itself.
+A greq algorithm may not set `gpu_swap` (`maint/gen_coll.py` rejects it). It
+handles device buffers itself.
 
 ### Example: `ibcast` `circ_graph`
 
