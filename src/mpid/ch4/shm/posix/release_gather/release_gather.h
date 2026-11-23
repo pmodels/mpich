@@ -389,11 +389,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
         (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ?
         RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells) - 1 : 0;
     uint64_t min_gather, child_gather_flag;
-    UT_array *children;
+    int *children;
     void *temp_recvbuf = NULL;
 
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
-    children = release_gather_info_ptr->bcast_tree.children;
+    children = MPIR_Treealgo_tree_children(&release_gather_info_ptr->bcast_tree);
     num_children = release_gather_info_ptr->bcast_tree.num_children;
     rank = MPIR_Comm_rank(comm_ptr);
 
@@ -425,10 +425,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
         MPIR_ERR_CHECK(mpi_errno);
         if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD) {
             num_children = release_gather_info_ptr->reduce_tree.num_children;
-            children = release_gather_info_ptr->reduce_tree.children;
+            children = MPIR_Treealgo_tree_children(&release_gather_info_ptr->reduce_tree);
         } else {
             num_children = release_gather_info_ptr->reduce_tree_large.num_children;
-            children = release_gather_info_ptr->reduce_tree_large.children;
+            children = MPIR_Treealgo_tree_children(&release_gather_info_ptr->reduce_tree_large);
         }
     }
 
@@ -443,7 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     /* Leaf nodes never skip checking */
     if (num_children == 0 || !skip_checking) {
         for (i = 0; i < num_children; i++) {
-            int child_rank = *(int *) utarray_eltptr(children, i);
+            int child_rank = children[i];
             child_flag_addr = MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(child_rank);
             /* Wait until the child has arrived */
             MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(child_flag_addr,

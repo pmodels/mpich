@@ -31,10 +31,22 @@ enum {
 };
 
 /* What an operation object of a nonblocking or persistent collective owns.
- * It is freed once, when the operation object is freed. */
+ * It is freed once, when the operation object is freed. The first few buffers and handles are
+ * kept in the object itself, which covers almost every call without allocating; more spill to
+ * the heap (e.g. alltoallw's datatypes, or per-chunk state). */
+#define MPIR_COLL_OWNED_INLINE 4
+
 typedef struct {
-    UT_array buffers;           /* MPL_malloc'd memory, MPL_free'd */
-    UT_array handles;           /* comm, datatype and op references, released */
+    /* MPL_malloc'd memory, MPL_free'd */
+    int n_buffers;
+    int max_buffers;            /* capacity of heap_buffers; 0 while they fit inline */
+    void **heap_buffers;
+    void *inl_buffers[MPIR_COLL_OWNED_INLINE];
+    /* comm, datatype and op references, released */
+    int n_handles;
+    int max_handles;            /* capacity of heap_handles; 0 while they fit inline */
+    int *heap_handles;
+    int inl_handles[MPIR_COLL_OWNED_INLINE];
 } MPIR_Coll_owned_t;
 
 /* A greq algorithm (grequest collective) has its own state machine instead of a schedule. Its
@@ -61,6 +73,10 @@ typedef struct MPII_Coll_req_t {
 
 typedef struct {
     struct MPII_Coll_req_t *head;
+    /* finished gentran schedules kept for reuse, so that a new collective call does not allocate
+     * one (MPII_Genutil_sched_recycle) */
+    struct MPII_Genutil_sched_t *free_scheds;
+    int num_free_scheds;
 } MPII_Coll_queue_t;
 
 #endif /* COLL_TYPES_H_INCLUDED */

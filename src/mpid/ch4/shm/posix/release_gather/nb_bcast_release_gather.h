@@ -273,18 +273,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_gather_completion(void *v, int *d
     MPIDI_POSIX_per_call_ibcast_info_t *per_call_data = vtxp->u.generic.data;
     MPIR_Comm *comm_ptr = per_call_data->comm_ptr;
     int num_ranks = MPIR_Comm_size(comm_ptr);
-    UT_array *children;
+    int *children;
     int i;
     MPIDI_POSIX_release_gather_comm_t *nb_release_gather_info_ptr;
     nb_release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, nb_release_gather);
-    children = nb_release_gather_info_ptr->bcast_tree.children;
+    children = MPIR_Treealgo_tree_children(&nb_release_gather_info_ptr->bcast_tree);
     int num_children = nb_release_gather_info_ptr->bcast_tree.num_children;
     int segment = per_call_data->seq_no % MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS;
     MPL_atomic_uint64_t *child_gather_flag_addr;
 
     /* Gather phase begins */
     for (i = 0; i < num_children; i++) {
-        int child_rank = *(int *) utarray_eltptr(children, i);
+        int child_rank = children[i];
         child_gather_flag_addr =
             MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_GATHER_FLAG_ADDR(child_rank, segment, num_ranks);
         if (MPL_atomic_acquire_load_uint64(child_gather_flag_addr) != per_call_data->seq_no) {

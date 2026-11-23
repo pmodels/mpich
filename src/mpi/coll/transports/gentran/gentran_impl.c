@@ -65,6 +65,7 @@ int MPII_TSP_finalize(void)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Progress_hook_deregister(MPII_Genutil_progress_hook_id);
+    MPII_Genutil_sched_cache_free();
 
     return mpi_errno;
 }

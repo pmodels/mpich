@@ -122,20 +122,20 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                       &parents_tree);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* initialize an empty children array */
-        parents_tree.num_children = 0;
+        MPIR_Treealgo_tree_init(&parents_tree, -1, size);
     }
 
     lend = lrank + 1;   /* the end of my subtree in logical ranks */
     for (i = 0; i < num_children; i++) {
-        current_child = ((*(int *) utarray_eltptr(my_tree.children, i)) - root + size) % size;  /* Dereference and calculate the current child */
+        current_child = ((MPIR_Treealgo_tree_children(&my_tree)[i]) - root + size) % size;      /* Dereference and calculate the current child */
 
         if (i < num_children - 1) {
-            next_child = ((*(int *) utarray_eltptr(my_tree.children, i + 1)) - root + size) % size;     /* Dereference and calculate next child */
+            next_child = ((MPIR_Treealgo_tree_children(&my_tree)[i + 1]) - root + size) % size; /* Dereference and calculate next child */
         } else {
             next_child = size;
             for (j = 0; j < parents_tree.num_children; j++) {
                 int sibling =
-                    ((*(int *) utarray_eltptr(parents_tree.children, j)) - root + size) % size;
+                    ((MPIR_Treealgo_tree_children(&parents_tree)[j]) - root + size) % size;
                 if (sibling > lrank) {  /* This is the first sibling larger than lrank */
                     next_child = sibling;
                     break;
@@ -186,7 +186,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     /* send data to children */
     for (i = 0; i < num_children; i++) {
-        int child = *(int *) utarray_eltptr(my_tree.children, i);
+        int child = MPIR_Treealgo_tree_children(&my_tree)[i];
         int lchild = (child - root + size) % size;
         int lchild_end = lchild + child_subtree_nranks[i];
         if (num_children > 0 && lrank != 0)

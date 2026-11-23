@@ -158,23 +158,18 @@ void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
     int *my_children = &children[child_ctr[rank]];
 
     *topotree_fail = 0;
+    MPIR_Treealgo_tree_init(my_tree, rank, num_ranks);
     my_tree->parent = parent;
-    my_tree->num_children = 0;
-    my_tree->rank = rank;
-    my_tree->nranks = num_ranks;
-    utarray_new(my_tree->children, &ut_int_icd, MPL_MEM_COLL);
-    MPIR_Assert(my_tree->children);
-    utarray_reserve(my_tree->children, num_children, MPL_MEM_COLL);
     char str[1024], tmp[128];
     snprintf(str, sizeof(str), "----**Rank %d, Parent, %d, Child(%d)[", rank, parent, num_children);
     for (int c = 0; c < num_children; ++c) {
-        utarray_push_back(my_tree->children, &my_children[c], MPL_MEM_COLL);
+        int rc = MPIR_Treealgo_tree_add_child(my_tree, my_children[c]);
+        MPIR_Assertp(rc == MPI_SUCCESS);
         if (my_children[c] == 0) {
             *topotree_fail = 1;
         }
         snprintf(tmp, sizeof(tmp), "%d, ", my_children[c]);
         strcat(str, tmp);
-        my_tree->num_children++;
     }
     if (MPIDI_SHM_TOPOTREE_DEBUG)
         fprintf(stderr, "%s]\n", str);

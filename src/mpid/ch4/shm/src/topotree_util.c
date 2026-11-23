@@ -38,7 +38,7 @@ void MPIDI_SHM_print_topotree_file(const char *s, int rand_val, int rank,
     file = fopen(fname, "w");
     if (file) {
         fprintf(file, "Children:: ");
-        int *cptr = (int *) utarray_eltptr(my_tree->children, 0);
+        int *cptr = MPIR_Treealgo_tree_children(my_tree);
         for (c = 0; c < my_tree->num_children; ++c) {
             fprintf(file, " %d", cptr[c]);
         }

@@ -254,7 +254,7 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
         addr = NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr);
         for (i = 0; i < NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.num_children); i++) {
             int child_rank =
-                *(int *) utarray_eltptr(NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_tree).children, i);
+                MPIR_Treealgo_tree_children(&NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_tree))[i];
             NB_RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr[i]) =
                 addr + (child_rank * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE);
         }

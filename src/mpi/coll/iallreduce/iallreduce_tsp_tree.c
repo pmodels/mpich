@@ -68,7 +68,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     }
 
     /* initialize the tree */
-    my_tree.children = NULL;
+    my_tree.heap_children = NULL;
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
@@ -127,7 +127,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
-            int child = *(int *) utarray_eltptr(my_tree.children, i);
+            int child = MPIR_Treealgo_tree_children(&my_tree)[i];
 
             /* Setup the dependencies for posting receive for child's data */
             if (buffer_per_child || i == 0) {   /* no dependency, just post the receive */
@@ -225,7 +225,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
         /* Send the result to each child on its own, once it is in. A multicast would make every
          * child wait for the slowest one. */
         for (i = 0; i < num_children; i++) {
-            int child = *(int *) utarray_eltptr(my_tree.children, i);
+            int child = MPIR_Treealgo_tree_children(&my_tree)[i];
             if (sync) {
                 mpi_errno = MPIR_TSP_sched_issend(reduce_address, msgsize, datatype, child, comm,
                                                   sched, nvtcs, vtcs, &bcast_send_id[i]);

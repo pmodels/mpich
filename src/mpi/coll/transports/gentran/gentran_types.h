@@ -137,6 +137,9 @@ typedef struct MPII_Genutil_sched_t {
 
     /* the tag of the collective call; all its sends and receives use it */
     int tag;
+
+    /* the next schedule in MPII_coll_queue.free_scheds, while this one waits for reuse */
+    struct MPII_Genutil_sched_t *next_free;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;

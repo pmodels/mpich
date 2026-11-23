@@ -71,7 +71,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         num_children = branching_factor;
     } else {
         /*construct the knomial tree */
-        my_tree.children = NULL;
+        my_tree.heap_children = NULL;
         if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE ||
             tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
             mpi_errno =
@@ -139,7 +139,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         }
     } else {
         for (j = 0; j < num_children; j++) {
-            p = (int *) utarray_eltptr(my_tree.children, j);
+            p = &MPIR_Treealgo_tree_children(&my_tree)[j];
             dst = *p;
 
             if (!is_nb) {

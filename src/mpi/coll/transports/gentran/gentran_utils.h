@@ -67,6 +67,8 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
 /* Functions to start the schedule, and to make progress on it */
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched);
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress);
+int MPII_Genutil_sched_recycle(MPII_Genutil_sched_t * sched);
+void MPII_Genutil_sched_cache_free(void);
 
 /* Hook to make progress on nonblocking collective operations  */
 int MPII_Genutil_progress_hook(int vci, int *made_progress);

@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
     /* Build a knomial tree */
-    my_tree->children = NULL;
+    my_tree->heap_children = NULL;
     mpi_errno =
         MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, root, my_tree);
     if (mpi_errno)
@@ -94,8 +94,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
         MPIR_ERR_POP(mpi_errno);
 
     /* Post recv for RTR from children */
-    for (p = (int *) utarray_front(my_tree->children); p != NULL;
-         p = (int *) utarray_next(my_tree->children, p)) {
+    for (p = MPIR_Treealgo_tree_children(my_tree);
+         p < MPIR_Treealgo_tree_children(my_tree) + my_tree->num_children; p++) {
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         ret = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                    MPIDI_OFI_global.ctx[0].rx, &((*works)[i + j]),
@@ -147,8 +147,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     }
 
     /* Root and intermediate nodes send data to children */
-    for (p = (int *) utarray_front(my_tree->children); p != NULL;
-         p = (int *) utarray_next(my_tree->children, p)) {
+    for (p = MPIR_Treealgo_tree_children(my_tree);
+         p < MPIR_Treealgo_tree_children(my_tree) + my_tree->num_children; p++) {
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].tx,
@@ -377,7 +377,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
 
     /* Build a knomial tree */
-    my_tree->children = NULL;
+    my_tree->heap_children = NULL;
     mpi_errno =
         MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, root, my_tree);
     if (mpi_errno)
@@ -422,8 +422,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
         MPIR_ERR_POP(mpi_errno);
 
     /* Post recv for RTR from children; this is needed to avoid unexpected messages */
-    for (p = (int *) utarray_front(my_tree->children); p != NULL;
-         p = (int *) utarray_next(my_tree->children, p)) {
+    for (p = MPIR_Treealgo_tree_children(my_tree);
+         p < MPIR_Treealgo_tree_children(my_tree) + my_tree->num_children; p++) {
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx,
@@ -456,8 +456,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     }
 
     /* Root and intermediate nodes send data to children */
-    for (p = (int *) utarray_front(my_tree->children); p != NULL;
-         p = (int *) utarray_next(my_tree->children, p)) {
+    for (p = MPIR_Treealgo_tree_children(my_tree);
+         p < MPIR_Treealgo_tree_children(my_tree) + my_tree->num_children; p++) {
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_rma_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                       MPIDI_OFI_global.ctx[0].tx, &((*works)[i++]),

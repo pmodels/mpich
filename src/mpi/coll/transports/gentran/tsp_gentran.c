@@ -24,27 +24,51 @@ UT_icd vtx_type_t_icd = {
     NULL
 };
 
+/* A finished non-persistent schedule is not freed but kept, with the arrays it allocated, on
+ * MPII_coll_queue.free_scheds, and the next MPIR_TSP_sched_create takes it from there. The list
+ * is guarded by the queue's mutex, which the progress hook already holds when it finishes a
+ * schedule. At most SCHED_CACHE_MAX schedules are kept, and none whose vertex array grew beyond
+ * SCHED_CACHE_VTCS, so that one large collective does not hold on to its memory. */
+#define SCHED_CACHE_MAX 8
+#define SCHED_CACHE_VTCS 64
+
+static int sched_release(MPII_Genutil_sched_t * sched);
+static void sched_free_storage(MPII_Genutil_sched_t * sched);
+
 int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 {
-    MPII_Genutil_sched_t *sched = MPL_malloc(sizeof(MPII_Genutil_sched_t), MPL_MEM_COLL);
-    MPIR_Assert(sched != NULL);
+    MPII_Genutil_sched_t *sched = NULL;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    if (MPII_coll_queue.free_scheds) {
+        sched = MPII_coll_queue.free_scheds;
+        MPII_coll_queue.free_scheds = sched->next_free;
+        MPII_coll_queue.num_free_scheds--;
+    }
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+
+    if (!sched) {
+        sched = MPL_malloc(sizeof(MPII_Genutil_sched_t), MPL_MEM_COLL);
+        MPIR_Assert(sched != NULL);
+
+        /* initialize array for storing vertices */
+        utarray_init(&sched->vtcs, &vtx_t_icd);
+        utarray_init(&sched->generic_types, &vtx_type_t_icd);
+        utarray_init(&sched->ready_vtcs_during_poke, &ut_int_icd);
+    }
 
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
     sched->last_fence = -1;
 
-    /* initialize array for storing vertices */
-    utarray_init(&sched->vtcs, &vtx_t_icd);
-
     MPIR_Coll_owned_init(&sched->owned);
-    utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
-    utarray_init(&sched->ready_vtcs_during_poke, &ut_int_icd);
 
     sched->is_persistent = is_persistent;
     sched->tag = 0;
+    sched->next_free = NULL;
 
     *s = sched;
     return MPI_SUCCESS;
@@ -53,6 +77,46 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
+    int mpi_errno = sched_release(sched);
+
+    sched_free_storage(sched);
+    return mpi_errno;
+}
+
+/* Frees a finished non-persistent schedule, or keeps it for reuse. The caller holds
+ * MPIDIU_THREAD_TSP_QUEUE_MUTEX. */
+int MPII_Genutil_sched_recycle(MPII_Genutil_sched_t * sched)
+{
+    int mpi_errno = sched_release(sched);
+
+    if (MPII_coll_queue.num_free_scheds < SCHED_CACHE_MAX && sched->vtcs.n <= SCHED_CACHE_VTCS) {
+        utarray_clear(&sched->vtcs);
+        utarray_clear(&sched->generic_types);
+        utarray_clear(&sched->ready_vtcs_during_poke);
+        sched->next_free = MPII_coll_queue.free_scheds;
+        MPII_coll_queue.free_scheds = sched;
+        MPII_coll_queue.num_free_scheds++;
+    } else {
+        sched_free_storage(sched);
+    }
+    return mpi_errno;
+}
+
+/* Frees the schedules kept for reuse, at finalize */
+void MPII_Genutil_sched_cache_free(void)
+{
+    while (MPII_coll_queue.free_scheds) {
+        MPII_Genutil_sched_t *sched = MPII_coll_queue.free_scheds;
+        MPII_coll_queue.free_scheds = sched->next_free;
+        sched_free_storage(sched);
+    }
+    MPII_coll_queue.num_free_scheds = 0;
+}
+
+/* Releases what the vertices and the schedule own: subschedules, generic vertex data, buffers
+ * and handles */
+static int sched_release(MPII_Genutil_sched_t * sched)
+{
     int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i;
     vtx_t *vtx;
@@ -98,15 +162,18 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     /* free up the allocated buffers */
     MPIR_Coll_owned_free(&sched->owned);
 
-    utarray_done(&sched->vtcs);
-    utarray_done(&sched->generic_types);
-    utarray_done(&sched->ready_vtcs_during_poke);
-    MPL_free(sched);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static void sched_free_storage(MPII_Genutil_sched_t * sched)
+{
+    utarray_done(&sched->vtcs);
+    utarray_done(&sched->generic_types);
+    utarray_done(&sched->ready_vtcs_during_poke);
+    MPL_free(sched);
 }
 
 int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn,
