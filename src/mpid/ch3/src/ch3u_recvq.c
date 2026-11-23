@@ -921,66 +921,6 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (comm_ptr->node_comm) {
-            /* node_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up unexpected pt2pt pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error);
-                    continue;
-                }
-            }
-
-            /* node_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error);
-                    continue;
-                }
-            }
-        }
-
-        if (comm_ptr->node_roots_comm) {
-            /* node_roots_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up unexpected pt2pt pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error);
-                    continue;
-                }
-            }
-
-            /* node_roots_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error);
-                    continue;
-                }
-            }
-        }
-
         prev_rreq = rreq;
         rreq = rreq->next;
     }
@@ -1013,66 +953,6 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
                             rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
                 dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error);
                 continue;
-            }
-        }
-
-        if (comm_ptr->node_comm) {
-            /* node_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up posted pt2pt pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error);
-                    continue;
-                }
-            }
-
-            /* node_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up posted collective pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error);
-                    continue;
-                }
-            }
-        }
-
-        if (comm_ptr->node_roots_comm) {
-            /* node_roots_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up posted pt2pt pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error);
-                    continue;
-                }
-            }
-
-            /* node_roots_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
-
-            if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-                if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
-                    MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_SHRINK_TAG) {
-                    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                "cleaning up posted collective pkt rank=%d tag=%d contextid=%d",
-                                rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-                    dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error);
-                    continue;
-                }
             }
         }
 

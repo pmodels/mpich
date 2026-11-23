@@ -589,14 +589,6 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
 
         new_comm->context_id = new_context_id;
         new_comm->recvcontext_id = new_comm->context_id;
-        if (new_comm->node_comm) {
-            new_comm->node_comm->context_id = new_context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
-            new_comm->node_comm->recvcontext_id = new_comm->node_comm->context_id;
-        }
-        if (new_comm->node_roots_comm) {
-            new_comm->node_roots_comm->context_id = new_context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
-            new_comm->node_roots_comm->recvcontext_id = new_comm->node_roots_comm->context_id;
-        }
         new_comm->stringtag = NULL;
 
         *p_newcom_ptr = new_comm;

@@ -421,9 +421,8 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
-int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs,
-                        int context_offset, MPIR_Comm ** subcomm_out,
-                        MPIR_Subcomm_type_e subcomm_type);
+int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
+                        MPIR_Comm ** subcomm_out, MPIR_Subcomm_type_e subcomm_type);
 int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Subcomm_parent_rank(MPIR_Comm * subcomm, int rank)
@@ -433,6 +432,12 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Subcomm_parent_rank(MPIR_Comm * subcomm, int r
     } else {
         return subcomm->subcomm.base + subcomm->subcomm.stride * rank;
     }
+}
+
+/* The comm that carries the traffic of comm: the parent of a subcomm */
+MPL_STATIC_INLINE_PREFIX MPIR_Comm *MPIR_Comm_device_comm(MPIR_Comm * comm)
+{
+    return (comm->attr & MPIR_COMM_ATTR__SUBCOMM) ? comm->subcomm.parent : comm;
 }
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);

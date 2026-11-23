@@ -423,18 +423,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     return mpi_errno;
 }
 
-/* Copy relevant hints and settings to a given subcomm */
-static void propagate_subcomms(MPIR_Comm * comm, MPIR_Comm * subcomm)
-{
-    /* Copy vci hints */
-    subcomm->hints[MPIR_COMM_HINT_SENDER_VCI] = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
-    subcomm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
-    subcomm->hints[MPIR_COMM_HINT_VCI] = comm->hints[MPIR_COMM_HINT_VCI];
-
-    subcomm->vcis_enabled = comm->vcis_enabled;
-    subcomm->seq = comm->seq;
-}
-
 static int get_max_num_nodes(void)
 {
     if (MPIR_Process.node_hostnames) {
@@ -617,10 +605,10 @@ static int set_rank_map(MPIR_Comm * subcomm, int sub_size, const int *procs)
  * * always intracomm
  * * never have hierarchical info (i.e. flat)
  * * a view of the parent's ranks procs[0..sub_size-1]; the parent is not a subcomm
+ * * no context id and no device state: MPIC_ sends and receives on the parent
  */
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
-                        int context_offset, MPIR_Comm ** subcomm_out,
-                        MPIR_Subcomm_type_e subcomm_type)
+                        MPIR_Comm ** subcomm_out, MPIR_Subcomm_type_e subcomm_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *subcomm;
@@ -639,8 +627,8 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     mpi_errno = set_rank_map(subcomm, sub_size, procs);
     MPIR_ERR_CHECK(mpi_errno);
 
-    subcomm->context_id = comm->context_id + context_offset;
-    subcomm->recvcontext_id = subcomm->context_id;
+    subcomm->context_id = MPIR_INVALID_CONTEXT_ID;
+    subcomm->recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     subcomm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
 
     subcomm->rank = sub_rank;
@@ -667,18 +655,14 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     mpi_errno = MPIR_Group_incl_impl(parent_group, sub_size, procs, &subcomm->local_group);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Create collectives-specific infrastructure.
-     * Need to be done before device init because addr exchange uses collective. */
+    /* Create collectives-specific infrastructure. */
     mpi_errno = MPIR_Coll_comm_init(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Notify device of communicator creation */
-    mpi_errno = MPID_Comm_commit_pre_hook(subcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* call post commit hooks */
-    mpi_errno = MPID_Comm_commit_post_hook(subcomm);
-    MPIR_ERR_CHECK(mpi_errno);
+#if defined(MPID_DEV_COMM_DECL) && defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
+    /* the device never sees a subcomm: make a use of its device fields fail */
+    memset(&subcomm->dev, 0xa5, sizeof(subcomm->dev));
+#endif
 
     *subcomm_out = subcomm;
 
@@ -695,9 +679,6 @@ int MPIR_Subcomm_free(MPIR_Comm * subcomm)
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPII_Coll_comm_cleanup(subcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPID_Comm_free_hook(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Group_free_impl(subcomm->local_group);
@@ -740,8 +721,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
             }
         }
 
-        mpi_errno = MPIR_Subcomm_create(comm, comm->num_local, comm->local_rank,
-                                        local_procs, MPIR_CONTEXT_INTRANODE_OFFSET,
+        mpi_errno = MPIR_Subcomm_create(comm, comm->num_local, comm->local_rank, local_procs,
                                         &comm->node_comm, MPIR_SUBCOMM__NODE_LOCAL);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -767,8 +747,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         }
 
         mpi_errno = MPIR_Subcomm_create(comm, comm->num_external, comm->external_rank,
-                                        external_procs, MPIR_CONTEXT_INTERNODE_OFFSET,
-                                        &comm->node_roots_comm, MPIR_SUBCOMM__NODE_ROOTS);
+                                        external_procs, &comm->node_roots_comm,
+                                        MPIR_SUBCOMM__NODE_ROOTS);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -888,13 +868,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->vcis_enabled) {
         mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
-
-        if (comm->node_comm) {
-            propagate_subcomms(comm, comm->node_comm);
-        }
-        if (comm->node_roots_comm) {
-            propagate_subcomms(comm, comm->node_roots_comm);
-        }
     }
 
   fn_exit:
