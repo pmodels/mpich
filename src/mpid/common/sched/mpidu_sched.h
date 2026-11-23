@@ -164,6 +164,5 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, v
 int MPIDU_Sched_barrier(MPIR_Sched_t s);
 int MPIDU_Sched_cond(MPIR_Sched_cond_start_t * start_p, MPIR_Sched_cond_test_t * test_p,
                      MPIR_Sched_cond_free_t * free_p, void *state, MPIR_Sched_t s);
-int MPIDU_Sched_move_to_front(MPIR_Sched_t s, int n);
 
 #endif /* MPIDU_SCHED_H_INCLUDED */

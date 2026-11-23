@@ -12,8 +12,8 @@
  * copies the receive buffer span to a temporary buffer, and calls the wrapper again with that
  * copy as the sendbuf and the receive side's counts and types as the send side. The algorithm
  * then runs as a not-in-place call and writes recvbuf directly, so there is no copy back.
- * A nonblocking call copies in the first step of its schedule, and the schedule owns the
- * temporary buffer. */
+ * A nonblocking or persistent call wraps the schedule (MPIR_Coll_wrap_sched), which copies when
+ * it starts and owns the temporary buffer. */
 
 #define COLL_TYPE_INTRA_CASE(NAME) \
     case MPIR_CSEL_COLL_TYPE__INTRA_  ## NAME: \
@@ -81,33 +81,14 @@ int MPIR_Coll_inplace_copy(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_
     MPIR_ERR_CHECK(mpi_errno);
 
     if (tmp && !is_blocking) {
-        /* the schedule owns tmp, and the copy-in becomes its first step */
-        if (coll_sig->sched_type == MPIR_SCHED_NORMAL) {
-            MPIR_Sched_t s = coll_sig->sched;
-            MPIR_Sched_add_buffer(s, tmp);
-            tmp = NULL;
+        struct MPIR_Coll_wrap *wrap;
+        mpi_errno = MPIR_Coll_wrap_sched(coll_sig, &wrap);
+        MPIR_ERR_CHECK(mpi_errno);
 
-            mpi_errno = MPIR_Sched_copy((char *) sp.buf + sp.lo, size, MPIR_BYTE_INTERNAL,
-                                        (char *) sendbuf + sp.lo, size, MPIR_BYTE_INTERNAL, s);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIR_Sched_move_to_front(s, 1);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else if (coll_sig->sched_type == MPIR_SCHED_GENTRAN) {
-            MPIR_TSP_sched_t s = coll_sig->sched;
-            MPIR_TSP_sched_add_buffer(s, tmp);
-            tmp = NULL;
-
-            mpi_errno = MPIR_TSP_sched_localcopy_front((char *) sp.buf + sp.lo, size,
-                                                       MPIR_BYTE_INTERNAL,
-                                                       (char *) sendbuf + sp.lo, size,
-                                                       MPIR_BYTE_INTERNAL, s);
-            MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIR_TSP_sched_fence(s);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            /* MPIR_SCHED_GREQ has no steps to add; nothing produces it for now */
-            MPIR_Assert(0);
-        }
+        MPIR_Coll_owned_add_buffer(MPIR_Coll_wrap_get_owned(wrap), tmp);
+        tmp = NULL;
+        MPIR_Coll_wrap_add_copy(wrap, false, (char *) sp.buf + sp.lo, size, MPIR_BYTE_INTERNAL,
+                                (char *) sendbuf + sp.lo, size, MPIR_BYTE_INTERNAL);
     }
 
   fn_exit:

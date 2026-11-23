@@ -605,12 +605,12 @@ table (`MPIR_*_fallback`, one algorithm calling another directly) don't get
 the wrapper.
 
 For nonblocking and persistent collectives, the selection only builds the
-schedule, which the generated `_impl` starts afterwards. `buffer_swap` adds
-the copies to that schedule before it starts: the copy-ins at the front
-(`MPIR_Sched_move_to_front`, or `MPIR_TSP_sched_localcopy_front` for gentran),
-then a barrier or fence and the copy-outs at the back. The schedule owns the
-host buffers (`MPIR_Sched_add_buffer`, `MPIR_TSP_sched_add_buffer`) and frees
-them with itself; a persistent schedule replays the copies on every start. A
+schedule, which the generated `_impl` starts afterwards. `buffer_swap` wraps
+that schedule (`MPIR_Coll_wrap_sched`, see
+[Collective Schedules](Collective_Schedules.md)): the wrapper makes the
+copy-ins before it starts the schedule and the copy-outs after the schedule
+completes, at every start of a persistent operation. The wrapper owns the
+host buffers and the packed datatypes, and frees them with itself. A
 call that adds to a schedule an outer collective is already building runs on
 the user buffers, since the copies would wrap the outer steps too.
 

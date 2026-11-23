@@ -108,8 +108,6 @@ int MPIR_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
 int MPIR_Sched_barrier(MPIR_Sched_t s);
-/* before the sched starts: move the last n entries to the front, followed by a barrier */
-int MPIR_Sched_move_to_front(MPIR_Sched_t s, int n);
 
 /* A convenience macro for the extremely common case that "mpi_errno" is the
  * variable used for tracking error state and MPIR_ERR_POP is needed.  This

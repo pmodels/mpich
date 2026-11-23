@@ -117,12 +117,6 @@ void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);
 
-/* Transport function to schedule, before the schedule starts, a local copy that all the
- * vertices already in the schedule wait for */
-int MPIR_TSP_sched_localcopy_front(const void *sendbuf, MPI_Aint sendcount,
-                                   MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                   MPI_Datatype recvtype, MPIR_TSP_sched_t sched);
-
 /* Transport function to schedule a sub-schedule */
 int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t sched, MPIR_TSP_sched_t subsched,
                              int n_in_vtcs, int *in_vtcs, int *vtx_id);

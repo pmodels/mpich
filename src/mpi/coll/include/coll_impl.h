@@ -49,6 +49,23 @@ int MPII_Coll_finalize(void);
 int MPIR_Coll_json(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_run_inner(MPIR_Csel_coll_sig_s * coll_sig);
 int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub);
+
+/* The schedule of a selected call, of any type, run as one step of an enclosing operation */
+struct MPIR_Coll_inner {
+    enum MPIR_sched_type sched_type;
+    void *sched;
+    MPIR_Comm *comm;
+    MPIR_Request *req;
+    bool is_persistent;
+    bool is_started;
+};
+
+/* takes over the schedule that the selection built in sub */
+void MPIR_Coll_inner_init(struct MPIR_Coll_inner *inner, MPIR_Csel_coll_sig_s * sub);
+int MPIR_Coll_inner_start(struct MPIR_Coll_inner *inner);
+/* sets done once the run completes, and returns its error */
+int MPIR_Coll_inner_test(struct MPIR_Coll_inner *inner, bool * done);
+void MPIR_Coll_inner_free(struct MPIR_Coll_inner *inner);
 int MPIR_Coll_nb(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt);
 
 /* Run an inner call of Coll (e.g. Bcast) with the arguments of the blocking collective. The inner
@@ -79,6 +96,16 @@ int MPIR_Coll_gpu_swap(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * 
                        MPIR_Coll_algo_fn fn);
 int MPIR_Coll_inplace_copy(MPIR_Csel_coll_sig_s * coll_sig, MPII_Csel_container_s * cnt,
                            MPIR_Coll_algo_fn fn);
+
+/* Local copies around the schedule of a nonblocking or persistent call (coll_wrap.c) */
+struct MPIR_Coll_wrap;
+/* replaces the schedule in coll_sig with a greq operation that runs it */
+int MPIR_Coll_wrap_sched(MPIR_Csel_coll_sig_s * coll_sig, struct MPIR_Coll_wrap **wrap_out);
+/* a copy before the schedule starts, or after it completes, at every run */
+void MPIR_Coll_wrap_add_copy(struct MPIR_Coll_wrap *wrap, bool after,
+                             const void *src, MPI_Aint src_count, MPI_Datatype src_type,
+                             void *dst, MPI_Aint dst_count, MPI_Datatype dst_type);
+MPIR_Coll_owned_t *MPIR_Coll_wrap_get_owned(struct MPIR_Coll_wrap *wrap);
 
 /* generated routines by gen_coll.py from coll_algorithms.txt */
 void MPII_Coll_type_init(void);

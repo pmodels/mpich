@@ -75,15 +75,6 @@ int MPIR_Coll_sched_call_inner(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
     goto fn_exit;
 }
 
-struct sched_inner {
-    enum MPIR_sched_type sched_type;
-    void *sched;
-    MPIR_Comm *comm;
-    MPIR_Request *req;
-    bool is_persistent;
-    bool is_started;
-};
-
 /* the callbacks of the COND entry */
 static int sched_inner_start(void *state);
 static int sched_inner_test(void *state, bool * done);
@@ -94,15 +85,10 @@ static int add_inner_entry(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    struct sched_inner *inner = MPIR_Sched_alloc_state(s, sizeof(struct sched_inner));
+    struct MPIR_Coll_inner *inner = MPIR_Sched_alloc_state(s, sizeof(struct MPIR_Coll_inner));
     MPIR_ERR_CHKANDJUMP(!inner, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    inner->sched_type = sub->sched_type;
-    inner->sched = sub->sched;
-    inner->comm = sub->comm_ptr;
-    inner->req = NULL;
-    inner->is_persistent = sub->flags & MPIR_COLL_SIG_FLAG__PERSISTENT;
-    inner->is_started = false;
+    MPIR_Coll_inner_init(inner, sub);
 
     mpi_errno = MPIR_Sched_cond(sched_inner_start, sched_inner_test, sched_inner_free, inner, s);
     MPIR_ERR_CHECK(mpi_errno);
@@ -115,8 +101,32 @@ static int add_inner_entry(MPIR_Sched_t s, MPIR_Csel_coll_sig_s * sub)
 
 static int sched_inner_start(void *state)
 {
+    return MPIR_Coll_inner_start(state);
+}
+
+static int sched_inner_test(void *state, bool * done)
+{
+    return MPIR_Coll_inner_test(state, done);
+}
+
+static void sched_inner_free(void *state)
+{
+    MPIR_Coll_inner_free(state);
+}
+
+void MPIR_Coll_inner_init(struct MPIR_Coll_inner *inner, MPIR_Csel_coll_sig_s * sub)
+{
+    inner->sched_type = sub->sched_type;
+    inner->sched = sub->sched;
+    inner->comm = sub->comm_ptr;
+    inner->req = NULL;
+    inner->is_persistent = sub->flags & MPIR_COLL_SIG_FLAG__PERSISTENT;
+    inner->is_started = false;
+}
+
+int MPIR_Coll_inner_start(struct MPIR_Coll_inner *inner)
+{
     int mpi_errno = MPI_SUCCESS;
-    struct sched_inner *inner = state;
 
     if (inner->is_persistent) {
         mpi_errno = persist_sched_start(inner->sched_type, inner->sched, inner->comm, &inner->req);
@@ -132,10 +142,9 @@ static int sched_inner_start(void *state)
     goto fn_exit;
 }
 
-static int sched_inner_test(void *state, bool * done)
+int MPIR_Coll_inner_test(struct MPIR_Coll_inner *inner, bool * done)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct sched_inner *inner = state;
 
     if (MPIR_Request_is_complete(inner->req)) {
         mpi_errno = inner->req->status.MPI_ERROR;
@@ -147,16 +156,13 @@ static int sched_inner_test(void *state, bool * done)
     return mpi_errno;
 }
 
-static void sched_inner_free(void *state)
+void MPIR_Coll_inner_free(struct MPIR_Coll_inner *inner)
 {
-    struct sched_inner *inner = state;
-
     /* a regular schedule that started frees itself when it completes */
     if (inner->is_persistent || !inner->is_started) {
         sched_free(inner->sched_type, inner->sched);
     }
 }
-
 
 static int persist_sched_start(enum MPIR_sched_type sched_type, void *sched, MPIR_Comm * comm,
                                MPIR_Request ** request)
