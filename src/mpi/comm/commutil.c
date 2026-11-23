@@ -584,9 +584,39 @@ static int check_hierarchy(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* Keeps an evenly spaced procs as base and stride, and a copy of any other */
+static int set_rank_map(MPIR_Comm * subcomm, int sub_size, const int *procs)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int stride = (sub_size > 1) ? procs[1] - procs[0] : 1;
+    bool is_affine = true;
+    for (int i = 2; i < sub_size; i++) {
+        if (procs[i] - procs[i - 1] != stride) {
+            is_affine = false;
+            break;
+        }
+    }
+
+    subcomm->subcomm.base = procs[0];
+    subcomm->subcomm.stride = stride;
+    subcomm->subcomm.procs = NULL;
+    if (!is_affine) {
+        subcomm->subcomm.procs = MPL_malloc(sub_size * sizeof(int), MPL_MEM_COMM);
+        MPIR_ERR_CHKANDJUMP(!subcomm->subcomm.procs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        memcpy(subcomm->subcomm.procs, procs, sub_size * sizeof(int));
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* subcomms are internal comms
  * * always intracomm
  * * never have hierarchical info (i.e. flat)
+ * * a view of the parent's ranks procs[0..sub_size-1]; the parent is not a subcomm
  */
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
                         int context_offset, MPIR_Comm ** subcomm_out,
@@ -602,7 +632,12 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     mpi_errno = MPII_Comm_init(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
     subcomm->attr |= MPIR_COMM_ATTR__SUBCOMM;
+    subcomm->subcomm.parent = comm;
+    subcomm->subcomm.type = subcomm_type;
+    mpi_errno = set_rank_map(subcomm, sub_size, procs);
+    MPIR_ERR_CHECK(mpi_errno);
 
     subcomm->context_id = comm->context_id + context_offset;
     subcomm->recvcontext_id = subcomm->context_id;
@@ -668,6 +703,7 @@ int MPIR_Subcomm_free(MPIR_Comm * subcomm)
     mpi_errno = MPIR_Group_free_impl(subcomm->local_group);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPL_free(subcomm->subcomm.procs);
     MPIR_Handle_obj_free(&MPIR_Comm_mem, subcomm);
 
   fn_exit:

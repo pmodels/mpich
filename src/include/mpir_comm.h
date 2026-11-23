@@ -132,6 +132,17 @@ struct MPIR_Comm {
     const char *stringtag;      /* A string tag used to support multi-threaded MPI_Comm_create_from_group */
     struct MPIR_CCLcomm *cclcomm;       /* Not NULL only if CCL subcommunication is enabled */
 
+    /* -- unset unless (attr & MPIR_COMM_ATTR__SUBCOMM) -- */
+    /* A subcomm is a view of a subset of its parent's ranks. Rank r of the subcomm is rank
+     * procs[r] of the parent, or base + stride * r when procs is NULL. */
+    struct {
+        struct MPIR_Comm *parent;
+        MPIR_Subcomm_type_e type;
+        int base;
+        int stride;
+        int *procs;
+    } subcomm;
+
     /* -- unset unless (attr & MPIR_COMM_ATTR__HIERARCHY) -- */
     int hierarchy_flags;        /* bit flags for hierarchy characteristics. See bit definitions below. */
     int local_rank;
@@ -414,6 +425,16 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs
                         int context_offset, MPIR_Comm ** subcomm_out,
                         MPIR_Subcomm_type_e subcomm_type);
 int MPIR_Subcomm_free(MPIR_Comm * subcomm);
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Subcomm_parent_rank(MPIR_Comm * subcomm, int rank)
+{
+    if (subcomm->subcomm.procs) {
+        return subcomm->subcomm.procs[rank];
+    } else {
+        return subcomm->subcomm.base + subcomm->subcomm.stride * rank;
+    }
+}
+
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 /* we may not always construct comm->node_comm or comm->node_roots_comm. Use
