@@ -41,7 +41,11 @@
 #define MPIR_CTXID_TAG                31
 #define MPIR_FIRST_HCOLL_TAG          32
 #define MPIR_LAST_HCOLL_TAG           (MPIR_FIRST_HCOLL_TAG + 255)
-#define MPIR_FIRST_NBC_TAG            (MPIR_LAST_HCOLL_TAG + 1)
+/* The tag of every blocking collective call chain that needs one, e.g. a blocking call run by
+ * a nonblocking algorithm. Safe because the blocking collectives on a comm run one after
+ * another. A nonblocking call draws its own (MPIR_Sched_next_tag) at the top-level call. */
+#define MPIR_COLL_BLOCKING_TAG        (MPIR_LAST_HCOLL_TAG + 1)
+#define MPIR_FIRST_NBC_TAG            (MPIR_COLL_BLOCKING_TAG + 1)
 
 #define MPIR_TAG_BITS_DEFAULT (31)
 

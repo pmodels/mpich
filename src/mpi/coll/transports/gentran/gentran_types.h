@@ -12,7 +12,6 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__ISEND,
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IRECV_STATUS,
-    MPII_GENUTIL_VTX_KIND__IMCAST,
     MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL,
     MPII_GENUTIL_VTX_KIND__LOCALCOPY,
     MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK,
@@ -31,8 +30,22 @@ typedef enum {
 
 struct MPII_Genutil_sched_t;
 
+/* A list of vertex ids. Most vertices have only a few dependents, so the first ones are kept in
+ * the list itself and only a longer list allocates. The vertex array may be reallocated, which
+ * moves the list, so the data pointer is computed on each access (MPII_Genutil_vtx_list_data). */
+#define MPII_GENUTIL_VTX_LIST_INLINE 4
+typedef struct {
+    int n;                      /* number of ids */
+    int cap;                    /* capacity of heap; 0 while the ids fit in inl */
+    int *heap;
+    int inl[MPII_GENUTIL_VTX_LIST_INLINE];
+} MPII_Genutil_vtx_list_t;
+
 typedef struct MPII_Genutil_vtx_t {
-    UT_array out_vtcs;
+    /* the vertices that wait for this one to complete, and those that wait for it to be issued
+     * (MPIR_TSP_DEP_ISSUE) */
+    MPII_Genutil_vtx_list_t completion_out_vtcs;
+    MPII_Genutil_vtx_list_t issue_out_vtcs;
 
     int vtx_kind;
     int vtx_state;
@@ -47,16 +60,15 @@ typedef struct MPII_Genutil_vtx_t {
             MPI_Aint count;
             MPI_Datatype dt;
             int dest;
-            int tag;
             MPIR_Comm *comm;
             MPIR_Request *req;
+            bool sync;          /* a synchronous send (MPIR_TSP_sched_issend) */
         } isend;
         struct {
             void *buf;
             MPI_Aint count;
             MPI_Datatype dt;
             int src;
-            int tag;
             MPIR_Comm *comm;
             MPIR_Request *req;
         } irecv;
@@ -65,22 +77,10 @@ typedef struct MPII_Genutil_vtx_t {
             MPI_Aint count;
             MPI_Datatype dt;
             int src;
-            int tag;
             MPIR_Comm *comm;
             MPIR_Request *req;
             MPI_Status *status;
         } irecv_status;
-        struct {
-            const void *buf;
-            MPI_Aint count;
-            MPI_Datatype dt;
-            UT_array dests;
-            int num_dests;
-            int tag;
-            MPIR_Comm *comm;
-            MPIR_Request **req;
-            int last_complete;
-        } imcast;
         struct {
             const void *inbuf;
             void *inoutbuf;
@@ -127,10 +127,16 @@ typedef struct MPII_Genutil_sched_t {
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;
 
+    /* temporary FIFO queue of released vtcs in a poke; kept here to avoid allocating per poke */
+    UT_array ready_vtcs_during_poke;
+
     /* list of new type */
     UT_array generic_types;
 
     bool is_persistent;
+
+    /* the tag of the collective call; all its sends and receives use it */
+    int tag;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;

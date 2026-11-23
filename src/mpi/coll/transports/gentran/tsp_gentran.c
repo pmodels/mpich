@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "tsp_impl.h"
+#include "algo_common.h"
 #include "gentran_impl.h"
 
 /* UT_icd helper structure for vtx_t utarray */
@@ -40,8 +41,10 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
+    utarray_init(&sched->ready_vtcs_during_poke, &ut_int_icd);
 
     sched->is_persistent = is_persistent;
+    sched->tag = 0;
 
     *s = sched;
     return MPI_SUCCESS;
@@ -66,10 +69,6 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
             case MPII_GENUTIL_VTX_KIND__IRECV:
                 break;
             case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
-                break;
-            case MPII_GENUTIL_VTX_KIND__IMCAST:
-                MPL_free(vtx->u.imcast.req);
-                utarray_done(&vtx->u.imcast.dests);
                 break;
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:
                 break;
@@ -101,6 +100,7 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 
     utarray_done(&sched->vtcs);
     utarray_done(&sched->generic_types);
+    utarray_done(&sched->ready_vtcs_during_poke);
     MPL_free(sched);
 
   fn_exit:
@@ -166,13 +166,67 @@ int MPIR_TSP_sched_generic(int type_id, void *data,
     goto fn_exit;
 }
 
-int MPIR_TSP_sched_isend(const void *buf,
-                         MPI_Aint count,
-                         MPI_Datatype dt,
-                         int dest,
-                         int tag,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                         int *vtx_id)
+int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t s, int vtx_id, int dep_id, enum MPIR_TSP_dep_type type)
+{
+    MPII_Genutil_sched_t *sched = s;
+
+    /* only while the schedule is built */
+    MPIR_Assert(sched->completed_vtcs == 0 && sched->issued_head == NULL);
+    /* dependencies point to older vertices, as with in_vtcs */
+    MPIR_Assert(0 <= dep_id && dep_id < vtx_id && vtx_id < sched->total_vtcs);
+
+    vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + vtx_id;
+    vtx_t *dep = ut_type_array(&sched->vtcs, vtx_t *) + dep_id;
+
+    if (type == MPIR_TSP_DEP_ISSUE) {
+        MPII_Genutil_vtx_list_push(&dep->issue_out_vtcs, vtx_id);
+    } else {
+        MPII_Genutil_vtx_list_push(&dep->completion_out_vtcs, vtx_id);
+    }
+    vtx->num_dependencies++;
+    vtx->pending_dependencies++;
+
+    return MPI_SUCCESS;
+}
+
+/* A synchronous send completes only once the receiver has matched it. If the window waited for it,
+ * the sender would stop window chunks after each one until the receiver catches up and its
+ * acknowledgment is back, and the receiver would run out of chunks: the pipeline drains at every
+ * synchronous send. Waiting for it only from the next synchronous send gives the acknowledgment
+ * sync_interval chunks to come back, and still bounds the chunks waiting unmatched at the receiver
+ * (to about 2 * sync_interval + window). */
+int MPIR_TSP_sched_add_window_deps(MPIR_TSP_sched_t sched, int i, int vtx_id, int *last,
+                                   int window, int sync_interval)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (i > 0) {
+        mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[(i - 1) % window],
+                                           MPIR_TSP_DEP_ISSUE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (i >= window && !MPIR_Algo_pipeline_sync(i - window, sync_interval)) {
+        mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[i % window], MPIR_TSP_DEP_COMPLETE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (MPIR_Algo_pipeline_sync(i, sync_interval)) {
+        if (i >= sync_interval) {
+            mpi_errno = MPIR_TSP_sched_add_dep(sched, vtx_id, last[window], MPIR_TSP_DEP_COMPLETE);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        last[window] = vtx_id;
+    }
+    last[i % window] = vtx_id;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int sched_isend(const void *buf, MPI_Aint count, MPI_Datatype dt, int dest,
+                       MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                       int *vtx_id, bool sync)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -187,8 +241,8 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.count = count;
     vtxp->u.isend.dt = dt;
     vtxp->u.isend.dest = dest;
-    vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
+    vtxp->u.isend.sync = sync;
 
     /* the schedule's builder holds the comm and datatype until the schedule is freed */
 
@@ -198,12 +252,31 @@ int MPIR_TSP_sched_isend(const void *buf,
     return mpi_errno;
 }
 
+int MPIR_TSP_sched_isend(const void *buf,
+                         MPI_Aint count,
+                         MPI_Datatype dt,
+                         int dest,
+                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                         int *vtx_id)
+{
+    return sched_isend(buf, count, dt, dest, comm_ptr, s, n_in_vtcs, in_vtcs, vtx_id, false);
+}
+
+int MPIR_TSP_sched_issend(const void *buf,
+                          MPI_Aint count,
+                          MPI_Datatype dt,
+                          int dest,
+                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
+                          int *vtx_id)
+{
+    return sched_isend(buf, count, dt, dest, comm_ptr, s, n_in_vtcs, in_vtcs, vtx_id, true);
+}
+
 
 int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id)
 {
@@ -221,7 +294,6 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.count = count;
     vtxp->u.irecv.dt = dt;
     vtxp->u.irecv.src = source;
-    vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -234,7 +306,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
@@ -252,7 +323,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.count = count;
     vtxp->u.irecv_status.dt = dt;
     vtxp->u.irecv_status.src = source;
-    vtxp->u.irecv_status.tag = tag;
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
 
@@ -263,43 +333,6 @@ int MPIR_TSP_sched_irecv_status(void *buf,
 }
 
 
-
-int MPIR_TSP_sched_imcast(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int *dests,
-                          int num_dests,
-                          int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                          int *vtx_id)
-{
-    MPII_Genutil_sched_t *sched = s;
-    vtx_t *vtxp;
-    int mpi_errno = MPI_SUCCESS;
-    /* assign a new vertex */
-    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IMCAST;
-    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
-
-    /* store the arguments */
-    vtxp->u.imcast.buf = (void *) buf;
-    vtxp->u.imcast.count = count;
-    vtxp->u.imcast.dt = dt;
-    vtxp->u.imcast.num_dests = num_dests;
-    utarray_init(&vtxp->u.imcast.dests, &ut_int_icd);
-    utarray_reserve(&vtxp->u.imcast.dests, num_dests, MPL_MEM_COLL);
-    memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
-    vtxp->u.imcast.tag = tag;
-    vtxp->u.imcast.comm = comm_ptr;
-    vtxp->u.imcast.req =
-        (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
-                                            MPL_MEM_COLL);
-    vtxp->u.imcast.last_complete = -1;
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
-    return mpi_errno;
-}
 
 int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_TSP_sched_t s,
@@ -414,7 +447,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
         else {
             /* this vertex only depends on the sink when it has no
              * outgoing dependence     */
-            if (utarray_len(&sched_fence->out_vtcs) == 0)
+            if (sched_fence->completion_out_vtcs.n == 0)
                 in_vtcs[n_in_vtcs++] = i;
         }
         sched_fence--;
@@ -500,6 +533,12 @@ void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t s, int handle)
     MPIR_Coll_owned_add_handle(&sched->owned, handle);
 }
 
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t s, int tag)
+{
+    MPII_Genutil_sched_t *sched = s;
+    sched->tag = tag;
+}
+
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
@@ -533,8 +572,6 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
 {
     MPII_Genutil_sched_t *sched = s;
     int mpi_errno = MPI_SUCCESS;
-    int is_complete;
-    int made_progress;
     MPIR_Request *reqp;
 
     MPIR_FUNC_ENTER;
@@ -558,14 +595,11 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     sched->req = reqp;
 
     MPIR_Assert(sched->completed_vtcs == 0);
-    /* Kick start progress on this collective's schedule */
-    mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
-    if (is_complete) {
-        MPIR_Request_complete(reqp);
-        goto fn_exit;
-    }
+    mpi_errno = MPII_Genutil_sched_start(sched);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Enqueue schedule and activate progress hook if not already activated */
+    /* Enqueue schedule and activate progress hook if not already activated. A schedule that is
+     * complete already is completed by the hook's next poke. */
     reqp->u.nbc.coll.sched = (void *) sched;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
@@ -601,9 +635,6 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
         vtx->pending_dependencies = vtx->num_dependencies;
         vtx->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
         switch (vtx->vtx_kind) {
-            case MPII_GENUTIL_VTX_KIND__IMCAST:
-                vtx->u.imcast.last_complete = -1;
-                break;
             case MPII_GENUTIL_VTX_KIND__SCHED:
                 MPIR_TSP_sched_reset(vtx->u.sched.sched);
                 break;

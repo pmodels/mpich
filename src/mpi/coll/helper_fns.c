@@ -34,6 +34,19 @@
         } \
     } while (0)
 
+/* a threadcomm send takes the synchronous flag in attr; a send between threads of one process
+ * ignores it and completes like a regular send */
+#define DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    do { \
+        if (comm_ptr->threadcomm) { \
+            MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr); \
+            mpi_errno = MPIR_Threadcomm_isend_attr(buf, count, datatype, dest, tag, \
+                                                   comm_ptr->threadcomm, attr, req); \
+        } else { \
+            mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
+        } \
+    } while (0)
+
 #define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
     do { \
         if (comm_ptr->threadcomm) { \
@@ -48,6 +61,11 @@
 #define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
     do { \
         mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
+    } while (0)
+
+#define DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    do { \
+        mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
     } while (0)
 
 #define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
@@ -403,8 +421,8 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     goto fn_exit;
 }
 
-int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, int coll_attr)
+static int do_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
+                    MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, int coll_attr, bool sync)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -424,7 +442,11 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 
     SET_ATTR(attr, coll_attr);
 
-    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
+    if (sync) {
+        DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
+    } else {
+        DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -434,6 +456,19 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     if (mpi_errno == MPIX_ERR_NOREQ)
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
+}
+
+int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
+               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, int coll_attr)
+{
+    return do_isend(buf, count, datatype, dest, tag, comm_ptr, request_ptr, coll_attr, false);
+}
+
+/* A synchronous send: it completes only once the receiver has matched it */
+int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
+                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, int coll_attr)
+{
+    return do_isend(buf, count, datatype, dest, tag, comm_ptr, request_ptr, coll_attr, true);
 }
 
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,

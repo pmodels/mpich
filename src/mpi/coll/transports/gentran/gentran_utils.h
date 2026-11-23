@@ -12,6 +12,42 @@
 extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
+static inline int *MPII_Genutil_vtx_list_data(const MPII_Genutil_vtx_list_t * l)
+{
+    return l->cap ? l->heap : (int *) l->inl;
+}
+
+static inline void MPII_Genutil_vtx_list_init(MPII_Genutil_vtx_list_t * l)
+{
+    l->n = 0;
+    l->cap = 0;
+    l->heap = NULL;
+}
+
+static inline void MPII_Genutil_vtx_list_push(MPII_Genutil_vtx_list_t * l, int id)
+{
+    if (l->cap == 0 && l->n < MPII_GENUTIL_VTX_LIST_INLINE) {
+        l->inl[l->n++] = id;
+        return;
+    }
+    if (l->cap == 0) {
+        l->cap = 2 * MPII_GENUTIL_VTX_LIST_INLINE;
+        l->heap = MPL_malloc(l->cap * sizeof(int), MPL_MEM_COLL);
+        MPIR_Assert(l->heap);
+        memcpy(l->heap, l->inl, l->n * sizeof(int));
+    } else if (l->n == l->cap) {
+        l->cap *= 2;
+        l->heap = MPL_realloc(l->heap, l->cap * sizeof(int), MPL_MEM_COLL);
+        MPIR_Assert(l->heap);
+    }
+    l->heap[l->n++] = id;
+}
+
+static inline void MPII_Genutil_vtx_list_free(MPII_Genutil_vtx_list_t * l)
+{
+    MPL_free(l->heap);
+}
+
 /* vertex copy function, required by utarray */
 void MPII_Genutil_vtx_copy(void *_dst, const void *_src);
 
@@ -28,7 +64,8 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 /* Function to get a new vertex in the graph */
 int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** vtx);
 
-/* Function to make progress on the schedule */
+/* Functions to start the schedule, and to make progress on it */
+int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched);
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress);
 
 /* Hook to make progress on nonblocking collective operations  */

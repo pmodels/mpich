@@ -18,13 +18,9 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     int dst, loop_count;
     void *partial_scan = NULL;
     void *tmp_buf = NULL;
-    int tag = 0, vtx_id;
+    int vtx_id;
     MPIR_FUNC_ENTER;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_COMM_RANK_SIZE(comm, rank, nranks);
 
@@ -65,7 +61,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
             nvtcs = 1;
             vtcs[0] = (loop_count == 0) ? dtcopy_id : reduce_id;
             mpi_errno =
-                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, sched, nvtcs,
+                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, comm, sched, nvtcs,
                                      vtcs, &send_id);
 
             MPIR_ERR_CHECK(mpi_errno);
@@ -75,7 +71,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 vtcs[1] = recv_reduce;
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs,
+                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, comm, sched, nvtcs, vtcs,
                                      &recv_id);
 
             MPIR_ERR_CHECK(mpi_errno);

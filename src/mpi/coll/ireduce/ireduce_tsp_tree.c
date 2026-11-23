@@ -7,6 +7,14 @@
 #include "algo_common.h"
 #include "treealgo.h"
 
+/* At most WINDOW chunks outstanding per channel (the receives from each child, the sends to the
+ * parent): without the bound, a rank issues every chunk's operation at once, and each progress pass
+ * walks all the issued operations. Every SYNC_INTERVAL-th send is synchronous: a parent with
+ * several children holds the chunks of a child that is ahead unmatched, and each of its receives
+ * from another child searches past them, so the unmatched chunks must stay few. */
+#define WINDOW 2
+#define SYNC_INTERVAL 16
+
 /* Routine to schedule a pipelined tree based reduce */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
@@ -35,7 +43,10 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int dtcopy_id = -1;
     int nvtcs;
-    int tag;
+    int send_id = -1;
+    int *recv_win = NULL;       /* the receive window of each child (MPIR_TSP_sched_add_window_deps) */
+    int send_win[WINDOW + 1];   /* the send window, to the parent or to the root */
+    int root_recv_win[WINDOW + 1];      /* at the root, the receive window from the tree root */
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
@@ -148,6 +159,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     if (num_children > 0) {
         MPIR_CHKLMEM_MALLOC(reduce_id, sizeof(int) * num_children);
         MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * num_children);
+        MPIR_CHKLMEM_MALLOC(recv_win, sizeof(int) * (WINDOW + 1) * num_children);
     }
 
     /* do pipelined reduce */
@@ -158,10 +170,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
 
-        /* For correctness, transport based collectives need to get the
-         * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
@@ -180,9 +188,11 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 nvtcs = 1;
             }
 
-            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
+            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
-
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_TSP_sched_add_window_deps(sched, j, recv_id[i],
+                                                       recv_win + (WINDOW + 1) * i, WINDOW, 0);
             MPIR_ERR_CHECK(mpi_errno);
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
             vtcs[0] = recv_id[i];
@@ -223,25 +233,33 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 vtcs[0] = reduce_id[num_children - 1];
         }
 
-        /* send data to the parent */
+        /* A rank sends its chunks to the parent or, from the tree root, to the root */
+        int dest = -1;
         if (!is_tree_root) {
-            mpi_errno =
-                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs, &vtx_id);
+            dest = my_tree.parent;
+        } else if (tree_root != root) {
+            dest = root;
+        }
+        if (dest != -1) {
+            if (MPIR_Algo_pipeline_sync(j, SYNC_INTERVAL)) {
+                mpi_errno = MPIR_TSP_sched_issend(reduce_address, msgsize, datatype, dest, comm,
+                                                  sched, nvtcs, vtcs, &send_id);
+            } else {
+                mpi_errno = MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, dest, comm,
+                                                 sched, nvtcs, vtcs, &send_id);
+            }
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_TSP_sched_add_window_deps(sched, j, send_id, send_win, WINDOW,
+                                                       SYNC_INTERVAL);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        /* send data to the root of the collective operation */
-        if (tree_root != root) {
-            if (is_tree_root) { /* tree_root sends data to root */
-                mpi_errno =
-                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm, sched,
-                                         nvtcs, vtcs, &vtx_id);
-            } else if (is_root) {       /* root receives data from tree_root */
-                mpi_errno =
-                    MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
-                                         tree_root, tag, comm, sched, 0, NULL, &vtx_id);
-            }
+        /* the root of the collective operation receives the result from the tree root */
+        if (tree_root != root && is_root) {
+            mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
+                                             tree_root, comm, sched, 0, NULL, &vtx_id);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_TSP_sched_add_window_deps(sched, j, vtx_id, root_recv_win, WINDOW, 0);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

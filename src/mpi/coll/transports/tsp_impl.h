@@ -21,7 +21,11 @@ int MPII_TSP_comm_cleanup(MPIR_Comm * comm_ptr);
 /* check if there are any pending schedules */
 int MPII_TSP_scheds_are_pending(void);
 
-/* TSP sched interfaces */
+/* TSP sched interfaces
+ *
+ * NOTE: A single tag is used. All messages need be issued in order: a send (or a receive)
+ * must be issued after the previous send (or receive) to the same peer, e.g. with an issue
+ * dependency (MPIR_TSP_DEP_ISSUE). */
 typedef void *MPIR_TSP_sched_t;
 
 typedef int (*MPIR_TSP_sched_issue_fn) (void *data, int *done);
@@ -43,21 +47,51 @@ int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn
 int MPIR_TSP_sched_generic(int type_id, void *data,
                            MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
+/* A vertex waits for each of its dependencies either to complete (the n_in_vtcs/in_vtcs given when
+ * it is added) or only to be issued. An issue dependency orders, e.g., two sends to the same peer
+ * without waiting for the first to complete. */
+enum MPIR_TSP_dep_type {
+    MPIR_TSP_DEP_COMPLETE,
+    MPIR_TSP_DEP_ISSUE,
+};
+
+/* Adds a dependency of vertex vtx_id on dep_id, while the schedule is built. As with in_vtcs,
+ * dep_id must be older than vtx_id. Both an issue and a completion dependency on the same vertex
+ * are allowed; the completion one implies the other. */
+int MPIR_TSP_sched_add_dep(MPIR_TSP_sched_t sched, int vtx_id, int dep_id,
+                           enum MPIR_TSP_dep_type type);
+
+/* Bounds the chunk operations on one channel, e.g. the sends to one peer: operation i (vtx_id) is
+ * issued after operation i-1, so that they match in order, and only once operation i-window has
+ * completed. On a send channel with sync_interval > 0, where the sends picked by
+ * MPIR_Algo_pipeline_sync are synchronous, the window does not wait for a synchronous send to
+ * complete; instead each synchronous send waits for the previous one. last[window + 1] holds the
+ * channel's last window operations, indexed by i % window, and its last synchronous send. */
+int MPIR_TSP_sched_add_window_deps(MPIR_TSP_sched_t sched, int i, int vtx_id, int *last,
+                                   int window, int sync_interval);
+
 /* Transport function to schedule an isend vertex */
 int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int dest,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
+
+/* Transport function to schedule a synchronous isend vertex: it completes only once the receiver
+ * has matched the message, so its completion bounds the messages waiting unmatched there */
+int MPIR_TSP_sched_issend(const void *buf,
+                          MPI_Aint count,
+                          MPI_Datatype dt,
+                          int dest,
+                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
+                          int *vtx_id);
 
 /* Transport function to schedule an irecv vertex */
 int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
                          MPI_Datatype dt,
                          int source,
-                         int tag,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
@@ -66,19 +100,8 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Aint count,
                                 MPI_Datatype dt,
                                 int source,
-                                int tag,
                                 MPIR_Comm * comm_ptr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
-
-/* Transport function to schedule an imcast vertex */
-int MPIR_TSP_sched_imcast(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int *dests,
-                          int num_dests,
-                          int tag,
-                          MPIR_Comm * comm_ptr,
-                          MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
 
 
 /* Transport function to schedule a local reduce vertex */
@@ -113,6 +136,10 @@ void MPIR_TSP_sched_add_buffer(MPIR_TSP_sched_t sched, void *buf);
 /* Transport function to hold a reference on a comm/datatype/op handle until the schedule is
  * freed */
 void MPIR_TSP_sched_add_handle(MPIR_TSP_sched_t sched, int handle);
+
+/* The tag of the collective call, set when the schedule is created (MPII_CSEL_CREATE_TSP_SCHED).
+ * Every send and receive of the schedule uses it. */
+void MPIR_TSP_sched_set_tag(MPIR_TSP_sched_t sched, int tag);
 
 /* what the schedule owns */
 MPIR_Coll_owned_t *MPIR_TSP_sched_get_owned(MPIR_TSP_sched_t sched);
