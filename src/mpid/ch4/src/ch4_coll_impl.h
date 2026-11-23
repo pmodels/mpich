@@ -147,10 +147,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
     MPL_pointer_attr_t attr;
     MPI_Aint size, shift;
 
-#ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
     MPI_Aint nbytes, recvd_size, type_size;
-#endif
 
     int intra_root = MPIR_Get_intranode_rank(comm, root);
     /* if node_comm exists and root is not local leader (node_comm rank 0) */
@@ -163,25 +161,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
         }
         /* local leader receives message from root */
         if (comm->node_roots_comm != NULL) {
-#ifndef HAVE_ERROR_CHECKING
-            mpi_errno =
-                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          MPI_STATUS_IGNORE);
+            /* the status is only for checking the size received */
+            mpi_errno = MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG,
+                                  comm->node_comm,
+                                  MPIR_ERROR_CHECKS_ENABLED ? &status : MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
-#else
-            mpi_errno =
-                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          &status);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            MPIR_Datatype_get_size_macro(datatype, type_size);
-            nbytes = type_size * count;
-            /* check that we received as much as we expected */
-            MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
-            MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                                 "**collective_size_mismatch",
-                                 "**collective_size_mismatch %d %d", recvd_size, nbytes);
-#endif
+            if (MPIR_ERROR_CHECKS_ENABLED) {
+                MPIR_Datatype_get_size_macro(datatype, type_size);
+                nbytes = type_size * count;
+                /* check that we received as much as we expected */
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
+                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                                     "**collective_size_mismatch",
+                                     "**collective_size_mismatch %d %d", recvd_size, nbytes);
+            }
         }
     }
 
@@ -382,10 +375,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
     MPL_pointer_attr_t attr;
     MPI_Aint size, shift;
 
-#ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
     MPI_Aint nbytes, recvd_size, type_size;
-#endif
 
     int intra_root = MPIR_Get_intranode_rank(comm, root);
     /* if node_comm exists and root is not local leader (node_comm rank 0) */
@@ -398,25 +389,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
         }
         /* local leader receives message from root */
         if (comm->node_roots_comm != NULL) {
-#ifndef HAVE_ERROR_CHECKING
-            mpi_errno =
-                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          MPI_STATUS_IGNORE);
+            /* the status is only for checking the size received */
+            mpi_errno = MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG,
+                                  comm->node_comm,
+                                  MPIR_ERROR_CHECKS_ENABLED ? &status : MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
-#else
-            mpi_errno =
-                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          &status);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            MPIR_Datatype_get_size_macro(datatype, type_size);
-            nbytes = type_size * count;
-            /* check that we received as much as we expected */
-            MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
-            MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                                 "**collective_size_mismatch",
-                                 "**collective_size_mismatch %d %d", recvd_size, nbytes);
-#endif
+            if (MPIR_ERROR_CHECKS_ENABLED) {
+                MPIR_Datatype_get_size_macro(datatype, type_size);
+                nbytes = type_size * count;
+                /* check that we received as much as we expected */
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
+                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                                     "**collective_size_mismatch",
+                                     "**collective_size_mismatch %d %d", recvd_size, nbytes);
+            }
         }
     }
 
