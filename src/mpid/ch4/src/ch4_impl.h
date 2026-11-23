@@ -439,118 +439,118 @@ do { \
 #ifdef HAVE_ERROR_CHECKING
 #define MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_NONE || \
-            MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_POST) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_NONE || \
+                MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_POST) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 /* Checking per-target sync status for pscw or lock epoch. */
 #define MPIDIG_EPOCH_CHECK_TARGET_SYNC(win,target_rank,mpi_errno,stmt) \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank); \
-        if ((MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_START && \
-             !MPIDIU_valid_group_rank(win->comm_ptr, target_rank,   \
-                                          MPIDIG_WIN(win, sync).sc.group)) || \
-            (target_ptr != NULL &&                                      \
-             MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_LOCK && \
-             target_ptr->sync.access_epoch_type != MPIDIG_EPOTYPE_LOCK)) \
-            MPIR_ERR_SETANDSTMT(mpi_errno,                              \
-                                MPI_ERR_RMA_SYNC,                       \
-                                stmt,                                   \
-                                "**rmasync");                           \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank); \
+            if ((MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_START && \
+                 !MPIDIU_valid_group_rank(win->comm_ptr, target_rank, \
+                                              MPIDIG_WIN(win, sync).sc.group)) || \
+                (target_ptr != NULL &&                                  \
+                 MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_LOCK && \
+                 target_ptr->sync.access_epoch_type != MPIDIG_EPOTYPE_LOCK)) \
+                MPIR_ERR_SETANDSTMT(mpi_errno,                          \
+                                    MPI_ERR_RMA_SYNC,                   \
+                                    stmt,                               \
+                                    "**rmasync");                       \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_EPOCH_CHECK_PASSIVE(win,mpi_errno,stmt)              \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if ((MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_LOCK) && \
-            (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_LOCK_ALL)) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if ((MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_LOCK) && \
+                (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_LOCK_ALL)) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 /* NOTE: unlock/flush/flush_local needs to check per-target passive epoch (lock) */
 #define MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr,mpi_errno,stmt)   \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (target_ptr->sync.access_epoch_type != MPIDIG_EPOTYPE_LOCK) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (target_ptr->sync.access_epoch_type != MPIDIG_EPOTYPE_LOCK) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_ACCESS_EPOCH_CHECK_NONE(win,mpi_errno,stmt)          \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE && \
-            MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE && \
+                MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win,mpi_errno,stmt)        \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_NONE && \
-            MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_REFENCE) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_NONE && \
+                MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_REFENCE) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 /* NOTE: multiple lock access epochs can occur simultaneously, as long as
  * target to different processes */
 #define MPIDIG_LOCK_EPOCH_CHECK_NONE(win,rank,mpi_errno,stmt)       \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, rank); \
-        if (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE && \
-            MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
-            !(MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_LOCK && \
-              (target_ptr == NULL || (!MPIR_CVAR_CH4_RMA_MEM_EFFICIENT && \
-                                      target_ptr->sync.lock.locked == 0)))) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, rank); \
+            if (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE && \
+                MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
+                !(MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_LOCK && \
+                  (target_ptr == NULL || (!MPIR_CVAR_CH4_RMA_MEM_EFFICIENT && \
+                                          target_ptr->sync.lock.locked == 0)))) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_FENCE_EPOCH_CHECK(win,mpi_errno,stmt)                \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if ((MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_FENCE && \
-             MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
-             MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_NONE) || \
-            (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_FENCE && \
-             MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
-             MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE)) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if ((MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_FENCE && \
+                 MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
+                 MPIDIG_WIN(win, sync).exposure_epoch_type != MPIDIG_EPOTYPE_NONE) || \
+                (MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_FENCE && \
+                 MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_REFENCE && \
+                 MPIDIG_WIN(win, sync).access_epoch_type != MPIDIG_EPOTYPE_NONE)) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_ACCESS_EPOCH_CHECK(win, epoch_type, mpi_errno, stmt) \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDIG_WIN(win, sync).access_epoch_type != epoch_type)  \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (MPIDIG_WIN(win, sync).access_epoch_type != epoch_type) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_EXPOSURE_EPOCH_CHECK(win, epoch_type, mpi_errno, stmt) \
     do {                                                                \
-        MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDIG_WIN(win, sync).exposure_epoch_type != epoch_type) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        MPID_END_ERROR_CHECKS;                                          \
+        if (MPIR_ERROR_CHECKS_ENABLED) {                                \
+            if (MPIDIG_WIN(win, sync).exposure_epoch_type != epoch_type) \
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,        \
+                                    stmt, "**rmasync");                 \
+        }                                                               \
     } while (0)
 
 #define MPIDIG_EPOCH_OP_REFENCE(win)                                \

@@ -1611,20 +1611,12 @@ def dump_function_normal(func):
 
     if '_handle_ptr_list' in func:
         G.out.append("")
-        G.out.append("#ifdef HAVE_ERROR_CHECKING")
-        G.out.append("{")
-        G.out.append("    MPID_BEGIN_ERROR_CHECKS;")
-        G.out.append("    {")
-        G.out.append("INDENT")
+        G.out.append("if (MPIR_ERROR_CHECKS_ENABLED) {")
         G.out.append("INDENT")
         for p in func['_handle_ptr_list']:
             dump_validate_handle(func, p)
         G.out.append("DEDENT")
-        G.out.append("DEDENT")
-        G.out.append("    }")
-        G.out.append("    MPID_END_ERROR_CHECKS;")
         G.out.append("}")
-        G.out.append("#endif \x2f* HAVE_ERROR_CHECKING */")
         G.out.append("")
         for p in func['_handle_ptr_list']:
             dump_convert_handle(func, p)
@@ -1641,11 +1633,7 @@ def dump_function_normal(func):
 
     if func['_need_validation']:
         G.out.append("")
-        G.out.append("#ifdef HAVE_ERROR_CHECKING")
-        G.out.append("{")
-        G.out.append("    MPID_BEGIN_ERROR_CHECKS;")
-        G.out.append("    {")
-        G.out.append("INDENT")
+        G.out.append("if (MPIR_ERROR_CHECKS_ENABLED) {")
         G.out.append("INDENT")
         if '_handle_ptr_list' in func:
             for p in func['_handle_ptr_list']:
@@ -1660,11 +1648,7 @@ def dump_function_normal(func):
                 else:
                     G.out.append(l)
         G.out.append("DEDENT")
-        G.out.append("DEDENT")
-        G.out.append("    }")
-        G.out.append("    MPID_END_ERROR_CHECKS;")
         G.out.append("}")
-        G.out.append("#endif \x2f* HAVE_ERROR_CHECKING */")
         G.out.append("")
 
     if '_datatype_in_list' in func:
