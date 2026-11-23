@@ -222,13 +222,12 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
         i++;
     }
 
-#ifdef HAVE_ERROR_CHECKING
-    /* check that we received as much as we expected */
-    MPIR_ERR_CHKANDJUMP2(curr_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                         "**collective_size_mismatch",
-                         "**collective_size_mismatch %d %d", (int) curr_size, (int) nbytes);
-
-#endif
+    if (MPIR_ERROR_CHECKS_ENABLED) {
+        /* check that we received as much as we expected */
+        MPIR_ERR_CHKANDJUMP2(curr_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                             "**collective_size_mismatch",
+                             "**collective_size_mismatch %d %d", (int) curr_size, (int) nbytes);
+    }
 
     if (!is_contig) {
         if (rank != root) {

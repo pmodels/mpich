@@ -112,12 +112,12 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
-#ifdef HAVE_ERROR_CHECKING
-    /* check that we received as much as we expected */
-    MPIR_ERR_CHKANDJUMP2(curr_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                         "**collective_size_mismatch",
-                         "**collective_size_mismatch %d %d", (int) curr_size, (int) nbytes);
-#endif
+    if (MPIR_ERROR_CHECKS_ENABLED) {
+        /* check that we received as much as we expected */
+        MPIR_ERR_CHKANDJUMP2(curr_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                             "**collective_size_mismatch",
+                             "**collective_size_mismatch %d %d", (int) curr_size, (int) nbytes);
+    }
 
     if (!is_contig) {
         if (rank != root) {
