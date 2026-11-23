@@ -20,14 +20,6 @@
         } \
     } while (0)
 
-static inline void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
-{
-    int i;
-
-    for (i = 0; i < n_elems; i++) {
-        utarray_push_back_int(dst_array, &elems[i], MPL_MEM_COLL);
-    }
-}
 
 /* Issues vtxp, which has no pending dependency; *immediate_complete tells whether it completed
  * at once. The caller releases its dependents. */
@@ -254,15 +246,17 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
 }
 
 
-static void vtx_release_in_start(UT_array * deps, MPII_Genutil_sched_t * sched);
-static void vtx_release_in_poke(UT_array * deps, MPII_Genutil_sched_t * sched);
+static void vtx_release_in_start(MPII_Genutil_vtx_list_t * deps, MPII_Genutil_sched_t * sched);
+static void vtx_release_in_poke(MPII_Genutil_vtx_list_t * deps, MPII_Genutil_sched_t * sched);
 static void push_ready(MPII_Genutil_sched_t * sched, int vtx_id);
 static int drain_ready(MPII_Genutil_sched_t * sched);
 
-static void vtx_release_dependents_impl(UT_array * deps, MPII_Genutil_sched_t * sched, bool queue)
+static void vtx_release_dependents_impl(MPII_Genutil_vtx_list_t * deps,
+                                        MPII_Genutil_sched_t * sched, bool queue)
 {
-    for (int i = 0; i < utarray_len(deps); i++) {
-        int outvtx_id = ut_int_array(deps)[i];
+    int *ids = MPII_Genutil_vtx_list_data(deps);
+    for (int i = 0; i < deps->n; i++) {
+        int outvtx_id = ids[i];
         vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + outvtx_id;
 
         if (--vtx->pending_dependencies == 0 && queue) {
@@ -273,7 +267,7 @@ static void vtx_release_dependents_impl(UT_array * deps, MPII_Genutil_sched_t * 
 
 /* Counts down the dependents in deps (a vertex's issue_out_vtcs or completion_out_vtcs). Used by
  * MPII_Genutil_sched_start, whose scan reaches the released ones itself. */
-static void vtx_release_in_start(UT_array * deps, MPII_Genutil_sched_t * sched)
+static void vtx_release_in_start(MPII_Genutil_vtx_list_t * deps, MPII_Genutil_sched_t * sched)
 {
     vtx_release_dependents_impl(deps, sched, false);
 }
@@ -286,7 +280,7 @@ static void vtx_release_in_start(UT_array * deps, MPII_Genutil_sched_t * sched)
  * first child releases the next chunk to that child, and so on, so a message to a later child
  * waits until every ready chunk to the earlier children has been issued, which adds to its
  * latency. */
-static void vtx_release_in_poke(UT_array * deps, MPII_Genutil_sched_t * sched)
+static void vtx_release_in_poke(MPII_Genutil_vtx_list_t * deps, MPII_Genutil_sched_t * sched)
 {
     vtx_release_dependents_impl(deps, sched, true);
 }
@@ -394,10 +388,16 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
     dst->vtx_state = src->vtx_state;
     dst->vtx_id = src->vtx_id;
 
-    utarray_init(&dst->completion_out_vtcs, &ut_int_icd);
-    utarray_concat(&dst->completion_out_vtcs, &src->completion_out_vtcs, MPL_MEM_COLL);
-    utarray_init(&dst->issue_out_vtcs, &ut_int_icd);
-    utarray_concat(&dst->issue_out_vtcs, &src->issue_out_vtcs, MPL_MEM_COLL);
+    MPII_Genutil_vtx_list_init(&dst->completion_out_vtcs);
+    for (int i = 0; i < src->completion_out_vtcs.n; i++) {
+        MPII_Genutil_vtx_list_push(&dst->completion_out_vtcs,
+                                   MPII_Genutil_vtx_list_data(&src->completion_out_vtcs)[i]);
+    }
+    MPII_Genutil_vtx_list_init(&dst->issue_out_vtcs);
+    for (int i = 0; i < src->issue_out_vtcs.n; i++) {
+        MPII_Genutil_vtx_list_push(&dst->issue_out_vtcs,
+                                   MPII_Genutil_vtx_list_data(&src->issue_out_vtcs)[i]);
+    }
 
     dst->pending_dependencies = src->pending_dependencies;
     dst->num_dependencies = src->num_dependencies;
@@ -410,8 +410,8 @@ void MPII_Genutil_vtx_dtor(void *_elt)
 {
     vtx_t *elt = (vtx_t *) _elt;
 
-    utarray_done(&elt->completion_out_vtcs);
-    utarray_done(&elt->issue_out_vtcs);
+    MPII_Genutil_vtx_list_free(&elt->completion_out_vtcs);
+    MPII_Genutil_vtx_list_free(&elt->issue_out_vtcs);
 }
 
 
@@ -419,7 +419,6 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
                                        int n_in_vtcs, int *in_vtcs)
 {
     int i;
-    UT_array *completion_out_vtcs;
     MPII_Genutil_vtx_t *vtx;
 
     vtx = ut_type_array(&sched->vtcs, vtx_t *) + vtx_id;
@@ -436,8 +435,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
         vtx_t *in_vtx = (vtx_t *) utarray_eltptr(&sched->vtcs, in_vtcs[i]);
         MPIR_Assert(in_vtx != NULL);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtcs[i]));
-        completion_out_vtcs = &in_vtx->completion_out_vtcs;
-        vtx_extend_utarray(completion_out_vtcs, 1, &vtx_id);
+        MPII_Genutil_vtx_list_push(&in_vtx->completion_out_vtcs, vtx_id);
 
         /* increment pending_dependencies only if the incoming
          * vertex is not complete yet */
@@ -454,8 +452,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
         /* add vtx as outgoing vtx of last_fence */
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, sched->last_fence);
         MPIR_Assert(sched_fence != NULL);
-        completion_out_vtcs = &sched_fence->completion_out_vtcs;
-        vtx_extend_utarray(completion_out_vtcs, 1, &vtx_id);
+        MPII_Genutil_vtx_list_push(&sched_fence->completion_out_vtcs, vtx_id);
 
         /* increment pending_dependencies only if the incoming
          * vertex is not complete yet */
@@ -475,8 +472,8 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
     *vtx = (vtx_t *) utarray_back(&sched->vtcs);
     vtxp = *vtx;
 
-    utarray_init(&vtxp->completion_out_vtcs, &ut_int_icd);
-    utarray_init(&vtxp->issue_out_vtcs, &ut_int_icd);
+    MPII_Genutil_vtx_list_init(&vtxp->completion_out_vtcs);
+    MPII_Genutil_vtx_list_init(&vtxp->issue_out_vtcs);
 
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
     vtxp->vtx_id = sched->total_vtcs++;
