@@ -91,6 +91,9 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
 
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
+                if (!request_ptr->u.persist.is_active) {
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
+                }
                 if (request_ptr->u.persist.real_request != NULL) {
                     /* jratt@us.ibm.com: The CC stuff on the next
                      * line is *really* needed for persistent Bsend
@@ -108,29 +111,28 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
                     request_ptr->cc_ptr = request_ptr->u.persist.real_request->cc_ptr;
                     mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
                     MPIR_ERR_CHECK(mpi_errno);
-                } else {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
                 }
                 break;
             }
 
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
             {
+                if (!request_ptr->u.persist.is_active) {
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
+                }
                 if (request_ptr->u.persist.real_request != NULL) {
                     mpi_errno = MPID_Cancel_recv(request_ptr->u.persist.real_request);
                     MPIR_ERR_CHECK(mpi_errno);
-                } else {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
                 }
                 break;
             }
 
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
-                if (request_ptr->u.persist_coll.real_request != NULL) {
+                if (request_ptr->u.persist.is_active) {
                     MPIR_Assert_error("Cancel persistent collective not supported");
                 } else {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
                 }
                 break;
             }
@@ -164,24 +166,12 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
 
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
-            /* If this is an active persistent request, we must also
-             * release the partner request. */
-            if (request_ptr->u.persist.real_request != NULL) {
-                MPIR_Request_free(request_ptr->u.persist.real_request);
-            }
-            break;
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
-            /* If this is an active persistent request, we must also
-             * release the partner request. */
-            if (request_ptr->u.persist.real_request != NULL) {
-                MPIR_Request_free(request_ptr->u.persist.real_request);
-            }
-            break;
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
             /* If this is an active persistent request, we must also
              * release the partner request. */
-            if (request_ptr->u.persist_coll.real_request != NULL) {
-                MPIR_Request_free(request_ptr->u.persist_coll.real_request);
+            if (request_ptr->u.persist.real_request != NULL) {
+                MPIR_Request_free(request_ptr->u.persist.real_request);
             }
             break;
         default:

@@ -82,6 +82,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
 
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
+                request_ptr->u.persist.is_active = false;
                 if (request_ptr->u.persist.real_request != NULL) {
                     MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
 
@@ -110,7 +111,10 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
             }
 
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
+                bool was_active = request_ptr->u.persist.is_active;
+                request_ptr->u.persist.is_active = false;
                 if (request_ptr->u.persist.real_request != NULL) {
                     MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
 
@@ -123,34 +127,10 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     mpi_errno = prequest_ptr->status.MPI_ERROR;
 
                     MPIR_Request_free(prequest_ptr);
-                } else {
-                    MPIR_Status_set_empty(status);
-                    /* --BEGIN ERROR HANDLING-- */
-                    if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
-                        /* if the persistent request failed to start then make the
-                         * error code available */
-                        mpi_errno = request_ptr->status.MPI_ERROR;
-                    }
-                    /* --END ERROR HANDLING-- */
-                }
-
-                break;
-            }
-
-        case MPIR_REQUEST_KIND__PREQUEST_COLL:
-            {
-                if (request_ptr->u.persist_coll.real_request != NULL) {
-                    MPIR_Request *prequest_ptr = request_ptr->u.persist_coll.real_request;
-
-                    /* reset persistent request to inactive state */
-                    MPIR_cc_set(&request_ptr->cc, 0);
-                    request_ptr->cc_ptr = &request_ptr->cc;
-                    request_ptr->u.persist_coll.real_request = NULL;
-
-                    MPIR_Request_extract_status(prequest_ptr, status);
-                    mpi_errno = prequest_ptr->status.MPI_ERROR;
-
-                    MPIR_Request_free(prequest_ptr);
+                } else if (was_active && request_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
+                           request_ptr->status.MPI_ERROR == MPI_SUCCESS) {
+                    /* a receive started without a real_request is from MPI_PROC_NULL */
+                    MPIR_Status_set_procnull(status);
                 } else {
                     MPIR_Status_set_empty(status);
                     /* --BEGIN ERROR HANDLING-- */
@@ -230,17 +210,8 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
             }
 
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
-            {
-                if (request_ptr->u.persist.real_request != NULL) {
-                    mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;
-                } else {
-                    mpi_errno = request_ptr->status.MPI_ERROR;
-                }
-
-                break;
-            }
-
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
                 if (request_ptr->u.persist.real_request != NULL) {
                     mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;

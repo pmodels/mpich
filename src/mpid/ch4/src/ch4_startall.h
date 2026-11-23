@@ -15,6 +15,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    preq->u.persist.is_active = true;
+    preq->u.persist.real_request = NULL;
+
     /* nothing to do if the source/dest is MPI_PROC_NULL */
     if (MPIDI_PREQUEST(preq, rank) == MPI_PROC_NULL)
         goto fn_exit;
@@ -68,7 +71,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
 
     if (mpi_errno == MPI_SUCCESS) {
         preq->status.MPI_ERROR = MPI_SUCCESS;
-        preq->cc_ptr = &preq->u.persist.real_request->cc;
+        if (preq->u.persist.real_request) {
+            preq->cc_ptr = &preq->u.persist.real_request->cc;
+        } else {
+            preq->cc_ptr = &preq->cc;
+            MPIR_cc_set(&preq->cc, 0);
+        }
     } else {
         preq->u.persist.real_request = NULL;
         preq->status.MPI_ERROR = mpi_errno;

@@ -21,13 +21,19 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    preq->u.persist_coll.real_request = NULL;
-    mpi_errno = persist_sched_start(preq->u.persist_coll.sched_type, preq->u.persist_coll.sched,
-                                    preq->comm, &preq->u.persist_coll.real_request);
+    preq->u.persist.is_active = true;
+    preq->u.persist.real_request = NULL;
+    mpi_errno = persist_sched_start(preq->u.persist.sched_type, preq->u.persist.sched,
+                                    preq->comm, &preq->u.persist.real_request);
     MPIR_ERR_CHECK(mpi_errno);
 
     preq->status.MPI_ERROR = MPI_SUCCESS;
-    preq->cc_ptr = &preq->u.persist_coll.real_request->cc;
+    if (preq->u.persist.real_request) {
+        preq->cc_ptr = &preq->u.persist.real_request->cc;
+    } else {
+        preq->cc_ptr = &preq->cc;
+        MPIR_cc_set(&preq->cc, 0);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -37,7 +43,7 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
      * the error code in the persistent request.  The wait and test
      * routines will look at the error code in the persistent
      * request if a partner request is not present. */
-    preq->u.persist_coll.real_request = NULL;
+    preq->u.persist.real_request = NULL;
     preq->status.MPI_ERROR = mpi_errno;
     preq->cc_ptr = &preq->cc;
     MPIR_cc_set(&preq->cc, 0);
@@ -46,8 +52,8 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
 
 void MPIR_Persist_coll_free_cb(MPIR_Request * request)
 {
-    if (request->u.persist_coll.sched) {
-        sched_free(request->u.persist_coll.sched_type, request->u.persist_coll.sched);
+    if (request->u.persist.sched) {
+        sched_free(request->u.persist.sched_type, request->u.persist.sched);
     }
 }
 
