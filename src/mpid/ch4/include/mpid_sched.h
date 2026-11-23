@@ -30,6 +30,5 @@
 #define MPIR_Sched_reduce MPIDU_Sched_reduce
 #define MPIR_Sched_copy MPIDU_Sched_copy
 #define MPIR_Sched_barrier MPIDU_Sched_barrier
-#define MPIR_Sched_move_to_front MPIDU_Sched_move_to_front
 
 #endif /* MPID_SCHED_H_INCLUDED */

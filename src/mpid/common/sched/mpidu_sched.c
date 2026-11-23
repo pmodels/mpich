@@ -937,37 +937,6 @@ int MPIDU_Sched_barrier(MPIR_Sched_t s)
     return mpi_errno;
 }
 
-/* Move the last n entries to the front and mark the last of them as a barrier, so they
- * complete before any other entry starts. Only valid before the schedule starts: nothing
- * refers to entries by position then, since s->idx is still 0. */
-int MPIDU_Sched_move_to_front(struct MPIDU_Sched *s, int n)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIDU_Sched_entry *tmp;
-
-    MPIR_Assert(s->idx == 0 && n <= s->num_entries);
-    if (n == 0) {
-        goto fn_exit;
-    }
-
-    size_t sz = n * sizeof(struct MPIDU_Sched_entry);
-    tmp = MPL_malloc(sz, MPL_MEM_COMM);
-    MPIR_ERR_CHKANDJUMP(!tmp, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    int k = s->num_entries - n;
-    memcpy(tmp, &s->entries[k], sz);
-    memmove(&s->entries[n], &s->entries[0], k * sizeof(struct MPIDU_Sched_entry));
-    memcpy(&s->entries[0], tmp, sz);
-    s->entries[n - 1].is_barrier = TRUE;
-
-    MPL_free(tmp);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* buffer management, fancy reductions, etc */
 int MPIDU_Sched_cb(MPIR_Sched_cb_t * cb_p, void *cb_state, MPIR_Sched_t s)
 {
