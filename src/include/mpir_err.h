@@ -172,31 +172,25 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* Error checking (see --enable-error-checking for control of this) */
+/* Error checking (see --enable-error-checking for control of this). Checks go in
+ * if (MPIR_ERROR_CHECKS_ENABLED) { ... }: always done with --enable-error-checking=all, done as
+ * MPIR_CVAR_ERROR_CHECKING says with =runtime (the default), and compiled away without error
+ * checking. */
 #ifdef HAVE_ERROR_CHECKING
 
 #define MPID_ERROR_LEVEL_ALL 1
 #define MPID_ERROR_LEVEL_RUNTIME 2
-/* Use MPID_ERROR_DECL to wrap declarations that are needed only when
-   error checking is turned on */
-#define MPID_ERROR_DECL(a) a
 
 #if HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_ALL
-#define MPID_BEGIN_ERROR_CHECKS
-#define MPID_END_ERROR_CHECKS
-#define MPID_ELSE_ERROR_CHECKS
+#define MPIR_ERROR_CHECKS_ENABLED 1
 #elif HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME
-#define MPID_BEGIN_ERROR_CHECKS if (MPIR_Process.do_error_checks) {
-#define MPID_ELSE_ERROR_CHECKS }else{
-#define MPID_END_ERROR_CHECKS }
+#define MPIR_ERROR_CHECKS_ENABLED (MPIR_Process.do_error_checks)
 #else
 #error "Unknown value for error checking"
 #endif
 
 #else
-#define MPID_BEGIN_ERROR_CHECKS
-#define MPID_END_ERROR_CHECKS
-#define MPID_ERROR_DECL(a)
+#define MPIR_ERROR_CHECKS_ENABLED 0
 #endif /* HAVE_ERROR_CHECKING */
 
 /*

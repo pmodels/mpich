@@ -19,13 +19,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint nbytes = 0;
     MPI_Status *status_p;
-#ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
-    status_p = &status;
     MPI_Aint recvd_size;
-#else
-    status_p = MPI_STATUS_IGNORE;
-#endif
+    /* the status is only for checking the size received */
+    status_p = MPIR_ERROR_CHECKS_ENABLED ? &status : MPI_STATUS_IGNORE;
     int is_contig;
     MPI_Aint type_size;
     void *tmp_buf = NULL;
@@ -96,14 +93,14 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
                                       MPIR_BCAST_TAG, comm_ptr, status_p);
             MPIR_ERR_CHECK(mpi_errno);
-#ifdef HAVE_ERROR_CHECKING
-            /* check that we received as much as we expected */
-            MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
-            MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                                 "**collective_size_mismatch",
-                                 "**collective_size_mismatch %d %d",
-                                 (int) recvd_size, (int) nbytes);
-#endif
+            if (MPIR_ERROR_CHECKS_ENABLED) {
+                /* check that we received as much as we expected */
+                MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
+                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                                     "**collective_size_mismatch",
+                                     "**collective_size_mismatch %d %d",
+                                     (int) recvd_size, (int) nbytes);
+            }
             break;
         }
         mask <<= 1;

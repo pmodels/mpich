@@ -352,7 +352,6 @@ static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
     return mpi_errno;
 }
 
-#ifdef HAVE_ERROR_CHECKING
 #define N_STATIC_LPID32 128
 /*@
   check_disjoint_lpids - Exchange address mapping for intercomm creation.
@@ -415,7 +414,6 @@ static int check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], 
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
 }
-#endif /* HAVE_ERROR_CHECKING */
 
 /*@
   MPID_Intercomm_exchange - Exchange remote info for intercomm creation.
@@ -485,18 +483,12 @@ int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPIDI_LPID_GetAllInComm( local_comm_ptr, local_size, local_lpids );
         MPIR_ERR_CHECK(mpi_errno);
 
-#       ifdef HAVE_ERROR_CHECKING
-        {
-            MPID_BEGIN_ERROR_CHECKS;
-            {
-                /* Now that we have both the local and remote processes,
-                   check for any overlap */
-                mpi_errno = check_disjoint_lpids( local_lpids, local_size, *remote_lpids, *remote_size );
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-            MPID_END_ERROR_CHECKS;
+        if (MPIR_ERROR_CHECKS_ENABLED) {
+            /* Now that we have both the local and remote processes,
+               check for any overlap */
+            mpi_errno = check_disjoint_lpids( local_lpids, local_size, *remote_lpids, *remote_size );
+            MPIR_ERR_CHECK(mpi_errno);
         }
-#       endif /* HAVE_ERROR_CHECKING */
 
         /* At this point, we're done with the local lpids; they'll
            be freed with the other local memory on exit */

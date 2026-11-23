@@ -396,25 +396,18 @@ static void MPIR_Bsend_dump(struct MPII_BsendBuffer_user *user);
 
 static int bsend_attach_user(struct MPII_BsendBuffer_user *user, void *buffer, MPI_Aint buffer_size)
 {
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            if (buffer_size < MPI_BSEND_OVERHEAD) {
-                /* MPI_ERR_OTHER is another valid choice for this error,
-                 * but the Intel test wants MPI_ERR_BUFFER, and it seems
-                 * to violate the principle of least surprise to not use
-                 * MPI_ERR_BUFFER for errors with the Buffer */
-                return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                            "MPIR_Bsend_attach", __LINE__, MPI_ERR_BUFFER,
-                                            "**bsendbufsmall",
-                                            "**bsendbufsmall %d %d", buffer_size,
-                                            MPI_BSEND_OVERHEAD);
-            }
+    if (MPIR_ERROR_CHECKS_ENABLED) {
+        if (buffer_size < MPI_BSEND_OVERHEAD) {
+            /* MPI_ERR_OTHER is another valid choice for this error,
+             * but the Intel test wants MPI_ERR_BUFFER, and it seems
+             * to violate the principle of least surprise to not use
+             * MPI_ERR_BUFFER for errors with the Buffer */
+            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                        "MPIR_Bsend_attach", __LINE__, MPI_ERR_BUFFER,
+                                        "**bsendbufsmall",
+                                        "**bsendbufsmall %d %d", buffer_size, MPI_BSEND_OVERHEAD);
         }
-        MPID_END_ERROR_CHECKS;
     }
-#endif /* HAVE_ERROR_CHECKING */
 
 
     user->origbuffer = buffer;

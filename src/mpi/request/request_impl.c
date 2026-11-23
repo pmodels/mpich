@@ -347,36 +347,30 @@ int MPIR_Testall(int count, MPIR_Request * request_ptrs[], int *flag,
         for (i = ii; i < ii + icount; i++) {
             if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i]))
                 n_completed += 1;
-#ifdef HAVE_ERROR_CHECKING
-            {
-                MPID_BEGIN_ERROR_CHECKS;
-                {
-                    if (request_ptrs[i] == NULL)
-                        continue;
-                    if (MPIR_Request_is_complete(request_ptrs[i])) {
-                        rc = MPIR_Request_get_error(request_ptrs[i]);
-                        if (rc != MPI_SUCCESS) {
-                            if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
-                                MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
-                                proc_failure = TRUE;
-                            if (MPIR_CVAR_REQUEST_ERR_FATAL) {
-                                mpi_errno = request_ptrs[i]->status.MPI_ERROR;
-                                MPIR_ERR_CHECK(mpi_errno);
-                            } else {
-                                mpi_errno = MPI_ERR_IN_STATUS;
-                            }
+            if (MPIR_ERROR_CHECKS_ENABLED) {
+                if (request_ptrs[i] == NULL)
+                    continue;
+                if (MPIR_Request_is_complete(request_ptrs[i])) {
+                    rc = MPIR_Request_get_error(request_ptrs[i]);
+                    if (rc != MPI_SUCCESS) {
+                        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
+                            MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
+                            proc_failure = TRUE;
+                        if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                            mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                            MPIR_ERR_CHECK(mpi_errno);
+                        } else {
+                            mpi_errno = MPI_ERR_IN_STATUS;
                         }
-                    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
-                        mpi_errno = MPI_ERR_IN_STATUS;
-                        MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-                        if (!ignoring_status)
-                            array_of_statuses[i].MPI_ERROR = rc;
-                        proc_failure = TRUE;
                     }
+                } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                    MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                    if (!ignoring_status)
+                        array_of_statuses[i].MPI_ERROR = rc;
+                    proc_failure = TRUE;
                 }
-                MPID_END_ERROR_CHECKS;
             }
-#endif
         }
     }
 

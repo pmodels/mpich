@@ -164,11 +164,6 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     /* TODO there should be an internal accessor/utility macro for getting the
      * TAG_UB value that doesn't require using the attribute interface */
     int tag_ub = MPIR_Process.attrs.tag_ub;
-#if defined(HAVE_ERROR_CHECKING)
-    int start = MPI_UNDEFINED;
-    int end = MPI_UNDEFINED;
-    struct MPIDU_Sched *elt = NULL;
-#endif
     MPIR_FUNC_ENTER;
 
     /* only a user-level nonblocking collective call draws a tag; everything below it, such as
@@ -178,38 +173,42 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     *tag = comm_ptr->next_sched_tag;
     ++comm_ptr->next_sched_tag;
 
-#if defined(HAVE_ERROR_CHECKING)
-    /* Upon entry into the second half of the tag space, ensure there are no
-     * outstanding schedules still using the second half of the space.  Check
-     * the first half similarly on wraparound. */
-    if (comm_ptr->next_sched_tag == (tag_ub / 2)) {
-        start = tag_ub / 2;
-        end = tag_ub;
-    } else if (comm_ptr->next_sched_tag == (tag_ub)) {
-        start = MPIR_FIRST_NBC_TAG;
-        end = tag_ub / 2;
-    }
-    if (start != MPI_UNDEFINED) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
-        DL_FOREACH(all_schedules.head, elt) {
-            if (comm_ptr == elt->req->comm) {
-                if (elt->tag >= start && elt->tag < end) {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+    if (MPIR_ERROR_CHECKS_ENABLED) {
+        int start = MPI_UNDEFINED;
+        int end = MPI_UNDEFINED;
+        struct MPIDU_Sched *elt = NULL;
+
+        /* Upon entry into the second half of the tag space, ensure there are no
+         * outstanding schedules still using the second half of the space.  Check
+         * the first half similarly on wraparound. */
+        if (comm_ptr->next_sched_tag == (tag_ub / 2)) {
+            start = tag_ub / 2;
+            end = tag_ub;
+        } else if (comm_ptr->next_sched_tag == (tag_ub)) {
+            start = MPIR_FIRST_NBC_TAG;
+            end = tag_ub / 2;
+        }
+        if (start != MPI_UNDEFINED) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+            DL_FOREACH(all_schedules.head, elt) {
+                if (comm_ptr == elt->req->comm) {
+                    if (elt->tag >= start && elt->tag < end) {
+                        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+                        break;
+                    }
                 }
             }
+            MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     }
-#endif
 
     /* wrap the tag values around to the start, but don't allow it to conflict
      * with the tags used by the blocking collectives */
     if (comm_ptr->next_sched_tag == tag_ub) {
         comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
     }
-#if defined(HAVE_ERROR_CHECKING)
   fn_fail:
-#endif
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -906,8 +905,8 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 
 
     /* some sanity checking up front */
-#if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
-    {
+#ifndef NDEBUG
+    if (MPIR_ERROR_CHECKS_ENABLED) {
         MPI_Aint intype_size, outtype_size;
         MPIR_Datatype_get_size_macro(intype, intype_size);
         MPIR_Datatype_get_size_macro(outtype, outtype_size);

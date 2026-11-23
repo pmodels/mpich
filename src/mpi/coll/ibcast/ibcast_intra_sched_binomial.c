@@ -22,7 +22,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     MPI_Aint nbytes, type_size;
     int relative_rank;
     int src, dst;
-    struct MPII_Ibcast_state *ibcast_state;
+    struct MPII_Ibcast_state *ibcast_state = NULL;
     void *tmp_buf = NULL;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -31,21 +31,28 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
-    /* we'll allocate tmp_buf along with ibcast_state.
-     * Alternatively, we can add init callback to allocate the tmp_buf.
+    /* ibcast_state is for checking the size received, so only when error checking is on. We'll
+     * allocate tmp_buf along with it. Alternatively, we can add init callback to allocate the
+     * tmp_buf.
      */
+    bool check = MPIR_ERROR_CHECKS_ENABLED;
+    MPI_Aint state_size = check ? sizeof(struct MPII_Ibcast_state) : 0;
     MPI_Aint tmp_size = 0;
     if (!is_contig) {
         tmp_size = nbytes;
     }
 
-    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state) + tmp_size);
-    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    if (!is_contig) {
-        tmp_buf = ibcast_state + 1;
+    if (state_size + tmp_size > 0) {
+        void *p = MPIR_Sched_alloc_state(s, state_size + tmp_size);
+        MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (check) {
+            ibcast_state = p;
+            ibcast_state->n_bytes = nbytes;
+        }
+        if (!is_contig) {
+            tmp_buf = (char *) p + state_size;
+        }
     }
-
-    ibcast_state->n_bytes = nbytes;
 
     if (!is_contig) {
         /* TODO: Pipeline the packing and communication */
@@ -90,7 +97,11 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             src = rank - mask;
             if (src < 0)
                 src += comm_size;
-            if (!is_contig)
+            if (!check && !is_contig)
+                mpi_errno = MPIR_Sched_recv(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, src, comm_ptr, s);
+            else if (!check)
+                mpi_errno = MPIR_Sched_recv(buffer, count, datatype, src, comm_ptr, s);
+            else if (!is_contig)
                 mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, src,
                                                    comm_ptr, &ibcast_state->status, s);
             else
@@ -99,9 +110,11 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
+            if (check) {
+                mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIR_SCHED_BARRIER(s);
+            }
             break;
         }
         mask <<= 1;

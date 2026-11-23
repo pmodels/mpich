@@ -94,13 +94,10 @@ static int send_to_node_root(void *buffer, MPI_Aint count, MPI_Datatype datatype
     int mpi_errno = MPI_SUCCESS;
     int coll_attr = 0;
     MPI_Status *status_p;
-#ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
-    status_p = &status;
     MPI_Aint recvd_size;
-#else
-    status_p = MPI_STATUS_IGNORE;
-#endif
+    /* the status is only for checking the size received */
+    status_p = MPIR_ERROR_CHECKS_ENABLED ? &status : MPI_STATUS_IGNORE;
 
     if (root == comm_ptr->rank) {
         mpi_errno = MPIC_Send(buffer, count, datatype, 0,
@@ -110,13 +107,14 @@ static int send_to_node_root(void *buffer, MPI_Aint count, MPI_Datatype datatype
         mpi_errno = MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
                               MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
         MPIR_ERR_CHECK(mpi_errno);
-#ifdef HAVE_ERROR_CHECKING
-        /* check that we received as much as we expected */
-        MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
-        MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
-                             "**collective_size_mismatch",
-                             "**collective_size_mismatch %d %d", (int) recvd_size, (int) nbytes);
-#endif
+        if (MPIR_ERROR_CHECKS_ENABLED) {
+            /* check that we received as much as we expected */
+            MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
+            MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                                 "**collective_size_mismatch",
+                                 "**collective_size_mismatch %d %d", (int) recvd_size,
+                                 (int) nbytes);
+        }
     }
 
   fn_exit:

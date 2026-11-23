@@ -160,24 +160,25 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     if (my_tree.parent != -1) {
         npieces = get_pieces(lrank, lend, root, size, displs, offs, lens);
         for (i = 0; i < npieces; i++) {
-#ifdef HAVE_ERROR_CHECKING
-            struct MPII_Ibcast_state *ibcast_state =
-                MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
-            MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            ibcast_state->n_bytes = lens[i];
-            mpi_errno =
-                MPIR_TSP_sched_irecv_status((char *) tmp_buf + offs[i], lens[i],
-                                            MPIR_BYTE_INTERNAL, my_tree.parent, comm,
-                                            &ibcast_state->status, sched, 0, NULL, &recv_id);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
-                              &vtx_id);
-#else
-            mpi_errno =
-                MPIR_TSP_sched_irecv((char *) tmp_buf + offs[i], lens[i], MPIR_BYTE_INTERNAL,
-                                     my_tree.parent, comm, sched, 0, NULL, &recv_id);
-            MPIR_ERR_CHECK(mpi_errno);
-#endif
+            /* checking the size received, only when error checking is on */
+            if (MPIR_ERROR_CHECKS_ENABLED) {
+                struct MPII_Ibcast_state *ibcast_state;
+                ibcast_state = MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
+                MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+                ibcast_state->n_bytes = lens[i];
+                mpi_errno = MPIR_TSP_sched_irecv_status((char *) tmp_buf + offs[i], lens[i],
+                                                        MPIR_BYTE_INTERNAL, my_tree.parent, comm,
+                                                        &ibcast_state->status, sched, 0, NULL,
+                                                        &recv_id);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1,
+                                  &recv_id, &vtx_id);
+            } else {
+                mpi_errno = MPIR_TSP_sched_irecv((char *) tmp_buf + offs[i], lens[i],
+                                                 MPIR_BYTE_INTERNAL, my_tree.parent, comm, sched, 0,
+                                                 NULL, &recv_id);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             recv_ids[nrecv++] = recv_id;
         }
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));

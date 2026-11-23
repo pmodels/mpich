@@ -22,7 +22,6 @@
 #include "mpit_err.h"
 #include "mpit_mem.h"
 
-#ifdef HAVE_ERROR_CHECKING
 typedef enum {
     MPIR_T_OBJECT_INVALID = 0,
     MPIR_T_ENUM_HANDLE,
@@ -34,7 +33,6 @@ typedef enum {
     MPIR_T_EVENT_REG,
     MPIR_T_EVENT_INSTANCE
 } MPIR_T_object_kind;
-#endif
 
 /* MPI_T enum
  */
@@ -44,9 +42,7 @@ typedef struct enum_item_s {
 } enum_item_t;
 
 typedef struct MPIR_T_enum_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
     const char *name;
     UT_array *items;
 } MPIR_T_enum_t;
@@ -127,9 +123,7 @@ typedef struct cvar_table_entry_s {
 } cvar_table_entry_t;
 
 typedef struct MPIR_T_cvar_handle_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
 
     /* Address and count of the cvar. Set at handle allocation time */
     void *addr;
@@ -281,9 +275,7 @@ typedef struct {
 } MPIR_T_pvar_watermark_t;
 
 typedef struct MPIR_T_pvar_handle_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
 
     /* These are cached fields from pvar table. Do so to avoid extra
      * indirection when accessing them through pvar handles.
@@ -343,9 +335,7 @@ typedef struct MPIR_T_pvar_handle_s {
 } MPIR_T_pvar_handle_t;
 
 typedef struct MPIR_T_pvar_session_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
 
     /* A linked list of pvar handles */
     MPIR_T_pvar_handle_t *hlist;
@@ -1250,9 +1240,7 @@ extern void MPIR_T_events_finalize(void);
 typedef MPI_Count(*MPIR_T_timestamp_fn) (void);
 
 typedef struct MPIR_T_source_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
     int index;
     char *name;
     char *desc;
@@ -1269,9 +1257,7 @@ void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_ord
                             MPI_Count max_ticks, int *index);
 
 typedef struct MPIR_T_event_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
     int index;
     int source_index;
     char *name;
@@ -1300,9 +1286,7 @@ typedef struct MPIR_T_event_cb_s {
 } MPIR_T_event_cb_t;
 
 typedef struct MPIR_T_event_registration_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
     MPIR_T_event_t *event;
     void *obj_handle;
     MPIR_T_event_cb_t callbacks[4];     /* one for each safety level */
@@ -1313,9 +1297,7 @@ typedef struct MPIR_T_event_registration_s {
 } MPIR_T_event_registration_t;
 
 typedef struct MPIR_T_event_instance_s {
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_object_kind kind;
-#endif
     MPIR_T_event_t *event;
     MPI_Count timestamp;
     void *data;
