@@ -307,6 +307,11 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
         last_chunk_count = count;
         chunk_size = 0;
     } else {
+        /* a message smaller than a chunk is one chunk of the message size, so that the
+         * per-receive tmpbufs are no larger than the message */
+        if (count > 0 && chunk_count > count) {
+            chunk_count = count;
+        }
         chunk_size = chunk_count * type_size;
         num_chunks = count / chunk_count;
         last_chunk_count = count % chunk_count;
