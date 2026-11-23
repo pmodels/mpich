@@ -73,6 +73,10 @@ typedef struct MPII_Coll_req_t {
 
 typedef struct {
     struct MPII_Coll_req_t *head;
+    /* finished gentran schedules kept for reuse, so that a new collective call does not allocate
+     * one (MPII_Genutil_sched_recycle) */
+    struct MPII_Genutil_sched_t *free_scheds;
+    int num_free_scheds;
 } MPII_Coll_queue_t;
 
 #endif /* COLL_TYPES_H_INCLUDED */

@@ -273,7 +273,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         }
 
         if (sched->is_persistent == false) {
-            mpi_errno = MPIR_TSP_sched_free(sched);
+            mpi_errno = MPII_Genutil_sched_recycle(sched);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
