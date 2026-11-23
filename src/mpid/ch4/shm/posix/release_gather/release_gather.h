@@ -11,8 +11,22 @@ extern MPL_shm_hnd_t shm_limit_handle;
 
 #include "ch4_progress.h"
 
+/* The comm that keeps the release_gather state of comm. A node subcomm, the only eligible
+ * subcomm, keeps it in its parent: a parent that spans several nodes is ineligible itself,
+ * and a single-node parent is the same group, so the two can share it. */
+MPL_STATIC_INLINE_PREFIX MPIR_Comm *MPIDI_POSIX_release_gather_owner(MPIR_Comm * comm)
+{
+    if ((comm->attr & MPIR_COMM_ATTR__SUBCOMM) && comm->subcomm.type == MPIR_SUBCOMM__NODE_LOCAL) {
+        return comm->subcomm.parent;
+    }
+    return comm;
+}
+
+#define MPIDI_POSIX_RELEASE_GATHER(comm) \
+    MPIDI_POSIX_COMM(MPIDI_POSIX_release_gather_owner(comm), release_gather)
+
 #define RELEASE_GATHER_FIELD(comm, field)                   \
-    MPIDI_POSIX_COMM(comm, release_gather).field
+    MPIDI_POSIX_RELEASE_GATHER(comm).field
 
 #define NB_RELEASE_GATHER_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm, nb_release_gather).field
@@ -73,7 +87,11 @@ MPIDI_POSIX_release_gather_eligible(MPIR_Csel_coll_sig_s * coll_sig,
 
     /* Check whether comm is an intranode comm */
     MPIR_Comm *comm_ptr = coll_sig->comm_ptr;
-    if (!(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY)) {
+    if ((comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM) &&
+        comm_ptr->subcomm.type != MPIR_SUBCOMM__NODE_LOCAL) {
+        /* only a node subcomm has a place for the state, in its parent */
+        return false;
+    } else if (!(comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY)) {
         /* Missing hierarchical check. */
         /* Add an assertion since this is likely due to a negligence. All comm should be
          * initialized with hierarchical info before exposed to users */
@@ -199,7 +217,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     void *bcast_data_addr = NULL;
     MPL_atomic_uint64_t *parent_flag_addr;
     rank = MPIR_Comm_rank(comm_ptr);
-    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
+    release_gather_info_ptr = &MPIDI_POSIX_RELEASE_GATHER(comm_ptr);
     release_gather_info_ptr->release_state++;
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
@@ -392,7 +410,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     int *children;
     void *temp_recvbuf = NULL;
 
-    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
+    release_gather_info_ptr = &MPIDI_POSIX_RELEASE_GATHER(comm_ptr);
     children = MPIR_Treealgo_tree_children(&release_gather_info_ptr->bcast_tree);
     num_children = release_gather_info_ptr->bcast_tree.num_children;
     rank = MPIR_Comm_rank(comm_ptr);

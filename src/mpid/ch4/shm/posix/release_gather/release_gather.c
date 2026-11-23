@@ -372,7 +372,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
         /* Initialize the release_gather struct and allocate shm for flags */
         MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr =
-            &MPIDI_POSIX_COMM(comm_ptr, release_gather);
+            &MPIDI_POSIX_RELEASE_GATHER(comm_ptr);
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
@@ -544,7 +544,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     /* decrease shm memory limit counter */
-    if (comm_ptr->rank == 0)
+    if (comm_ptr->local_rank == 0)
         MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
                                     RELEASE_GATHER_FIELD(comm_ptr, flags_shm_size));
 
@@ -555,7 +555,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
-        if (comm_ptr->rank == 0)
+        if (comm_ptr->local_rank == 0)
             MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
                                         RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size));
         /* destroy and detach shared memory used for bcast buffer */
@@ -564,7 +564,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr) != NULL) {
-        if (comm_ptr->rank == 0)
+        if (comm_ptr->local_rank == 0)
             MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
                                         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         /* destroy and detach shared memory used for reduce buffers */
@@ -578,6 +578,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, bcast_tree)));
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree)));
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large)));
+    RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
 
   fn_exit:
     MPIR_FUNC_EXIT;
