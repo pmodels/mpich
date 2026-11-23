@@ -543,6 +543,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
     return get_builtin_req(HANDLE_INDEX(MPIR_REQUEST_NULL_RECV), MPIR_REQUEST_KIND__RECV);
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIR_Request_is_complete_builtin(MPIR_Request * req)
+{
+    return (req == NULL || HANDLE_IS_BUILTIN(req->handle));
+}
+
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
                                                  int need_safety, int *errno_out)

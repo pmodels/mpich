@@ -293,7 +293,7 @@ MPI_Rsend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    if (request_ptr == NULL) {
+    if (MPIR_Request_is_complete_builtin(request_ptr)) {
         goto fn_exit;
     }
 
@@ -330,7 +330,7 @@ MPI_Send:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    if (request_ptr == NULL) {
+    if (MPIR_Request_is_complete_builtin(request_ptr)) {
         goto fn_exit;
     }
 
@@ -400,7 +400,7 @@ MPI_Ssend:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    if (request_ptr == NULL) {
+    if (MPIR_Request_is_complete_builtin(request_ptr)) {
         goto fn_exit;
     }
 
