@@ -134,6 +134,9 @@ static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
 struct MPIDU_Sched_state {
     struct MPIDU_Sched *head;
     /* no need for a tail with utlist */
+    /* finished schedules kept for reuse, linked through next (see sched_recycle) */
+    struct MPIDU_Sched *free;
+    int num_free;
 };
 
 /* holds on to all incomplete schedules on which progress should be made */
@@ -464,33 +467,55 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 }
 
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
+/* A finished non-persistent schedule is not freed but kept, with its entries array, on
+ * all_schedules.free, and the next MPIDU_Sched_create takes it from there. The list is guarded by
+ * SCHED_LIST_MUTEX, which progress already holds when it finishes a schedule. At most
+ * SCHED_CACHE_MAX schedules are kept, and none whose entries array grew beyond
+ * SCHED_CACHE_MAX_ENTRIES. */
+#define SCHED_CACHE_MAX 8
+#define SCHED_CACHE_MAX_ENTRIES 64
+
 int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIDU_Sched *s;
+    struct MPIDU_Sched *s = NULL;
     MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
     *sp = NULL;
 
-    /* this mem will be freed by the progress engine when the request is completed */
-    MPIR_CHKPMEM_MALLOC(s, sizeof(struct MPIDU_Sched), MPL_MEM_COMM);
+    /* progress holds the mutex when a callback creates a schedule */
+    if (!in_sched_progress) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    }
+    if (all_schedules.free) {
+        s = all_schedules.free;
+        all_schedules.free = s->next;
+        all_schedules.num_free--;
+    }
+    if (!in_sched_progress) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    }
 
-    s->size = MPIDU_SCHED_INITIAL_ENTRIES;
+    if (!s) {
+        /* this mem will be freed by the progress engine when the request is completed */
+        MPIR_CHKPMEM_MALLOC(s, sizeof(struct MPIDU_Sched), MPL_MEM_COMM);
+        s->size = MPIDU_SCHED_INITIAL_ENTRIES;
+        /* this mem will be freed by the progress engine when the request is completed */
+        MPIR_CHKPMEM_MALLOC(s->entries,
+                            MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry),
+                            MPL_MEM_COMM);
+    }
+
     s->idx = 0;
     s->num_entries = 0;
     s->tag = -1;
     s->req = NULL;
-    s->entries = NULL;
     s->kind = kind;
     MPIR_Coll_owned_init(&s->owned);
     s->next = NULL;     /* only needed for sanity checks */
     s->prev = NULL;     /* only needed for sanity checks */
-
-    /* this mem will be freed by the progress engine when the request is completed */
-    MPIR_CHKPMEM_MALLOC(s->entries, MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry),
-                        MPL_MEM_COMM);
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
@@ -513,7 +538,8 @@ int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
     return mpi_errno;
 }
 
-int MPIDU_Sched_free(struct MPIDU_Sched *s)
+/* Releases what the entries and the schedule own */
+static void sched_release(struct MPIDU_Sched *s)
 {
     for (int i = 0; i < s->num_entries; ++i) {
         struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -521,10 +547,42 @@ int MPIDU_Sched_free(struct MPIDU_Sched *s)
             e->u.cond.free_p(e->u.cond.state);
         }
     }
-    MPL_free(s->entries);
     MPIR_Coll_owned_free(&s->owned);
+}
+
+int MPIDU_Sched_free(struct MPIDU_Sched *s)
+{
+    sched_release(s);
+    MPL_free(s->entries);
     MPL_free(s);
     return MPI_SUCCESS;
+}
+
+/* Frees a finished non-persistent schedule, or keeps it for reuse. The caller holds
+ * SCHED_LIST_MUTEX. */
+static void sched_recycle(struct MPIDU_Sched *s)
+{
+    if (all_schedules.num_free < SCHED_CACHE_MAX && s->size <= SCHED_CACHE_MAX_ENTRIES) {
+        sched_release(s);
+        s->num_entries = 0;
+        s->next = all_schedules.free;
+        all_schedules.free = s;
+        all_schedules.num_free++;
+    } else {
+        MPIDU_Sched_free(s);
+    }
+}
+
+/* Frees the schedules kept for reuse, at finalize */
+void MPIDU_Sched_cache_free(void)
+{
+    while (all_schedules.free) {
+        struct MPIDU_Sched *s = all_schedules.free;
+        all_schedules.free = s->next;
+        MPL_free(s->entries);
+        MPL_free(s);
+    }
+    all_schedules.num_free = 0;
 }
 
 int MPIDU_Sched_reset(struct MPIDU_Sched *s)
@@ -1162,7 +1220,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             MPIR_Request_complete(s->req);
 
             if (not_persistent) {
-                MPIDU_Sched_free(s);
+                sched_recycle(s);
             }
 
             if (made_progress)

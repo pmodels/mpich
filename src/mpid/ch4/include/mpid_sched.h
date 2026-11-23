@@ -15,6 +15,7 @@
 #define MPIR_Sched_create MPIDU_Sched_create
 #define MPIR_Sched_clone MPIDU_Sched_clone
 #define MPIR_Sched_free MPIDU_Sched_free
+#define MPIR_Sched_cache_free MPIDU_Sched_cache_free
 #define MPIR_Sched_reset MPIDU_Sched_reset
 #define MPIR_Sched_alloc_state MPIDU_Sched_alloc_state
 #define MPIR_Sched_add_buffer MPIDU_Sched_add_buffer

@@ -223,6 +223,7 @@ int MPII_Coll_finalize(void)
 
     /* deregister non blocking collectives progress hook */
     MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
+    MPIR_Sched_cache_free();
 
     mpi_errno = MPII_TSP_finalize();
     MPIR_ERR_CHECK(mpi_errno);

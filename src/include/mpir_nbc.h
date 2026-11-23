@@ -66,6 +66,8 @@ int MPIR_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 int MPIR_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 /* free the handle. The handle should not be used afterwards */
 int MPIR_Sched_free(MPIR_Sched_t s);
+/* frees the finished schedules kept for reuse, at finalize */
+void MPIR_Sched_cache_free(void);
 /* reset a completed persistent collective sched so it can be started again */
 int MPIR_Sched_reset(MPIR_Sched_t s);
 /* allocate the state buffer associated with the sched. It will be freed by MPIR_Sched_free */

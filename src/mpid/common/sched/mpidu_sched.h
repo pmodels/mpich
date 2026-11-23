@@ -143,6 +143,7 @@ void MPIDU_Sched_set_tag(MPIR_Sched_t s, int tag);
 int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 int MPIDU_Sched_free(MPIR_Sched_t s);
+void MPIDU_Sched_cache_free(void);
 int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 void MPIDU_Sched_add_buffer(MPIR_Sched_t s, void *buf);
