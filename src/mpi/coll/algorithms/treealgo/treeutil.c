@@ -14,42 +14,48 @@ static void tree_topology_dump_hierarchy(UT_array hierarchy[], int myrank,
                                          FILE * outfile) ATTRIBUTE((unused));
 static void tree_topology_print_heaps_built(heap_vector * minHeaps) ATTRIBUTE((unused));
 
-/* Routine to calculate log_k of an integer. Specific to tree based calculations */
-static int tree_ilog(int k, int number)
+/* The rank of logical rank lrank (relative to root), without a division or an overflow */
+static inline int tree_rank(int lrank, int root, int nranks)
 {
-    int i = 1, p = k - 1;
+    return (lrank >= nranks - root) ? lrank - (nranks - root) : lrank + root;
+}
 
-    for (; p - 1 < number; i++)
-        p *= k;
-
-    return i;
+/* The powers of k up to nranks - 1: pw[i] = k^i. Returns their number, which is the number of
+ * base-k digits of nranks - 1 (0 for nranks <= 1). */
+#define TREE_MAX_LEVELS 32
+static inline int tree_powers(int nranks, int k, int *pw)
+{
+    int m = 0, lim = (nranks - 1) / k;
+    for (int p = 1; nranks > 1; p *= k) {
+        pw[m++] = p;
+        if (p > lim)
+            break;
+    }
+    return m;
 }
 
 int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Treealgo_tree_t * ct)
 {
-    int lrank, child;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Treealgo_tree_init(ct, rank, nranks);
-
     MPIR_Assert(nranks >= 0);
-
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
     if (nranks == 0)
         goto fn_exit;
 
-    lrank = (rank + (nranks - root)) % nranks;
+    int lrank = (rank + (nranks - root)) % nranks;
 
-    ct->parent = (lrank == 0) ? -1 : (((lrank - 1) / k) + root) % nranks;
-
-    for (child = 1; child <= k; child++) {
-        int val = lrank * k + child;
-
-        if (val >= nranks)
-            break;
-
-        val = (val + root) % nranks;
-        mpi_errno = MPIR_Treealgo_tree_add_child(ct, val);
-        MPIR_ERR_CHECK(mpi_errno);
+    /* parent (lrank - 1) / k, children lrank * k + 1 .. lrank * k + k */
+    if (lrank > 0) {
+        ct->parent = tree_rank((lrank - 1) / k, root, nranks);
+    }
+    if (lrank <= (nranks - 2) / k) {
+        int first = lrank * k + 1;
+        int last = (first <= nranks - k) ? first + k - 1 : nranks - 1;
+        for (int c = first; c <= last; c++) {
+            mpi_errno = MPIR_Treealgo_tree_add_child(ct, tree_rank(c, root, nranks));
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:
@@ -129,77 +135,50 @@ int MPII_Treeutil_tree_kary_init_topo_aware(int rank, int nranks, int k0, int k1
 int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                                       MPIR_Treealgo_tree_t * ct)
 {
-    int lrank, i, j, maxstep, tmp, step, parent, current_rank, running_rank, crank;
     int mpi_errno = MPI_SUCCESS;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-
     MPIR_Assert(nranks >= 0);
-
-    if (nranks == 0)
+    MPIR_Assert(k >= 2);
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
+    if (nranks <= 1)
         goto fn_exit;
 
-    lrank = (rank + (nranks - root)) % nranks;
-    MPIR_Assert(k >= 2);
+    int lrank = (rank + (nranks - root)) % nranks;
 
-    /* maximum number of steps while generating the knomial tree */
-    maxstep = 0;
-    for (tmp = nranks - 1; tmp; tmp /= k)
-        maxstep++;
+    /* The ranks are numbered in preorder, largest subtree first. A node at level s has k-1
+     * children at each level below it, whose subtrees hold pw[lvl] consecutive ranks for
+     * lvl = maxstep-s-1 down to 0, maxstep being the number of base-k digits of nranks - 1.
+     * Walk down from the root: lrank is either in one of the current level's k-1 subtrees, or
+     * after all of them. */
+    int pw[TREE_MAX_LEVELS];
+    int lvl = tree_powers(nranks, k, pw) - 1;
 
-    ct->max_children = 0;
-    ct->heap_children = NULL;
-    ct->num_children = 0;
-    step = 0;
-    parent = -1;        /* root has no parent */
-    current_rank = 0;   /* start at root of the tree */
-    running_rank = current_rank + 1;    /* used for calculation below
-                                         * start with first child of the current_rank */
-
-    for (step = 0;; step++) {
-        MPIR_Assert(step <= nranks);    /* actually, should not need more steps than log_k(nranks) */
-
-        /* desired rank found */
-        if (lrank == current_rank)
-            break;
-
-        /* check if rank lies in this range */
-        for (j = 1; j < k; j++) {
-            if (lrank >= running_rank && lrank < running_rank + MPL_ipow(k, maxstep - step - 1)) {
-                /* move to the corresponding subtree */
-                parent = current_rank;
-                current_rank = running_rank;
-                running_rank = current_rank + 1;
-                break;
-            }
-
-            running_rank += MPL_ipow(k, maxstep - step - 1);
+    int cur = 0, next = 1;      /* next: the first rank of the current level's subtrees */
+    for (; cur != lrank; lvl--) {
+        MPIR_Assert(lvl >= 0);
+        int p = pw[lvl], off = lrank - next, j = 0;
+        while (j < k - 1 && off >= p) {
+            off -= p;
+            j++;
+        }
+        if (j < k - 1) {
+            ct->parent = tree_rank(cur, root, nranks);
+            cur = next + j * p;
+            next = cur + 1;
+        } else {
+            next += (k - 1) * p;
         }
     }
 
-    /* set the parent */
-    if (parent == -1)
-        ct->parent = -1;
-    else
-        ct->parent = (parent + root) % nranks;
-
-    /* set the children */
-    crank = lrank + 1;  /* crank stands for child rank */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "parent of rank %d is %d, total ranks = %d (root=%d)", rank,
-                     ct->parent, nranks, root));
-    for (i = step; i < maxstep; i++) {
-        for (j = 1; j < k; j++) {
-            if (crank < nranks) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST, "adding child %d to rank %d",
-                                 (crank + root) % nranks, rank));
-                mpi_errno = MPIR_Treealgo_tree_add_child(ct, (crank + root) % nranks);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-            crank += MPL_ipow(k, maxstep - i - 1);
+    /* the children: k-1 at each level below, largest subtrees first */
+    int crank = lrank + 1;
+    for (; lvl >= 0 && crank < nranks; lvl--) {
+        for (int j = 1; j < k; j++) {
+            mpi_errno = MPIR_Treealgo_tree_add_child(ct, tree_rank(crank, root, nranks));
+            MPIR_ERR_CHECK(mpi_errno);
+            if (pw[lvl] >= nranks - crank)
+                goto fn_exit;
+            crank += pw[lvl];
         }
     }
 
@@ -225,65 +204,58 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
                                       MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int lrank, i, j, depth;
-    int *flip_bit, child;
-
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->num_children = 0;
-    ct->parent = -1;
 
     MPIR_Assert(nranks >= 0);
-    if (nranks <= 0)
-        return mpi_errno;
-
-    lrank = (rank + (nranks - root)) % nranks;
     MPIR_Assert(k >= 2);
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
+    if (nranks == 0)
+        goto fn_exit;
 
-    ct->max_children = 0;
-    ct->heap_children = NULL;
-    ct->num_children = 0;
+    int lrank = (rank + (nranks - root)) % nranks;
 
-    /* Parent calculation */
-    if (lrank <= 0)
-        ct->parent = -1;
-    else {
-        depth = tree_ilog(k, nranks - 1);
+    /* In base k, a node's parent clears its lowest nonzero digit j, and its children set one of
+     * the zero digits below it. The root acts as if j were above the highest digit. */
+    int pw[TREE_MAX_LEVELS];
+    int m = tree_powers(nranks, k, pw);
+    int j, lvl;
+    if (lrank == 0) {
+        lvl = m - 1;
+    } else {
+        int q = lrank;
+        j = 0;
+        if ((k & (k - 1)) == 0) {
+            int shift = 0;
+            while ((1 << shift) < k)
+                shift++;
+            while ((q & (k - 1)) == 0) {
+                q >>= shift;
+                j++;
+            }
+            q &= k - 1;
+        } else {
+            while (q % k == 0) {
+                q /= k;
+                j++;
+            }
+            q %= k;
+        }
+        ct->parent = tree_rank(lrank - q * pw[j], root, nranks);
+        lvl = j - 1;
+    }
 
-        for (i = 0; i < depth; i++) {
-            if (MPL_getdigit(k, lrank, i)) {
-                ct->parent = (MPL_setdigit(k, lrank, i, 0) + root) % nranks;
-                break;
+    /* the children lrank + v * pw[lvl]: highest digit first, and the largest value first within
+     * a digit, keeping those below nranks */
+    int rem = nranks - 1 - lrank;
+    for (; lvl >= 0; lvl--) {
+        for (int v = k - 1; v >= 1; v--) {
+            if ((long long) v * pw[lvl] <= rem) {
+                mpi_errno = MPIR_Treealgo_tree_add_child(ct,
+                                                         tree_rank(lrank + v * pw[lvl], root,
+                                                                   nranks));
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
-
-    /* Children calculation */
-    depth = tree_ilog(k, nranks - 1);
-    flip_bit = (int *) MPL_calloc(depth, sizeof(int), MPL_MEM_COLL);
-    MPIR_ERR_CHKANDJUMP(!flip_bit, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    for (j = 0; j < depth; j++) {
-        if (MPL_getdigit(k, lrank, j)) {
-            break;
-        }
-        flip_bit[j] = 1;
-    }
-
-    for (j = depth - 1; j >= 0; j--) {
-        if (flip_bit[j] == 1) {
-            for (i = k - 1; i >= 1; i--) {
-                child = MPL_setdigit(k, lrank, j, i);
-                if (child < nranks)
-                    MPIR_Treealgo_tree_add_child(ct, (child + root) % nranks);
-            }
-        }
-    }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "parent of rank %d is %d, total ranks = %d (root=%d)", rank,
-                     ct->parent, nranks, root));
-    MPL_free(flip_bit);
 
   fn_exit:
     return mpi_errno;
