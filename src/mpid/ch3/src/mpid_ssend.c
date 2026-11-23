@@ -24,6 +24,7 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+    MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,

@@ -24,7 +24,7 @@
     } while (0)
 
 #ifdef ENABLE_THREADCOMM
-#define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
     do { \
         if (comm_ptr->threadcomm) { \
             mpi_errno = MPIR_Threadcomm_isend_attr(buf, count, datatype, dest, tag, \
@@ -36,7 +36,7 @@
 
 /* a threadcomm send takes the synchronous flag in attr; a send between threads of one process
  * ignores it and completes like a regular send */
-#define DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
     do { \
         if (comm_ptr->threadcomm) { \
             MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr); \
@@ -47,7 +47,7 @@
         } \
     } while (0)
 
-#define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
     do { \
         if (comm_ptr->threadcomm) { \
             mpi_errno = MPIR_Threadcomm_irecv_attr(buf, count, datatype, source, tag, \
@@ -58,21 +58,42 @@
     } while (0)
 
 #else
-#define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
     do { \
         mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
     } while (0)
 
-#define DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
     do { \
         mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
     } while (0)
 
-#define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
+#define DO_DEVICE_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
     do { \
         mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, attr, req); \
     } while (0)
 #endif
+
+/* A subcomm sends and receives on its parent, with the peer's rank translated. The
+ * device never sees a subcomm, and the status of a receive has the parent rank. */
+#define DO_ON_PARENT(DO_DEVICE_OP, buf, count, datatype, peer, tag, comm_ptr, attr, req) \
+    do { \
+        if (comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM) { \
+            MPIR_Assert(peer != MPI_ANY_SOURCE); \
+            int parent_peer_ = MPIR_Subcomm_parent_rank(comm_ptr, peer); \
+            MPIR_Comm *parent_ = comm_ptr->subcomm.parent; \
+            DO_DEVICE_OP(buf, count, datatype, parent_peer_, tag, parent_, attr, req); \
+        } else { \
+            DO_DEVICE_OP(buf, count, datatype, peer, tag, comm_ptr, attr, req); \
+        } \
+    } while (0)
+
+#define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    DO_ON_PARENT(DO_DEVICE_ISEND, buf, count, datatype, dest, tag, comm_ptr, attr, req)
+#define DO_MPID_ISSEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    DO_ON_PARENT(DO_DEVICE_ISSEND, buf, count, datatype, dest, tag, comm_ptr, attr, req)
+#define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
+    DO_ON_PARENT(DO_DEVICE_IRECV, buf, count, datatype, source, tag, comm_ptr, attr, req)
 
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 {

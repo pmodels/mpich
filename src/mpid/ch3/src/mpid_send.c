@@ -29,6 +29,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     }
 
     MPIR_FUNC_ENTER;
+    MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int coll_attr = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
