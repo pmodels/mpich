@@ -58,8 +58,8 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     int relative_dst, dst_tree_root, my_tree_root;
     int tree_root, nprocs_completed;
     MPI_Aint true_extent, true_lb;
-    void *tmp_buf;
-    struct MPII_Ibcast_state *ibcast_state;
+    void *tmp_buf = NULL;
+    struct MPII_Ibcast_state *ibcast_state = NULL;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
@@ -80,21 +80,28 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
-    /* we'll allocate tmp_buf along with ibcast_state.
-     * Alternatively, we can add init callback to allocate the tmp_buf.
+    /* ibcast_state is for checking the size received, so only when error checking is on. We'll
+     * allocate tmp_buf along with it. Alternatively, we can add init callback to allocate the
+     * tmp_buf.
      */
+    bool check = MPIR_ERROR_CHECKS_ENABLED;
+    MPI_Aint state_size = check ? sizeof(struct MPII_Ibcast_state) : 0;
     MPI_Aint tmp_size = 0;
     if (!is_contig) {
         tmp_size = nbytes;
     }
 
-    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state) + tmp_size);
-    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    if (!is_contig) {
-        tmp_buf = ibcast_state + 1;
+    if (state_size + tmp_size > 0) {
+        void *p = MPIR_Sched_alloc_state(s, state_size + tmp_size);
+        MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (check) {
+            ibcast_state = p;
+            ibcast_state->n_bytes = nbytes;
+        }
+        if (!is_contig) {
+            tmp_buf = (char *) p + state_size;
+        }
     }
-
-    ibcast_state->n_bytes = nbytes;
     if (is_contig) {
         /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -123,9 +130,11 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    ibcast_state->initial_bytes = curr_size;
-    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (check) {
+        ibcast_state->initial_bytes = curr_size;
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* initialize because the compiler can't tell that it is always initialized when used */
     incoming_count = -1;
@@ -165,15 +174,20 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
                                         curr_size, MPIR_BYTE_INTERNAL, dst, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier */
-            mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + recv_offset),
-                                               incoming_count,
-                                               MPIR_BYTE_INTERNAL, dst, comm_ptr,
-                                               &ibcast_state->status, s);
+            if (check)
+                mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + recv_offset), incoming_count,
+                                                   MPIR_BYTE_INTERNAL, dst, comm_ptr,
+                                                   &ibcast_state->status, s);
+            else
+                mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset), incoming_count,
+                                            MPIR_BYTE_INTERNAL, dst, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
+            if (check) {
+                mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
+                MPIR_ERR_CHECK(mpi_errno);
+                MPIR_SCHED_BARRIER(s);
+            }
 
             curr_size += incoming_count;
         }
@@ -248,14 +262,20 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
 
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
-                    mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + offset),
-                                                       incoming_count, MPIR_BYTE_INTERNAL, dst,
-                                                       comm_ptr, &ibcast_state->status, s);
+                    if (check)
+                        mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + offset),
+                                                           incoming_count, MPIR_BYTE_INTERNAL,
+                                                           dst, comm_ptr, &ibcast_state->status, s);
+                    else
+                        mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset), incoming_count,
+                                                    MPIR_BYTE_INTERNAL, dst, comm_ptr, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
-                    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    MPIR_SCHED_BARRIER(s);
+                    if (check) {
+                        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
+                        MPIR_ERR_CHECK(mpi_errno);
+                        MPIR_SCHED_BARRIER(s);
+                    }
 
                     curr_size += incoming_count;
                 }
@@ -268,12 +288,14 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
         mask <<= 1;
         i++;
     }
-    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (check) {
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     if (!is_contig) {
         if (rank != root) {
-            mpi_errno =
-                MPIR_Sched_copy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count, datatype, s);
+            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count,
+                                        datatype, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

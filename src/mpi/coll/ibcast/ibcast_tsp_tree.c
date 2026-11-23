@@ -56,34 +56,33 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     /* NOTE: Make sure you are handling non-contiguous datatypes
      * correctly with pipelined broadcast, for example, buffer+offset
      * if being calculated correctly */
+    /* checking the size received in each chunk, only when error checking is on */
+    bool check = MPIR_ERROR_CHECKS_ENABLED;
     for (i = 0; i < num_chunks; i++) {
         MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
-#ifdef HAVE_ERROR_CHECKING
-        struct MPII_Ibcast_state *ibcast_state = NULL;
-
-        ibcast_state = MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
-        MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        ibcast_state->n_bytes = msgsize * type_size;
-#endif
-
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {
-#ifdef HAVE_ERROR_CHECKING
-            mpi_errno =
-                MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
-                                            datatype, my_tree.parent, comm,
-                                            &ibcast_state->status, sched, 0, NULL, &recv_id);
-            MPIR_ERR_CHECK(mpi_errno);
-            int vtx_id;
-            MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
-                              &vtx_id);
-#else
-            mpi_errno =
-                MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
-                                     my_tree.parent, comm, sched, 0, NULL, &recv_id);
-            MPIR_ERR_CHECK(mpi_errno);
-#endif
+            if (check) {
+                struct MPII_Ibcast_state *ibcast_state = NULL;
+
+                ibcast_state = MPIR_TSP_sched_malloc(sizeof(struct MPII_Ibcast_state), sched);
+                MPIR_ERR_CHKANDJUMP(ibcast_state == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+                ibcast_state->n_bytes = msgsize * type_size;
+                mpi_errno = MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
+                                                        datatype, my_tree.parent, comm,
+                                                        &ibcast_state->status, sched, 0, NULL,
+                                                        &recv_id);
+                MPIR_ERR_CHECK(mpi_errno);
+                int vtx_id;
+                MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1,
+                                  &recv_id, &vtx_id);
+            } else {
+                mpi_errno = MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize,
+                                                 datatype, my_tree.parent, comm, sched, 0, NULL,
+                                                 &recv_id);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
             mpi_errno = MPIR_TSP_sched_add_window_deps(sched, i, recv_id, recv_ids, WINDOW, 0);
             MPIR_ERR_CHECK(mpi_errno);
         }

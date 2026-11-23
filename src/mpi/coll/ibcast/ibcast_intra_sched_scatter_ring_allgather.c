@@ -35,7 +35,7 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
 
-    struct MPII_Ibcast_state *ibcast_state;
+    struct MPII_Ibcast_state *ibcast_state = NULL;
 
     MPIR_COMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -49,21 +49,28 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
-    /* we'll allocate tmp_buf along with ibcast_state.
-     * Alternatively, we can add init callback to allocate the tmp_buf.
+    /* ibcast_state is for checking the size received, so only when error checking is on. We'll
+     * allocate tmp_buf along with it. Alternatively, we can add init callback to allocate the
+     * tmp_buf.
      */
+    bool check = MPIR_ERROR_CHECKS_ENABLED;
+    MPI_Aint state_size = check ? sizeof(struct MPII_Ibcast_state) : 0;
     MPI_Aint tmp_size = 0;
     if (!is_contig) {
         tmp_size = nbytes;
     }
 
-    ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state) + tmp_size);
-    MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    if (!is_contig) {
-        tmp_buf = ibcast_state + 1;
+    if (state_size + tmp_size > 0) {
+        void *p = MPIR_Sched_alloc_state(s, state_size + tmp_size);
+        MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (check) {
+            ibcast_state = p;
+            ibcast_state->n_bytes = nbytes;
+        }
+        if (!is_contig) {
+            tmp_buf = (char *) p + state_size;
+        }
     }
-
-    ibcast_state->n_bytes = nbytes;
     if (is_contig) {
         /* contiguous, no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -92,9 +99,11 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    ibcast_state->initial_bytes = curr_size;
-    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (check) {
+        ibcast_state->initial_bytes = curr_size;
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_init_length, ibcast_state, s);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
@@ -122,20 +131,28 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
                                     right_count, MPIR_BYTE_INTERNAL, right, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier here */
-        mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + left_disp),
-                                           left_count, MPIR_BYTE_INTERNAL, left, comm_ptr,
-                                           &ibcast_state->status, s);
+        if (check)
+            mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + left_disp), left_count,
+                                               MPIR_BYTE_INTERNAL, left, comm_ptr,
+                                               &ibcast_state->status, s);
+        else
+            mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + left_disp), left_count,
+                                        MPIR_BYTE_INTERNAL, left, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
+        if (check) {
+            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_SCHED_BARRIER(s);
+        }
 
         j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
-    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (check) {
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (!is_contig && rank != root) {
         mpi_errno =
