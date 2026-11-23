@@ -193,11 +193,13 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
             DL_FOREACH(all_schedules.head, elt) {
                 if (comm_ptr == elt->req->comm) {
                     if (elt->tag >= start && elt->tag < end) {
-                        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+                        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+                        break;
                     }
                 }
             }
             MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
