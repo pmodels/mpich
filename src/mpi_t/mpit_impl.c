@@ -71,9 +71,7 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
         mpi_errno = MPI_T_ERR_OUT_OF_HANDLES;
         goto fn_fail;
     }
-#ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_CVAR_HANDLE;
-#endif
 
     /* It is time to fix addr and count if they are unknown */
     if (cvar->get_count != NULL)

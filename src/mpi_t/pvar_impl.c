@@ -31,9 +31,7 @@ void MPIR_T_pvar_env_init(void)
         pvar_hashs[i] = NULL;
     }
 
-#ifdef HAVE_ERROR_CHECKING
     MPIR_T_pvar_all_handles_obj.kind = MPIR_T_PVAR_HANDLE;
-#endif
 }
 
 int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
@@ -75,9 +73,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
         mpi_errno = MPI_T_ERR_OUT_OF_HANDLES;
         goto fn_fail;
     }
-#ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_PVAR_HANDLE;
-#endif
 
     /* Setup the common fields */
     if (is_sum)
@@ -430,9 +426,7 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
     /* essential for utlist to work */
     (*session)->hlist = NULL;
 
-#ifdef HAVE_ERROR_CHECKING
     (*session)->kind = MPIR_T_PVAR_SESSION;
-#endif
 
   fn_exit:
     return mpi_errno;

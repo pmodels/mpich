@@ -18,9 +18,7 @@ void MPIR_T_register_event(int source_index, const char *name, int verbosity,
 #ifdef HAVE_MPIT_EVENTS
     MPIR_T_event_t *event = MPL_malloc(sizeof(MPIR_T_event_t), MPL_MEM_MPIT);
 
-#ifdef HAVE_ERROR_CHECKING
     event->kind = MPIR_T_EVENT;
-#endif
     event->index = global_num_events++;
     event->source_index = source_index;
     event->name = MPL_strdup(name);
@@ -55,9 +53,7 @@ void MPIR_T_register_source(const char *name, const char *desc, MPI_T_source_ord
 #ifdef HAVE_MPIT_EVENTS
     MPIR_T_source_t *source = MPL_malloc(sizeof(MPIR_T_source_t), MPL_MEM_MPIT);
 
-#ifdef HAVE_ERROR_CHECKING
     source->kind = MPIR_T_SOURCE;
-#endif
     source->index = global_num_sources++;
     source->name = MPL_strdup(name);
     source->desc = MPL_strdup(desc);
@@ -108,9 +104,7 @@ void MPIR_T_event_instance(int event_index, MPI_T_cb_safety cb_safety, void *dat
                 MPIR_T_source_t *source;
                 MPIR_T_event_instance_t event_instance;
                 HASH_FIND_INT(sources, &event->source_index, source);
-#ifdef HAVE_ERROR_CHECKING
                 event_instance.kind = MPIR_T_EVENT_INSTANCE;
-#endif
                 event_instance.event = event;
                 MPIR_T_source_get_timestamp_impl(event->source_index, &event_instance.timestamp);
                 event_instance.data = data;
@@ -272,9 +266,7 @@ int MPIR_T_event_handle_alloc_impl(int event_index, void *obj_handle, MPIR_Info 
 
     MPIR_T_event_registration_t *event_reg =
         MPL_malloc(sizeof(MPIR_T_event_registration_t), MPL_MEM_MPIT);
-#ifdef HAVE_ERROR_CHECKING
     event_reg->kind = MPIR_T_EVENT_REG;
-#endif
     event_reg->event = event;
     LL_APPEND(event->reg_list_head, event->reg_list_tail, event_reg);
     if (event->bind != MPI_T_BIND_NO_OBJECT)
