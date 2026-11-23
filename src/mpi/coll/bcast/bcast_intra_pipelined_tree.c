@@ -206,7 +206,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         } else if (num_children) {
             /* Send data to the children */
             for (j = 0; j < num_children; j++) {
-                p = (int *) utarray_eltptr(my_tree.children, j);
+                p = &MPIR_Treealgo_tree_children(&my_tree)[j];
                 dst = *p;
                 if (!is_nb) {
                     mpi_errno =

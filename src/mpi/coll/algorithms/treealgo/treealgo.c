@@ -127,17 +127,11 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                     MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder,
                                                            comm->coll.topo_aware_tree);
                 MPIR_ERR_CHECK(mpi_errno);
-                *ct = *comm->coll.topo_aware_tree;
                 comm->coll.topo_aware_tree_root = root;
                 comm->coll.topo_aware_tree_k = k;
             }
-            *ct = *comm->coll.topo_aware_tree;
-            utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-            for (int i = 0; i < ct->num_children; i++) {
-                utarray_push_back(ct->children,
-                                  &ut_int_array(comm->coll.topo_aware_tree->children)[i],
-                                  MPL_MEM_COLL);
-            }
+            mpi_errno = MPIR_Treealgo_tree_copy(ct, comm->coll.topo_aware_tree);
+            MPIR_ERR_CHECK(mpi_errno);
             break;
 
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE_K:
@@ -154,17 +148,11 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                     MPII_Treeutil_tree_topology_aware_k_init(comm, k, root, enable_reorder,
                                                              comm->coll.topo_aware_k_tree);
                 MPIR_ERR_CHECK(mpi_errno);
-                *ct = *comm->coll.topo_aware_k_tree;
                 comm->coll.topo_aware_k_tree_root = root;
                 comm->coll.topo_aware_k_tree_k = k;
             }
-            *ct = *comm->coll.topo_aware_k_tree;
-            utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-            for (int i = 0; i < ct->num_children; i++) {
-                utarray_push_back(ct->children,
-                                  &ut_int_array(comm->coll.topo_aware_k_tree->children)[i],
-                                  MPL_MEM_COLL);
-            }
+            mpi_errno = MPIR_Treealgo_tree_copy(ct, comm->coll.topo_aware_k_tree);
+            MPIR_ERR_CHECK(mpi_errno);
             break;
 
         default:
@@ -210,19 +198,14 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
                                                           lat_same_switches,
                                                           comm->coll.topo_wave_tree);
         MPIR_ERR_CHECK(mpi_errno);
-        *ct = *comm->coll.topo_wave_tree;
         comm->coll.topo_wave_tree_root = root;
         comm->coll.topo_wave_tree_overhead = overhead;
         comm->coll.topo_wave_tree_lat_diff_groups = lat_diff_groups;
         comm->coll.topo_wave_tree_lat_diff_switches = lat_diff_switches;
         comm->coll.topo_wave_tree_lat_same_switches = lat_same_switches;
     }
-    *ct = *comm->coll.topo_wave_tree;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-    for (int i = 0; i < ct->num_children; i++) {
-        utarray_push_back(ct->children,
-                          &ut_int_array(comm->coll.topo_wave_tree->children)[i], MPL_MEM_COLL);
-    }
+    mpi_errno = MPIR_Treealgo_tree_copy(ct, comm->coll.topo_wave_tree);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_EXIT;
 
@@ -238,7 +221,62 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
 
 void MPIR_Treealgo_tree_free(MPIR_Treealgo_tree_t * tree)
 {
-    utarray_free(tree->children);
+    if (tree->heap_children) {
+        MPL_free(tree->heap_children);
+        tree->heap_children = NULL;
+    }
+    tree->max_children = 0;
+    tree->num_children = 0;
+}
+
+void MPIR_Treealgo_tree_init(MPIR_Treealgo_tree_t * t, int rank, int nranks)
+{
+    t->rank = rank;
+    t->nranks = nranks;
+    t->parent = -1;
+    t->num_children = 0;
+    t->max_children = 0;
+    t->heap_children = NULL;
+}
+
+/* The slow path of MPIR_Treealgo_tree_add_child: the children do not fit inline */
+int MPII_Treealgo_tree_add_child_heap(MPIR_Treealgo_tree_t * t, int child)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (!t->heap_children || t->num_children == t->max_children) {
+        int n = t->max_children ? 2 * t->max_children : 2 * MPIR_TREEALGO_INLINE_CHILDREN;
+        int *p = MPL_realloc(t->heap_children, n * sizeof(int), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!t->heap_children) {
+            memcpy(p, t->inl_children, t->num_children * sizeof(int));
+        }
+        t->heap_children = p;
+        t->max_children = n;
+    }
+    t->heap_children[t->num_children++] = child;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Treealgo_tree_copy(MPIR_Treealgo_tree_t * dst, const MPIR_Treealgo_tree_t * src)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *dst = *src;
+    if (src->heap_children) {
+        dst->heap_children = MPL_malloc(src->max_children * sizeof(int), MPL_MEM_COLL);
+        MPIR_ERR_CHKANDJUMP(!dst->heap_children, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        memcpy(dst->heap_children, src->heap_children, src->num_children * sizeof(int));
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -250,7 +288,7 @@ static void dump_node(MPIR_Treealgo_tree_t * node, FILE * output_stream)
         if (child > 0) {
             fprintf(output_stream, ",");
         }
-        fprintf(output_stream, "%d", tree_ut_int_elt(node->children, child));
+        fprintf(output_stream, "%d", MPIR_Treealgo_tree_children(node)[child]);
     }
     fprintf(output_stream, "] }\n");
 }

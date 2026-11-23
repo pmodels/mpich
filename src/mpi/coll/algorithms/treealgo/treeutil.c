@@ -14,16 +14,6 @@ static void tree_topology_dump_hierarchy(UT_array hierarchy[], int myrank,
                                          FILE * outfile) ATTRIBUTE((unused));
 static void tree_topology_print_heaps_built(heap_vector * minHeaps) ATTRIBUTE((unused));
 
-static int tree_add_child(MPIR_Treealgo_tree_t * t, int rank)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    utarray_push_back(t->children, &rank, MPL_MEM_COLL);
-    t->num_children++;
-
-    return mpi_errno;
-}
-
 /* Routine to calculate log_k of an integer. Specific to tree based calculations */
 static int tree_ilog(int k, int number)
 {
@@ -40,11 +30,7 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Tre
     int lrank, child;
     int mpi_errno = MPI_SUCCESS;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-    ct->num_children = 0;
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
 
     MPIR_Assert(nranks >= 0);
 
@@ -62,7 +48,7 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Tre
             break;
 
         val = (val + root) % nranks;
-        mpi_errno = tree_add_child(ct, val);
+        mpi_errno = MPIR_Treealgo_tree_add_child(ct, val);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -87,11 +73,7 @@ int MPII_Treeutil_tree_kary_init_topo_aware(int rank, int nranks, int k0, int k1
     int lrank, child;
     int mpi_errno = MPI_SUCCESS;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-    ct->num_children = 0;
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
 
     MPIR_Assert(nranks >= 0);
 
@@ -110,7 +92,7 @@ int MPII_Treeutil_tree_kary_init_topo_aware(int rank, int nranks, int k0, int k1
                 break;
 
             val = (val + root) % nranks;
-            mpi_errno = tree_add_child(ct, val);
+            mpi_errno = MPIR_Treealgo_tree_add_child(ct, val);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
@@ -121,7 +103,7 @@ int MPII_Treeutil_tree_kary_init_topo_aware(int rank, int nranks, int k0, int k1
                 break;
 
             val = (val + root) % nranks;
-            mpi_errno = tree_add_child(ct, val);
+            mpi_errno = MPIR_Treealgo_tree_add_child(ct, val);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -167,7 +149,8 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
     for (tmp = nranks - 1; tmp; tmp /= k)
         maxstep++;
 
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    ct->max_children = 0;
+    ct->heap_children = NULL;
     ct->num_children = 0;
     step = 0;
     parent = -1;        /* root has no parent */
@@ -213,7 +196,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                 (MPL_DBG_FDEST, "adding child %d to rank %d",
                                  (crank + root) % nranks, rank));
-                mpi_errno = tree_add_child(ct, (crank + root) % nranks);
+                mpi_errno = MPIR_Treealgo_tree_add_child(ct, (crank + root) % nranks);
                 MPIR_ERR_CHECK(mpi_errno);
             }
             crank += MPL_ipow(k, maxstep - i - 1);
@@ -257,7 +240,8 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
     lrank = (rank + (nranks - root)) % nranks;
     MPIR_Assert(k >= 2);
 
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    ct->max_children = 0;
+    ct->heap_children = NULL;
     ct->num_children = 0;
 
     /* Parent calculation */
@@ -291,7 +275,7 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
             for (i = k - 1; i >= 1; i--) {
                 child = MPL_setdigit(k, lrank, j, i);
                 if (child < nranks)
-                    tree_add_child(ct, (child + root) % nranks);
+                    MPIR_Treealgo_tree_add_child(ct, (child + root) % nranks);
             }
         }
     }
@@ -617,11 +601,7 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
         0 != MPII_Treeutil_hierarchy_populate(comm, rank, nranks, root, enable_reorder, hierarchy))
         goto fn_fallback;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-    ct->num_children = 0;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
 
     for (dim = MPIR_Process.coords_dims - 1; dim >= 0; --dim) {
         int cur_level_count = utarray_len(&hierarchy[dim]);
@@ -646,8 +626,8 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
-            int children_number = utarray_len(tmp_tree.children);
-            int *children = ut_int_array(tmp_tree.children);
+            int children_number = tmp_tree.num_children;
+            int *children = MPIR_Treealgo_tree_children(&tmp_tree);
             for (int i = 0; i < children_number; ++i) {
                 int r = 0;
                 if (dim >= 1) {
@@ -656,7 +636,7 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
                 } else {
                     r = tree_ut_int_elt(&level->ranks, children[i]);
                 }
-                mpi_errno = tree_add_child(ct, r);
+                mpi_errno = MPIR_Treealgo_tree_add_child(ct, r);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -724,11 +704,7 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
     if (0 != MPII_Treeutil_hierarchy_populate(comm, rank, nranks, root, enable_reorder, hierarchy))
         goto fn_fallback;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-    ct->num_children = 0;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
 
     for (dim = MPIR_Process.coords_dims - 1; dim >= 0; --dim) {
         int cur_level_count = utarray_len(&hierarchy[dim]);
@@ -772,8 +748,8 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
-            int children_number = utarray_len(tmp_tree.children);
-            int *children = ut_int_array(tmp_tree.children);
+            int children_number = tmp_tree.num_children;
+            int *children = MPIR_Treealgo_tree_children(&tmp_tree);
             for (int i = 0; i < children_number; ++i) {
                 int r = 0;
                 if (dim >= 1) {
@@ -782,7 +758,7 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                 } else {
                     r = tree_ut_int_elt(&level->ranks, children[i]);
                 }
-                mpi_errno = tree_add_child(ct, r);
+                mpi_errno = MPIR_Treealgo_tree_add_child(ct, r);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -1147,11 +1123,7 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
         (hierarchy, &minHeaps, unv_set, root, &root_gr_sorted_idx, &root_sw_sorted_idx))
         goto fn_fallback;
 
-    ct->rank = rank;
-    ct->nranks = nranks;
-    ct->parent = -1;
-    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
-    ct->num_children = 0;
+    MPIR_Treealgo_tree_init(ct, rank, nranks);
 
     MPIR_Assert(nranks >= 0);
 
@@ -1183,7 +1155,7 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
             MPIR_Assert(ct->parent == -1);
             ct->parent = minHeaps.heap[best_v_sw_idx].elem->rank;
         } else if (rank == minHeaps.heap[best_v_sw_idx].elem->rank) {
-            mpi_errno = tree_add_child(ct, pair_elt(unv_set, best_u_nd_idx)->rank);
+            mpi_errno = MPIR_Treealgo_tree_add_child(ct, pair_elt(unv_set, best_u_nd_idx)->rank);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

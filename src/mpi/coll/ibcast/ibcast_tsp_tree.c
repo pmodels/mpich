@@ -92,7 +92,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
         bool sync = MPIR_Algo_pipeline_sync(i, SYNC_INTERVAL);
         for (int c = 0; c < num_children; c++) {
             void *buf = (char *) buffer + offset * extent;
-            int child = ut_int_array(my_tree.children)[c];
+            int child = MPIR_Treealgo_tree_children(&my_tree)[c];
             int n_in = (my_tree.parent != -1) ? 1 : 0;
             int vtx_id;
             if (sync) {

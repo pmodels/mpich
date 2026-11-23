@@ -508,14 +508,13 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         addr = RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr);
         for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.num_children); i++) {
             int child_rank =
-                *(int *) utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree).children, i);
+                MPIR_Treealgo_tree_children(&RELEASE_GATHER_FIELD(comm_ptr, reduce_tree))[i];
             RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr[i]) =
                 addr + (child_rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }
         for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large.num_children); i++) {
             int child_rank =
-                *(int *) utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large).children,
-                                        i);
+                MPIR_Treealgo_tree_children(&RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large))[i];
             RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr_large[i]) =
                 addr + (child_rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }

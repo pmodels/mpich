@@ -70,22 +70,20 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     if (my_tree.parent != -1) {
         MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
     } else {    /* initialize an empty children array */
-        utarray_new(parents_tree.children, &ut_int_icd, MPL_MEM_COLL);
-        parents_tree.num_children = 0;
+        MPIR_Treealgo_tree_init(&parents_tree, -1, size);
     }
 
     recv_size = 1;      /* total size of the data to be received from the parent.
                          * 1 is to count yourself, now add the size of each child's subtree */
     for (i = 0; i < num_children; i++) {
-        int current_child = (*(int *) utarray_eltptr(my_tree.children, i) - root + size) % size;
+        int current_child = (MPIR_Treealgo_tree_children(&my_tree)[i] - root + size) % size;
 
         if (i < num_children - 1) {
-            next_child = (*(int *) utarray_eltptr(my_tree.children, i + 1) - root + size) % size;
+            next_child = (MPIR_Treealgo_tree_children(&my_tree)[i + 1] - root + size) % size;
         } else {
             next_child = size;
             for (j = 0; j < parents_tree.num_children; j++) {
-                int sibling =
-                    (*(int *) utarray_eltptr(parents_tree.children, j) - root + size) % size;
+                int sibling = (MPIR_Treealgo_tree_children(&parents_tree)[j] - root + size) % size;
                 if (sibling > lrank) {  /* This is the first sibling larger than lrank */
                     next_child = sibling;
                     break;
@@ -149,7 +147,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 
     /* send data to children */
     for (i = 0; i < num_children; i++) {
-        int child = *(int *) utarray_eltptr(my_tree.children, i);
+        int child = MPIR_Treealgo_tree_children(&my_tree)[i];
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + child_data_offset[i] * sendtype_extent,
                                          child_subtree_size[i] * sendcount, sendtype,
                                          child, comm, sched, num_send_dependencies,

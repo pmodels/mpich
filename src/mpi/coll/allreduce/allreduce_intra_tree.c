@@ -115,7 +115,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
             MPIR_ERR_CHKANDJUMP(!recv_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            int child = *(int *) utarray_eltptr(my_tree.children, i);
+            int child = MPIR_Treealgo_tree_children(&my_tree)[i];
             MPIR_ERR_CHKANDJUMP(!child, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
             mpi_errno =
@@ -154,7 +154,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         }
         if (num_children) {
             for (i = 0; i < num_children; i++) {
-                int child = *(int *) utarray_eltptr(my_tree.children, i);
+                int child = MPIR_Treealgo_tree_children(&my_tree)[i];
                 MPIR_ERR_CHKANDJUMP(!child, mpi_errno, MPI_ERR_OTHER, "**nomem");
                 MPIR_Assert(child != 0);
                 mpi_errno = MPIC_Isend(reduce_address, msgsize,

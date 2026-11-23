@@ -73,7 +73,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     }
 
     /* initialize the tree */
-    my_tree.children = NULL;
+    my_tree.heap_children = NULL;
     if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE || tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
         mpi_errno =
             MPIR_Treealgo_tree_create_topo_aware(comm, tree_type, k, tree_root,
@@ -173,7 +173,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
-            int child = *(int *) utarray_eltptr(my_tree.children, i);
+            int child = MPIR_Treealgo_tree_children(&my_tree)[i];
 
             /* Setup the dependencies for posting receive for child's data */
             if (buffer_per_child || i == 0) {   /* no dependency, just post the receive */
