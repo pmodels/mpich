@@ -14,7 +14,7 @@ After algorithm selection, `coll_sig->sched` holds the operation object and
 |---|---|---|---|
 | `MPIR_SCHED_NORMAL` | `MPIR_Sched_t` (`MPIDU_Sched`, `src/mpid/common/sched`) | `sched_` algorithms, through `MPIR_Sched_*` | the `MPIDU` schedule progress |
 | `MPIR_SCHED_GENTRAN` | `MPIR_TSP_sched_t` (`MPII_Genutil_sched_t`, `src/mpi/coll/transports/gentran`) | `tsp_` algorithms, through `MPIR_TSP_sched_*` | the gentran progress |
-| `MPIR_SCHED_GREQ` | `MPIR_Coll_greq_t` (`src/mpi/coll/src/coll_greq.c`) | greq algorithms, through their `_init` | the algorithm itself |
+| `MPIR_SCHED_GREQ` | `MPIR_Coll_greq_t` (`src/mpi/coll/src/coll_greq.c`) | greq algorithms, through their `_init`; the adapters, wrapping a schedule | the algorithm itself, or the wrapper |
 
 The first two are generic: the algorithm describes its steps, and a shared
 engine runs them. A *greq algorithm* (grequest collective) has its own
@@ -332,6 +332,39 @@ swap steps to. It handles device buffers itself.
 A persistent `MPIDU` schedule also keeps its tag for every start. The blocking
 `circ_graph` algorithms (`bcast`, `allgather`, `reduce`) call
 `MPII_cga_queue_free` after `MPII_cga_waitall`.
+
+## Wrapped schedules (`src/mpi/coll/src/coll_wrap.c`)
+
+The in-place copy and GPU swap adapters (see
+[Collective Selection](Collective_Selection.md)) need local copies before
+the algorithm's schedule starts, and the swap also after it completes. They
+don't add steps to the schedule. The selection builds it as usual, of any
+type, and `MPIR_Coll_wrap_sched(coll_sig, &wrap)` replaces it in the
+`coll_sig` with a greq operation that runs it:
+
+```c
+mpi_errno = fn(coll_sig, cnt);     /* builds the algorithm's schedule */
+MPIR_ERR_CHECK(mpi_errno);
+mpi_errno = MPIR_Coll_wrap_sched(coll_sig, &wrap);
+MPIR_ERR_CHECK(mpi_errno);
+MPIR_Coll_owned_add_buffer(MPIR_Coll_wrap_get_owned(wrap), tmp);
+MPIR_Coll_wrap_add_copy(wrap, false, src, count, type, tmp, count, type);
+```
+
+- `start_fn` makes the copies that go before (`after == false`), starts the
+  schedule (`MPIR_Coll_inner_start`, which `nbcutil.c` also uses for the
+  inner calls of compositions), creates the grequest and adds an async thing.
+- The async thing polls the schedule's request. When it completes, the
+  thing makes the copies that go after, and completes the grequest with the
+  schedule's error.
+- The copies run at every start, when the operation starts, so a persistent
+  operation copies each time, and an inner call of a composition reads its
+  input when the parent reaches it.
+- The wrapper's `owned` holds the collective's handles and what the adapter
+  hands it. The schedule is freed with the wrapper if it is persistent or
+  never started; otherwise it frees itself when it completes.
+- A wrapped schedule can be wrapped again, e.g. the GPU swap around an
+  in-place copy.
 
 ## Related
 
