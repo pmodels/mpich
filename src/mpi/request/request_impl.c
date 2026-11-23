@@ -812,13 +812,6 @@ int MPIR_Waitall(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_s
 
         for (i = ii; i < ii + icount; i++) {
             if (request_ptrs[i]) {
-                /* If one of the requests is an anysource on a communicator that's
-                 * disabled such communication, convert this operation to a testall
-                 * instead to prevent getting stuck in the progress engine. */
-                if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
-                    disabled_anysource = TRUE;
-                }
-
                 if (request_ptrs[i]->kind != MPIR_REQUEST_KIND__RECV &&
                     request_ptrs[i]->kind != MPIR_REQUEST_KIND__SEND) {
                     requests_property &= ~MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY;
@@ -829,6 +822,18 @@ int MPIR_Waitall(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_s
                             MPIR_Grequest_wait(request_ptrs[i], &array_of_statuses[i]);
                     }
                 }
+
+                if (MPIR_Request_is_complete(request_ptrs[i])) {
+                    if (unlikely(request_ptrs[i]->status.MPI_ERROR != MPI_SUCCESS)) {
+                        requests_property &= ~MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY;
+                    }
+                    n_completed += 1;
+                } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
+                    /* If one of the requests is an anysource on a communicator that's
+                     * disabled such communication, convert this operation to a testall
+                     * instead to prevent getting stuck in the progress engine. */
+                    disabled_anysource = TRUE;
+                }
             } else {
                 if (!ignoring_statuses)
                     MPIR_Status_set_empty(&array_of_statuses[i]);
@@ -838,16 +843,20 @@ int MPIR_Waitall(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_s
         }
 
         if (n_completed == icount) {
-            continue;
-        }
+            if (ignoring_statuses && (requests_property & MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)) {
+                continue;
+            }
+        } else {
+            if (unlikely(disabled_anysource)) {
+                mpi_errno =
+                    MPIR_Testall(count, request_ptrs, &disabled_anysource, array_of_statuses);
+                goto fn_exit;
+            }
 
-        if (unlikely(disabled_anysource)) {
-            mpi_errno = MPIR_Testall(count, request_ptrs, &disabled_anysource, array_of_statuses);
-            goto fn_exit;
+            mpi_errno =
+                MPID_Waitall(icount, &request_ptrs[ii], array_of_statuses, requests_property);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-
-        mpi_errno = MPID_Waitall(icount, &request_ptrs[ii], array_of_statuses, requests_property);
-        MPIR_ERR_CHECK(mpi_errno);
 
         if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
             /* NOTE-O1: high-message-rate optimization.  For simple send and recv
