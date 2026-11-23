@@ -156,7 +156,8 @@ static void cga_bcast_free(void *state_p)
 }
 
 int MPIR_Ibcast_intra_circ_graph_init(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                      int root, MPIR_Comm * comm, MPIR_Coll_greq_t * greq)
+                                      int root, MPIR_Comm * comm, int chunk_size, int q_len,
+                                      MPIR_Coll_greq_t * greq)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -183,7 +184,7 @@ int MPIR_Ibcast_intra_circ_graph_init(void *buffer, MPI_Aint count, MPI_Datatype
     /* request queue */
     int min_pending_blocks = q * 2;
     int coll_attr = 0;
-    mpi_errno = MPII_cga_init_bcast_queue(&state->queue, min_pending_blocks,
+    mpi_errno = MPII_cga_init_bcast_queue(&state->queue, min_pending_blocks, chunk_size, q_len,
                                           buffer, count, datatype, comm, coll_attr, greq->tag);
     MPIR_ERR_CHECK(mpi_errno);
 

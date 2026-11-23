@@ -155,17 +155,19 @@ int MPIR_cga_init(void);
 int MPIR_cga_finalize(void);
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
-                              void *buf, MPI_Aint count, MPI_Datatype datatype,
-                              MPIR_Comm * comm, int coll_attr, int tag);
+                              int chunk_size, int q_len, void *buf, MPI_Aint count,
+                              MPI_Datatype datatype, MPIR_Comm * comm, int coll_attr, int tag);
 int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pending,
-                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  MPIR_Comm * comm, int coll_attr, int rank, int comm_size);
+                                  int chunk_size, int q_len, void *buf, MPI_Aint count,
+                                  MPI_Datatype datatype, MPIR_Comm * comm, int coll_attr, int rank,
+                                  int comm_size);
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
-                               void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm, int coll_attr);
+                               int chunk_size, int q_len, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_attr);
 int MPII_cga_init_allreduce_queue(MPII_cga_request_queue * queue, int num_pending,
-                                  void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                                  MPI_Op op, MPIR_Comm * comm, int coll_attr);
+                                  int chunk_size, int q_len, void *recvbuf, MPI_Aint count,
+                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                  int coll_attr);
 int MPII_cga_switch_coll_type(MPII_cga_request_queue * queue, enum MPII_cga_type coll_type);
 
 int MPII_cga_bcast_isend(MPII_cga_request_queue * queue, int block, int peer_rank, bool * flag);

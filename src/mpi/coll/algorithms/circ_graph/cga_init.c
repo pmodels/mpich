@@ -10,7 +10,32 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CIRC_GRAPH_Q_LEN
+    - name        : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the size (in bytes) of a chunk buffer in the pool of the circ_graph
+        algorithms, 0 for no pool. A chunk that needs packing (a noncontiguous datatype or a
+        device buffer) is at most this size; without a pool such a message is not chunked.
+
+    - name        : MPIR_CVAR_BCAST_CIRC_GRAPH_CHUNK_SIZE
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the chunk size (in bytes) for the pipeline of the circ_graph Bcast
+        algorithm, 0 for no chunking.
+
+    - name        : MPIR_CVAR_BCAST_CIRC_GRAPH_Q_LEN
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_Q_LEN
       category    : COLLECTIVE
       type        : int
       default     : 8
@@ -18,17 +43,104 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Determines how many messages can be in flight at once for the circ_graph algorithm
+        Determines how many messages can be in flight at once for the circ_graph Bcast
+        algorithm (at least 2).
 
-    - name        : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+    - name        : MPIR_CVAR_IBCAST_CIRC_GRAPH_CHUNK_SIZE
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
       category    : COLLECTIVE
       type        : int
       default     : 131072
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Specifies the chunk size (in bytes) for pipeline data transfer.
+        Specifies the chunk size (in bytes) for the pipeline of the circ_graph Ibcast
+        algorithm, 0 for no chunking.
+
+    - name        : MPIR_CVAR_IBCAST_CIRC_GRAPH_Q_LEN
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many messages can be in flight at once for the circ_graph Ibcast
+        algorithm (at least 2).
+
+    - name        : MPIR_CVAR_ALLGATHER_CIRC_GRAPH_CHUNK_SIZE
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the chunk size (in bytes) for the pipeline of the circ_graph Allgather
+        algorithm, 0 for no chunking.
+
+    - name        : MPIR_CVAR_ALLGATHER_CIRC_GRAPH_Q_LEN
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many messages can be in flight at once for the circ_graph Allgather
+        algorithm (at least 2).
+
+    - name        : MPIR_CVAR_REDUCE_CIRC_GRAPH_CHUNK_SIZE
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the chunk size (in bytes) for the pipeline of the circ_graph Reduce
+        algorithm, 0 for no chunking.
+
+    - name        : MPIR_CVAR_REDUCE_CIRC_GRAPH_Q_LEN
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many messages can be in flight at once for the circ_graph Reduce
+        algorithm (at least 2).
+
+    - name        : MPIR_CVAR_ALLREDUCE_CIRC_GRAPH_CHUNK_SIZE
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the chunk size (in bytes) for the pipeline of the circ_graph Allreduce
+        algorithm, 0 for no chunking.
+
+    - name        : MPIR_CVAR_ALLREDUCE_CIRC_GRAPH_Q_LEN
+      alt-env     : MPIR_CVAR_CIRC_GRAPH_Q_LEN
+      category    : COLLECTIVE
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Determines how many messages can be in flight at once for the circ_graph Allreduce
+        algorithm (at least 2).
 
     - name        : MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS
       category    : COLLECTIVE

@@ -30,7 +30,8 @@
 
 int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
                                  MPI_Aint count, MPI_Datatype datatype,
-                                 MPI_Op op, int root, MPIR_Comm * comm, int coll_attr)
+                                 MPI_Op op, int root, MPIR_Comm * comm, int chunk_size, int q_len,
+                                 int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -69,7 +70,7 @@ int MPIR_Reduce_intra_circ_graph(const void *sendbuf, void *recvbuf,
     /* Run schedule */
     MPII_cga_request_queue queue;
     int min_pending_blocks = cga.q * 2;
-    mpi_errno = MPII_cga_init_reduce_queue(&queue, min_pending_blocks,
+    mpi_errno = MPII_cga_init_reduce_queue(&queue, min_pending_blocks, chunk_size, q_len,
                                            recvbuf, count, datatype, op, comm, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 

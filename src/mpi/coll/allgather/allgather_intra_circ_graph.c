@@ -16,7 +16,7 @@
 
 int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm, int coll_attr)
+                                    MPIR_Comm * comm, int chunk_size, int q_len, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -40,7 +40,7 @@ int MPIR_Allgather_intra_circ_graph(const void *sendbuf, MPI_Aint sendcount, MPI
     /* Run schedule */
     MPII_cga_request_queue queue;
     int min_pending_blocks = cga.q * 2;
-    mpi_errno = MPII_cga_init_allgather_queue(&queue, min_pending_blocks,
+    mpi_errno = MPII_cga_init_allgather_queue(&queue, min_pending_blocks, chunk_size, q_len,
                                               recvbuf, recvcount, recvtype,
                                               comm, coll_attr, rank, comm_size);
     MPIR_ERR_CHECK(mpi_errno);

@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-- [Collective Algorithms](#collective-algorithms) (224)
+- [Collective Algorithms](#collective-algorithms) (233)
 - [CH4 Device Layer](#ch4-device-layer) (92)
 - [CH3 Device Layer](#ch3-device-layer) (25)
 - [Process Management](#process-management) (7)
@@ -57,6 +57,28 @@ Sets the radix value for the generic transport Brucks-based Allgather algorithm.
 * integer - default is 2, represents the radix value for generic transport Brucks-based Allgather.
 
 Used in functions: `MPI_Allgather`
+
+### MPIR_CVAR_ALLGATHER_CIRC_GRAPH_CHUNK_SIZE
+
+Sets the chunk size, in bytes, for the pipeline of the circ_graph allgather algorithm. It is used when the algorithm is forced through `MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `chunk_size` instead. It determines how the message is split into blocks, and so the number of rounds. A queue that needs packing (a non-contiguous datatype or a GPU buffer) clamps it to `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, the pool's chunk buffer size.
+
+* 0 - Uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk size in bytes.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_ALLGATHER_CIRC_GRAPH_Q_LEN
+
+Sets the request queue length for the circ_graph allgather algorithm, how many nonblocking send or receive requests can be in flight at once. It is used when the algorithm is forced through `MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `q_len` instead.
+
+* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
+* integer 2 or greater - default is 8, represents the request queue length.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_Q_LEN
+
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_ALLGATHER_COMPOSITION
 
@@ -146,6 +168,28 @@ Selects the collective communication library backend used by the CCL allreduce w
 * rccl - selects RCCL for the CCL allreduce wrapper.
 
 Used in functions: `get_ccl_from_string`, `MPIR_Allreduce_intra_ccl`
+
+### MPIR_CVAR_ALLREDUCE_CIRC_GRAPH_CHUNK_SIZE
+
+Sets the chunk size, in bytes, for the pipeline of the circ_graph allreduce algorithm. It is used when the algorithm is forced through `MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `chunk_size` instead. It determines how the message is split into blocks, and so the number of rounds; blocks are rounded down to whole datatype elements. A queue that needs packing (a non-contiguous datatype or a GPU buffer) clamps it to `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, the pool's chunk buffer size.
+
+* 0 - Uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk size in bytes.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_ALLREDUCE_CIRC_GRAPH_Q_LEN
+
+Sets the request queue length for the circ_graph allreduce algorithm, how many nonblocking send or receive requests can be in flight at once. It is used when the algorithm is forced through `MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `q_len` instead.
+
+* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
+* integer 2 or greater - default is 8, represents the request queue length.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_Q_LEN
+
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_ALLREDUCE_COMPOSITION
 
@@ -490,6 +534,28 @@ Controls receive posting for recursive-exchange Barrier algorithms. It is used o
 
 Used in functions: `MPI_Barrier`
 
+### MPIR_CVAR_BCAST_CIRC_GRAPH_CHUNK_SIZE
+
+Sets the chunk size, in bytes, for the pipeline of the circ_graph broadcast algorithm. It is used when the algorithm is forced through `MPIR_CVAR_BCAST_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `chunk_size` instead. It determines how the message is split into blocks, and so the number of rounds. A queue that needs packing (a non-contiguous datatype or a GPU buffer) clamps it to `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, the pool's chunk buffer size.
+
+* 0 - Uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk size in bytes.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_BCAST_CIRC_GRAPH_Q_LEN
+
+Sets the request queue length for the circ_graph broadcast algorithm, how many nonblocking send or receive requests can be in flight at once. It is used when the algorithm is forced through `MPIR_CVAR_BCAST_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `q_len` instead.
+
+* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
+* integer 2 or greater - default is 8, represents the request queue length.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_Q_LEN
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
 ### MPIR_CVAR_BCAST_COMPOSITION
 
 Selects the CH4 broadcast composition in `MPID_Bcast`. When set to automatic selection, the CH4 collective-selection table is consulted and may fall back to the MPIR broadcast implementation if no selection is found. If `MPIR_CVAR_COLL_HYBRID_MEMORY` is disabled, automatic selection first checks the broadcast buffer memory type and uses the GPU-specific collective-selection table for strict device buffers. Forced CH4 compositions apply only to intracommunicators, with the combined network-module and shared-memory compositions also requiring a parent communicator; if a forced composition cannot be applied, the fallback path uses the MPIR broadcast implementation for intercommunicators and the network-module-only CH4 composition for intracommunicators. No alternate CVAR name is visible in `src/mpid/ch4/src/ch4_coll.h`. When active, this CVAR sets whether CH4 broadcast uses automatic collective selection, a combined network-module and shared-memory composition, or a network-module-only composition.
@@ -690,12 +756,12 @@ Used in functions: `MPID_Init`
 
 ### MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
 
-Sets the chunk size, in bytes, for circ_graph collective pipeline data transfer. It is used when initializing circ_graph broadcast, allgather, and reduce queues after a circ_graph collective algorithm is selected. It determines how data is split into blocks for broadcast and allgather, determines reduction block sizes rounded to whole datatype elements, and controls whether the registered host chunk-buffer pool is created for pack buffers. The chunk-buffer pool sizing also depends on `MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS` and `MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS`, and pack buffers are used only when the queue needs packing for non-contiguous datatypes or GPU buffers.
+Sets the size, in bytes, of a chunk buffer in the registered host chunk-buffer pool of the circ_graph collective algorithms. The pool is created during circ_graph initialization and holds the pack buffers, which a queue uses only when it needs packing for a non-contiguous datatype or a GPU buffer. Such a queue clamps its chunk size, set per collective by `MPIR_CVAR_<COLL>_CIRC_GRAPH_CHUNK_SIZE` or by the algorithm parameter `chunk_size` in a collective selection JSON file, to this size. The pool sizing also depends on `MPIR_CVAR_CIRC_GRAPH_NUM_CHUNKS` and `MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS`. This name is also an alternate name of the per-collective chunk-size CVARs, so setting it in the environment sets those too.
 
-* 0 - Disables creation of the registered host chunk-buffer pool and uses a single chunk for each transfer.
-* positive integer - default is 131072, represents the target chunk size in bytes for pipelined circ_graph transfers and enables creation of the registered host chunk-buffer pool.
+* 0 - Disables creation of the registered host chunk-buffer pool; a queue that needs packing uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk buffer size in bytes and enables creation of the registered host chunk-buffer pool.
 
-Used in functions: `MPIR_cga_init`, `MPIR_cga_finalize`, `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`, `MPII_cga_init_reduce_queue`
+Used in functions: `MPIR_cga_init`, `MPIR_cga_finalize`
 
 ### MPIR_CVAR_CIRC_GRAPH_MAX_CHUNKS
 
@@ -712,15 +778,6 @@ Sets the initial number of chunk buffers reserved for circ_graph collective pipe
 * integer - default is 32, represents the initial number of chunk buffers for the registered host chunk-buffer pool.
 
 Used in functions: `MPIR_cga_init`
-
-### MPIR_CVAR_CIRC_GRAPH_Q_LEN
-
-Sets the request queue length for the circ_graph collective algorithm runtime. It is used when initializing circ_graph broadcast, allgather, and reduce queues, and controls how many nonblocking send or receive requests can be tracked in the queue at once. It works with `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, which determines the chunking used to initialize the same queues.
-
-* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
-* integer 2 or greater - default is 8, represents the request queue length.
-
-Used in functions: `MPII_cga_init_bcast_queue`, `MPII_cga_init_allgather_queue`, `MPII_cga_init_reduce_queue`
 
 ### MPIR_CVAR_COLLECTIVE_FALLBACK
 
@@ -1249,6 +1306,28 @@ Used in functions: `MPIR_Coll_init_algo_container`
 Sets the k value for the recursive-exchange Allgatherv phase of the generic transport intra-communicator Ibcast scatterv followed by recursive-exchange Allgatherv algorithm. It is used when `MPIR_CVAR_IBCAST_INTRA_ALGORITHM` forces `tsp_scatterv_recexch_allgatherv`; when automatic collective selection chooses that TSP Ibcast path, the selected container supplies the Allgatherv k value instead of this CVAR. The selected path also uses `MPIR_CVAR_IBCAST_SCATTERV_KVAL` for the scatterv phase.
 
 * integer - default is 2, represents the k value used by the recursive-exchange Allgatherv phase of the generic transport Ibcast scatterv plus recursive-exchange Allgatherv algorithm.
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_IBCAST_CIRC_GRAPH_CHUNK_SIZE
+
+Sets the chunk size, in bytes, for the pipeline of the circ_graph nonblocking broadcast algorithm. It is used when the algorithm is forced through `MPIR_CVAR_IBCAST_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `chunk_size` instead. It determines how the message is split into blocks, and so the number of rounds. A queue that needs packing (a non-contiguous datatype or a GPU buffer) clamps it to `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, the pool's chunk buffer size.
+
+* 0 - Uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk size in bytes.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_IBCAST_CIRC_GRAPH_Q_LEN
+
+Sets the request queue length for the circ_graph nonblocking broadcast algorithm, how many nonblocking send or receive requests can be in flight at once. It is used when the algorithm is forced through `MPIR_CVAR_IBCAST_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `q_len` instead.
+
+* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
+* integer 2 or greater - default is 8, represents the request queue length.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_Q_LEN
 
 Used in functions: `MPIR_Coll_init_algo_container`
 
@@ -1855,6 +1934,28 @@ Controls how many gentran collective operations the progress engine advances dur
 * positive integer - maximum number of collective operations that can report progress during one progress-hook invocation.
 
 Used in functions: `MPII_Genutil_progress_hook`
+
+### MPIR_CVAR_REDUCE_CIRC_GRAPH_CHUNK_SIZE
+
+Sets the chunk size, in bytes, for the pipeline of the circ_graph reduce algorithm. It is used when the algorithm is forced through `MPIR_CVAR_REDUCE_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `chunk_size` instead. It determines how the message is split into blocks, and so the number of rounds; blocks are rounded down to whole datatype elements. A queue that needs packing (a non-contiguous datatype or a GPU buffer) clamps it to `MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE`, the pool's chunk buffer size.
+
+* 0 - Uses a single chunk for the whole message.
+* positive integer - default is 131072, represents the chunk size in bytes.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_CHUNK_SIZE
+
+Used in functions: `MPIR_Coll_init_algo_container`
+
+### MPIR_CVAR_REDUCE_CIRC_GRAPH_Q_LEN
+
+Sets the request queue length for the circ_graph reduce algorithm, how many nonblocking send or receive requests can be in flight at once. It is used when the algorithm is forced through `MPIR_CVAR_REDUCE_INTRA_ALGORITHM`; a collective selection JSON file gives it as the algorithm parameter `q_len` instead.
+
+* integer less than 2 - Uses a minimum queue length of 2 to avoid circular dependency issues.
+* integer 2 or greater - default is 8, represents the request queue length.
+
+Alternate name: MPIR_CVAR_CIRC_GRAPH_Q_LEN
+
+Used in functions: `MPIR_Coll_init_algo_container`
 
 ### MPIR_CVAR_REDUCE_COMPOSITION
 

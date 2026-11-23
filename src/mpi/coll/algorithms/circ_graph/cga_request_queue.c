@@ -114,6 +114,18 @@ static void init_pack_attr(MPII_cga_request_queue * queue, void *buf, MPI_Dataty
     queue->need_pack = (!dt_contig || MPL_gpu_attr_is_dev(&queue->attr));
 }
 
+/* A packed chunk has to fit in a cell of the chunk pool; 0 means no chunking. */
+static int clamp_chunk_size(MPII_cga_request_queue * queue, int chunk_size)
+{
+    if (chunk_size <= 0) {
+        return 0;
+    }
+    if (queue->need_pack && chunk_size > MPIR_cga_chunk_pool_cell_size) {
+        return MPIR_cga_chunk_pool_cell_size;
+    }
+    return chunk_size;
+}
+
 static int init_request_queue_common(MPII_cga_request_queue * queue,
                                      int q_len, int num_pending, MPI_Aint num_chunks, int all_size,
                                      MPI_Aint chunk_size, MPI_Aint last_chunk_size,
@@ -123,8 +135,8 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* With chunking (chunk_size > 0) every chunk fits in a cell of the chunk pool. Without it
-     * (chunk_size == 0) there may be no pool, and the single chunk is the whole message,
+    /* With chunking (chunk_size > 0) every packed chunk fits in a cell of the chunk pool. Without
+     * it (chunk_size == 0) there may be no pool, and the single chunk is the whole message,
      * last_chunk_size bytes, so its pack buffer is allocated with MPL_malloc. */
     queue->packbuf_from_pool = (chunk_size > 0);
 
@@ -282,13 +294,10 @@ static void *get_user_buf(MPII_cga_request_queue * queue, MPI_Aint nbytes, bool 
 }
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
-                              void *buf, MPI_Aint count, MPI_Datatype datatype,
-                              MPIR_Comm * comm, int coll_attr, int tag)
+                              int chunk_size, int q_len, void *buf, MPI_Aint count,
+                              MPI_Datatype datatype, MPIR_Comm * comm, int coll_attr, int tag)
 {
     int mpi_errno;
-
-    int chunk_size = MPIR_cga_chunk_pool_cell_size;
-    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 to avoid circular dependency issues within a round */
     if (q_len < 2) {
@@ -296,6 +305,7 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
     }
 
     init_pack_attr(queue, buf, datatype);
+    chunk_size = clamp_chunk_size(queue, chunk_size);
 
     MPI_Aint type_size, data_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -316,13 +326,11 @@ int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
 }
 
 int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pending,
-                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  MPIR_Comm * comm, int coll_attr, int rank, int comm_size)
+                                  int chunk_size, int q_len, void *buf, MPI_Aint count,
+                                  MPI_Datatype datatype, MPIR_Comm * comm, int coll_attr, int rank,
+                                  int comm_size)
 {
     int mpi_errno;
-
-    int chunk_size = MPIR_cga_chunk_pool_cell_size;
-    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 to avoid circular dependency issues within a round */
     if (q_len < 2) {
@@ -330,6 +338,7 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
     }
 
     init_pack_attr(queue, buf, datatype);
+    chunk_size = clamp_chunk_size(queue, chunk_size);
 
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -353,13 +362,10 @@ int MPII_cga_init_allgather_queue(MPII_cga_request_queue * queue, int num_pendin
 }
 
 int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
-                               void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm, int coll_attr)
+                               int chunk_size, int q_len, void *recvbuf, MPI_Aint count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    MPI_Aint chunk_size = MPIR_cga_chunk_pool_cell_size;
-    int q_len = MPIR_CVAR_CIRC_GRAPH_Q_LEN;
 
     /* minimum q_len is 2 */
     if (q_len < 2) {
@@ -367,12 +373,13 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
     }
 
     init_pack_attr(queue, recvbuf, datatype);
+    chunk_size = clamp_chunk_size(queue, chunk_size);
 
     MPI_Aint type_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* Reduction chunks have to contain whole datatypes. Round down so that a chunk fits in a
-     * pool cell. If not even one datatype fits, don't chunk (chunk_size = 0). */
+    /* Reduction chunks have to contain whole datatypes. Round down so that a chunk is at most
+     * chunk_size. If not even one datatype fits, don't chunk (chunk_size = 0). */
     MPI_Aint num_chunks, chunk_count, last_chunk_count, last_chunk_size;
     chunk_count = (chunk_size > 0 && type_size > 0) ? chunk_size / type_size : 0;
     if (chunk_count == 0) {
@@ -436,13 +443,13 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
 }
 
 int MPII_cga_init_allreduce_queue(MPII_cga_request_queue * queue, int num_pending,
-                                  void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                                  MPI_Op op, MPIR_Comm * comm, int coll_attr)
+                                  int chunk_size, int q_len, void *recvbuf, MPI_Aint count,
+                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPII_cga_init_reduce_queue(queue, num_pending, recvbuf, count, datatype,
-                                           op, comm, coll_attr);
+    mpi_errno = MPII_cga_init_reduce_queue(queue, num_pending, chunk_size, q_len,
+                                           recvbuf, count, datatype, op, comm, coll_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (queue->need_pack && MPL_gpu_attr_is_dev(&queue->attr)) {

@@ -195,6 +195,8 @@ bcast-intra:
     scatter_recursive_doubling_allgather
     scatter_ring_allgather
     circ_graph
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_GRAPH_CHUNK_SIZE, CIRC_GRAPH_Q_LEN
     smp
         restrictions: hierarchical
         inner: bcast-intra@node_comm, bcast-intra@node_roots_comm
@@ -238,6 +240,8 @@ ibcast-intra:
         extra_params: chunk_size
         cvar_params: RING_CHUNK_SIZE
     circ_graph
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_GRAPH_CHUNK_SIZE, CIRC_GRAPH_Q_LEN
 bcast-inter:
     remote_send_local_bcast
         inner: bcast-intra@local_comm
@@ -334,6 +338,8 @@ allgather-intra:
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     circ_graph
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_GRAPH_CHUNK_SIZE, CIRC_GRAPH_Q_LEN
     cnc
         macro_guard: defined(ENABLE_CNC)
 allgather-inter:
@@ -476,6 +482,8 @@ reduce-intra:
     binomial
     circ_graph
         restrictions: commutative
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_GRAPH_CHUNK_SIZE, CIRC_GRAPH_Q_LEN
     smp
         restrictions: commutative, hierarchical
         inner: reduce-intra@node_comm, reduce-intra@node_roots_comm
@@ -544,6 +552,8 @@ allreduce-intra:
         macro_guard: defined(ENABLE_CNC)
     circ_graph
         restrictions: commutative
+        extra_params: chunk_size, q_len
+        cvar_params: CIRC_GRAPH_CHUNK_SIZE, CIRC_GRAPH_Q_LEN
 allreduce-inter:
     reduce_exchange_bcast
         inner: reduce-intra@local_comm, bcast-intra@local_comm
