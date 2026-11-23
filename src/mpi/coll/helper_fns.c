@@ -176,7 +176,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
     DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-    if (request_ptr) {
+    if (!MPIR_Request_is_complete_builtin(request_ptr)) {
         mpi_errno = MPIC_Wait(request_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Request_free(request_ptr);
