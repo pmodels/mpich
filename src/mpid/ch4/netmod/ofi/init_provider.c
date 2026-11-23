@@ -87,6 +87,15 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
         MPIDI_OFI_update_global_settings(*prov_out);
     }
 
+    /* auto takes the rndv protocol selection logic from the capability set */
+    if (MPIR_CVAR_CH4_OFI_RNDV_SELECTION == MPIR_CVAR_CH4_OFI_RNDV_SELECTION_auto) {
+        if (0 == strcmp(MPIDI_OFI_global.settings.rndv_selection, "efa")) {
+            MPIR_CVAR_CH4_OFI_RNDV_SELECTION = MPIR_CVAR_CH4_OFI_RNDV_SELECTION_efa;
+        } else {
+            MPIR_CVAR_CH4_OFI_RNDV_SELECTION = MPIR_CVAR_CH4_OFI_RNDV_SELECTION_generic;
+        }
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -192,6 +201,8 @@ static int find_provider(struct fi_info **prov_out)
     MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : MPIDI_OFI_caps_list[MPIDI_OFI_SET_NUMBER].cap
 
         UPDATE_SETTING_BY_SET_NUMBER(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
+        MPIDI_OFI_global.settings.rndv_selection =
+            MPIDI_OFI_caps_list[MPIDI_OFI_SET_NUMBER].rndv_selection;
 
     }
 

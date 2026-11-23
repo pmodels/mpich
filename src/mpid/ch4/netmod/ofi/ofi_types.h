@@ -428,6 +428,7 @@ typedef struct {
     int minor_version;
     int num_am_buffers;
     int num_optimized_memory_regions;
+    const char *rndv_selection; /* default for MPIR_CVAR_CH4_OFI_RNDV_SELECTION */
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {

@@ -339,6 +339,8 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
                           MPIR_CVAR_CH4_OFI_NUM_OPTIMIZED_MEMORY_REGIONS);
     UPDATE_SETTING_BY_CAP(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
     UPDATE_SETTING_BY_CAP(enable_mr_hmem, MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM);
+    /* resolved against MPIR_CVAR_CH4_OFI_RNDV_SELECTION in MPIDI_OFI_find_provider */
+    p_settings->rndv_selection = prov_caps->rndv_selection;
 }
 
 #define CHECK_CAP(setting, cond_bad) \
