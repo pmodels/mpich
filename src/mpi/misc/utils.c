@@ -342,65 +342,42 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             dir = MPL_GPU_COPY_DIRECTION_NONE;
         }
 
-        int fast_copy_threshold;
-        if (dir == MPL_GPU_COPY_H2D) {
-            /* Used in ofi_events.h when unpacking from received pack_buffer to original device buffer */
-            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D;
-        } else if (dir == MPL_GPU_COPY_D2H) {
-            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H;
-        } else if (dir == MPL_GPU_COPY_D2D_OUTGOING || dir == MPL_GPU_COPY_D2D_INCOMING) {
-            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2D;
-        } else {
-            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
+        if (MPL_gpu_attr_is_dev(send_attr)) {
+            dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
         }
-        /* MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE is the ceiling of the direction thresholds */
-        fast_copy_threshold = MPL_MIN(fast_copy_threshold, MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
 
-        if (copy_sz <= fast_copy_threshold) {
-            mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
-            MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**mpl_gpu_fast_memcpy");
-            if (gpu_req) {
-                gpu_req->type = MPIR_NULL_REQUEST;
-            }
-        } else {
-            if (MPL_gpu_attr_is_dev(send_attr)) {
-                dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
-            }
-
-            if (dev_id == -1) {
-                if (MPL_gpu_attr_is_dev(recv_attr)) {
-                    dev_id = MPL_gpu_get_dev_id_from_attr(recv_attr);
-                } else {
-                    /* fallback to do_localcopy */
-                    goto fn_fallback;
-                }
-            }
-            MPIR_ERR_CHKANDJUMP(dev_id == -1, mpi_errno, MPI_ERR_OTHER,
-                                "**mpl_gpu_get_dev_id_from_attr");
-
-            MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
-            if (gpu_req == NULL) {
-                MPL_gpu_request req;
-                mpl_errno = MPL_gpu_imemcpy(recv_ptr, send_ptr, copy_sz, dev_id, dir, enginetype,
-                                            &req, commit);
-                MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                    "**mpl_gpu_imemcpy");
-
-                while (!completed) {
-                    mpl_errno = MPL_gpu_test(&req, &completed);
-                    MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                        "**mpl_gpu_test");
-                }
+        if (dev_id == -1) {
+            if (MPL_gpu_attr_is_dev(recv_attr)) {
+                dev_id = MPL_gpu_get_dev_id_from_attr(recv_attr);
             } else {
-                mpl_errno = MPL_gpu_imemcpy(recv_ptr, send_ptr, copy_sz, dev_id, dir, enginetype,
-                                            &gpu_req->u.gpu_req, commit);
-                MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                    "**mpl_gpu_imemcpy");
-                gpu_req->type = MPIR_GPU_REQUEST;
+                /* fallback to do_localcopy */
+                goto fn_fallback;
             }
-            MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
         }
+        MPIR_ERR_CHKANDJUMP(dev_id == -1, mpi_errno, MPI_ERR_OTHER,
+                            "**mpl_gpu_get_dev_id_from_attr");
+
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
+        if (gpu_req == NULL) {
+            MPL_gpu_request req;
+            mpl_errno = MPL_gpu_imemcpy(recv_ptr, send_ptr, copy_sz, dev_id, dir, enginetype,
+                                        &req, commit);
+            MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_gpu_imemcpy");
+
+            while (!completed) {
+                mpl_errno = MPL_gpu_test(&req, &completed);
+                MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**mpl_gpu_test");
+            }
+        } else {
+            mpl_errno = MPL_gpu_imemcpy(recv_ptr, send_ptr, copy_sz, dev_id, dir, enginetype,
+                                        &gpu_req->u.gpu_req, commit);
+            MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_gpu_imemcpy");
+            gpu_req->type = MPIR_GPU_REQUEST;
+        }
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GPU_MUTEX);
 #else /* !MPL_HAVE_ZE */
         goto fn_fallback;
 #endif
