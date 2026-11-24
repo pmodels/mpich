@@ -25,7 +25,9 @@
  * stale, when the buffer is freed (free hook), and at finalize. The ctx argument is
  * passed through to ext_free.
  *
- * There is no locking inside; the callers serialize access as before.
+ * There is no locking inside; the callers serialize access as before. The local mmap
+ * calls are also made from the MPI layer, which holds no lock, so they leave the buffer
+ * unmapped when MPI is threaded (MPI_THREAD_MULTIPLE).
  */
 
 struct MPIDU_gpu_cache_entry {

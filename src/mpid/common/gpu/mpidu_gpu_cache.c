@@ -144,8 +144,8 @@ struct MPIDU_gpu_cache_entry *MPIDU_gpu_cache_find_handle(MPL_gpu_ipc_mem_handle
  * address of dev_ptr and attr->type is MPL_GPU_POINTER_DEV_MMAP, so that
  * MPIR_Localcopy_gpu copies directly. A new buffer evicts the least recently used
  * entry that is not in use when the cache is full. Otherwise (not ZE device memory,
- * every entry in use, or caching disabled) *host_ptr_out is dev_ptr and attr is
- * unchanged. The mapping stays valid only until the cache drops the entry, so use it
+ * every entry in use, caching disabled, or MPI threaded) *host_ptr_out is dev_ptr and
+ * attr is unchanged. The mapping stays valid only until the cache drops the entry, so use it
  * before the next cache call. */
 int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out)
 {
@@ -188,7 +188,9 @@ static int local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_
     *entry_out = NULL;
 
 #ifdef MPL_HAVE_ZE
-    if (!gpu_cache.initialized || !MPL_gpu_attr_is_dev(attr)) {
+    /* the callers of the local mmaps hold no common lock, so skip the cache when MPI is
+     * threaded; the copy then goes through the GPU instead */
+    if (!gpu_cache.initialized || MPIR_IS_THREADED || !MPL_gpu_attr_is_dev(attr)) {
         goto fn_exit;
     }
 
