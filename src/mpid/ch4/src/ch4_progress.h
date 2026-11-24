@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
 #else
 #define MPIDI_PROGRESS_YIELD() \
     do { \
-        if (MPIR_ThreadInfo.isThreaded) { \
+        if (MPIR_IS_THREADED) { \
             MPID_Thread_yield(); \
         } \
     } while (0)
