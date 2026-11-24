@@ -16,14 +16,18 @@
  *   * the shm IPC module exports the handle to local peers and keeps their mappings
  *     in entry->ext, which it releases in the ext_free callback;
  *   * small (CPU) copies use the host mmap from MPIDU_gpu_cache_local_mmap instead
- *     of mapping and unmapping the buffer on every copy (ZE only).
+ *     of mapping and unmapping the buffer on every copy (ZE only); a user that keeps
+ *     the mapping across calls (e.g. a collective) pins the entry with
+ *     MPIDU_gpu_cache_local_mmap_acquire and MPIDU_gpu_cache_release.
  *
  * Entries are keyed by the allocation (base, length, buffer id). An entry is dropped
  * when the cache is full (LRU among the entries not in use), when a lookup finds it
  * stale, when the buffer is freed (free hook), and at finalize. The ctx argument is
  * passed through to ext_free.
  *
- * There is no locking inside; the callers serialize access as before.
+ * There is no locking inside; the callers serialize access as before. The local mmap
+ * calls are also made from the MPI layer, which holds no lock, so they leave the buffer
+ * unmapped when MPI is threaded (MPI_THREAD_MULTIPLE).
  */
 
 struct MPIDU_gpu_cache_entry {
@@ -45,5 +49,9 @@ int MPIDU_gpu_cache_get_handle(void *base, uintptr_t len, MPL_gpu_device_attr * 
 struct MPIDU_gpu_cache_entry *MPIDU_gpu_cache_find(const void *base);
 struct MPIDU_gpu_cache_entry *MPIDU_gpu_cache_find_handle(MPL_gpu_ipc_mem_handle_t * handle_ptr);
 int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out);
+int MPIDU_gpu_cache_local_mmap_acquire(void *dev_ptr, MPL_pointer_attr_t * attr,
+                                       void **host_ptr_out,
+                                       struct MPIDU_gpu_cache_entry **entry_out);
+void MPIDU_gpu_cache_release(struct MPIDU_gpu_cache_entry *entry);
 
 #endif /* MPIDU_GPU_CACHE_H_INCLUDED */

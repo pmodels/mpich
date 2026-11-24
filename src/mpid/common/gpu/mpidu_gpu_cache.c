@@ -53,6 +53,8 @@ static int cache_insert(void *base, uintptr_t len, uint64_t tag, MPL_gpu_device_
                         MPL_gpu_ipc_mem_handle_t ** handle_out);
 static int entry_free(struct MPIR_range_cache_entry *range, void *ctx);
 static void gpu_free_hook(void *dptr);
+static int local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out,
+                      struct MPIDU_gpu_cache_entry **entry_out);
 
 int MPIDU_gpu_cache_init(bool force_insert)
 {
@@ -142,16 +144,53 @@ struct MPIDU_gpu_cache_entry *MPIDU_gpu_cache_find_handle(MPL_gpu_ipc_mem_handle
  * address of dev_ptr and attr->type is MPL_GPU_POINTER_DEV_MMAP, so that
  * MPIR_Localcopy_gpu copies directly. A new buffer evicts the least recently used
  * entry that is not in use when the cache is full. Otherwise (not ZE device memory,
- * every entry in use, or caching disabled) *host_ptr_out is dev_ptr and attr is
- * unchanged. */
+ * every entry in use, caching disabled, or MPI threaded) *host_ptr_out is dev_ptr and
+ * attr is unchanged. The mapping stays valid only until the cache drops the entry, so use it
+ * before the next cache call. */
 int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out)
+{
+    struct MPIDU_gpu_cache_entry *entry;
+    return local_mmap(dev_ptr, attr, host_ptr_out, &entry);
+}
+
+/* As MPIDU_gpu_cache_local_mmap, and keep the entry, with its mapping, in the cache until
+ * MPIDU_gpu_cache_release. *entry_out is NULL if the cache is not used, in which case
+ * *host_ptr_out is dev_ptr. Release only an entry that was acquired. */
+int MPIDU_gpu_cache_local_mmap_acquire(void *dev_ptr, MPL_pointer_attr_t * attr,
+                                       void **host_ptr_out,
+                                       struct MPIDU_gpu_cache_entry **entry_out)
+{
+    int mpi_errno = local_mmap(dev_ptr, attr, host_ptr_out, entry_out);
+    if (*entry_out) {
+        (*entry_out)->range.in_use++;
+    }
+    return mpi_errno;
+}
+
+void MPIDU_gpu_cache_release(struct MPIDU_gpu_cache_entry *entry)
+{
+    if (entry) {
+        entry->range.in_use--;
+        MPIR_Assert(entry->range.in_use >= 0);
+    }
+}
+
+/* ---- static functions ---- */
+
+/* See MPIDU_gpu_cache_local_mmap. *entry_out is the entry that holds the mapping, or NULL
+ * if the cache is not used. */
+static int local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **host_ptr_out,
+                      struct MPIDU_gpu_cache_entry **entry_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
     *host_ptr_out = dev_ptr;    /* default: unchanged */
+    *entry_out = NULL;
 
 #ifdef MPL_HAVE_ZE
-    if (!gpu_cache.initialized || !MPL_gpu_attr_is_dev(attr)) {
+    /* the callers of the local mmaps hold no common lock, so skip the cache when MPI is
+     * threaded; the copy then goes through the GPU instead */
+    if (!gpu_cache.initialized || MPIR_IS_THREADED || !MPL_gpu_attr_is_dev(attr)) {
         goto fn_exit;
     }
 
@@ -194,6 +233,7 @@ int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **
     uintptr_t offset = (uintptr_t) dev_ptr - (uintptr_t) pbase;
     *host_ptr_out = (void *) ((uintptr_t) entry->local_map.mapped_addr + offset);
     attr->type = MPL_GPU_POINTER_DEV_MMAP;
+    *entry_out = entry;
 
   fn_exit:
 #endif
@@ -203,8 +243,6 @@ int MPIDU_gpu_cache_local_mmap(void *dev_ptr, MPL_pointer_attr_t * attr, void **
     goto fn_exit;
 #endif
 }
-
-/* ---- static functions ---- */
 
 static int cache_search(void *base, uintptr_t len, uint64_t tag, void *ctx,
                         struct MPIDU_gpu_cache_entry **entry_out)

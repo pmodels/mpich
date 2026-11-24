@@ -8,6 +8,9 @@
 
 #include "mpidu_genq_private_pool.h"
 
+/* defined in mpidu_gpu_cache.h */
+struct MPIDU_gpu_cache_entry;
+
 /* Because reduce, allgather, allreduce are based on the bcast algorithm, we
  * assume the bcast context unless otherwise noted */
 
@@ -77,6 +80,12 @@ typedef struct {
     bool need_pack;
     bool packbuf_from_pool;     /* pack buffers come from MPIR_cga_chunk_pool, else MPL_malloc */
     MPL_pointer_attr_t attr;
+    /* small copies between a device buf and host memory use its cached host mmap */
+    void *mmap_buf;             /* host address of buf, or NULL if not mapped */
+    MPL_pointer_attr_t mmap_attr;
+    struct MPIDU_gpu_cache_entry *mmap_entry;   /* pinned in the cache while mapped */
+    MPI_Aint mmap_h2d_max;      /* largest copy into buf that uses mmap_buf */
+    MPI_Aint mmap_d2h_max;      /* largest copy out of buf that uses mmap_buf */
 
     enum MPII_cga_type coll_type;
     union {
