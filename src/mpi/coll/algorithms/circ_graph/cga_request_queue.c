@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "circ_graph.h"
+#include "mpidu_gpu_cache.h"
 
 /* This runtime uses a block-based dependency tracking.
  *
@@ -45,6 +46,9 @@ static MPIR_gpu_req *get_staging_areq(MPII_cga_request_queue * queue, int block,
 /* whether a send reads its block from staging_buf rather than the user buffer */
 static bool send_from_staging(MPII_cga_request_queue * queue, int req_id);
 
+static int setup_mmap(MPII_cga_request_queue * queue, MPI_Aint max_copy);
+static void *get_user_buf(MPII_cga_request_queue * queue, MPI_Aint nbytes, bool is_h2d,
+                          MPL_pointer_attr_t ** attr_out);
 static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out);
 static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf);
 static int alloc_tmpbuf(MPII_cga_request_queue * queue, void **tmpbuf_out);
@@ -133,6 +137,13 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->inverse_order = inverse_order;
     queue->dt_contig = dt_contig;
 
+    queue->mmap_buf = NULL;
+    queue->mmap_entry = NULL;
+    if (queue->need_pack && MPL_gpu_attr_is_dev(&queue->attr)) {
+        mpi_errno = setup_mmap(queue, (chunk_size > 0) ? chunk_size : last_chunk_size);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     /* a nonblocking call uses the tag of its call chain, and a blocking one (tag 0) the
      * blocking tag. Nothing below a user-level call draws a tag. */
     if (tag) {
@@ -156,12 +167,14 @@ static int init_request_queue_common(MPII_cga_request_queue * queue,
     queue->pending_blocks = MPL_malloc(all_size * num_pending * sizeof(*queue->pending_blocks),
                                        MPL_MEM_OTHER);
     if (!queue->pending_blocks) {
+        MPIDU_gpu_cache_release(queue->mmap_entry);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     queue->requests = MPL_malloc(q_len * sizeof(*queue->requests), MPL_MEM_OTHER);
     if (!queue->requests) {
         MPL_free(queue->pending_blocks);
+        MPIDU_gpu_cache_release(queue->mmap_entry);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
@@ -209,10 +222,58 @@ void MPII_cga_queue_free(MPII_cga_request_queue * queue)
         queue->u.reduce.staging_buf = NULL;
         queue->need_staging = false;
     }
+    MPIDU_gpu_cache_release(queue->mmap_entry);
+    queue->mmap_entry = NULL;
+    queue->mmap_buf = NULL;
     MPL_free(queue->pending_blocks);
     MPL_free(queue->requests);
     queue->pending_blocks = NULL;
     queue->requests = NULL;
+}
+
+/* A copy between the device buffer and host memory of at most
+ * MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (into buf) or _D2H (out of buf) bytes is a CPU copy
+ * through the cached host mmap of buf: MPIR_Localcopy_gpu copies a MPL_GPU_POINTER_DEV_MMAP
+ * pointer with MPL_gpu_fast_memcpy. The mapping is made once and pinned in the cache for the
+ * life of the queue. The cache leaves the buffer unmapped when MPI is threaded. */
+static int setup_mmap(MPII_cga_request_queue * queue, MPI_Aint max_copy)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    queue->mmap_h2d_max = MPL_MIN(MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D,
+                                  MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
+    queue->mmap_d2h_max = MPL_MIN(MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H,
+                                  MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
+    if (!queue->dt_contig || max_copy > MPL_MAX(queue->mmap_h2d_max, queue->mmap_d2h_max)) {
+        goto fn_exit;
+    }
+
+    void *dev_ptr = (char *) queue->buf + queue->true_lb;
+    void *host_ptr;
+    queue->mmap_attr = queue->attr;
+    mpi_errno = MPIDU_gpu_cache_local_mmap_acquire(dev_ptr, &queue->mmap_attr, &host_ptr,
+                                                   &queue->mmap_entry);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (queue->mmap_entry) {
+        queue->mmap_buf = (char *) host_ptr - queue->true_lb;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* the user buffer, or its host mmap, for a copy of nbytes into (is_h2d) or out of it */
+static void *get_user_buf(MPII_cga_request_queue * queue, MPI_Aint nbytes, bool is_h2d,
+                          MPL_pointer_attr_t ** attr_out)
+{
+    if (queue->mmap_buf && nbytes <= (is_h2d ? queue->mmap_h2d_max : queue->mmap_d2h_max)) {
+        *attr_out = &queue->mmap_attr;
+        return queue->mmap_buf;
+    }
+    *attr_out = &queue->attr;
+    return queue->buf;
 }
 
 int MPII_cga_init_bcast_queue(MPII_cga_request_queue * queue, int num_pending,
@@ -760,23 +821,23 @@ static int issue_unpack(MPII_cga_request_queue * queue, int block, int root,
     MPI_Aint nbytes = GET_BLOCK_SIZE(block);
 
     void *dst_buf;
+    MPL_pointer_attr_t *dst_attr = &queue->attr;
     MPI_Aint offset;
     if (tmpbuf) {
         /* reduce need unpack into a tmpbuf before reduce_local */
         dst_buf = (char *) tmpbuf - queue->u.reduce.tmpbuf_shift;
         offset = 0;
     } else {
-        if (root == 0) {
-            dst_buf = queue->buf;
-        } else {
-            dst_buf = (char *) queue->buf + root * queue->buf_extent;
+        dst_buf = get_user_buf(queue, nbytes, true, &dst_attr);
+        if (root > 0) {
+            dst_buf = (char *) dst_buf + root * queue->buf_extent;
         }
         offset = block * queue->chunk_size;
     }
 
     int engine_type = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;  /* TODO: add a cvar */
     mpi_errno = MPIR_Ilocalcopy_gpu(packbuf, nbytes, MPIR_BYTE_INTERNAL, 0, NULL,
-                                    dst_buf, queue->count, queue->datatype, offset, &queue->attr,
+                                    dst_buf, queue->count, queue->datatype, offset, dst_attr,
                                     engine_type, 1, areq);
 
     return mpi_errno;
@@ -788,8 +849,8 @@ static int issue_pack(MPII_cga_request_queue * queue, int block, int root, bool 
     int mpi_errno = MPI_SUCCESS;
 
     MPI_Aint nbytes = GET_BLOCK_SIZE(block);
-    void *src_buf = queue->buf;
-    MPL_pointer_attr_t *src_attr = &queue->attr;
+    MPL_pointer_attr_t *src_attr;
+    void *src_buf = get_user_buf(queue, nbytes, false, &src_attr);
     if (from_staging) {
         /* staging_buf is host memory */
         src_buf = (char *) queue->u.reduce.staging_buf - queue->true_lb;
@@ -816,13 +877,16 @@ static int issue_staging(MPII_cga_request_queue * queue, int block, int root,
     MPI_Aint nbytes = GET_BLOCK_SIZE(block);
     MPI_Aint chunk_count = nbytes / queue->u.reduce.type_size;
 
+    /* the user buffer is on the device, staging_buf is host memory */
+    MPL_pointer_attr_t *user_attr;
+    char *user_buf = get_user_buf(queue, nbytes, !is_load, &user_attr);
     char *src_buf, *dst_buf;
     if (is_load) {
-        src_buf = (char *) queue->buf;
+        src_buf = user_buf;
         dst_buf = (char *) queue->u.reduce.staging_buf - queue->true_lb;
     } else {
         src_buf = (char *) queue->u.reduce.staging_buf - queue->true_lb;
-        dst_buf = (char *) queue->buf;
+        dst_buf = user_buf;
     }
     if (root > 0) {
         src_buf += root * queue->buf_extent;
@@ -833,9 +897,8 @@ static int issue_staging(MPII_cga_request_queue * queue, int block, int root,
     dst_buf += offset;
 
     int engine_type = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;  /* TODO: add a cvar */
-    /* the user buffer is on the device, staging_buf is host memory */
-    MPL_pointer_attr_t *src_attr = is_load ? &queue->attr : NULL;
-    MPL_pointer_attr_t *dst_attr = is_load ? NULL : &queue->attr;
+    MPL_pointer_attr_t *src_attr = is_load ? user_attr : NULL;
+    MPL_pointer_attr_t *dst_attr = is_load ? NULL : user_attr;
     mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, chunk_count, queue->datatype, 0, src_attr,
                                     dst_buf, chunk_count, queue->datatype, 0, dst_attr,
                                     engine_type, 1, areq);
