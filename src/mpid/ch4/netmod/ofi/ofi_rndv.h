@@ -29,13 +29,15 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_RNDV_SELECTION
       category    : CH4_OFI
       type        : enum
-      default     : generic
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : |-
         Specify the logic used to choose a rendezvous protocol when
         MPIR_CVAR_CH4_OFI_RNDV_PROTOCOL is auto.
+        auto - use the logic preset by the provider's capability set: efa for
+          the EFA provider, generic for all others.
         generic - choose based on buffer attributes and datatypes only.
         efa - Protocol selection is informed by probing OFI provider's P2P support.
           If P2P support is present, will disable host bouncing of data buffers

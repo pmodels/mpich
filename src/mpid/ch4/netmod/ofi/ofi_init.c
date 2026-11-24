@@ -1510,6 +1510,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "libfabric provider: %s - %s\n",
             MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name,
             MPIDI_OFI_global.prov_use[0]->fabric_attr->name);
+    fprintf(stdout, "MPIR_CVAR_CH4_OFI_RNDV_SELECTION: %d\n", MPIR_CVAR_CH4_OFI_RNDV_SELECTION);
     fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",

@@ -268,7 +268,7 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
-    if (prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT && prov) {
+    if ((prov_idx == MPIDI_OFI_SET_NUMBER_DEFAULT || prov_idx == MPIDI_OFI_SET_NUMBER_EFA) && prov) {
         /* update some default settings based on capabilities provided by the provider */
         if (MPIDI_OFI_get_required_version() >= FI_VERSION(1, 5)) {
 #ifdef FI_MR_VIRT_ADDR
@@ -339,6 +339,8 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
                           MPIR_CVAR_CH4_OFI_NUM_OPTIMIZED_MEMORY_REGIONS);
     UPDATE_SETTING_BY_CAP(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
     UPDATE_SETTING_BY_CAP(enable_mr_hmem, MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM);
+    /* resolved against MPIR_CVAR_CH4_OFI_RNDV_SELECTION in MPIDI_OFI_find_provider */
+    p_settings->rndv_selection = prov_caps->rndv_selection;
 }
 
 #define CHECK_CAP(setting, cond_bad) \
