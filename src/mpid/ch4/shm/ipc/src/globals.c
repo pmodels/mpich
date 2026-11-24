@@ -33,6 +33,8 @@ cvars:
 MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #endif
 
+bool MPIDI_IPCI_is_ready = false;
+
 int MPIDI_IPCI_is_repeat_addr(const void *addr)
 {
     if (!MPIR_CVAR_CH4_IPC_MAP_REPEAT_ADDR) {
