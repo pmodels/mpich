@@ -2113,7 +2113,7 @@ Used in functions: `MPIDI_OFI_do_put`, `MPIDI_OFI_do_get`, `MPIDI_UCX_recv`, `do
 
 Sets the minimum send message size, in bytes, for selecting the CMA-based single-copy protocol for intranode communication. It is used only when MPICH is built with the CMA shared-memory submodule and `MPIR_CVAR_CH4_CMA_ENABLE` is enabled; datatypes whose contiguous-block count exceeds the CMA iovec limit are not selected for CMA. When active, this CVAR sets the point-to-point size threshold for eligible CMA-based IPC transfers.
 
-* 8192 - default, select CMA-based single-copy IPC transfers for eligible messages of at least 8192 bytes.
+* 16384 - default, select CMA-based single-copy IPC transfers for eligible messages of at least 16384 bytes.
 * integer - select CMA-based single-copy IPC transfers for eligible messages whose size is greater than or equal to the specified byte threshold.
 
 Used in functions: `MPIDI_CMA_get_ipc_attr`
@@ -2175,7 +2175,7 @@ Used in functions: `MPIDI_IPCI_is_repeat_addr`
 
 Sets the minimum send message size, in bytes, for selecting the XPMEM-based single-copy protocol for intranode communication. It is used only when MPICH is built with the XPMEM shared-memory submodule and `MPIR_CVAR_CH4_XPMEM_ENABLE` is enabled; selection also requires the message size not to exceed `MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD` when that upper threshold is active, and requires repeated-address detection for the buffer. When active, this CVAR sets the point-to-point size threshold for eligible XPMEM-based IPC transfers.
 
-* 65536 - default, select XPMEM-based single-copy IPC transfers for eligible messages of at least 65536 bytes.
+* 8192 - default, select XPMEM-based single-copy IPC transfers for eligible messages of at least 8192 bytes.
 * integer - select XPMEM-based single-copy IPC transfers for eligible messages whose size is greater than or equal to the specified byte threshold.
 
 Used in functions: `MPIDI_XPMEM_get_ipc_attr`
