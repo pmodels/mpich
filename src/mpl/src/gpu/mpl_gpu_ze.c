@@ -1370,6 +1370,16 @@ static inline int MPL_event_pool_get_event(MPL_gpu_event ** event)
 
 static inline void MPL_event_pool_push_event(MPL_gpu_event * gpu_event)
 {
+    /* The next imemcpy in a direction waits on prev_event[dir]. Once the event is back in the
+     * pool it can be handed out again, possibly to that very copy, which would then wait on its
+     * own event. The copy has completed, so drop the dependency. */
+    for (int d = 0; d < local_ze_device_count; d++) {
+        for (int i = 0; i < MPL_GPU_COPY_DIRECTION_TYPES; i++) {
+            if (device_states[d].prev_event[i] == gpu_event) {
+                device_states[d].prev_event[i] = NULL;
+            }
+        }
+    }
     DL_APPEND(ze_events, gpu_event);
 }
 
