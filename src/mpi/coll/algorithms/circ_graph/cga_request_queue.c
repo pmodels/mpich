@@ -47,6 +47,8 @@ static bool send_from_staging(MPII_cga_request_queue * queue, int req_id);
 
 static int alloc_packbuf(MPII_cga_request_queue * queue, void **packbuf_out);
 static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf);
+static int alloc_tmpbuf(MPII_cga_request_queue * queue, void **tmpbuf_out);
+static void free_tmpbuf(MPII_cga_request_queue * queue, void *tmpbuf);
 /* free buffers depend on where they are stored */
 static void clear_request(MPII_cga_request_queue * queue, int req_id);
 static void clear_pending(MPII_cga_request_queue * queue, int pending_id);
@@ -307,6 +309,11 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
         last_chunk_count = count;
         chunk_size = 0;
     } else {
+        /* a message smaller than a chunk is one chunk of the message size, so that the
+         * per-receive tmpbufs are no larger than the message */
+        if (count > 0 && chunk_count > count) {
+            chunk_count = count;
+        }
         chunk_size = chunk_count * type_size;
         num_chunks = count / chunk_count;
         last_chunk_count = count % chunk_count;
@@ -347,6 +354,10 @@ int MPII_cga_init_reduce_queue(MPII_cga_request_queue * queue, int num_pending,
         /* non-contig case, we need both pack_buf and tmpbuf */
         queue->u.reduce.tmpbuf_size = tmpbuf_size;
     }
+    /* a tmpbuf is allocated for every receive, so take it from the pool when it fits */
+    queue->u.reduce.tmpbuf_from_pool = (queue->u.reduce.tmpbuf_size > 0 &&
+                                        queue->u.reduce.tmpbuf_size <=
+                                        MPIR_cga_chunk_pool_cell_size);
 
   fn_fail:
     return mpi_errno;
@@ -724,8 +735,8 @@ static int issue_nb_op(MPII_cga_request_queue * queue, enum MPII_cga_op_type op_
     if (op_type == MPII_CGA_OP_RECV && REQi.coll_type == MPII_CGA_REDUCE) {
         /* reduce need recv (or unpack) into a tmp buffer before reduce_local */
         if (queue->u.reduce.tmpbuf_size > 0) {
-            REQi.tmpbuf = MPL_malloc(queue->u.reduce.tmpbuf_size, MPL_MEM_OTHER);
-            MPIR_ERR_CHKANDJUMP(!REQi.tmpbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            mpi_errno = alloc_tmpbuf(queue, &REQi.tmpbuf);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 #undef REQi
@@ -1115,6 +1126,29 @@ static void free_packbuf(MPII_cga_request_queue * queue, void *packbuf)
     }
 }
 
+static int alloc_tmpbuf(MPII_cga_request_queue * queue, void **tmpbuf_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (queue->u.reduce.tmpbuf_from_pool) {
+        mpi_errno = MPIDU_genq_private_pool_force_alloc_cell(MPIR_cga_chunk_pool, tmpbuf_out);
+    } else {
+        *tmpbuf_out = MPL_malloc(queue->u.reduce.tmpbuf_size, MPL_MEM_OTHER);
+        if (!*tmpbuf_out) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        }
+    }
+    return mpi_errno;
+}
+
+static void free_tmpbuf(MPII_cga_request_queue * queue, void *tmpbuf)
+{
+    if (queue->u.reduce.tmpbuf_from_pool) {
+        MPIDU_genq_private_pool_free_cell(MPIR_cga_chunk_pool, tmpbuf);
+    } else {
+        MPL_free(tmpbuf);
+    }
+}
+
 static void clear_request(MPII_cga_request_queue * queue, int req_id)
 {
 #define REQi queue->requests[req_id]
@@ -1124,7 +1158,7 @@ static void clear_request(MPII_cga_request_queue * queue, int req_id)
             REQi.packbuf = NULL;
         }
         if (REQi.tmpbuf) {
-            MPL_free(REQi.tmpbuf);
+            free_tmpbuf(queue, REQi.tmpbuf);
             REQi.tmpbuf = NULL;
         }
     }

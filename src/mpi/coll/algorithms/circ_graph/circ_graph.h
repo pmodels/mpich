@@ -86,6 +86,7 @@ typedef struct {
             MPI_Aint chunk_extent;      /* for calc buf offset at a block */
             MPI_Aint tmpbuf_shift;      /* adjustment for tmp_buf */
             MPI_Aint tmpbuf_size;       /* buffer span of chunk_count elements, but 0 if not needed */
+            bool tmpbuf_from_pool;      /* tmpbufs come from MPIR_cga_chunk_pool, else MPL_malloc */
             MPI_Aint true_extent;       /* for the size of staging_buf */
             MPI_Op op;
             void *staging_buf;  /* if recvbuf is in GPU, use staging buf for intermediate results */
