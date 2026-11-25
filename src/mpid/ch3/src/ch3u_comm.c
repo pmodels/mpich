@@ -487,9 +487,7 @@ void MPIDI_CH3I_Comm_find(int context_id, MPIR_Comm **comm)
     MPIR_FUNC_ENTER;
 
     COMM_FOREACH((*comm)) {
-        if ((*comm)->context_id == context_id || ((*comm)->context_id + MPIR_CONTEXT_COLL_OFFSET) == context_id ||
-            ((*comm)->node_comm && ((*comm)->node_comm->context_id == context_id || ((*comm)->node_comm->context_id + MPIR_CONTEXT_COLL_OFFSET) == context_id)) ||
-            ((*comm)->node_roots_comm && ((*comm)->node_roots_comm->context_id == context_id || ((*comm)->node_roots_comm->context_id + MPIR_CONTEXT_COLL_OFFSET) == context_id)) ) {
+        if ((*comm)->context_id == context_id || ((*comm)->context_id + MPIR_CONTEXT_COLL_OFFSET) == context_id) {
             MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"Found matching context id: %d", (*comm)->context_id);
             break;
         }

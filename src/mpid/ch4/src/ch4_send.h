@@ -51,6 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIR_FUNC_ENTER;
 
     MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
+    MPIR_Assert(!(comm->attr & MPIR_COMM_ATTR__SUBCOMM));
     if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
     } else {

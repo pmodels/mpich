@@ -37,13 +37,6 @@ static int mpidi_ucc_finalize(void *param ATTRIBUTE((unused)))
         MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
                                  "finalizing ucc for comm_world");
         MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world);
-        if (MPIR_Process.comm_world->node_comm || MPIR_Process.comm_world->node_roots_comm) {
-            MPIDI_COMMON_UCC_VERBOSE(MPIDI_COMMON_UCC_VERBOSE_LEVEL_COMM,
-                                     "finalizing ucc for comm_world's shadow comms");
-            /* the destroy hook skips a NULL comm */
-            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_comm);
-            MPIDI_common_ucc_comm_destroy_hook(MPIR_Process.comm_world->node_roots_comm);
-        }
     }
 
     MPIR_Progress_hook_deactivate(MPIDI_common_ucc_priv.progress_hook_id);
