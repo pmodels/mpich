@@ -44,6 +44,11 @@ extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #define IPC_TRACE(...) \
     MPL_DBG_MSG_FMT(MPIDI_IPCI_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "IPC "__VA_ARGS__))
 
+/* IPC is not used until MPIDI_IPC_comm_bootstrap completes. The bootstrap itself communicates
+ * (e.g. the XPMEM segid allgather), and those messages must not take an IPC path that depends on
+ * the information being exchanged. */
+extern bool MPIDI_IPCI_is_ready;
+
 #define MPIDI_IPCI_REQUEST(req, field)      ((req)->dev.ch4.am.shm_am.ipc.field)
 
 int MPIDI_IPCI_is_repeat_addr(const void *addr);

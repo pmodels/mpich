@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_has_ipc(void)
 }
 
 /* use this macro to prevent unused label warning in case no IPC is enabled */
-#define MPIDI_IPCI_NO_IPC_EXIT if (!MPIDI_IPCI_has_ipc()) goto fn_exit
+#define MPIDI_IPCI_NO_IPC_EXIT if (!MPIDI_IPCI_has_ipc() || !MPIDI_IPCI_is_ready) goto fn_exit
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_ipc_attr(const void *buf, MPI_Aint count,
                                                      MPI_Datatype datatype,

@@ -33,12 +33,14 @@ cvars:
 MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #endif
 
+bool MPIDI_IPCI_is_ready = false;
+
 int MPIDI_IPCI_is_repeat_addr(const void *addr)
 {
     if (!MPIR_CVAR_CH4_IPC_MAP_REPEAT_ADDR) {
         return 0;
     }
-#define MAX_REPEAT_ADDRS 16     /* a bit arbitrary - TODO: make it tunable */
+#define MAX_REPEAT_ADDRS 50     /* a bit arbitrary - TODO: make it tunable */
     static const void *repeat_addr[MAX_REPEAT_ADDRS] = { 0 };
     static int repeat_addr_count[MAX_REPEAT_ADDRS];
     static int addr_idx = 0;

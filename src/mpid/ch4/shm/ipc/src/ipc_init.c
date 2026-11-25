@@ -51,6 +51,9 @@ int MPIDI_IPC_comm_bootstrap(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* no IPC while bootstrapping, see MPIDI_IPCI_is_ready */
+    MPIDI_IPCI_is_ready = false;
+
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     mpi_errno = MPIDI_XPMEM_comm_bootstrap(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -70,6 +73,8 @@ int MPIDI_IPC_comm_bootstrap(MPIR_Comm * comm)
 
     /* extra just to silence potential unused-label warnings */
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_IPCI_is_ready = true;
 
   fn_exit:
     return mpi_errno;
