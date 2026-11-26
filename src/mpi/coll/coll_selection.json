@@ -197,7 +197,7 @@
     {
             "msg_size(16384)": {"algorithm=MPIDI_POSIX_mpi_reduce_release_gather": {}},
             "msg_size(4194304)": {"algorithm=MPIR_Coll_nb": {}},
-            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {}}
+            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}}
     },
     "name=reduce-intra-21c": "dispatch(200)",
     "name=reduce-intra-0-gpu":
@@ -207,7 +207,7 @@
     "name=reduce-intra-20c-gpu":
     {
             "msg_size(65536)": {"algorithm=MPIR_Coll_nb": {}},
-            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {}}
+            "any": {"algorithm=MPIR_Reduce_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}}
     },
     "name=reduce-intra-800": "dispatch(800)",
     "name=reduce-intra-a0c": "dispatch(800)",
@@ -807,12 +807,12 @@
     "name=ibcast-intra-0":
     {
             "comm_size(64)": {
-                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
-                "comm_size(32)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
+                "comm_size(32)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             },
             "any": {
-                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             }
     },
@@ -822,12 +822,12 @@
                 "comm_size(4)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
                 "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
                 "msg_size(262144)": {"algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather": {}},
-                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}}
+                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}}
             },
             "any": {
                 "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
                 "msg_size(262144)": {"algorithm=MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather": {}},
-                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}}
+                "any": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}}
             }
     },
     "name=ibcast-intra-10":
@@ -838,15 +838,15 @@
     {
             "comm_size(64)": {
                 "msg_size(65536)": {
-                    "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
-                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                    "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
+                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                     "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
                 },
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
             },
             "any": {
                 "msg_size(65536)": {
-                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                    "msg_size(4096)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                     "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
                 },
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
@@ -856,11 +856,11 @@
     {
             "comm_size(64)": {
                 "comm_size(8)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
-                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             },
             "any": {
-                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             }
     },
@@ -868,18 +868,18 @@
     {
             "comm_size(64)": {
                 "comm_size(4)": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}},
-                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             },
             "any": {
-                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(1048576)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_binomial": {}}
             }
     },
     "name=ibcast-intra-10-gpu":
     {
             "msg_size(262144)": {
-                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {}},
+                "msg_size(16384)": {"algorithm=MPIR_Ibcast_intra_circ_graph": {"chunk_size": 131072, "q_len": 8}},
                 "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
             },
             "any": {"algorithm=MPIR_Ibcast_intra_sched_smp": {}}
