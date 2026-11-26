@@ -71,9 +71,13 @@ static int finalize_hook(void)
         cerr = hipStreamDestroy(yaksuri_hipi_global.stream[i]);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
+        cerr = hipStreamDestroy(yaksuri_hipi_global.copy_stream[i]);
+        YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
         free(yaksuri_hipi_global.p2p[i]);
     }
     free(yaksuri_hipi_global.stream);
+    free(yaksuri_hipi_global.copy_stream);
     free(yaksuri_hipi_global.p2p);
 
   fn_exit:
@@ -144,6 +148,8 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
 
     yaksuri_hipi_global.stream = (hipStream_t *)
         malloc(yaksuri_hipi_global.ndevices * sizeof(hipStream_t));
+    yaksuri_hipi_global.copy_stream = (hipStream_t *)
+        malloc(yaksuri_hipi_global.ndevices * sizeof(hipStream_t));
 
     yaksuri_hipi_global.p2p = (bool **) malloc(yaksuri_hipi_global.ndevices * sizeof(bool *));
     for (int i = 0; i < yaksuri_hipi_global.ndevices; i++) {
@@ -159,6 +165,9 @@ int yaksuri_hip_init_hook(yaksur_gpudriver_hooks_s ** hooks)
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
         cerr = hipStreamCreateWithFlags(&yaksuri_hipi_global.stream[i], hipStreamNonBlocking);
+        YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
+        cerr = hipStreamCreateWithFlags(&yaksuri_hipi_global.copy_stream[i], hipStreamNonBlocking);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
         for (int j = 0; j < yaksuri_hipi_global.ndevices; j++) {

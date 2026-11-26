@@ -81,10 +81,18 @@ static int finalize_hook(void)
             cerr = cudaStreamDestroy(yaksuri_cudai_global.streams[i].stream);
             YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
         }
+        if (yaksuri_cudai_global.copy_streams[i].created) {
+            cerr = cudaSetDevice(i);
+            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+
+            cerr = cudaStreamDestroy(yaksuri_cudai_global.copy_streams[i].stream);
+            YAKSURI_CUDAI_CUDA_ERR_CHKANDJUMP(cerr, rc, fn_fail);
+        }
 
         free(yaksuri_cudai_global.p2p[i]);
     }
     free(yaksuri_cudai_global.streams);
+    free(yaksuri_cudai_global.copy_streams);
     free(yaksuri_cudai_global.p2p);
 
   fn_exit:
@@ -205,12 +213,17 @@ int yaksuri_cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
     }
 
     yaksuri_cudai_global.streams = calloc(yaksuri_cudai_global.ndevices, sizeof(cudai_stream));
+    yaksuri_cudai_global.copy_streams = calloc(yaksuri_cudai_global.ndevices, sizeof(cudai_stream));
 
     yaksuri_cudai_global.p2p = (int **) malloc(yaksuri_cudai_global.ndevices * sizeof(int *));
     for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
         if (yaksuri_global.has_wait_kernel) {
             /* The stream creation will deadlock with wait kernel. Create them now. */
+            cudaStream_t copy_stream;
+
             yaksuri_cudai_get_stream(i);
+            rc = yaksuri_cudai_get_copy_stream(i, &copy_stream);
+            YAKSU_ERR_CHECK(rc, fn_fail);
         }
         yaksuri_cudai_global.p2p[i] = (int *) malloc(yaksuri_cudai_global.ndevices * sizeof(int));
         /* mark as unchecked with -1. We will check access and cache the value

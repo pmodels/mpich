@@ -118,7 +118,7 @@ int yaksuri_hipi_ipack_with_stream(const void *inbuf, void *outbuf, uintptr_t co
             offset += actual_iov_len;
         }
     } else {
-        rc = yaksuri_hipi_md_alloc(type);
+        rc = yaksuri_hipi_md_alloc(type, target);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
         unsigned int n_threads;
@@ -133,8 +133,8 @@ int yaksuri_hipi_ipack_with_stream(const void *inbuf, void *outbuf, uintptr_t co
         cerr = hipSetDevice(target);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-        hip_type->pack(inbuf, outbuf, count, op, hip_type->md, n_threads, n_blocks_x, n_blocks_y,
-                       n_blocks_z, stream);
+        hip_type->pack(inbuf, outbuf, count, op, yaksuri_hipi_md_get(type, target), n_threads,
+                       n_blocks_x, n_blocks_y, n_blocks_z, stream);
 
         cerr = hipSetDevice(cur_device);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
@@ -182,7 +182,7 @@ int yaksuri_hipi_iunpack_with_stream(const void *inbuf, void *outbuf, uintptr_t 
             offset += actual_iov_len;
         }
     } else {
-        rc = yaksuri_hipi_md_alloc(type);
+        rc = yaksuri_hipi_md_alloc(type, target);
         YAKSU_ERR_CHECK(rc, fn_fail);
 
         unsigned int n_threads;
@@ -197,8 +197,8 @@ int yaksuri_hipi_iunpack_with_stream(const void *inbuf, void *outbuf, uintptr_t 
         cerr = hipSetDevice(target);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
 
-        hip_type->unpack(inbuf, outbuf, count, op, hip_type->md, n_threads, n_blocks_x,
-                         n_blocks_y, n_blocks_z, stream);
+        hip_type->unpack(inbuf, outbuf, count, op, yaksuri_hipi_md_get(type, target), n_threads,
+                         n_blocks_x, n_blocks_y, n_blocks_z, stream);
 
         cerr = hipSetDevice(cur_device);
         YAKSURI_HIPI_HIP_ERR_CHKANDJUMP(cerr, rc, fn_fail);
