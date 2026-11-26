@@ -3224,14 +3224,14 @@ Used in functions: `win_init`
 
 ### MPIR_CVAR_INTERFACE_HOSTNAME
 
-Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod or the CH3 sock channel builds its business card, so other processes use that address when connecting to it. In nemesis TCP it is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, nemesis TCP falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup; the sock channel skips the PMI hostname step. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process.
+Specifies the hostname or IP address advertised for this process when the CH3 nemesis TCP netmod or the CH3 sock channel builds its business card, so other processes use that address when connecting to it. In nemesis TCP it is used only when `MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE` is not set; setting both is an error. If this CVAR is not set, nemesis TCP falls back to the PMI hostname, then a per-rank interface hostname environment variable, and then local processor/interface lookup; the sock channel skips the PMI hostname step. When active, this CVAR sets the advertised host description and socket address used for TCP connections to this process. In CH4 OFI with the sockets or tcp provider, it is passed to `fi_getinfo` as the source node with `FI_SOURCE`, so the provider binds to that address instead of its first non-loopback interface (for example, `127.0.0.1` keeps a single-node run on the loopback interface); other providers ignore it.
 
 * NULL - default, do not set an advertised hostname or IP address through this CVAR.
 * string - hostname or IP address to advertise for connections to this process.
 
 Alternate name: MPIR_CVAR_CH3_INTERFACE_HOSTNAME
 
-Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`, `MPIDU_CH3U_GetSockInterfaceAddr`, `MPIDI_CH3I_Sock_get_host_description`
+Used in functions: `GetSockInterfaceAddr`, `MPID_nem_tcp_get_business_card`, `MPIDU_CH3U_GetSockInterfaceAddr`, `MPIDI_CH3I_Sock_get_host_description`, `get_src_node`
 
 ### MPIR_CVAR_NEMESIS_ENABLE_CKPOINT
 
