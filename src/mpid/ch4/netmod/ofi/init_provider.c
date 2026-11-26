@@ -110,6 +110,22 @@ int MPIDI_OFI_get_required_version(void)
         return fi_version();
 }
 
+/* MPIR_CVAR_INTERFACE_HOSTNAME as the source address for fi_getinfo (with FI_SOURCE), so the
+ * IP providers (sockets, tcp, also layered as "tcp;ofi_rxm") bind to it instead of their first
+ * non-loopback interface; NULL for other providers or when the cvar is unset */
+static const char *get_src_node(const char *provname)
+{
+    if (!MPIR_CVAR_INTERFACE_HOSTNAME || !MPIR_CVAR_INTERFACE_HOSTNAME[0] || !provname) {
+        return NULL;
+    }
+    size_t n = strcspn(provname, ";");
+    if ((n == strlen("sockets") && strncmp(provname, "sockets", n) == 0) ||
+        (n == strlen("tcp") && strncmp(provname, "tcp", n) == 0)) {
+        return MPIR_CVAR_INTERFACE_HOSTNAME;
+    }
+    return NULL;
+}
+
 /* find best matching provider */
 static int find_provider(struct fi_info **prov_out)
 {
@@ -164,21 +180,23 @@ static int find_provider(struct fi_info **prov_out)
         hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
 
+        const char *src_node = get_src_node(provname);
+        uint64_t getinfo_flags = src_node ? FI_SOURCE : 0;
 
         /* Now we have the hints with best matched provider, get the new prov_list */
         struct fi_info *old_prov_list = prov_list;
 
         /* First try with the initial (optimal) hints */
-        ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
+        ret = fi_getinfo(required_version, src_node, NULL, getinfo_flags, hints, &prov_list);
         if (ret || prov_list == NULL) {
             /* relax msg_order */
             hints->tx_attr->msg_order = prov->tx_attr->msg_order;
-            ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
+            ret = fi_getinfo(required_version, src_node, NULL, getinfo_flags, hints, &prov_list);
         }
         if (ret || prov_list == NULL) {
             /* relax mr_mode */
             hints->domain_attr->mr_mode = prov->domain_attr->mr_mode;
-            ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
+            ret = fi_getinfo(required_version, src_node, NULL, getinfo_flags, hints, &prov_list);
         }
         /* free the old one, the new one will be freed in MPIDI_OFI_find_provider_cleanup */
         fi_freeinfo(old_prov_list);
@@ -189,7 +207,9 @@ static int find_provider(struct fi_info **prov_out)
         mpi_errno = MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(MPIDI_OFI_PROV_NAME);
 
-        ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
+        const char *src_node = get_src_node(MPIDI_OFI_PROV_NAME);
+        ret = fi_getinfo(required_version, src_node, NULL, src_node ? FI_SOURCE : 0ULL, hints,
+                         &prov_list);
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
         int set_number = MPIDI_OFI_get_set_number(prov_list->fabric_attr->prov_name);

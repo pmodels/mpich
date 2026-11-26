@@ -35,6 +35,11 @@ cvars:
       description : >-
         If non-NULL, this cvar specifies the IP address that
         other processes should use when connecting to this process.
+        It applies to ch3:nemesis:tcp, ch3:sock, and ch4:ofi with the
+        sockets or tcp provider, which binds to this address (passed to
+        fi_getinfo as the FI_SOURCE node) instead of its first
+        non-loopback interface. For example, 127.0.0.1 keeps a
+        single-node run on the loopback interface.
         This cvar is mutually exclusive with the
         MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE cvar and it is an error to set
         them both.
