@@ -242,7 +242,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+        mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (j = 1; j < k; j++) {
