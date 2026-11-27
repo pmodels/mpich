@@ -80,6 +80,15 @@ PAC_POP_FLAG([CFLAGS])
 
 AM_PROG_AR
 
+AC_ARG_ENABLE([dlopen],
+              [AS_HELP_STRING([--enable-dlopen],
+                              [Do not link libraries such as CUDA directly. Build the
+                               code that needs them as a separate piece that the
+                               parent project links into a module to dlopen at runtime.])],
+              [], [enable_dlopen=no])
+# LT_INIT uses and resets the shell variable enable_dlopen, save ours
+yaksa_enable_dlopen=$enable_dlopen
+
 LT_INIT
 
 AC_PROG_INSTALL

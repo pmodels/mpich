@@ -298,7 +298,11 @@ def populate_pupfns(pup_max_nesting, backend, blklens, builtin_types, builtin_ma
     filename = "src/backend/%s/pup/Makefile.populate_pupfns.mk" % backend
     yutils.copyright_makefile(filename)
     OUTFILE = open(filename, "a")
-    yutils.display(OUTFILE, "libyaksa_la_SOURCES += \\\n")
+    if backend == "cuda":
+        # the cuda backend can be built into a separate library, see src/backend/cuda/Makefile.mk
+        yutils.display(OUTFILE, "yaksa_cuda_sources += \\\n")
+    else:
+        yutils.display(OUTFILE, "libyaksa_la_SOURCES += \\\n")
     if pup_max_nesting > 0:
         for dtype1 in derived_types:
             if pup_max_nesting > 1:

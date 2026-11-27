@@ -15,7 +15,7 @@ static void *cuda_host_malloc(uintptr_t size)
 {
     void *ptr = NULL;
 
-    if (yaksuri_global.has_wait_kernel) {
+    if (YAKSURI_CUDAI_HAS_WAIT_KERNEL) {
         ptr = malloc(size);
     } else {
         cudaError_t cerr = cudaMallocHost(&ptr, size);
@@ -52,7 +52,7 @@ static void *cuda_gpu_malloc(uintptr_t size, int device)
 
 static void cuda_host_free(void *ptr)
 {
-    if (yaksuri_global.has_wait_kernel) {
+    if (YAKSURI_CUDAI_HAS_WAIT_KERNEL) {
         free(ptr);
     } else {
         cudaError_t cerr = cudaFreeHost(ptr);
@@ -164,7 +164,24 @@ static bool check_p2p_comm(int sdev, int ddev)
     return is_enabled;
 }
 
+#ifdef YAKSA_CUDA_DLOPEN
+static int cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks);
+
+yaksuri_cuda_host_s yaksuri_cudai_host;
+
+/* entry function of the dlopen module, called by yaksuri_cuda_init_hook in libyaksa */
+__attribute__ ((visibility("default")))
+int yaksuri_cuda_module_init(const yaksuri_cuda_host_s * host, yaksur_gpudriver_hooks_s ** hooks);
+int yaksuri_cuda_module_init(const yaksuri_cuda_host_s * host, yaksur_gpudriver_hooks_s ** hooks)
+{
+    yaksuri_cudai_host = *host;
+    return cuda_init_hook(hooks);
+}
+
+static int cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
+#else
 int yaksuri_cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
+#endif
 {
     int rc = YAKSA_SUCCESS;
     cudaError_t cerr;
@@ -208,7 +225,7 @@ int yaksuri_cuda_init_hook(yaksur_gpudriver_hooks_s ** hooks)
 
     yaksuri_cudai_global.p2p = (int **) malloc(yaksuri_cudai_global.ndevices * sizeof(int *));
     for (int i = 0; i < yaksuri_cudai_global.ndevices; i++) {
-        if (yaksuri_global.has_wait_kernel) {
+        if (YAKSURI_CUDAI_HAS_WAIT_KERNEL) {
             /* The stream creation will deadlock with wait kernel. Create them now. */
             yaksuri_cudai_get_stream(i);
         }
